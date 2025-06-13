@@ -1,0 +1,41 @@
+# JSAR Canary
+
+JSAR Canary is an independent spatial app released by the JSAR team within Rokid AR Studio (meaning it's not on the desktop space). It provides a preview of the latest JSAR runtime features, allowing users to access any XSML document by scanning a QR code within the app and initializing it in their space.
+
+## Download and Installation
+
+Download the JSAR Canary installation package through the following link: [jsar-canary.apk](https://ar.rokidcdn.com/web-assets/pages/jsar-canary/jsar-canary-latest.apk), and then install it into Rokid AR Studio using `adb install jsar-canary.apk`.
+
+## How to Use
+
+Access the JSAR Canary space through the AR Lab, and then follow the instructions to use the computing terminal to scan the QR code of an XSML link to load the app in your space.
+
+## Publishing
+
+In JSAR Canary, opening a spatial app only requires a link to an XSML document. Therefore, you only need to deploy a web service that Rokid AR Studio can access.
+
+The following are several commonly used methods for deploying and using web services.
+
+### GitHub
+
+With the help of [jsdelivr][], you can directly access files in a GitHub repository via URL, such as:
+
+```
+https://cdn.jsdelivr.net/gh/M-CreativeLab/jsar-gallery-rokid-jungle@main/main.xsml
+```
+
+This URL points to the main.xsml file in the [M-CreativeLab/jsar-gallery-rokid-jungle](https://github.com/M-CreativeLab/jsar-gallery-rokid-jungle/tree/main) repository's main branch. If you are a GitHub user, you can publish your spatial app to a GitHub repository and generate a jsdelivr URL for a QR code scan by JSAR Canary.
+
+### Npm
+
+Similar to GitHub, [jsdelivr][] also supports mapping files from npm packages, for example:
+
+```
+https://cdn.jsdelivr.net/npm/jsar-gallery-rokid-jungle/main.xsml
+```
+
+[jsdelivr]: https://www.jsdelivr.com/
+
+### Other Methods
+
+Based on the principle of JSAR loading via URL, you can deploy a web service in any way you prefer, as long as you can access the XSML document via URL. In addition to static files, you can also have the web service dynamically render XSML content, so that each time you open the spatial app, it displays different content.

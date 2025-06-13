@@ -1,0 +1,66 @@
+# Contributing to JSAR
+
+JSAR extends its gratitude to all contributors.
+
+## Projects
+
+JSAR is composed of multiple projects, each responsible for specific functionalities, and they are integrated to form the overall spatial web runtime solution.
+
+> Note that not all projects are open source currently. The entire JSAR project group will gradually open source, but we list all repositories and functionalities here for an understanding of the project's composition.
+
+### `jsar-dom`
+
+`jsar-dom` is the upper-level API definition of JSAR, implementing the DOM and all the Web APIs required for the JSAR runtime. This project can also integrate spatial web applications into Babylon.js.
+
+| Project Attribute | Description |
+|---------|------|
+| Open Source | Yes |
+| Repository | [https://github.com/M-CreativeLab/jsar-dom](https://github.com/M-CreativeLab/jsar-dom) |
+| Language | TypeScript, Rust |
+
+### `jsar-runtime`
+
+Transmute is the 3D data exchange protocol between JSAR and the host environment. It defines real-time 3D data in spatial web applications, including vertex, material, texture data, etc. `jsar-runtime` specifically:
+
+- Defines the Transmute protocol
+- Implements the Transmute protocol producer based on `jsar-dom`
+- Integrates the Node.js runtime
+- Provides the Transmute protocol consumer interface, including Unity C# and C/C++.
+
+| Project Attribute | Description |
+|---------|------|
+| Open Source | No |
+| Repository | N/A |
+| Language | C/C++, C#, Rust |
+
+### `jsar-loader-unity`
+
+`jsar-loader-unity` is the loader for JSAR applications in Unity. It integrates `jsar-runtime` and uses the Unity C# interface to render and interact with the Transmute protocol in the Unity environment.
+
+| Project Attribute | Description |
+|---------|------|
+| Open Source | No |
+| Repository | N/A |
+| Language | C#, Shaderlab |
+
+> We welcome community contributions for more loaders, enabling JSAR applications to run in various host environments, such as Unreal Engine, Cocos Engine, Godot, VisionOS, etc.
+
+### `jsar-devtools`
+
+`jsar-devtools` is the developer tools for JSAR, including a Visual Studio Code plugin and an online web development environment.
+
+| Project Attribute | Description |
+|---------|------|
+| Open Source | No |
+| Repository | N/A |
+| Language | TypeScript |
+
+### `jsar-website`
+
+`jsar-website` is the official website for JSAR, containing documentation, examples, tutorials, etc.
+
+| Project Attribute | Description |
+|---------|------|
+| Open Source | Yes |
+| Repository | [https://github.com/M-CreativeLab/jsar-website](https://github.com/M-CreativeLab/jsar-website) |
+| Language | TypeScript |

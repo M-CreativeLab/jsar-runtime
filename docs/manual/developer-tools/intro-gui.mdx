@@ -1,0 +1,37 @@
+# Interface
+
+The extension interface is shown in the image below, mainly consisting of 5 areas:
+
+![](vscode-extension-gui.png)
+
+1. Directory Tree: Used to view files and code in your project.
+2. Editing Area: Used to edit code for a single file.
+3. Preview Area: or Scene Preview: Used to preview a single XSML file.
+4. Scene Tree: Used to view the structure of the currently running scene.
+5. Property Inspector: Used to view the properties of selected objects.
+
+## Directory Tree
+
+If you are familiar with VSCode or other code editors, you will be no stranger to this. It is a built-in feature of VSCode used to view files in your project.
+
+## Editing Area
+
+Like the directory tree, this is also a built-in feature of VSCode used for code editing. However, the JSAR extension provides support related to the XSML/SCSS languages, including syntax highlighting and IntelliSense.
+
+## Preview Area
+
+When you open a file ending in `*.xsml`, you will find a preview button in the upper right corner. Clicking it will open a preview area and load the content of your current XSML file for rendering a scene. Developers can use it to preview the scene.
+
+## Scene Tree
+
+Whenever an XSML file is loaded in the preview area, the content is synchronized to the Scene Hierarchy in the middle. This is used to view the structure of the current scene. Developers can use it to see the hierarchy of nodes in the scene and the properties of nodes.
+
+## Property Inspector
+
+This is used in conjunction with the Scene Tree. After selecting an object in the Scene Tree, you can view the properties of the currently selected object in the Property Inspector, including:
+
+- Basic properties
+- Position, rotation, and scale properties
+- Material properties
+
+> In the future, modifying object properties through the Property Inspector and synchronizing them to the code will be supported.

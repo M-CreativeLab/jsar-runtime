@@ -1,0 +1,149 @@
+# Run applications and assets in JSAR
+
+In the previous sections, you've learned how to install _Play WebXR_ and how to create the project in HTML or XSML. Next, let's see how to run the project in _Play WebXR_ app and other ways.
+
+JSAR is a browser engine library only, it doesn't provide the specific ways to run, but we did build few tools to help developers run your project.
+
+- [Classic Web Browser](./quick-start/run#classic-web-browser)
+- [_Play WebXR_ app](./quick-start/run#_play-webxr_-app)
+  - [x] Rokid AR Studio
+  - [ ] Rokid AR Lite (Work in progress)
+- [System Launcher](./quick-start/run#system-launcher)
+  - [ ] Rokid AR Studio (Work in progress)
+  - [ ] Rokid AR Lite (Work in progress)
+- [Visual Studio Code Extension (only for XSML)](./quick-start/run#visual-studio-code-extension-(only-for-xsml))
+
+## Classic Web Browser
+
+At a classic Web browser, running XSML is different from HTML, this section will introduce how to run them.
+
+### Run HTML in Classic Web Browser
+
+HTML is of course supported in any classic Web browser, you only need to make your HTML can be run both in classic Web browser and JSAR. The following is the example of how to run your project in a classic Web browser:
+
+```html title="index.html"
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My First WebXR</title>
+  <script type="module">
+    import * as THREE from 'three';
+
+    let renderer;
+    const gl = navigator.gl;
+    if (typeof gl !== 'undefined') {
+      /** If the navigator.gl exists, it's the JSAR environment */
+      renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      });
+      // ...
+    } else {
+      /** If the navigator.gl doesn't exist, it's the classic Web browser */
+      renderer = new THREE.WebGLRenderer(); // This creates a default canvas element.
+    }
+
+    // Do the rest of your 3D rendering here.
+  </script>
+</head>
+<body>
+</body>
+</html>
+```
+
+As the above code shows, you can use the `navigator.gl` to detect whether the current environment is JSAR. If it exists, it's the JSAR environment, and you can create a `three` renderer with the shared WebGL context. Otherwise, it's the classic Web browser, and you can create a `three` renderer with the default canvas element.
+
+To use this way, you can easily run your HTML project in any classic Web browser for application development, testing and debugging, and then run it in JSAR to use, is it fun, right?
+
+### Run XSML in Classic Web Browser
+
+In former version of JSAR, there is a library [jsar-dom][] that helps to run XSML file in classic Web browser, it will parse the XSML file and run it in the browser in JavaScript and WebAssembly.
+
+So you can use [jsar-dom][] to build a webpage that run your XSML in classic Web browser, this is [an example](https://github.com/M-CreativeLab/jsar-dom/blob/main/pages/impl-babylonjs.ts) of how to build it. Besides, we also provide an online tool: https://m-creativelab.github.io/jsar-dom/ for you without building it.
+
+```sh
+https://m-creativelab.github.io/jsar-dom/?url={your_xsml_url}
+```
+
+For example:
+
+- Using GitHub Raw: https://m-creativelab.github.io/jsar-dom/?url=https://raw.githubusercontent.com/M-CreativeLab/jsar-gallery-rokid-jungle/main/main.xsml
+- Using jsDelivr: https://m-creativelab.github.io/jsar-dom/?url=https://cdn.jsdelivr.net/gh/M-CreativeLab/jsar-gallery-rokid-jungle@main/main.xsml
+
+This online tool also supports running your project locally, but you need to start an HTTP server locally. For example:
+
+```sh
+npm install serve -g
+```
+
+After installing `serve`, navigate to your project directory and run:
+
+```sh
+serve -p 8080 --cors
+```
+
+> Note: Be sure to add the --cors parameter, as there may be cross-origin access issues without it. This is because the localhost domain and the jsar.netlify.app domain are different.
+
+Then, verify if your service is running correctly by accessing `http://localhost:8080/main.xsml` through your browser. It should respond your expected XSML content.
+
+The specific path may vary depending on your project structure. If your URL returns XSML content as shown above, you can change the url parameter to the XSML address of your local HTTP server, such as:
+
+```
+https://m-creativelab.github.io/jsar-dom/?url=http://localhost:8080/main.xsml
+```
+
+> Note: The [jsar-dom][] online tool's URL is not stable, if you found it's not working, please contact us via [GitHub Issues](https://github.com/M-CreativeLab/jsar-dom/issues/new).
+
+[jsar-dom]: https://github.com/m-CreativeLab/jsar-dom
+
+## _Play WebXR_ app
+
+_Play WebXR_ is an application that integrates JSAR to run Web applications, images, and 3D models. It currently supports Rokid's AR Studio and AR Lite devices.
+
+![logo](logo-playwebxr.jpg)
+
+> Want to install _Play WebXR_? please refer to [Setup](./quick-start/setup#install-_play-webxr_).
+
+Running HTML, XSML, and other supported formats in _Play WebXR_ is simple, just type the URL of your project in the input box and click the "OPEN" button.
+
+![screenshot](playwebxr-screenshot-input.png)
+
+Then you can see your application is opened there:
+
+![screenshot](playwebxr-screenshot-opened.png)
+
+When you opened an application, you can drag, move and remove it as you like in the space. Of course you are able to open another one at the same time.
+
+![screenshot](playwebxr-screenshot-apps.png)
+
+## System Launcher
+
+If you are a Web developer, and not experienced in Android developement, you might not know what's a system launcher, before we introduce how to run, let's learn what's a system launcher.
+
+In Android, a launcher is an application that provides the home screen, it's the first screen that the user sees when they boot up their Android device, it's also the screen where they can place shortcuts to apps and widgets.
+
+In an XR operating system, no matter whether it's Android or not, it also has a launcher application "System Desktop" or "Home" that helps user to manage the applications, widgets and settings. Besides, it also provides the _virtual windows_ to run the window-based applications and _virtual volumes_ to run the 3D applications.
+
+If a system launcher integrates JSAR, it can run the Web applications (pages and WebXR apps) in these _virtual volumes_ and user can interact with them in the "System Desktop".
+
+> Note: because the system launcher integration with Rokid devices is not ready yet, we will introduce when it's ready.
+
+## Visual Studio Code Extension (Only for XSML)
+
+> Note: This extension is only for XSML, if you are using HTML, please refer to the [Classic Web Browser](./quick-start/run#classic-web-browser) section.
+
+![screenshot](howto-run-project.png)
+
+- First, open any `*.xsml` file.
+- Select the opened tab page, and in the upper-right corner, you can find the button to open the scene view.
+- Click the button to open the scene view.
+
+Once the scene view is open, there are two functional buttons:
+
+- Reset Position: Resets the position of the scene view to the origin.
+- Refresh: Reloads the scene view.
+
+You can click these two buttons as needed. Additionally, when you make changes to project files through the editor, the scene view will automatically refresh.

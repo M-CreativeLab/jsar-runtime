@@ -1,0 +1,59 @@
+# Debugging
+
+In the [Interface](developer-tools/intro-gui) section, it was explained how to view the performance of your code in a real environment using the scene tree and property inspector. This section will not provide further explanations on those topics.
+
+## Viewing Local Logs
+
+There are two ways to view local logs.
+
+### Viewing Logs via VSCode Output
+
+![](/vscode-extension-howto-scene-logs.png)
+
+As shown above, JSAR DevTools provides a dedicated output channel to help developers view application logs. Here's how to use it:
+
+1. Print logs using `console` and save them.
+2. Open the Terminal panel in Visual Studio Code.
+3. Select the Output panel.
+4. Choose the output channel "JSAR Scene Logs."
+5. Run XSML again.
+
+### Viewing Logs via Chrome DevTools
+
+While the previous method allows you to see independent logs of spatial apps, the Output panel in Visual Studio Code is designed for viewing text-based logs. If you want to view JavaScript objects as you would in Chrome DevTools Console, follow these steps:
+
+1. Open the command palette with Cmd + Shift + P.
+2. Enter "Developer: Open Webview Developer Tools" and press Enter (make sure you have the preview window open).
+3. A Chrome DevTools window will pop up.
+4. Switch to the Console tab.
+5. Run XSML again.
+
+Using this method, you can interactively view JavaScript objects, but note that it includes all log messages, so you may need to add some identifiers for filtering.
+
+## Real-Device Debugging
+
+JSAR supports real-device debugging in Rokid AR Studio's desktop environment. Here are the steps to follow:
+
+First, open the desktop's quick settings and select "Settings."
+
+![Step 1](device-debugging-00.png)
+
+In the settings, select "Developer Options" and enable "Spatial App Debugging."
+
+![Step 2](device-debugging-01.png)
+
+Then, swipe down one screen on the application list to see that the current spatial app is in debugging mode.
+
+![Step 3](device-debugging-02.png)
+
+Next, open any spatial app project using Visual Studio Code, and you can install the project on the device and debug it in two ways:
+
+1. Open the command palette with Cmd + Shift + P, enter "JSAR: Install to Connected Device," and follow the prompts to select the device.
+2. In the Explorer panel, right-click in a blank area, select "JSAR: Install to Connected Device," and follow the prompts to select the device.
+
+Note: This feature depends on locally installed adb to interact with AOSP devices. The basic adb information is as follows:
+
+```
+Android Debug Bridge version 1.0.41
+Version 34.0.1-9979309
+```

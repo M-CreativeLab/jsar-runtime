@@ -1,0 +1,154 @@
+# Three.js support
+
+![Three.js: JavaScript 3D Library](/logo-threejs.svg 'width=200px,align=left')
+
+[Three.js][] is a popular 3D library that can be used to create 3D scenes in the browser. It is often used for creating games, visualizations, and other interactive experiences.
+
+In this section, you will learn how to use [Three.js][] in JSAR.
+
+## Installation
+
+As the first step, you need to install the library into your HTML:
+
+```html title="index.html"
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>My first three.js app</title>
+  <style>
+    body { margin: 0; }
+  </style>
+</head>
+<body>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
+```
+
+```js title="main.js"
+import * as THREE from 'three';
+
+// ...
+```
+
+Now that we've set up the basic project structure for Three.js, but this doesn't work yet because we haven't installed the library. From Three.js documentation, there are 2 options to do this:
+
+- Install with NPM and a build tool.
+- Import from a CDN.
+
+JSAR recommends the way not building or bundling, so you can choose the second option:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@<version>/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@<version>/examples/jsm/"
+    }
+  }
+</script>
+```
+
+Replace `<version>` with the version you want to use.
+
+With the above setup, you can now use Three.js addons as well:
+
+```js
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const controls = new OrbitControls( camera, renderer.domElement );
+const loader = new GLTFLoader();
+```
+
+You could see [Libraries and Plugins][] for the complete Three.js addons list.
+
+## Create a scene
+
+After the installation, you can start creating a scene with Three.js:
+
+```js
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+const renderer = new THREE.WebGLRenderer({
+  canvas: { // Mock canvas element
+    addEventListener: () => {},
+  },
+  context: navigator.gl,
+});
+```
+
+There is a difference in the renderer setup as you can see. Instead of constructing the renderer via `new THREE.WebGLRenderer()`, at JSAR, you need to pass a mock canvas element and the given WebGL/WebGL2 rendering context.
+
+This is because at the scenario of JSAR, the WebGL context is already created and managed by the XR device, there is no need to create a new one and a new canvas for that. Thus JSAR exposes the context via `navigator.gl` and you can pass it to the renderer.
+
+> Note: `navigator.gl` is a WebGL/WebGL2 rendering context that is created and managed by the runtime.
+
+## Create XR content
+
+In the next step, you can create XR content by using created scene and renderer:
+
+```js
+// 1. Request an XR session
+navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+
+  // 2. Create a XRWebGLLayer and set it to the session
+  const baseLayer = new XRWebGLLayer(session, navigator.gl);
+  session.updateRenderState({ baseLayer });
+
+  // 3. Configure the renderer for the XR session
+  renderer.xr.enabled = true;
+  renderer.xr.setReferenceSpaceType('local');
+  renderer.xr.setSession(session);
+
+  // 4. Write the animation callback
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+});
+```
+
+As the above code snippet shows, by using some of the WebXR APIs and Three.js, you can create an XR scene and start rendering. But there are something to note:
+
+- You don't need a VR button to start the session, this is because JSAR is already in an parent XR session.
+- Only `immersive-ar` session type is supported by JSAR.
+- You need to create a `XRWebGLLayer` with `navigator.gl` still.
+- You need to set the reference space type to `local`, other types are not supported yet.
+
+## Multiview rendering
+
+Multiview rendering in [OpenGLES][] is a technique to render the stereo views of a XR scene in a single draw call, which is more efficient than rendering each view separately.
+
+However the multiview extensions like [`OVR_multiview2`][ovr_multiview2] or [`OCCULUS_multiview`][oculus_multiview] requires shader modifications and some other changes in the framebuffer setup, this might require the JavaScript 3D libraries like Three.js to support it.
+
+```glsl title="vert.glsl"
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+```
+
+JSAR supports the host to use multiview rendering for performance, that means in that environment, using the Three.js that doesn't support multiview rendering won't work as expected, because the Three.js shaders are not compatible with multiview rendering.
+
+To resolve the problem, JSAR release a Three.js fork that supports multiview rendering, you just need to modify the importmap if you want your HTML to be used on multiview rendering:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js",
+      "three/addons/": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/jsm/"
+    }
+  }
+</script>
+```
+
+> Related changes to the Three.js fork can be found at [M-CreativeLab/three.js](https://github.com/M-CreativeLab/three.js).
+
+[Three.js]: https://threejs.org/
+[Libraries and Plugins]: https://threejs.org/docs/#manual/en/introduction/Libraries-and-Plugins
+[OpenGLES]: https://www.khronos.org/opengles/
+[ovr_multiview2]: https://registry.khronos.org/OpenGL/extensions/OVR/OVR_multiview2.txt
+[oculus_multiview]: https://developers.meta.com/horizon/documentation/web/web-multiview/

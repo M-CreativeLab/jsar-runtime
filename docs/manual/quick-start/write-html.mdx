@@ -1,0 +1,152 @@
+# Write your first HTML
+
+The way to get started JSAR is the same as creating a Web page, developer can create a simple `index.html` file with the following content:
+
+```html title="index.html"
+<html>
+<head>
+  <title>My First WebXR</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+
+    const light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.set(0, 1, 1);
+    scene.add(light);
+
+    const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
+    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: false });
+    const obj = new THREE.Mesh(geometry, material);
+    scene.add(obj);
+
+    navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+      const baseLayer = new XRWebGLLayer(session, navigator.gl);
+      session.updateRenderState({ baseLayer });
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: {
+          // mock the canvas
+          addEventListener() { },
+        },
+        context: navigator.gl,
+      });
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      renderer.xr.setSession(session);
+
+      function animate() {
+        obj.rotation.x += 0.01;
+        obj.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      camera.position.z = 5;
+      renderer.setAnimationLoop(animate);
+    }, (err) => {
+      console.warn('Failed to start XR session:', err);
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
+```
+
+Now let's explain the code above one by one.
+
+## Using `importmap` script
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"
+    }
+  }
+</script>
+```
+
+The [`importmap`][] feature is convinient to configure the import path of the modules, in this case, import the `three` module will be resolved to the URL `https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js`.
+
+```html
+<script type="module">
+  import * as THREE from 'three';
+  // ...
+</script>
+```
+
+[`importmap`]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap
+
+## Create `three` renderer
+
+At traditional Web browser, to get 3d library to work, developer needs to create a canvas to get the WebGL context, then create library's renderer to start rendering.
+
+```js
+const renderer = new THREE.WebGLRenderer();
+```
+
+The above line would call `document.createElement('canvas')` to create a canvas. Developer is able to pass a canvas element to the constructor to use it as the rendering canvas.
+
+```js
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('custom-canvas') });
+```
+
+In traditional Web browser, the render target is the browser window, but in JSAR, all applications (including WebXR and host) are sharing the same render target, that means the WebGL context is also shared. To create a `three` renderer:
+
+```js
+const gl = navigator.gl;
+const renderer = new THREE.WebGLRenderer({
+  canvas: {
+    // mock the canvas
+    addEventListener() { },
+  },
+  context: gl,
+});
+```
+
+JSAR runtime exposes a new __readonly__ property `gl: WebGL2RenderingContext` on the `navigator` object, application could use this property to make draw calls on the shared context.
+
+## Request an XR session
+
+In JSAR, developer doesn't need a AR/VR button to trigger the XR session, developer could request the session directly because the device is already in XR mode:
+
+```js
+navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+  const baseLayer = new XRWebGLLayer(session, navigator.gl);
+  session.updateRenderState({ baseLayer });
+
+  renderer.xr.enabled = true;
+  renderer.xr.setReferenceSpaceType('local');
+  renderer.xr.setSession(session);
+});
+```
+
+The above code is how to configure the three.js library to work with WebXR, the same code could be used in traditional Web browser.
+
+## Start the animation loop
+
+Now both the `three` renderer and WebXR configuration are ready, the last step is to start the animation loop:
+
+```js
+function animate() {
+  obj.rotation.x += 0.01;
+  renderer.render(scene, camera);
+}
+renderer.setAnimationLoop(animate);
+```
+
+Three.js `renderer.setAnimationLoop` method is used to start the animation loop, internally it will call the `XRSession`'s `requestAnimationFrame` method to get the next frame callback and render the scene at that time.
+
+## Next
+
+In the next section, we will introduce the [XSML][] part to get started, this is optional to the new-comers because [XSML][] will be deprecated.
+
+[XSML]: https://jsar.netlify.app/en-us/manual/0.2.1/basic-concepts/intro-xsml

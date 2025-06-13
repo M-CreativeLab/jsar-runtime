@@ -1,0 +1,66 @@
+# Spaces
+
+This section will introduce what's space and space-related fundamental concepts.
+
+## Space
+
+In the context of augmented reality (AR), a space refers to an area in the real world, which can be a flat surface or a three-dimensional object. Users interact with the space to obtain information about the space, such as its size, position, rotation, and more. In XR development, a scene is typically used to represent and encapsulate one or more spaces.
+
+![Space Example](intro-subspace-in-deskstop.png)
+
+For instance, the _YodaOS-Master_ system desktop (as shown in the image above) is a space. Users can see a series of virtual screens (surfaces) arranged in the space, and there may also be independent objects in the space. All of these surfaces and objects collectively constitute the desktop space, but each screen or object can be considered a subspace.
+
+> __YodaOS-Master__ is an XR operating system developed by [Rokid][], which is based on [Android Open Source Project (AOSP)](https://source.android.com/) and designed for AR glasses.
+
+[Rokid]: https://global.rokid.com/
+
+## Degrees of Freedom (DoF)
+
+In the field of augmented reality and virtual reality, the term "degrees of freedom" (DoF) is often used to describe the level of realism in a space. Higher degrees (&lt;=6) of freedom indicate a more realistic space.
+
+In general, the movement of an object in space can be described in terms of position and rotation. Position includes the offset along the X, Y, and Z axes, while rotation involves the angles of rotation around these axes (pitch, yaw, and roll). Therefore, when an object moves in a space, it exhibits changes in position and orientation. The number of parameters used to describe these changes is referred to as degrees of freedom (DoF).
+
+### 0 DoF
+
+0 DoF (Zero Degree of Freedom) refers to a space where the observer has a fixed viewpoint and cannot move or change their perspective.
+
+> __Observer__ refers to the person or device that is viewing the space. However in the context of XR development, the observer is typically the user itself.
+
+![0 DoF Space](space-0dof.gif)
+
+### 3 DoF
+
+3 DoF (Three Degrees of Freedom) refers to a space where the observer has three degrees of freedom, typically related to the space's orientation.
+
+In virtual spaces, if a camera or observer only changes its orientation while maintaining a fixed position, the space is said to have 3 DoF. This means that objects within the virtual space can move programmatically, but the observer's position remains fixed, and they observe the virtual space from different orientations.
+
+![3 DoF Space](space-3dof.gif)
+
+### 6 DoF
+
+6 DoF (Six Degrees of Freedom) refers to a space where the observer has six degrees of freedom, including both position and orientation.
+
+In virtual spaces, if a camera or observer can change both its position and orientation, the space is said to have 6 DoF. The observer can freely move and rotate within the space, providing a high level of realism.
+
+![6 DoF Space](space-6dof.gif)
+
+## Embeddable Spaces
+
+So, what are embeddable spaces, also known as subspaces?
+
+An embeddable space, or subspace, is a complete space containing objects that can be embedded within another space as a component. This allows us to:
+
+- Move, rotate, and scale the embedded space from the parent space.
+- Interact with objects of the embedded space directly.
+- Combine multiple embedded spaces within a parent space to create more complex spatial experiences.
+
+The key technical challenge in embeddable spaces is how to embed/composite a space into another space (the host space) without interfering with the host space or other embedded spaces. This is referred to as space safety. In a host space, it's similar to:
+
+1. Different web pages running in the same web browser without interfering with each other, demonstrating browser security.
+2. Multiple windows operating on the same screen in a windowing system, where each window does not disrupt the others, demonstrating windowing system security.
+
+Embeddable spaces are the most important fundamental concept in JSAR, because one of the main objectives of JSAR is to open Web pages and WebXR applications in an embeddable space, allowing users to interact with them in a 3D environment. With this capability, users can view and interact with multiple Web contents simultaneously in a single XR space.
+
+## Next
+
+In the next section, you will learn about the [Input Sources](./basic-concepts/input-sources) in XR development.

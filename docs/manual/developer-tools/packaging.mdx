@@ -1,0 +1,9 @@
+# Packaging
+
+With JSAR DevTools, you can package your spatial app into a standalone file for future distribution.
+
+> Currently, the packaged spatial app must be smaller than 10MB. If the extension detects that the app exceeds this limit during packaging, it will prompt for packaging failure. Developers can use the [`gltf-transform`](https://gltf-transform.dev/) tool for model compression or other optimization methods to reduce the size of the app.
+
+![howto-pack-project](./howto-pack-project.png)
+
+As shown in the image above, right-click in the empty space of your project, and select "JSAR: Package" to package the project. Afterward, you'll find a `{name}-{version}.zip` file in the current directory, where `name` and `version` are the name and version specified in your `package.json` file.
