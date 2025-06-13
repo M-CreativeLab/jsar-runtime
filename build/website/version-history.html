@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本历史 - JSAR Runtime</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>版本历史</h1>
+            <p>JSAR Runtime 的发布历史和更新日志</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="api-compatibility.html">API 兼容性</a></li>
+                <li><a href="version-history.html">版本历史</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <section class="compatibility-section">
+                <h2>发布版本</h2>
+                <table class="api-table"><thead><tr><th>版本</th><th>发布日期</th><th>发布说明</th></tr></thead><tbody><tr>
+        <td><span class="version-badge">0.7.3</span></td>
+        <td>2024-03-01</td>
+        <td></td>
+      </tr><tr>
+        <td><span class="version-badge">0.7.2</span></td>
+        <td>2024-01-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v072" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr><tr>
+        <td><span class="version-badge">0.7.1</span></td>
+        <td>2023-11-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v071" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr><tr>
+        <td><span class="version-badge">0.7.0</span></td>
+        <td>2023-09-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v070" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr><tr>
+        <td><span class="version-badge">0.6.0</span></td>
+        <td>2023-06-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v060" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr><tr>
+        <td><span class="version-badge">0.5.0</span></td>
+        <td>2023-03-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v050" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr><tr>
+        <td><span class="version-badge">0.4.0</span></td>
+        <td>2023-01-01</td>
+        <td><a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v040" class="mdn-link" target="_blank">查看说明</a></td>
+      </tr></tbody></table>
+            </section>
+
+            <section class="compatibility-section">
+                <h2>详细更新日志</h2>
+                <div class="changelog-content">
+                    <h2>JSAR Alpha Changelog</h2><p>The alpha version of JSAR is the first version of the project.</p><h3>v0.7.2</h3><h4>New Features & Improvements</h4><p>#### Rendering Enhancements</p><ul><li>WebGL Improvements:</li></ul>
+<p>  - Optimized WebGL texture handling with anisotropic filtering.</p>
+<p>  - Improved support for the <code>EXT_texture_filter_anisotropic</code> extension.</p>
+<p>  - Enhanced WebGL context attributes for better XR compatibility.</p><p>#### DOM Updates</p><ul><li>Event Handling:</li></ul>
+<p>  - Added new event constructor types including <code>MouseEvent</code>, <code>PointerEvent</code>, and <code>XRSessionEvent</code>.</p>
+<p>  - Enhanced <code>EventTarget</code> to provide detailed event type mappings and dispatching.</p>
+<ul><li>Document Features:</li></ul>
+<p>  - Introduced <code>Document.timeline</code> for animation timelines.</p>
+<p>  - Enhanced <code>Document.appendStyleSheet()</code> to manage styles dynamically.</p><p>#### HTML Enhancements</p><ul><li>Image Element:</li></ul>
+<p>  - Improved <code><img></code> element to handle <code>onload</code> and <code>onerror</code> events asynchronously.</p>
+<p>  - Optimized image decoding with fallback mechanisms for error handling.</p>
+<ul><li>Web Content Updates:</li></ul>
+<p>  - Added support for logical dimensions (<code>logicalWidth</code> and <code>logicalHeight</code>) for web content rendering.</p>
+<p>  - Improved device pixel ratio handling in <code>WebContent</code>.</p><h4>Fixes & Optimizations</h4><p>#### Performance Optimizations</p><ul><li>Rendering Pipeline:</li></ul>
+<p>  - Optimized text and element rendering by marking dirty nodes and reducing unnecessary updates.</p>
+<p>  - Improved layout computation efficiency for dynamic content.</p>
+<ul><li>Event Dispatch:</li></ul>
+<p>  - Fixed hit testing for mouse events to handle <code>mouseleave</code> and <code>mouseout</code> scenarios properly.</p><p>#### Bug Fixes</p><ul><li>Fixed issues with <code>CSSStyleDeclaration</code> caching to ensure seamless style updates.</li></ul>
+<ul><li>Resolved memory leaks in image decoding processes.</li></ul>
+<ul><li>Addressed rendering bugs for logical dimensions in <code>WebContent</code>.</li></ul>
+<ul><li>Fixed service memory leaks in destroying content processes.</li></ul>
+<ul><li>Added maximum size for the image and texture at client-side and server-side to prevent out of memory issues.</li></ul>
+<ul><li>Fixed the resource caching issues, now the caching follows the standard HTTP caching rules.</li></ul><h3>v0.7.1</h3><h4>​​New Features & Improvements​​</h4><p>#### ​​Layout System Overhaul​​</p><ul><li>​<strong>​Refactored layout system</strong>​​ to align with the standard <strong>​​CSS Box Model​​</strong>.</li></ul>
+<p>  - Added ​<strong>​scrolling and overflow</strong> support​.</p>
+<p>  - Introduced ​​<strong>CSS Grid Layout</strong>​​ support.</p><p>#### New DOM APIs</p><ul><li><strong>Node Manipulation</strong></li></ul>
+<p>  - <code>Node.previousSibling</code></p>
+<p>  - <code>Node.replaceChild()</code></p>
+<p>  - <code>Node.removeChild()</code></p>
+<p>  - <code>Node.cloneNode()</code></p>
+<p>  - <code>Node.nextSibling</code></p>
+<p>  - <code>Node.insertBefore()</code></p>
+<ul><li>​<strong>​Element Properties & Methods</strong></li></ul>
+<p>  - <code>Element.innerHTML</code> (getter & setter)</p>
+<p>  - <code>Element.before()</code> & <code>Element.after()</code></p>
+<ul><li><strong>Element Events</strong></li></ul>
+<p>  - click – Fired when the primary button is clicked.</p>
+<p>  - mousedown – Fired when the primary button is pressed.</p>
+<p>  - mouseup – Fired when the primary button is released.</p>
+<p>  - mousemove – Fired when the mouse moves over the element.</p>
+<p>  - mouseover – Fired when the mouse enters the element.</p>
+<p>  - mouseout – Fired when the mouse leaves the element.</p>
+<ul><li><strong>​​Document APIs</strong></li></ul>
+<p>  - <code>Document.querySelector()</code> & <code>Document.querySelectorAll()</code>.</p>
+<p>  - <code>Document.createTextNode()</code>.</p>
+<p>  - Added <code>DocumentFragment</code> support.</p><p>#### ​​HTML & CSS Enhancements​​</p><ul><li>​<strong>​Dataset Support​</strong>​ – Added <code>data-*</code> attribute handling for HTML elements.</li></ul>
+<ul><li><strong>​​MutationObserver</strong>​​ – Now supports observing DOM tree changes.</li></ul>
+<ul><li>​<strong>​New HTML Elements</strong></li></ul>
+<p>  - <code><link></code> (<code>HTMLLinkElement</code>) – Supports loading external CSS via href.</p>
+<p>  - <code><template></code> (<code>HTMLTemplateElement</code>)</p>
+<p>  - ​​<strong>Semantic Elements</strong>:​​ <code><header></code>, <code><footer></code>, <code><main></code>, <code><section></code>.</p>
+<ul><li><strong>CSS Properties</strong></li></ul>
+<p>  - <code>text-transform</code> – Supports uppercase, lowercase, and capitalize.</p><p>#### ​​Performance Optimizations​​</p><ul><li><strong>​​ECS (Entity-Component-System):​​</strong></li></ul>
+<p>  - Optimized queryEntities() with a ​​new caching system​​.</p>
+<ul><li><strong>Rendering</strong></li></ul>
+<p>  - Improved efficiency by <strong>​​skipping rendering of overflow images​​</strong>.</p><h3>v0.7.0</h3><ul><li>Supports the rendering for HTML elements with high performance, both elements rendering in the two draw calls.</li></ul>
+<ul><li>Supports update the elements in 3D via the CSS transform functions such as <code>translate</code>, <code>rotate</code>, and <code>scale</code>.</li></ul>
+<ul><li>Open as HTML document by default.</li></ul>
+<ul><li>Add inspector support to debug the rendering backend issues.</li></ul><h3>v0.6.0</h3><ul><li>HTML is introduced as the main entry point to start an application.</li></ul>
+<p>  - Include the following elements (element rendering is not working yet):</p>
+<p>    - <code><audio></code></p>
+<p>    - <code><body></code></p>
+<p>    - <code><canvas></code></p>
+<p>    - <code><div></code></p>
+<p>    - <code><head></code></p>
+<p>    - <code><html></code></p>
+<p>    - <code><img></code></p>
+<p>    - <code><meta></code></p>
+<p>    - <code><p></code></p>
+<p>    - <code><script></code></p>
+<p>    - <code><span></code></p>
+<p>    - <code><video></code></p>
+<p>  - Add scripting and module system support:</p>
+<p>    - Scripting: JavaScript & TypeScript</p>
+<p>    - ECMAScript Modules</p>
+<p>  - Add Web Canvas API: <code>HTMLCanvasElement</code> and <code>OffscreenCanvas</code>.</p>
+<p>  - Add <code>location</code> object to support parsing the request URL.</p>
+<p>  - Add <code>window.open(url)</code> to open a new window (this depends on the embedder).</p>
+<p>  - Add <code>window.close()</code> to close the current application.</p>
+<p>  - Add <code>document.head</code> and <code>document.body</code> to access the head and body elements.</p>
+<p>  - Add <code>getElementById(id)</code> to get an element by its ID.</p>
+<p>  - Add <code>getElementsByTagName(tagName)</code> and <code>getElementsByName(name)</code> to get elements by tag name and name.</p>
+<ul><li>WebGL:</li></ul>
+<p>  - Fix the extension <code>OVR_multiview2</code> constant values.</p>
+<p>  - Implement the WebGL method: <code>gl.hint()</code>.</p>
+<p>  - Implement the WebGL method: <code>gl.lineWidth()</code>.</p>
+<p>  - Implement the WebGL method: <code>gl.texParameterf()</code>.</p>
+<ul><li>Support running three.js projects in HTML.</li></ul>
+<ul><li>Support running Babylon.js projects in HTML.</li></ul><h3>v0.5.0</h3><ul><li>Added ability to support Unity Universal RP.</li></ul>
+<ul><li>Added ability to support more stereo rendering modes: <code>SinglePass</code>, <code>SinglePassInstanced</code>, and <code>SinglePassMultiview</code>.</li></ul>
+<ul><li>Fixed the GLES state managment for stencil buffer and color mask.</li></ul><h3>v0.4.0</h3><ul><li>Added the WebGL 1.0 APIs.</li></ul>
+<ul><li>Added the WebGL 2.0 APIs partially.</li></ul>
+<ul><li>Added the WebXR Device APIs:</li></ul>
+<p>  - Rendering: <code>XRFrame</code>, <code>XRView</code>, <code>XRViewport</code>, <code>XRWebGLLayer</code></p>
+<p>  - Input Sources: <code>XRInputSource</code>, <code>XRInputSourceArray</code>, <code>XRInputSourceEvent</code></p>
+<p>  - Spaces: <code>XRSpace</code>, <code>XRReferenceSpace</code>, <code>XRViewSpace</code>, <code>XRLocalSpace</code>, <code>XRWorldSpace</code></p>
+<ul><li>Added the basic input sources: gaze and hand.</li></ul>
+<ul><li>Added the <code>audio</code> implementation with the audio spatialization support.</li></ul>
+<p></p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 JSAR Runtime. 基于 MIT 许可证开源。</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

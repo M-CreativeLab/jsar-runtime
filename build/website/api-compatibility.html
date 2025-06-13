@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 兼容性 - JSAR Runtime</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>API 兼容性</h1>
+            <p>了解 JSAR 中支持的 Web API</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="index.html">首页</a></li>
+                <li><a href="api-compatibility.html">API 兼容性</a></li>
+                <li><a href="version-history.html">版本历史</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">总 API 数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">已支持</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">部分支持</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">未支持</div>
+                </div>
+            </section>
+
+            <section class="compatibility-section">
+                <div class="search-filter">
+                    <input type="text" id="api-search" placeholder="搜索 API...">
+                    <select id="status-filter">
+                        <option value="">所有状态</option>
+                        <option value="supported">已支持</option>
+                        <option value="partial">部分支持</option>
+                        <option value="not-supported">未支持</option>
+                    </select>
+                    <select id="category-filter">
+                        <option value="">所有类别</option>
+                        <option value="dom">DOM API</option>
+                        <option value="webgl">WebGL</option>
+                        <option value="html">HTML 元素</option>
+                        <option value="worker">Web Workers</option>
+                        <option value="canvas">Canvas</option>
+                    </select>
+                </div>
+                
+                <p>显示 <span id="visible-count">10</span> 个 API</p>
+
+                <div class="category-header">DOM API</div><table class="api-table"><thead><tr><th>API</th><th>描述</th><th>支持状态</th><th>版本</th><th>MDN 链接</th></tr></thead><tbody><tr data-category="dom">
+            <td><strong>Document</strong></td>
+            <td>Document 接口表示任何在浏览器中载入的网页</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.6.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/Document" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="dom">
+            <td><strong>DocumentFragment</strong></td>
+            <td>DocumentFragment 接口表示一个没有父级文件的最小文档对象</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.7.1</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/DocumentFragment" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="dom">
+            <td><strong>HTMLDocument</strong></td>
+            <td>HTMLDocument 接口是 HTML 文档的根接口</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.6.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/HTMLDocument" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="dom">
+            <td><strong>HTMLElement</strong></td>
+            <td>HTMLElement 接口表示所有的 HTML 元素</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.6.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/HTMLElement" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="dom">
+            <td><strong>MutationObserver</strong></td>
+            <td>MutationObserver 接口提供了监视对 DOM 树所做更改的能力</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.7.1</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/MutationObserver" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr></tbody></table>
+                <div class="category-header">WebGL API</div><table class="api-table"><thead><tr><th>API</th><th>描述</th><th>支持状态</th><th>版本</th><th>MDN 链接</th></tr></thead><tbody><tr data-category="webgl">
+            <td><strong>WebGLRenderingContext</strong></td>
+            <td>WebGL 1.0 渲染上下文</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.4.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/WebGLRenderingContext" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="webgl">
+            <td><strong>WebGL2RenderingContext</strong></td>
+            <td>WebGL 2.0 渲染上下文</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.4.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/WebGL2RenderingContext" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr></tbody></table>
+                <div class="category-header">HTML 元素</div><table class="api-table"><thead><tr><th>元素</th><th>描述</th><th>支持状态</th><th>版本</th><th>MDN 链接</th></tr></thead><tbody></tbody></table>
+                <div class="category-header">Web Workers</div><table class="api-table"><thead><tr><th>API</th><th>描述</th><th>支持状态</th><th>版本</th><th>MDN 链接</th></tr></thead><tbody><tr data-category="worker">
+          <td><strong>Worker</strong></td>
+          <td>Web Workers API 用于在后台线程中运行脚本</td>
+          <td><span class="support-status supported">✅ 支持</span></td>
+          <td><span class="version-badge">0.6.0</span></td>
+          <td><a href="https://developer.mozilla.org/docs/Web/API/Worker" class="mdn-link" target="_blank">查看文档</a></td>
+        </tr></tbody></table>
+                <div class="category-header">Canvas API</div><table class="api-table"><thead><tr><th>API</th><th>描述</th><th>支持状态</th><th>版本</th><th>MDN 链接</th></tr></thead><tbody><tr data-category="canvas">
+            <td><strong>HTMLCanvasElement</strong></td>
+            <td>HTML Canvas 元素接口</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.6.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr><tr data-category="canvas">
+            <td><strong>OffscreenCanvas</strong></td>
+            <td>离屏 Canvas 接口</td>
+            <td><span class="support-status supported">✅ 支持</span></td>
+            <td><span class="version-badge">0.6.0</span></td>
+            <td><a href="https://developer.mozilla.org/docs/Web/API/OffscreenCanvas" class="mdn-link" target="_blank">查看文档</a></td>
+          </tr></tbody></table>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 JSAR Runtime. 基于 MIT 许可证开源。</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
