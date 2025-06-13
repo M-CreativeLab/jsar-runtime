@@ -49,19 +49,16 @@ integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and 
 
 ## Overview
 
-### Request Formats
+### Supported URL Formats to Request
 
-Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats JSAR is expected to support:
+Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as SVG, 3D models, etc. The following formats is expected to support:
 
 | Format   | Status      | Recommended Use Case       |
 | -------- | ----------- | -------------------------- |
 | HTML     | Partially   | Browsing classic Web pages |
-| PDF      | Not started | Reading PDF documents      |
-| SVG      | Not started | Displaying SVG images      |
 | GLTF     | Ok          | Displaying 3D models       |
 | JPEG/PNG | Ok          | Viewing images             |
-
-> XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers but deprecated.
+| SVG      | Not started | Displaying SVG images      |
 
 ### Scripting & Modules
 
