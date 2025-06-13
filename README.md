@@ -60,7 +60,6 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | SVG      | Not started | Displaying SVG images      |
 | GLTF     | Ok          | Displaying 3D models       |
 | JPEG/PNG | Ok          | Viewing images             |
-| XSML     | Deprecated  | Using WebXR applications   |
 
 > XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers but deprecated.
 
