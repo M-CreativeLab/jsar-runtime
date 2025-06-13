@@ -4,7 +4,7 @@
     JSAR: a revolutionary <b>Browser Engine Library</b> designed for Metaverse.
     <br>
     <br>
-    <a href="https://jsar.rocks/en-us/manual/latest/introduction">Documentation</a>
+    <a href="/docs/manual/introduction.mdx">User Manual</a>
     ·
     <a href="https://deepwiki.com/m-creativelab/jsar-runtime">DeepWiki</a>
   </p>
