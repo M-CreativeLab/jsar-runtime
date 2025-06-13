@@ -1,0 +1,68 @@
+{
+  "api": {
+    "WebGLRenderingContext": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/WebGLRenderingContext",
+        "spec_url": "https://www.khronos.org/registry/webgl/specs/latest/1.0/",
+        "support": {
+          "jsar": {
+            "version_added": "0.4.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "hint": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/WebGLRenderingContext/hint",
+          "spec_url": "https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.3",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "lineWidth": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/WebGLRenderingContext/lineWidth",
+          "spec_url": "https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.3",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "texParameterf": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/WebGLRenderingContext/texParameter",
+          "spec_url": "https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.8",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

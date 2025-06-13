@@ -88,7 +88,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#global-attributes:classes-2",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -136,7 +136,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#attr-data-*",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.7.1"
             }
           },
           "status": {
@@ -252,7 +252,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#global-attributes:the-id-attribute-2",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -442,7 +442,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute",
           "support": {
             "jsar": {
-              "version_added": false
+              "version_added": "0.7.0"
             }
           },
           "status": {

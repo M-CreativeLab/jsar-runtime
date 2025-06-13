@@ -1,0 +1,22 @@
+{
+  "html": {
+    "elements": {
+      "div": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/div",
+          "spec_url": "https://html.spec.whatwg.org/multipage/grouping-content.html#the-div-element",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

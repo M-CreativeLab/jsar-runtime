@@ -1,0 +1,22 @@
+{
+  "html": {
+    "elements": {
+      "footer": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/footer",
+          "spec_url": "https://html.spec.whatwg.org/multipage/sections.html#the-footer-element",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

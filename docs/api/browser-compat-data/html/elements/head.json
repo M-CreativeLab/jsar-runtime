@@ -1,0 +1,22 @@
+{
+  "html": {
+    "elements": {
+      "head": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/head",
+          "spec_url": "https://html.spec.whatwg.org/multipage/document-metadata.html#the-head-element",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

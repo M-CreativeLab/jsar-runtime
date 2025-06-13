@@ -1,9 +1,9 @@
 {
   "api": {
-    "HTMLDocument": {
+    "OffscreenCanvas": {
       "__compat": {
-        "mdn_url": "https://developer.mozilla.org/docs/Web/API/HTMLDocument",
-        "spec_url": "https://html.spec.whatwg.org/multipage/nav-history-apis.html#htmldocument",
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/OffscreenCanvas",
+        "spec_url": "https://html.spec.whatwg.org/multipage/canvas.html#offscreencanvas",
         "support": {
           "jsar": {
             "version_added": "0.6.0"

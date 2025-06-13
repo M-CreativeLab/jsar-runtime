@@ -1,0 +1,36 @@
+{
+  "api": {
+    "HTMLCanvasElement": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement",
+        "spec_url": "https://html.spec.whatwg.org/multipage/canvas.html#htmlcanvaselement",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "getContext": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement/getContext",
+          "spec_url": "https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "api": {
+    "Document": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document",
+        "spec_url": "https://dom.spec.whatwg.org/#interface-document",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "getElementById": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/getElementById",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-nonelementparentnode-getelementbyid",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "getElementsByTagName": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/getElementsByTagName",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-document-getelementsbytagname",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "getElementsByName": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/getElementsByName",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#dom-document-getelementsbyname",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "querySelector": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/querySelector",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-parentnode-queryselector",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "querySelectorAll": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/querySelectorAll",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-parentnode-queryselectorall",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "createTextNode": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/createTextNode",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-document-createtextnode",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "head": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/head",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#dom-document-head",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "body": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/body",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#dom-document-body",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "timeline": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Document/timeline",
+          "spec_url": "https://www.w3.org/TR/web-animations-1/#dom-document-timeline",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.2"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

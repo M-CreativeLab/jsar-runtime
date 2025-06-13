@@ -7,7 +7,35 @@
       "pref_url": "jsar://flags",
       "accepts_flags": true,
       "accepts_webextensions": false,
-      "releases": {}
+      "releases": {
+        "0.4.0": {
+          "release_date": "2023-01-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v040"
+        },
+        "0.5.0": {
+          "release_date": "2023-03-01", 
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v050"
+        },
+        "0.6.0": {
+          "release_date": "2023-06-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v060"
+        },
+        "0.7.0": {
+          "release_date": "2023-09-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v070"
+        },
+        "0.7.1": {
+          "release_date": "2023-11-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v071"
+        },
+        "0.7.2": {
+          "release_date": "2024-01-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v072"
+        },
+        "0.7.3": {
+          "release_date": "2024-03-01"
+        }
+      }
     }
   }
 }

@@ -1,0 +1,37 @@
+{
+  "html": {
+    "elements": {
+      "link": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/link",
+          "spec_url": "https://html.spec.whatwg.org/multipage/document-metadata.html#the-link-element",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "rel_stylesheet": {
+          "__compat": {
+            "description": "rel=\"stylesheet\" for CSS loading",
+            "support": {
+              "jsar": {
+                "version_added": "0.7.1"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

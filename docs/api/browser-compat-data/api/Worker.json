@@ -6,7 +6,7 @@
         "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface",
         "support": {
           "jsar": {
-            "version_added": "1"
+            "version_added": "0.6.0"
           }
         },
         "status": {
@@ -22,7 +22,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-dev",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -39,7 +39,7 @@
             ],
             "support": {
               "jsar": {
-                "version_added": "1"
+                "version_added": "0.6.0"
               }
             },
             "status": {
@@ -69,7 +69,7 @@
             "description": "<code>options.name</code> parameter",
             "support": {
               "jsar": {
-                "version_added": "1"
+                "version_added": "0.6.0"
               }
             },
             "status": {
@@ -87,7 +87,7 @@
             ],
             "support": {
               "jsar": {
-                "version_added": "1"
+                "version_added": "0.6.0"
               }
             },
             "status": {
@@ -103,7 +103,7 @@
           "description": "Available in workers",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -120,7 +120,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#handler-abstractworker-onerror",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -137,7 +137,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/indices.html#event-message",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -154,7 +154,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/indices.html#event-messageerror",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -170,7 +170,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage-dev",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
@@ -186,7 +186,7 @@
           "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate-dev",
           "support": {
             "jsar": {
-              "version_added": "1"
+              "version_added": "0.6.0"
             }
           },
           "status": {
