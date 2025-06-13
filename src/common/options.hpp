@@ -58,6 +58,8 @@ enum class TrScriptRunMode
  */
 class TrDocumentRequestInit final
 {
+  static constexpr uint32_t INSPECTOR_PORT_BASE = 9801;
+
 public:
   TrDocumentRequestInit() = default;
   TrDocumentRequestInit(TrDocumentRequestInit &that) = default;
@@ -79,6 +81,7 @@ public:
     }
     return "dangerously";
   }
+  uint32_t inspectorPort() const { return INSPECTOR_PORT_BASE + id; }
 
 public:
   std::string url;
