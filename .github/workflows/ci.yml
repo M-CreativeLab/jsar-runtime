@@ -25,7 +25,7 @@ jobs:
       - name: Setup clang-format
         uses: aminya/setup-cpp@v1
         with:
-          clangformat: 14
+          clangformat: 20
 
       - name: Install dependencies
         run: npm ci
