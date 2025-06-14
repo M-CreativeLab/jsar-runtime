@@ -18,9 +18,18 @@ namespace bindings
     XRRigidTransform(const Napi::CallbackInfo &info);
 
   public:
-    inline const glm::vec3 &position() const { return data_.position(); }
-    inline const glm::quat &orientation() const { return data_.orientation(); }
-    inline const glm::mat4 &matrix() const { return data_.matrix(); }
+    inline const glm::vec3 &position() const
+    {
+      return data_.position();
+    }
+    inline const glm::quat &orientation() const
+    {
+      return data_.orientation();
+    }
+    inline const glm::mat4 &matrix() const
+    {
+      return data_.matrix();
+    }
 
   private:
     Napi::Value InverseGetter(const Napi::CallbackInfo &info);

@@ -11,8 +11,8 @@ namespace jsar::example
   {
   public:
     XRStereoscopicRenderer(WindowContext *windowCtx)
-        : windowCtx(windowCtx),
-          viewer_position_(0.0f, 0.0f, 0.35f)
+        : windowCtx(windowCtx)
+        , viewer_position_(0.0f, 0.0f, 0.35f)
     {
       float eyeOffset = XR_EYE_SPAN / 2;
       {
@@ -35,7 +35,10 @@ namespace jsar::example
     }
 
   public:
-    glm::vec3 viewerPosition() { return viewer_position_; }
+    glm::vec3 viewerPosition()
+    {
+      return viewer_position_;
+    }
     glm::vec3 eyePosition(int eyeIndex)
     {
       assert(eyeIndex < 2);
@@ -63,14 +66,15 @@ namespace jsar::example
     {
       assert(eyeIndex < 2);
       auto viewBaseMatrix =
-          glm::translate(glm::mat4(1.0f), eye_position_[eyeIndex]) * glm::mat4_cast(eye_orientation_[eyeIndex]);
+        glm::translate(glm::mat4(1.0f), eye_position_[eyeIndex]) * glm::mat4_cast(eye_orientation_[eyeIndex]);
       return glm::inverse(viewBaseMatrix);
     }
     glm::mat4 getProjectionMatrix()
     {
       return glm::perspective(glm::radians(fov),
                               windowCtx->aspect / 2, // aspect ratio for each eye
-                              near, far);
+                              near,
+                              far);
     }
     void moveViewerForward(float zOffset)
     {

@@ -19,7 +19,7 @@ namespace dom
       node = this->at(index);
 
     return node == nullptr
-               ? nullptr
-               : const_pointer_cast<Node>(node);
+             ? nullptr
+             : const_pointer_cast<Node>(node);
   }
 }

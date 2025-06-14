@@ -221,19 +221,24 @@ namespace crates::css2
       public:
         GenericMatrix() = default;
         GenericMatrix(T a, T b, T c, T d, T e, T f)
-            : a(a), b(b), c(c), d(d), e(e), f(f)
+            : a(a)
+            , b(b)
+            , c(c)
+            , d(d)
+            , e(e)
+            , f(f)
         {
         }
 
         template <typename U = T>
         explicit GenericMatrix(const holocron::css::values::specified::NumberMatrix &inner,
                                typename std::enable_if<std::is_same<U, specified::Number>::value>::type * = nullptr)
-            : a(holocron::css::values::specified::getNumberMatrixItem(inner, 0)),
-              b(holocron::css::values::specified::getNumberMatrixItem(inner, 1)),
-              c(holocron::css::values::specified::getNumberMatrixItem(inner, 2)),
-              d(holocron::css::values::specified::getNumberMatrixItem(inner, 3)),
-              e(holocron::css::values::specified::getNumberMatrixItem(inner, 4)),
-              f(holocron::css::values::specified::getNumberMatrixItem(inner, 5))
+            : a(holocron::css::values::specified::getNumberMatrixItem(inner, 0))
+            , b(holocron::css::values::specified::getNumberMatrixItem(inner, 1))
+            , c(holocron::css::values::specified::getNumberMatrixItem(inner, 2))
+            , d(holocron::css::values::specified::getNumberMatrixItem(inner, 3))
+            , e(holocron::css::values::specified::getNumberMatrixItem(inner, 4))
+            , f(holocron::css::values::specified::getNumberMatrixItem(inner, 5))
         {
         }
 
@@ -263,36 +268,45 @@ namespace crates::css2
       {
       public:
         GenericMatrix3D() = default;
-        GenericMatrix3D(T m11, T m12, T m13, T m14,
-                        T m21, T m22, T m23, T m24,
-                        T m31, T m32, T m33, T m34,
-                        T m41, T m42, T m43, T m44)
-            : m11(m11), m12(m12), m13(m13), m14(m14),
-              m21(m21), m22(m22), m23(m23), m24(m24),
-              m31(m31), m32(m32), m33(m33), m34(m34),
-              m41(m41), m42(m42), m43(m43), m44(m44)
+        GenericMatrix3D(T m11, T m12, T m13, T m14, T m21, T m22, T m23, T m24, T m31, T m32, T m33, T m34, T m41, T m42, T m43, T m44)
+            : m11(m11)
+            , m12(m12)
+            , m13(m13)
+            , m14(m14)
+            , m21(m21)
+            , m22(m22)
+            , m23(m23)
+            , m24(m24)
+            , m31(m31)
+            , m32(m32)
+            , m33(m33)
+            , m34(m34)
+            , m41(m41)
+            , m42(m42)
+            , m43(m43)
+            , m44(m44)
         {
         }
 
         template <typename U = T>
         explicit GenericMatrix3D(const holocron::css::values::specified::NumberMatrix3D &inner,
                                  typename std::enable_if<std::is_same<U, specified::Number>::value>::type * = nullptr)
-            : m11(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 1)),
-              m12(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 2)),
-              m13(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 3)),
-              m14(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 4)),
-              m21(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 1)),
-              m22(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 2)),
-              m23(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 3)),
-              m24(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 4)),
-              m31(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 1)),
-              m32(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 2)),
-              m33(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 3)),
-              m34(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 4)),
-              m41(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 1)),
-              m42(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 2)),
-              m43(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 3)),
-              m44(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 4))
+            : m11(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 1))
+            , m12(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 2))
+            , m13(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 3))
+            , m14(holocron::css::values::specified::getNumberMatrix3DItem(inner, 1, 4))
+            , m21(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 1))
+            , m22(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 2))
+            , m23(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 3))
+            , m24(holocron::css::values::specified::getNumberMatrix3DItem(inner, 2, 4))
+            , m31(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 1))
+            , m32(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 2))
+            , m33(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 3))
+            , m34(holocron::css::values::specified::getNumberMatrix3DItem(inner, 3, 4))
+            , m41(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 1))
+            , m42(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 2))
+            , m43(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 3))
+            , m44(holocron::css::values::specified::getNumberMatrix3DItem(inner, 4, 4))
         {
         }
 
@@ -394,7 +408,10 @@ namespace crates::css2
         {
           return os << number.value;
         }
-        operator float() const { return value; }
+        operator float() const
+        {
+          return value;
+        }
 
       public:
         float value;
@@ -426,10 +443,14 @@ namespace crates::css2
       class NoCalcLength
       {
       public:
-        NoCalcLength() : value(0), unit("px") {}
+        NoCalcLength()
+            : value(0)
+            , unit("px")
+        {
+        }
         NoCalcLength(const holocron::css::values::specified::NoCalcLength &inner)
-            : value(holocron::css::values::specified::getNoCalcLengthUnitlessValue(inner)),
-              unit(holocron::css::values::specified::getNoCalcLengthUnit(inner))
+            : value(holocron::css::values::specified::getNoCalcLengthUnitlessValue(inner))
+            , unit(holocron::css::values::specified::getNoCalcLengthUnit(inner))
         {
         }
         NoCalcLength(Box<holocron::css::values::specified::NoCalcLength> innerBox)
@@ -496,7 +517,10 @@ namespace crates::css2
         }
 
       public:
-        bool isCalc() const { return isCalc_; }
+        bool isCalc() const
+        {
+          return isCalc_;
+        }
         float numberValue() const
         {
           if (isCalc_)
@@ -544,9 +568,18 @@ namespace crates::css2
         }
 
       public:
-        inline bool isNoCalcLength() const { return std::holds_alternative<NoCalcLength>(value_); }
-        inline bool isPercentage() const { return std::holds_alternative<Percentage>(value_); }
-        inline bool isCalc() const { return std::holds_alternative<CalcLengthPercentage>(value_); }
+        inline bool isNoCalcLength() const
+        {
+          return std::holds_alternative<NoCalcLength>(value_);
+        }
+        inline bool isPercentage() const
+        {
+          return std::holds_alternative<Percentage>(value_);
+        }
+        inline bool isCalc() const
+        {
+          return std::holds_alternative<CalcLengthPercentage>(value_);
+        }
 
         inline const NoCalcLength &getNoCalcLength() const
         {
@@ -582,13 +615,28 @@ namespace crates::css2
 
       public:
         Color() = default;
-        Color(Inner inner) : inner_(inner) {}
+        Color(Inner inner)
+            : inner_(inner)
+        {
+        }
 
       public:
-        inline float r() const { return inner_.r; }
-        inline float g() const { return inner_.g; }
-        inline float b() const { return inner_.b; }
-        inline float a() const { return inner_.a; }
+        inline float r() const
+        {
+          return inner_.r;
+        }
+        inline float g() const
+        {
+          return inner_.g;
+        }
+        inline float b() const
+        {
+          return inner_.b;
+        }
+        inline float a() const
+        {
+          return inner_.a;
+        }
 
       private:
         Inner inner_;
@@ -618,7 +666,10 @@ namespace crates::css2
         }
 
       public:
-        const std::vector<std::string> fonts() const { return fonts_; }
+        const std::vector<std::string> fonts() const
+        {
+          return fonts_;
+        }
 
       private:
         const std::vector<std::string> fonts_;
@@ -632,8 +683,8 @@ namespace crates::css2
         {
         public:
           Translate(const holocron::css::values::specified::transform::Translate inner)
-              : x(*inner.x),
-                y(*inner.y)
+              : x(*inner.x)
+              , y(*inner.y)
           {
           }
 
@@ -652,9 +703,9 @@ namespace crates::css2
         {
         public:
           Translate3D(const holocron::css::values::specified::transform::Translate3D inner)
-              : x(*inner.x),
-                y(*inner.y),
-                z(*inner.z)
+              : x(*inner.x)
+              , y(*inner.y)
+              , z(*inner.z)
           {
           }
 
@@ -673,12 +724,12 @@ namespace crates::css2
         class TransformOperation
         {
           using OperationImpl = std::variant<
-              generics::GenericMatrix<Number>,
-              generics::GenericMatrix3D<Number>,
-              specified::Length,
-              specified::LengthPercentage,
-              Translate,
-              Translate3D>;
+            generics::GenericMatrix<Number>,
+            generics::GenericMatrix3D<Number>,
+            specified::Length,
+            specified::LengthPercentage,
+            Translate,
+            Translate3D>;
 
         public:
           TransformOperation(const holocron::css::values::specified::TransformOperation &inner)
@@ -787,7 +838,10 @@ namespace crates::css2
           }
 
         public:
-          const TransformOperationType type() const { return type_; }
+          const TransformOperationType type() const
+          {
+            return type_;
+          }
 
           /**
            * Get the operation implementation as a specific type.
@@ -817,7 +871,10 @@ namespace crates::css2
           }
 
         public:
-          const std::vector<TransformOperation> &operations() const { return operations_; }
+          const std::vector<TransformOperation> &operations() const
+          {
+            return operations_;
+          }
 
         private:
           std::vector<TransformOperation> operations_;
@@ -898,10 +955,10 @@ namespace crates::css2
     {
     public:
       Component(const holocron::css::selectors::Component &inner)
-          : type(holocron::css::selectors::getComponentType(inner)),
-            combinator(holocron::css::selectors::getComponentCombinator(inner)),
-            name_(holocron::css::selectors::tryGetComponentName(inner)),
-            pseudo_class_type(holocron::css::selectors::getComponentPseudoClassType(inner))
+          : type(holocron::css::selectors::getComponentType(inner))
+          , combinator(holocron::css::selectors::getComponentCombinator(inner))
+          , name_(holocron::css::selectors::tryGetComponentName(inner))
+          , pseudo_class_type(holocron::css::selectors::getComponentPseudoClassType(inner))
       {
       }
 
@@ -949,17 +1006,47 @@ namespace crates::css2
       }
 
     public:
-      inline bool isLocalName() const { return type == ComponentType::kLocalName; }
-      inline bool isId() const { return type == ComponentType::kID; }
-      inline bool isClass() const { return type == ComponentType::kClass; }
-      inline bool isRoot() const { return type == ComponentType::kRoot; }
-      inline bool isEmpty() const { return type == ComponentType::kEmpty; }
-      inline bool isHost() const { return type == ComponentType::kHost; }
-      inline bool isPseudoElement() const { return type == ComponentType::kPseudoElement; }
-      inline bool isPseudoClass() const { return type == ComponentType::kPseudoClass; }
-      inline bool isCombinator() const { return type == ComponentType::kCombinator; }
+      inline bool isLocalName() const
+      {
+        return type == ComponentType::kLocalName;
+      }
+      inline bool isId() const
+      {
+        return type == ComponentType::kID;
+      }
+      inline bool isClass() const
+      {
+        return type == ComponentType::kClass;
+      }
+      inline bool isRoot() const
+      {
+        return type == ComponentType::kRoot;
+      }
+      inline bool isEmpty() const
+      {
+        return type == ComponentType::kEmpty;
+      }
+      inline bool isHost() const
+      {
+        return type == ComponentType::kHost;
+      }
+      inline bool isPseudoElement() const
+      {
+        return type == ComponentType::kPseudoElement;
+      }
+      inline bool isPseudoClass() const
+      {
+        return type == ComponentType::kPseudoClass;
+      }
+      inline bool isCombinator() const
+      {
+        return type == ComponentType::kCombinator;
+      }
 
-      inline const std::string &name() const { return name_; }
+      inline const std::string &name() const
+      {
+        return name_;
+      }
       inline const std::string &id() const
       {
         assert(isId());
@@ -972,9 +1059,18 @@ namespace crates::css2
       }
 
       // Pseudo-class subtype check
-      inline bool isHover() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kHover; }
-      inline bool isActive() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kActive; }
-      inline bool isFocus() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kFocus; }
+      inline bool isHover() const
+      {
+        return isPseudoClass() && pseudo_class_type == PseudoClassType::kHover;
+      }
+      inline bool isActive() const
+      {
+        return isPseudoClass() && pseudo_class_type == PseudoClassType::kActive;
+      }
+      inline bool isFocus() const
+      {
+        return isPseudoClass() && pseudo_class_type == PseudoClassType::kFocus;
+      }
 
     public:
       const ComponentType type;
@@ -1018,7 +1114,10 @@ namespace crates::css2
       }
 
     public:
-      const std::vector<Component> &components() const { return components_; }
+      const std::vector<Component> &components() const
+      {
+        return components_;
+      }
 
     private:
       std::vector<Component> components_;
@@ -1040,10 +1139,22 @@ namespace crates::css2
       }
 
     public:
-      auto begin() { return std::vector<Selector>::begin(); }
-      auto end() { return std::vector<Selector>::end(); }
-      auto begin() const { return std::vector<Selector>::begin(); }
-      auto end() const { return std::vector<Selector>::end(); }
+      auto begin()
+      {
+        return std::vector<Selector>::begin();
+      }
+      auto end()
+      {
+        return std::vector<Selector>::end();
+      }
+      auto begin() const
+      {
+        return std::vector<Selector>::begin();
+      }
+      auto end() const
+      {
+        return std::vector<Selector>::end();
+      }
       operator std::string() const
       {
         std::string str;
@@ -1069,7 +1180,10 @@ namespace crates::css2
     class CssRule
     {
     public:
-      CssRule(CssRuleType type) : type(type) {}
+      CssRule(CssRuleType type)
+          : type(type)
+      {
+      }
       CssRule(holocron::css::stylesheets::CssRule &inner)
       {
       }
@@ -1093,9 +1207,18 @@ namespace crates::css2
       }
 
     public:
-      const selectors::SelectorList &selectors() const { return *selectors_; }
-      const properties::PropertyDeclarationBlock &block() const { return *block_; }
-      std::unique_ptr<properties::PropertyDeclarationBlock> takeBlock() { return std::move(block_); }
+      const selectors::SelectorList &selectors() const
+      {
+        return *selectors_;
+      }
+      const properties::PropertyDeclarationBlock &block() const
+      {
+        return *block_;
+      }
+      std::unique_ptr<properties::PropertyDeclarationBlock> takeBlock()
+      {
+        return std::move(block_);
+      }
 
     private:
       std::unique_ptr<selectors::SelectorList> selectors_;
@@ -1157,7 +1280,10 @@ namespace crates::css2
       }
 
     public:
-      const std::vector<CssRuleReference> &rules() const { return rules_; }
+      const std::vector<CssRuleReference> &rules() const
+      {
+        return rules_;
+      }
 
     private:
       std::vector<CssRuleReference> rules_;
@@ -1201,17 +1327,17 @@ namespace crates::css2
       const values::specified::FontFamily parseFontFamily(const std::string str) const
       {
         return values::specified::FontFamily(
-            *holocron::css::parsing::parseFontFamily(*inner_, str));
+          *holocron::css::parsing::parseFontFamily(*inner_, str));
       }
       const values::specified::transform::Transform parseTransform(const std::string str) const
       {
         return values::specified::transform::Transform(
-            *holocron::css::parsing::parseTransform(*inner_, str));
+          *holocron::css::parsing::parseTransform(*inner_, str));
       }
       const values::specified::grid::GridTemplateComponent parseGridTemplateComponent(const std::string str) const
       {
         return values::specified::grid::GridTemplateComponent(
-            holocron::css::parsing::parseGridTemplate(*inner_, str));
+          holocron::css::parsing::parseGridTemplate(*inner_, str));
       }
 
     private:

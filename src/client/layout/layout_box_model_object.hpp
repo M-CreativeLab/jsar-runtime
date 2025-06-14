@@ -27,12 +27,18 @@ namespace client_layout
      *
      * @returns `true` if this box is a replaced element, otherwise `false`.
      */
-    inline bool isReplacedElement() const { return display_.isContents(); }
+    inline bool isReplacedElement() const
+    {
+      return display_.isContents();
+    }
 
     /**
      * @returns `true` if this box is visible, otherwise `false`.
      */
-    inline bool visible() const { return !display_.isNone(); }
+    inline bool visible() const
+    {
+      return !display_.isNone();
+    }
 
     /**
      * Set the display type of the box.
@@ -46,21 +52,54 @@ namespace client_layout
 
     virtual void updateFromStyle();
 
-    virtual float paddingTop() const { return getPaddingEdgeWidth(Edge::kTop); }
-    virtual float paddingBottom() const { return getPaddingEdgeWidth(Edge::kBottom); }
-    virtual float paddingLeft() const { return getPaddingEdgeWidth(Edge::kLeft); }
-    virtual float paddingRight() const { return getPaddingEdgeWidth(Edge::kRight); }
+    virtual float paddingTop() const
+    {
+      return getPaddingEdgeWidth(Edge::kTop);
+    }
+    virtual float paddingBottom() const
+    {
+      return getPaddingEdgeWidth(Edge::kBottom);
+    }
+    virtual float paddingLeft() const
+    {
+      return getPaddingEdgeWidth(Edge::kLeft);
+    }
+    virtual float paddingRight() const
+    {
+      return getPaddingEdgeWidth(Edge::kRight);
+    }
 
-    virtual float borderTop() const { return getBorderEdgeWidth(Edge::kTop); }
-    virtual float borderBottom() const { return getBorderEdgeWidth(Edge::kBottom); }
-    virtual float borderLeft() const { return getBorderEdgeWidth(Edge::kLeft); }
-    virtual float borderRight() const { return getBorderEdgeWidth(Edge::kRight); }
+    virtual float borderTop() const
+    {
+      return getBorderEdgeWidth(Edge::kTop);
+    }
+    virtual float borderBottom() const
+    {
+      return getBorderEdgeWidth(Edge::kBottom);
+    }
+    virtual float borderLeft() const
+    {
+      return getBorderEdgeWidth(Edge::kLeft);
+    }
+    virtual float borderRight() const
+    {
+      return getBorderEdgeWidth(Edge::kRight);
+    }
 
-    float borderWidth() const { return borderLeft() + borderRight(); }
-    float borderHeight() const { return borderTop() + borderBottom(); }
+    float borderWidth() const
+    {
+      return borderLeft() + borderRight();
+    }
+    float borderHeight() const
+    {
+      return borderTop() + borderBottom();
+    }
 
   private:
-    bool isBoxModelObject() const override final { return true; }
+    bool isBoxModelObject() const override final
+    {
+      return true;
+    }
 
     float getPaddingEdgeWidth(Edge) const;
     float getBorderEdgeWidth(Edge) const;

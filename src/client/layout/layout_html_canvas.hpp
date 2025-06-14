@@ -12,8 +12,14 @@ namespace client_layout
     using LayoutReplaced::LayoutReplaced;
 
   public:
-    const char *name() const override { return "LayoutHTMLCanvas"; }
-    bool isCanvas() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutHTMLCanvas";
+    }
+    bool isCanvas() const override final
+    {
+      return true;
+    }
 
     bool adjustDrawingSize();
     void setDrawingBitmap(std::shared_ptr<const SkBitmap> src_bitmap);

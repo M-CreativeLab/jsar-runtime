@@ -6,14 +6,14 @@ namespace dom
 
   Animation::Animation(unique_ptr<AnimationEffect> effect,
                        shared_ptr<const AnimationTimeline> timeline)
-      : effect_(move(effect)),
-        timeline_(timeline),
-        id_(""),
-        pending_(false),
-        ready_(false),
-        play_state_(kPlayStateIdle),
-        current_time_(0.0f),
-        playbackRate(1.0f)
+      : effect_(move(effect))
+      , timeline_(timeline)
+      , id_("")
+      , pending_(false)
+      , ready_(false)
+      , play_state_(kPlayStateIdle)
+      , current_time_(0.0f)
+      , playbackRate(1.0f)
   {
   }
 

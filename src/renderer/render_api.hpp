@@ -85,7 +85,10 @@ public:
   /**
    * @returns the singleton instance of the current RHI.
    */
-  static inline RenderAPI *Get() { return s_instance; }
+  static inline RenderAPI *Get()
+  {
+    return s_instance;
+  }
 
   /**
    * Creates the RHI instance.
@@ -97,7 +100,10 @@ public:
   static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
 
 public:
-  virtual ~RenderAPI() { s_instance = nullptr; }
+  virtual ~RenderAPI()
+  {
+    s_instance = nullptr;
+  }
 
   /**
    * Process general event like initialization, shutdown, device loss/reset etc.
@@ -133,10 +139,10 @@ public:
    * @returns a boolean value indicating if there are any commands to execute.
    */
   virtual bool ExecuteCommandBuffer(
-      vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-      renderer::TrContentRenderer *content,
-      xr::DeviceFrame *deviceFrame,
-      bool isDefaultQueue) = 0;
+    vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+    renderer::TrContentRenderer *content,
+    xr::DeviceFrame *deviceFrame,
+    bool isDefaultQueue) = 0;
 
   /**
    * Enables the graphics debug log, which is useful when you want to debug the backend graphics api.
@@ -165,27 +171,42 @@ public:
   /**
    * Sets the time of the current frame.
    */
-  inline void SetTime(float time) { this->time = time; }
+  inline void SetTime(float time)
+  {
+    this->time = time;
+  }
 
   /**
    * @returns the backend type of the RHI.
    */
-  inline RHIBackendType GetBackendType() { return backendType; }
+  inline RHIBackendType GetBackendType()
+  {
+    return backendType;
+  }
 
   /**
    * Enables the loggings for the application.
    */
-  inline void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
+  inline void EnableAppGlobalLog()
+  {
+    m_EnableLogOnAppGlobal = true;
+  }
 
   /**
    * Enables the loggings for the XR frame.
    */
-  inline void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
+  inline void EnableXRFrameLog()
+  {
+    m_EnableLogOnXRFrame = true;
+  }
 
   /**
    * Enables the context switch logs.
    */
-  inline void EnableContextLog() { m_PrintsContext = true; }
+  inline void EnableContextLog()
+  {
+    m_PrintsContext = true;
+  }
 
   /**
    * Checks if the viewport should be changed with the given `XYWH`.
@@ -214,14 +235,20 @@ public:
   /**
    * @returns the drawing viewport.
    */
-  inline TrViewport GetDrawingViewport() { return m_DrawingViewport; }
+  inline TrViewport GetDrawingViewport()
+  {
+    return m_DrawingViewport;
+  }
 
   /**
    * Sets the field of view.
    *
    * @param fov the field of view to be set.
    */
-  inline void SetFieldOfView(float fov) { this->fov = fov; }
+  inline void SetFieldOfView(float fov)
+  {
+    this->fov = fov;
+  }
 
   // Lifecycles
 
@@ -239,7 +266,10 @@ protected:
   /**
    * @returns the `renderer::TrRenderer` shared pointer to use.
    */
-  inline std::shared_ptr<renderer::TrRenderer> GetRenderer() { return renderer.lock(); }
+  inline std::shared_ptr<renderer::TrRenderer> GetRenderer()
+  {
+    return renderer.lock();
+  }
 
 private:
   /**

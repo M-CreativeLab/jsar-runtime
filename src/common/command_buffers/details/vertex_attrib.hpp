@@ -12,8 +12,8 @@ namespace commandbuffers
   public:
     EnableVertexAttribArrayCommandBufferRequest() = delete;
     EnableVertexAttribArrayCommandBufferRequest(uint32_t index)
-        : TrCommandBufferSimpleRequest(),
-          index(index)
+        : TrCommandBufferSimpleRequest()
+        , index(index)
     {
     }
 
@@ -28,8 +28,8 @@ namespace commandbuffers
   public:
     DisableVertexAttribArrayCommandBufferRequest() = delete;
     DisableVertexAttribArrayCommandBufferRequest(uint32_t index)
-        : TrCommandBufferSimpleRequest(),
-          index(index)
+        : TrCommandBufferSimpleRequest()
+        , index(index)
     {
     }
 
@@ -43,13 +43,13 @@ namespace commandbuffers
   public:
     VertexAttribPointerCommandBufferRequest() = delete;
     VertexAttribPointerCommandBufferRequest(uint32_t index, uint32_t size, uint32_t type, uint32_t normalized, uint32_t stride, uint32_t offset)
-        : TrCommandBufferSimpleRequest(),
-          index(index),
-          conponentSize(size),
-          componentType(type),
-          normalized(normalized),
-          stride(stride),
-          offset(offset)
+        : TrCommandBufferSimpleRequest()
+        , index(index)
+        , conponentSize(size)
+        , componentType(type)
+        , normalized(normalized)
+        , stride(stride)
+        , offset(offset)
     {
     }
 
@@ -68,12 +68,12 @@ namespace commandbuffers
   public:
     VertexAttribIPointerCommandBufferRequest() = delete;
     VertexAttribIPointerCommandBufferRequest(uint32_t index, uint32_t size, uint32_t type, uint32_t stride, uint32_t offset)
-        : TrCommandBufferSimpleRequest(),
-          index(index),
-          componentSize(size),
-          componentType(type),
-          stride(stride),
-          offset(offset)
+        : TrCommandBufferSimpleRequest()
+        , index(index)
+        , componentSize(size)
+        , componentType(type)
+        , stride(stride)
+        , offset(offset)
     {
     }
 
@@ -91,9 +91,9 @@ namespace commandbuffers
   public:
     VertexAttribDivisorCommandBufferRequest() = delete;
     VertexAttribDivisorCommandBufferRequest(uint32_t index, uint32_t divisor)
-        : TrCommandBufferSimpleRequest(),
-          index(index),
-          divisor(divisor)
+        : TrCommandBufferSimpleRequest()
+        , index(index)
+        , divisor(divisor)
     {
     }
 

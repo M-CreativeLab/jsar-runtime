@@ -73,15 +73,24 @@ namespace renderer
     /**
      * Enable the tracing.
      */
-    inline void enableTracing() { isTracingEnabled = true; }
+    inline void enableTracing()
+    {
+      isTracingEnabled = true;
+    }
     /**
      * Enable the host context summary.
      */
-    inline void enableHostContextSummary() { isHostContextSummaryEnabled = true; }
+    inline void enableHostContextSummary()
+    {
+      isHostContextSummaryEnabled = true;
+    }
     /**
      * Enable the app context summary.
      */
-    inline void enableAppContextSummary() { isAppContextSummaryEnabled = true; }
+    inline void enableAppContextSummary()
+    {
+      isAppContextSummaryEnabled = true;
+    }
     /**
      * Configure the client frame rate.
      *
@@ -113,7 +122,10 @@ namespace renderer
     /**
      * @returns The command buffer channel port.
      */
-    inline uint32_t getCommandBufferChanPort() { return commandBufferChanServer->getPort(); }
+    inline uint32_t getCommandBufferChanPort()
+    {
+      return commandBufferChanServer->getPort();
+    }
     /**
      * Remove the command buffer channel client.
      *
@@ -128,7 +140,10 @@ namespace renderer
     /**
      * @returns The host graphics context.
      */
-    OpenGLHostContextStorage *getOpenGLContext() { return glHostContext; }
+    OpenGLHostContextStorage *getOpenGLContext()
+    {
+      return glHostContext;
+    }
 
   public: // API for content renderer
     /**

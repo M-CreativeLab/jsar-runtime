@@ -48,7 +48,8 @@ namespace dombinding
     assert(false && "invalid document type.");
   }
 
-  Document::Document(const Napi::CallbackInfo &info) : DocumentBase<Document, dom::HTMLDocument>(info)
+  Document::Document(const Napi::CallbackInfo &info)
+      : DocumentBase<Document, dom::HTMLDocument>(info)
   {
   }
 
@@ -58,7 +59,8 @@ namespace dombinding
     DocumentBase<XMLDocument, dom::XMLDocument>::Init(env, "XMLDocument");
   }
 
-  XMLDocument::XMLDocument(const Napi::CallbackInfo &info) : DocumentBase<XMLDocument, dom::XMLDocument>(info)
+  XMLDocument::XMLDocument(const Napi::CallbackInfo &info)
+      : DocumentBase<XMLDocument, dom::XMLDocument>(info)
   {
   }
 }

@@ -10,7 +10,9 @@
 #include "common/utility.hpp"
 
 template <typename T>
-inline void USE(T &&) {}
+inline void USE(T &&)
+{
+}
 
 namespace dom
 {
@@ -86,8 +88,8 @@ namespace dom
       // Used by ContextEmbedderTag::IsMyContext to know that we are on a node
       // context.
       context->SetAlignedPointerInEmbedderData(
-          ContextEmbedderIndex::kContextTag,
-          ContextEmbedderTag::kMyContextTagPtr);
+        ContextEmbedderIndex::kContextTag,
+        ContextEmbedderTag::kMyContextTagPtr);
     }
 
     static inline bool IsMyContext(v8::Local<v8::Context> context)
@@ -102,7 +104,7 @@ namespace dom
         return false;
       }
       if (TR_UNLIKELY(context->GetAlignedPointerFromEmbedderData(
-                          ContextEmbedderIndex::kContextTag) !=
+                        ContextEmbedderIndex::kContextTag) !=
                       ContextEmbedderTag::kMyContextTagPtr))
       {
         return false;
@@ -177,8 +179,7 @@ namespace dom
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
      */
-    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext, const std::string &url,
-                                      SourceTextType type);
+    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext, const std::string &url, SourceTextType type);
 
     /**
      * Compile the given script.
@@ -197,7 +198,8 @@ namespace dom
      * @param sourceData The source data of the script.
      * @param sourceLength The length of the source data.
      */
-    bool compileAsSyntheticModule(std::shared_ptr<DOMModule> scriptModule, SyntheticModuleType type,
+    bool compileAsSyntheticModule(std::shared_ptr<DOMModule> scriptModule,
+                                  SyntheticModuleType type,
                                   const void *sourceData,
                                   size_t sourceLength);
 
@@ -257,7 +259,8 @@ namespace dom
      * @param disableCache Whether to disable the cache.
      * @param loadedCallback The callback to call when the module is loaded.
      */
-    void tryImportModule(const std::string &url, const bool disableCache,
+    void tryImportModule(const std::string &url,
+                         const bool disableCache,
                          std::function<void(std::shared_ptr<DOMModule>)> loadedCallback,
                          std::function<void(const std::string &)> errorCallback = nullptr);
 

@@ -13,21 +13,21 @@ namespace webaudio
   void AudioPlayer::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(
-        env,
-        "AudioPlayer",
-        {
-            InstanceMethod("load", &AudioPlayer::Load),
-            InstanceMethod("play", &AudioPlayer::Play),
-            InstanceMethod("pause", &AudioPlayer::Pause),
-            InstanceMethod("canPlayType", &AudioPlayer::CanPlayType),
-            InstanceMethod("dispose", &AudioPlayer::Dispose),
-            InstanceAccessor("paused", &AudioPlayer::PausedGetter, nullptr),
-            InstanceAccessor("currentTime", &AudioPlayer::CurrentTimeGetter, &AudioPlayer::CurrentTimeSetter),
-            InstanceAccessor("duration", &AudioPlayer::DurationGetter, nullptr),
-            InstanceAccessor("volume", &AudioPlayer::VolumeGetter, &AudioPlayer::VolumeSetter),
-            InstanceAccessor("loop", &AudioPlayer::LoopGetter, &AudioPlayer::LoopSetter),
-            InstanceAccessor("onended", &AudioPlayer::OnEndedGetter, &AudioPlayer::OnEndedSetter),
-        });
+      env,
+      "AudioPlayer",
+      {
+        InstanceMethod("load", &AudioPlayer::Load),
+        InstanceMethod("play", &AudioPlayer::Play),
+        InstanceMethod("pause", &AudioPlayer::Pause),
+        InstanceMethod("canPlayType", &AudioPlayer::CanPlayType),
+        InstanceMethod("dispose", &AudioPlayer::Dispose),
+        InstanceAccessor("paused", &AudioPlayer::PausedGetter, nullptr),
+        InstanceAccessor("currentTime", &AudioPlayer::CurrentTimeGetter, &AudioPlayer::CurrentTimeSetter),
+        InstanceAccessor("duration", &AudioPlayer::DurationGetter, nullptr),
+        InstanceAccessor("volume", &AudioPlayer::VolumeGetter, &AudioPlayer::VolumeSetter),
+        InstanceAccessor("loop", &AudioPlayer::LoopGetter, &AudioPlayer::LoopSetter),
+        InstanceAccessor("onended", &AudioPlayer::OnEndedGetter, &AudioPlayer::OnEndedSetter),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -36,12 +36,13 @@ namespace webaudio
     exports.Set("AudioPlayer", tpl);
   }
 
-  AudioPlayer::AudioPlayer(const Napi::CallbackInfo &info) : Napi::ObjectWrap<AudioPlayer>(info),
-                                                             sourceAudioContext(nullptr),
-                                                             loaded(false),
-                                                             sourced(false),
-                                                             looped(false),
-                                                             volume(1.0f)
+  AudioPlayer::AudioPlayer(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<AudioPlayer>(info)
+      , sourceAudioContext(nullptr)
+      , loaded(false)
+      , sourced(false)
+      , looped(false)
+      , volume(1.0f)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

@@ -10,7 +10,8 @@
 
 using namespace std;
 
-TrClientEntry::TrClientEntry(TrClientMode mode) : mode(mode)
+TrClientEntry::TrClientEntry(TrClientMode mode)
+    : mode(mode)
 {
   clientContext = TrClientContextPerProcess::Create();
 }
@@ -136,10 +137,10 @@ int TrClientEntry::onClientMode(TrDocumentRequestInit &init)
 
   TrScriptRuntimePerProcess runtime;
   vector<string> args = {
-      "--url",
-      clientContext->url,
-      "--id",
-      std::to_string(clientContext->id),
+    "--url",
+    clientContext->url,
+    "--id",
+    std::to_string(clientContext->id),
   };
   runtime.start(args);
   fprintf(stdout, "The client(%d|%s) is stopped.\n", clientContext->id, clientContext->url.c_str());

@@ -15,7 +15,8 @@
 #include "./hive_server.hpp"
 #include "./entry.hpp"
 
-TrHiveChildProcess::TrHiveChildProcess(uint32_t documentId) : documentId(documentId)
+TrHiveChildProcess::TrHiveChildProcess(uint32_t documentId)
+    : documentId(documentId)
 {
   if (pipe(childPipes) == -1)
   {
@@ -117,8 +118,7 @@ bool TrHiveChildProcess::test()
     else if (WIFSIGNALED(status))
     {
       // Process is terminated
-      fprintf(stderr, "The client process(%d) is terminated by a signal: %d, and core dumped: %d\n",
-              pid, WTERMSIG(status), WCOREDUMP(status));
+      fprintf(stderr, "The client process(%d) is terminated by a signal: %d, and core dumped: %d\n", pid, WTERMSIG(status), WCOREDUMP(status));
       pid = -1;
       return false;
     }
@@ -126,7 +126,9 @@ bool TrHiveChildProcess::test()
   return true;
 }
 
-TrHiveServer::TrHiveServer(TrClientEntry *clientEntry, int port) : clientEntry(clientEntry), port(port)
+TrHiveServer::TrHiveServer(TrClientEntry *clientEntry, int port)
+    : clientEntry(clientEntry)
+    , port(port)
 {
   assert(clientEntry != nullptr);
   assert(port > 0);
@@ -140,7 +142,8 @@ void TrHiveServer::start()
   hive_comm::TrHiveCommandReceiver commandReceiver(commandChanClient);
   hive_comm::TrHiveCommandSender commandSender(commandChanClient);
   checkingStatusWorker = make_unique<WorkerThread>("HiveChildrenStatus", [&, this](WorkerThread &worker)
-                                                   { checkStatus(commandSender); worker.sleep(); }, 100);
+                                                   { checkStatus(commandSender); worker.sleep(); },
+                                                   100);
 
   running = true;
   {

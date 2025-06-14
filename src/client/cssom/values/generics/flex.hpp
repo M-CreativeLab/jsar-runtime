@@ -18,13 +18,28 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Row() { return T(Tag::kRow); }
-    static T RowReverse() { return T(Tag::kRowReverse); }
-    static T Column() { return T(Tag::kColumn); }
-    static T ColumnReverse() { return T(Tag::kColumnReverse); }
+    static T Row()
+    {
+      return T(Tag::kRow);
+    }
+    static T RowReverse()
+    {
+      return T(Tag::kRowReverse);
+    }
+    static T Column()
+    {
+      return T(Tag::kColumn);
+    }
+    static T ColumnReverse()
+    {
+      return T(Tag::kColumnReverse);
+    }
 
   public:
-    GenericFlexDirection() : tag_(kRow) {}
+    GenericFlexDirection()
+        : tag_(kRow)
+    {
+    }
 
   private:
     GenericFlexDirection(Tag tag)
@@ -48,12 +63,24 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T NoWrap() { return T(Tag::kNoWrap); }
-    static T Wrap() { return T(Tag::kWrap); }
-    static T WrapReverse() { return T(Tag::kWrapReverse); }
+    static T NoWrap()
+    {
+      return T(Tag::kNoWrap);
+    }
+    static T Wrap()
+    {
+      return T(Tag::kWrap);
+    }
+    static T WrapReverse()
+    {
+      return T(Tag::kWrapReverse);
+    }
 
   public:
-    GenericFlexWrap() : tag_(kNoWrap) {}
+    GenericFlexWrap()
+        : tag_(kNoWrap)
+    {
+    }
 
   private:
     GenericFlexWrap(Tag tag)

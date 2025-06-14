@@ -21,7 +21,9 @@ namespace canvas
   {
   public:
     RenderingContextBase(RenderingContextType type, std::shared_ptr<CanvasType> canvasRef)
-        : contextType(type), canvasRef(canvasRef), clientContext(TrClientContextPerProcess::Get())
+        : contextType(type)
+        , canvasRef(canvasRef)
+        , clientContext(TrClientContextPerProcess::Get())
     {
       assert(clientContext != nullptr);
       assert(canvasRef != nullptr && "Canvas reference cannot be null");

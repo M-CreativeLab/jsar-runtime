@@ -14,7 +14,7 @@ static const char *WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY = "_placeholderId";
 
 static const char *WEBGL_PLACEHOLDERS_IDS[] = {
 #define XX(id, _) #id,
-    PLACEHOLDER_ID_MAP(XX)
+  PLACEHOLDER_ID_MAP(XX)
 #undef XX
 };
 
@@ -23,7 +23,7 @@ enum class WebGLMatrixPlaceholderId
 #define XX(id, v) id = v,
   PLACEHOLDER_ID_MAP(XX)
 #undef XX
-      NotSet = 0,
+    NotSet = 0,
 };
 
 inline bool isValidPlaceholderId(uint32_t placeholderId)

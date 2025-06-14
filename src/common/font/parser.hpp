@@ -7,12 +7,13 @@ using namespace std;
 
 namespace font
 {
-  static string FONT_SHORTHAND_REGEX = "(italic|oblique|normal|)\\s*"              // style
-                                       "(small-caps|normal|)\\s*"                  // variant
-                                       "(bold|bolder|lighter|[1-9]00|normal|)\\s*" // weight
-                                       "([\\d\\.]+)"                               // size
-                                       "(px|pt|pc|in|cm|mm|%|em|ex|ch|rem|q)"      // unit
-                                       "(.+)";                                     // family
+  static string FONT_SHORTHAND_REGEX =
+    "(italic|oblique|normal|)\\s*"              // style
+    "(small-caps|normal|)\\s*"                  // variant
+    "(bold|bolder|lighter|[1-9]00|normal|)\\s*" // weight
+    "([\\d\\.]+)"                               // size
+    "(px|pt|pc|in|cm|mm|%|em|ex|ch|rem|q)"      // unit
+    "(.+)";                                     // family
 
   inline string ltrim(string s)
   {

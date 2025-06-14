@@ -160,7 +160,10 @@ namespace dom
     /**
      * @returns `true` if the observer is observing the subtree.
      */
-    inline bool isSubtreeObserved() const { return options_.subtree; }
+    inline bool isSubtreeObserved() const
+    {
+      return options_.subtree;
+    }
 
   public:
     void disconnect();

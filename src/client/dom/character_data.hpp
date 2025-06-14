@@ -12,14 +12,19 @@ namespace dom
   {
   public:
     CharacterData(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    CharacterData(NodeType nodeType, std::string nodeName, const std::string &data,
-                  std::shared_ptr<Document> ownerDocument);
+    CharacterData(NodeType nodeType, std::string nodeName, const std::string &data, std::shared_ptr<Document> ownerDocument);
     CharacterData(const CharacterData &other);
     ~CharacterData() = default;
 
   public:
-    std::string &data() { return data_; }
-    const size_t length() const { return data_.length(); }
+    std::string &data()
+    {
+      return data_;
+    }
+    const size_t length() const
+    {
+      return data_.length();
+    }
     std::shared_ptr<Element> nextElementSibling();
     std::shared_ptr<Element> previousElementSibling();
 
@@ -32,13 +37,22 @@ namespace dom
     std::string substringData(size_t offset, size_t count);
     void before(std::vector<std::shared_ptr<Node>> nodes);
     void before(std::string text);
-    inline void before(std::shared_ptr<Node> node) { before(std::vector<std::shared_ptr<Node>>{node}); }
+    inline void before(std::shared_ptr<Node> node)
+    {
+      before(std::vector<std::shared_ptr<Node>>{node});
+    }
     void after(std::vector<std::shared_ptr<Node>> nodes);
     void after(std::string text);
-    inline void after(std::shared_ptr<Node> node) { after(std::vector<std::shared_ptr<Node>>{node}); }
+    inline void after(std::shared_ptr<Node> node)
+    {
+      after(std::vector<std::shared_ptr<Node>>{node});
+    }
 
   private:
-    bool isCharacterData() const override final { return true; }
+    bool isCharacterData() const override final
+    {
+      return true;
+    }
 
   protected:
     std::string data_;

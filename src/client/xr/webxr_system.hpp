@@ -27,9 +27,9 @@ namespace client_xr
 
   public:
     XRSystem(std::shared_ptr<XRDeviceClient> device, uv_loop_t *eventloop)
-        : dom::DOMEventTarget(),
-          device_(device),
-          eventloop_(eventloop)
+        : dom::DOMEventTarget()
+        , device_(device)
+        , eventloop_(eventloop)
     {
       assert(device_ != nullptr);
       assert(eventloop_ != nullptr);
@@ -39,11 +39,17 @@ namespace client_xr
     /**
      * @returns the `XRDeviceClient` instance that the `XRSystem` is using.
      */
-    std::shared_ptr<XRDeviceClient> device() const { return device_; }
+    std::shared_ptr<XRDeviceClient> device() const
+    {
+      return device_;
+    }
     /**
      * @returns the libuv's event loop that the `XRSystem` is using.
      */
-    uv_loop_t *eventloop() const { return eventloop_; }
+    uv_loop_t *eventloop() const
+    {
+      return eventloop_;
+    }
 
   public:
     /**

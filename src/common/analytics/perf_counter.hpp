@@ -10,8 +10,8 @@ namespace analytics
   {
   public:
     TaggedTimepoint(const char *tag)
-        : tag(tag),
-          timepoint(std::chrono::steady_clock::now())
+        : tag(tag)
+        , timepoint(std::chrono::steady_clock::now())
     {
     }
     ~TaggedTimepoint() = default;
@@ -24,7 +24,8 @@ namespace analytics
   class PerformanceCounter
   {
   public:
-    PerformanceCounter(const char *name) : name(name)
+    PerformanceCounter(const char *name)
+        : name(name)
     {
 #ifdef TR_ENABLE_PERF_COUNTER
       reset();

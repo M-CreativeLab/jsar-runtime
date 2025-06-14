@@ -15,14 +15,14 @@ namespace crates::texture_atlas
   {
   public:
     TextureLayout(const holocron::texture_atlas::TextureLayout &layout, int atlas_width, int atlas_height)
-        : id(layout.id),
-          width(layout.w),
-          height(layout.h),
-          x(layout.x),
-          y(layout.y),
-          layer(layout.layer),
-          atlas_width_(atlas_width),
-          atlas_height_(atlas_height)
+        : id(layout.id)
+        , width(layout.w)
+        , height(layout.h)
+        , x(layout.x)
+        , y(layout.y)
+        , layer(layout.layer)
+        , atlas_width_(atlas_width)
+        , atlas_height_(atlas_height)
     {
     }
 
@@ -74,15 +74,18 @@ namespace crates::texture_atlas
   {
   public:
     TextureAtlasLayout(int width, int height, int maxLayerCount)
-        : width_(width),
-          height_(height),
-          maxLayerCount_(maxLayerCount),
-          allocator_(holocron::texture_atlas::createTextureAtlasLayoutAllocator(width, height, maxLayerCount))
+        : width_(width)
+        , height_(height)
+        , maxLayerCount_(maxLayerCount)
+        , allocator_(holocron::texture_atlas::createTextureAtlasLayoutAllocator(width, height, maxLayerCount))
     {
     }
 
   public:
-    inline size_t size() const { return textures_.size(); }
+    inline size_t size() const
+    {
+      return textures_.size();
+    }
     inline bool shouldDownscale(int width, int height) const
     {
       return holocron::texture_atlas::shouldDownscaleTexture(*allocator_, width, height);

@@ -131,21 +131,30 @@ namespace client_cssom::values::computed
     }
 
   public:
-    inline bool isLength() const { return std::holds_alternative<LengthVariant>(variant_); }
-    inline bool isPercentage() const { return std::holds_alternative<PercentageVariant>(variant_); }
-    inline bool isCalc() const { return std::holds_alternative<CalcVariant>(variant_); }
+    inline bool isLength() const
+    {
+      return std::holds_alternative<LengthVariant>(variant_);
+    }
+    inline bool isPercentage() const
+    {
+      return std::holds_alternative<PercentageVariant>(variant_);
+    }
+    inline bool isCalc() const
+    {
+      return std::holds_alternative<CalcVariant>(variant_);
+    }
 
     inline CSSPixelLength getLength() const
     {
       return isLength()
-                 ? std::get<LengthVariant>(variant_).length
-                 : CSSPixelLength(0.0f);
+               ? std::get<LengthVariant>(variant_).length
+               : CSSPixelLength(0.0f);
     }
     inline computed::Percentage getPercentage() const
     {
       return isPercentage()
-                 ? std::get<PercentageVariant>(variant_).percentage
-                 : computed::Percentage(0.0f);
+               ? std::get<PercentageVariant>(variant_).percentage
+               : computed::Percentage(0.0f);
     }
 
     // Converts this LengthPercentage to a Percentage if it is a percentage.

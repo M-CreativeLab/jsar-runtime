@@ -20,7 +20,7 @@ namespace dom
 
   public:
     static AnimatableProperties FromTransitionProperty(
-        const client_cssom::values::computed::TransitionProperty &property)
+      const client_cssom::values::computed::TransitionProperty &property)
     {
       return AnimatableProperties{{property.toCss()}};
     }
@@ -35,8 +35,8 @@ namespace dom
     public:
       RunningAnimation(std::shared_ptr<Animation> animation,
                        std::string name)
-          : animation(animation),
-            name(name)
+          : animation(animation)
+          , name(name)
       {
       }
 
@@ -56,8 +56,8 @@ namespace dom
     public:
       RunningTransition(std::shared_ptr<CSSTransition> animation,
                         const AnimatableProperties properties)
-          : animation(animation),
-            properties(properties)
+          : animation(animation)
+          , properties(properties)
       {
       }
 
@@ -88,7 +88,10 @@ namespace dom
              transitions_.empty();
     }
 
-    const std::vector<std::shared_ptr<RunningAnimation>> &runningAnimations() const { return running_animations_; }
+    const std::vector<std::shared_ptr<RunningAnimation>> &runningAnimations() const
+    {
+      return running_animations_;
+    }
     const std::optional<RunningTransition> transition(const std::string &name) const
     {
       auto it = transitions_.find(name);

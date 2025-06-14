@@ -16,9 +16,9 @@ namespace dombinding
     {
       using T = EventTargetWrap<ObjectType, EventTargetType>;
       return {
-          T::InstanceMethod("addEventListener", &T::AddEventListener),
-          T::InstanceMethod("removeEventListener", &T::RemoveEventListener),
-          T::InstanceMethod("dispatchEvent", &T::DispatchEvent),
+        T::InstanceMethod("addEventListener", &T::AddEventListener),
+        T::InstanceMethod("removeEventListener", &T::RemoveEventListener),
+        T::InstanceMethod("dispatchEvent", &T::DispatchEvent),
       };
     }
 
@@ -32,7 +32,10 @@ namespace dombinding
 
   public:
     // Returns the `dom::DOMEventTargetType` enum of this event target.
-    virtual dom::DOMEventTargetType eventTargetType() const { return dom::DOMEventTargetType::kEventTarget; }
+    virtual dom::DOMEventTargetType eventTargetType() const
+    {
+      return dom::DOMEventTargetType::kEventTarget;
+    }
 
   protected:
     Napi::Value AddEventListener(const Napi::CallbackInfo &info);

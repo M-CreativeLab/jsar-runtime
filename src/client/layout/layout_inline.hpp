@@ -45,13 +45,31 @@ namespace client_layout
     LayoutInline(std::shared_ptr<dom::Node> node);
 
   public:
-    const char *name() const override { return "LayoutInline"; }
-    bool isLayoutInline() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutInline";
+    }
+    bool isLayoutInline() const override final
+    {
+      return true;
+    }
 
-    inline std::shared_ptr<LayoutObjectChildList> children() const { return children_; }
-    inline std::shared_ptr<LayoutObjectChildList> children() { return children_; }
-    inline LayoutObjectChildList &childrenRef() { return *children_; }
-    inline const LayoutObjectChildList &childrenRef() const { return *children_; }
+    inline std::shared_ptr<LayoutObjectChildList> children() const
+    {
+      return children_;
+    }
+    inline std::shared_ptr<LayoutObjectChildList> children()
+    {
+      return children_;
+    }
+    inline LayoutObjectChildList &childrenRef()
+    {
+      return *children_;
+    }
+    inline const LayoutObjectChildList &childrenRef() const
+    {
+      return *children_;
+    }
 
     std::shared_ptr<LayoutObject> firstChild() const;
     std::shared_ptr<LayoutObject> lastChild() const;
@@ -61,8 +79,14 @@ namespace client_layout
     void slowLastChild() const = delete;
 
   private:
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final { return children(); }
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() override final { return children(); }
+    std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final
+    {
+      return children();
+    }
+    std::shared_ptr<LayoutObjectChildList> virtualChildren() override final
+    {
+      return children();
+    }
 
   private:
     std::shared_ptr<LayoutObjectChildList> children_;

@@ -8,12 +8,12 @@ namespace dombinding
     using T = HTMLCanvasElement;
     auto props = HTMLElementBase<HTMLCanvasElement, dom::HTMLCanvasElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>>(
-        {
-            T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
-            T::InstanceAccessor("height", &T::HeightGetter, &T::HeightSetter),
-            T::InstanceMethod("getContext", &T::GetContext),
-            T::InstanceMethod("toDataURL", &T::ToDataURL),
-        });
+      {
+        T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
+        T::InstanceAccessor("height", &T::HeightGetter, &T::HeightSetter),
+        T::InstanceMethod("getContext", &T::GetContext),
+        T::InstanceMethod("toDataURL", &T::ToDataURL),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -29,9 +29,9 @@ namespace dombinding
   }
 
   HTMLCanvasElement::HTMLCanvasElement(const Napi::CallbackInfo &info)
-      : HTMLElementBase(info),
-        canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>(node->canvasImpl()),
-        canvasbinding::ImageSourceWrap<dom::HTMLCanvasElement>()
+      : HTMLElementBase(info)
+      , canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>(node->canvasImpl())
+      , canvasbinding::ImageSourceWrap<dom::HTMLCanvasElement>()
   {
     dataImpl = node;
   }

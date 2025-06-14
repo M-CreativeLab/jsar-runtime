@@ -14,7 +14,10 @@ namespace client_cssom::values::generics
     }
 
   public:
-    CSSFloat seconds() const { return seconds_; }
+    CSSFloat seconds() const
+    {
+      return seconds_;
+    }
 
     std::string toCss() const override
     {

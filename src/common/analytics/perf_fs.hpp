@@ -17,9 +17,9 @@ namespace analytics
   public:
     PerformanceValue() = default;
     PerformanceValue(std::string &filename, ValueType initialValue)
-        : filename(filename),
-          initialValue(initialValue),
-          valueSize(64)
+        : filename(filename)
+        , initialValue(initialValue)
+        , valueSize(64)
     {
       fileDescriptor = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
       if (fileDescriptor != -1)
@@ -74,7 +74,7 @@ namespace analytics
     PerformanceFileSystem(std::string cacheDir, const char *clientPidStr = nullptr)
     {
       std::filesystem::path dirPath = cacheDir + "/perf";
-      if (clientPidStr == nullptr)  // Clear the perf directory if starting as non-client mode.
+      if (clientPidStr == nullptr) // Clear the perf directory if starting as non-client mode.
         std::filesystem::remove_all(dirPath);
       if (clientPidStr != nullptr)
         dirPath = dirPath / clientPidStr;

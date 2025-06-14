@@ -42,8 +42,8 @@ namespace client_cssom::values::computed
     operator skia::textlayout::TextDirection() const
     {
       return tag_ == Tag::kLTR
-                 ? skia::textlayout::TextDirection::kLtr
-                 : skia::textlayout::TextDirection::kRtl;
+               ? skia::textlayout::TextDirection::kLtr
+               : skia::textlayout::TextDirection::kRtl;
     }
   };
 }

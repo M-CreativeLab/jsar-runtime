@@ -107,21 +107,25 @@ bool TrInspector::getContents(rapidjson::Document &json)
 
     // CDP fields
     contentJson.AddMember("description",
-                          rapidjson::Value().SetString("JSAR page", allocator), allocator);
+                          rapidjson::Value().SetString("JSAR page", allocator),
+                          allocator);
     contentJson.AddMember("devtoolsFrontendUrl",
-                          rapidjson::Value().SetString(devtoolsFrontendUrl.c_str(), allocator), allocator);
+                          rapidjson::Value().SetString(devtoolsFrontendUrl.c_str(), allocator),
+                          allocator);
     contentJson.AddMember("devtoolsFrontendUrlCompat",
-                          rapidjson::Value().SetString(devtoolsFrontendUrl.c_str(), allocator), allocator);
+                          rapidjson::Value().SetString(devtoolsFrontendUrl.c_str(), allocator),
+                          allocator);
     contentJson.AddMember("faviconUrl",
                           rapidjson::Value()
-                              .SetString("https://nodejs.org/static/images/favicons/favicon.ico", allocator),
+                            .SetString("https://nodejs.org/static/images/favicons/favicon.ico", allocator),
                           allocator);
     contentJson.AddMember("id", rapidjson::Value().SetString(id.c_str(), allocator), allocator);
     contentJson.AddMember("title", rapidjson::Value().SetString(title.c_str(), allocator), allocator);
     contentJson.AddMember("type", rapidjson::Value().SetString("page", allocator), allocator);
     contentJson.AddMember("url", rapidjson::Value().SetString(url.c_str(), allocator), allocator);
     contentJson.AddMember("webSocketDebuggerUrl",
-                          rapidjson::Value().SetString(debuggerUrl.c_str(), allocator), allocator);
+                          rapidjson::Value().SetString(debuggerUrl.c_str(), allocator),
+                          allocator);
 
     // JSAR extended fields
     contentJson.AddMember("pid", content->pid.load(), allocator);
@@ -130,7 +134,8 @@ bool TrInspector::getContents(rapidjson::Document &json)
       rapidjson::Value requestInitJson;
       requestInitJson.SetObject();
       requestInitJson.AddMember("url",
-                                rapidjson::Value().SetString(requestInit.url.c_str(), allocator), allocator);
+                                rapidjson::Value().SetString(requestInit.url.c_str(), allocator),
+                                allocator);
       requestInitJson.AddMember("disableCache", requestInit.disableCache, allocator);
       contentJson.AddMember("requestInit", requestInitJson, allocator);
     }

@@ -29,18 +29,19 @@ using namespace bindings;
     return Napi::RegisterModule(env, exports, bindings::varname::InitModule); \
   }                                                                           \
   static napi_module transmute_##varname##_napi_mod = {                       \
-      NAPI_MODULE_VERSION,                                                    \
-      node::ModuleFlags::kLinked,                                             \
-      nullptr,                                                                \
-      __napi_reg_##varname,                                                   \
-      "transmute:" #varname,                                                  \
-      nullptr,                                                                \
-      {0},                                                                    \
+    NAPI_MODULE_VERSION,                                                      \
+    node::ModuleFlags::kLinked,                                               \
+    nullptr,                                                                  \
+    __napi_reg_##varname,                                                     \
+    "transmute:" #varname,                                                    \
+    nullptr,                                                                  \
+    {0},                                                                      \
   };
 TR_NAPI_MODULE_MAP(XX)
 #undef XX
 
-ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
+ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir)
+    : id(id)
 {
   auto &args = scriptArgs;
   args.push_back("node");
@@ -92,9 +93,10 @@ bool ScriptEnvironment::initialize()
   }
 
   std::unique_ptr<node::InitializationResult> result =
-      node::InitializeOncePerProcess(scriptArgs, {node::ProcessInitializationFlags::kNoInitializeV8,
-                                                  node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
-                                                  node::ProcessInitializationFlags::kNoDefaultSignalHandling});
+    node::InitializeOncePerProcess(scriptArgs,
+                                   {node::ProcessInitializationFlags::kNoInitializeV8,
+                                    node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
+                                    node::ProcessInitializationFlags::kNoDefaultSignalHandling});
 
   auto errors = result->errors();
   if (errors.size() > 0)
@@ -341,8 +343,8 @@ static bool GetBooleanEnv(const char *name, bool default_value = false)
 }
 
 TrClientEnvironmentPerProcess::TrClientEnvironmentPerProcess()
-    : debugLayoutTree(GetBooleanEnv("DEBUG_LAYOUT_TREE")),
-      debugLayoutFormattingContext(GetBooleanEnv("DEBUG_LAYOUT_FORMATTING_CONTEXT"))
+    : debugLayoutTree(GetBooleanEnv("DEBUG_LAYOUT_TREE"))
+    , debugLayoutFormattingContext(GetBooleanEnv("DEBUG_LAYOUT_FORMATTING_CONTEXT"))
 {
 }
 
@@ -415,8 +417,8 @@ void TrClientContextPerProcess::start()
   assert(commandBufferChanClient != nullptr);
 
   if (
-      !eventChanClient->isConnected() ||
-      !mediaChanClient->isConnected())
+    !eventChanClient->isConnected() ||
+    !mediaChanClient->isConnected())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to the channels: event, media or frame", id);
     return;
@@ -495,7 +497,9 @@ void TrClientContextPerProcess::print()
   if (xrDeviceInit.enabled == true)
   {
     fprintf(stdout, "ClientContext(%d) xrDeviceInit.active=%s\n", id, xrDeviceInit.active ? "YES" : "NO");
-    fprintf(stdout, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d\n", id,
+    fprintf(stdout,
+            "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d\n",
+            id,
             static_cast<int>(xrDeviceInit.stereoRenderingMode));
     fprintf(stdout, "ClientContext(%d) xrDeviceInit.commandChanPort=%d\n", id, xrDeviceInit.commandChanPort);
   }

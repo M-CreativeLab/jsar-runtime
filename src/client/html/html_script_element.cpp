@@ -45,9 +45,7 @@ namespace dom
     }
     else if (isClassicScript() || isModuleScript())
     {
-      compiledScript = browsingContext->createScript(baseURI, isClassicScript()
-                                                                  ? SourceTextType::Classic
-                                                                  : SourceTextType::ESM);
+      compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
       loadSource();
     }

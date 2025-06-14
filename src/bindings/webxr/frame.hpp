@@ -59,10 +59,22 @@ namespace bindings
     void end();
 
   public:
-    inline uint32_t id() { return handle_->id(); }
-    inline XRSession *session() { return session_; }
-    inline uint32_t sessionId() { return session_->id(); }
-    inline uint32_t stereoId() { return handle_->stereoId(); }
+    inline uint32_t id()
+    {
+      return handle_->id();
+    }
+    inline XRSession *session()
+    {
+      return session_;
+    }
+    inline uint32_t sessionId()
+    {
+      return session_->id();
+    }
+    inline uint32_t stereoId()
+    {
+      return handle_->stereoId();
+    }
 
   private:
     XRSession *session_;

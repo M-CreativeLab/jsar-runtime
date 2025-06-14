@@ -8,7 +8,8 @@ namespace client_cssom::values::generics
     using T::T;
 
   public:
-    NonNegative(T value) : T(value)
+    NonNegative(T value)
+        : T(value)
     {
       // TODO(yorkie): set the value to zero if the value is negative.
     }

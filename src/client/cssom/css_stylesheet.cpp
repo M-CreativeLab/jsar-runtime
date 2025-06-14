@@ -7,9 +7,9 @@ namespace client_cssom
   using namespace crates::css;
 
   CSSStyleSheet::CSSStyleSheet(optional<CSSStyleSheetInit> init)
-      : StyleSheet(),
-        init_(init.value_or(CSSStyleSheetInit{})),
-        cssRules_(make_unique<CSSRuleList>())
+      : StyleSheet()
+      , init_(init.value_or(CSSStyleSheetInit{}))
+      , cssRules_(make_unique<CSSRuleList>())
   {
   }
 
@@ -31,7 +31,7 @@ namespace client_cssom
   void CSSStyleSheet::replaceSync(const string &cssText)
   {
     auto stylesheet = crates::css2::parsing::CSSParser().parseStylesheet(cssText, "");
-    auto& cssRules = stylesheet.rules();
+    auto &cssRules = stylesheet.rules();
     for (auto cssRule : cssRules)
       cssRules_->insert(*cssRule);
   }

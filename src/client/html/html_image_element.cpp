@@ -41,13 +41,11 @@ namespace dom
     sk_bitmap_ = make_shared<SkBitmap>();
 
     load_async_handle_.data = this;
-    uv_async_init(TrClientContextPerProcess::Get()->getScriptingEventLoop(), &load_async_handle_,
-                  [](uv_async_t *handle)
+    uv_async_init(TrClientContextPerProcess::Get()->getScriptingEventLoop(), &load_async_handle_, [](uv_async_t *handle)
                   {
                     auto imageElement = static_cast<HTMLImageElement *>(handle->data);
                     auto imageSrc = imageElement->getSrc();
-                    imageElement->fetchImage(imageSrc);
-                  });
+                    imageElement->fetchImage(imageSrc); });
   }
 
   void HTMLImageElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
@@ -140,10 +138,10 @@ namespace dom
   bool HTMLImageElement::decodeImage(SkBitmap &bitmap)
   {
     static constexpr const SkCodecs::Decoder decoders[] = {
-        SkPngDecoder::Decoder(),
-        SkJpegDecoder::Decoder(),
-        SkWebpDecoder::Decoder(),
-        SkGifDecoder::Decoder()};
+      SkPngDecoder::Decoder(),
+      SkJpegDecoder::Decoder(),
+      SkWebpDecoder::Decoder(),
+      SkGifDecoder::Decoder()};
 
     if (is_src_image_decoded_)
       return true;
@@ -170,8 +168,8 @@ namespace dom
           int original_width = info.width();
           int original_height = info.height();
           float scale = std::min(
-              static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_width,
-              static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_height);
+            static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_width,
+            static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_height);
           int scaled_width = static_cast<int>(original_width * scale);
           int scaled_height = static_cast<int>(original_height * scale);
           SkImageInfo scaled_info = info.makeWH(scaled_width, scaled_height);
@@ -281,7 +279,9 @@ namespace dom
     // Schedule the image decoding on the scripting thread.
     decode_work_handle_.data = this;
     uv_queue_work(TrClientContextPerProcess::Get()->getScriptingEventLoop(),
-                  &decode_work_handle_, work, afterWork);
+                  &decode_work_handle_,
+                  work,
+                  afterWork);
   }
 
   void HTMLImageElement::onImageDataReady()

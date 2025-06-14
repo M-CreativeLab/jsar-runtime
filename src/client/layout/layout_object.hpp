@@ -42,28 +42,82 @@ namespace client_layout
     std::string toString() const;
     std::string debugName() const;
 
-    virtual bool isBoxModelObject() const { return false; }
-    virtual bool isBox() const { return false; }
-    virtual bool isText() const { return false; }
-    virtual bool isEmptyText() const { return false; }
-    virtual bool isCanvas() const { return false; }
-    virtual bool isNone() const { return false; }
-    virtual bool isFlexibleBox() const { return false; }
-    virtual bool isLayoutGrid() const { return false; }
-    virtual bool isLayoutImage() const { return false; }
-    virtual bool isLayoutView() const { return false; }
-    virtual bool isLayoutReplaced() const { return false; }
-    virtual bool isLayoutBlock() const { return false; }
-    virtual bool isLayoutBlockFlow() const { return false; }
-    virtual bool isLayoutInline() const { return false; }
+    virtual bool isBoxModelObject() const
+    {
+      return false;
+    }
+    virtual bool isBox() const
+    {
+      return false;
+    }
+    virtual bool isText() const
+    {
+      return false;
+    }
+    virtual bool isEmptyText() const
+    {
+      return false;
+    }
+    virtual bool isCanvas() const
+    {
+      return false;
+    }
+    virtual bool isNone() const
+    {
+      return false;
+    }
+    virtual bool isFlexibleBox() const
+    {
+      return false;
+    }
+    virtual bool isLayoutGrid() const
+    {
+      return false;
+    }
+    virtual bool isLayoutImage() const
+    {
+      return false;
+    }
+    virtual bool isLayoutView() const
+    {
+      return false;
+    }
+    virtual bool isLayoutReplaced() const
+    {
+      return false;
+    }
+    virtual bool isLayoutBlock() const
+    {
+      return false;
+    }
+    virtual bool isLayoutBlockFlow() const
+    {
+      return false;
+    }
+    virtual bool isLayoutInline() const
+    {
+      return false;
+    }
 
     bool isDocumentElement() const;
     bool isBody() const;
 
-    virtual bool isSVG() const { return false; }
-    virtual bool isSVGRoot() const { return false; }
-    virtual bool isSVGChild() const { return isSVG() && !isSVGRoot(); }
-    virtual bool isSVGContainer() const { return false; }
+    virtual bool isSVG() const
+    {
+      return false;
+    }
+    virtual bool isSVGRoot() const
+    {
+      return false;
+    }
+    virtual bool isSVGChild() const
+    {
+      return isSVG() && !isSVGRoot();
+    }
+    virtual bool isSVGContainer() const
+    {
+      return false;
+    }
 
     bool isAnonymous() const
     {
@@ -75,7 +129,10 @@ namespace client_layout
     }
 
     // Returns `true` if this is a `LayoutBox` without physical fragments.
-    virtual bool isFragmentLessBox() const { return false; }
+    virtual bool isFragmentLessBox() const
+    {
+      return false;
+    }
 
     // Absolute or fixed positioning
     bool isRelativelyPositioned() const;
@@ -83,17 +140,32 @@ namespace client_layout
     bool isFixedPositioned() const;
     bool isAbsolutelyPositioned() const;
     bool isPositioned() const;
-    bool isInline() const { return false; }
-    bool isAtomicInlineLevel() const { return false; }
+    bool isInline() const
+    {
+      return false;
+    }
+    bool isAtomicInlineLevel() const
+    {
+      return false;
+    }
 
     bool hasClip() const;
     bool isScrollContainer() const;
 
-    inline std::shared_ptr<dom::Node> node() const { return node_.lock(); }
-    inline dom::Node &nodeRef() const { return *node(); }
+    inline std::shared_ptr<dom::Node> node() const
+    {
+      return node_.lock();
+    }
+    inline dom::Node &nodeRef() const
+    {
+      return *node();
+    }
 
     std::shared_ptr<dom::HTMLDocument> document() const;
-    dom::HTMLDocument &documentRef() const { return *document(); }
+    dom::HTMLDocument &documentRef() const
+    {
+      return *document();
+    }
 
     std::shared_ptr<LayoutView> view();
     LayoutView &viewRef();
@@ -101,8 +173,14 @@ namespace client_layout
     const LayoutView &viewRef() const;
 
     void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &);
-    inline bool hasEntity() const { return entity_.has_value(); }
-    builtin_scene::ecs::EntityId entity() const { return entity_.value(); }
+    inline bool hasEntity() const
+    {
+      return entity_.has_value();
+    }
+    builtin_scene::ecs::EntityId entity() const
+    {
+      return entity_.value();
+    }
     void createEntity();
     void destroyEntity();
     // Use the entity from the other layout object, this is useful when replacing the layout object.
@@ -116,19 +194,29 @@ namespace client_layout
     struct FragmentDifference
     {
       // Returns a `FragmentDifference` object which disables the differences computating.
-      static FragmentDifference Disabled() { return FragmentDifference(false, false); }
-      static FragmentDifference Default() { return FragmentDifference(); }
+      static FragmentDifference Disabled()
+      {
+        return FragmentDifference(false, false);
+      }
+      static FragmentDifference Default()
+      {
+        return FragmentDifference();
+      }
 
       bool enabled;
       bool changed;
 
       FragmentDifference(bool enabled = true, bool changed = false)
-          : enabled(enabled), changed(changed)
+          : enabled(enabled)
+          , changed(changed)
       {
       }
 
       // Returns if the fragment difference has changed.
-      inline bool isChanged() const { return enabled && changed; }
+      inline bool isChanged() const
+      {
+        return enabled && changed;
+      }
     };
 
     // Compute the current fragment result.
@@ -141,9 +229,18 @@ namespace client_layout
       return accumulated_fragment_.value();
     }
 
-    std::shared_ptr<LayoutObject> parent() const { return parent_.lock(); }
-    std::shared_ptr<LayoutObject> prevSibling() const { return previous_.lock(); }
-    std::shared_ptr<LayoutObject> nextSibling() const { return next_.lock(); }
+    std::shared_ptr<LayoutObject> parent() const
+    {
+      return parent_.lock();
+    }
+    std::shared_ptr<LayoutObject> prevSibling() const
+    {
+      return previous_.lock();
+    }
+    std::shared_ptr<LayoutObject> nextSibling() const
+    {
+      return next_.lock();
+    }
 
     bool isDescendantOf(std::shared_ptr<LayoutObject>) const;
     std::shared_ptr<LayoutObject> slowFirstChild() const;
@@ -156,8 +253,14 @@ namespace client_layout
                           std::shared_ptr<LayoutObject> beforeChild = nullptr);
     virtual void removeChild(std::shared_ptr<LayoutObject> oldChild);
 
-    virtual std::shared_ptr<LayoutObjectChildList> virtualChildren() { return nullptr; }
-    virtual std::shared_ptr<LayoutObjectChildList> virtualChildren() const { return nullptr; }
+    virtual std::shared_ptr<LayoutObjectChildList> virtualChildren()
+    {
+      return nullptr;
+    }
+    virtual std::shared_ptr<LayoutObjectChildList> virtualChildren() const
+    {
+      return nullptr;
+    }
 
     /**
      * Check if this box's associated entity has the specified scene component `T`.
@@ -272,13 +375,31 @@ namespace client_layout
 
     std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
 
-    bool isHorizontalWritingMode() const { return bitfields_.HorizontalWritingMode(); }
-    bool hasNonVisibleOverflow() const { return bitfields_.HasNonVisibleOverflow(); }
-    bool hasValidCachedGeometry() const { return bitfields_.HasValidCachedGeometry(); }
+    bool isHorizontalWritingMode() const
+    {
+      return bitfields_.HorizontalWritingMode();
+    }
+    bool hasNonVisibleOverflow() const
+    {
+      return bitfields_.HasNonVisibleOverflow();
+    }
+    bool hasValidCachedGeometry() const
+    {
+      return bitfields_.HasValidCachedGeometry();
+    }
 
-    void setHorizontalWritingMode(bool b) { bitfields_.SetHorizontalWritingMode(b); }
-    void setHasNonVisibleOverflow(bool b) { bitfields_.SetHasNonVisibleOverflow(b); }
-    void setHasValidCachedGeometry(bool b) { bitfields_.SetHasValidCachedGeometry(b); }
+    void setHorizontalWritingMode(bool b)
+    {
+      bitfields_.SetHorizontalWritingMode(b);
+    }
+    void setHasNonVisibleOverflow(bool b)
+    {
+      bitfields_.SetHasNonVisibleOverflow(b);
+    }
+    void setHasValidCachedGeometry(bool b)
+    {
+      bitfields_.SetHasValidCachedGeometry(b);
+    }
 
     bool visibleToHitTestRequest(const HitTestRequest &) const;
     bool visibleToHitTesting() const;
@@ -289,11 +410,16 @@ namespace client_layout
     // between point- and list-based hit test results.
     virtual std::shared_ptr<dom::Node> nodeForHitTest() const;
     virtual void updateHitTestResult(HitTestResult &, const glm::vec3 &point) const;
-    virtual bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
-                             HitTestPhase) { return false; }
+    virtual bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase)
+    {
+      return false;
+    }
 
   protected:
-    FormattingContext &formattingContext() const { return *formattingContext_; }
+    FormattingContext &formattingContext() const
+    {
+      return *formattingContext_;
+    }
 
     virtual void entityDidCreate(builtin_scene::ecs::EntityId entity);
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
@@ -311,9 +437,18 @@ namespace client_layout
     virtual void didComputeLayoutOnce(const ConstraintSpace &);
 
   private:
-    void setParent(std::shared_ptr<LayoutObject> parent) { parent_ = parent; }
-    void setPrevSibling(std::shared_ptr<LayoutObject> prev) { previous_ = prev; }
-    void setNextSibling(std::shared_ptr<LayoutObject> next) { next_ = next; }
+    void setParent(std::shared_ptr<LayoutObject> parent)
+    {
+      parent_ = parent;
+    }
+    void setPrevSibling(std::shared_ptr<LayoutObject> prev)
+    {
+      previous_ = prev;
+    }
+    void setNextSibling(std::shared_ptr<LayoutObject> next)
+    {
+      next_ = next;
+    }
 
     inline bool isTextOrSVGChild() const
     {
@@ -343,22 +478,28 @@ namespace client_layout
     std::weak_ptr<LayoutObject> next_;
 
   private: // LayoutObjectBitfields: holds all the boolean values for `LayoutObject`.
-#define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase)               \
-public:                                                                 \
-  bool MethodNameBase() const { return field_name_; }                   \
-  void Set##MethodNameBase(bool new_value) { field_name_ = new_value; } \
-                                                                        \
-private:                                                                \
+#define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase) \
+public:                                                   \
+  bool MethodNameBase() const                             \
+  {                                                       \
+    return field_name_;                                   \
+  }                                                       \
+  void Set##MethodNameBase(bool new_value)                \
+  {                                                       \
+    field_name_ = new_value;                              \
+  }                                                       \
+                                                          \
+private:                                                  \
   unsigned field_name_ : 1
 
     class LayoutObjectBitfields
     {
     public:
       explicit LayoutObjectBitfields()
-          : floating_(false),
-            horizontal_writing_mode_(true),
-            has_non_visible_overflow_(false),
-            has_valid_cached_geometry_(false)
+          : floating_(false)
+          , horizontal_writing_mode_(true)
+          , has_non_visible_overflow_(false)
+          , has_valid_cached_geometry_(false)
       {
       }
 

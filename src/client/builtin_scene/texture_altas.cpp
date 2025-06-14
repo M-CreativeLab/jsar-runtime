@@ -7,12 +7,12 @@ namespace builtin_scene
   using namespace client_graphics;
 
   TextureAtlas::TextureAtlas(shared_ptr<WebGL2Context> glContext, WebGLTextureUnit unit, int width, int height)
-      : glContext_(glContext),
-        glTexture_(glContext->createTexture()),
-        width_(width),
-        height_(height),
-        unit_(unit),
-        handle_(make_unique<crates::texture_atlas::TextureAtlasLayout>(width, height, kMaxLayerCount))
+      : glContext_(glContext)
+      , glTexture_(glContext->createTexture())
+      , width_(width)
+      , height_(height)
+      , unit_(unit)
+      , handle_(make_unique<crates::texture_atlas::TextureAtlasLayout>(width, height, kMaxLayerCount))
   {
     assert(glContext != nullptr);
     assert(unit_ >= WebGLTextureUnit::kTexture0 &&
@@ -108,19 +108,23 @@ namespace builtin_scene
     handle_->removeTexture(texture);
   }
 
-  void TextureAtlas::updateTexture(const Texture &texture, const unsigned char *pixels,
-                                   WebGLTextureFormat format,
-                                   WebGLPixelType pixelType)
+  void TextureAtlas::updateTexture(const Texture &texture, const unsigned char *pixels, WebGLTextureFormat format, WebGLPixelType pixelType)
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
 
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, glTexture_);
     // Update the texture with the new pixels or the default values.
-    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0,
-                             texture.x, texture.y, texture.layer,
-                             texture.width, texture.height, 1,
-                             format, pixelType,
+    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray,
+                             0,
+                             texture.x,
+                             texture.y,
+                             texture.layer,
+                             texture.width,
+                             texture.height,
+                             1,
+                             format,
+                             pixelType,
                              const_cast<unsigned char *>(pixels));
 
     glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);

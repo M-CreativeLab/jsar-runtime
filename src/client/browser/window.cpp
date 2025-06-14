@@ -15,8 +15,8 @@ namespace browser
   using namespace client_cssom::values;
 
   Window::Window(TrClientContextPerProcess *client_context)
-      : dom::DOMEventTarget(),
-        client_context_(client_context)
+      : dom::DOMEventTarget()
+      , client_context_(client_context)
   {
   }
 

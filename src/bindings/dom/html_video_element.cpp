@@ -9,9 +9,9 @@ namespace dombinding
     // using T = HTMLVideoElement;
     auto props = HTMLMediaElementBase<HTMLVideoElement, dom::HTMLVideoElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLVideoElement>>(
-        {
-            // Video Properties
-        });
+      {
+        // Video Properties
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

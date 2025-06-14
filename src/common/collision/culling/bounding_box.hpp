@@ -15,20 +15,18 @@ namespace collision
     {
     public:
       TrBoundingBox(const glm::vec3 min, const glm::vec3 &max, const glm::mat4 &worldMatrix)
-          : vectors{{glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{},
-                     glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}}},
-            center{glm::vec3{}},
-            centerWorld{glm::vec3{}},
-            extendSize{glm::vec3{}},
-            extendSizeWorld{glm::vec3{}},
-            directions{{glm::vec3{}, glm::vec3{}, glm::vec3{}}},
-            vectorsWorld{{glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{},
-                          glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}}},
-            minimum{glm::vec3{}},
-            minimumWorld{glm::vec3{}},
-            maximum{glm::vec3{}},
-            maximumWorld{glm::vec3{}},
-            worldBaseMatrix{glm::mat4(1.0f)}
+          : vectors{{glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}}}
+          , center{glm::vec3{}}
+          , centerWorld{glm::vec3{}}
+          , extendSize{glm::vec3{}}
+          , extendSizeWorld{glm::vec3{}}
+          , directions{{glm::vec3{}, glm::vec3{}, glm::vec3{}}}
+          , vectorsWorld{{glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}, glm::vec3{}}}
+          , minimum{glm::vec3{}}
+          , minimumWorld{glm::vec3{}}
+          , maximum{glm::vec3{}}
+          , maximumWorld{glm::vec3{}}
+          , worldBaseMatrix{glm::mat4(1.0f)}
       {
         reConstruct(min, max, worldMatrix);
       }
@@ -92,7 +90,7 @@ namespace collision
         reConstruct(minimum, maximum, worldBaseMatrix);
         return *this;
       }
-      
+
       glm::mat4 &getWorldMatrix()
       {
         return worldBaseMatrix;
@@ -172,8 +170,8 @@ namespace collision
         return true;
       }
       static bool IsCompletelyInFrustum(
-          const std::array<glm::vec3, 8> &boundingVectors,
-          const std::array<math3d::TrPlane, 6> &frustumPlanes)
+        const std::array<glm::vec3, 8> &boundingVectors,
+        const std::array<math3d::TrPlane, 6> &frustumPlanes)
       {
         for (unsigned p = 0u; p < 6; ++p)
         {

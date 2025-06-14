@@ -38,6 +38,9 @@ namespace client_graphics
   class WebGLBuffer : public WebGLObject
   {
   public:
-    WebGLBuffer() : WebGLObject(WebGLObjectType::Buffer) {}
+    WebGLBuffer()
+        : WebGLObject(WebGLObjectType::Buffer)
+    {
+    }
   };
 }

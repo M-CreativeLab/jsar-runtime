@@ -20,11 +20,11 @@ namespace builtin_scene
   struct InstanceData
   {
     InstanceData()
-        : transform(1.0f),
-          color(1.0f, 1.0f, 1.0f, 0.0f),
-          texUvOffset(0.0f, 0.0f),
-          texUvScale(1.0f, 1.0f),
-          texLayerIndex(0)
+        : transform(1.0f)
+        , color(1.0f, 1.0f, 1.0f, 0.0f)
+        , texUvOffset(0.0f, 0.0f)
+        , texUvScale(1.0f, 1.0f)
+        , texLayerIndex(0)
     {
     }
     glm::mat4 transform;   /** 16 */
@@ -122,8 +122,14 @@ namespace builtin_scene
                             std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo);
 
   public:
-    inline size_t count() const { return list_.size(); }
-    inline bool isDirty() const { return isDirty_; }
+    inline size_t count() const
+    {
+      return list_.size();
+    }
+    inline bool isDirty() const
+    {
+      return isDirty_;
+    }
     /**
      * Update the renderable instances list with the given instances.
      *
@@ -146,7 +152,10 @@ namespace builtin_scene
     void clearInstances();
     // Add an instance to the list.
     void addInstance(std::shared_ptr<Instance> instance);
-    inline void markAsDirty() { isDirty_ = true; }
+    inline void markAsDirty()
+    {
+      isDirty_ = true;
+    }
 
   public:
     InstanceFilter filter;
@@ -220,8 +229,14 @@ namespace builtin_scene
      * Remove the instance with the given entity id.
      */
     bool removeInstance(ecs::EntityId id);
-    inline RenderableInstancesList &getOpaqueInstancesList() const { return *opaqueInstances_; }
-    inline RenderableInstancesList &getTransparentInstancesList() const { return *transparentInstances_; }
+    inline RenderableInstancesList &getOpaqueInstancesList() const
+    {
+      return *opaqueInstances_;
+    }
+    inline RenderableInstancesList &getTransparentInstancesList() const
+    {
+      return *transparentInstances_;
+    }
 
   protected:
     /**
@@ -243,7 +258,10 @@ namespace builtin_scene
     void updateRenderQueues(bool ignoreDirty = false);
 
   private:
-    inline void markAsDirty() { isDirty_ = true; }
+    inline void markAsDirty()
+    {
+      isDirty_ = true;
+    }
 
   protected:
     mutable std::shared_mutex mutex_;
@@ -268,13 +286,19 @@ namespace builtin_scene
   public:
     template <typename... InitMeshArgs>
     InstancedMesh(const std::string &name, InitMeshArgs &&...args)
-        : InstancedMeshBase(),
-          MeshType(std::forward<InitMeshArgs>(args)...)
+        : InstancedMeshBase()
+        , MeshType(std::forward<InitMeshArgs>(args)...)
     {
     }
 
   public:
-    float area() override { return 0.0f; }
-    float volume() override { return 0.0f; }
+    float area() override
+    {
+      return 0.0f;
+    }
+    float volume() override
+    {
+      return 0.0f;
+    }
   };
 }

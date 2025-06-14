@@ -167,8 +167,8 @@ namespace client_xr
     {
       XRSessionRequestInit init;
       init.requiredFeatures = {
-          xr::TrXRFeature::LOCAL,
-          xr::TrXRFeature::VIEWER};
+        xr::TrXRFeature::LOCAL,
+        xr::TrXRFeature::VIEWER};
       return init;
     }
 
@@ -200,11 +200,11 @@ namespace client_xr
                            XRSessionMode mode,
                            XRSessionRequestInit requestInit,
                            std::vector<xr::TrXRFeature> enabledFeatures)
-        : id(response.sessionId),
-          recommendedContentSize(response.recommendedContentSize),
-          mode(mode),
-          requestInit(requestInit),
-          enabledFeatures(enabledFeatures)
+        : id(response.sessionId)
+        , recommendedContentSize(response.recommendedContentSize)
+        , mode(mode)
+        , requestInit(requestInit)
+        , enabledFeatures(enabledFeatures)
     {
     }
 

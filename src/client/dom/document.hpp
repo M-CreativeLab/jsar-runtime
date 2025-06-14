@@ -64,17 +64,13 @@ namespace dom
      * @param browsingContext The browsing context that the document belongs to.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
-    static std::shared_ptr<Document> Make(std::string contentType, DocumentType documentType,
-                                          std::shared_ptr<BrowsingContext> browsingContext,
-                                          bool autoConnect = false);
+    static std::shared_ptr<Document> Make(std::string contentType, DocumentType documentType, std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
 
   public:
     /**
      * Don't use this constructor directly, use `Document::Make` instead.
      */
-    Document(std::string contentType, DocumentType documentType,
-             std::shared_ptr<BrowsingContext> browsingContext,
-             bool autoConnect = false);
+    Document(std::string contentType, DocumentType documentType, std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
     Document(Document &other) = default;
     virtual ~Document() = default;
 
@@ -102,7 +98,10 @@ namespace dom
     void onNodeRemoved(const std::shared_ptr<Node>, bool recursive);
 
   private:
-    bool isDocument() const override final { return true; }
+    bool isDocument() const override final
+    {
+      return true;
+    }
     void openInternal();
     // Fix the source string to replace invalid tags.
     std::string &fixSource(std::string &source);
@@ -125,9 +124,18 @@ namespace dom
     std::string cookie() const;
     void setCookie(const std::string &new_cookies);
 
-    std::shared_ptr<const DocumentTimeline> timeline() const { return timeline_; }
-    const DocumentTimeline &timelineRef() const { return *timeline_; }
-    DocumentTimeline &timelineRef() { return *timeline_; }
+    std::shared_ptr<const DocumentTimeline> timeline() const
+    {
+      return timeline_;
+    }
+    const DocumentTimeline &timelineRef() const
+    {
+      return *timeline_;
+    }
+    DocumentTimeline &timelineRef()
+    {
+      return *timeline_;
+    }
 
     /**
      * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
@@ -143,7 +151,10 @@ namespace dom
      *
      * TODO: Will be moved to the `DocumentOrShadowRoot` interface.
      */
-    inline client_cssom::StyleCache &styleCache() { return style_cache_; }
+    inline client_cssom::StyleCache &styleCache()
+    {
+      return style_cache_;
+    }
 
   public:
     /**
@@ -151,15 +162,30 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
-    inline std::shared_ptr<HTMLHeadElement> head() const { return head_element_; }
-    inline const HTMLHeadElement &headRef() const { return *head_element_; }
-    inline std::shared_ptr<HTMLBodyElement> body() const { return body_element_; }
-    inline const HTMLBodyElement &bodyRef() const { return *body_element_; }
+    inline std::shared_ptr<HTMLHeadElement> head() const
+    {
+      return head_element_;
+    }
+    inline const HTMLHeadElement &headRef() const
+    {
+      return *head_element_;
+    }
+    inline std::shared_ptr<HTMLBodyElement> body() const
+    {
+      return body_element_;
+    }
+    inline const HTMLBodyElement &bodyRef() const
+    {
+      return *body_element_;
+    }
     /**
      * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element
      *  of the document (for example, the <html> element for HTML documents).
      */
-    inline std::shared_ptr<Element> documentElement() const { return firstElementChild(); }
+    inline std::shared_ptr<Element> documentElement() const
+    {
+      return firstElementChild();
+    }
     /**
      * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if
      * there are no child elements.
@@ -261,10 +287,22 @@ namespace dom
     ~HTMLDocument() = default;
 
   public:
-    inline std::shared_ptr<client_layout::LayoutView> layoutView() { return layout_view_; }
-    inline std::shared_ptr<const client_layout::LayoutView> layoutView() const { return layout_view_; }
-    inline client_layout::LayoutView &layoutViewRef() { return *layout_view_; }
-    inline const client_layout::LayoutView &layoutViewRef() const { return *layout_view_; }
+    inline std::shared_ptr<client_layout::LayoutView> layoutView()
+    {
+      return layout_view_;
+    }
+    inline std::shared_ptr<const client_layout::LayoutView> layoutView() const
+    {
+      return layout_view_;
+    }
+    inline client_layout::LayoutView &layoutViewRef()
+    {
+      return *layout_view_;
+    }
+    inline const client_layout::LayoutView &layoutViewRef() const
+    {
+      return *layout_view_;
+    }
 
     // Returns the current root of text node or element that is dirty, the renderer will draw from this node.
     // Call this function will reset the cached text or element.
@@ -312,7 +350,10 @@ namespace dom
     void afterLoadedCallback() override;
 
   private:
-    bool isHTMLDocument() const override final { return true; }
+    bool isHTMLDocument() const override final
+    {
+      return true;
+    }
     void onDocumentOpened() override;
     void onStyleSheetsDidChange() override;
 

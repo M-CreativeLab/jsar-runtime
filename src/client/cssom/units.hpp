@@ -8,7 +8,7 @@ namespace client_cssom
 {
   // The Pixel Per Inch (PPI) constant.
   constexpr const int PPI = 92;
-  
+
   // The device pixel ratio.
   constexpr const float DevicePixelRatio = 1.5f;
 

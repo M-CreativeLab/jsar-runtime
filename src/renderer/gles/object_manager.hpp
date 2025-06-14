@@ -11,14 +11,14 @@ namespace gles
   {
   public:
     GLObjectManager(const std::string &name)
-        : name(name),
-          programs(),
-          shaders(),
-          textures(),
-          buffers(),
-          framebuffers(),
-          renderbuffers(),
-          vertexArrays()
+        : name(name)
+        , programs()
+        , shaders()
+        , textures()
+        , buffers()
+        , framebuffers()
+        , renderbuffers()
+        , vertexArrays()
     {
     }
     GLObjectManager(GLObjectManager &) = delete;

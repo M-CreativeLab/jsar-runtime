@@ -22,12 +22,18 @@ namespace dom
     void connectedCallback() override;
 
   private:
-    bool isRenderable() const override final { return false; }
+    bool isRenderable() const override final
+    {
+      return false;
+    }
 
   public:
     bool blocking = true;
     bool disabled = false;
-    inline const client_cssom::StyleSheet &sheet() const { return *sheet_; }
+    inline const client_cssom::StyleSheet &sheet() const
+    {
+      return *sheet_;
+    }
 
   private:
     std::shared_ptr<client_cssom::StyleSheet> sheet_;

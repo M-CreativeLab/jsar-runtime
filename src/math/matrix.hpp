@@ -62,7 +62,10 @@ namespace math
   /**
    * @returns the origin matrix (identity matrix).
    */
-  inline glm::mat4 GetOriginMatrix() { return matrix::Origin; }
+  inline glm::mat4 GetOriginMatrix()
+  {
+    return matrix::Origin;
+  }
 
   /**
    * Convert a projection matrix to a left-handed coordinate system.

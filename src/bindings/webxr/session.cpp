@@ -26,16 +26,19 @@ namespace bindings
 #define MODULE_NAME "XRSession"
     auto props = dombinding::EventTargetWrap<XRSession, client_xr::XRSession>::GetClassProperties(env);
     auto added = vector<ClassPropertyDescriptor<XRSession>>(
-        {InstanceAccessor("inputSources", &XRSession::InputSourcesGetter, nullptr, napi_default_jsproperty),
-         InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),
-         InstanceAccessor("environmentBlendMode", &XRSession::EnvironmentBlendModeGetter, nullptr, napi_default_jsproperty),
-         InstanceMethod("requestAnimationFrame", &XRSession::RequestAnimationFrame, napi_default_method),
-         InstanceMethod("cancelAnimationFrame", &XRSession::CancelAnimationFrame, napi_default_method),
-         InstanceMethod("requestReferenceSpace", &XRSession::RequestReferenceSpace, napi_default_method),
-         InstanceMethod("updateRenderState", &XRSession::UpdateRenderState, napi_default_method),
-         InstanceMethod("updateTargetFrameRate", &XRSession::UpdateTargetFrameRate, napi_default_method),
-         InstanceMethod("updateCollisionBox", &XRSession::UpdateCollisionBox, napi_default_method),
-         InstanceMethod("end", &XRSession::End, napi_default_method)});
+      {InstanceAccessor("inputSources", &XRSession::InputSourcesGetter, nullptr, napi_default_jsproperty),
+       InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),
+       InstanceAccessor("environmentBlendMode",
+                        &XRSession::EnvironmentBlendModeGetter,
+                        nullptr,
+                        napi_default_jsproperty),
+       InstanceMethod("requestAnimationFrame", &XRSession::RequestAnimationFrame, napi_default_method),
+       InstanceMethod("cancelAnimationFrame", &XRSession::CancelAnimationFrame, napi_default_method),
+       InstanceMethod("requestReferenceSpace", &XRSession::RequestReferenceSpace, napi_default_method),
+       InstanceMethod("updateRenderState", &XRSession::UpdateRenderState, napi_default_method),
+       InstanceMethod("updateTargetFrameRate", &XRSession::UpdateTargetFrameRate, napi_default_method),
+       InstanceMethod("updateCollisionBox", &XRSession::UpdateCollisionBox, napi_default_method),
+       InstanceMethod("end", &XRSession::End, napi_default_method)});
     props.insert(props.end(), added.begin(), added.end());
 
     Function tpl = DefineClass(env, MODULE_NAME, props);
@@ -57,9 +60,11 @@ namespace bindings
 
     // Initialize the frame dispatcher
     frameDispatcherTsfn_ = ThreadSafeFunction::New(
-        env,
-        Function::New(env, [](const auto &info) {}),
-        "XRSession::FrameDispatcher", 0, 2);
+      env,
+      Function::New(env, [](const auto &info) {}),
+      "XRSession::FrameDispatcher",
+      0,
+      2);
 
     auto dispatcher = [this](shared_ptr<xr::TrXRFrameRequest> frameRequest, client_xr::XRFrameDispatcherCallback dispatch)
     {

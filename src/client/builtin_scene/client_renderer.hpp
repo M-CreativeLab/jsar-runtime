@@ -32,7 +32,8 @@ namespace builtin_scene
        * @param view The view to render.
        */
       XRRenderTarget(std::shared_ptr<client_xr::XRView> view)
-          : multiview_(false), view_(view)
+          : multiview_(false)
+          , view_(view)
       {
       }
       /**
@@ -41,7 +42,8 @@ namespace builtin_scene
        * @param views The views to render.
        */
       XRRenderTarget(const std::vector<std::shared_ptr<client_xr::XRView>> &views)
-          : multiview_(true), views_(&views)
+          : multiview_(true)
+          , views_(&views)
       {
       }
 
@@ -49,11 +51,17 @@ namespace builtin_scene
       /**
        * @returns Whether the render target is multiview.
        */
-      inline bool isMultiview() const { return multiview_; }
+      inline bool isMultiview() const
+      {
+        return multiview_;
+      }
       /**
        * @returns The view to render, it is `nullptr` if the render target is multiview.
        */
-      inline std::shared_ptr<client_xr::XRView> view() const { return view_; }
+      inline std::shared_ptr<client_xr::XRView> view() const
+      {
+        return view_;
+      }
       /**
        * @returns The views to render, and it will throw an exception if the render target is not multiview.
        */
@@ -72,8 +80,8 @@ namespace builtin_scene
 
   public:
     Renderer(std::shared_ptr<client_graphics::WebGL2Context> glContext, math::Size3 volumeSize)
-        : glContext_(glContext),
-          volumeSize_(volumeSize)
+        : glContext_(glContext)
+        , volumeSize_(volumeSize)
     {
       glContext_->enable(WEBGL_CULL_FACE);
     }
@@ -122,7 +130,10 @@ namespace builtin_scene
     /**
      * @returns The volume size of the renderer.
      */
-    inline math::Size3 volumeSize() const { return volumeSize_; }
+    inline math::Size3 volumeSize() const
+    {
+      return volumeSize_;
+    }
     /**
      * Set the volume size of the renderer.
      *
@@ -187,7 +198,9 @@ namespace builtin_scene
      * @param parentTransform The parent transform of the mesh, `nullptr` for the root transform.
      * @param renderTarget The XR render target to draw the mesh with.
      */
-    void drawMesh3d(const ecs::EntityId &entity, std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
+    void drawMesh3d(const ecs::EntityId &entity,
+                    std::shared_ptr<Mesh3d> mesh,
+                    std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
                     std::shared_ptr<Transform> parentTransform = nullptr,
                     std::optional<XRRenderTarget> renderTarget = std::nullopt);
@@ -245,7 +258,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "RenderStartupSystem"; }
+    const std::string name() const override
+    {
+      return "RenderStartupSystem";
+    }
     void onExecute() override;
   };
 
@@ -254,7 +270,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "RenderSystem"; }
+    const std::string name() const override
+    {
+      return "RenderSystem";
+    }
     void onExecute() override;
 
   private:
@@ -305,7 +324,8 @@ namespace builtin_scene
      * @param renderer The renderer to use.
      * @param renderTarget The XR render target.
      */
-    void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
+    void traverseAndRender(ecs::EntityId entity,
+                           Renderer &renderer,
                            std::optional<Renderer::XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Render the mesh with the given renderer.
@@ -315,7 +335,9 @@ namespace builtin_scene
      * @param renderer The renderer to use.
      * @param renderTarget The XR render target.
      */
-    void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
+    void renderMesh(ecs::EntityId &entity,
+                    std::shared_ptr<Mesh3d> meshComponent,
+                    Renderer &renderer,
                     std::optional<Renderer::XRRenderTarget> renderTarget);
   };
 }

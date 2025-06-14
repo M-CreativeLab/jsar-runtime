@@ -5,11 +5,13 @@ namespace webgl
   thread_local Napi::FunctionReference *WebGLTexture::constructor;
   void WebGLTexture::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLTexture",
-                                     {
-                                         InstanceMethod("toString", &WebGLTexture::ToString),
-                                         InstanceMethod("get", &WebGLTexture::GetValue),
-                                     });
+    Napi::Function tpl = DefineClass(
+      env,
+      "WebGLTexture",
+      {
+        InstanceMethod("toString", &WebGLTexture::ToString),
+        InstanceMethod("get", &WebGLTexture::GetValue),
+      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }

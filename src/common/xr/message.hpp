@@ -50,11 +50,16 @@ namespace xr
   class TrXRCommandBase
   {
   public:
-    TrXRCommandBase() {}
-    TrXRCommandBase(TrXRCmdType type) : type(type)
+    TrXRCommandBase()
     {
     }
-    virtual ~TrXRCommandBase() {}
+    TrXRCommandBase(TrXRCmdType type)
+        : type(type)
+    {
+    }
+    virtual ~TrXRCommandBase()
+    {
+    }
 
   public:
     TrXRCmdType type;
@@ -68,8 +73,9 @@ namespace xr
   class IsSessionSupportedRequest : public TrXRCommandBase<IsSessionSupportedRequest>
   {
   public:
-    IsSessionSupportedRequest(TrXRSessionMode mode) : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest),
-                                                      sessionMode(mode)
+    IsSessionSupportedRequest(TrXRSessionMode mode)
+        : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest)
+        , sessionMode(mode)
     {
     }
 
@@ -80,7 +86,10 @@ namespace xr
   class IsSessionSupportedResponse : public TrXRCommandBase<IsSessionSupportedResponse>
   {
   public:
-    IsSessionSupportedResponse() : TrXRCommandBase(TrXRCmdType::IsSessionSupportedResponse) {}
+    IsSessionSupportedResponse()
+        : TrXRCommandBase(TrXRCmdType::IsSessionSupportedResponse)
+    {
+    }
 
   public:
     bool supported;
@@ -89,12 +98,14 @@ namespace xr
   class SessionRequest : public TrXRCommandBase<SessionRequest>
   {
   public:
-    SessionRequest() : TrXRCommandBase(TrXRCmdType::SessionRequest),
-                       sessionMode(TrXRSessionMode::ImmersiveAR)
+    SessionRequest()
+        : TrXRCommandBase(TrXRCmdType::SessionRequest)
+        , sessionMode(TrXRSessionMode::ImmersiveAR)
     {
     }
-    SessionRequest(TrXRSessionMode mode) : TrXRCommandBase(TrXRCmdType::SessionRequest),
-                                           sessionMode(mode)
+    SessionRequest(TrXRSessionMode mode)
+        : TrXRCommandBase(TrXRCmdType::SessionRequest)
+        , sessionMode(mode)
     {
     }
 
@@ -105,8 +116,9 @@ namespace xr
   class SessionResponse : public TrXRCommandBase<SessionResponse>
   {
   public:
-    SessionResponse(uint32_t sessionId) : TrXRCommandBase(TrXRCmdType::SessionResponse),
-                                          sessionId(sessionId)
+    SessionResponse(uint32_t sessionId)
+        : TrXRCommandBase(TrXRCmdType::SessionResponse)
+        , sessionId(sessionId)
     {
     }
 
@@ -119,8 +131,9 @@ namespace xr
   class EndSessionRequest : public TrXRCommandBase<EndSessionRequest>
   {
   public:
-    EndSessionRequest(uint32_t sessionId) : TrXRCommandBase(TrXRCmdType::EndSessionRequest),
-                                            sessionId(sessionId)
+    EndSessionRequest(uint32_t sessionId)
+        : TrXRCommandBase(TrXRCmdType::EndSessionRequest)
+        , sessionId(sessionId)
     {
     }
 
@@ -131,7 +144,10 @@ namespace xr
   class EndSessionResponse : public TrXRCommandBase<EndSessionResponse>
   {
   public:
-    EndSessionResponse() : TrXRCommandBase(TrXRCmdType::EndSessionResponse) {}
+    EndSessionResponse()
+        : TrXRCommandBase(TrXRCmdType::EndSessionResponse)
+    {
+    }
 
   public:
     bool success;
@@ -140,8 +156,9 @@ namespace xr
   class UpdateBaseLayerRequest : public TrXRCommandBase<UpdateBaseLayerRequest>
   {
   public:
-    UpdateBaseLayerRequest(uint32_t sessionId) : TrXRCommandBase(TrXRCmdType::UpdateBaseLayerRequest),
-                                                 sessionId(sessionId)
+    UpdateBaseLayerRequest(uint32_t sessionId)
+        : TrXRCommandBase(TrXRCmdType::UpdateBaseLayerRequest)
+        , sessionId(sessionId)
     {
     }
 
@@ -157,7 +174,10 @@ namespace xr
   class UpdateBaseLayerResponse : public TrXRCommandBase<UpdateBaseLayerResponse>
   {
   public:
-    UpdateBaseLayerResponse() : TrXRCommandBase(TrXRCmdType::UpdateBaseLayerResponse) {}
+    UpdateBaseLayerResponse()
+        : TrXRCommandBase(TrXRCmdType::UpdateBaseLayerResponse)
+    {
+    }
 
   public:
     bool success;
@@ -189,10 +209,15 @@ namespace xr
     }
 
   public:
-    TrXRCommandMessage() : type(TrXRCmdType::Unknown), base(nullptr), baseSize(0) {}
+    TrXRCommandMessage()
+        : type(TrXRCmdType::Unknown)
+        , base(nullptr)
+        , baseSize(0)
+    {
+    }
     TrXRCommandMessage(TrXRCmdType type, void *base, size_t baseSize)
-        : type(type),
-          baseSize(baseSize)
+        : type(type)
+        , baseSize(baseSize)
     {
       if (base == nullptr || baseSize == 0)
         return;

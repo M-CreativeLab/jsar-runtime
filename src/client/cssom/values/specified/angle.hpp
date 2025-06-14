@@ -27,26 +27,56 @@ namespace client_cssom::values::specified
     static constexpr const char *UNIT_TURN = "turn";
 
   public:
-    static AngleDimension Deg(float value) { return AngleDimension(kDeg, value); }
-    static AngleDimension Grad(float value) { return AngleDimension(kGrad, value); }
-    static AngleDimension Rad(float value) { return AngleDimension(kRad, value); }
-    static AngleDimension Turn(float value) { return AngleDimension(kTurn, value); }
+    static AngleDimension Deg(float value)
+    {
+      return AngleDimension(kDeg, value);
+    }
+    static AngleDimension Grad(float value)
+    {
+      return AngleDimension(kGrad, value);
+    }
+    static AngleDimension Rad(float value)
+    {
+      return AngleDimension(kRad, value);
+    }
+    static AngleDimension Turn(float value)
+    {
+      return AngleDimension(kTurn, value);
+    }
 
   private:
     AngleDimension(Tag tag, float value = 0.0f)
-        : tag_(tag),
-          unitless_value_(value)
+        : tag_(tag)
+        , unitless_value_(value)
     {
     }
 
   public:
-    inline bool isDeg() const { return tag_ == kDeg; }
-    inline bool isGrad() const { return tag_ == kGrad; }
-    inline bool isRad() const { return tag_ == kRad; }
-    inline bool isTurn() const { return tag_ == kTurn; }
-    inline bool isZero() const { return unitless_value_ == 0.0f; }
+    inline bool isDeg() const
+    {
+      return tag_ == kDeg;
+    }
+    inline bool isGrad() const
+    {
+      return tag_ == kGrad;
+    }
+    inline bool isRad() const
+    {
+      return tag_ == kRad;
+    }
+    inline bool isTurn() const
+    {
+      return tag_ == kTurn;
+    }
+    inline bool isZero() const
+    {
+      return unitless_value_ == 0.0f;
+    }
 
-    inline float unitlessValue() const { return unitless_value_; }
+    inline float unitlessValue() const
+    {
+      return unitless_value_;
+    }
     inline const char *unit() const
     {
       switch (tag_)
@@ -96,15 +126,18 @@ namespace client_cssom::values::specified
     friend class Parse;
 
   public:
-    static Angle Zero() { return Angle(AngleDimension::Deg(0.0f), false); }
+    static Angle Zero()
+    {
+      return Angle(AngleDimension::Deg(0.0f), false);
+    }
 
   public:
     Angle() = default;
 
   private:
     Angle(AngleDimension value, bool was_calculated)
-        : value_(value),
-          was_calculated_(was_calculated)
+        : value_(value)
+        , was_calculated_(was_calculated)
     {
     }
 
@@ -138,7 +171,10 @@ namespace client_cssom::values::specified
     }
 
   public:
-    inline bool isZero() const { return value_.isZero(); }
+    inline bool isZero() const
+    {
+      return value_.isZero();
+    }
 
     std::string toCss() const override
     {

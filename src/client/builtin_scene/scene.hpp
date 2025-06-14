@@ -97,7 +97,10 @@ namespace builtin_scene
     /**
      * @returns The volume size of this scene.
      */
-    math::Size3 volumeSize() const { return volumeSize_; }
+    math::Size3 volumeSize() const
+    {
+      return volumeSize_;
+    }
 
     /**
      * Update the volume size of the scene.

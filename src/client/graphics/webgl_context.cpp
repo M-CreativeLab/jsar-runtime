@@ -45,7 +45,8 @@ namespace client_graphics
   }
 
   WebGLContext::WebGLContext(ContextAttributes &attrs, bool isWebGL2)
-      : contextAttributes(attrs), isWebGL2_(isWebGL2)
+      : contextAttributes(attrs)
+      , isWebGL2_(isWebGL2)
   {
     clientContext_ = TrClientContextPerProcess::Get();
     assert(clientContext_ != nullptr);
@@ -112,7 +113,9 @@ namespace client_graphics
   {
   public:
     LinkProgramException(WebGLProgram &program, const std::string &detail)
-        : std::runtime_error(getMessage(program, detail)) {}
+        : std::runtime_error(getMessage(program, detail))
+    {
+    }
 
   private:
     std::string getMessage(WebGLProgram &program, const std::string &detail)
@@ -466,10 +469,10 @@ namespace client_graphics
   }
 
   void WebGLContext::framebufferRenderbuffer(
-      WebGLFramebufferBindingTarget target,
-      WebGLFramebufferAttachment attachment,
-      WebGLRenderbufferBindingTarget renderbuffertarget,
-      std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+    WebGLFramebufferBindingTarget target,
+    WebGLFramebufferAttachment attachment,
+    WebGLRenderbufferBindingTarget renderbuffertarget,
+    std::shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
     auto req = FramebufferRenderbufferCommandBufferRequest(static_cast<uint32_t>(target),
                                                            static_cast<uint32_t>(attachment),
@@ -479,11 +482,11 @@ namespace client_graphics
   }
 
   void WebGLContext::framebufferTexture2D(
-      WebGLFramebufferBindingTarget target,
-      WebGLFramebufferAttachment attachment,
-      WebGLTexture2DTarget textarget,
-      std::shared_ptr<WebGLTexture> texture,
-      int level)
+    WebGLFramebufferBindingTarget target,
+    WebGLFramebufferAttachment attachment,
+    WebGLTexture2DTarget textarget,
+    std::shared_ptr<WebGLTexture> texture,
+    int level)
   {
     auto req = FramebufferTexture2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                         static_cast<uint32_t>(attachment),
@@ -583,15 +586,15 @@ namespace client_graphics
   }
 
   void WebGLContext::texImage2D(
-      WebGLTexture2DTarget target,
-      int level,
-      int internalformat,
-      size_t width,
-      size_t height,
-      int border,
-      WebGLTextureFormat format,
-      WebGLPixelType type,
-      unsigned char *pixels)
+    WebGLTexture2DTarget target,
+    int level,
+    int internalformat,
+    size_t width,
+    size_t height,
+    int border,
+    WebGLTextureFormat format,
+    WebGLPixelType type,
+    unsigned char *pixels)
   {
     auto req = TextureImage2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                   level,
@@ -638,15 +641,15 @@ namespace client_graphics
   }
 
   void WebGLContext::texSubImage2D(
-      WebGLTexture2DTarget target,
-      int level,
-      int xoffset,
-      int yoffset,
-      size_t width,
-      size_t height,
-      WebGLTextureFormat format,
-      WebGLPixelType type,
-      unsigned char *pixels)
+    WebGLTexture2DTarget target,
+    int level,
+    int xoffset,
+    int yoffset,
+    size_t width,
+    size_t height,
+    WebGLTextureFormat format,
+    WebGLPixelType type,
+    unsigned char *pixels)
   {
     auto req = TextureSubImage2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                      level,
@@ -659,8 +662,8 @@ namespace client_graphics
 
     unsigned char *unpacked = nullptr;
     if (
-        pixels != nullptr &&
-        (unpackFlipY_ || unpackPremultiplyAlpha_))
+      pixels != nullptr &&
+      (unpackFlipY_ || unpackPremultiplyAlpha_))
     {
       unpacked = unpackPixels(type,
                               format,
@@ -679,14 +682,14 @@ namespace client_graphics
   }
 
   void WebGLContext::copyTexImage2D(
-      WebGLTexture2DTarget target,
-      int level,
-      int internalformat,
-      int x,
-      int y,
-      size_t width,
-      size_t height,
-      int border)
+    WebGLTexture2DTarget target,
+    int level,
+    int internalformat,
+    int x,
+    int y,
+    size_t width,
+    size_t height,
+    int border)
   {
     auto req = CopyTextureImage2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                       level,
@@ -700,14 +703,14 @@ namespace client_graphics
   }
 
   void WebGLContext::copyTexSubImage2D(
-      WebGLTexture2DTarget target,
-      int level,
-      int xoffset,
-      int yoffset,
-      int x,
-      int y,
-      size_t width,
-      size_t height)
+    WebGLTexture2DTarget target,
+    int level,
+    int xoffset,
+    int yoffset,
+    int x,
+    int y,
+    size_t width,
+    size_t height)
   {
     auto req = CopyTextureSubImage2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                          level,
@@ -908,8 +911,7 @@ namespace client_graphics
   void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, glm::mat2 m)
   {
     std::vector<float> values = {
-        m[0][0], m[0][1],
-        m[1][0], m[1][1]};
+      m[0][0], m[0][1], m[1][0], m[1][1]};
     uniformMatrix2fv(location, transpose, values);
   }
 
@@ -929,10 +931,12 @@ namespace client_graphics
 
   void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m)
   {
+    // clang-format off
     std::vector<float> values = {
-        m[0][0], m[0][1], m[0][2],
-        m[1][0], m[1][1], m[1][2],
-        m[2][0], m[2][1], m[2][2]};
+      m[0][0], m[0][1], m[0][2],
+      m[1][0], m[1][1], m[1][2],
+      m[2][0], m[2][1], m[2][2]};
+    // clang-format on
     uniformMatrix3fv(location, transpose, values);
   }
 
@@ -952,11 +956,13 @@ namespace client_graphics
 
   void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m)
   {
+    // clang-format off
     std::vector<float> values = {
-        m[0][0], m[0][1], m[0][2], m[0][3],
-        m[1][0], m[1][1], m[1][2], m[1][3],
-        m[2][0], m[2][1], m[2][2], m[2][3],
-        m[3][0], m[3][1], m[3][2], m[3][3]};
+      m[0][0], m[0][1], m[0][2], m[0][3],
+      m[1][0], m[1][1], m[1][2], m[1][3],
+      m[2][0], m[2][1], m[2][2], m[2][3],
+      m[3][0], m[3][1], m[3][2], m[3][3]};
+    // clang-format on
     uniformMatrix4fv(location, transpose, values);
   }
 
@@ -973,26 +979,26 @@ namespace client_graphics
 
     if (runsInXRFrame &&
         (
-            /**
+          /**
              * Match for three.js matrix uniforms
              */
-            locationName == "projectionMatrix" ||
-            locationName == "projectionMatrices" ||
-            locationName == "projectionMatrices[0]" ||
-            locationName == "viewMatrix" ||
-            locationName == "viewMatrices" ||
-            locationName == "viewMatrices[0]" ||
-            /**
+          locationName == "projectionMatrix" ||
+          locationName == "projectionMatrices" ||
+          locationName == "projectionMatrices[0]" ||
+          locationName == "viewMatrix" ||
+          locationName == "viewMatrices" ||
+          locationName == "viewMatrices[0]" ||
+          /**
              * Match for Babylon.js matrix uniforms
              */
-            locationName == "projection" ||
-            locationName == "view" ||
-            locationName == "viewProjection" ||
-            locationName == "viewProjectionR"
-            /**
+          locationName == "projection" ||
+          locationName == "view" ||
+          locationName == "viewProjection" ||
+          locationName == "viewProjectionR"
+          /**
              * TODO: Compatibility with other libraries: Babylon.js, etc.
              */
-            ))
+          ))
     {
       bool forMultiview = false;
       WebGLMatrixPlaceholderId placeholderId = WebGLMatrixPlaceholderId::NotSet;
@@ -1289,18 +1295,18 @@ namespace client_graphics
     if (pname == WebGLFloatArrayParameterName::kViewport)
     {
       return {
-          static_cast<float>(viewport_.x()),
-          static_cast<float>(viewport_.y()),
-          static_cast<float>(viewport_.width()),
-          static_cast<float>(viewport_.height())};
+        static_cast<float>(viewport_.x()),
+        static_cast<float>(viewport_.y()),
+        static_cast<float>(viewport_.width()),
+        static_cast<float>(viewport_.height())};
     }
     else if (pname == WebGLFloatArrayParameterName::kScissorBox)
     {
       return {
-          static_cast<float>(0),
-          static_cast<float>(0),
-          static_cast<float>(viewport_.width()),
-          static_cast<float>(viewport_.height())};
+        static_cast<float>(0),
+        static_cast<float>(0),
+        static_cast<float>(viewport_.width()),
+        static_cast<float>(viewport_.height())};
     }
     assert(false);
   }
@@ -1563,8 +1569,11 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::bindBufferRange(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer,
-                                      int offset, size_t size)
+  void WebGL2Context::bindBufferRange(WebGLBufferBindingTarget target,
+                                      uint32_t index,
+                                      std::shared_ptr<WebGLBuffer> buffer,
+                                      int offset,
+                                      size_t size)
   {
     uint32_t bufferId = 0;
     if (buffer != nullptr)
@@ -1597,41 +1606,50 @@ namespace client_graphics
   }
 
   void WebGL2Context::blitFramebuffer(
-      int srcX0,
-      int srcY0,
-      int srcX1,
-      int srcY1,
-      int dstX0,
-      int dstY0,
-      int dstX1,
-      int dstY1,
-      int mask,
-      int filter)
+    int srcX0,
+    int srcY0,
+    int srcX1,
+    int srcY1,
+    int dstX0,
+    int dstY0,
+    int dstX1,
+    int dstY1,
+    int mask,
+    int filter)
   {
     auto req = BlitFramebufferCommandBufferRequest(
-        srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+      srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
     sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage)
   {
-    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target), size, nullptr,
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target),
+                                              size,
+                                              nullptr,
                                               static_cast<uint32_t>(usage));
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::bufferData(WebGLBufferBindingTarget target, size_t srcSize, void *srcData,
+  void WebGL2Context::bufferData(WebGLBufferBindingTarget target,
+                                 size_t srcSize,
+                                 void *srcData,
                                  WebGLBufferUsage usage,
                                  std::optional<int> srcOffset,
                                  std::optional<int> length)
   {
     // TODO: implement the srcOffset and length
-    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target), srcSize, srcData,
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target),
+                                              srcSize,
+                                              srcData,
                                               static_cast<uint32_t>(usage));
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::bufferSubData(WebGLBufferBindingTarget target, int dstByteOffset, size_t srcSize, void *srcData,
+  void WebGL2Context::bufferSubData(WebGLBufferBindingTarget target,
+                                    int dstByteOffset,
+                                    size_t srcSize,
+                                    void *srcData,
                                     std::optional<int> srcOffset,
                                     std::optional<int> length)
   {
@@ -1661,55 +1679,55 @@ namespace client_graphics
   }
 
   void WebGL2Context::compressedTexImage3D(
-      WebGLTexture3DTarget target,
-      int level,
-      int internalformat,
-      size_t width,
-      size_t height,
-      size_t depth,
-      int border,
-      size_t imageSize,
-      unsigned char *data)
+    WebGLTexture3DTarget target,
+    int level,
+    int internalformat,
+    size_t width,
+    size_t height,
+    size_t depth,
+    int border,
+    size_t imageSize,
+    unsigned char *data)
   {
     NOT_IMPLEMENTED();
   }
 
   void WebGL2Context::compressedTexSubImage3D(
-      WebGLTexture3DTarget target,
-      int level,
-      int xoffset,
-      int yoffset,
-      int zoffset,
-      size_t width,
-      size_t height,
-      size_t depth,
-      int format,
-      size_t imageSize,
-      unsigned char *data)
+    WebGLTexture3DTarget target,
+    int level,
+    int xoffset,
+    int yoffset,
+    int zoffset,
+    size_t width,
+    size_t height,
+    size_t depth,
+    int format,
+    size_t imageSize,
+    unsigned char *data)
   {
     NOT_IMPLEMENTED();
   }
 
   void WebGL2Context::copyBufferSubData(
-      WebGLBufferBindingTarget readTarget,
-      WebGLBufferBindingTarget writeTarget,
-      int readOffset,
-      int writeOffset,
-      size_t size)
+    WebGLBufferBindingTarget readTarget,
+    WebGLBufferBindingTarget writeTarget,
+    int readOffset,
+    int writeOffset,
+    size_t size)
   {
     NOT_IMPLEMENTED();
   }
 
   void WebGL2Context::copyTexSubImage3D(
-      WebGLTexture2DTarget target,
-      int level,
-      int xoffset,
-      int yoffset,
-      int zoffset,
-      int x,
-      int y,
-      size_t width,
-      size_t height)
+    WebGLTexture2DTarget target,
+    int level,
+    int xoffset,
+    int yoffset,
+    int zoffset,
+    int x,
+    int y,
+    size_t width,
+    size_t height)
   {
     NOT_IMPLEMENTED();
   }
@@ -1756,7 +1774,9 @@ namespace client_graphics
   void WebGL2Context::drawArraysInstanced(WebGLDrawMode mode, int first, int count, int instanceCount)
   {
     ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawArraysInstanced()");
-    auto commandBuffer = DrawArraysInstancedCommandBufferRequest(static_cast<uint32_t>(mode), first, count,
+    auto commandBuffer = DrawArraysInstancedCommandBufferRequest(static_cast<uint32_t>(mode),
+                                                                 first,
+                                                                 count,
                                                                  instanceCount);
     sendCommandBufferRequest(commandBuffer);
     sendFirstContentfulPaintMetrics();
@@ -1771,7 +1791,10 @@ namespace client_graphics
   void WebGL2Context::drawElementsInstanced(WebGLDrawMode mode, int count, int type, int offset, int instanceCount)
   {
     ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawElementsInstanced()");
-    auto commandBuffer = DrawElementsInstancedCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset,
+    auto commandBuffer = DrawElementsInstancedCommandBufferRequest(static_cast<uint32_t>(mode),
+                                                                   count,
+                                                                   type,
+                                                                   offset,
                                                                    instanceCount);
     sendCommandBufferRequest(commandBuffer);
     sendFirstContentfulPaintMetrics();
@@ -1780,8 +1803,12 @@ namespace client_graphics
   void WebGL2Context::drawRangeElements(WebGLDrawMode mode, int start, int end, int count, int type, int offset)
   {
     ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawRangeElements()");
-    auto commandBuffer = DrawRangeElementsCommandBufferRequest(static_cast<uint32_t>(mode), start, end,
-                                                               count, type, offset);
+    auto commandBuffer = DrawRangeElementsCommandBufferRequest(static_cast<uint32_t>(mode),
+                                                               start,
+                                                               end,
+                                                               count,
+                                                               type,
+                                                               offset);
     sendCommandBufferRequest(commandBuffer);
     sendFirstContentfulPaintMetrics();
   }
@@ -1792,11 +1819,11 @@ namespace client_graphics
   }
 
   void WebGL2Context::framebufferTextureLayer(
-      WebGLFramebufferBindingTarget target,
-      WebGLFramebufferAttachment attachment,
-      std::shared_ptr<WebGLTexture> texture,
-      int level,
-      int layer)
+    WebGLFramebufferBindingTarget target,
+    WebGLFramebufferAttachment attachment,
+    std::shared_ptr<WebGLTexture> texture,
+    int level,
+    int layer)
   {
     NOT_IMPLEMENTED();
   }
@@ -1808,12 +1835,12 @@ namespace client_graphics
   }
 
   void WebGL2Context::getBufferSubData(
-      WebGLBufferBindingTarget target,
-      int srcByteOffset,
-      size_t dstSize,
-      void *dstData,
-      std::optional<int> dstOffset,
-      std::optional<int> length)
+    WebGLBufferBindingTarget target,
+    int srcByteOffset,
+    size_t dstSize,
+    void *dstData,
+    std::optional<int> dstOffset,
+    std::optional<int> length)
   {
     NOT_IMPLEMENTED();
   }
@@ -1920,12 +1947,12 @@ namespace client_graphics
   }
 
   void WebGL2Context::invalidateSubFramebuffer(
-      WebGLFramebufferBindingTarget target,
-      const std::vector<int> attachments,
-      int x,
-      int y,
-      size_t width,
-      size_t height)
+    WebGLFramebufferBindingTarget target,
+    const std::vector<int> attachments,
+    int x,
+    int y,
+    size_t width,
+    size_t height)
   {
     NOT_IMPLEMENTED();
   }
@@ -1952,28 +1979,28 @@ namespace client_graphics
   }
 
   void WebGL2Context::renderbufferStorageMultisample(
-      WebGLRenderbufferBindingTarget target,
-      int samples,
-      int internalformat,
-      int width,
-      int height)
+    WebGLRenderbufferBindingTarget target,
+    int samples,
+    int internalformat,
+    int width,
+    int height)
   {
     auto commandBuffer = RenderbufferStorageMultisampleCommandBufferRequest(
-        static_cast<uint32_t>(target), samples, internalformat, width, height);
+      static_cast<uint32_t>(target), samples, internalformat, width, height);
     sendCommandBufferRequest(commandBuffer);
   }
 
   void WebGL2Context::texImage3D(
-      WebGLTexture3DTarget target,
-      int level,
-      int internalformat,
-      size_t width,
-      size_t height,
-      size_t depth,
-      int border,
-      WebGLTextureFormat format,
-      WebGLPixelType type,
-      unsigned char *pixels)
+    WebGLTexture3DTarget target,
+    int level,
+    int internalformat,
+    size_t width,
+    size_t height,
+    size_t depth,
+    int border,
+    WebGLTextureFormat format,
+    WebGLPixelType type,
+    unsigned char *pixels)
   {
     TextureImage3DCommandBufferRequest req;
     req.target = static_cast<uint32_t>(target);
@@ -1990,42 +2017,49 @@ namespace client_graphics
   }
 
   void WebGL2Context::texStorage2D(
-      WebGLTexture2DTarget target,
-      int levels,
-      int internalformat,
-      size_t width,
-      size_t height)
+    WebGLTexture2DTarget target,
+    int levels,
+    int internalformat,
+    size_t width,
+    size_t height)
   {
     auto req = TextureStorage2DCommandBufferRequest(static_cast<uint32_t>(target),
-                                                    levels, internalformat, width, height);
+                                                    levels,
+                                                    internalformat,
+                                                    width,
+                                                    height);
     sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::texStorage3D(
-      WebGLTexture3DTarget target,
-      int levels,
-      int internalformat,
-      size_t width,
-      size_t height,
-      size_t depth)
+    WebGLTexture3DTarget target,
+    int levels,
+    int internalformat,
+    size_t width,
+    size_t height,
+    size_t depth)
   {
     auto req = commandbuffers::TextureStorage3DCommandBufferRequest(static_cast<uint32_t>(target),
-                                                                    levels, internalformat, width, height, depth);
+                                                                    levels,
+                                                                    internalformat,
+                                                                    width,
+                                                                    height,
+                                                                    depth);
     sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::texSubImage3D(
-      WebGLTexture3DTarget target,
-      int level,
-      int xoffset,
-      int yoffset,
-      int zoffset,
-      size_t width,
-      size_t height,
-      size_t depth,
-      WebGLTextureFormat format,
-      WebGLPixelType type,
-      unsigned char *pixels)
+    WebGLTexture3DTarget target,
+    int level,
+    int xoffset,
+    int yoffset,
+    int zoffset,
+    size_t width,
+    size_t height,
+    size_t depth,
+    WebGLTextureFormat format,
+    WebGLPixelType type,
+    unsigned char *pixels)
   {
     TextureSubImage3DCommandBufferRequest req;
     req.target = static_cast<uint32_t>(target);
@@ -2116,11 +2150,11 @@ namespace client_graphics
   }
 
   void WebGL2Context::vertexAttribIPointer(
-      uint32_t index,
-      int size,
-      int type,
-      int stride,
-      int offset)
+    uint32_t index,
+    int size,
+    int type,
+    int stride,
+    int offset)
   {
     auto commandBuffer = VertexAttribIPointerCommandBufferRequest(index, size, type, stride, offset);
     sendCommandBufferRequest(commandBuffer);

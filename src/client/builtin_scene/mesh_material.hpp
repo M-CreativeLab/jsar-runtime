@@ -16,8 +16,8 @@ namespace builtin_scene
 
   public:
     MeshMaterial3d(std::shared_ptr<Material> material)
-        : ecs::Component(),
-          material_(material)
+        : ecs::Component()
+        , material_(material)
     {
     }
 
@@ -42,15 +42,24 @@ namespace builtin_scene
     /**
      * @returns The mesh handle.
      */
-    inline std::shared_ptr<Mesh3d> mesh() const { return mesh_; }
+    inline std::shared_ptr<Mesh3d> mesh() const
+    {
+      return mesh_;
+    }
     /**
      * @returns The program of the material.
      */
-    inline std::shared_ptr<client_graphics::WebGLProgram> program() const { return program_; }
+    inline std::shared_ptr<client_graphics::WebGLProgram> program() const
+    {
+      return program_;
+    }
     /**
      * @returns Whether the material is opaque.
      */
-    inline bool isOpaque() const { return material_->isOpaque(); }
+    inline bool isOpaque() const
+    {
+      return material_->isOpaque();
+    }
     /**
      * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.
      *
@@ -79,7 +88,10 @@ namespace builtin_scene
     /**
      * @returns Whether the material is initialized.
      */
-    inline bool initialized() const { return initialized_; }
+    inline bool initialized() const
+    {
+      return initialized_;
+    }
     /**
      * Get the shader source of this material.
      *

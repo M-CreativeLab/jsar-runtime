@@ -12,7 +12,8 @@ namespace builtin_scene::hierarchy
 
   public:
     Element(std::string name, std::shared_ptr<dom::Node> node)
-        : name(name), node(node)
+        : name(name)
+        , node(node)
     {
     }
 
@@ -26,7 +27,7 @@ namespace builtin_scene::hierarchy
 
     template <typename T>
       requires std::is_same_v<T, dom::SceneObject>
-    T& getNodeChecked() const
+    T &getNodeChecked() const
     {
       auto ref = getNode<T>();
       assert(ref != nullptr && "The node must be valid.");

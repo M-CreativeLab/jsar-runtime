@@ -6,8 +6,8 @@ namespace client_layout
   using namespace std;
 
   LayoutInline::LayoutInline(shared_ptr<dom::Node> node)
-      : LayoutBoxModelObject(node),
-        children_(make_shared<LayoutObjectChildList>())
+      : LayoutBoxModelObject(node)
+      , children_(make_shared<LayoutObjectChildList>())
   {
   }
 

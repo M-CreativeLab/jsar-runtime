@@ -13,8 +13,8 @@ namespace client_xr
   }
 
   XRHand::XRHand(XRHand &that)
-      : vector<shared_ptr<XRJointSpace>>(that),
-        inputSource_(that.inputSource_)
+      : vector<shared_ptr<XRJointSpace>>(that)
+      , inputSource_(that.inputSource_)
   {
   }
 

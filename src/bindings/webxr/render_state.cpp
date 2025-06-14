@@ -10,11 +10,13 @@ namespace bindings
   // static
   void XRRenderState::Init(Napi::Env env)
   {
-    Function tpl = DefineClass(env, "XRRenderState",
-                               {InstanceAccessor("baseLayer", &XRRenderState::BaseLayerGetter, nullptr),
-                                InstanceAccessor("depthFar", &XRRenderState::DepthFarGetter, nullptr),
-                                InstanceAccessor("depthNear", &XRRenderState::DepthNearGetter, nullptr),
-                                InstanceAccessor("inlineVerticalFieldOfView", &XRRenderState::InlineVerticalFieldOfViewGetter, nullptr)});
+    Function tpl = DefineClass(
+      env,
+      "XRRenderState",
+      {InstanceAccessor("baseLayer", &XRRenderState::BaseLayerGetter, nullptr),
+       InstanceAccessor("depthFar", &XRRenderState::DepthFarGetter, nullptr),
+       InstanceAccessor("depthNear", &XRRenderState::DepthNearGetter, nullptr),
+       InstanceAccessor("inlineVerticalFieldOfView", &XRRenderState::InlineVerticalFieldOfViewGetter, nullptr)});
 
     constructor = new FunctionReference();
     *constructor = Persistent(tpl);
@@ -31,7 +33,8 @@ namespace bindings
     return scope.Escape(instance).ToObject();
   }
 
-  XRRenderState::XRRenderState(const CallbackInfo &info) : ObjectWrap<XRRenderState>(info)
+  XRRenderState::XRRenderState(const CallbackInfo &info)
+      : ObjectWrap<XRRenderState>(info)
   {
     auto env = info.Env();
     HandleScope scope(info.Env());

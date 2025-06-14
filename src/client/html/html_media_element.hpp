@@ -24,8 +24,8 @@ namespace dom
     HTMLMediaElement(std::string tagName,
                      media_comm::MediaContentType contentType,
                      std::shared_ptr<Document> ownerDocument)
-        : HTMLElement(tagName, ownerDocument),
-          contentType_(contentType)
+        : HTMLElement(tagName, ownerDocument)
+        , contentType_(contentType)
     {
     }
     virtual ~HTMLMediaElement()
@@ -73,40 +73,61 @@ namespace dom
     /**
      * Sets the volume of the media player.
      */
-    inline void setVolume(bool value) { player_->setVolume(value); }
+    inline void setVolume(bool value)
+    {
+      player_->setVolume(value);
+    }
 
     /**
      * Returns the volume of the media player.
      */
-    inline double getVolume() { return player_->getVolume(); }
+    inline double getVolume()
+    {
+      return player_->getVolume();
+    }
 
     /**
      * Sets if this playback should be looped.
      */
-    inline void setLoop(bool value) { player_->setLoop(value); }
+    inline void setLoop(bool value)
+    {
+      player_->setLoop(value);
+    }
 
     /**
      * Returns if this playback should be looped.
      */
-    inline bool getLoop() { return player_->getLoop(); }
+    inline bool getLoop()
+    {
+      return player_->getLoop();
+    }
 
   public: // Read-only properties
     /**
      * Returns a string with the absolute URL of the chosen media resource.
      */
-    std::string currentSrc() { return currentSrc_; }
+    std::string currentSrc()
+    {
+      return currentSrc_;
+    }
 
     /**
      * A read-only double-precision floating-point value indicating the total duration of the media in seconds. If no media
      * data is available, the returned value is NaN. If the media is of indefinite length (such as streamed live media, a
      * WebRTC call's media, or similar), the value is +Infinity.
      */
-    float duration() { return player_->getDuration(); }
+    float duration()
+    {
+      return player_->getDuration();
+    }
 
     /**
      * Returns a boolean that indicates whether the media element has finished playing.
      */
-    bool ended() { return ended_; }
+    bool ended()
+    {
+      return ended_;
+    }
 
   public: // Methods
     /**
@@ -122,7 +143,10 @@ namespace dom
      *
      * @param time The time to seek to.
      */
-    inline void fastSeek(long long time) { player_->fastSeek(time); }
+    inline void fastSeek(long long time)
+    {
+      player_->fastSeek(time);
+    }
 
     /**
      * Resets the media element to its initial state and begins the process of selecting a media source and loading the
@@ -162,7 +186,7 @@ namespace dom
      * @param callback The callback function that is called when the media event occurs.
      */
     inline void resetEventCallback(
-        std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> callback)
+      std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> callback)
     {
       eventCallback_ = callback;
     }

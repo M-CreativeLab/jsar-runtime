@@ -35,9 +35,9 @@ namespace builtin_scene
      * @param disableRendering Whether to disable rendering of the mesh, by default it's disabled.
      */
     Mesh3d(std::shared_ptr<Mesh> handle, bool disableRendering = true)
-        : ecs::Component(),
-          handle_(handle),
-          disableRendering_(disableRendering)
+        : ecs::Component()
+        , handle_(handle)
+        , disableRendering_(disableRendering)
     {
     }
 
@@ -99,11 +99,17 @@ namespace builtin_scene
     /**
      * @returns The vertex array object.
      */
-    inline std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() const { return vao_; }
+    inline std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() const
+    {
+      return vao_;
+    }
     /**
      * @returns The vertex buffer object.
      */
-    inline std::shared_ptr<client_graphics::WebGLBuffer> vertexBufferObject() const { return vbo_; }
+    inline std::shared_ptr<client_graphics::WebGLBuffer> vertexBufferObject() const
+    {
+      return vbo_;
+    }
     /**
      * Set if the mesh3d is initialized.
      *
@@ -126,35 +132,59 @@ namespace builtin_scene
     /**
      * @returns If the mesh3d is initialized.
      */
-    inline bool initialized() { return initialized_; }
+    inline bool initialized()
+    {
+      return initialized_;
+    }
     /**
      * @returns If the mesh3d needs to update the underlying vertex buffer data.
      */
-    inline bool needsUpdate() const { return handle_->isDirty(); }
+    inline bool needsUpdate() const
+    {
+      return handle_->isDirty();
+    }
     /**
      * @returns If the mesh3d is disabled for rendering.
      */
-    inline bool isRenderingDisabled() { return disableRendering_; }
+    inline bool isRenderingDisabled()
+    {
+      return disableRendering_;
+    }
     /**
      * Disable rendering of the mesh, it causes the mesh not to be rendered.
      */
-    inline void disableRendering() { disableRendering_ = true; }
+    inline void disableRendering()
+    {
+      disableRendering_ = true;
+    }
     /**
      * Resume rendering of the mesh.
      */
-    inline void resumeRendering() { disableRendering_ = false; }
+    inline void resumeRendering()
+    {
+      disableRendering_ = false;
+    }
     /**
      * @returns The primitive topology of the mesh.
      */
-    inline PrimitiveTopology primitiveTopology() const { return handle_->primitiveTopology; }
+    inline PrimitiveTopology primitiveTopology() const
+    {
+      return handle_->primitiveTopology;
+    }
     /**
      * @returns The indices of the mesh.
      */
-    inline const Indices<uint32_t> &indices() const { return handle_->indices(); }
+    inline const Indices<uint32_t> &indices() const
+    {
+      return handle_->indices();
+    }
     /**
      * @returns The vertex buffer of the mesh.
      */
-    inline MeshVertexBuffer &vertexBuffer() { return handle_->vertexBuffer(); }
+    inline MeshVertexBuffer &vertexBuffer()
+    {
+      return handle_->vertexBuffer();
+    }
     /**
      * Iterate the enabled attributes of the mesh.
      *
@@ -169,8 +199,7 @@ namespace builtin_scene
       size_t stride = handle_->attributesStride();
       size_t offset = 0;
 
-      auto configureAttrib = [callback, glContext, program,
-                              stride, &offset](const IVertexAttribute &attrib)
+      auto configureAttrib = [callback, glContext, program, stride, &offset](const IVertexAttribute &attrib)
       {
         auto loc = glContext->getAttribLocation(program, attrib.name());
         if (loc.has_value())

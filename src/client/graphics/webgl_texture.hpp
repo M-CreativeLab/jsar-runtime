@@ -130,6 +130,9 @@ namespace client_graphics
   class WebGLTexture : public WebGLObject
   {
   public:
-    WebGLTexture() : WebGLObject(WebGLObjectType::Texture) {}
+    WebGLTexture()
+        : WebGLObject(WebGLObjectType::Texture)
+    {
+    }
   };
 }

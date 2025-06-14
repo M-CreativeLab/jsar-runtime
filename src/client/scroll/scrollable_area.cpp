@@ -10,8 +10,8 @@ namespace client_scroll
   using namespace client_layout;
 
   ScrollableArea::ScrollableArea()
-      : scroll_origin_(0.0f, 0.0f, 0.0f),
-        scroll_offset_(0.0f, 0.0f, 0.0f)
+      : scroll_origin_(0.0f, 0.0f, 0.0f)
+      , scroll_offset_(0.0f, 0.0f, 0.0f)
   {
   }
 

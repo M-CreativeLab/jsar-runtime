@@ -16,9 +16,9 @@ namespace client_layout
   using namespace skia::textlayout;
 
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
-      : LayoutObject(textNode),
-        plain_text_(nullopt),
-        transformed_text_(nullopt)
+      : LayoutObject(textNode)
+      , plain_text_(nullopt)
+      , transformed_text_(nullopt)
   {
   }
 
@@ -82,8 +82,8 @@ namespace client_layout
 
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(maxWidth > 0
-                          ? maxWidth + 1.0f // Add a small margin to avoid rounding issues
-                          : numeric_limits<float>::infinity());
+                        ? maxWidth + 1.0f // Add a small margin to avoid rounding issues
+                        : numeric_limits<float>::infinity());
 
     // Use longest line width and height as the constraint space.
     return ConstraintSpace(paragraph->getLongestLine(),

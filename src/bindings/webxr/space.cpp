@@ -37,7 +37,8 @@ namespace bindings
     return NewInstance(env, make_shared<client_xr::XRSpace>(baseMatrix, subType));
   }
 
-  XRSpace::XRSpace(const CallbackInfo &info) : XRSpaceBase(info)
+  XRSpace::XRSpace(const CallbackInfo &info)
+      : XRSpaceBase(info)
   {
   }
 
@@ -46,8 +47,7 @@ namespace bindings
   {
 #define MODULE_NAME "XRReferenceSpace"
     HandleScope scope(env);
-    Function func = DefineClass(env, MODULE_NAME,
-                                {InstanceMethod("getOffsetReferenceSpace", &XRReferenceSpace::GetOffsetReferenceSpace)});
+    Function func = DefineClass(env, MODULE_NAME, {InstanceMethod("getOffsetReferenceSpace", &XRReferenceSpace::GetOffsetReferenceSpace)});
     constructor = new FunctionReference();
     *constructor = Persistent(func);
     env.Global().Set(MODULE_NAME, func);
@@ -66,7 +66,8 @@ namespace bindings
     return NewInstance(env, make_shared<client_xr::XRReferenceSpace>(type));
   }
 
-  XRReferenceSpace::XRReferenceSpace(const CallbackInfo &info) : XRSpaceBase(info)
+  XRReferenceSpace::XRReferenceSpace(const CallbackInfo &info)
+      : XRSpaceBase(info)
   {
   }
 
@@ -82,10 +83,11 @@ namespace bindings
 #define MODULE_NAME "XRViewSpace"
     HandleScope scope(env);
     Function func = DefineClass(
-        env, MODULE_NAME,
-        {
-            InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
-        });
+      env,
+      MODULE_NAME,
+      {
+        InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
+      });
     constructor = new FunctionReference();
     *constructor = Persistent(func);
 #undef MODULE_NAME
@@ -148,7 +150,8 @@ namespace bindings
     return NewInstance(env, client_xr::XRJointSpace::Make(inputSource, index));
   }
 
-  XRJointSpace::XRJointSpace(const CallbackInfo &info) : XRSpaceBase(info)
+  XRJointSpace::XRJointSpace(const CallbackInfo &info)
+      : XRSpaceBase(info)
   {
     Napi::Env env = info.Env();
     HandleScope scope(env);
@@ -172,7 +175,8 @@ namespace bindings
     return XRSpaceBase<XRTargetRayOrGripSpace, client_xr::XRTargetRayOrGripSpace>::NewInstance(env, handle);
   }
 
-  XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const CallbackInfo &info) : XRSpaceBase(info)
+  XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const CallbackInfo &info)
+      : XRSpaceBase(info)
   {
   }
 }

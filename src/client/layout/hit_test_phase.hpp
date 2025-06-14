@@ -16,21 +16,21 @@ namespace client_layout
   {
     switch (phase)
     {
-      case HitTestPhase::kSelfBlockBackground:
-        os << "kSelfBlockBackground";
-        break;
-      case HitTestPhase::kDescendantBlockBackgrounds:
-        os << "kDescendantBlockBackgrounds";
-        break;
-      case HitTestPhase::kFloat:
-        os << "kFloat";
-        break;
-      case HitTestPhase::kForeground:
-        os << "kForeground";
-        break;
-      default:
-        os << "Unknown Phase";
-        break;
+    case HitTestPhase::kSelfBlockBackground:
+      os << "kSelfBlockBackground";
+      break;
+    case HitTestPhase::kDescendantBlockBackgrounds:
+      os << "kDescendantBlockBackgrounds";
+      break;
+    case HitTestPhase::kFloat:
+      os << "kFloat";
+      break;
+    case HitTestPhase::kForeground:
+      os << "kForeground";
+      break;
+    default:
+      os << "Unknown Phase";
+      break;
     }
     return os;
   }

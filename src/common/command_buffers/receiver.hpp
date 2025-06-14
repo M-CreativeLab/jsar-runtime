@@ -8,8 +8,13 @@ namespace commandbuffers
   class TrCommandBufferReceiver : public ipc::TrChannelReceiver<TrCommandBufferMessage>
   {
   public:
-    TrCommandBufferReceiver(ipc::TrOneShotClient<TrCommandBufferMessage> *client) : ipc::TrChannelReceiver<TrCommandBufferMessage>(client) {}
-    ~TrCommandBufferReceiver() {}
+    TrCommandBufferReceiver(ipc::TrOneShotClient<TrCommandBufferMessage> *client)
+        : ipc::TrChannelReceiver<TrCommandBufferMessage>(client)
+    {
+    }
+    ~TrCommandBufferReceiver()
+    {
+    }
 
   public:
     // Receive a new command buffer request or response.

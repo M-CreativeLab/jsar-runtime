@@ -11,7 +11,8 @@ namespace client_graphics
   class WebGLProgram : public WebGLObject
   {
   public:
-    WebGLProgram() : WebGLObject(WebGLObjectType::Program)
+    WebGLProgram()
+        : WebGLObject(WebGLObjectType::Program)
     {
     }
 

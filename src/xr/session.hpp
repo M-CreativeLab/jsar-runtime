@@ -27,18 +27,13 @@ namespace xr
      * @param init The requested session initialization info.
      * @returns The new `xr::TrXRSession` instance.
      */
-    static inline std::shared_ptr<TrXRSession> Make(uint32_t sessionId, Device *device,
-                                                    std::shared_ptr<TrContentRuntime> content,
-                                                    TrXRSessionMode mode,
-                                                    TrXRSessionInit &init)
+    static inline std::shared_ptr<TrXRSession> Make(uint32_t sessionId, Device *device, std::shared_ptr<TrContentRuntime> content, TrXRSessionMode mode, TrXRSessionInit &init)
     {
       return std::make_shared<TrXRSession>(sessionId, device, content, mode, init);
     }
 
   public:
-    TrXRSession(uint32_t id, Device *device, std::shared_ptr<TrContentRuntime> content,
-                TrXRSessionMode mode,
-                TrXRSessionInit &init);
+    TrXRSession(uint32_t id, Device *device, std::shared_ptr<TrContentRuntime> content, TrXRSessionMode mode, TrXRSessionInit &init);
     ~TrXRSession();
 
   public:
@@ -66,19 +61,28 @@ namespace xr
     /**
      * Get the collision box of this session.
      */
-    void getCollisionBox(float *outMin, float *outMax) { return contextZone->getCollisionBoxMinMax(outMin, outMax); }
+    void getCollisionBox(float *outMin, float *outMax)
+    {
+      return contextZone->getCollisionBoxMinMax(outMin, outMax);
+    }
     /**
      * Set the stereo frame id to the session's context zone.
      *
      * @param id The stereo id.
      */
-    void setStereoId(uint32_t id) { contextZone->setStereoId(id); }
+    void setStereoId(uint32_t id)
+    {
+      contextZone->setStereoId(id);
+    }
     /**
      * Set the pending stereo frames count to the session's context zone.
      *
      * @param count The pending stereo frames count.
      */
-    void setPendingStereoFramesCount(int count) { contextZone->setPendingStereoFramesCount(count); }
+    void setPendingStereoFramesCount(int count)
+    {
+      contextZone->setPendingStereoFramesCount(count);
+    }
     /**
      * Update the states in zone.
      */

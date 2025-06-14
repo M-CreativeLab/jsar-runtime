@@ -42,20 +42,20 @@ namespace client_cssom
     static bool IsInheritedProperty(const std::string property)
     {
       static const std::unordered_set<std::string> inherited_properties = {
-          "font-size",
-          "font-weight",
-          "font-style",
-          "line-height",
-          "color",
-          "visibility",
-          "text-align",
-          "direction",
-          "text-decoration",
-          "text-transform",
-          "letter-spacing",
-          "word-spacing",
-          "white-space",
-          "text-indent"};
+        "font-size",
+        "font-weight",
+        "font-style",
+        "line-height",
+        "color",
+        "visibility",
+        "text-align",
+        "direction",
+        "text-decoration",
+        "text-transform",
+        "letter-spacing",
+        "word-spacing",
+        "white-space",
+        "text-indent"};
       return inherited_properties.find(property) != inherited_properties.end();
     }
 
@@ -85,7 +85,10 @@ namespace client_cssom
     }
 
   public:
-    inline bool hasProperty(const std::string &name) const { return find(name) != end(); }
+    inline bool hasProperty(const std::string &name) const
+    {
+      return find(name) != end();
+    }
     inline std::string getPropertyValue(const std::string &name) const
     {
       const auto &it = find(name);
@@ -103,24 +106,72 @@ namespace client_cssom
     bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
 
     // Properties
-    inline const values::computed::Display &display() const { return display_; }
-    inline const values::computed::BoxSizing &boxSizing() const { return box_sizing_; }
-    inline const values::computed::Overflow &overflowX() const { return overflow_x_; }
-    inline const values::computed::Overflow &overflowY() const { return overflow_y_; }
-    inline const values::computed::Margin &margin() const { return margin_; }
-    inline const values::computed::Padding &padding() const { return padding_; }
+    inline const values::computed::Display &display() const
+    {
+      return display_;
+    }
+    inline const values::computed::BoxSizing &boxSizing() const
+    {
+      return box_sizing_;
+    }
+    inline const values::computed::Overflow &overflowX() const
+    {
+      return overflow_x_;
+    }
+    inline const values::computed::Overflow &overflowY() const
+    {
+      return overflow_y_;
+    }
+    inline const values::computed::Margin &margin() const
+    {
+      return margin_;
+    }
+    inline const values::computed::Padding &padding() const
+    {
+      return padding_;
+    }
 
-    inline const values::computed::Size &width() const { return width_; }
-    inline const values::computed::Size &height() const { return height_; }
-    inline const values::computed::Size &minWidth() const { return min_width_; }
-    inline const values::computed::Size &minHeight() const { return min_height_; }
-    inline const values::computed::MaxSize &maxWidth() const { return max_width_; }
-    inline const values::computed::MaxSize &maxHeight() const { return max_height_; }
+    inline const values::computed::Size &width() const
+    {
+      return width_;
+    }
+    inline const values::computed::Size &height() const
+    {
+      return height_;
+    }
+    inline const values::computed::Size &minWidth() const
+    {
+      return min_width_;
+    }
+    inline const values::computed::Size &minHeight() const
+    {
+      return min_height_;
+    }
+    inline const values::computed::MaxSize &maxWidth() const
+    {
+      return max_width_;
+    }
+    inline const values::computed::MaxSize &maxHeight() const
+    {
+      return max_height_;
+    }
 
-    inline const values::computed::BorderWidth &borderWidth() const { return border_width_; }
-    inline const values::computed::BorderColor &borderColor() const { return border_color_; }
-    inline const values::computed::BorderStyle &borderStyle() const { return border_style_; }
-    inline const values::computed::BorderRadius &borderRadius() const { return border_radius_; }
+    inline const values::computed::BorderWidth &borderWidth() const
+    {
+      return border_width_;
+    }
+    inline const values::computed::BorderColor &borderColor() const
+    {
+      return border_color_;
+    }
+    inline const values::computed::BorderStyle &borderStyle() const
+    {
+      return border_style_;
+    }
+    inline const values::computed::BorderRadius &borderRadius() const
+    {
+      return border_radius_;
+    }
     inline const values::computed::BorderCornerRadius &borderTopLeftRadius() const
     {
       return border_radius_.topLeft();
@@ -152,24 +203,66 @@ namespace client_cssom
       return false;
     }
 
-    inline const values::computed::PositionType &positionType() const { return position_type_; }
+    inline const values::computed::PositionType &positionType() const
+    {
+      return position_type_;
+    }
 
-    inline Visibility visibility() const { return visibility_.value_or(Visibility::kVisible); }
-    inline PointerEvents pointerEvents() const { return pointer_events_.value_or(PointerEvents::kAuto); }
+    inline Visibility visibility() const
+    {
+      return visibility_.value_or(Visibility::kVisible);
+    }
+    inline PointerEvents pointerEvents() const
+    {
+      return pointer_events_.value_or(PointerEvents::kAuto);
+    }
 
-    inline const std::vector<std::string> &fonts() const { return fonts_; }
-    inline const values::computed::FontSize &fontSize() const { return font_size_; }
-    inline const values::computed::FontWeight &fontWeight() const { return font_weight_; }
-    inline const values::computed::FontStyle &fontStyle() const { return font_style_; }
-    inline const values::computed::LineHeight &lineHeight() const { return line_height_; }
+    inline const std::vector<std::string> &fonts() const
+    {
+      return fonts_;
+    }
+    inline const values::computed::FontSize &fontSize() const
+    {
+      return font_size_;
+    }
+    inline const values::computed::FontWeight &fontWeight() const
+    {
+      return font_weight_;
+    }
+    inline const values::computed::FontStyle &fontStyle() const
+    {
+      return font_style_;
+    }
+    inline const values::computed::LineHeight &lineHeight() const
+    {
+      return line_height_;
+    }
 
-    inline const values::computed::TextAlign &textAlign() const { return text_align_; }
-    inline const values::computed::Direction &textDirection() const { return text_direction_; }
+    inline const values::computed::TextAlign &textAlign() const
+    {
+      return text_align_;
+    }
+    inline const values::computed::Direction &textDirection() const
+    {
+      return text_direction_;
+    }
 
-    inline const values::computed::Color &color() const { return color_; }
-    inline bool hasColor() const { return bitfields_.HasColor(); }
-    inline const values::computed::Color &backgroundColor() const { return background_color_; }
-    inline bool hasBackgroundColor() const { return bitfields_.HasBackgroundColor(); }
+    inline const values::computed::Color &color() const
+    {
+      return color_;
+    }
+    inline bool hasColor() const
+    {
+      return bitfields_.HasColor();
+    }
+    inline const values::computed::Color &backgroundColor() const
+    {
+      return background_color_;
+    }
+    inline bool hasBackgroundColor() const
+    {
+      return bitfields_.HasBackgroundColor();
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -179,17 +272,32 @@ namespace client_cssom
     }
 
     // 3D Transforms
-    inline const bool hasTransform() const { return bitfields_.HasTransform(); }
-    inline const values::computed::Transform &transform() const { return transform_; }
-    inline const size_t applyTransformTo(glm::mat4 &matrix) const { return transform_.applyTo(matrix); }
+    inline const bool hasTransform() const
+    {
+      return bitfields_.HasTransform();
+    }
+    inline const values::computed::Transform &transform() const
+    {
+      return transform_;
+    }
+    inline const size_t applyTransformTo(glm::mat4 &matrix) const
+    {
+      return transform_.applyTo(matrix);
+    }
 
     // Transitions and animations
     inline const std::vector<values::computed::TransitionProperty> &transitionProperties() const
     {
       return transition_properties_;
     }
-    inline const std::vector<values::computed::Time> &transitionDurations() const { return transition_durations_; }
-    inline const std::vector<values::computed::Time> &transitionDelays() const { return transition_delays_; }
+    inline const std::vector<values::computed::Time> &transitionDurations() const
+    {
+      return transition_durations_;
+    }
+    inline const std::vector<values::computed::Time> &transitionDelays() const
+    {
+      return transition_delays_;
+    }
     inline const std::vector<values::computed::TimingFunction> &transitionTimingFunctions() const
     {
       return transition_timing_functions_;
@@ -204,8 +312,14 @@ namespace client_cssom
     };
     // Returns the transition property at the given index, otherwise returns `std::nullopt`.
     std::optional<TransitionProperty> getTransitionProperty(uint32_t index) const;
-    inline const size_t getTransitionPropertiesCount() const { return transition_properties_.size(); }
-    inline const bool hasTransitionProperties() const { return !transition_properties_.empty(); }
+    inline const size_t getTransitionPropertiesCount() const
+    {
+      return transition_properties_.size();
+    }
+    inline const bool hasTransitionProperties() const
+    {
+      return !transition_properties_.empty();
+    }
 
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
@@ -287,12 +401,18 @@ namespace client_cssom
     std::vector<values::computed::TimingFunction> transition_timing_functions_;
 
   private: // Bitfields for computed style properties.
-#define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME)               \
-public:                                                               \
-  bool PUBLIC_NAME() const { return PRIVATE_NAME; }                   \
-  void Set##PUBLIC_NAME(bool new_value) { PRIVATE_NAME = new_value; } \
-                                                                      \
-private:                                                              \
+#define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME) \
+public:                                                 \
+  bool PUBLIC_NAME() const                              \
+  {                                                     \
+    return PRIVATE_NAME;                                \
+  }                                                     \
+  void Set##PUBLIC_NAME(bool new_value)                 \
+  {                                                     \
+    PRIVATE_NAME = new_value;                           \
+  }                                                     \
+                                                        \
+private:                                                \
   unsigned PRIVATE_NAME : 1
 
     class ComputedStyleBitfields

@@ -9,7 +9,13 @@ namespace client_layout
     using LayoutBlock::LayoutBlock;
 
   public:
-    const char *name() const override { return "LayoutGrid"; }
-    bool isLayoutGrid() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutGrid";
+    }
+    bool isLayoutGrid() const override final
+    {
+      return true;
+    }
   };
 }

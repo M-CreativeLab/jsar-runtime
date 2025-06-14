@@ -33,8 +33,11 @@ namespace math3d
   class TrVector3
   {
   public:
-    static inline void TransformCoordinatesFromFloatsToRef(float x, float y, float z,
-                                                           const glm::mat4 &transformation, glm::vec3 &result)
+    static inline void TransformCoordinatesFromFloatsToRef(float x,
+                                                           float y,
+                                                           float z,
+                                                           const glm::mat4 &transformation,
+                                                           glm::vec3 &result)
     {
       const auto &m = glm::value_ptr(transformation);
       const auto rx = x * m[0] + y * m[4] + z * m[8] + m[12];
@@ -47,7 +50,8 @@ namespace math3d
     }
 
     static inline void TransformCoordinatesToRef(const glm::vec3 &vector,
-                                                 const glm::mat4 &transformation, glm::vec3 &result)
+                                                 const glm::mat4 &transformation,
+                                                 glm::vec3 &result)
     {
       return TransformCoordinatesFromFloatsToRef(vector.x, vector.y, vector.z, transformation, result);
     }

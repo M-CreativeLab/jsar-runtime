@@ -7,27 +7,35 @@ using namespace std;
 
 namespace canvas
 {
-  shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(const void *imageData, size_t imageByteLength,
-                                                         float sx, float sy, float sw, float sh)
+  shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(const void *imageData, size_t imageByteLength, float sx, float sy, float sw, float sh)
   {
     return make_shared<ImageBitmap>(imageData, imageByteLength, sx, sy, sw, sh);
   }
 
   shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(shared_ptr<ImageSource> image,
-                                                         float sx, float sy, float sw, float sh)
+                                                         float sx,
+                                                         float sy,
+                                                         float sw,
+                                                         float sh)
   {
     return make_shared<ImageBitmap>(image, sx, sy, sw, sh);
   }
 
   shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(shared_ptr<ImageBitmap> otherImageBitmap,
-                                                         float sx, float sy, float sw, float sh)
+                                                         float sx,
+                                                         float sy,
+                                                         float sw,
+                                                         float sh)
   {
     auto image = dynamic_pointer_cast<ImageSource>(otherImageBitmap);
     return CreateImageBitmap(image, sx, sy, sw, sh);
   }
 
   shared_ptr<ImageBitmap> ImageBitmap::CreateImageBitmap(shared_ptr<ImageData> otherImageData,
-                                                         float sx, float sy, float sw, float sh)
+                                                         float sx,
+                                                         float sy,
+                                                         float sw,
+                                                         float sh)
   {
     auto image = dynamic_pointer_cast<ImageSource>(otherImageData);
     return CreateImageBitmap(image, sx, sy, sw, sh);

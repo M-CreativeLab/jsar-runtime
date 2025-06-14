@@ -37,15 +37,24 @@ namespace client_xr
     /**
      * @returns the device's context zone.
      */
-    inline xr::TrXRDeviceContextZone *contextZone() { return clientContext_->getXRDeviceContextZone(); }
+    inline xr::TrXRDeviceContextZone *contextZone()
+    {
+      return clientContext_->getXRDeviceContextZone();
+    }
     /**
      * @returns the device's input sources zone.
      */
-    inline xr::TrXRInputSourcesZone *inputSourcesZone() { return clientContext_->getXRInputSourcesZone(); }
+    inline xr::TrXRInputSourcesZone *inputSourcesZone()
+    {
+      return clientContext_->getXRInputSourcesZone();
+    }
     /**
      * @returns the client context.
      */
-    inline TrClientContextPerProcess *clientContext() { return clientContext_; }
+    inline TrClientContextPerProcess *clientContext()
+    {
+      return clientContext_;
+    }
 
   public:
     /**

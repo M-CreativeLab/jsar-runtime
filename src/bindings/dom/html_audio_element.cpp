@@ -9,9 +9,9 @@ namespace dombinding
   {
     auto props = HTMLMediaElementBase<HTMLAudioElement, dom::HTMLAudioElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>>(
-        {
-            // Audio Properties
-        });
+      {
+        // Audio Properties
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -35,8 +35,9 @@ namespace dombinding
 
     if (!info.IsConstructCall())
     {
-      auto msg = "Failed to construct 'Audio': "
-                 "Please use the 'new' operator, this object constructor cannot be called as a function.";
+      auto msg =
+        "Failed to construct 'Audio': "
+        "Please use the 'new' operator, this object constructor cannot be called as a function.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Null();
     }
@@ -44,17 +45,18 @@ namespace dombinding
     Document *document = Document::GetCurrent(env);
     if (TR_UNLIKELY(document == nullptr))
     {
-      auto msg = "Failed to construct 'Audio': "
-                 "The global object 'document' is not an instance of 'Document'.";
+      auto msg =
+        "Failed to construct 'Audio': "
+        "The global object 'document' is not an instance of 'Document'.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Null();
     }
 
     auto documentObject = document->Value();
     auto audioValue = documentObject
-        .Get("createElement")
-        .As<Napi::Function>()
-        .Call(documentObject, {Napi::String::New(env, "audio")});
+                        .Get("createElement")
+                        .As<Napi::Function>()
+                        .Call(documentObject, {Napi::String::New(env, "audio")});
 
     auto audioObject = audioValue.As<Napi::Object>();
     if (info.Length() >= 1 && info[0].IsString())

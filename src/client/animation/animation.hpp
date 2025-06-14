@@ -16,8 +16,14 @@ namespace dom
     virtual ~Animation() = default;
 
   public:
-    virtual bool isCSSAnimation() const { return false; }
-    virtual bool isCSSTransition() const { return false; }
+    virtual bool isCSSAnimation() const
+    {
+      return false;
+    }
+    virtual bool isCSSTransition() const
+    {
+      return false;
+    }
 
     void cancel();
     void commitStyles();
@@ -46,11 +52,23 @@ namespace dom
       current_time_ = time;
     }
 
-    const AnimationEffect &effect() const { return *effect_; }
-    AnimationEffect &effect() { return *effect_; }
+    const AnimationEffect &effect() const
+    {
+      return *effect_;
+    }
+    AnimationEffect &effect()
+    {
+      return *effect_;
+    }
 
-    std::string id() const { return id_; }
-    bool ready() const { return ready_; }
+    std::string id() const
+    {
+      return id_;
+    }
+    bool ready() const
+    {
+      return ready_;
+    }
 
     enum PlayState
     {
@@ -59,13 +77,19 @@ namespace dom
       kPlayStatePaused,
       kPlayStateFinished,
     };
-    bool pending() const { return pending_; }
+    bool pending() const
+    {
+      return pending_;
+    }
     bool played() const
     {
       return play_state_ == kPlayStateRunning ||
              play_state_ == kPlayStatePaused;
     }
-    PlayState playState() const { return play_state_; }
+    PlayState playState() const
+    {
+      return play_state_;
+    }
 
     enum ReplaceState
     {
@@ -73,7 +97,10 @@ namespace dom
       kReplaceStatePersisted,
       kReplaceStateRemoved,
     };
-    ReplaceState replaceState() const { return replace_state_; }
+    ReplaceState replaceState() const
+    {
+      return replace_state_;
+    }
 
   public:
     float playbackRate;

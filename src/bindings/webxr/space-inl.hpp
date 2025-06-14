@@ -38,12 +38,12 @@ namespace bindings
 
     auto jsThis = info.This().As<Napi::Object>();
     jsThis.DefineProperty(
-        Napi::PropertyDescriptor::Value("_subType",
-                                        Napi::String::New(env, client_xr::to_string(subType())),
-                                        napi_enumerable));
+      Napi::PropertyDescriptor::Value("_subType",
+                                      Napi::String::New(env, client_xr::to_string(subType())),
+                                      napi_enumerable));
     jsThis.DefineProperty(
-        Napi::PropertyDescriptor::Value("_isReferenceSpace",
-                                        Napi::Boolean::New(env, isReferenceSpace()),
-                                        napi_enumerable));
+      Napi::PropertyDescriptor::Value("_isReferenceSpace",
+                                      Napi::Boolean::New(env, isReferenceSpace()),
+                                      napi_enumerable));
   }
 }

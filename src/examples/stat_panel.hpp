@@ -22,27 +22,30 @@ namespace jsar::example
    */
   class StatPanel
   {
-    const char *panelVertSource = "#version 410 core\n"
-                                  "layout (location = 0) in vec2 position;\n"
-                                  "layout (location = 1) in vec2 texCoord;\n"
-                                  "out vec2 TexCoord;\n"
-                                  "void main()\n"
-                                  "{\n"
-                                  "    gl_Position = vec4(position, 0.0, 1.0);\n"
-                                  "    TexCoord = texCoord;\n"
-                                  "}\n";
-    const char *panelFragSource = "#version 410 core\n"
-                                  "precision mediump float;\n"
-                                  "in vec2 TexCoord;\n"
-                                  "out vec4 FragColor;\n"
-                                  "uniform sampler2D texture1;\n"
-                                  "void main()\n"
-                                  "{\n"
-                                  "    FragColor = texture(texture1, TexCoord);\n"
-                                  "}\n";
+    const char *panelVertSource =
+      "#version 410 core\n"
+      "layout (location = 0) in vec2 position;\n"
+      "layout (location = 1) in vec2 texCoord;\n"
+      "out vec2 TexCoord;\n"
+      "void main()\n"
+      "{\n"
+      "    gl_Position = vec4(position, 0.0, 1.0);\n"
+      "    TexCoord = texCoord;\n"
+      "}\n";
+    const char *panelFragSource =
+      "#version 410 core\n"
+      "precision mediump float;\n"
+      "in vec2 TexCoord;\n"
+      "out vec4 FragColor;\n"
+      "uniform sampler2D texture1;\n"
+      "void main()\n"
+      "{\n"
+      "    FragColor = texture(texture1, TexCoord);\n"
+      "}\n";
 
   public:
-    StatPanel(WindowContext *windowCtx) : windowCtx(windowCtx)
+    StatPanel(WindowContext *windowCtx)
+        : windowCtx(windowCtx)
     {
       initGLProgram();
       resetCanvas();
@@ -181,6 +184,7 @@ namespace jsar::example
     GLuint vao;
     GLuint program;
     GLuint texture;
+    // clang-format off
     float vertices[16] = {
         // 位置          // 纹理坐标
         1.0f, 1.0f, 1.0f, 0.0f,  // 右上角
@@ -188,6 +192,7 @@ namespace jsar::example
         -1.0f, 1.0f, 0.0f, 0.0f, // 左上角
         -1.0f, -1.0f, 0.0f, 1.0f // 左下角
     };
+    // clang-format on
 
   public:
     uint32_t fps = 0;

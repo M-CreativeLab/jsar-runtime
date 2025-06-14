@@ -37,13 +37,16 @@ namespace client_xr
 
   public:
     XRSessionEvent(XRSessionEventType type, std::shared_ptr<XRSession> session)
-        : dom::Event(dom::DOMEventConstructorType::kXRSessionEvent, GetDOMEventType(type)),
-          session_(session)
+        : dom::Event(dom::DOMEventConstructorType::kXRSessionEvent, GetDOMEventType(type))
+        , session_(session)
     {
     }
 
   public:
-    std::shared_ptr<XRSession> session() const { return session_; }
+    std::shared_ptr<XRSession> session() const
+    {
+      return session_;
+    }
 
   private:
     std::shared_ptr<XRSession> session_;
@@ -97,15 +100,21 @@ namespace client_xr
     XRInputSourceEvent(XRInputSourceEventType type,
                        std::shared_ptr<XRFrame> frame,
                        std::shared_ptr<XRInputSource> inputSource)
-        : dom::Event(dom::DOMEventConstructorType::kXRInputSourceEvent, GetDOMEventType(type)),
-          frame_(frame),
-          inputSource_(inputSource)
+        : dom::Event(dom::DOMEventConstructorType::kXRInputSourceEvent, GetDOMEventType(type))
+        , frame_(frame)
+        , inputSource_(inputSource)
     {
     }
 
   public:
-    std::shared_ptr<XRFrame> frame() { return frame_; }
-    std::shared_ptr<XRInputSource> inputSource() { return inputSource_; }
+    std::shared_ptr<XRFrame> frame()
+    {
+      return frame_;
+    }
+    std::shared_ptr<XRInputSource> inputSource()
+    {
+      return inputSource_;
+    }
 
   private:
     std::shared_ptr<XRFrame> frame_;
@@ -145,10 +154,10 @@ namespace client_xr
                               std::vector<std::shared_ptr<XRInputSource>> added,
                               std::vector<std::shared_ptr<XRInputSource>> removed)
         : dom::Event(dom::DOMEventConstructorType::kXRInputSourcesChangeEvent,
-                     GetDOMEventType(XRInputSourcesChangeEventType::kChange)),
-          session_(session),
-          added_(added),
-          removed_(removed)
+                     GetDOMEventType(XRInputSourcesChangeEventType::kChange))
+        , session_(session)
+        , added_(added)
+        , removed_(removed)
     {
     }
     XRInputSourcesChangeEvent(const XRInputSourcesChangeEvent &) = delete;
@@ -157,15 +166,24 @@ namespace client_xr
     /**
      * @returns The session that the input sources belong to.
      */
-    std::shared_ptr<XRSession> session() { return session_; }
+    std::shared_ptr<XRSession> session()
+    {
+      return session_;
+    }
     /**
      * @returns The input sources that have been added.
      */
-    std::vector<std::shared_ptr<XRInputSource>> &added() { return added_; }
+    std::vector<std::shared_ptr<XRInputSource>> &added()
+    {
+      return added_;
+    }
     /**
      * @returns The input sources that have been removed.
      */
-    std::vector<std::shared_ptr<XRInputSource>> &removed() { return removed_; }
+    std::vector<std::shared_ptr<XRInputSource>> &removed()
+    {
+      return removed_;
+    }
 
   private:
     std::shared_ptr<XRSession> session_;

@@ -42,7 +42,10 @@ namespace webgl
     }
 
   public:
-    uint32_t GetId() const { return handle_->id; }
+    uint32_t GetId() const
+    {
+      return handle_->id;
+    }
 
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);

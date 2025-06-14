@@ -14,12 +14,13 @@ namespace builtin_scene
   using namespace std;
   using namespace client_xr;
 
-  WebXRExperience::WebXRExperience() : ecs::Resource(),
-                                       client_(TrClientContextPerProcess::Get()->getXRDeviceClient()),
-                                       session_(nullptr),
-                                       reference_space_(nullptr),
-                                       current_frame_(nullptr),
-                                       current_time_(0)
+  WebXRExperience::WebXRExperience()
+      : ecs::Resource()
+      , client_(TrClientContextPerProcess::Get()->getXRDeviceClient())
+      , session_(nullptr)
+      , reference_space_(nullptr)
+      , current_frame_(nullptr)
+      , current_time_(0)
   {
     assert(client_ != nullptr && "WebXRExperience: XRDeviceClient is null");
   }

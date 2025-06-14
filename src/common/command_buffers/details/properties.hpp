@@ -11,8 +11,8 @@ namespace commandbuffers
   public:
     GetParameterCommandBufferRequest() = delete;
     GetParameterCommandBufferRequest(int pname)
-        : TrCommandBufferSimpleRequest<Derived, Type>(),
-          pname(pname)
+        : TrCommandBufferSimpleRequest<Derived, Type>()
+        , pname(pname)
     {
     }
 
@@ -26,8 +26,8 @@ namespace commandbuffers
   public:
     GetParameterCommandBufferResponse() = delete;
     GetParameterCommandBufferResponse(ReqType *req, ValueType value)
-        : TrCommandBufferSimpleResponse<Derived>(Type, req),
-          value(value)
+        : TrCommandBufferSimpleResponse<Derived>(Type, req)
+        , value(value)
     {
     }
 
@@ -132,9 +132,9 @@ namespace commandbuffers
   public:
     GetShaderPrecisionFormatCommandBufferRequest() = delete;
     GetShaderPrecisionFormatCommandBufferRequest(int shadertype, int precisiontype)
-        : TrCommandBufferSimpleRequest(),
-          shadertype(shadertype),
-          precisiontype(precisiontype)
+        : TrCommandBufferSimpleRequest()
+        , shadertype(shadertype)
+        , precisiontype(precisiontype)
     {
     }
 
@@ -149,11 +149,13 @@ namespace commandbuffers
   public:
     GetShaderPrecisionFormatCommandBufferResponse() = delete;
     GetShaderPrecisionFormatCommandBufferResponse(GetShaderPrecisionFormatCommandBufferRequest *req,
-                                                  int rangeMin, int rangeMax, int precision)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req),
-          rangeMin(rangeMin),
-          rangeMax(rangeMax),
-          precision(precision)
+                                                  int rangeMin,
+                                                  int rangeMax,
+                                                  int precision)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req)
+        , rangeMin(rangeMin)
+        , rangeMax(rangeMax)
+        , precision(precision)
     {
     }
 
@@ -176,8 +178,8 @@ namespace commandbuffers
   public:
     GetErrorCommandBufferResponse() = delete;
     GetErrorCommandBufferResponse(GetErrorCommandBufferRequest *req, int error)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_ERROR_RES, req),
-          error(error)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_ERROR_RES, req)
+        , error(error)
     {
     }
 

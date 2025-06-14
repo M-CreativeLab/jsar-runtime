@@ -17,14 +17,23 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Normal() { return T(kNormal); }
-    static T Italic() { return T(kItalic); }
-    static T Oblique(AngleType angle) { return T(kOblique, angle); }
+    static T Normal()
+    {
+      return T(kNormal);
+    }
+    static T Italic()
+    {
+      return T(kItalic);
+    }
+    static T Oblique(AngleType angle)
+    {
+      return T(kOblique, angle);
+    }
 
   protected:
     FontStyle(Tag tag = kNormal, std::optional<AngleType> oblique_angle = std::nullopt)
-        : tag_(tag),
-          oblique_angle_(oblique_angle)
+        : tag_(tag)
+        , oblique_angle_(oblique_angle)
     {
     }
 
@@ -46,14 +55,32 @@ namespace client_cssom::values::generics
     using ValueVariant = std::variant<std::monostate, N, L>;
 
   public:
-    static T Normal() { return T(kNormal); }
-    static T Number(N number) { return T(kNumber, number); }
-    static T Length(L length) { return T(kLength, length); }
+    static T Normal()
+    {
+      return T(kNormal);
+    }
+    static T Number(N number)
+    {
+      return T(kNumber, number);
+    }
+    static T Length(L length)
+    {
+      return T(kLength, length);
+    }
 
   public:
-    inline bool isNormal() const { return tag_ == kNormal; }
-    inline bool isNumber() const { return tag_ == kNumber; }
-    inline bool isLength() const { return tag_ == kLength; }
+    inline bool isNormal() const
+    {
+      return tag_ == kNormal;
+    }
+    inline bool isNumber() const
+    {
+      return tag_ == kNumber;
+    }
+    inline bool isLength() const
+    {
+      return tag_ == kLength;
+    }
 
     N getNumber()
     {
@@ -82,13 +109,13 @@ namespace client_cssom::values::generics
 
   protected:
     GenericLineHeight()
-        : tag_(Tag::kNormal),
-          value_(std::monostate{})
+        : tag_(Tag::kNormal)
+        , value_(std::monostate{})
     {
     }
     GenericLineHeight(Tag tag, ValueVariant value = std::monostate{})
-        : tag_(tag),
-          value_(value)
+        : tag_(tag)
+        , value_(value)
     {
     }
 

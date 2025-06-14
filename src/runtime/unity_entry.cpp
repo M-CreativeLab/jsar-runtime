@@ -44,8 +44,9 @@ private:
   }
 
 private:
-  UnityEmbedder(IUnityInterfaces *unityInterfaces) : TrEmbedder(TrHostEngine::Unity),
-                                                     interfaces(unityInterfaces)
+  UnityEmbedder(IUnityInterfaces *unityInterfaces)
+      : TrEmbedder(TrHostEngine::Unity)
+      , interfaces(unityInterfaces)
   {
     graphics = unityInterfaces->Get<IUnityGraphics>();
     log = unityInterfaces->Get<IUnityLog>();
@@ -187,19 +188,19 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
 
   char deviceVendor[PROP_VALUE_MAX];
   if (
-      __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
-      __system_property_get("ro.product.product.brand", deviceVendor) >= 0)
+    __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
+    __system_property_get("ro.product.product.brand", deviceVendor) >= 0)
   {
     setenv("JSAR_DEVICE_VENDOR", deviceVendor, 1);
   }
 
   char enableWebglPlaceholders[PROP_VALUE_MAX];
   if (
-      /**
+    /**
        * When the property is set and the value is not "yes", we will disable the placeholder feature.
        */
-      __system_property_get("jsar.webgl.placeholders", enableWebglPlaceholders) > 0 &&
-      strcmp(enableWebglPlaceholders, "yes") != 0)
+    __system_property_get("jsar.webgl.placeholders", enableWebglPlaceholders) > 0 &&
+    strcmp(enableWebglPlaceholders, "yes") != 0)
   {
     setenv("JSAR_WEBGL_PLACEHOLDERS", "no", 1);
   }
@@ -249,20 +250,20 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
 
       char enableRendererTracingStr[PROP_VALUE_MAX];
       if (
-          __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
-          strcmp(enableRendererTracingStr, "yes") == 0)
+        __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
+        strcmp(enableRendererTracingStr, "yes") == 0)
         renderer->enableTracing();
 
       char enablePrintHostContextSummaryStr[PROP_VALUE_MAX];
       if (
-          __system_property_get("jsar.renderer.print_host_context_summary", enablePrintHostContextSummaryStr) >= 0 &&
-          strcmp(enablePrintHostContextSummaryStr, "yes") == 0)
+        __system_property_get("jsar.renderer.print_host_context_summary", enablePrintHostContextSummaryStr) >= 0 &&
+        strcmp(enablePrintHostContextSummaryStr, "yes") == 0)
         renderer->enableHostContextSummary();
 
       char enablePrintAppContextSummaryStr[PROP_VALUE_MAX];
       if (
-          __system_property_get("jsar.renderer.print_app_context_summary", enablePrintAppContextSummaryStr) >= 0 &&
-          strcmp(enablePrintAppContextSummaryStr, "yes") == 0)
+        __system_property_get("jsar.renderer.print_app_context_summary", enablePrintAppContextSummaryStr) >= 0 &&
+        strcmp(enablePrintAppContextSummaryStr, "yes") == 0)
         renderer->enableAppContextSummary();
 
       char logfilter[PROP_VALUE_MAX];

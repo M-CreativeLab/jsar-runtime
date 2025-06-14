@@ -14,7 +14,8 @@ namespace dombinding
     static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
 
   public:
-    ElementBase(const Napi::CallbackInfo &info) : NodeBase<ObjectType, ElementType>(info)
+    ElementBase(const Napi::CallbackInfo &info)
+        : NodeBase<ObjectType, ElementType>(info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
@@ -84,8 +85,7 @@ namespace dombinding
      * @param tagName The tag name of the element.
      * @param ownerDocument The owner document of the element.
      */
-    static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName,
-                                    std::shared_ptr<dom::Document> ownerDocument);
+    static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName, std::shared_ptr<dom::Document> ownerDocument);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

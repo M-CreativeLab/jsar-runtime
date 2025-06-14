@@ -8,7 +8,10 @@ namespace dom
   class AnimationTimeline
   {
   public:
-    inline bool isActive() const { return current_time_ != std::nullopt; }
+    inline bool isActive() const
+    {
+      return current_time_ != std::nullopt;
+    }
     std::optional<long long> currentTime() const
     {
       if (!isActive())

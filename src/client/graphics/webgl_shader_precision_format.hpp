@@ -10,11 +10,15 @@ namespace client_graphics
   {
   public:
     WebGLShaderPrecisionFormat(int rangeMin, int rangeMax, int precision)
-        : rangeMin(rangeMin), rangeMax(rangeMax), precision(precision)
+        : rangeMin(rangeMin)
+        , rangeMax(rangeMax)
+        , precision(precision)
     {
     }
-    WebGLShaderPrecisionFormat(commandbuffers::GetShaderPrecisionFormatCommandBufferResponse& resp)
-        : rangeMin(resp.rangeMin), rangeMax(resp.rangeMax), precision(resp.precision)
+    WebGLShaderPrecisionFormat(commandbuffers::GetShaderPrecisionFormatCommandBufferResponse &resp)
+        : rangeMin(resp.rangeMin)
+        , rangeMax(resp.rangeMax)
+        , precision(resp.precision)
     {
     }
 

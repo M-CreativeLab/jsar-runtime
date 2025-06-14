@@ -46,8 +46,8 @@ namespace dom
   }
 
   MutationRecord::MutationRecord(MutationType type, std::shared_ptr<Node> target)
-      : type(type),
-        target(target)
+      : type(type)
+      , target(target)
   {
     assert(target != nullptr && "The target node is null when creating a mutation record.");
   }

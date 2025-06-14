@@ -18,8 +18,8 @@ namespace ipc
   {
   public:
     TrIpcMessageSegment(size_t size, void *data, bool ownMemory = true)
-        : size(size),
-          ownMemory(ownMemory)
+        : size(size)
+        , ownMemory(ownMemory)
     {
       if (ownMemory)
       {
@@ -41,16 +41,30 @@ namespace ipc
      * It creates a segment from a vector<T> object.
      */
     template <typename T>
-    TrIpcMessageSegment(vector<T> &vec) : size(vec.size() * sizeof(T)), data(new char[size])
+    TrIpcMessageSegment(vector<T> &vec)
+        : size(vec.size() * sizeof(T))
+        , data(new char[size])
     {
       memcpy(this->data, vec.data(), size);
     }
 
   public:
-    inline size_t getSize() { return size; }
-    inline void *getData() { return (void *)data; }
-    inline string toString() { return string(data, size); }
-    inline const char *c_str() { return data; }
+    inline size_t getSize()
+    {
+      return size;
+    }
+    inline void *getData()
+    {
+      return (void *)data;
+    }
+    inline string toString()
+    {
+      return string(data, size);
+    }
+    inline const char *c_str()
+    {
+      return data;
+    }
 
     /**
      * It reads the segment data as a vector<T> object.
@@ -82,11 +96,15 @@ namespace ipc
     };
 
   public:
-    TrIpcMessage() : baseSize(0), base(nullptr) {}
+    TrIpcMessage()
+        : baseSize(0)
+        , base(nullptr)
+    {
+    }
     TrIpcMessage(MessageEnum type, size_t size, void *base)
-        : type(type),
-          baseSize(size),
-          base(base)
+        : type(type)
+        , baseSize(size)
+        , base(base)
     {
       id = ipcMessageIdGen.get();
     }
@@ -157,19 +175,19 @@ namespace ipc
       for (auto &segment : segments)
         segmentsLength += (sizeof(segment->size) + segment->size); // size + data
       size_t contentSize =
-          sizeof(type) +     // type
-          sizeof(uint32_t) + // id
-          sizeof(size_t) +   // segments length
-          sizeof(size_t) +   // segments count
-          segmentsLength +   // segments
-          sizeof(size_t) +   // base size
-          baseSize;          // base
+        sizeof(type) +     // type
+        sizeof(uint32_t) + // id
+        sizeof(size_t) +   // segments length
+        sizeof(size_t) +   // segments count
+        segmentsLength +   // segments
+        sizeof(size_t) +   // base size
+        baseSize;          // base
 
       int16_t magic = TR_IPC_MESSAGE_MAGIC;
       size_t bufferSize =
-          sizeof(magic) +       // magic
-          sizeof(contentSize) + // content size
-          contentSize;          // content
+        sizeof(magic) +       // magic
+        sizeof(contentSize) + // content size
+        contentSize;          // content
 
       char *buffer = (char *)malloc(bufferSize);
       if (buffer == nullptr)

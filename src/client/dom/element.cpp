@@ -39,8 +39,7 @@ namespace dom
     return dynamic_pointer_cast<Element>(element);
   }
 
-  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument,
-                                             bool from_scripting)
+  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument, bool from_scripting)
   {
 #define XX(tagNameStr, className)                                                 \
   if (tagName == tagNameStr)                                                      \
@@ -87,8 +86,8 @@ namespace dom
   }
 
   Element::Element(string tagName, optional<shared_ptr<Document>> ownerDocument)
-      : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument),
-        tagName(ToUpperCase(tagName))
+      : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument)
+      , tagName(ToUpperCase(tagName))
   {
   }
 
@@ -98,14 +97,14 @@ namespace dom
   }
 
   Element::Element(const Element &other)
-      : Node(other),
-        id(other.id),
-        namespaceURI(other.namespaceURI),
-        tagName(other.tagName),
-        localName(other.localName),
-        prefix(other.prefix),
-        classList_(other.classList_),
-        attributeNodes_(other.attributeNodes_)
+      : Node(other)
+      , id(other.id)
+      , namespaceURI(other.namespaceURI)
+      , tagName(other.tagName)
+      , localName(other.localName)
+      , prefix(other.prefix)
+      , classList_(other.classList_)
+      , attributeNodes_(other.attributeNodes_)
   {
   }
 
@@ -119,8 +118,7 @@ namespace dom
 
       // Get the bounding box of the layout box.
       auto fragment = box->fragment();
-      geometry::DOMRect rect(fragment.left(), fragment.top(),
-                             fragment.width(), fragment.height());
+      geometry::DOMRect rect(fragment.left(), fragment.top(), fragment.width(), fragment.height());
       rects.push_back(rect);
     }
     return rects;
@@ -250,8 +248,8 @@ namespace dom
     if (adopted_style_->hasTransitionProperties())
     {
       elementAnimationsRef()
-          .cssAnimations()
-          .setTransitions(*adopted_style_, ownerDocument->timeline());
+        .cssAnimations()
+        .setTransitions(*adopted_style_, ownerDocument->timeline());
     }
   }
 
@@ -291,7 +289,8 @@ namespace dom
       if (parentElement != nullptr)
         parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
 
-      auto newPrincipalBox = layoutView.createBox(currentDisplayStr_, getPtr<Element>(),
+      auto newPrincipalBox = layoutView.createBox(currentDisplayStr_,
+                                                  getPtr<Element>(),
                                                   parentBlock,
                                                   principalBox_->nextSibling());
 

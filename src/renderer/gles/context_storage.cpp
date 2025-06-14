@@ -171,10 +171,10 @@ void OpenGLContextStorage::Restore()
   GLenum bindTextureError;
 
   if (
-      m_Viewport[0] != -1 &&
-      m_Viewport[1] != -1 &&
-      m_Viewport[2] != -1 &&
-      m_Viewport[3] != -1)
+    m_Viewport[0] != -1 &&
+    m_Viewport[1] != -1 &&
+    m_Viewport[2] != -1 &&
+    m_Viewport[3] != -1)
   {
     glViewport(m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
   }
@@ -196,8 +196,7 @@ void OpenGLContextStorage::Restore()
   if (!m_BlendFunc.IsSeparate())
     glBlendFunc(m_BlendFunc.GetSrc(), m_BlendFunc.GetDst());
   else
-    glBlendFuncSeparate(m_BlendFunc.GetSrcRgb(), m_BlendFunc.GetDstRgb(),
-                        m_BlendFunc.GetSrcAlpha(), m_BlendFunc.GetDstAlpha());
+    glBlendFuncSeparate(m_BlendFunc.GetSrcRgb(), m_BlendFunc.GetDstRgb(), m_BlendFunc.GetSrcAlpha(), m_BlendFunc.GetDstAlpha());
 
   // Cull state restore
   glCullFace(m_CullFace);
@@ -292,17 +291,13 @@ void OpenGLContextStorage::Restore()
 #endif
 
   if (setViewportError != GL_NO_ERROR)
-    DEBUG(LOG_TAG_ERROR, "Occurs an error in glViewport(%d, %d, %d, %d) when restoring %s context: 0x%04X",
-          m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3], GetName(), setViewportError);
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in glViewport(%d, %d, %d, %d) when restoring %s context: 0x%04X", m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3], GetName(), setViewportError);
   if (useProgramError != GL_NO_ERROR)
-    DEBUG(LOG_TAG_ERROR, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X",
-          m_ProgramId, GetName(), useProgramError);
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X", m_ProgramId, GetName(), useProgramError);
   if (bindBuffersError != GL_NO_ERROR)
-    DEBUG(LOG_TAG_ERROR, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
-          GetName(), bindBuffersError);
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in buffers binding when restoring %s context: 0x%04X", GetName(), bindBuffersError);
   if (bindTextureError != GL_NO_ERROR)
-    DEBUG(LOG_TAG_ERROR, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
-          GetName(), bindTextureError);
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in texture bindings when restoring %s context: 0x%04X", GetName(), bindTextureError);
 
   // Check for OpenGL errors
   GLenum error = glGetError();
@@ -312,10 +307,8 @@ void OpenGLContextStorage::Restore()
 
 void OpenGLContextStorage::Print()
 {
-  DEBUG(DEBUG_TAG, "%s program(%d), viewport(%d, %d, %d, %d)", GetName(),
-        m_ProgramId, m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
-  DEBUG(DEBUG_TAG, "%s ebo(%d), vao(%d), framebuffer(%d), activeTexture(%d)", GetName(),
-        m_ElementArrayBufferId, m_VertexArrayObjectId, m_FramebufferId, m_LastActiveTextureUnit - GL_TEXTURE0);
+  DEBUG(DEBUG_TAG, "%s program(%d), viewport(%d, %d, %d, %d)", GetName(), m_ProgramId, m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
+  DEBUG(DEBUG_TAG, "%s ebo(%d), vao(%d), framebuffer(%d), activeTexture(%d)", GetName(), m_ElementArrayBufferId, m_VertexArrayObjectId, m_FramebufferId, m_LastActiveTextureUnit - GL_TEXTURE0);
 }
 
 void OpenGLContextStorage::ClearTextureBindings()
@@ -451,8 +444,8 @@ void OpenGLHostContextStorage::RestoreFramebuffer()
 }
 
 OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
-    : OpenGLContextStorage(name),
-      m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
+    : OpenGLContextStorage(name)
+    , m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
 {
   /**
    * Initial values for WebGL or OpenGLES.
@@ -503,8 +496,8 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
 }
 
 OpenGLAppContextStorage::OpenGLAppContextStorage(string name, OpenGLAppContextStorage *from)
-    : OpenGLContextStorage(name, from),
-      m_GLObjectManager(from->m_GLObjectManager)
+    : OpenGLContextStorage(name, from)
+    , m_GLObjectManager(from->m_GLObjectManager)
 {
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
   m_Shaders = OpenGLNamesStorage(&from->m_Shaders);

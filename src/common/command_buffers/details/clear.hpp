@@ -11,8 +11,8 @@ namespace commandbuffers
   public:
     ClearCommandBufferRequest() = delete;
     ClearCommandBufferRequest(int mask)
-        : TrCommandBufferSimpleRequest(),
-          mask(mask)
+        : TrCommandBufferSimpleRequest()
+        , mask(mask)
     {
     }
 
@@ -27,8 +27,11 @@ namespace commandbuffers
   public:
     ClearColorCommandBufferRequest() = delete;
     ClearColorCommandBufferRequest(float r, float g, float b, float a)
-        : TrCommandBufferSimpleRequest(),
-          r(r), g(g), b(b), a(a)
+        : TrCommandBufferSimpleRequest()
+        , r(r)
+        , g(g)
+        , b(b)
+        , a(a)
     {
     }
 
@@ -46,8 +49,8 @@ namespace commandbuffers
   public:
     ClearDepthCommandBufferRequest() = delete;
     ClearDepthCommandBufferRequest(float depth)
-        : TrCommandBufferSimpleRequest(),
-          depth(depth)
+        : TrCommandBufferSimpleRequest()
+        , depth(depth)
     {
     }
 
@@ -62,8 +65,8 @@ namespace commandbuffers
   public:
     ClearStencilCommandBufferRequest() = delete;
     ClearStencilCommandBufferRequest(int stencil)
-        : TrCommandBufferSimpleRequest(),
-          stencil(stencil)
+        : TrCommandBufferSimpleRequest()
+        , stencil(stencil)
     {
     }
 

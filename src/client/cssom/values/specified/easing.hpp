@@ -69,10 +69,10 @@ namespace client_cssom::values::specified
           return computed::TimingFunction::EaseInOut();
         }
       case kCubicBezier:
-        {
-          const auto &cubic = std::get<CubicBezierDescriptor>(timing_function_);
-          return computed::TimingFunction::CubicBezier(cubic.x1, cubic.y1, cubic.x2, cubic.y2);
-        }
+      {
+        const auto &cubic = std::get<CubicBezierDescriptor>(timing_function_);
+        return computed::TimingFunction::CubicBezier(cubic.x1, cubic.y1, cubic.x2, cubic.y2);
+      }
       }
       return computed::TimingFunction(); // Should not reach here.
     }

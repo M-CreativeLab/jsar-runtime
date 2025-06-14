@@ -74,7 +74,7 @@ namespace client_cssom::values::specified
                                                       { return !std::isspace(ch); }));
         prop_str.erase(std::find_if(prop_str.rbegin(), prop_str.rend(), [](int ch)
                                     { return !std::isspace(ch); })
-                           .base(),
+                         .base(),
                        prop_str.end());
 
         // Try inserting the property.

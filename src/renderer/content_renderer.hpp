@@ -56,7 +56,8 @@ namespace renderer
      * @param constellation The constellation that the content belongs to.
      * @return The created content renderer.
      */
-    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content, uint8_t contextId,
+    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content,
+                                                          uint8_t contextId,
                                                           TrConstellation *constellation)
     {
       assert(content != nullptr);
@@ -75,7 +76,10 @@ namespace renderer
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
     OpenGLAppContextStorage *getOpenGLContext();
-    inline shared_ptr<TrContentRuntime> getContent() { return content.lock(); }
+    inline shared_ptr<TrContentRuntime> getContent()
+    {
+      return content.lock();
+    }
     pid_t getContentPid();
 
   public:
@@ -84,15 +88,24 @@ namespace renderer
      * 
      * @param req The command buffer request to be dispatched.
      */
-    inline void dispatchCommandBufferRequest(TrCommandBufferBase *req) { onCommandBufferRequestReceived(req); }
+    inline void dispatchCommandBufferRequest(TrCommandBufferBase *req)
+    {
+      onCommandBufferRequestReceived(req);
+    }
     /**
      * Mark the last frame has OOM error.
      */
-    inline void markOccurOutOfMemoryError() { lastFrameHasOutOfMemoryError = true; }
+    inline void markOccurOutOfMemoryError()
+    {
+      lastFrameHasOutOfMemoryError = true;
+    }
     /**
      * Increase the frame errors count.
      */
-    inline void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
+    inline void increaseFrameErrorsCount()
+    {
+      lastFrameErrorsCount++;
+    }
     /**
      * Increase the draw calls count.
      * 

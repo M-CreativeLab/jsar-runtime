@@ -19,11 +19,13 @@ namespace bindings
   void XRInputSource::Init(Napi::Env env)
   {
 #define MODULE_NAME "XRInputSource"
-    Function func = DefineClass(env, MODULE_NAME,
-                                {
-                                    InstanceAccessor("hand", &XRInputSource::HandGetter, nullptr),
-                                    InstanceAccessor("gamepad", &XRInputSource::GamepadGetter, nullptr),
-                                });
+    Function func = DefineClass(
+      env,
+      MODULE_NAME,
+      {
+        InstanceAccessor("hand", &XRInputSource::HandGetter, nullptr),
+        InstanceAccessor("gamepad", &XRInputSource::GamepadGetter, nullptr),
+      });
     constructor = new FunctionReference();
     *constructor = Persistent(func);
     env.Global().Set(MODULE_NAME, func);
@@ -47,13 +49,13 @@ namespace bindings
 
     auto thisObject = info.This().ToObject();
     thisObject.DefineProperty(
-        Napi::PropertyDescriptor::Value("gripSpace", GripSpaceGetter(info), napi_enumerable));
+      Napi::PropertyDescriptor::Value("gripSpace", GripSpaceGetter(info), napi_enumerable));
     thisObject.DefineProperty(
-        Napi::PropertyDescriptor::Value("handedness", HandednessGetter(info), napi_enumerable));
+      Napi::PropertyDescriptor::Value("handedness", HandednessGetter(info), napi_enumerable));
     thisObject.DefineProperty(
-        Napi::PropertyDescriptor::Value("targetRayMode", TargetRayModeGetter(info), napi_enumerable));
+      Napi::PropertyDescriptor::Value("targetRayMode", TargetRayModeGetter(info), napi_enumerable));
     thisObject.DefineProperty(
-        Napi::PropertyDescriptor::Value("targetRaySpace", TargetRaySpaceGetter(info), napi_enumerable));
+      Napi::PropertyDescriptor::Value("targetRaySpace", TargetRaySpaceGetter(info), napi_enumerable));
 
     handle_->ref(this);
   }
@@ -124,7 +126,8 @@ namespace bindings
     return inputSources;
   }
 
-  XRInputSourceArray::XRInputSourceArray(napi_env env, napi_value value) : Napi::Array(env, value)
+  XRInputSourceArray::XRInputSourceArray(napi_env env, napi_value value)
+      : Napi::Array(env, value)
   {
   }
 

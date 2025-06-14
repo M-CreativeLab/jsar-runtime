@@ -20,7 +20,7 @@ namespace dombinding::events
     EscapableHandleScope scope(env);
     auto props = GetClassProperties(env);
     auto added = {
-        InstanceValue("session", env.Null(), napi_default_jsproperty),
+      InstanceValue("session", env.Null(), napi_default_jsproperty),
     };
     props.insert(props.end(), added.begin(), added.end());
     Function func = DefineClass(env, "XRSessionEvent", props);

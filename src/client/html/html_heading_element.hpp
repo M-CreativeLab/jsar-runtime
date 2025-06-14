@@ -52,8 +52,8 @@ namespace dom
 
   public:
     HTMLHeadingElement(HeadingLevel level, std::shared_ptr<Document> ownerDocument)
-        : HTMLElement(to_string(level), ownerDocument),
-          level_(level)
+        : HTMLElement(to_string(level), ownerDocument)
+        , level_(level)
     {
     }
     HTMLHeadingElement(std::string tagName, std::shared_ptr<Document> ownerDocument)

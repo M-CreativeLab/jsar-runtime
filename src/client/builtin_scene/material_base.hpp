@@ -43,8 +43,8 @@ namespace builtin_scene
     static inline void SetMultiviewRequired(bool required)
     {
       required
-          ? SetGlobalDefines(kRequireMultiviewDefine)
-          : UnsetGlobalDefines(kRequireMultiviewDefine);
+        ? SetGlobalDefines(kRequireMultiviewDefine)
+        : UnsetGlobalDefines(kRequireMultiviewDefine);
     }
 
     /**
@@ -113,8 +113,14 @@ namespace builtin_scene
     /**
      * Called before drawing the mesh with the material.
      */
-    virtual void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
-    virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
+    virtual void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                  std::shared_ptr<Mesh3d> mesh)
+    {
+    }
+    virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                 std::shared_ptr<Mesh3d> mesh)
+    {
+    }
 
   public:
     /**

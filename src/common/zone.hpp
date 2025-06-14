@@ -28,13 +28,17 @@ template <typename DataType>
 class TrZone
 {
 public:
-  TrZone(string filename, TrZoneType type) : type(type), filename(filename)
+  TrZone(string filename, TrZoneType type)
+      : type(type)
+      , filename(filename)
   {
     initHandle();
     resize();
     remap();
   }
-  TrZone(TrZone &that) : type(that.type), filename(that.filename)
+  TrZone(TrZone &that)
+      : type(that.type)
+      , filename(that.filename)
   {
   }
   virtual ~TrZone()
@@ -44,23 +48,31 @@ public:
   }
 
 protected:
-  virtual size_t getDataSize() { return sizeof(DataType); }
+  virtual size_t getDataSize()
+  {
+    return sizeof(DataType);
+  }
   /**
    * Implement this to pull the client(shared) update to the server-side object, disabled by default.
    */
-  virtual void updateData(DataType *sharedData) {}
+  virtual void updateData(DataType *sharedData)
+  {
+  }
 
 public:
-  string getFilename() { return filename; }
+  string getFilename()
+  {
+    return filename;
+  }
   /**
    * Sync the server-side object to the shared memory to protect the data consistency at the client-side.
    */
   void syncData()
   {
     if (
-        type == TrZoneType::Server && // Only server can use this method to sync.
-        memoryAddr != nullptr &&
-        data != nullptr)
+      type == TrZoneType::Server && // Only server can use this method to sync.
+      memoryAddr != nullptr &&
+      data != nullptr)
     {
       updateData(reinterpret_cast<DataType *>(memoryAddr));
       memcpy(memoryAddr, reinterpret_cast<void *>(data.get()), memorySize);
@@ -71,13 +83,16 @@ public:
    *
    * @return The data pointer.
    */
-  DataType *getData() { return reinterpret_cast<DataType *>(memoryAddr); }
+  DataType *getData()
+  {
+    return reinterpret_cast<DataType *>(memoryAddr);
+  }
 
 private:
   void initHandle()
   {
     if (type == TrZoneType::Client)
-      handleFd = open(filename.c_str(), O_RDWR);  // client can only read.
+      handleFd = open(filename.c_str(), O_RDWR); // client can only read.
     else
       handleFd = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
     assert(handleFd > 0);

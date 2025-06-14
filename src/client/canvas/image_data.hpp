@@ -18,16 +18,40 @@ namespace canvas
     ~ImageData();
 
   public:
-    size_t width() const override { return pixmap.width(); }
-    size_t height() const override { return pixmap.height(); }
-    bool readPixels(SkPixmap &dst) const override { return pixmap.readPixels(dst, 0, 0); }
+    size_t width() const override
+    {
+      return pixmap.width();
+    }
+    size_t height() const override
+    {
+      return pixmap.height();
+    }
+    bool readPixels(SkPixmap &dst) const override
+    {
+      return pixmap.readPixels(dst, 0, 0);
+    }
 
   public:
-    inline SkColorSpace *colorSpace() { return pixmap.colorSpace(); }
-    inline std::string colorSpaceName() { return colorSpaceName_; }
-    inline void *addr() { return pixmap.writable_addr(); }
-    inline size_t rowBytes() { return pixmap.rowBytes(); }
-    inline size_t computeByteSize() { return pixmap.computeByteSize(); }
+    inline SkColorSpace *colorSpace()
+    {
+      return pixmap.colorSpace();
+    }
+    inline std::string colorSpaceName()
+    {
+      return colorSpaceName_;
+    }
+    inline void *addr()
+    {
+      return pixmap.writable_addr();
+    }
+    inline size_t rowBytes()
+    {
+      return pixmap.rowBytes();
+    }
+    inline size_t computeByteSize()
+    {
+      return pixmap.computeByteSize();
+    }
 
   private:
     /**

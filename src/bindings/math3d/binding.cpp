@@ -12,7 +12,7 @@ namespace bindings
       return exports;
     }
 
-    Napi::Value MatrixMultiplyToArray(const Napi::CallbackInfo& info)
+    Napi::Value MatrixMultiplyToArray(const Napi::CallbackInfo &info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);

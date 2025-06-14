@@ -8,16 +8,15 @@ namespace xr
 {
   using namespace std;
 
-  TrXRSession::TrXRSession(uint32_t id, Device *device, shared_ptr<TrContentRuntime> content,
-                           TrXRSessionMode mode, TrXRSessionInit &init)
-      : id(id),
-        device(device),
-        constellation(device->m_Constellation),
-        content(weak_ptr<TrContentRuntime>(content)),
-        mode(mode),
-        init(init),
-        baseMatrix(1.0f),
-        boundingInfo(glm::vec3(-recommendedContentSize / 2), glm::vec3(recommendedContentSize / 2), baseMatrix)
+  TrXRSession::TrXRSession(uint32_t id, Device *device, shared_ptr<TrContentRuntime> content, TrXRSessionMode mode, TrXRSessionInit &init)
+      : id(id)
+      , device(device)
+      , constellation(device->m_Constellation)
+      , content(weak_ptr<TrContentRuntime>(content))
+      , mode(mode)
+      , init(init)
+      , baseMatrix(1.0f)
+      , boundingInfo(glm::vec3(-recommendedContentSize / 2), glm::vec3(recommendedContentSize / 2), baseMatrix)
   {
     assert(device != nullptr);
     assert(content != nullptr);
@@ -25,7 +24,8 @@ namespace xr
 
     auto &opt = constellation->getOptions();
     contextZone = make_unique<TrXRSessionContextZone>(opt.getZoneFilename(std::to_string(id), "sessions"),
-                                                      TrZoneType::Server, id);
+                                                      TrZoneType::Server,
+                                                      id);
   }
 
   TrXRSession::~TrXRSession()
@@ -72,16 +72,16 @@ namespace xr
   {
     auto contentRef = content.lock();
     return contentRef == nullptr
-               ? false
-               : contentRef->pid == contentPid;
+             ? false
+             : contentRef->pid == contentPid;
   }
 
   bool TrXRSession::isActive()
   {
     auto contentRef = content.lock();
     return contentRef == nullptr
-               ? false
-               : contentRef->getActiveXRSession() == this;
+             ? false
+             : contentRef->getActiveXRSession() == this;
   }
 
   glm::mat4 TrXRSession::getLocalBaseMatrix()

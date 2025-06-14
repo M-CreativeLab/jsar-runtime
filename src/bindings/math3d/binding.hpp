@@ -11,6 +11,6 @@ namespace bindings
     Napi::Object InitModule(Napi::Env env, Napi::Object exports);
 
     // Matrix
-    Napi::Value MatrixMultiplyToArray(const Napi::CallbackInfo& info);
+    Napi::Value MatrixMultiplyToArray(const Napi::CallbackInfo &);
   }
 }

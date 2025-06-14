@@ -10,12 +10,17 @@ namespace client_layout
   {
   public:
     explicit BoxScrollableOverflowModel(geometry::Rect<float> overflowRect)
-        : scrollable_overflow_(overflowRect) {}
+        : scrollable_overflow_(overflowRect)
+    {
+    }
     BoxScrollableOverflowModel(const BoxScrollableOverflowModel &) = delete;
     BoxScrollableOverflowModel &operator=(const BoxScrollableOverflowModel &) = delete;
 
   public:
-    const geometry::Rect<float> &scrollableOverflowRect() const { return scrollable_overflow_; }
+    const geometry::Rect<float> &scrollableOverflowRect() const
+    {
+      return scrollable_overflow_;
+    }
 
   private:
     geometry::Rect<float> scrollable_overflow_;
@@ -25,7 +30,9 @@ namespace client_layout
   {
   public:
     explicit BoxVisualOverflowModel(const geometry::Rect<float> &selfVisualOverflowRect)
-        : self_visual_overflow_(selfVisualOverflowRect) {}
+        : self_visual_overflow_(selfVisualOverflowRect)
+    {
+    }
     BoxVisualOverflowModel(const BoxVisualOverflowModel &) = delete;
     BoxVisualOverflowModel &operator=(const BoxVisualOverflowModel &) = delete;
 

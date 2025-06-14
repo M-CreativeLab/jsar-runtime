@@ -13,9 +13,9 @@ namespace dom
   using namespace client_layout;
 
   RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
-      : ecs::System(),
-        DocumentEventDispatcher(document),
-        document_(document)
+      : ecs::System()
+      , DocumentEventDispatcher(document)
+      , document_(document)
   {
     assert(document_ != nullptr);
   }
@@ -51,9 +51,10 @@ namespace dom
       // Compute the layout from the root element.
       // TODO(yorkie): compute the layout from the root?
       layoutView->computeLayout(targetSpace());
-      layoutView->debugPrint("After layout", LayoutView::DebugOptions::Default()
-                                                 .withFormattingContext(clientEnv.debugLayoutFormattingContext)
-                                                 .withDisabled(clientEnv.debugLayoutTree == false));
+      layoutView->debugPrint("After layout",
+                             LayoutView::DebugOptions::Default()
+                               .withFormattingContext(clientEnv.debugLayoutFormattingContext)
+                               .withDisabled(clientEnv.debugLayoutTree == false));
     }
 
     // Visit the layout view to render CSS boxes.

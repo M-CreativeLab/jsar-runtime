@@ -23,7 +23,10 @@ namespace bindings
     Napi::Value InlineVerticalFieldOfViewGetter(const Napi::CallbackInfo &info);
 
   public:
-    inline client_xr::XRRenderState handle() { return handle_; }
+    inline client_xr::XRRenderState handle()
+    {
+      return handle_;
+    }
 
   private:
     client_xr::XRRenderState handle_;

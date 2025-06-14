@@ -35,7 +35,10 @@ class WorkerThread final : public ScopedThread
 {
 public:
   WorkerThread(std::string name, std::function<void(WorkerThread &)> work, uint32_t waitTime = 100)
-      : ScopedThread(), name(name), work(work), waitTime(waitTime)
+      : ScopedThread()
+      , name(name)
+      , work(work)
+      , waitTime(waitTime)
   {
     start();
   }
@@ -77,11 +80,17 @@ public:
   /**
    * Pause the worker thread but it's alive, it will not do any work until the `resume` is called.
    */
-  inline void pause() { paused = true; }
+  inline void pause()
+  {
+    paused = true;
+  }
   /**
    * Resume the worker thread, it will continue to do the work.
    */
-  inline void resume() { paused = false; }
+  inline void resume()
+  {
+    paused = false;
+  }
   /**
    * Sleep the worker thread for a while(100ms).
    */

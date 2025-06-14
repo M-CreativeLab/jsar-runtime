@@ -11,24 +11,40 @@ namespace builtin_scene::meshes
   {
   public:
     Box(float width, float height, float depth)
-        : Mesh("Box", PrimitiveTopology::kTriangles),
-          width_(width),
-          height_(height),
-          depth_(depth)
+        : Mesh("Box", PrimitiveTopology::kTriangles)
+        , width_(width)
+        , height_(height)
+        , depth_(depth)
     {
     }
-    Box(float size) : Box(size, size, size)
+    Box(float size)
+        : Box(size, size, size)
     {
     }
 
   public:
-    inline float width() { return width_; }
-    inline float height() { return height_; }
-    inline float depth() { return depth_; }
+    inline float width()
+    {
+      return width_;
+    }
+    inline float height()
+    {
+      return height_;
+    }
+    inline float depth()
+    {
+      return depth_;
+    }
 
   public:
-    float area() override { return 2.0f * (width_ * height_ + width_ * depth_ + height_ * depth_); }
-    float volume() override { return width_ * height_ * depth_; }
+    float area() override
+    {
+      return 2.0f * (width_ * height_ + width_ * depth_ + height_ * depth_);
+    }
+    float volume() override
+    {
+      return width_ * height_ * depth_;
+    }
     void build() override
     {
       glm::vec3 max = glm::vec3(width_ / 2.0f, height_ / 2.0f, depth_ / 2.0f);
@@ -85,14 +101,16 @@ namespace builtin_scene::meshes
       }
 
       // Indices
+      // clang-format off
       Indices<uint32_t> indices = {
-          0, 1, 2, 2, 3, 0,       // front
-          4, 5, 6, 6, 7, 4,       // back
-          8, 9, 10, 10, 11, 8,    // right
-          12, 13, 14, 14, 15, 12, // left
-          16, 17, 18, 18, 19, 16, // top
-          20, 21, 22, 22, 23, 20, // bottom
+        0, 1, 2, 2, 3, 0,       // front
+        4, 5, 6, 6, 7, 4,       // back
+        8, 9, 10, 10, 11, 8,    // right
+        12, 13, 14, 14, 15, 12, // left
+        16, 17, 18, 18, 19, 16, // top
+        20, 21, 22, 22, 23, 20, // bottom
       };
+      // clang-format on
 
       updateIndices(indices);
       enableAttribute(Vertex::ATTRIBUTE_POSITION);
@@ -109,16 +127,27 @@ namespace builtin_scene::meshes
   class Cube : public Box
   {
   public:
-    Cube(float size) : Box(size), halfSize(size / 2.0f)
+    Cube(float size)
+        : Box(size)
+        , halfSize(size / 2.0f)
     {
     }
 
   public:
-    inline float size() { return halfSize * 2.0f; }
+    inline float size()
+    {
+      return halfSize * 2.0f;
+    }
 
   public:
-    float area() override { return 6.0f * halfSize * halfSize; }
-    float volume() override { return std::pow(halfSize, 3); }
+    float area() override
+    {
+      return 6.0f * halfSize * halfSize;
+    }
+    float volume() override
+    {
+      return std::pow(halfSize, 3);
+    }
 
   private:
     float halfSize;

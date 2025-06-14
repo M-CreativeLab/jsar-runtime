@@ -13,7 +13,10 @@ namespace client_cssom::rules
     using CSSGroupingRule::CSSGroupingRule;
 
   public:
-    const std::string &conditionText() const { return conditionText_; }
+    const std::string &conditionText() const
+    {
+      return conditionText_;
+    }
 
   private:
     std::string conditionText_;

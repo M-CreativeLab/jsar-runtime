@@ -12,7 +12,8 @@ namespace client_cssom::values::computed
     using specified::AlignContent::AlignContent;
 
   public:
-    AlignContent(specified::AlignContent other) : specified::AlignContent(other)
+    AlignContent(specified::AlignContent other)
+        : specified::AlignContent(other)
     {
     }
 
@@ -50,7 +51,8 @@ namespace client_cssom::values::computed
     using specified::JustifyContent::JustifyContent;
 
   public:
-    JustifyContent(specified::JustifyContent other) : specified::JustifyContent(other)
+    JustifyContent(specified::JustifyContent other)
+        : specified::JustifyContent(other)
     {
     }
 
@@ -93,7 +95,8 @@ namespace client_cssom::values::computed
     using specified::AlignItems::AlignItems;
 
   public:
-    AlignItems(specified::AlignItems other) : specified::AlignItems(other)
+    AlignItems(specified::AlignItems other)
+        : specified::AlignItems(other)
     {
     }
 
@@ -125,7 +128,8 @@ namespace client_cssom::values::computed
     using specified::AlignSelf::AlignSelf;
 
   public:
-    AlignSelf(specified::AlignSelf other) : specified::AlignSelf(other)
+    AlignSelf(specified::AlignSelf other)
+        : specified::AlignSelf(other)
     {
     }
 
@@ -157,7 +161,8 @@ namespace client_cssom::values::computed
     using specified::JustifySelf::JustifySelf;
 
   public:
-    JustifySelf(specified::JustifySelf other) : specified::JustifySelf(other)
+    JustifySelf(specified::JustifySelf other)
+        : specified::JustifySelf(other)
     {
     }
 
@@ -190,7 +195,8 @@ namespace client_cssom::values::computed
     using specified::JustifyItems::JustifyItems;
 
   public:
-    JustifyItems(specified::JustifyItems other) : specified::JustifyItems(other)
+    JustifyItems(specified::JustifyItems other)
+        : specified::JustifyItems(other)
     {
     }
 

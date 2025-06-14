@@ -230,13 +230,19 @@ namespace xr
      *
      * @returns the session context zone directory.
      */
-    inline std::string getSessionContextZoneDirectory() { return m_SessionContextZoneDirectory; }
+    inline std::string getSessionContextZoneDirectory()
+    {
+      return m_SessionContextZoneDirectory;
+    }
     /**
      * Get the device context zone path.
      *
      * @returns the device context zone path.
      */
-    inline std::string getDeviceContextZonePath() { return m_DeviceContextZone->getFilename(); }
+    inline std::string getDeviceContextZonePath()
+    {
+      return m_DeviceContextZone->getFilename();
+    }
 
   public: // Input sources
     /**

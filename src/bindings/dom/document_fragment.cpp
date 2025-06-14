@@ -21,12 +21,12 @@ namespace dombinding
   {
     auto props = NodeBase<DocumentFragment, dom::DocumentFragment>::GetClassProperties(env);
     auto added = std::vector<Napi::ClassPropertyDescriptor<DocumentFragment>>(
-        {
-            InstanceAccessor("childElementCount", &DocumentFragment::ChildElementCountGetter, nullptr),
-            InstanceAccessor("children", &DocumentFragment::ChildrenGetter, nullptr),
-            InstanceAccessor("firstElementChild", &DocumentFragment::FirstElementChildGetter, nullptr),
-            InstanceAccessor("lastElementChild", &DocumentFragment::LastElementChildGetter, nullptr),
-        });
+      {
+        InstanceAccessor("childElementCount", &DocumentFragment::ChildElementCountGetter, nullptr),
+        InstanceAccessor("children", &DocumentFragment::ChildrenGetter, nullptr),
+        InstanceAccessor("firstElementChild", &DocumentFragment::FirstElementChildGetter, nullptr),
+        InstanceAccessor("lastElementChild", &DocumentFragment::LastElementChildGetter, nullptr),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -53,7 +53,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "Failed to get 'children' property: not implemented")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
@@ -64,8 +64,8 @@ namespace dombinding
 
     auto element = this->node->firstElementChild();
     return element != nullptr
-               ? Element::NewInstance(env, element)
-               : env.Null();
+             ? Element::NewInstance(env, element)
+             : env.Null();
   }
 
   Napi::Value DocumentFragment::LastElementChildGetter(const Napi::CallbackInfo &info)
@@ -75,7 +75,7 @@ namespace dombinding
 
     auto element = this->node->lastElementChild();
     return element != nullptr
-               ? Element::NewInstance(env, element)
-               : env.Null();
+             ? Element::NewInstance(env, element)
+             : env.Null();
   }
 }

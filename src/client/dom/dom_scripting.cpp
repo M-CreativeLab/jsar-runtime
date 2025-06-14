@@ -12,7 +12,7 @@ namespace dom
 
   int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
   void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
-      static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
+    static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
 
   DOMScriptingContext *DOMScriptingContext::GetCurrent(v8::Local<v8::Context> context)
   {
@@ -221,7 +221,8 @@ namespace dom
   }
 
   DOMScriptingContext::DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext)
-      : isolate(v8::Isolate::GetCurrent()), runtimeContext(runtimeContext)
+      : isolate(v8::Isolate::GetCurrent())
+      , runtimeContext(runtimeContext)
   {
   }
 
@@ -247,15 +248,15 @@ namespace dom
       v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
 
       v8::NamedPropertyHandlerConfiguration namedConfig(
-          PropertyGetterCallback,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          {},
-          v8::PropertyHandlerFlags::kHasNoSideEffect);
+        PropertyGetterCallback,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        {},
+        v8::PropertyHandlerFlags::kHasNoSideEffect);
       globalObjectTemplate->SetHandler(namedConfig);
 
       auto newContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
@@ -485,15 +486,15 @@ namespace dom
       v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
 
       v8::NamedPropertyHandlerConfiguration namedConfig(
-          PropertyGetterCallback,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          {},
-          v8::PropertyHandlerFlags::kHasNoSideEffect);
+        PropertyGetterCallback,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        {},
+        v8::PropertyHandlerFlags::kHasNoSideEffect);
       globalObjectTemplate->SetHandler(namedConfig);
 
       auto workerContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
@@ -727,7 +728,8 @@ namespace dom
     return nullopt;
   }
 
-  void DOMScriptingContext::tryImportModule(const string &url, const bool disableCache,
+  void DOMScriptingContext::tryImportModule(const string &url,
+                                            const bool disableCache,
                                             function<void(shared_ptr<DOMModule>)> loadedCallback,
                                             function<void(const string &)> errorCallback)
   {
@@ -753,10 +755,10 @@ namespace dom
         compile(script, source, extension.isTypeScript());
       }
       else if (
-          extension.isBinary() ||
-          extension.isWebAssembly() ||
-          extension.isAudio() ||
-          extension.isImage())
+        extension.isBinary() ||
+        extension.isWebAssembly() ||
+        extension.isAudio() ||
+        extension.isImage())
       {
         compileAsSyntheticModule(module, SyntheticModuleType::ArrayBuffer, sourceData, sourceByteLength);
       }
@@ -822,15 +824,15 @@ namespace dom
     v8::Local<v8::ObjectTemplate> windowProxyTemplate = windowProxyFunctionTemplate->InstanceTemplate();
 
     v8::NamedPropertyHandlerConfiguration namedConfig(
-        WindowProxyPropertyGetterCallback,
-        nullptr,
-        nullptr,
-        nullptr,
-        WindowProxyPropertyEnumeratorCallback,
-        nullptr,
-        nullptr,
-        {},
-        v8::PropertyHandlerFlags::kHasNoSideEffect);
+      WindowProxyPropertyGetterCallback,
+      nullptr,
+      nullptr,
+      nullptr,
+      WindowProxyPropertyEnumeratorCallback,
+      nullptr,
+      nullptr,
+      {},
+      v8::PropertyHandlerFlags::kHasNoSideEffect);
     windowProxyTemplate->SetHandler(namedConfig);
 
     auto windowProxy = windowProxyTemplate->NewInstance(context).ToLocalChecked();
@@ -846,15 +848,15 @@ namespace dom
     v8::Local<v8::ObjectTemplate> selfProxyTemplate = selfProxyFunctionTemplate->InstanceTemplate();
 
     v8::NamedPropertyHandlerConfiguration namedConfig(
-        WorkerSelfProxyPropertyGetterCallback,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        {},
-        v8::PropertyHandlerFlags::kHasNoSideEffect);
+      WorkerSelfProxyPropertyGetterCallback,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      {},
+      v8::PropertyHandlerFlags::kHasNoSideEffect);
     selfProxyTemplate->SetHandler(namedConfig);
 
     auto selfProxy = selfProxyTemplate->NewInstance(context).ToLocalChecked();
@@ -862,8 +864,8 @@ namespace dom
   }
 
   DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)
-      : sourceTextType(sourceTextType),
-        runtimeContext(runtimeContext)
+      : sourceTextType(sourceTextType)
+      , runtimeContext(runtimeContext)
   {
     static TrIdGenerator scriptIdGen(0xf9);
     id = scriptIdGen.get();
@@ -1168,7 +1170,9 @@ namespace dom
     }
 
     v8::Local<v8::Module> module = v8::Module::CreateSyntheticModule(isolate,
-                                                                     urlString, {defaultExportName}, SyntheticModuleEvaluationStepsCallback);
+                                                                     urlString,
+                                                                     {defaultExportName},
+                                                                     SyntheticModuleEvaluationStepsCallback);
     moduleStore.Reset(isolate, module);
     return true;
   }

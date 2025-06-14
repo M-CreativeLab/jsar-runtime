@@ -10,10 +10,12 @@ namespace bindings
   // static
   void XRView::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRView",
-                                     {
-                                         InstanceMethod("requestViewportScale", &XRView::RequestViewportScale),
-                                     });
+    Napi::Function tpl = DefineClass(
+      env,
+      "XRView",
+      {
+        InstanceMethod("requestViewportScale", &XRView::RequestViewportScale),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -31,7 +33,8 @@ namespace bindings
     return scope.Escape(instance).ToObject();
   }
 
-  XRView::XRView(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRView>(info)
+  XRView::XRView(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRView>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

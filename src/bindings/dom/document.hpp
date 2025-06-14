@@ -24,35 +24,40 @@ namespace dombinding
     {
       auto props = NodeBase<ObjectType, DocumentType>::GetClassProperties(env);
       auto documentProps = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-          {
-              // Properties
-              ObjectType::InstanceAccessor("head", &ObjectType::HeadGetter, nullptr, napi_default_jsproperty),
-              ObjectType::InstanceAccessor("body", &ObjectType::BodyGetter, nullptr, napi_default_jsproperty),
-              // Methods
-              ObjectType::InstanceMethod("adoptNode", &ObjectType::AdoptNode, napi_default_method),
-              ObjectType::InstanceMethod("append", &ObjectType::Append, napi_default_method),
-              ObjectType::InstanceMethod("close", &ObjectType::Close, napi_default_method),
-              ObjectType::InstanceMethod("createAttribute", &ObjectType::CreateAttribute, napi_default_method),
-              ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS, napi_default_method),
-              ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection, napi_default_method),
-              ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment, napi_default_method),
-              ObjectType::InstanceMethod("createDocumentFragment",
-                                         &ObjectType::CreateDocumentFragment, napi_default_method),
-              ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
-              ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
-              ObjectType::InstanceMethod("createTextNode", &ObjectType::CreateTextNode, napi_default_method),
-              ObjectType::InstanceMethod("importNode", &ObjectType::ImportNode, napi_default_method),
-              ObjectType::InstanceMethod("getElementById",
-                                         &ObjectType::GetElementById, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByClassName",
-                                         &ObjectType::GetElementsByClassName, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByName",
-                                         &ObjectType::GetElementsByName, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByTagName",
-                                         &ObjectType::GetElementsByTagName, napi_default_method),
-              ObjectType::InstanceMethod("querySelector", &ObjectType::QuerySelector, napi_default_method),
-              ObjectType::InstanceMethod("querySelectorAll", &ObjectType::QuerySelectorAll, napi_default_method),
-          });
+        {
+          // Properties
+          ObjectType::InstanceAccessor("head", &ObjectType::HeadGetter, nullptr, napi_default_jsproperty),
+          ObjectType::InstanceAccessor("body", &ObjectType::BodyGetter, nullptr, napi_default_jsproperty),
+          // Methods
+          ObjectType::InstanceMethod("adoptNode", &ObjectType::AdoptNode, napi_default_method),
+          ObjectType::InstanceMethod("append", &ObjectType::Append, napi_default_method),
+          ObjectType::InstanceMethod("close", &ObjectType::Close, napi_default_method),
+          ObjectType::InstanceMethod("createAttribute", &ObjectType::CreateAttribute, napi_default_method),
+          ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS, napi_default_method),
+          ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection, napi_default_method),
+          ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment, napi_default_method),
+          ObjectType::InstanceMethod("createDocumentFragment",
+                                     &ObjectType::CreateDocumentFragment,
+                                     napi_default_method),
+          ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
+          ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
+          ObjectType::InstanceMethod("createTextNode", &ObjectType::CreateTextNode, napi_default_method),
+          ObjectType::InstanceMethod("importNode", &ObjectType::ImportNode, napi_default_method),
+          ObjectType::InstanceMethod("getElementById",
+                                     &ObjectType::GetElementById,
+                                     napi_default_method),
+          ObjectType::InstanceMethod("getElementsByClassName",
+                                     &ObjectType::GetElementsByClassName,
+                                     napi_default_method),
+          ObjectType::InstanceMethod("getElementsByName",
+                                     &ObjectType::GetElementsByName,
+                                     napi_default_method),
+          ObjectType::InstanceMethod("getElementsByTagName",
+                                     &ObjectType::GetElementsByTagName,
+                                     napi_default_method),
+          ObjectType::InstanceMethod("querySelector", &ObjectType::QuerySelector, napi_default_method),
+          ObjectType::InstanceMethod("querySelectorAll", &ObjectType::QuerySelectorAll, napi_default_method),
+        });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
     }
@@ -81,7 +86,8 @@ namespace dombinding
     }
 
   public:
-    DocumentBase(const Napi::CallbackInfo &info) : NodeBase<ObjectType, DocumentType>(info)
+    DocumentBase(const Napi::CallbackInfo &info)
+        : NodeBase<ObjectType, DocumentType>(info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);

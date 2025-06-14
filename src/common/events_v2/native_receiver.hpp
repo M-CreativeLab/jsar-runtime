@@ -20,9 +20,9 @@ namespace events_comm
     /**
      * Try to receive an event message, it will returns a new instance you should delete it after using.
      */
-    inline TrNativeEventMessage* recvEvent(int timeout)
+    inline TrNativeEventMessage *recvEvent(int timeout)
     {
-      TrNativeEventMessage* newMessage = new TrNativeEventMessage();
+      TrNativeEventMessage *newMessage = new TrNativeEventMessage();
       if (!newMessage->deserialize(this, timeout))
       {
         delete newMessage;

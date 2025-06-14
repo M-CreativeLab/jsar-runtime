@@ -93,8 +93,7 @@ namespace builtin_scene
 
   void Instance::removeHolder(std::shared_ptr<RenderableInstancesList> holder)
   {
-    holders_.erase(remove_if(holders_.begin(), holders_.end(),
-                             [holder](const weak_ptr<RenderableInstancesList> &h)
+    holders_.erase(remove_if(holders_.begin(), holders_.end(), [holder](const weak_ptr<RenderableInstancesList> &h)
                              { return h.lock() == holder; }),
                    holders_.end());
   }
@@ -111,10 +110,10 @@ namespace builtin_scene
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
                                                    shared_ptr<WebGLVertexArray> vao,
                                                    shared_ptr<WebGLBuffer> instanceVbo)
-      : filter(filter),
-        vao(vao),
-        instanceVbo(instanceVbo),
-        isDirty_(true)
+      : filter(filter)
+      , vao(vao)
+      , instanceVbo(instanceVbo)
+      , isDirty_(true)
   {
     assert(filter != InstanceFilter::kAll);
   }
@@ -147,8 +146,7 @@ namespace builtin_scene
     if (sortingOrder != SortingOrder::kNone && list_.size() > 1)
     {
       // Sorting the instances by z-index and the sorting order.
-      sort(list_.begin(), list_.end(),
-           [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
+      sort(list_.begin(), list_.end(), [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
            {
              if (auto aPtr = a.lock(); aPtr != nullptr)
              {
@@ -160,8 +158,7 @@ namespace builtin_scene
                    return aPtr->zIndex_ > bPtr->zIndex_;
                }
              }
-             return false;
-           });
+             return false; });
     }
     isDirty_ = true;
   }
@@ -192,8 +189,7 @@ namespace builtin_scene
     if ((len = copyToArrayData(array)) > 0)
     {
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
-      glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(),
-                           WebGLBufferUsage::kDynamicDraw);
+      glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
     }
     isDirty_ = false;
   }
@@ -346,9 +342,9 @@ namespace builtin_scene
     assert(glContext != nullptr);
     glContext_ = glContext;
     opaqueInstances_ = make_shared<RenderableInstancesList>(
-        InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo);
+      InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo);
     transparentInstances_ = make_shared<RenderableInstancesList>(
-        InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
+      InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
   }
 
   void InstancedMeshBase::updateRenderQueues(bool ignoreDirty)

@@ -32,8 +32,13 @@ namespace gles
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
         size_t bytes = width * height * gles::glTextureFormatToByteLength(format);
 
-        DEBUG(LOG_TAG_ERROR, " #%d: %dx%d %s %zubytes", *pTexture,
-              width, height, gles::glTextureInternalFormatToString(format).c_str(), bytes);
+        DEBUG(LOG_TAG_ERROR,
+              " #%d: %dx%d %s %zubytes",
+              *pTexture,
+              width,
+              height,
+              gles::glTextureInternalFormatToString(format).c_str(),
+              bytes);
       }
       glBindTexture(GL_TEXTURE_2D, currentTexture);
     }

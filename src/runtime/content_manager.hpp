@@ -22,7 +22,10 @@ public:
   bool initialize();
   bool shutdown();
   bool tickOnFrame();
-  bool hasContents() { return !contents.empty(); }
+  bool hasContents()
+  {
+    return !contents.empty();
+  }
 
   /**
    * Set the request authorization headers for upcoming content(client-side) HTTP requests.
@@ -31,8 +34,8 @@ public:
    * @param allowed_origins The allowed origins for the raw headers, if empty, all origins are allowed.
    */
   inline void setRequestAuthorizationHeaders(
-      const std::string &raw_headers,
-      const std::vector<std::string> &allowed_origins = std::vector<std::string>())
+    const std::string &raw_headers,
+    const std::vector<std::string> &allowed_origins = std::vector<std::string>())
   {
     request_authorization_headers.raw_headers = raw_headers;
     request_authorization_headers.allowed_origins = allowed_origins;

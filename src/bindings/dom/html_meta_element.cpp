@@ -10,12 +10,12 @@ namespace dombinding
     using T = HTMLMetaElement;
     auto props = HTMLElementBase<HTMLMetaElement, dom::HTMLMetaElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>>(
-        {
-            T::InstanceAccessor("content", &T::ContentGetter, &T::ContentSetter),
-            T::InstanceAccessor("httpEquiv", &T::HttpEquivGetter, &T::HttpEquivSetter),
-            T::InstanceAccessor("media", &T::MediaGetter, &T::MediaSetter),
-            T::InstanceAccessor("name", &T::NameGetter, &T::NameSetter),
-        });
+      {
+        T::InstanceAccessor("content", &T::ContentGetter, &T::ContentSetter),
+        T::InstanceAccessor("httpEquiv", &T::HttpEquivGetter, &T::HttpEquivSetter),
+        T::InstanceAccessor("media", &T::MediaGetter, &T::MediaSetter),
+        T::InstanceAccessor("name", &T::NameGetter, &T::NameSetter),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

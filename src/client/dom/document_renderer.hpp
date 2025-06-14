@@ -29,7 +29,10 @@ namespace dom
     ~RenderHTMLDocument();
 
   public:
-    const std::string name() const override { return "dom.RenderHTMLDocument"; }
+    const std::string name() const override
+    {
+      return "dom.RenderHTMLDocument";
+    }
     void onExecute() override;
 
   private:

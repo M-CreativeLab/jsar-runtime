@@ -66,7 +66,10 @@ namespace xr
      *
      * @param device The XR device.
      */
-    DeviceFrame(xr::Device *device) : m_XrDevice(device) {}
+    DeviceFrame(xr::Device *device)
+        : m_XrDevice(device)
+    {
+    }
     virtual ~DeviceFrame() = default;
 
   public:
@@ -274,8 +277,14 @@ namespace xr
      * In a single frame, we may have multiple flush commands, this method is used to reset the flush flag.
      */
     void resetFlush(int passIndex);
-    inline int getId() { return m_StereoId; }
-    inline bool addedOnce() { return m_IsAddedOnce; }
+    inline int getId()
+    {
+      return m_StereoId;
+    }
+    inline bool addedOnce()
+    {
+      return m_IsAddedOnce;
+    }
     inline bool empty()
     {
       if (m_IsMultiPass)
@@ -283,10 +292,19 @@ namespace xr
       else
         return m_CommandBuffersInPass.empty();
     }
-    inline bool available() { return m_Available; }
-    inline void available(bool v) { m_Available = v; }
+    inline bool available()
+    {
+      return m_Available;
+    }
+    inline void available(bool v)
+    {
+      m_Available = v;
+    }
     // returns if this frame is expired after `timeout` milliseconds.
-    inline bool expired(int timeout) { return duration<chrono::milliseconds>().count() > timeout; }
+    inline bool expired(int timeout)
+    {
+      return duration<chrono::milliseconds>().count() > timeout;
+    }
     bool idempotent();
     void idempotent(int passIndex, bool value);
     inline void finishPass(int passIndex)
@@ -294,9 +312,15 @@ namespace xr
       assert(passIndex == 0 || passIndex == 1);
       m_Finished[passIndex] = true;
     }
-    inline bool finished(int passIndex) { return passIndex < 0 || passIndex > 1 ? false : m_Finished[passIndex]; }
+    inline bool finished(int passIndex)
+    {
+      return passIndex < 0 || passIndex > 1 ? false : m_Finished[passIndex];
+    }
 
-    inline size_t count() { return m_CommandBuffersInPass.size() + m_CommandBuffersInPass2.size(); }
+    inline size_t count()
+    {
+      return m_CommandBuffersInPass.size() + m_CommandBuffersInPass2.size();
+    }
     inline size_t count(int passIndex)
     {
       return passIndex == 0 ? m_CommandBuffersInPass.size() : m_CommandBuffersInPass2.size();
@@ -308,7 +332,10 @@ namespace xr
         len += byteLength(1);
       return len;
     }
-    inline size_t byteLength(int passIndex) { return m_CommandBuffersByteLength[passIndex]; }
+    inline size_t byteLength(int passIndex)
+    {
+      return m_CommandBuffersByteLength[passIndex];
+    }
     string toString();
 
   public:

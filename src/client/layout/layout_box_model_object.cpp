@@ -9,8 +9,8 @@ namespace client_layout
   using namespace std;
 
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
-      : LayoutObject(node),
-        scrollable_area_(make_shared<client_scroll::ScrollableArea>())
+      : LayoutObject(node)
+      , scrollable_area_(make_shared<client_scroll::ScrollableArea>())
   {
   }
 

@@ -21,11 +21,14 @@
 #endif
 #endif
 
-#define TR_DISALLOW_NEW()                                         \
-public:                                                           \
-  void *operator new(size_t, void *location) { return location; } \
-                                                                  \
-private:                                                          \
+#define TR_DISALLOW_NEW()                    \
+public:                                      \
+  void *operator new(size_t, void *location) \
+  {                                          \
+    return location;                         \
+  }                                          \
+                                             \
+private:                                     \
   void *operator new(size_t) = delete
 
 /**
@@ -39,7 +42,10 @@ template <typename T>
 class SharedReference
 {
 public:
-  SharedReference(std::shared_ptr<T> value) : value(value) {}
+  SharedReference(std::shared_ptr<T> value)
+      : value(value)
+  {
+  }
 
 public:
   std::shared_ptr<T> value;
@@ -55,19 +61,31 @@ template <typename T>
 class JSObjectHolder
 {
 public:
-  JSObjectHolder() : value_(nullptr) {}
-  JSObjectHolder(JSObjectHolder &that) : value_(that.value_) {}
+  JSObjectHolder()
+      : value_(nullptr)
+  {
+  }
+  JSObjectHolder(JSObjectHolder &that)
+      : value_(that.value_)
+  {
+  }
 
 public:
   /**
    * @returns `true` if this holder has a JavaScript object value, `false` otherwise.
    * @deprecated Use `hasJSObject` instead.
    */
-  inline bool isJSObject() const { return value_ != nullptr; }
+  inline bool isJSObject() const
+  {
+    return value_ != nullptr;
+  }
   /**
    * @returns `true` if this holds a JavaScript object value, `false` otherwise.
    */
-  inline bool hasJSObject() const { return isJSObject(); }
+  inline bool hasJSObject() const
+  {
+    return isJSObject();
+  }
   /**
    * @returns The JavaScript object value.
    */

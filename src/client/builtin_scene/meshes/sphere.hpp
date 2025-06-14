@@ -17,19 +17,31 @@ namespace builtin_scene
 
     public:
       Sphere(float radius)
-          : Mesh("Sphere", PrimitiveTopology::kTriangles),
-            radius_(radius)
+          : Mesh("Sphere", PrimitiveTopology::kTriangles)
+          , radius_(radius)
       {
       }
       virtual ~Sphere() = default;
 
     public:
-      inline float radius() { return radius_; }
-      inline float diameter() { return radius_ * 2.0f; }
+      inline float radius()
+      {
+        return radius_;
+      }
+      inline float diameter()
+      {
+        return radius_ * 2.0f;
+      }
 
     public:
-      float area() override { return 4.0f * glm::pi<float>() * std::pow(radius_, 2); }
-      float volume() override { return (4.0f / 3.0f) * glm::pi<float>() * std::pow(radius_, 3); }
+      float area() override
+      {
+        return 4.0f * glm::pi<float>() * std::pow(radius_, 2);
+      }
+      float volume() override
+      {
+        return (4.0f / 3.0f) * glm::pi<float>() * std::pow(radius_, 3);
+      }
       void build() override = 0;
 
     private:
@@ -40,8 +52,8 @@ namespace builtin_scene
     {
     public:
       IcoSphere(float radius, uint32_t subdivisions)
-          : Sphere<IcoSphere>(radius),
-            subdivisions_(subdivisions)
+          : Sphere<IcoSphere>(radius)
+          , subdivisions_(subdivisions)
       {
       }
 
@@ -68,9 +80,9 @@ namespace builtin_scene
        * @param stacks The number of latitudinal stacks.
        */
       UvSphere(float radius, uint32_t sectors, uint32_t stacks)
-          : Sphere<UvSphere>(radius),
-            sectors_(sectors),
-            stacks_(stacks)
+          : Sphere<UvSphere>(radius)
+          , sectors_(sectors)
+          , stacks_(stacks)
       {
       }
 

@@ -10,7 +10,10 @@ namespace client_layout
   {
   public:
     // Zero space: 0 x 0
-    static ConstraintSpace Zero() { return ConstraintSpace(0, 0); }
+    static ConstraintSpace Zero()
+    {
+      return ConstraintSpace(0, 0);
+    }
 
   public:
     ConstraintSpace(float width, float height)
@@ -23,8 +26,14 @@ namespace client_layout
     }
 
   public:
-    float width() const { return size_.x; }
-    float height() const { return size_.y; }
+    float width() const
+    {
+      return size_.x;
+    }
+    float height() const
+    {
+      return size_.y;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const ConstraintSpace &space)

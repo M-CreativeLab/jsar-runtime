@@ -47,37 +47,38 @@ namespace dom
   }
 
   Node::Node(NodeType nodeType, string nodeName, optional<shared_ptr<Document>> ownerDocument)
-      : DOMEventTarget(),
-        uid(NodeIdGenerator.get()),
-        internal(make_shared<pugi::xml_node>()),
-        connected(false),
-        nodeType(nodeType),
-        nodeName(ToLowerCase(nodeName))
+      : DOMEventTarget()
+      , uid(NodeIdGenerator.get())
+      , internal(make_shared<pugi::xml_node>())
+      , connected(false)
+      , nodeType(nodeType)
+      , nodeName(ToLowerCase(nodeName))
   {
     updateFieldsFromDocument(ownerDocument);
   }
 
   Node::Node(pugi::xml_node node, shared_ptr<Document> ownerDocument)
-      : DOMEventTarget(),
-        uid(NodeIdGenerator.get()),
-        internal(make_shared<pugi::xml_node>(node)), connected(false)
+      : DOMEventTarget()
+      , uid(NodeIdGenerator.get())
+      , internal(make_shared<pugi::xml_node>(node))
+      , connected(false)
   {
     updateFieldsFromInternal();
     updateFieldsFromDocument(ownerDocument);
   }
 
   Node::Node(const Node &other)
-      : DOMEventTarget(),
-        uid(NodeIdGenerator.get()),
-        internal(nullptr), // Not copy the internal node
-        baseURI(other.baseURI),
-        connected(false),
-        nodeName(other.nodeName),
-        nodeType(other.nodeType),
-        ownerDocument(other.ownerDocument),
-        parentNode(weak_ptr<Node>()),
-        childNodes({}),
-        renderable(other.renderable)
+      : DOMEventTarget()
+      , uid(NodeIdGenerator.get())
+      , internal(nullptr) // Not copy the internal node
+      , baseURI(other.baseURI)
+      , connected(false)
+      , nodeName(other.nodeName)
+      , nodeType(other.nodeType)
+      , ownerDocument(other.ownerDocument)
+      , parentNode(weak_ptr<Node>())
+      , childNodes({})
+      , renderable(other.renderable)
   {
   }
 
@@ -104,8 +105,9 @@ namespace dom
     }
     else
     {
-      string msg = "Failed to append the child: "
-                   "the new child node is not a DocumentFragment, Text, Comment or Element.";
+      string msg =
+        "Failed to append the child: "
+        "the new child node is not a DocumentFragment, Text, Comment or Element.";
       throw runtime_error(msg);
     }
   }
@@ -635,8 +637,8 @@ namespace dom
   {
     childNodes.clear();
     shared_ptr<Document> childOwnerDocument = (nodeType != NodeType::DOCUMENT_NODE && ownerDocument.has_value())
-                                                  ? ownerDocument.value().lock()
-                                                  : getPtr<Document>();
+                                                ? ownerDocument.value().lock()
+                                                : getPtr<Document>();
     assert(childOwnerDocument != nullptr && "The owner document is not set.");
 
     for (auto child : internal->children())

@@ -32,7 +32,10 @@ namespace client_cssom::values::specified
       uint32_t b;
       uint32_t a;
 
-      operator glm::vec4() const { return glm::vec4(r, g, b, a); }
+      operator glm::vec4() const
+      {
+        return glm::vec4(r, g, b, a);
+      }
     };
     using ValueVariant = std::variant<std::monostate, AbsoluteColorVariant>;
 
@@ -52,17 +55,23 @@ namespace client_cssom::values::specified
         auto color = parsing::parseColor(input);
         tag_ = Tag::kAbsolute;
         value_ = AbsoluteColorVariant{
-            static_cast<uint32_t>(color.r()),
-            static_cast<uint32_t>(color.g()),
-            static_cast<uint32_t>(color.b()),
-            static_cast<uint32_t>(color.a())};
+          static_cast<uint32_t>(color.r()),
+          static_cast<uint32_t>(color.g()),
+          static_cast<uint32_t>(color.b()),
+          static_cast<uint32_t>(color.a())};
       }
       return true;
     }
 
   public:
-    inline bool isCurrentColor() const { return tag_ == Tag::kCurrentColor; }
-    inline bool isAbsoluteColor() const { return tag_ == Tag::kAbsolute; }
+    inline bool isCurrentColor() const
+    {
+      return tag_ == Tag::kCurrentColor;
+    }
+    inline bool isAbsoluteColor() const
+    {
+      return tag_ == Tag::kAbsolute;
+    }
 
     std::string toCss() const override
     {

@@ -79,8 +79,8 @@ namespace dom
   }
 
   Text::Text(const Text &other)
-      : CharacterData(other),
-        style_(other.style_)
+      : CharacterData(other)
+      , style_(other.style_)
   {
   }
 

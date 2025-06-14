@@ -333,16 +333,16 @@ namespace client_graphics
     void deleteFramebuffer(std::shared_ptr<WebGLFramebuffer> framebuffer);
     void bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer);
     void framebufferRenderbuffer(
-        WebGLFramebufferBindingTarget target,
-        WebGLFramebufferAttachment attachment,
-        WebGLRenderbufferBindingTarget renderbuffertarget,
-        std::shared_ptr<WebGLRenderbuffer> renderbuffer);
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      WebGLRenderbufferBindingTarget renderbuffertarget,
+      std::shared_ptr<WebGLRenderbuffer> renderbuffer);
     void framebufferTexture2D(
-        WebGLFramebufferBindingTarget target,
-        WebGLFramebufferAttachment attachment,
-        WebGLTexture2DTarget textarget,
-        std::shared_ptr<WebGLTexture> texture,
-        int level);
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      WebGLTexture2DTarget textarget,
+      std::shared_ptr<WebGLTexture> texture,
+      int level);
     uint32_t checkFramebufferStatus(WebGLFramebufferBindingTarget target);
     std::shared_ptr<WebGLRenderbuffer> createRenderbuffer();
     void deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer);
@@ -352,43 +352,43 @@ namespace client_graphics
     void deleteTexture(std::shared_ptr<WebGLTexture> texture);
     void bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture);
     void texImage2D(
-        WebGLTexture2DTarget target,
-        int level,
-        int internalformat,
-        size_t width,
-        size_t height,
-        int border,
-        WebGLTextureFormat format,
-        WebGLPixelType type,
-        unsigned char *pixels);
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      int border,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels);
     void texSubImage2D(
-        WebGLTexture2DTarget target,
-        int level,
-        int xoffset,
-        int yoffset,
-        size_t width,
-        size_t height,
-        WebGLTextureFormat format,
-        WebGLPixelType type,
-        unsigned char *pixels);
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      size_t width,
+      size_t height,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels);
     void copyTexImage2D(
-        WebGLTexture2DTarget target,
-        int level,
-        int internalformat,
-        int x,
-        int y,
-        size_t width,
-        size_t height,
-        int border);
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      int x,
+      int y,
+      size_t width,
+      size_t height,
+      int border);
     void copyTexSubImage2D(
-        WebGLTexture2DTarget target,
-        int level,
-        int xoffset,
-        int yoffset,
-        int x,
-        int y,
-        size_t width,
-        size_t height);
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int x,
+      int y,
+      size_t width,
+      size_t height);
     void texParameterf(WebGLTextureTarget target, WebGLTextureParameterName pname, float param);
     void texParameteri(WebGLTextureTarget target, WebGLTextureParameterName pname, int param);
     void texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<float> params);
@@ -617,12 +617,12 @@ namespace client_graphics
      * @returns The destination pixels buffer.
      */
     unsigned char *unpackPixels(
-        WebGLPixelType type,
-        WebGLTextureFormat format,
-        size_t width,
-        size_t height,
-        unsigned char *srcPixels,
-        unsigned char *dstPixels = nullptr)
+      WebGLPixelType type,
+      WebGLTextureFormat format,
+      size_t width,
+      size_t height,
+      unsigned char *srcPixels,
+      unsigned char *dstPixels = nullptr)
     {
       if (srcPixels == nullptr) // return null if the input is null.
         return nullptr;
@@ -668,22 +668,22 @@ namespace client_graphics
         for (int i = 0, j = height - 1; j >= 0; ++i, --j)
         {
           memcpy(
-              reinterpret_cast<void *>(unpacked + j * rowStride),
-              reinterpret_cast<void *>(srcPixels + i * rowStride),
-              width * pixelSize);
+            reinterpret_cast<void *>(unpacked + j * rowStride),
+            reinterpret_cast<void *>(srcPixels + i * rowStride),
+            width * pixelSize);
         }
       }
       else
       {
         memcpy(
-            reinterpret_cast<void *>(unpacked),
-            reinterpret_cast<void *>(srcPixels),
-            imageSize);
+          reinterpret_cast<void *>(unpacked),
+          reinterpret_cast<void *>(srcPixels),
+          imageSize);
       }
 
       if (
-          unpackPremultiplyAlpha_ &&
-          (format == WebGLTextureFormat::kLuminanceAlpha || format == WebGLTextureFormat::kRGBA))
+        unpackPremultiplyAlpha_ &&
+        (format == WebGLTextureFormat::kLuminanceAlpha || format == WebGLTextureFormat::kRGBA))
       {
         for (int row = 0; row < height; ++row)
         {
@@ -725,7 +725,10 @@ namespace client_graphics
     /**
      * @returns the client state of the WebGL context.
      */
-    WebGLState &clientState() { return clientState_; }
+    WebGLState &clientState()
+    {
+      return clientState_;
+    }
     /**
      * an XR-compatible WebGL context could be configured as an `XRWebGLLayer` object and be connected to a specific WebXR
      * session. At the same time, each WebXR session could own 1 base layer, thus the XR-compatible WebGL context to a WebXR
@@ -814,32 +817,32 @@ namespace client_graphics
     void beginTransformFeedback(WebGLDrawMode mode);
     void bindBufferBase(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer);
     void bindBufferRange(
-        WebGLBufferBindingTarget target,
-        uint32_t index,
-        std::shared_ptr<WebGLBuffer> buffer,
-        int offset,
-        size_t size);
+      WebGLBufferBindingTarget target,
+      uint32_t index,
+      std::shared_ptr<WebGLBuffer> buffer,
+      int offset,
+      size_t size);
     void bindSampler(uint32_t unit, std::shared_ptr<WebGLSampler> sampler);
     void bindVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray);
     void blitFramebuffer(
-        int srcX0,
-        int srcY0,
-        int srcX1,
-        int srcY1,
-        int dstX0,
-        int dstY0,
-        int dstX1,
-        int dstY1,
-        int mask,
-        int filter);
+      int srcX0,
+      int srcY0,
+      int srcX1,
+      int srcY1,
+      int dstX0,
+      int dstY0,
+      int dstX1,
+      int dstY1,
+      int mask,
+      int filter);
     void bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage);
     void bufferData(
-        WebGLBufferBindingTarget target,
-        size_t srcSize,
-        void *srcData,
-        WebGLBufferUsage usage,
-        std::optional<int> srcOffset = 0,
-        std::optional<int> length = 0);
+      WebGLBufferBindingTarget target,
+      size_t srcSize,
+      void *srcData,
+      WebGLBufferUsage usage,
+      std::optional<int> srcOffset = 0,
+      std::optional<int> length = 0);
     /**
      * It updates a subset of a buffer object's data store.
      *
@@ -851,54 +854,54 @@ namespace client_graphics
      * @param length A `uint` defaulting to 0, where 0 means bufferSubData should calculate the length.
      */
     void bufferSubData(
-        WebGLBufferBindingTarget target,
-        int dstByteOffset,
-        size_t srcSize,
-        void *srcData,
-        std::optional<int> srcOffset = std::nullopt,
-        std::optional<int> length = 0);
+      WebGLBufferBindingTarget target,
+      int dstByteOffset,
+      size_t srcSize,
+      void *srcData,
+      std::optional<int> srcOffset = std::nullopt,
+      std::optional<int> length = 0);
     void clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<float> values);
     void clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<int> values);
     void clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<unsigned int> values);
     void clearBufferfi(WebGLFramebufferAttachmentType buffer, int drawbuffer, float depth, int stencil);
     void compressedTexImage3D(
-        WebGLTexture3DTarget target,
-        int level,
-        int internalformat,
-        size_t width,
-        size_t height,
-        size_t depth,
-        int border,
-        size_t imageSize,
-        unsigned char *data);
+      WebGLTexture3DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int border,
+      size_t imageSize,
+      unsigned char *data);
     void compressedTexSubImage3D(
-        WebGLTexture3DTarget target,
-        int level,
-        int xoffset,
-        int yoffset,
-        int zoffset,
-        size_t width,
-        size_t height,
-        size_t depth,
-        int format,
-        size_t imageSize,
-        unsigned char *data);
+      WebGLTexture3DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int format,
+      size_t imageSize,
+      unsigned char *data);
     void copyBufferSubData(
-        WebGLBufferBindingTarget readTarget,
-        WebGLBufferBindingTarget writeTarget,
-        int readOffset,
-        int writeOffset,
-        size_t size);
+      WebGLBufferBindingTarget readTarget,
+      WebGLBufferBindingTarget writeTarget,
+      int readOffset,
+      int writeOffset,
+      size_t size);
     void copyTexSubImage3D(
-        WebGLTexture2DTarget target,
-        int level,
-        int xoffset,
-        int yoffset,
-        int zoffset,
-        int x,
-        int y,
-        size_t width,
-        size_t height);
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      int x,
+      int y,
+      size_t width,
+      size_t height);
     std::shared_ptr<WebGLQuery> createQuery();
     std::shared_ptr<WebGLSampler> createSampler();
     std::shared_ptr<WebGLVertexArray> createVertexArray();
@@ -914,11 +917,11 @@ namespace client_graphics
      * It attaches a single layer of a texture to a framebuffer.
      */
     void framebufferTextureLayer(
-        WebGLFramebufferBindingTarget target,
-        WebGLFramebufferAttachment attachment,
-        std::shared_ptr<WebGLTexture> texture,
-        int level,
-        int layer);
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      std::shared_ptr<WebGLTexture> texture,
+      int level,
+      int layer);
     /**
      * @returns A string indicating the active uniform block name.
      */
@@ -934,12 +937,12 @@ namespace client_graphics
      * @param length the number of elements to copy. If this is 0 or nullopt, it will copy util the end of `dstData`.
      */
     void getBufferSubData(
-        WebGLBufferBindingTarget target,
-        int srcByteOffset,
-        size_t dstSize,
-        void *dstData,
-        std::optional<int> dstOffset = std::nullopt,
-        std::optional<int> length = std::nullopt);
+      WebGLBufferBindingTarget target,
+      int srcByteOffset,
+      size_t dstSize,
+      void *dstData,
+      std::optional<int> dstOffset = std::nullopt,
+      std::optional<int> length = std::nullopt);
     int getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
     int getParameterV2(WebGL2IntegerParameterName pname);
     std::shared_ptr<WebGLQuery> getQuery(WebGLQueryTarget target, int pname);
@@ -969,12 +972,12 @@ namespace client_graphics
      * @param height The height of the region to invalidate.
      */
     void invalidateSubFramebuffer(
-        WebGLFramebufferBindingTarget target,
-        const std::vector<int> attachments,
-        int x,
-        int y,
-        size_t width,
-        size_t height);
+      WebGLFramebufferBindingTarget target,
+      const std::vector<int> attachments,
+      int x,
+      int y,
+      size_t width,
+      size_t height);
     /**
      * @returns `true` if the passed object is a valid `WebGLQuery` object.
      */
@@ -1005,11 +1008,11 @@ namespace client_graphics
      * @param height The height of the renderbuffer.
      */
     void renderbufferStorageMultisample(
-        WebGLRenderbufferBindingTarget target,
-        int samples,
-        int internalformat,
-        int width,
-        int height);
+      WebGLRenderbufferBindingTarget target,
+      int samples,
+      int internalformat,
+      int width,
+      int height);
     /**
      * It specifies a three-dimensional texture image.
      *
@@ -1025,16 +1028,16 @@ namespace client_graphics
      * @param pixels The pixel data.
      */
     void texImage3D(
-        WebGLTexture3DTarget target,
-        int level,
-        int internalformat,
-        size_t width,
-        size_t height,
-        size_t depth,
-        int border,
-        WebGLTextureFormat format,
-        WebGLPixelType type,
-        unsigned char *pixels);
+      WebGLTexture3DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int border,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels);
     /**
      * It specifies all levels of two-dimensional texture storage.
      *
@@ -1045,11 +1048,11 @@ namespace client_graphics
      * @param height The height of the texture image.
      */
     void texStorage2D(
-        WebGLTexture2DTarget target,
-        int levels,
-        int internalformat,
-        size_t width,
-        size_t height);
+      WebGLTexture2DTarget target,
+      int levels,
+      int internalformat,
+      size_t width,
+      size_t height);
     /**
      * It specifies all levels of three-dimensional texture storage.
      *
@@ -1061,12 +1064,12 @@ namespace client_graphics
      * @param depth The depth of the texture image.
      */
     void texStorage3D(
-        WebGLTexture3DTarget target,
-        int levels,
-        int internalformat,
-        size_t width,
-        size_t height,
-        size_t depth);
+      WebGLTexture3DTarget target,
+      int levels,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth);
     /**
      * It specifies a sub-rectangle of a three-dimensional texture image.
      *
@@ -1083,17 +1086,17 @@ namespace client_graphics
      * @param pixels The pixel data.
      */
     void texSubImage3D(
-        WebGLTexture3DTarget target,
-        int level,
-        int xoffset,
-        int yoffset,
-        int zoffset,
-        size_t width,
-        size_t height,
-        size_t depth,
-        WebGLTextureFormat format,
-        WebGLPixelType type,
-        unsigned char *pixels);
+      WebGLTexture3DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      size_t width,
+      size_t height,
+      size_t depth,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels);
     /**
      * It assigns binding points for active uniform blocks.
      */
@@ -1175,11 +1178,11 @@ namespace client_graphics
      * @param offset An offset in bytes of the first component in the vertex attribute array. Must be a multiple of type.
      */
     void vertexAttribIPointer(
-        uint32_t index,
-        int size,
-        int type,
-        int stride,
-        int offset);
+      uint32_t index,
+      int size,
+      int type,
+      int stride,
+      int offset);
 
   public: // WebGL2 properties
     int max3DTextureSize;
@@ -1223,14 +1226,20 @@ namespace client_graphics
   {
   public:
     WebGLObjectScope(std::shared_ptr<ContextType> glContext, std::shared_ptr<ObjectType> object)
-        : glContext_(glContext),
-          glObject_(object)
+        : glContext_(glContext)
+        , glObject_(object)
     {
     }
 
   protected:
-    inline bool isObjectInContextChanged() const { return objectInContextChanged_; }
-    inline void markObjectInContextChanged() { objectInContextChanged_ = true; }
+    inline bool isObjectInContextChanged() const
+    {
+      return objectInContextChanged_;
+    }
+    inline void markObjectInContextChanged()
+    {
+      objectInContextChanged_ = true;
+    }
 
   protected:
     std::shared_ptr<ContextType> glContext_;
@@ -1262,7 +1271,10 @@ namespace client_graphics
     }
 
   public:
-    inline std::shared_ptr<client_graphics::WebGLProgram> program() const { return glObject_; }
+    inline std::shared_ptr<client_graphics::WebGLProgram> program() const
+    {
+      return glObject_;
+    }
   };
 
   class WebGLVertexArrayScope final : public WebGLObjectScope<WebGL2Context, WebGLVertexArray>
@@ -1285,8 +1297,8 @@ namespace client_graphics
     WebGLVertexBufferScope(std::shared_ptr<WebGL2Context> glContext,
                            std::shared_ptr<WebGLBuffer> glObject,
                            WebGLBufferBindingTarget bindingTarget)
-        : WebGLObjectScope(glContext, glObject),
-          bindingTarget_(bindingTarget)
+        : WebGLObjectScope(glContext, glObject)
+        , bindingTarget_(bindingTarget)
     {
       glContext_->bindBuffer(bindingTarget_, glObject);
     }

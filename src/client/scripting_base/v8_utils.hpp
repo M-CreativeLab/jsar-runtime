@@ -39,11 +39,11 @@ namespace scripting_base
       v8::Isolate *isolate = context->GetIsolate();
       v8::Local<v8::Object> consoleObject = context->Global()->Get(context,
                                                                    v8::String::NewFromUtf8Literal(isolate, "console"))
-                                                .ToLocalChecked()
-                                                .As<v8::Object>();
+                                              .ToLocalChecked()
+                                              .As<v8::Object>();
       v8::Local<v8::Function> consoleLog = consoleObject->Get(context, v8::String::NewFromUtf8Literal(isolate, "log"))
-                                               .ToLocalChecked()
-                                               .As<v8::Function>();
+                                             .ToLocalChecked()
+                                             .As<v8::Function>();
       consoleLog->Call(context, consoleObject, 1, &value).ToLocalChecked();
     }
   }

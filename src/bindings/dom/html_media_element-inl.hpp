@@ -11,23 +11,23 @@ namespace dombinding
     using T = HTMLMediaElementBase<ObjectType, HTMLMediaElementType>;
     auto props = HTMLElementBase<ObjectType, HTMLMediaElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-        {
-            T::InstanceAccessor("autoplay", &T::AutoPlayGetter, &T::AutoPlaySetter),
-            T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
-            T::InstanceAccessor("currentTime", &T::CurrentTimeGetter, &T::CurrentTimeSetter),
-            T::InstanceAccessor("duration", &T::DurationGetter, nullptr),
-            T::InstanceAccessor("ended", &T::EndedGetter, nullptr),
-            T::InstanceAccessor("loop", &T::LoopGetter, &T::LoopSetter),
-            T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
-            T::InstanceAccessor("srcObject", &T::SrcObjectGetter, &T::SrcObjectSetter),
-            T::InstanceAccessor("volume", &T::VolumeGetter, &T::VolumeSetter),
-            T::InstanceMethod("canPlayType", &T::CanPlayType),
-            T::InstanceMethod("captureStream", &T::CaptureStream),
-            T::InstanceMethod("fastSeek", &T::FastSeek),
-            T::InstanceMethod("load", &T::Load),
-            T::InstanceMethod("pause", &T::Pause),
-            T::InstanceMethod("play", &T::Play),
-        });
+      {
+        T::InstanceAccessor("autoplay", &T::AutoPlayGetter, &T::AutoPlaySetter),
+        T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
+        T::InstanceAccessor("currentTime", &T::CurrentTimeGetter, &T::CurrentTimeSetter),
+        T::InstanceAccessor("duration", &T::DurationGetter, nullptr),
+        T::InstanceAccessor("ended", &T::EndedGetter, nullptr),
+        T::InstanceAccessor("loop", &T::LoopGetter, &T::LoopSetter),
+        T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
+        T::InstanceAccessor("srcObject", &T::SrcObjectGetter, &T::SrcObjectSetter),
+        T::InstanceAccessor("volume", &T::VolumeGetter, &T::VolumeSetter),
+        T::InstanceMethod("canPlayType", &T::CanPlayType),
+        T::InstanceMethod("captureStream", &T::CaptureStream),
+        T::InstanceMethod("fastSeek", &T::FastSeek),
+        T::InstanceMethod("load", &T::Load),
+        T::InstanceMethod("pause", &T::Pause),
+        T::InstanceMethod("play", &T::Play),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -148,8 +148,9 @@ namespace dombinding
 
     if (!value.IsObject())
     {
-      auto msg = "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
-                 "The provided value is not of object.";
+      auto msg =
+        "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
+        "The provided value is not of object.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return;
     }
@@ -163,25 +164,25 @@ namespace dombinding
       if (arraybuffer.IsPromise())
       {
         Napi::Function func = Napi::Function::New(
-            env,
-            [](const Napi::CallbackInfo &info) -> Napi::Value
-            {
-              Napi::Env env = info.Env();
-              Napi::HandleScope scope(env);
+          env,
+          [](const Napi::CallbackInfo &info) -> Napi::Value
+          {
+            Napi::Env env = info.Env();
+            Napi::HandleScope scope(env);
 
-              auto jsThis = info.This().As<Napi::Object>();
-              auto arraybuffer = info[0].As<Napi::ArrayBuffer>();
-              auto *element = HTMLMediaElementBase<ObjectType, HTMLMediaElementType>::Unwrap(jsThis);
-              element->node->setSrcBuffer(arraybuffer.Data(), arraybuffer.ByteLength());
-              return env.Undefined();
-            });
+            auto jsThis = info.This().As<Napi::Object>();
+            auto arraybuffer = info[0].As<Napi::ArrayBuffer>();
+            auto *element = HTMLMediaElementBase<ObjectType, HTMLMediaElementType>::Unwrap(jsThis);
+            element->node->setSrcBuffer(arraybuffer.Data(), arraybuffer.ByteLength());
+            return env.Undefined();
+          });
 
         auto onArrayBufferLoaded = func.Get("bind").As<Napi::Function>().Call(func, {info.This()});
         arraybuffer
-            .ToObject()
-            .Get("then")
-            .As<Napi::Function>()
-            .Call(arraybuffer, {onArrayBufferLoaded});
+          .ToObject()
+          .Get("then")
+          .As<Napi::Function>()
+          .Call(arraybuffer, {onArrayBufferLoaded});
       }
     }
     /**
@@ -189,8 +190,9 @@ namespace dombinding
      */
     else
     {
-      auto msg = "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
-                 "The provided value is not of type 'MediaStream', 'MediaSource', 'Blob' or 'File'.";
+      auto msg =
+        "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
+        "The provided value is not of type 'MediaStream', 'MediaSource', 'Blob' or 'File'.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return;
     }
@@ -223,8 +225,9 @@ namespace dombinding
 
     if (info.Length() < 1)
     {
-      auto msg = "Failed to execute 'canPlayType' on 'HTMLMediaElement': "
-                 "1 argument required, but only 0 present.";
+      auto msg =
+        "Failed to execute 'canPlayType' on 'HTMLMediaElement': "
+        "1 argument required, but only 0 present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }

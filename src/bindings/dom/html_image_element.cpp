@@ -11,14 +11,14 @@ namespace dombinding
     using T = HTMLImageElement;
     auto props = HTMLElementBase<HTMLImageElement, dom::HTMLImageElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLImageElement>>(
-        {
-            T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
-            T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
-            T::InstanceAccessor("naturalWidth", &T::NaturalWidthGetter, nullptr),
-            T::InstanceAccessor("naturalHeight", &T::NaturalHeightGetter, nullptr),
-            T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
-            T::InstanceAccessor("height", &T::HeightGetter, &T::HeightSetter),
-        });
+      {
+        T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
+        T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
+        T::InstanceAccessor("naturalWidth", &T::NaturalWidthGetter, nullptr),
+        T::InstanceAccessor("naturalHeight", &T::NaturalHeightGetter, nullptr),
+        T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
+        T::InstanceAccessor("height", &T::HeightGetter, &T::HeightSetter),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -44,8 +44,9 @@ namespace dombinding
 
     if (!info.IsConstructCall())
     {
-      auto msg = "Failed to construct 'Image': "
-                 "Please use the 'new' operator, this object constructor cannot be called as a function.";
+      auto msg =
+        "Failed to construct 'Image': "
+        "Please use the 'new' operator, this object constructor cannot be called as a function.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Null();
     }
@@ -53,17 +54,18 @@ namespace dombinding
     Document *document = Document::GetCurrent(env);
     if (TR_UNLIKELY(document == nullptr))
     {
-      auto msg = "Failed to construct 'Image': "
-                 "The global object 'document' is not an instance of 'Document'.";
+      auto msg =
+        "Failed to construct 'Image': "
+        "The global object 'document' is not an instance of 'Document'.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Null();
     }
 
     auto documentObject = document->Value();
     auto imageValue = documentObject
-                          .Get("createElement")
-                          .As<Napi::Function>()
-                          .Call(documentObject, {Napi::String::New(env, "img")});
+                        .Get("createElement")
+                        .As<Napi::Function>()
+                        .Call(documentObject, {Napi::String::New(env, "img")});
 
     auto imageObject = imageValue.As<Napi::Object>();
 
@@ -86,8 +88,8 @@ namespace dombinding
   }
 
   HTMLImageElement::HTMLImageElement(const Napi::CallbackInfo &info)
-      : HTMLElementBase(info),
-        canvasbinding::ImageSourceWrap<dom::HTMLImageElement>()
+      : HTMLElementBase(info)
+      , canvasbinding::ImageSourceWrap<dom::HTMLImageElement>()
   {
     dataImpl = node;
   }

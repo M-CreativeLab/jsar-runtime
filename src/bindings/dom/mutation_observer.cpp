@@ -11,12 +11,14 @@ namespace dombinding
   {
 #define MODULE_NAME "MutationObserver"
     Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, MODULE_NAME,
-                                      {
-                                          InstanceMethod("disconnect", &MutationObserver::Disconnect),
-                                          InstanceMethod("observe", &MutationObserver::Observe),
-                                          InstanceMethod("takeRecords", &MutationObserver::TakeRecords),
-                                      });
+    Napi::Function func = DefineClass(
+      env,
+      MODULE_NAME,
+      {
+        InstanceMethod("disconnect", &MutationObserver::Disconnect),
+        InstanceMethod("observe", &MutationObserver::Observe),
+        InstanceMethod("takeRecords", &MutationObserver::TakeRecords),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

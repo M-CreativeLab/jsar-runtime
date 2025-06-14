@@ -11,7 +11,7 @@ namespace client_layout
   {
     int depth = 0;
     function<void(LayoutObject &)> visitObject =
-        [this, &depth, &visitObject](LayoutObject &object)
+      [this, &depth, &visitObject](LayoutObject &object)
     {
       if (false == onVisitObject(object, depth))
         return;

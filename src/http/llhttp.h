@@ -1,3 +1,4 @@
+// clang-format off
 
 #ifndef INCLUDE_LLHTTP_H_
 #define INCLUDE_LLHTTP_H_

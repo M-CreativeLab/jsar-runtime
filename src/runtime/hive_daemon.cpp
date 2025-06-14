@@ -170,10 +170,10 @@ void TrHiveDaemon::onDeamonProcess()
   hiveConfig.Accept(hiveConfigWriter);
 
   char *hiveArgs[] = {
-      const_cast<char *>("jsar-client"),
-      const_cast<char *>("--hive"),
-      const_cast<char *>(hiveConfigBuffer.GetString()),
-      nullptr};
+    const_cast<char *>("jsar-client"),
+    const_cast<char *>("--hive"),
+    const_cast<char *>(hiveConfigBuffer.GetString()),
+    nullptr};
 
   cout << "Starting hive process on \"" << clientPath.c_str() << "\"" << endl;
   if (execvp(clientPath.c_str(), hiveArgs) == -1)
@@ -200,7 +200,8 @@ void TrHiveDaemon::onNewChanClient(TrOneShotClient<hive_comm::TrHiveCommandMessa
 void TrHiveDaemon::acceptChanClient(int timeout)
 {
   commandChanServer->tryAccept([this](TrOneShotClient<hive_comm::TrHiveCommandMessage> &client)
-                               { onNewChanClient(client); }, timeout);
+                               { onNewChanClient(client); },
+                               timeout);
 }
 
 bool TrHiveDaemon::checkDaemonAlive()
@@ -229,8 +230,11 @@ bool TrHiveDaemon::checkDaemonAlive()
     else if (WIFSIGNALED(status))
     {
       // Process is terminated
-      DEBUG(LOG_TAG_ERROR, "The hive(%d) is terminated by a signal: %d, and core dumped: %d",
-            daemonPid, WTERMSIG(status), WCOREDUMP(status));
+      DEBUG(LOG_TAG_ERROR,
+            "The hive(%d) is terminated by a signal: %d, and core dumped: %d",
+            daemonPid,
+            WTERMSIG(status),
+            WCOREDUMP(status));
       daemonPid = -1;
       return false;
     }

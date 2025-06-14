@@ -13,23 +13,29 @@ namespace client_xr
   {
   public:
     XRSpace(bool isReferenceSpace = false)
-        : lastFrameId_(-1),
-          baseMatrix_(1.0f),
-          isReferenceSpace_(isReferenceSpace)
+        : lastFrameId_(-1)
+        , baseMatrix_(1.0f)
+        , isReferenceSpace_(isReferenceSpace)
     {
     }
     XRSpace(glm::mat4 baseMatrix, XRSpaceSubType subType)
-        : subType(subType),
-          lastFrameId_(-1),
-          baseMatrix_(baseMatrix),
-          isReferenceSpace_(false)
+        : subType(subType)
+        , lastFrameId_(-1)
+        , baseMatrix_(baseMatrix)
+        , isReferenceSpace_(false)
     {
     }
     virtual ~XRSpace() = default;
 
   public:
-    inline bool isReferenceSpace() const { return isReferenceSpace_; }
-    inline glm::mat4 &baseMatrix() { return baseMatrix_; }
+    inline bool isReferenceSpace() const
+    {
+      return isReferenceSpace_;
+    }
+    inline glm::mat4 &baseMatrix()
+    {
+      return baseMatrix_;
+    }
     inline glm::mat4 &inverseBaseMatrix()
     {
       if (isInverseMatrixDirty_)
@@ -81,8 +87,8 @@ namespace client_xr
 
   public:
     XRReferenceSpace(XRReferenceSpaceType type)
-        : XRSpace(true),
-          type_(type)
+        : XRSpace(true)
+        , type_(type)
     {
     }
 
@@ -90,7 +96,10 @@ namespace client_xr
     void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
-    XRReferenceSpaceType referenceSpaceType() const { return type_; }
+    XRReferenceSpaceType referenceSpaceType() const
+    {
+      return type_;
+    }
 
   public:
     XRReferenceSpace getOffsetReferenceSpace(glm::mat4 offsetMatrix)
@@ -122,9 +131,9 @@ namespace client_xr
 
   public:
     XRViewSpace(XRViewSpaceType type, glm::mat4 projectionMatrix)
-        : XRSpace(),
-          type_(type),
-          projectionMatrix_(projectionMatrix)
+        : XRSpace()
+        , type_(type)
+        , projectionMatrix_(projectionMatrix)
     {
     }
 
@@ -132,8 +141,14 @@ namespace client_xr
     void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
-    XREye eye() const { return type_; }
-    glm::mat4 &projectionMatrix() { return projectionMatrix_; }
+    XREye eye() const
+    {
+      return type_;
+    }
+    glm::mat4 &projectionMatrix()
+    {
+      return projectionMatrix_;
+    }
 
   private:
     XRViewSpaceType type_;
@@ -157,10 +172,10 @@ namespace client_xr
 
   public:
     XRJointSpace(std::shared_ptr<XRInputSource> inputSource, XRJointIndex index)
-        : XRSpace(),
-          inputSource(inputSource),
-          index(index),
-          name(xr::to_string(index))
+        : XRSpace()
+        , inputSource(inputSource)
+        , index(index)
+        , name(xr::to_string(index))
     {
     }
 
@@ -190,7 +205,8 @@ namespace client_xr
 
   public:
     XRTargetRayOrGripSpace(std::shared_ptr<XRInputSource> inputSource, XRSpaceSubType targetRayOrGrip)
-        : XRSpace(), inputSource(inputSource)
+        : XRSpace()
+        , inputSource(inputSource)
     {
       this->subType = targetRayOrGrip;
     }

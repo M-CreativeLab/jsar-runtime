@@ -30,65 +30,65 @@ namespace canvasbinding
   {
     using T = CanvasRenderingContext2DBase<ObjectType, CanvasType>;
     return {
-        T::InstanceMethod("fill", &T::Fill),
-        T::InstanceMethod("fillRect", &T::FillRect),
-        T::InstanceMethod("fillText", &T::FillText),
-        T::InstanceMethod("stroke", &T::Stroke),
-        T::InstanceMethod("clearRect", &T::ClearRect),
-        T::InstanceMethod("setLineDash", &T::SetLineDash),
-        // Path methods
-        T::InstanceMethod("beginPath", &T::BeginPath),
-        T::InstanceMethod("closePath", &T::ClosePath),
-        T::InstanceMethod("moveTo", &T::MoveTo),
-        T::InstanceMethod("lineTo", &T::LineTo),
-        T::InstanceMethod("bezierCurveTo", &T::BezierCurveTo),
-        T::InstanceMethod("quadraticCurveTo", &T::QuadraticCurveTo),
-        T::InstanceMethod("arc", &T::Arc),
-        T::InstanceMethod("arcTo", &T::ArcTo),
-        // Image mthods
-        T::InstanceMethod("drawImage", &T::DrawImage),
-        T::InstanceMethod("createImageData", &T::CreateImageData),
-        T::InstanceMethod("getImageData", &T::GetImageData),
-        T::InstanceMethod("putImageData", &T::PutImageData),
-        // Text methods
-        T::InstanceMethod("measureText", &T::MeasureText),
-        // Transform methods
-        T::InstanceMethod("transform", &T::Transform),
-        T::InstanceMethod("setTransform", &T::SetTransform),
-        T::InstanceMethod("scale", &T::Scale),
-        T::InstanceMethod("rotate", &T::Rotate),
-        T::InstanceMethod("translate", &T::Translate),
-        // State methods
-        T::InstanceMethod("save", &T::Save),
-        T::InstanceMethod("restore", &T::Restore),
-        // Properties
-        T::InstanceAccessor("canvas", &T::CanvasGetter, nullptr),
-        T::InstanceAccessor("fillStyle", &T::FillStyleGetter, &T::FillStyleSetter),
-        T::InstanceAccessor("strokeStyle", &T::StrokeStyleGetter, &T::StrokeStyleSetter),
-        T::InstanceAccessor("font",
-                            &T::FontGetter,
-                            &T::FontSetter),
-        T::InstanceAccessor("globalAlpha",
-                            &T::GlobalAlphaGetter,
-                            &T::GlobalAlphaSetter),
-        T::InstanceAccessor("globalCompositeOperation",
-                            &T::GlobalCompositeOperationGetter,
-                            &T::GlobalCompositeOperationSetter),
-        T::InstanceAccessor("textAlign",
-                            &T::TextAlignGetter,
-                            &T::TextAlignSetter),
-        T::InstanceAccessor("textBaseline",
-                            &T::TextBaselineGetter,
-                            &T::TextBaselineSetter),
-        T::InstanceAccessor("lineWidth",
-                            &T::LineWidthGetter,
-                            &T::LineWidthSetter),
-        T::InstanceAccessor("lineCap",
-                            &T::LineCapGetter,
-                            &T::LineCapSetter),
-        T::InstanceAccessor("lineJoin",
-                            &T::LineJoinGetter,
-                            &T::LineJoinSetter),
+      T::InstanceMethod("fill", &T::Fill),
+      T::InstanceMethod("fillRect", &T::FillRect),
+      T::InstanceMethod("fillText", &T::FillText),
+      T::InstanceMethod("stroke", &T::Stroke),
+      T::InstanceMethod("clearRect", &T::ClearRect),
+      T::InstanceMethod("setLineDash", &T::SetLineDash),
+      // Path methods
+      T::InstanceMethod("beginPath", &T::BeginPath),
+      T::InstanceMethod("closePath", &T::ClosePath),
+      T::InstanceMethod("moveTo", &T::MoveTo),
+      T::InstanceMethod("lineTo", &T::LineTo),
+      T::InstanceMethod("bezierCurveTo", &T::BezierCurveTo),
+      T::InstanceMethod("quadraticCurveTo", &T::QuadraticCurveTo),
+      T::InstanceMethod("arc", &T::Arc),
+      T::InstanceMethod("arcTo", &T::ArcTo),
+      // Image mthods
+      T::InstanceMethod("drawImage", &T::DrawImage),
+      T::InstanceMethod("createImageData", &T::CreateImageData),
+      T::InstanceMethod("getImageData", &T::GetImageData),
+      T::InstanceMethod("putImageData", &T::PutImageData),
+      // Text methods
+      T::InstanceMethod("measureText", &T::MeasureText),
+      // Transform methods
+      T::InstanceMethod("transform", &T::Transform),
+      T::InstanceMethod("setTransform", &T::SetTransform),
+      T::InstanceMethod("scale", &T::Scale),
+      T::InstanceMethod("rotate", &T::Rotate),
+      T::InstanceMethod("translate", &T::Translate),
+      // State methods
+      T::InstanceMethod("save", &T::Save),
+      T::InstanceMethod("restore", &T::Restore),
+      // Properties
+      T::InstanceAccessor("canvas", &T::CanvasGetter, nullptr),
+      T::InstanceAccessor("fillStyle", &T::FillStyleGetter, &T::FillStyleSetter),
+      T::InstanceAccessor("strokeStyle", &T::StrokeStyleGetter, &T::StrokeStyleSetter),
+      T::InstanceAccessor("font",
+                          &T::FontGetter,
+                          &T::FontSetter),
+      T::InstanceAccessor("globalAlpha",
+                          &T::GlobalAlphaGetter,
+                          &T::GlobalAlphaSetter),
+      T::InstanceAccessor("globalCompositeOperation",
+                          &T::GlobalCompositeOperationGetter,
+                          &T::GlobalCompositeOperationSetter),
+      T::InstanceAccessor("textAlign",
+                          &T::TextAlignGetter,
+                          &T::TextAlignSetter),
+      T::InstanceAccessor("textBaseline",
+                          &T::TextBaselineGetter,
+                          &T::TextBaselineSetter),
+      T::InstanceAccessor("lineWidth",
+                          &T::LineWidthGetter,
+                          &T::LineWidthSetter),
+      T::InstanceAccessor("lineCap",
+                          &T::LineCapGetter,
+                          &T::LineCapSetter),
+      T::InstanceAccessor("lineJoin",
+                          &T::LineJoinGetter,
+                          &T::LineJoinSetter),
     };
   }
 
@@ -557,8 +557,9 @@ namespace canvasbinding
        * - HTMLVideoElement
        * - VideoFrame
        */
-      auto msg = "Failed to execute 'drawImage' on 'CanvasRenderingContext2D': "
-                  "Image should be an ImageBitmap, ImageData, HTMLCanvasElement or OffscreenCanvas.";
+      auto msg =
+        "Failed to execute 'drawImage' on 'CanvasRenderingContext2D': "
+        "Image should be an ImageBitmap, ImageData, HTMLCanvasElement or OffscreenCanvas.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -842,7 +843,7 @@ namespace canvasbinding
     auto str = value.ToString().Utf8Value();
     if (!contextImpl->setGlobalCompositeOperation(str))
       Napi::TypeError::New(info.Env(), "Invalid value for globalCompositeOperation")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename CanvasType>
@@ -864,7 +865,7 @@ namespace canvasbinding
     auto str = value.ToString().Utf8Value();
     if (!contextImpl->setTextAlign(str))
       Napi::TypeError::New(info.Env(), "Invalid value for textAlign")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename CanvasType>
@@ -886,7 +887,7 @@ namespace canvasbinding
     auto str = value.ToString().Utf8Value();
     if (!contextImpl->setTextBaseline(str))
       Napi::TypeError::New(info.Env(), "Invalid value for textBaseline")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename CanvasType>
@@ -927,7 +928,7 @@ namespace canvasbinding
     auto str = value.ToString().Utf8Value();
     if (!contextImpl->setLineCap(str))
       Napi::TypeError::New(info.Env(), "Invalid value for `lineCap`")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename CanvasType>
@@ -949,7 +950,7 @@ namespace canvasbinding
     auto str = value.ToString().Utf8Value();
     if (!contextImpl->setLineJoin(str))
       Napi::TypeError::New(info.Env(), "Invalid value for `lineJoin`")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename CanvasType>

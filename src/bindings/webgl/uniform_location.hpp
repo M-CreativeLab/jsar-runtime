@@ -19,15 +19,24 @@ namespace webgl
     /**
      * @returns the index of the uniform location.
      */
-    int value() const { return handle_.has_value() ? handle_->index : -1; }
+    int value() const
+    {
+      return handle_.has_value() ? handle_->index : -1;
+    }
     /**
      * @returns the name of the uniform location.
      */
-    std::string name() const { return handle_.has_value() ? handle_->name : ""; }
+    std::string name() const
+    {
+      return handle_.has_value() ? handle_->name : "";
+    }
     /**
      * @returns the handle of the uniform location.
      */
-    client_graphics::WebGLUniformLocation &handle() { return handle_.value(); }
+    client_graphics::WebGLUniformLocation &handle()
+    {
+      return handle_.value();
+    }
 
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);

@@ -8,13 +8,13 @@ namespace browserbinding
   {
     auto props = dombinding::EventTargetWrap<Window, browser::Window>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<Window>>(
-        {InstanceMethod("alert", &Window::Alert, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("blur", &Window::Blur, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("close", &Window::Close, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("confirm", &Window::Confirm, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("focus", &Window::Focus, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("open", &Window::Open, napi_property_attributes::napi_default_jsproperty),
-         InstanceMethod("prompt", &Window::Prompt, napi_property_attributes::napi_default_jsproperty)});
+      {InstanceMethod("alert", &Window::Alert, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("blur", &Window::Blur, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("close", &Window::Close, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("confirm", &Window::Confirm, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("focus", &Window::Focus, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("open", &Window::Open, napi_property_attributes::napi_default_jsproperty),
+       InstanceMethod("prompt", &Window::Prompt, napi_property_attributes::napi_default_jsproperty)});
     props.insert(props.end(), added.begin(), added.end());
 
     Napi::Function func = DefineClass(env, "Window", props);

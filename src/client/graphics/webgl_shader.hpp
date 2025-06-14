@@ -16,7 +16,8 @@ namespace client_graphics
   {
   public:
     WebGLShader(WebGLShaderType type)
-        : WebGLObject(WebGLObjectType::Shader), type(type)
+        : WebGLObject(WebGLObjectType::Shader)
+        , type(type)
     {
     }
 

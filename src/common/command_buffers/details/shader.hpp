@@ -12,9 +12,9 @@ namespace commandbuffers
   public:
     AttachShaderCommandBufferRequest() = delete;
     AttachShaderCommandBufferRequest(uint32_t program, uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          program(program),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , program(program)
+        , shader(shader)
     {
     }
 
@@ -30,9 +30,9 @@ namespace commandbuffers
   public:
     DetachShaderCommandBufferRequest() = delete;
     DetachShaderCommandBufferRequest(uint32_t program, uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          program(program),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , program(program)
+        , shader(shader)
     {
     }
 
@@ -48,9 +48,9 @@ namespace commandbuffers
   public:
     CreateShaderCommandBufferRequest() = delete;
     CreateShaderCommandBufferRequest(uint32_t clientId, uint32_t type)
-        : TrCommandBufferSimpleRequest(),
-          clientId(clientId),
-          shaderType(type)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
+        , shaderType(type)
     {
     }
 
@@ -66,8 +66,8 @@ namespace commandbuffers
   public:
     DeleteShaderCommandBufferRequest() = delete;
     DeleteShaderCommandBufferRequest(uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
     {
     }
 
@@ -81,8 +81,8 @@ namespace commandbuffers
   {
   public:
     CompileShaderCommandBufferRequest(uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
     {
     }
 
@@ -96,8 +96,8 @@ namespace commandbuffers
   {
   public:
     ShaderSourceCommandBufferRequest(uint32_t shader, const string &source)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
     {
       sourceSize = source.size();
       sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
@@ -146,8 +146,8 @@ namespace commandbuffers
   public:
     GetShaderSourceCommandBufferRequest() = delete;
     GetShaderSourceCommandBufferRequest(uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
     {
     }
 
@@ -188,9 +188,9 @@ namespace commandbuffers
   public:
     GetShaderParamCommandBufferRequest() = delete;
     GetShaderParamCommandBufferRequest(uint32_t shader, uint32_t pname)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader),
-          pname(pname)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
+        , pname(pname)
     {
     }
 
@@ -204,7 +204,8 @@ namespace commandbuffers
   public:
     GetShaderParamCommandBufferResponse() = delete;
     GetShaderParamCommandBufferResponse(GetShaderParamCommandBufferRequest *req, int32_t value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req), value(value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req)
+        , value(value)
     {
     }
 
@@ -219,8 +220,8 @@ namespace commandbuffers
   public:
     GetShaderInfoLogCommandBufferRequest() = delete;
     GetShaderInfoLogCommandBufferRequest(uint32_t shader)
-        : TrCommandBufferSimpleRequest(),
-          shader(shader)
+        : TrCommandBufferSimpleRequest()
+        , shader(shader)
     {
     }
 
@@ -234,7 +235,8 @@ namespace commandbuffers
   public:
     GetShaderInfoLogCommandBufferResponse() = delete;
     GetShaderInfoLogCommandBufferResponse(GetShaderInfoLogCommandBufferRequest *req, const string log)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req), infoLog(log)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req)
+        , infoLog(log)
     {
     }
 

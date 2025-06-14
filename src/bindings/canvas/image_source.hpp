@@ -13,13 +13,18 @@ namespace canvasbinding
   class ImageSourceWrap
   {
   public:
-    ImageSourceWrap() {}
+    ImageSourceWrap()
+    {
+    }
 
   public:
     /**
      * Returns the underlying implementation instance.
      */
-    inline std::shared_ptr<SourceType> impl() { return dataImpl; }
+    inline std::shared_ptr<SourceType> impl()
+    {
+      return dataImpl;
+    }
 
     /**
      * Get the common `canvas::ImageSource` instance.

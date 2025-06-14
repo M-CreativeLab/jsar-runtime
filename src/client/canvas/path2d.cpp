@@ -18,8 +18,12 @@ namespace canvas
   }
 
   void ellipseHelper(std::shared_ptr<SkPath> skPath,
-                     float x, float y, float radiusX, float radiusY,
-                     float startAngle, float endAngle)
+                     float x,
+                     float y,
+                     float radiusX,
+                     float radiusY,
+                     float startAngle,
+                     float endAngle)
   {
     auto sweepDegrees = radToDeg(endAngle - startAngle);
     auto startDegrees = radToDeg(startAngle);
@@ -43,8 +47,14 @@ namespace canvas
   }
 
   void Path2D::Ellipse(std::shared_ptr<SkPath> skPath,
-                       float x, float y, float radiusX, float radiusY, float rotation,
-                       float startAngle, float endAngle, bool ccw)
+                       float x,
+                       float y,
+                       float radiusX,
+                       float radiusY,
+                       float rotation,
+                       float startAngle,
+                       float endAngle,
+                       bool ccw)
   {
     if (radiusX < 0 || radiusY < 0)
       throw std::runtime_error("radii cannot be negative");

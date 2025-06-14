@@ -51,7 +51,7 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Failed to call 'after' method: 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -90,7 +90,7 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Failed to call 'appendData' method: 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -114,7 +114,7 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Failed to call 'before' method: 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -152,7 +152,7 @@ namespace dombinding
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "Failed to call 'deleteData' method: 2 arguments required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -177,7 +177,7 @@ namespace dombinding
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "Failed to call 'insertData' method: 2 arguments required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -212,7 +212,7 @@ namespace dombinding
     if (info.Length() < 3)
     {
       Napi::TypeError::New(env, "Failed to call 'replaceData' method: 3 arguments required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -245,7 +245,7 @@ namespace dombinding
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "Failed to call 'substringData' method: 2 arguments required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 

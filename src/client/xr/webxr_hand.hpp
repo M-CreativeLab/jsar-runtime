@@ -37,7 +37,10 @@ namespace client_xr
     /**
      * @returns an array with all the `XRJointSpace` values.
      */
-    inline std::vector<std::shared_ptr<XRJointSpace>> values() { return *this; }
+    inline std::vector<std::shared_ptr<XRJointSpace>> values()
+    {
+      return *this;
+    }
 
   private:
     XRInputSource *inputSource_;

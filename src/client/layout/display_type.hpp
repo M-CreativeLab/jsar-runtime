@@ -58,7 +58,9 @@ namespace client_layout
 
     DisplayType(DisplayOutside outside = DisplayOutside::kBlock,
                 DisplayInside inside = DisplayInside::kFlow)
-        : outside(outside), inside(inside), noneOrContents(std::nullopt)
+        : outside(outside)
+        , inside(inside)
+        , noneOrContents(std::nullopt)
     {
     }
     DisplayType(DisplayNoneOrContents noneOrContents)
@@ -66,17 +68,38 @@ namespace client_layout
     {
     }
 
-    inline bool isNone() const { return noneOrContents == DisplayNoneOrContents::kNone; }
-    inline bool isContents() const { return noneOrContents == DisplayNoneOrContents::kContents; }
-    inline bool isInline() const { return outside == DisplayOutside::kInline; }
-    inline bool isBlock() const { return outside == DisplayOutside::kBlock; }
-    inline bool isFlex() const { return inside == DisplayInside::kFlex; }
-    inline bool isGrid() const { return inside == DisplayInside::kGrid; }
+    inline bool isNone() const
+    {
+      return noneOrContents == DisplayNoneOrContents::kNone;
+    }
+    inline bool isContents() const
+    {
+      return noneOrContents == DisplayNoneOrContents::kContents;
+    }
+    inline bool isInline() const
+    {
+      return outside == DisplayOutside::kInline;
+    }
+    inline bool isBlock() const
+    {
+      return outside == DisplayOutside::kBlock;
+    }
+    inline bool isFlex() const
+    {
+      return inside == DisplayInside::kFlex;
+    }
+    inline bool isGrid() const
+    {
+      return inside == DisplayInside::kGrid;
+    }
 
     friend std::ostream &operator<<(std::ostream &os, const DisplayType &display);
 
     static DisplayType Make(const std::string &input);
-    static DisplayType None() { return DisplayType(DisplayNoneOrContents::kNone); }
+    static DisplayType None()
+    {
+      return DisplayType(DisplayNoneOrContents::kNone);
+    }
     static DisplayType Block(DisplayInside inside = DisplayInside::kFlow)
     {
       return DisplayType(DisplayOutside::kBlock, inside);
@@ -85,8 +108,14 @@ namespace client_layout
     {
       return DisplayType(DisplayOutside::kInline, inside);
     }
-    static DisplayType Flex() { return DisplayType(DisplayOutside::kBlock, DisplayInside::kFlex); }
-    static DisplayType Grid() { return DisplayType(DisplayOutside::kBlock, DisplayInside::kGrid); }
+    static DisplayType Flex()
+    {
+      return DisplayType(DisplayOutside::kBlock, DisplayInside::kFlex);
+    }
+    static DisplayType Grid()
+    {
+      return DisplayType(DisplayOutside::kBlock, DisplayInside::kGrid);
+    }
 
     operator crates::layout2::styles::Display() const
     {

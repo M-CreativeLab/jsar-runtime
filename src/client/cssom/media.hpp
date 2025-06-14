@@ -19,14 +19,23 @@ namespace client_cssom
     };
 
   public:
-    static MediaType Screen() { return MediaType(kScreen); }
-    static MediaType Print() { return MediaType(kPrint); }
+    static MediaType Screen()
+    {
+      return MediaType(kScreen);
+    }
+    static MediaType Print()
+    {
+      return MediaType(kPrint);
+    }
 
   public:
     MediaType() = default;
-  
+
   private:
-    MediaType(Tag tag) : tag_(tag) {}
+    MediaType(Tag tag)
+        : tag_(tag)
+    {
+    }
 
   private:
     bool parse(const std::string &input) override
@@ -49,7 +58,10 @@ namespace client_cssom
 
   public:
     inline std::string mediaText() const;
-    inline size_t length() const { return size(); }
+    inline size_t length() const
+    {
+      return size();
+    }
 
   public:
     inline std::optional<std::string> operator[](size_t index) const
@@ -64,7 +76,10 @@ namespace client_cssom
         return at(index);
       return std::nullopt;
     }
-    inline void appendMedium(const std::string &medium) { push_back(medium); }
+    inline void appendMedium(const std::string &medium)
+    {
+      push_back(medium);
+    }
     inline void deleteMedium(const std::string &medium)
     {
       erase(std::remove(begin(), end(), medium), end());

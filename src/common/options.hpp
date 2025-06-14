@@ -81,7 +81,10 @@ public:
     }
     return "dangerously";
   }
-  uint32_t inspectorPort() const { return INSPECTOR_PORT_BASE + id; }
+  uint32_t inspectorPort() const
+  {
+    return INSPECTOR_PORT_BASE + id;
+  }
 
 public:
   std::string url;

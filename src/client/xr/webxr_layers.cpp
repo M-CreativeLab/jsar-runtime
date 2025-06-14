@@ -12,17 +12,17 @@ namespace client_xr
   }
 
   XRWebGLLayer::XRWebGLLayer(shared_ptr<XRSession> session, shared_ptr<client_graphics::WebGLContext> glContext)
-      : XRLayer(session),
-        xr::WebGLLayer(),
-        glContext_(glContext)
+      : XRLayer(session)
+      , xr::WebGLLayer()
+      , glContext_(glContext)
   {
     multiviewRequired = session->device()->getDeviceInit().multiviewRequired();
   }
 
   XRWebGLLayer::XRWebGLLayer(xr::WebGLLayer &layerData)
-      : XRLayer(nullptr),
-        xr::WebGLLayer(layerData),
-        glContext_(nullptr)
+      : XRLayer(nullptr)
+      , xr::WebGLLayer(layerData)
+      , glContext_(nullptr)
   {
   }
 

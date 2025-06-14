@@ -27,9 +27,18 @@ namespace client_cssom::values::computed
     {
     }
 
-    std::string toCss() const override { return std::to_string(value_) + "deg"; }
-    float degrees() const { return value_; }
-    float radians() const { return value_ * RAD_PER_DEG; }
+    std::string toCss() const override
+    {
+      return std::to_string(value_) + "deg";
+    }
+    float degrees() const
+    {
+      return value_;
+    }
+    float radians() const
+    {
+      return value_ * RAD_PER_DEG;
+    }
 
   private:
     float value_;

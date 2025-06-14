@@ -60,9 +60,9 @@ namespace dom::events
       return std::make_unique<PointerEvent>(DOMEventConstructorType::kPointerEvent,
                                             DOMEventType::PointerEnter,
                                             dom::DOMEventInit{
-                                                .bubbles = false,
-                                                .cancelable = false,
-                                                .composed = false,
+                                              .bubbles = false,
+                                              .cancelable = false,
+                                              .composed = false,
                                             });
     }
 
@@ -71,15 +71,21 @@ namespace dom::events
       return std::make_unique<PointerEvent>(DOMEventConstructorType::kPointerEvent,
                                             DOMEventType::PointerLeave,
                                             dom::DOMEventInit{
-                                                .bubbles = false,
-                                                .cancelable = false,
-                                                .composed = false,
+                                              .bubbles = false,
+                                              .cancelable = false,
+                                              .composed = false,
                                             });
     }
 
   public:
-    int pointerId() const { return pointer_id_; }
-    PointerType pointerType() const { return pointer_type_; }
+    int pointerId() const
+    {
+      return pointer_id_;
+    }
+    PointerType pointerType() const
+    {
+      return pointer_type_;
+    }
 
   private:
     int pointer_id_;

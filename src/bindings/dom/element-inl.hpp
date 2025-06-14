@@ -11,32 +11,32 @@ namespace dombinding
     using T = ElementBase<ObjectType, ElementType>;
     auto props = NodeBase<ObjectType, ElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-        {
-            T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),
-            T::InstanceAccessor("id", &T::IdGetter, &T::IdSetter),
-            T::InstanceAccessor("firstElementChild", &T::FirstElementChildGetter, nullptr),
-            T::InstanceAccessor("lastElementChild", &T::LastElementChildGetter, nullptr),
-            T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
-            T::InstanceAccessor("outerHTML", &T::OuterHTMLGetter, &T::OuterHTMLSetter),
-            T::InstanceMethod("after", &T::After),
-            T::InstanceMethod("animate", &T::Animate),
-            T::InstanceMethod("append", &T::Append),
-            T::InstanceMethod("attachShadow", &T::AttachShadow),
-            T::InstanceMethod("before", &T::Before),
-            T::InstanceMethod("checkVisibility", &T::CheckVisibility),
-            T::InstanceMethod("closest", &T::Closest),
-            T::InstanceMethod("getAttribute", &T::GetAttribute),
-            T::InstanceMethod("getAttributeNames", &T::GetAttributeNames),
-            T::InstanceMethod("getBoundingClientRect", &T::GetBoundingClientRect),
-            T::InstanceMethod("hasAttribute", &T::HasAttribute),
-            T::InstanceMethod("hasAttributes", &T::HasAttributes),
-            T::InstanceMethod("remove", &T::Remove),
-            T::InstanceMethod("removeAttribute", &T::RemoveAttribute),
-            T::InstanceMethod("setAttribute", &T::SetAttribute),
-            T::InstanceMethod("setAttributeNode", &T::SetAttributeNode),
-            T::InstanceMethod("setAttributeNodeNS", &T::SetAttributeNodeNS),
-            T::InstanceMethod("setAttributeNS", &T::SetAttributeNS),
-        });
+      {
+        T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),
+        T::InstanceAccessor("id", &T::IdGetter, &T::IdSetter),
+        T::InstanceAccessor("firstElementChild", &T::FirstElementChildGetter, nullptr),
+        T::InstanceAccessor("lastElementChild", &T::LastElementChildGetter, nullptr),
+        T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
+        T::InstanceAccessor("outerHTML", &T::OuterHTMLGetter, &T::OuterHTMLSetter),
+        T::InstanceMethod("after", &T::After),
+        T::InstanceMethod("animate", &T::Animate),
+        T::InstanceMethod("append", &T::Append),
+        T::InstanceMethod("attachShadow", &T::AttachShadow),
+        T::InstanceMethod("before", &T::Before),
+        T::InstanceMethod("checkVisibility", &T::CheckVisibility),
+        T::InstanceMethod("closest", &T::Closest),
+        T::InstanceMethod("getAttribute", &T::GetAttribute),
+        T::InstanceMethod("getAttributeNames", &T::GetAttributeNames),
+        T::InstanceMethod("getBoundingClientRect", &T::GetBoundingClientRect),
+        T::InstanceMethod("hasAttribute", &T::HasAttribute),
+        T::InstanceMethod("hasAttributes", &T::HasAttributes),
+        T::InstanceMethod("remove", &T::Remove),
+        T::InstanceMethod("removeAttribute", &T::RemoveAttribute),
+        T::InstanceMethod("setAttribute", &T::SetAttribute),
+        T::InstanceMethod("setAttributeNode", &T::SetAttributeNode),
+        T::InstanceMethod("setAttributeNodeNS", &T::SetAttributeNodeNS),
+        T::InstanceMethod("setAttributeNS", &T::SetAttributeNS),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -79,8 +79,8 @@ namespace dombinding
 
     auto childElement = this->node->firstElementChild();
     return childElement == nullptr
-               ? env.Null()
-               : Node::NewInstance(env, childElement);
+             ? env.Null()
+             : Node::NewInstance(env, childElement);
   }
 
   template <typename ObjectType, typename ElementType>
@@ -91,8 +91,8 @@ namespace dombinding
 
     auto childElement = this->node->lastElementChild();
     return childElement == nullptr
-               ? env.Null()
-               : Node::NewInstance(env, childElement);
+             ? env.Null()
+             : Node::NewInstance(env, childElement);
   }
 
   template <typename ObjectType, typename ElementType>
@@ -136,7 +136,7 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Failed to call 'after' method: 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -196,7 +196,7 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "Failed to call 'before' method: 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -359,7 +359,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "Failed to call 'setAttributeNode' method: not implemented")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
@@ -369,7 +369,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "Failed to call 'setAttributeNodeNS' method: not implemented")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
@@ -379,7 +379,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "Failed to call 'setAttributeNS' method: not implemented")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 }

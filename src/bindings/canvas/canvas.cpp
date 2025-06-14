@@ -15,19 +15,21 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *OffscreenCanvas::constructor;
   void OffscreenCanvas::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function tpl = DefineClass(env, "OffscreenCanvas",
-                                     {InstanceMethod("getContext", &OffscreenCanvas::GetContext),
-                                      InstanceAccessor("width", &OffscreenCanvas::WidthGetter, &OffscreenCanvas::WidthSetter),
-                                      InstanceAccessor("height", &OffscreenCanvas::HeightGetter, &OffscreenCanvas::HeightSetter)});
+    Napi::Function tpl = DefineClass(
+      env,
+      "OffscreenCanvas",
+      {InstanceMethod("getContext", &OffscreenCanvas::GetContext),
+       InstanceAccessor("width", &OffscreenCanvas::WidthGetter, &OffscreenCanvas::WidthSetter),
+       InstanceAccessor("height", &OffscreenCanvas::HeightGetter, &OffscreenCanvas::HeightSetter)});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     exports.Set("OffscreenCanvas", tpl);
   }
 
   OffscreenCanvas::OffscreenCanvas(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<OffscreenCanvas>(info),
-        CanvasWrap<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>(),
-        ImageSourceWrap<canvas::OffscreenCanvas>()
+      : Napi::ObjectWrap<OffscreenCanvas>(info)
+      , CanvasWrap<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>()
+      , ImageSourceWrap<canvas::OffscreenCanvas>()
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -94,8 +96,8 @@ namespace canvasbinding
   {
     auto props = EventTargetWrap<ReadOnlyScreenCanvas, dom::DOMEventTarget>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ReadOnlyScreenCanvas>>(
-        {InstanceAccessor("width", &ReadOnlyScreenCanvas::WidthGetter, nullptr),
-         InstanceAccessor("height", &ReadOnlyScreenCanvas::HeightGetter, nullptr)});
+      {InstanceAccessor("width", &ReadOnlyScreenCanvas::WidthGetter, nullptr),
+       InstanceAccessor("height", &ReadOnlyScreenCanvas::HeightGetter, nullptr)});
     props.insert(props.end(), added.begin(), added.end());
 
     Napi::Function tpl = DefineClass(env, "ReadOnlyScreenCanvas", props);

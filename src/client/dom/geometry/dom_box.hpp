@@ -21,14 +21,25 @@ namespace dom::geometry
 
   public:
     DOMBoxReadOnly(float width = 0.0f, float height = 0.0f, float depth = 0.0f)
-        : width_(width), height_(height), depth_(depth)
+        : width_(width)
+        , height_(height)
+        , depth_(depth)
     {
     }
 
   public:
-    float width() const { return width_; }
-    float height() const { return height_; }
-    float depth() const { return depth_; }
+    float width() const
+    {
+      return width_;
+    }
+    float height() const
+    {
+      return height_;
+    }
+    float depth() const
+    {
+      return depth_;
+    }
 
   public:
     operator std::string() const
@@ -58,8 +69,17 @@ namespace dom::geometry
     using DOMBoxReadOnly::DOMBoxReadOnly;
 
   public:
-    float &width() { return width_; }
-    float &height() { return height_; }
-    float &depth() { return depth_; }
+    float &width()
+    {
+      return width_;
+    }
+    float &height()
+    {
+      return height_;
+    }
+    float &depth()
+    {
+      return depth_;
+    }
   };
 }

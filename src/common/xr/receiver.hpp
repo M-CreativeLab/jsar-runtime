@@ -11,7 +11,8 @@ namespace xr
   class TrXRCommandReceiver : public ipc::TrChannelReceiver<TrXRCommandMessage>
   {
   public:
-    TrXRCommandReceiver(ipc::TrOneShotClient<TrXRCommandMessage> *client) : ipc::TrChannelReceiver<TrXRCommandMessage>(client)
+    TrXRCommandReceiver(ipc::TrOneShotClient<TrXRCommandMessage> *client)
+        : ipc::TrChannelReceiver<TrXRCommandMessage>(client)
     {
     }
 

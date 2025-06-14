@@ -35,21 +35,37 @@ namespace dom
     void removeDataset(const std::string &key);
 
   public:
-    inline float offsetWidth() const override { return offsetWidth_; }
-    inline float &offsetWidth() override { return offsetWidth_; }
-    inline float offsetHeight() const override { return offsetHeight_; }
-    inline float &offsetHeight() override { return offsetHeight_; }
+    inline float offsetWidth() const override
+    {
+      return offsetWidth_;
+    }
+    inline float &offsetWidth() override
+    {
+      return offsetWidth_;
+    }
+    inline float offsetHeight() const override
+    {
+      return offsetHeight_;
+    }
+    inline float &offsetHeight() override
+    {
+      return offsetHeight_;
+    }
 
   public:
     void createdCallback(bool from_scripting) override;
     void attributeChangedCallback(const std::string &name,
-                                  const std::string &oldValue, const std::string &newValue) override;
+                                  const std::string &oldValue,
+                                  const std::string &newValue) override;
 
   protected:
     void markAsDirty() override;
 
   private:
-    bool isHTMLElement() const override final { return true; }
+    bool isHTMLElement() const override final
+    {
+      return true;
+    }
     void invalidateStyleCache();
 
   public:
@@ -63,9 +79,15 @@ namespace dom
     std::string title;
     std::string translate;
     // The style attribute.
-    const client_cssom::CSSStyleDeclaration &style() const { return *style_; }
+    const client_cssom::CSSStyleDeclaration &style() const
+    {
+      return *style_;
+    }
     // The style attribute reference.
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> styleRef() { return style_; }
+    std::shared_ptr<client_cssom::CSSStyleDeclaration> styleRef()
+    {
+      return style_;
+    }
 
   private:
     float offsetWidth_ = 0.0f;

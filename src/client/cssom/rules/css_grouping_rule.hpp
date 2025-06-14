@@ -11,7 +11,10 @@ namespace client_cssom::rules
     using CSSRule::CSSRule;
 
   public:
-    inline CSSRuleList &cssRules() const { return *cssRules_; }
+    inline CSSRuleList &cssRules() const
+    {
+      return *cssRules_;
+    }
 
   public:
     size_t insertRule(const std::string &rule, size_t index);

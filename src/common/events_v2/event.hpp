@@ -39,17 +39,26 @@ namespace events_comm
      *
      * @return The a new string of the detail JSON.
      */
-    string toJson() { return srcJson; }
+    string toJson()
+    {
+      return srcJson;
+    }
 
     /**
      * Get a reference to the stored detail JSON string.
      */
-    string &getJson() { return srcJson; }
+    string &getJson()
+    {
+      return srcJson;
+    }
 
     /**
      * Get the byte length of the stored detail.
      */
-    size_t getByteLength() { return srcJson.size(); }
+    size_t getByteLength()
+    {
+      return srcJson.size();
+    }
 
     /**
      * Set the detail from a `TrEventDetailObject` instance.
@@ -72,7 +81,10 @@ namespace events_comm
     /**
      * Set the detail from a JSON string.
      */
-    void setJsonFromString(string json) { srcJson = json; }
+    void setJsonFromString(string json)
+    {
+      srcJson = json;
+    }
 
     /**
      * Get the detail as a `TrEventDetailObject` instance.
@@ -138,11 +150,14 @@ namespace events_comm
 
   public:
     TrEvent(EventType type)
-        : id(eventIdGenerator.get()), type(type)
+        : id(eventIdGenerator.get())
+        , type(type)
     {
     }
     TrEvent(TrEvent &that)
-        : id(that.id), type(that.type), detailStorage(that.detailStorage)
+        : id(that.id)
+        , type(that.type)
+        , detailStorage(that.detailStorage)
     {
     }
     virtual ~TrEvent() = default;
@@ -164,12 +179,18 @@ namespace events_comm
      *
      * @return A new string of the detail JSON.
      */
-    string &getDetailJson() { return detailStorage.getJson(); }
+    string &getDetailJson()
+    {
+      return detailStorage.getJson();
+    }
 
     /**
      * Get the byte length of the detail, it's useful when sometimes you just want to know the size of the detail.
      */
-    size_t getDetailByteLength() { return detailStorage.getByteLength(); }
+    size_t getDetailByteLength()
+    {
+      return detailStorage.getByteLength();
+    }
 
   public:
     int id;

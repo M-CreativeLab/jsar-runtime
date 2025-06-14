@@ -11,15 +11,29 @@
 class OpenGLTextureBinding
 {
 public:
-  OpenGLTextureBinding(GLenum target, GLuint texture) : m_Target(target), m_Texture(texture) {}
-  OpenGLTextureBinding(OpenGLTextureBinding &from) : m_Target(from.m_Target), m_Texture(from.m_Texture) {}
+  OpenGLTextureBinding(GLenum target, GLuint texture)
+      : m_Target(target)
+      , m_Texture(texture)
+  {
+  }
+  OpenGLTextureBinding(OpenGLTextureBinding &from)
+      : m_Target(from.m_Target)
+      , m_Texture(from.m_Texture)
+  {
+  }
   inline void Reset(GLenum target, GLuint texture)
   {
     m_Target = target;
     m_Texture = texture;
   }
-  inline GLenum GetTarget() { return m_Target; }
-  inline GLint GetTexture() { return m_Texture; }
+  inline GLenum GetTarget()
+  {
+    return m_Target;
+  }
+  inline GLint GetTexture()
+  {
+    return m_Texture;
+  }
 
 public:
   GLenum m_Target;
@@ -29,23 +43,49 @@ public:
 class OpenGLBlendingFunc
 {
 public:
-  OpenGLBlendingFunc() : m_Src(GL_ONE), m_Dst(GL_ZERO), m_IsSeparate(false) {}
+  OpenGLBlendingFunc()
+      : m_Src(GL_ONE)
+      , m_Dst(GL_ZERO)
+      , m_IsSeparate(false)
+  {
+  }
   OpenGLBlendingFunc(OpenGLBlendingFunc *from)
-      : m_Src(from->m_Src),
-        m_Dst(from->m_Dst),
-        m_SrcAlpha(from->m_SrcAlpha),
-        m_DstAlpha(from->m_DstAlpha)
+      : m_Src(from->m_Src)
+      , m_Dst(from->m_Dst)
+      , m_SrcAlpha(from->m_SrcAlpha)
+      , m_DstAlpha(from->m_DstAlpha)
   {
   }
 
 public:
-  inline bool IsSeparate() { return m_IsSeparate; }
-  inline GLenum GetSrc() { return m_Src; }
-  inline GLenum GetDst() { return m_Dst; }
-  inline GLenum GetSrcRgb() { return m_Src; }
-  inline GLenum GetDstRgb() { return m_Dst; }
-  inline GLenum GetSrcAlpha() { return m_SrcAlpha; }
-  inline GLenum GetDstAlpha() { return m_DstAlpha; }
+  inline bool IsSeparate()
+  {
+    return m_IsSeparate;
+  }
+  inline GLenum GetSrc()
+  {
+    return m_Src;
+  }
+  inline GLenum GetDst()
+  {
+    return m_Dst;
+  }
+  inline GLenum GetSrcRgb()
+  {
+    return m_Src;
+  }
+  inline GLenum GetDstRgb()
+  {
+    return m_Dst;
+  }
+  inline GLenum GetSrcAlpha()
+  {
+    return m_SrcAlpha;
+  }
+  inline GLenum GetDstAlpha()
+  {
+    return m_DstAlpha;
+  }
   inline void Reset(GLenum src, GLenum dst)
   {
     m_Src = src;
@@ -147,12 +187,14 @@ class OpenGLContextStorage
   };
 
 public:
-  OpenGLContextStorage(std::string name) : m_Name(name)
+  OpenGLContextStorage(std::string name)
+      : m_Name(name)
   {
     glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
     glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
   }
-  OpenGLContextStorage(std::string name, OpenGLContextStorage *from) : m_Name(name)
+  OpenGLContextStorage(std::string name, OpenGLContextStorage *from)
+      : m_Name(name)
   {
     // Viewport
     m_Viewport[0] = from->m_Viewport[0];
@@ -223,15 +265,42 @@ public:
   void RecordActiveTextureUnit(int unit);
   void RecordTextureBindingWithUnit(GLenum target, GLuint texture);
 
-  const char *GetName() { return m_Name.c_str(); }
-  TrViewport GetViewport() { return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]); }
-  GLint GetProgram() { return m_ProgramId; }
-  GLint GetArrayBuffer() { return m_ArrayBufferId; }
-  GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
-  GLint GetFramebuffer() { return m_FramebufferId; }
-  GLint GetRenderbuffer() { return m_RenderbufferId; }
-  GLint GetVertexArrayObject() { return m_VertexArrayObjectId; }
-  GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
+  const char *GetName()
+  {
+    return m_Name.c_str();
+  }
+  TrViewport GetViewport()
+  {
+    return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]);
+  }
+  GLint GetProgram()
+  {
+    return m_ProgramId;
+  }
+  GLint GetArrayBuffer()
+  {
+    return m_ArrayBufferId;
+  }
+  GLint GetElementArrayBuffer()
+  {
+    return m_ElementArrayBufferId;
+  }
+  GLint GetFramebuffer()
+  {
+    return m_FramebufferId;
+  }
+  GLint GetRenderbuffer()
+  {
+    return m_RenderbufferId;
+  }
+  GLint GetVertexArrayObject()
+  {
+    return m_VertexArrayObjectId;
+  }
+  GLenum GetActiveTextureUnit()
+  {
+    return m_LastActiveTextureUnit;
+  }
 
   void ResetProgram(int programToReset);
   void Restore();
@@ -289,7 +358,8 @@ protected: /** OpenGLES objects */
 class OpenGLHostContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLHostContextStorage() : OpenGLContextStorage("Host")
+  OpenGLHostContextStorage()
+      : OpenGLContextStorage("Host")
   {
     Record();
   }
@@ -304,7 +374,10 @@ public:
 class OpenGLNamesStorage : public std::map<GLuint, bool>
 {
 public:
-  OpenGLNamesStorage() : std::map<GLuint, bool>() {}
+  OpenGLNamesStorage()
+      : std::map<GLuint, bool>()
+  {
+  }
   OpenGLNamesStorage(OpenGLNamesStorage *from)
   {
     for (auto it = from->begin(); it != from->end(); it++)
@@ -356,7 +429,10 @@ public:
   bool IsChanged(OpenGLAppContextStorage *other);
 
 public:
-  gles::GLObjectManager &ObjectManagerRef() { return *m_GLObjectManager; }
+  gles::GLObjectManager &ObjectManagerRef()
+  {
+    return *m_GLObjectManager;
+  }
 
 private:
   bool m_Dirty = false;

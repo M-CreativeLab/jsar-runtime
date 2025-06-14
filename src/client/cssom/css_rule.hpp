@@ -57,16 +57,34 @@ namespace client_cssom
     CSSRuleList() = default;
 
   public:
-    size_t length() const { return size(); }
+    size_t length() const
+    {
+      return size();
+    }
 
   public:
-    CSSRule &item(CSSRuleIndex index) const { return *at(index); }
-    auto begin() { return std::vector<std::shared_ptr<CSSRule>>::begin(); }
-    auto end() { return std::vector<std::shared_ptr<CSSRule>>::end(); }
-    auto begin() const { return std::vector<std::shared_ptr<CSSRule>>::begin(); }
-    auto end() const { return std::vector<std::shared_ptr<CSSRule>>::end(); }
+    CSSRule &item(CSSRuleIndex index) const
+    {
+      return *at(index);
+    }
+    auto begin()
+    {
+      return std::vector<std::shared_ptr<CSSRule>>::begin();
+    }
+    auto end()
+    {
+      return std::vector<std::shared_ptr<CSSRule>>::end();
+    }
+    auto begin() const
+    {
+      return std::vector<std::shared_ptr<CSSRule>>::begin();
+    }
+    auto end() const
+    {
+      return std::vector<std::shared_ptr<CSSRule>>::end();
+    }
 
   private:
-    CSSRuleIndex insert(crates::css2::stylesheets::CssRule& inner);
+    CSSRuleIndex insert(crates::css2::stylesheets::CssRule &inner);
   };
 }

@@ -7,16 +7,17 @@ namespace xr
   class WebGLLayer
   {
   public:
-    WebGLLayer() : antialias(true),
-                   depth(true),
-                   stencil(false),
-                   alpha(true),
-                   multiviewRequired(false),
-                   ignoreDepthValues(false),
-                   framebufferScaleFactor(1.0f),
-                   framebuffer(0),
-                   framebufferWidth(0),
-                   framebufferHeight(0)
+    WebGLLayer()
+        : antialias(true)
+        , depth(true)
+        , stencil(false)
+        , alpha(true)
+        , multiviewRequired(false)
+        , ignoreDepthValues(false)
+        , framebufferScaleFactor(1.0f)
+        , framebuffer(0)
+        , framebufferWidth(0)
+        , framebufferHeight(0)
     {
     }
 

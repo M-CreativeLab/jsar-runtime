@@ -33,13 +33,13 @@ namespace client_cssom::values::specified
   {
   public:
     CalcLengthPercentage()
-        : clamping_mode_(AllowedNumbericType::Default()),
-          calc_node_(nullptr)
+        : clamping_mode_(AllowedNumbericType::Default())
+        , calc_node_(nullptr)
     {
     }
     CalcLengthPercentage(const CalcLengthPercentage &other)
-        : clamping_mode_(other.clamping_mode_),
-          calc_node_(nullptr)
+        : clamping_mode_(other.clamping_mode_)
+        , calc_node_(nullptr)
     {
     }
 

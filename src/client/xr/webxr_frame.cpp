@@ -9,28 +9,28 @@ using namespace std::chrono;
 namespace client_xr
 {
   XRFrame::XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session)
-      : frameRequestData_(frameRequest),
-        id_(frameRequest->id),
-        stereoId_(frameRequest->stereoId),
-        timestamp_(frameRequest->time),
-        session_(session),
-        sessionId_(session->id),
-        device_(session->device()),
-        active_(false),
-        animationFrame_(false)
+      : frameRequestData_(frameRequest)
+      , id_(frameRequest->id)
+      , stereoId_(frameRequest->stereoId)
+      , timestamp_(frameRequest->time)
+      , session_(session)
+      , sessionId_(session->id)
+      , device_(session->device())
+      , active_(false)
+      , animationFrame_(false)
   {
   }
 
   XRFrame::XRFrame(XRFrame &other)
-      : frameRequestData_(other.frameRequestData_),
-        id_(other.id_),
-        stereoId_(other.stereoId_),
-        timestamp_(other.timestamp_),
-        session_(other.session_),
-        sessionId_(other.sessionId_),
-        device_(other.device_),
-        active_(other.active_),
-        animationFrame_(other.animationFrame_)
+      : frameRequestData_(other.frameRequestData_)
+      , id_(other.id_)
+      , stereoId_(other.stereoId_)
+      , timestamp_(other.timestamp_)
+      , session_(other.session_)
+      , sessionId_(other.sessionId_)
+      , device_(other.device_)
+      , active_(other.active_)
+      , animationFrame_(other.animationFrame_)
   {
   }
 
@@ -41,8 +41,8 @@ namespace client_xr
     bool isNewStereoFrame = false;
     auto isMultipass = device_->getDeviceInit().renderedAsMultipass();
     if (
-        !isMultipass ||                   /** SinglePass */
-        frameRequestData_->viewIndex == 0 /** MultiPass's right view */
+      !isMultipass ||                   /** SinglePass */
+      frameRequestData_->viewIndex == 0 /** MultiPass's right view */
     )
       isNewStereoFrame = true;
 

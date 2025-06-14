@@ -16,7 +16,9 @@ namespace transmute
     /**
      * Returns a downsampled image based on the given source image pixels and dimensions.
      */
-    static ImageData GetDownsampledImage(void *srcImagePixels, int srcWidth, int srcHeight,
+    static ImageData GetDownsampledImage(void *srcImagePixels,
+                                         int srcWidth,
+                                         int srcHeight,
                                          int constraintSize = DEFAULT_MAX_TEXTURE_SIZE)
     {
       float src_aspect_ratio = static_cast<float>(srcWidth) / static_cast<float>(srcHeight);

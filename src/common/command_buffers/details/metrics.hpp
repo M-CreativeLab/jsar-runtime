@@ -18,8 +18,8 @@ namespace commandbuffers
   public:
     PaintingMetricsCommandBufferRequest() = delete;
     PaintingMetricsCommandBufferRequest(MetricsCategory category)
-        : TrCommandBufferSimpleRequest(),
-          category(category)
+        : TrCommandBufferSimpleRequest()
+        , category(category)
     {
     }
 

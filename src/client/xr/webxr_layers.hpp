@@ -15,7 +15,10 @@ namespace client_xr
     virtual ~XRLayer() = default;
 
   public:
-    std::shared_ptr<XRSession> session() const { return session_; }
+    std::shared_ptr<XRSession> session() const
+    {
+      return session_;
+    }
 
   protected:
     std::shared_ptr<XRSession> session_;
@@ -44,7 +47,10 @@ namespace client_xr
     XRWebGLLayer(xr::WebGLLayer &layerData);
 
   public:
-    inline std::shared_ptr<client_graphics::WebGLContext> glContext() { return glContext_; }
+    inline std::shared_ptr<client_graphics::WebGLContext> glContext()
+    {
+      return glContext_;
+    }
 
   private:
     std::shared_ptr<client_graphics::WebGLContext> glContext_;

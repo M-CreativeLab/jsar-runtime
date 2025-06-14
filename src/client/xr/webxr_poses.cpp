@@ -7,20 +7,20 @@
 namespace client_xr
 {
   XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
-      : session_(session),
-        device_(session->device()),
-        frameRequestData_(frame->frameRequestData_),
-        transform(transformationMatrix),
-        emulatedPosition(false)
+      : session_(session)
+      , device_(session->device())
+      , frameRequestData_(frame->frameRequestData_)
+      , transform(transformationMatrix)
+      , emulatedPosition(false)
   {
   }
 
   XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform)
-      : session_(session),
-        device_(session->device()),
-        frameRequestData_(frame->frameRequestData_),
-        transform(transform),
-        emulatedPosition(false)
+      : session_(session)
+      , device_(session->device())
+      , frameRequestData_(frame->frameRequestData_)
+      , transform(transform)
+      , emulatedPosition(false)
   {
   }
 

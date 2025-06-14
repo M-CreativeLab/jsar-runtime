@@ -23,8 +23,7 @@ namespace builtin_scene
      * @param shaderType The type of the shader, such as vertex or fragment shader.
      * @return The preprocessed source code of the shader.
      */
-    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines,
-                                        client_graphics::WebGLShaderType shaderType);
+    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines, client_graphics::WebGLShaderType shaderType);
 
     /**
      * Concatenate the source code with the given lines.
@@ -45,9 +44,9 @@ namespace builtin_scene
   class ShaderSource
   {
   public:
-    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines,
-                 client_graphics::WebGLShaderType shaderType)
-        : name(name), source(ShaderPreprocessor::PreprocessSource(source, defines, shaderType))
+    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines, client_graphics::WebGLShaderType shaderType)
+        : name(name)
+        , source(ShaderPreprocessor::PreprocessSource(source, defines, shaderType))
     {
     }
 
@@ -67,7 +66,9 @@ namespace builtin_scene
      *
      * @param name The relative path of the builtin shader, such as "materials/color.frag".
      */
-    ShaderRef(client_graphics::WebGLShaderType type, std::string name) : type(type), name(name)
+    ShaderRef(client_graphics::WebGLShaderType type, std::string name)
+        : type(type)
+        , name(name)
     {
     }
 

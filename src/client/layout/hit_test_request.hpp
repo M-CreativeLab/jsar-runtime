@@ -38,13 +38,34 @@ namespace client_layout
     HitTestRequest(HitTestRequestType, std::shared_ptr<LayoutObject> stopNode = nullptr);
 
   public:
-    bool readOnly() const { return request_type_ & kReadOnly; }
-    bool active() const { return request_type_ & kActive; }
-    bool move() const { return request_type_ & kMove; }
-    bool release() const { return request_type_ & kRelease; }
-    bool ignoreClipping() const { return request_type_ & kIgnoreClipping; }
-    bool svgClipContent() const { return request_type_ & kSVGClipContent; }
-    bool touchEvent() const { return request_type_ & kTouchEvent; }
+    bool readOnly() const
+    {
+      return request_type_ & kReadOnly;
+    }
+    bool active() const
+    {
+      return request_type_ & kActive;
+    }
+    bool move() const
+    {
+      return request_type_ & kMove;
+    }
+    bool release() const
+    {
+      return request_type_ & kRelease;
+    }
+    bool ignoreClipping() const
+    {
+      return request_type_ & kIgnoreClipping;
+    }
+    bool svgClipContent() const
+    {
+      return request_type_ & kSVGClipContent;
+    }
+    bool touchEvent() const
+    {
+      return request_type_ & kTouchEvent;
+    }
     bool allowsChildFrameContent() const
     {
       return request_type_ & kAllowChildFrameContent;
@@ -61,14 +82,32 @@ namespace client_layout
     {
       return request_type_ & kIgnorePointerEventsNone;
     }
-    bool listBased() const { return request_type_ & kListBased; }
-    bool penetratingList() const { return request_type_ & kPenetratingList; }
-    bool avoidCache() const { return request_type_ & kAvoidCache; }
+    bool listBased() const
+    {
+      return request_type_ & kListBased;
+    }
+    bool penetratingList() const
+    {
+      return request_type_ & kPenetratingList;
+    }
+    bool avoidCache() const
+    {
+      return request_type_ & kAvoidCache;
+    }
 
-    bool touchMove() const { return move() && touchEvent(); }
+    bool touchMove() const
+    {
+      return move() && touchEvent();
+    }
 
-    HitTestRequestType getType() const { return request_type_; }
-    std::shared_ptr<LayoutObject> getStopNode() const { return stop_node_.lock(); }
+    HitTestRequestType getType() const
+    {
+      return request_type_;
+    }
+    std::shared_ptr<LayoutObject> getStopNode() const
+    {
+      return stop_node_.lock();
+    }
 
   private:
     HitTestRequestType request_type_;

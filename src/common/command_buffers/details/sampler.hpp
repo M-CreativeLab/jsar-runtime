@@ -11,8 +11,9 @@ namespace commandbuffers
   {
   public:
     CreateSamplerCommandBufferRequest() = delete;
-    CreateSamplerCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
-                                                           clientId(clientId)
+    CreateSamplerCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -26,8 +27,9 @@ namespace commandbuffers
   {
   public:
     DeleteSamplerCommandBufferRequest() = delete;
-    DeleteSamplerCommandBufferRequest(uint32_t sampler) : TrCommandBufferSimpleRequest(),
-                                                          sampler(sampler)
+    DeleteSamplerCommandBufferRequest(uint32_t sampler)
+        : TrCommandBufferSimpleRequest()
+        , sampler(sampler)
     {
     }
 
@@ -42,9 +44,9 @@ namespace commandbuffers
   public:
     BindSamplerCommandBufferRequest() = delete;
     BindSamplerCommandBufferRequest(uint32_t unit, uint32_t sampler)
-        : TrCommandBufferSimpleRequest(),
-          unit(unit),
-          sampler(sampler)
+        : TrCommandBufferSimpleRequest()
+        , unit(unit)
+        , sampler(sampler)
     {
     }
 
@@ -60,10 +62,10 @@ namespace commandbuffers
   public:
     SamplerParameteriCommandBufferRequest() = delete;
     SamplerParameteriCommandBufferRequest(uint32_t sampler, uint32_t pname, int32_t param)
-        : TrCommandBufferSimpleRequest(),
-          sampler(sampler),
-          pname(pname),
-          param(param)
+        : TrCommandBufferSimpleRequest()
+        , sampler(sampler)
+        , pname(pname)
+        , param(param)
     {
     }
 
@@ -80,10 +82,10 @@ namespace commandbuffers
   public:
     SamplerParameterfCommandBufferRequest() = delete;
     SamplerParameterfCommandBufferRequest(uint32_t sampler, uint32_t pname, float param)
-        : TrCommandBufferSimpleRequest(),
-          sampler(sampler),
-          pname(pname),
-          param(param)
+        : TrCommandBufferSimpleRequest()
+        , sampler(sampler)
+        , pname(pname)
+        , param(param)
     {
     }
 
@@ -100,9 +102,9 @@ namespace commandbuffers
   public:
     GetSamplerParameterCommandBufferRequest() = delete;
     GetSamplerParameterCommandBufferRequest(uint32_t sampler, uint32_t pname)
-        : TrCommandBufferSimpleRequest(),
-          sampler(sampler),
-          pname(pname)
+        : TrCommandBufferSimpleRequest()
+        , sampler(sampler)
+        , pname(pname)
     {
     }
 
@@ -116,8 +118,8 @@ namespace commandbuffers
   {
   public:
     GetSamplerParameterCommandBufferResponse(GetSamplerParameterCommandBufferRequest *req, int value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req),
-          value(value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req)
+        , value(value)
     {
     }
 
@@ -132,8 +134,8 @@ namespace commandbuffers
   public:
     IsSamplerCommandBufferRequest() = delete;
     IsSamplerCommandBufferRequest(uint32_t sampler)
-        : TrCommandBufferSimpleRequest(),
-          sampler(sampler)
+        : TrCommandBufferSimpleRequest()
+        , sampler(sampler)
     {
     }
 
@@ -146,8 +148,8 @@ namespace commandbuffers
   {
   public:
     IsSamplerCommandBufferResponse(IsSamplerCommandBufferRequest *req, bool value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_SAMPLER_RES, req),
-          value(value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_SAMPLER_RES, req)
+        , value(value)
     {
     }
 

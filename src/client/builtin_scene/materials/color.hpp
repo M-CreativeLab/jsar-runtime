@@ -14,27 +14,45 @@ namespace builtin_scene::materials
     /**
      * @returns The transparent color material.
      */
-    static inline ColorMaterialReference Transparent() { return std::make_shared<ColorMaterial>(); }
+    static inline ColorMaterialReference Transparent()
+    {
+      return std::make_shared<ColorMaterial>();
+    }
     /**
      * @returns The white color material.
      */
-    static inline ColorMaterialReference White() { return std::make_shared<ColorMaterial>(1.0f, 1.0f, 1.0f); }
+    static inline ColorMaterialReference White()
+    {
+      return std::make_shared<ColorMaterial>(1.0f, 1.0f, 1.0f);
+    }
     /**
      * @returns The black color material.
      */
-    static inline ColorMaterialReference Black() { return std::make_shared<ColorMaterial>(0.0f, 0.0f, 0.0f); }
+    static inline ColorMaterialReference Black()
+    {
+      return std::make_shared<ColorMaterial>(0.0f, 0.0f, 0.0f);
+    }
     /**
      * @returns The red color material.
      */
-    static inline ColorMaterialReference Red() { return std::make_shared<ColorMaterial>(1.0f, 0.0f, 0.0f); }
+    static inline ColorMaterialReference Red()
+    {
+      return std::make_shared<ColorMaterial>(1.0f, 0.0f, 0.0f);
+    }
     /**
      * @returns The green color material.
      */
-    static inline ColorMaterialReference Green() { return std::make_shared<ColorMaterial>(0.0f, 1.0f, 0.0f); }
+    static inline ColorMaterialReference Green()
+    {
+      return std::make_shared<ColorMaterial>(0.0f, 1.0f, 0.0f);
+    }
     /**
      * @returns The blue color material.
      */
-    static inline ColorMaterialReference Blue() { return std::make_shared<ColorMaterial>(0.0f, 0.0f, 1.0f); }
+    static inline ColorMaterialReference Blue()
+    {
+      return std::make_shared<ColorMaterial>(0.0f, 0.0f, 1.0f);
+    }
 
   public:
     /**
@@ -50,10 +68,15 @@ namespace builtin_scene::materials
      * @param alpha The alpha component of the surface color.
      */
     ColorMaterial(float red, float green, float blue, float alpha = 1.0f)
-        : surfaceColor(red, green, blue, alpha) {}
+        : surfaceColor(red, green, blue, alpha)
+    {
+    }
 
   public:
-    const std::string name() const override { return "ColorMaterial"; }
+    const std::string name() const override
+    {
+      return "ColorMaterial";
+    }
     ShaderRef fragmentShader() override
     {
       return ShaderRef(ShaderType::kFragment, "materials/color.frag");
@@ -72,7 +95,10 @@ namespace builtin_scene::materials
       }
 
       glContext->uniform4f(surfaceColorLoc.value(),
-                           surfaceColor.r, surfaceColor.g, surfaceColor.b, surfaceColor.a);
+                           surfaceColor.r,
+                           surfaceColor.g,
+                           surfaceColor.b,
+                           surfaceColor.a);
       return true;
     }
 

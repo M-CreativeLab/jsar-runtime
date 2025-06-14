@@ -52,14 +52,20 @@ namespace client_graphics
   class WebGLFramebuffer : public WebGLObject
   {
   public:
-    WebGLFramebuffer() : WebGLObject(WebGLObjectType::Framebuffer) {}
-  
+    WebGLFramebuffer()
+        : WebGLObject(WebGLObjectType::Framebuffer)
+    {
+    }
+
   protected:
     /**
      * Create a new `WebGLFramebuffer` with the given id, that is used for the specific framebuffers
      * like the default framebuffer or the host framebuffer.
      */
-    WebGLFramebuffer(int defaultId) : WebGLObject(WebGLObjectType::Framebuffer, defaultId) {}
+    WebGLFramebuffer(int defaultId)
+        : WebGLObject(WebGLObjectType::Framebuffer, defaultId)
+    {
+    }
   };
 
   /**
@@ -69,6 +75,9 @@ namespace client_graphics
   class WebGLHostFramebuffer : public WebGLFramebuffer
   {
   public:
-    WebGLHostFramebuffer() : WebGLFramebuffer(-1) {}
+    WebGLHostFramebuffer()
+        : WebGLFramebuffer(-1)
+    {
+    }
   };
 }

@@ -44,7 +44,10 @@ namespace webgl
     WebGLProgram(const Napi::CallbackInfo &info);
 
   public:
-    void printInfo() { handle_->printInfo(); }
+    void printInfo()
+    {
+      handle_->printInfo();
+    }
 
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);

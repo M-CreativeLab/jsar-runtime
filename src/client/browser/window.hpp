@@ -105,24 +105,69 @@ namespace browser
     Window(TrClientContextPerProcess *clientContext = TrClientContextPerProcess::Get());
 
   public:
-    inline const std::string &name() const { return name_; }
-    inline const std::string &origin() const { return origin_; }
-    inline const client_cssom::Device &device() const { return device_; }
-    inline client_cssom::Device &device() { return device_; }
+    inline const std::string &name() const
+    {
+      return name_;
+    }
+    inline const std::string &origin() const
+    {
+      return origin_;
+    }
+    inline const client_cssom::Device &device() const
+    {
+      return device_;
+    }
+    inline client_cssom::Device &device()
+    {
+      return device_;
+    }
 
-    inline bool fullscreen() const { return fullscreen_; }
-    inline float innerWidth() const { return inner_width_; }
-    inline float innerHeight() const { return inner_height_; }
-    inline float innerDepth() const { return inner_depth_; }
-    inline float outerWidth() const { return outer_width_; }
-    inline float outerHeight() const { return outer_height_; }
-    inline float outerDepth() const { return outer_depth_; }
+    inline bool fullscreen() const
+    {
+      return fullscreen_;
+    }
+    inline float innerWidth() const
+    {
+      return inner_width_;
+    }
+    inline float innerHeight() const
+    {
+      return inner_height_;
+    }
+    inline float innerDepth() const
+    {
+      return inner_depth_;
+    }
+    inline float outerWidth() const
+    {
+      return outer_width_;
+    }
+    inline float outerHeight() const
+    {
+      return outer_height_;
+    }
+    inline float outerDepth() const
+    {
+      return outer_depth_;
+    }
 
-    inline float scrollX() const { return scroll_x_; }
-    inline float scrollY() const { return scroll_y_; }
+    inline float scrollX() const
+    {
+      return scroll_x_;
+    }
+    inline float scrollY() const
+    {
+      return scroll_y_;
+    }
 
-    inline float devicePixelRatio() const { return device_.devicePixelRatio(); }
-    inline float &devicePixelRatio() { return device_.devicePixelRatio(); }
+    inline float devicePixelRatio() const
+    {
+      return device_.devicePixelRatio();
+    }
+    inline float &devicePixelRatio()
+    {
+      return device_.devicePixelRatio();
+    }
 
     inline TrViewport viewport() const
     {
@@ -130,8 +175,14 @@ namespace browser
       return TrViewport(viewport.x, viewport.y, 0, 0);
     }
 
-    inline std::shared_ptr<Window> self() { return shared_from_this(); }
-    inline std::shared_ptr<dom::Document> document() const { return document_; }
+    inline std::shared_ptr<Window> self()
+    {
+      return shared_from_this();
+    }
+    inline std::shared_ptr<dom::Document> document() const
+    {
+      return document_;
+    }
 
   public:
     /**
@@ -159,8 +210,7 @@ namespace browser
      * @param target The target browsing context.
      * @param features The features of the new window.
      */
-    inline void open(const std::string &url, WindowTarget target,
-                     const WindowFeatures &features = WindowFeatures())
+    inline void open(const std::string &url, WindowTarget target, const WindowFeatures &features = WindowFeatures())
     {
       client_context_->makeRpcCall("window.open", {url, to_string(target)});
     }

@@ -89,7 +89,8 @@ namespace dom
      * @param fromScripting Whether the element is created from scripting or not.
      * @returns The created `Element` object.
      */
-    static std::shared_ptr<Element> CreateElement(std::string namespaceURI, std::string tagName,
+    static std::shared_ptr<Element> CreateElement(std::string namespaceURI,
+                                                  std::string tagName,
                                                   std::shared_ptr<Document> ownerDocument,
                                                   bool fromScripting);
 
@@ -113,10 +114,16 @@ namespace dom
 
     void before(std::vector<std::shared_ptr<Node>> nodes);
     void before(std::string text);
-    inline void before(std::shared_ptr<Node> node) { before(std::vector<std::shared_ptr<Node>>{node}); }
+    inline void before(std::shared_ptr<Node> node)
+    {
+      before(std::vector<std::shared_ptr<Node>>{node});
+    }
     void after(std::vector<std::shared_ptr<Node>> nodes);
     void after(std::string text);
-    inline void after(std::shared_ptr<Node> node) { after(std::vector<std::shared_ptr<Node>>{node}); }
+    inline void after(std::shared_ptr<Node> node)
+    {
+      after(std::vector<std::shared_ptr<Node>>{node});
+    }
     std::string getAttribute(const std::string &name) const;
     std::vector<std::string> getAttributeNames() const;
     std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
@@ -171,31 +178,61 @@ namespace dom
     };
 
     // Scrolls the element to the given position.
-    inline void scroll(const ScrollOptions &opts) { scrollTo(opts); }
+    inline void scroll(const ScrollOptions &opts)
+    {
+      scrollTo(opts);
+    }
     // Scrolls an element to the given position.
     void scrollTo(const ScrollOptions &);
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
 
-    ElementAnimations &elementAnimationsRef() { return *element_animations_; }
-    bool hasAnimations() const { return element_animations_ != nullptr && !element_animations_->isEmpty(); }
+    ElementAnimations &elementAnimationsRef()
+    {
+      return *element_animations_;
+    }
+    bool hasAnimations() const
+    {
+      return element_animations_ != nullptr && !element_animations_->isEmpty();
+    }
 
-    inline bool hasAdoptedStyle() const { return adopted_style_ != nullptr; }
+    inline bool hasAdoptedStyle() const
+    {
+      return adopted_style_ != nullptr;
+    }
     inline const client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       assert(adopted_style_ != nullptr && "The adopted style should not be null.");
       return *adopted_style_;
     }
-    const client_cssom::CSSStyleDeclaration &defaultStyleRef() const { return defaultStyle_; }
+    const client_cssom::CSSStyleDeclaration &defaultStyleRef() const
+    {
+      return defaultStyle_;
+    }
 
-    std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
-    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
+    std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const
+    {
+      return principalBox_;
+    }
+    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox()
+    {
+      return principalBox_;
+    }
 
   public:
-    bool isElement() const override final { return true; }
+    bool isElement() const override final
+    {
+      return true;
+    }
 
-    bool isHovered() const { return is_hovered_; }
-    bool isFocused() const { return is_focused_; }
+    bool isHovered() const
+    {
+      return is_hovered_;
+    }
+    bool isFocused() const
+    {
+      return is_focused_;
+    }
 
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
@@ -288,13 +325,22 @@ namespace dom
     std::string localName;
     std::string prefix;
 
-    inline const std::string &className() const { return classList_.value(); }
+    inline const std::string &className() const
+    {
+      return classList_.value();
+    }
     inline void setClassName(const std::string &className)
     {
       setAttribute("class", className);
     }
-    inline const DOMTokenList &classList() const { return classList_; }
-    inline DOMTokenList &classList() { return classList_; }
+    inline const DOMTokenList &classList() const
+    {
+      return classList_;
+    }
+    inline DOMTokenList &classList()
+    {
+      return classList_;
+    }
 
     std::shared_ptr<Element> firstElementChild() const;
     std::shared_ptr<Element> lastElementChild() const;

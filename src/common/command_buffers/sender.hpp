@@ -8,8 +8,13 @@ namespace commandbuffers
   class TrCommandBufferSender : public ipc::TrChannelSender<TrCommandBufferMessage>
   {
   public:
-    TrCommandBufferSender(ipc::TrOneShotClient<TrCommandBufferMessage> *client) : ipc::TrChannelSender<TrCommandBufferMessage>(client) {}
-    ~TrCommandBufferSender() {}
+    TrCommandBufferSender(ipc::TrOneShotClient<TrCommandBufferMessage> *client)
+        : ipc::TrChannelSender<TrCommandBufferMessage>(client)
+    {
+    }
+    ~TrCommandBufferSender()
+    {
+    }
 
   public:
     bool sendCommandBufferRequest(TrCommandBufferBase &req, bool forceFlush = false);

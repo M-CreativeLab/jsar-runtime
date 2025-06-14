@@ -15,9 +15,11 @@ namespace bindings
   // static
   void XRPose::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRPose",
-                                     {InstanceAccessor("transform", &XRPose::TransformGetter, nullptr),
-                                      InstanceAccessor("emulatedPosition", &XRPose::EmulatedPositionGetter, nullptr)});
+    Napi::Function tpl = DefineClass(
+      env,
+      "XRPose",
+      {InstanceAccessor("transform", &XRPose::TransformGetter, nullptr),
+       InstanceAccessor("emulatedPosition", &XRPose::EmulatedPositionGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -50,10 +52,11 @@ namespace bindings
   {
 #define MODULE_NAME "XRViewerPose"
     Napi::Function tpl = DefineClass(
-        env, MODULE_NAME,
-        {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
-         InstanceAccessor("emulatedPosition", &XRViewerPose::EmulatedPositionGetter, nullptr),
-         InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
+      env,
+      MODULE_NAME,
+      {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
+       InstanceAccessor("emulatedPosition", &XRViewerPose::EmulatedPositionGetter, nullptr),
+       InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -104,8 +107,10 @@ namespace bindings
   void XRJointPose::Init(Napi::Env env)
   {
 #define MODULE_NAME "XRJointPose"
-    Function tpl = DefineClass(env, MODULE_NAME,
-                               {InstanceValue("radius", Number::New(env, 0.0))});
+    Function tpl = DefineClass(
+      env,
+      MODULE_NAME,
+      {InstanceValue("radius", Number::New(env, 0.0))});
     constructor = new FunctionReference();
     *constructor = Persistent(tpl);
     env.SetInstanceData(constructor);

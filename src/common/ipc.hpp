@@ -138,9 +138,12 @@ namespace ipc
   class TrChannelSender
   {
   public:
-    TrChannelSender(TrOneShotClient<T> *client) : client(client),
-                                                  fd(client->fd),
-                                                  blocking(client->blocking) {}
+    TrChannelSender(TrOneShotClient<T> *client)
+        : client(client)
+        , fd(client->fd)
+        , blocking(client->blocking)
+    {
+    }
     ~TrChannelSender()
     {
       fd = -1;
@@ -190,9 +193,10 @@ namespace ipc
   class TrChannelReceiver
   {
   public:
-    TrChannelReceiver(TrOneShotClient<T> *client) : client(client),
-                                                    fd(client->fd),
-                                                    blocking(client->blocking)
+    TrChannelReceiver(TrOneShotClient<T> *client)
+        : client(client)
+        , fd(client->fd)
+        , blocking(client->blocking)
     {
     }
     ~TrChannelReceiver()
@@ -202,7 +206,10 @@ namespace ipc
     }
 
   public:
-    int getFd() { return fd; }
+    int getFd()
+    {
+      return fd;
+    }
 
     /**
      * Try to receive a new instance T with a timeout.
@@ -313,8 +320,8 @@ namespace ipc
     {
       TrOneShotClient<T> *client = new TrOneShotClient<T>();
       if (
-          client->connect(port, blocking) &&
-          client->sendHandshake(customId)) // If the client is connected and the handshake is successful.
+        client->connect(port, blocking) &&
+        client->sendHandshake(customId)) // If the client is connected and the handshake is successful.
       {
         client->handshaked = true;
         return client;
@@ -327,10 +334,14 @@ namespace ipc
     }
 
   private:
-    TrOneShotClient() : connected(false)
+    TrOneShotClient()
+        : connected(false)
     {
     }
-    TrOneShotClient(int fd, bool blocking) : fd(fd), blocking(blocking), connected(true)
+    TrOneShotClient(int fd, bool blocking)
+        : fd(fd)
+        , blocking(blocking)
+        , connected(true)
     {
       if (recvHandshake())
         handshaked = true;
@@ -472,9 +483,18 @@ namespace ipc
     }
 
   public:
-    pid_t getPid() { return pid; }
-    uint32_t getCustomId() { return customId; }
-    bool isConnected() { return connected; }
+    pid_t getPid()
+    {
+      return pid;
+    }
+    uint32_t getCustomId()
+    {
+      return customId;
+    }
+    bool isConnected()
+    {
+      return connected;
+    }
 
   private:
     /**
@@ -522,7 +542,8 @@ namespace ipc
   class TrOneShotServer
   {
   public:
-    TrOneShotServer(string name) : fd(-1)
+    TrOneShotServer(string name)
+        : fd(-1)
     {
       fd = socket(AF_INET, SOCK_STREAM, 0);
       if (fd == -1)
@@ -578,7 +599,10 @@ namespace ipc
     /**
      * Get the port number of this server.
      */
-    int getPort() { return port; }
+    int getPort()
+    {
+      return port;
+    }
     /**
      * Accepts a client in blocking mode.
      */
@@ -645,7 +669,10 @@ namespace ipc
     /**
      * It returns the client list.
      */
-    vector<TrOneShotClient<T> *> &getClients() { return clients; }
+    vector<TrOneShotClient<T> *> &getClients()
+    {
+      return clients;
+    }
     /**
      * It removes the client from the client list.
      */

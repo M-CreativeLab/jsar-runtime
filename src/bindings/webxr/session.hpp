@@ -20,7 +20,8 @@ namespace bindings
   {
   public:
     XRFrameCallbackDescriptor(Napi::Function cb)
-        : handle(++NEXT_HANDLE), cancelled(false)
+        : handle(++NEXT_HANDLE)
+        , cancelled(false)
     {
       callback = new Napi::FunctionReference();
       *callback = Napi::Persistent(cb);
@@ -65,7 +66,10 @@ namespace bindings
     ~XRSession();
 
   public:
-    dom::DOMEventTargetType eventTargetType() const override final { return dom::DOMEventTargetType::kXRSession; }
+    dom::DOMEventTargetType eventTargetType() const override final
+    {
+      return dom::DOMEventTargetType::kXRSession;
+    }
 
   private:
     Napi::Value InputSourcesGetter(const Napi::CallbackInfo &info);
@@ -84,11 +88,26 @@ namespace bindings
     Napi::Array createEnabledFeatures(Napi::Env env);
 
   public:
-    inline int32_t id() const { return handle_->id; }
-    inline client_xr::XRSessionMode mode() const { return handle_->mode; }
-    inline client_xr::XRSessionRequestInit requestInit() const { return handle_->requestInit; }
-    inline bool immersive() const { return handle_->immersive(); }
-    inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
+    inline int32_t id() const
+    {
+      return handle_->id;
+    }
+    inline client_xr::XRSessionMode mode() const
+    {
+      return handle_->mode;
+    }
+    inline client_xr::XRSessionRequestInit requestInit() const
+    {
+      return handle_->requestInit;
+    }
+    inline bool immersive() const
+    {
+      return handle_->immersive();
+    }
+    inline client_xr::XREnvironmentBlendMode environmentBlendMode() const
+    {
+      return handle_->environmentBlendMode();
+    }
 
   private:
     Napi::ThreadSafeFunction frameDispatcherTsfn_;

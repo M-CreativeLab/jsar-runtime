@@ -67,21 +67,30 @@ namespace client_cssom::values::specified
     static constexpr float THICK_IN_PX = 5.0f;
 
   public:
-    static BorderSideWidth Thin() { return BorderSideWidth(kThin, THIN_IN_PX); }
-    static BorderSideWidth Medium() { return BorderSideWidth(kMedium, MEDIUM_IN_PX); }
-    static BorderSideWidth Thick() { return BorderSideWidth(kThick, THICK_IN_PX); }
+    static BorderSideWidth Thin()
+    {
+      return BorderSideWidth(kThin, THIN_IN_PX);
+    }
+    static BorderSideWidth Medium()
+    {
+      return BorderSideWidth(kMedium, MEDIUM_IN_PX);
+    }
+    static BorderSideWidth Thick()
+    {
+      return BorderSideWidth(kThick, THICK_IN_PX);
+    }
 
   public:
     BorderSideWidth()
-        : tag_(kMedium),
-          length_(NoCalcLength::FromPx(MEDIUM_IN_PX))
+        : tag_(kMedium)
+        , length_(NoCalcLength::FromPx(MEDIUM_IN_PX))
     {
     }
 
   private:
     BorderSideWidth(Tag tag, float px)
-        : tag_(tag),
-          length_(NoCalcLength::FromPx(px))
+        : tag_(tag)
+        , length_(NoCalcLength::FromPx(px))
     {
     }
 

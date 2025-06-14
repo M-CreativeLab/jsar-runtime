@@ -11,20 +11,22 @@ namespace bindings
   void XRFrame::Init(Napi::Env env)
   {
 #define MODULE_NAME "XRFrame"
-    Napi::Function tpl = DefineClass(env, MODULE_NAME,
-                                     {
-                                         InstanceMethod("createAnchor", &XRFrame::CreateAnchor),
-                                         InstanceMethod("getHitTestResults", &XRFrame::GetHitTestResults),
-                                         InstanceMethod("getHitTestResultsForTransientInput", &XRFrame::GetHitTestResultsForTransientInput),
-                                         InstanceMethod("fillPoses", &XRFrame::FillPoses),
-                                         InstanceMethod("getJointPose", &XRFrame::GetJointPose),
-                                         InstanceMethod("fillJointRadii", &XRFrame::FillJointRadii),
-                                         InstanceMethod("getImageTrackingResults", &XRFrame::GetImageTrackingResults),
-                                         InstanceMethod("getLightEstimate", &XRFrame::GetLightEstimate),
-                                         InstanceMethod("getDepthInformation", &XRFrame::GetDepthInformation),
-                                         InstanceMethod("getPose", &XRFrame::GetPose),
-                                         InstanceMethod("getViewerPose", &XRFrame::GetViewerPose),
-                                     });
+    Napi::Function tpl = DefineClass(
+      env,
+      MODULE_NAME,
+      {
+        InstanceMethod("createAnchor", &XRFrame::CreateAnchor),
+        InstanceMethod("getHitTestResults", &XRFrame::GetHitTestResults),
+        InstanceMethod("getHitTestResultsForTransientInput", &XRFrame::GetHitTestResultsForTransientInput),
+        InstanceMethod("fillPoses", &XRFrame::FillPoses),
+        InstanceMethod("getJointPose", &XRFrame::GetJointPose),
+        InstanceMethod("fillJointRadii", &XRFrame::FillJointRadii),
+        InstanceMethod("getImageTrackingResults", &XRFrame::GetImageTrackingResults),
+        InstanceMethod("getLightEstimate", &XRFrame::GetLightEstimate),
+        InstanceMethod("getDepthInformation", &XRFrame::GetDepthInformation),
+        InstanceMethod("getPose", &XRFrame::GetPose),
+        InstanceMethod("getViewerPose", &XRFrame::GetViewerPose),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -116,10 +118,10 @@ namespace bindings
       return env.Undefined();
     }
     if (
-        info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
+      info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
     {
       Napi::TypeError::New(env, "getJointPose() requires `XRJointSpace` and `XRSpace` parameters")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -140,10 +142,10 @@ namespace bindings
       return env.Undefined();
     }
     if (
-        info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
+      info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
     {
       Napi::TypeError::New(env, "getPose() requires `XRSpace` and `XRSpace` parameters")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -157,14 +159,14 @@ namespace bindings
     catch (const std::invalid_argument &e)
     {
       auto consoleWarn = env.Global()
-                             .Get("console")
-                             .As<Napi::Object>()
-                             .Get("warn")
-                             .As<Napi::Function>();
+                           .Get("console")
+                           .As<Napi::Object>()
+                           .Get("warn")
+                           .As<Napi::Function>();
       auto msg = "Failed to get pose: " + std::string(e.what());
       consoleWarn.Call({Napi::String::New(env, msg), info[0], info[1]});
       Napi::TypeError::New(env, msg)
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
   }

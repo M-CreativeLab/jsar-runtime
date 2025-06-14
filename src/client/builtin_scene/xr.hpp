@@ -25,16 +25,37 @@ namespace builtin_scene
     ~WebXRExperience();
 
   public:
-    std::shared_ptr<client_xr::XRSession> session() { return session_; }
-    client_xr::XRSession& sessionRef() { return *session_; }
+    std::shared_ptr<client_xr::XRSession> session()
+    {
+      return session_;
+    }
+    client_xr::XRSession &sessionRef()
+    {
+      return *session_;
+    }
 
-    std::shared_ptr<client_xr::XRReferenceSpace> referenceSpace() { return reference_space_; }
-    const client_xr::XRReferenceSpace& referenceSpaceRef() { return *reference_space_; }
+    std::shared_ptr<client_xr::XRReferenceSpace> referenceSpace()
+    {
+      return reference_space_;
+    }
+    const client_xr::XRReferenceSpace &referenceSpaceRef()
+    {
+      return *reference_space_;
+    }
 
-    std::shared_ptr<client_xr::XRFrame> currentFrame() { return current_frame_; }
-    const client_xr::XRFrame& currentFrameRef() { return *current_frame_; }
+    std::shared_ptr<client_xr::XRFrame> currentFrame()
+    {
+      return current_frame_;
+    }
+    const client_xr::XRFrame &currentFrameRef()
+    {
+      return *current_frame_;
+    }
 
-    uint32_t currentTime() { return current_time_; }
+    uint32_t currentTime()
+    {
+      return current_time_;
+    }
     std::shared_ptr<client_xr::XRViewerPose> viewerPose()
     {
       if (current_frame_ == nullptr || reference_space_ == nullptr)
@@ -42,14 +63,17 @@ namespace builtin_scene
       return current_frame_->getViewerPose(reference_space_);
     }
 
-    bool multiviewEnabled() const { return multiview_enabled_; }
+    bool multiviewEnabled() const
+    {
+      return multiview_enabled_;
+    }
     bool multiviewRequired() const;
 
-    void resetSelectStartHandler(std::function<void(client_xr::XRInputSourceEvent&)> handler)
+    void resetSelectStartHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
     {
       select_start_handler_ = handler;
     }
-    void resetSelectEndHandler(std::function<void(client_xr::XRInputSourceEvent&)> handler)
+    void resetSelectEndHandler(std::function<void(client_xr::XRInputSourceEvent &)> handler)
     {
       select_end_handler_ = handler;
     }
@@ -83,8 +107,8 @@ namespace builtin_scene
     uint32_t current_time_;
     bool multiview_enabled_;
 
-    std::function<void(client_xr::XRInputSourceEvent&)> select_start_handler_;
-    std::function<void(client_xr::XRInputSourceEvent&)> select_end_handler_;
+    std::function<void(client_xr::XRInputSourceEvent &)> select_start_handler_;
+    std::function<void(client_xr::XRInputSourceEvent &)> select_end_handler_;
   };
 
   class WebXRExperienceStartupSystem : public ecs::System
@@ -92,7 +116,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "WebXRExperienceStartupSystem"; }
+    const std::string name() const override
+    {
+      return "WebXRExperienceStartupSystem";
+    }
     void onExecute() override;
   };
 
@@ -101,7 +128,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "WebXRExperienceUpdateSystem"; }
+    const std::string name() const override
+    {
+      return "WebXRExperienceUpdateSystem";
+    }
     void onExecute() override;
   };
 
@@ -110,7 +140,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "WebXRCollisionBoxSystem"; }
+    const std::string name() const override
+    {
+      return "WebXRCollisionBoxSystem";
+    }
     void onExecute() override;
   };
 

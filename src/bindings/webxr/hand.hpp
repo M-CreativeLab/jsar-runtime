@@ -28,7 +28,7 @@ namespace bindings
 
   private:
     std::optional<client_xr::XRHand> handle_;
-    std::map<std::string, Napi::ObjectReference*> entries_;
+    std::map<std::string, Napi::ObjectReference *> entries_;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

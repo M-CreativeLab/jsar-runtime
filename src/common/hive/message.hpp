@@ -45,7 +45,10 @@ namespace hive_comm
     }
 
   public:
-    TrHiveCommandType getType() { return type; }
+    TrHiveCommandType getType()
+    {
+      return type;
+    }
   };
 
   class TrHiveCommandBase : public ipc::TrIpcSerializableBase<TrHiveCommandMessage, TrHiveCommandType>
@@ -60,36 +63,48 @@ namespace hive_comm
     }
 
   public:
-    TrHiveCommandBase() : TrIpcSerializableBase() {}
-    TrHiveCommandBase(TrHiveCommandType type, size_t size) : TrIpcSerializableBase(type, size) {}
+    TrHiveCommandBase()
+        : TrIpcSerializableBase()
+    {
+    }
+    TrHiveCommandBase(TrHiveCommandType type, size_t size)
+        : TrIpcSerializableBase(type, size)
+    {
+    }
   };
 
   template <typename T>
   class TrHiveCommandSimple : public TrHiveCommandBase
   {
   public:
-    TrHiveCommandSimple(TrHiveCommandSimple &that) : TrHiveCommandBase(that.type, that.size) {}
-    TrHiveCommandSimple(TrHiveCommandType type) : TrHiveCommandBase(type, sizeof(T)) {}
+    TrHiveCommandSimple(TrHiveCommandSimple &that)
+        : TrHiveCommandBase(that.type, that.size)
+    {
+    }
+    TrHiveCommandSimple(TrHiveCommandType type)
+        : TrHiveCommandBase(type, sizeof(T))
+    {
+    }
   };
 
   class TrCreateClientRequest : public TrHiveCommandSimple<TrCreateClientRequest>
   {
   public:
     TrCreateClientRequest(TrDocumentRequestInit &init)
-        : TrHiveCommandSimple(TrHiveCommandType::CreateClientRequest),
-          url(init.url),
-          documentId(init.id),
-          disableCache(init.disableCache),
-          isPreview(init.isPreview),
-          runScripts(init.runScripts)
+        : TrHiveCommandSimple(TrHiveCommandType::CreateClientRequest)
+        , url(init.url)
+        , documentId(init.id)
+        , disableCache(init.disableCache)
+        , isPreview(init.isPreview)
+        , runScripts(init.runScripts)
     {
     }
     TrCreateClientRequest(TrCreateClientRequest &that)
-        : TrHiveCommandSimple(that),
-          documentId(that.documentId),
-          disableCache(that.disableCache),
-          isPreview(that.isPreview),
-          runScripts(that.runScripts)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , disableCache(that.disableCache)
+        , isPreview(that.isPreview)
+        , runScripts(that.runScripts)
     {
     }
 
@@ -119,11 +134,15 @@ namespace hive_comm
   {
   public:
     TrCreateClientResponse(TrCreateClientRequest &request)
-        : TrHiveCommandSimple(TrHiveCommandType::CreateClientResponse), documentId(request.documentId), pid(0)
+        : TrHiveCommandSimple(TrHiveCommandType::CreateClientResponse)
+        , documentId(request.documentId)
+        , pid(0)
     {
     }
     TrCreateClientResponse(TrCreateClientResponse &that)
-        : TrHiveCommandSimple(that), documentId(that.documentId), pid(that.pid)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , pid(that.pid)
     {
     }
 
@@ -136,11 +155,13 @@ namespace hive_comm
   {
   public:
     TrTerminateClientRequest(uint32_t documentId)
-        : TrHiveCommandSimple(TrHiveCommandType::TerminateClientRequest), documentId(documentId)
+        : TrHiveCommandSimple(TrHiveCommandType::TerminateClientRequest)
+        , documentId(documentId)
     {
     }
     TrTerminateClientRequest(TrTerminateClientRequest &that)
-        : TrHiveCommandSimple(that), documentId(that.documentId)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
     {
     }
 
@@ -152,11 +173,15 @@ namespace hive_comm
   {
   public:
     TrTerminateClientResponse(TrTerminateClientRequest &request, bool success)
-        : TrHiveCommandSimple(TrHiveCommandType::TerminateClientResponse), documentId(request.documentId), success(success)
+        : TrHiveCommandSimple(TrHiveCommandType::TerminateClientResponse)
+        , documentId(request.documentId)
+        , success(success)
     {
     }
     TrTerminateClientResponse(TrTerminateClientResponse &that)
-        : TrHiveCommandSimple(that), documentId(that.documentId), success(that.success)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , success(that.success)
     {
     }
 
@@ -168,12 +193,19 @@ namespace hive_comm
   class TrPingRequest : public TrHiveCommandSimple<TrPingRequest>
   {
   public:
-    TrPingRequest(uint32_t documentId) : TrHiveCommandSimple(TrHiveCommandType::PingRequest), documentId(documentId)
+    TrPingRequest(uint32_t documentId)
+        : TrHiveCommandSimple(TrHiveCommandType::PingRequest)
+        , documentId(documentId)
     {
       auto now = chrono::system_clock::now();
       timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
     }
-    TrPingRequest(TrPingRequest &that) : TrHiveCommandSimple(that), documentId(that.documentId), timestamp(that.timestamp) {}
+    TrPingRequest(TrPingRequest &that)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , timestamp(that.timestamp)
+    {
+    }
 
   public:
     uint32_t documentId;
@@ -183,12 +215,21 @@ namespace hive_comm
   class TrPongResponse : public TrHiveCommandSimple<TrPongResponse>
   {
   public:
-    TrPongResponse(TrPingRequest &request) : TrHiveCommandSimple(TrHiveCommandType::PongResponse), documentId(request.documentId), requestTimestamp(request.timestamp)
+    TrPongResponse(TrPingRequest &request)
+        : TrHiveCommandSimple(TrHiveCommandType::PongResponse)
+        , documentId(request.documentId)
+        , requestTimestamp(request.timestamp)
     {
       auto now = chrono::system_clock::now();
       timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
     }
-    TrPongResponse(TrPongResponse &that) : TrHiveCommandSimple(that), documentId(that.documentId), requestTimestamp(that.requestTimestamp), timestamp(that.timestamp) {}
+    TrPongResponse(TrPongResponse &that)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , requestTimestamp(that.requestTimestamp)
+        , timestamp(that.timestamp)
+    {
+    }
 
   public:
     uint32_t documentId;
@@ -199,19 +240,29 @@ namespace hive_comm
   class TrOnServerReadyEvent : public TrHiveCommandSimple<TrOnServerReadyEvent>
   {
   public:
-    TrOnServerReadyEvent() : TrHiveCommandSimple(TrHiveCommandType::OnServerReadyEvent) {}
-    TrOnServerReadyEvent(TrOnServerReadyEvent &that) : TrHiveCommandSimple(that) {}
+    TrOnServerReadyEvent()
+        : TrHiveCommandSimple(TrHiveCommandType::OnServerReadyEvent)
+    {
+    }
+    TrOnServerReadyEvent(TrOnServerReadyEvent &that)
+        : TrHiveCommandSimple(that)
+    {
+    }
   };
 
   class TrOnExitEvent : public TrHiveCommandSimple<TrOnExitEvent>
   {
   public:
     TrOnExitEvent(uint32_t documentId, uint32_t code)
-        : TrHiveCommandSimple(TrHiveCommandType::OnExitEvent), documentId(documentId), code(code)
+        : TrHiveCommandSimple(TrHiveCommandType::OnExitEvent)
+        , documentId(documentId)
+        , code(code)
     {
     }
     TrOnExitEvent(TrOnExitEvent &that)
-        : TrHiveCommandSimple(that), documentId(that.documentId), code(that.code)
+        : TrHiveCommandSimple(that)
+        , documentId(that.documentId)
+        , code(that.code)
     {
     }
 
@@ -224,21 +275,21 @@ namespace hive_comm
   {
   public:
     TrOnLogEntryEvent(uint32_t documentId, pid_t pid)
-        : TrHiveCommandSimple(TrHiveCommandType::OnLogEntryEvent),
-          level(0),
-          text(""),
-          sourceDocumentId(documentId),
-          sourcePid(pid)
+        : TrHiveCommandSimple(TrHiveCommandType::OnLogEntryEvent)
+        , level(0)
+        , text("")
+        , sourceDocumentId(documentId)
+        , sourcePid(pid)
     {
       auto now = chrono::system_clock::now();
       timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
     }
     TrOnLogEntryEvent(TrOnLogEntryEvent &that)
-        : TrHiveCommandSimple(that),
-          timestamp(that.timestamp),
-          level(that.level),
-          sourceDocumentId(that.sourceDocumentId),
-          sourcePid(that.sourcePid)
+        : TrHiveCommandSimple(that)
+        , timestamp(that.timestamp)
+        , level(that.level)
+        , sourceDocumentId(that.sourceDocumentId)
+        , sourcePid(that.sourcePid)
     {
     }
 

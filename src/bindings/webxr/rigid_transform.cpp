@@ -7,8 +7,10 @@ namespace bindings
   // static
   void XRRigidTransform::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRRigidTransform",
-                                     {InstanceAccessor("inverse", &XRRigidTransform::InverseGetter, nullptr)});
+    Napi::Function tpl = DefineClass(
+      env,
+      "XRRigidTransform",
+      {InstanceAccessor("inverse", &XRRigidTransform::InverseGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -41,7 +43,8 @@ namespace bindings
     return scope.Escape(obj).ToObject();
   }
 
-  XRRigidTransform::XRRigidTransform(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRigidTransform>(info)
+  XRRigidTransform::XRRigidTransform(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRRigidTransform>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -79,14 +82,14 @@ namespace bindings
           else
           {
             Napi::TypeError::New(env, "Illegal constructor: TypedArray must have 16 elements")
-                .ThrowAsJavaScriptException();
+              .ThrowAsJavaScriptException();
             return;
           }
         }
         else
         {
           Napi::TypeError::New(env, "Illegal constructor: TypedArray must be of type Float32Array")
-              .ThrowAsJavaScriptException();
+            .ThrowAsJavaScriptException();
           return;
         }
       }

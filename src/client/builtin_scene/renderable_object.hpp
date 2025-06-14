@@ -17,7 +17,9 @@ namespace builtin_scene
   class Transform : public IRenderableObject
   {
   public:
-    Transform() {}
+    Transform()
+    {
+    }
     virtual ~Transform() = default;
 
   public:

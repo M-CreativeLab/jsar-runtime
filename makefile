@@ -101,6 +101,12 @@ ifeq ($(CRATES_ONLY), no)
 	$(MAKE) -C ./build windows
 endif
 
+lint:
+	@echo "Running tslint..."
+	npm run lint
+	@echo "Running clang-format..."
+	./tools/clang-format-check.sh
+
 test:
 	cargo test
 ifeq ($(CRATES_ONLY), no)

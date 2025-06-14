@@ -24,8 +24,14 @@ namespace dom
     {
       return css_animations_.isEmpty() && animations_.empty();
     }
-    const CSSAnimations &cssAnimations() const { return css_animations_; }
-    CSSAnimations &cssAnimations() { return css_animations_; }
+    const CSSAnimations &cssAnimations() const
+    {
+      return css_animations_;
+    }
+    CSSAnimations &cssAnimations()
+    {
+      return css_animations_;
+    }
 
     // Update the element's animations to the given computed style, and returns whether the style is updated via
     // animations.

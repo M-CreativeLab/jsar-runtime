@@ -27,7 +27,10 @@ namespace events_comm
     }
 
   public:
-    TrNativeEventType getType() { return type; }
+    TrNativeEventType getType()
+    {
+      return type;
+    }
   };
 
   class TrSharedNativeEventBase : public ipc::TrIpcSerializableBase<TrNativeEventMessage, TrNativeEventType>
@@ -48,8 +51,14 @@ namespace events_comm
     }
 
   public:
-    TrSharedNativeEventBase() : TrIpcSerializableBase() {}
-    TrSharedNativeEventBase(TrNativeEventType type, size_t size) : TrIpcSerializableBase(type, size) {}
+    TrSharedNativeEventBase()
+        : TrIpcSerializableBase()
+    {
+    }
+    TrSharedNativeEventBase(TrNativeEventType type, size_t size)
+        : TrIpcSerializableBase(type, size)
+    {
+    }
   };
 
   template <typename InstanceType>
@@ -57,23 +66,28 @@ namespace events_comm
   {
   public:
     TrSharedNativeEvent() = default;
-    TrSharedNativeEvent(TrNativeEventType type) : TrSharedNativeEventBase(type, sizeof(InstanceType)) {}
+    TrSharedNativeEvent(TrNativeEventType type)
+        : TrSharedNativeEventBase(type, sizeof(InstanceType))
+    {
+    }
     /**
      * It creates a shared native event from a native event instance in this process.
      *
      * @param event The native event instance.
      */
     TrSharedNativeEvent(TrNativeEvent &event, uint32_t peerId)
-        : TrSharedNativeEventBase(event.type, sizeof(InstanceType)),
-          eventId(event.id),
-          peerId(peerId),
-          detailJson(event.getDetailJson())
+        : TrSharedNativeEventBase(event.type, sizeof(InstanceType))
+        , eventId(event.id)
+        , peerId(peerId)
+        , detailJson(event.getDetailJson())
     {
       static TrIdGenerator sharedEventIdGen(0xff);
       id = sharedEventIdGen.get();
     }
     TrSharedNativeEvent(TrSharedNativeEvent &that)
-        : TrSharedNativeEventBase(that.type, that.size), eventId(that.eventId), peerId(that.peerId)
+        : TrSharedNativeEventBase(that.type, that.size)
+        , eventId(that.eventId)
+        , peerId(that.peerId)
     {
       id = that.id;
     }

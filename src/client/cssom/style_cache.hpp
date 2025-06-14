@@ -18,6 +18,9 @@ namespace client_cssom
                                                bool useElementStyle = true);
     bool resetStyle(std::shared_ptr<dom::Node> elementOrTextNode);
 
-    inline void invalidateCache() { clear(); }
+    inline void invalidateCache()
+    {
+      clear();
+    }
   };
 }

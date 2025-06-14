@@ -63,8 +63,8 @@ namespace cssombinding
     v8::Local<v8::Function> constructor = Base::Initialize(v8::Isolate::GetCurrent());
 
     env.Global().Set(
-        Napi::String::New(env, "CSSStyleDeclaration"),
-        scripting_base::Value(constructor));
+      Napi::String::New(env, "CSSStyleDeclaration"),
+      scripting_base::Value(constructor));
   }
 
   Napi::Value CSSStyleDeclaration::NewInstance(Napi::Env env, shared_ptr<client_cssom::CSSStyleDeclaration> inner)
@@ -100,7 +100,7 @@ namespace cssombinding
     if (priority == client_cssom::CSSPropertyPriority::Important)
     {
       args.GetReturnValue()
-          .Set(v8::String::NewFromUtf8(isolate, "important").ToLocalChecked());
+        .Set(v8::String::NewFromUtf8(isolate, "important").ToLocalChecked());
     }
     else
     {
@@ -130,12 +130,12 @@ namespace cssombinding
     if (value.empty())
     {
       args.GetReturnValue()
-          .Set(v8::String::Empty(isolate));
+        .Set(v8::String::Empty(isolate));
     }
     else
     {
       args.GetReturnValue()
-          .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
+        .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
     }
   }
 
@@ -185,7 +185,7 @@ namespace cssombinding
     else
     {
       args.GetReturnValue()
-          .Set(v8::String::NewFromUtf8(isolate, result.c_str()).ToLocalChecked());
+        .Set(v8::String::NewFromUtf8(isolate, result.c_str()).ToLocalChecked());
     }
   }
 
@@ -240,7 +240,7 @@ namespace cssombinding
 
     auto cssText = instance->inner()->cssText();
     args.GetReturnValue()
-        .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
+      .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
   }
 
   void CSSStyleDeclaration::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
@@ -248,15 +248,15 @@ namespace cssombinding
     Base::ConfigureFunctionTemplate(isolate, tpl);
 
     tpl->InstanceTemplate()->SetHandler(v8::NamedPropertyHandlerConfiguration(
-        PropertyGetter,         // Getter
-        PropertySetter,         // Setter
-        nullptr,                // Query
-        PropertyDeleter,        // Deleter
-        PropertyEnumerator,     // Enumerator
-        nullptr,                // Definer
-        nullptr,                // Descriptor
-        v8::Local<v8::Value>(), // Data
-        v8::PropertyHandlerFlags::kNone));
+      PropertyGetter,         // Getter
+      PropertySetter,         // Setter
+      nullptr,                // Query
+      PropertyDeleter,        // Deleter
+      PropertyEnumerator,     // Enumerator
+      nullptr,                // Definer
+      nullptr,                // Descriptor
+      v8::Local<v8::Value>(), // Data
+      v8::PropertyHandlerFlags::kNone));
   }
 
   void CSSStyleDeclaration::PropertyGetter(v8::Local<v8::Name> property,
@@ -289,7 +289,7 @@ namespace cssombinding
     {
       auto cssText = instance->inner()->cssText();
       info.GetReturnValue()
-          .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
+        .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
       return;
     }
 
@@ -305,9 +305,9 @@ namespace cssombinding
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "item").ToLocalChecked()))
     {
       info.GetReturnValue()
-          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::Item)
-                   ->GetFunction(context)
-                   .ToLocalChecked());
+        .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::Item)
+               ->GetFunction(context)
+               .ToLocalChecked());
       return;
     }
 
@@ -315,9 +315,9 @@ namespace cssombinding
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "getPropertyValue").ToLocalChecked()))
     {
       info.GetReturnValue()
-          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyValue)
-                   ->GetFunction(context)
-                   .ToLocalChecked());
+        .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyValue)
+               ->GetFunction(context)
+               .ToLocalChecked());
       return;
     }
 
@@ -325,9 +325,9 @@ namespace cssombinding
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "getPropertyPriority").ToLocalChecked()))
     {
       info.GetReturnValue()
-          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyPriority)
-                   ->GetFunction(context)
-                   .ToLocalChecked());
+        .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyPriority)
+               ->GetFunction(context)
+               .ToLocalChecked());
       return;
     }
 
@@ -335,9 +335,9 @@ namespace cssombinding
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "removeProperty").ToLocalChecked()))
     {
       info.GetReturnValue()
-          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::RemoveProperty)
-                   ->GetFunction(context)
-                   .ToLocalChecked());
+        .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::RemoveProperty)
+               ->GetFunction(context)
+               .ToLocalChecked());
       return;
     }
 
@@ -345,9 +345,9 @@ namespace cssombinding
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "setProperty").ToLocalChecked()))
     {
       info.GetReturnValue()
-          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::SetProperty)
-                   ->GetFunction(context)
-                   .ToLocalChecked());
+        .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::SetProperty)
+               ->GetFunction(context)
+               .ToLocalChecked());
       return;
     }
 
@@ -358,13 +358,13 @@ namespace cssombinding
       if (floatValue.empty())
       {
         info.GetReturnValue()
-            .Set(v8::Undefined(isolate));
+          .Set(v8::Undefined(isolate));
         return;
       }
       else
       {
         info.GetReturnValue()
-            .Set(v8::String::NewFromUtf8(isolate, floatValue.c_str()).ToLocalChecked());
+          .Set(v8::String::NewFromUtf8(isolate, floatValue.c_str()).ToLocalChecked());
         return;
       }
     }
@@ -380,17 +380,16 @@ namespace cssombinding
     if (value.empty())
     {
       info.GetReturnValue()
-          .Set(v8::Undefined(isolate));
+        .Set(v8::Undefined(isolate));
     }
     else
     {
       info.GetReturnValue()
-          .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
+        .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
     }
   }
 
-  void CSSStyleDeclaration::PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value,
-                                           const v8::PropertyCallbackInfo<v8::Value> &info)
+  void CSSStyleDeclaration::PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
@@ -480,18 +479,18 @@ namespace cssombinding
       {
         auto key = v8::String::NewFromUtf8(isolate,
                                            kebab_to_camel_case(decls->item(index)).c_str())
-                       .ToLocalChecked();
+                     .ToLocalChecked();
         keys->Set(context, index, key).FromJust();
       }
     }
 
     // Append accessors
     keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked())
-        .FromJust();
+      .FromJust();
     keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "cssText").ToLocalChecked())
-        .FromJust();
+      .FromJust();
     keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "length").ToLocalChecked())
-        .FromJust();
+      .FromJust();
 
     info.GetReturnValue().Set(keys);
   }

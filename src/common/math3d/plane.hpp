@@ -14,13 +14,27 @@ namespace math3d
   {
   public:
     TrPlane() = default;
-    TrPlane(const glm::vec3 &normal, float d) : normal(normal), d(d) {}
-    TrPlane(float a, float b, float c, float d) : normal(a, b, c), d(d) {}
+    TrPlane(const glm::vec3 &normal, float d)
+        : normal(normal)
+        , d(d)
+    {
+    }
+    TrPlane(float a, float b, float c, float d)
+        : normal(a, b, c)
+        , d(d)
+    {
+    }
     ~TrPlane() = default;
 
   public:
-    TrPlane copy() const { return TrPlane(*this); }
-    std::array<float, 4> asArray() const { return {{normal.x, normal.y, normal.z, d}}; }
+    TrPlane copy() const
+    {
+      return TrPlane(*this);
+    }
+    std::array<float, 4> asArray() const
+    {
+      return {{normal.x, normal.y, normal.z, d}};
+    }
     TrPlane &normalize()
     {
       const float norm = sqrtf((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));

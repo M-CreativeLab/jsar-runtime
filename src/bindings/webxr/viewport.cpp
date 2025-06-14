@@ -7,11 +7,13 @@ namespace bindings
   // static
   void XRViewport::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRViewport",
-                                     {InstanceValue("width", Napi::Number::New(env, 0), napi_default_jsproperty),
-                                      InstanceValue("height", Napi::Number::New(env, 0), napi_default_jsproperty),
-                                      InstanceValue("x", Napi::Number::New(env, 0), napi_default_jsproperty),
-                                      InstanceValue("y", Napi::Number::New(env, 0), napi_default_jsproperty)});
+    Napi::Function tpl = DefineClass(
+      env,
+      "XRViewport",
+      {InstanceValue("width", Napi::Number::New(env, 0), napi_default_jsproperty),
+       InstanceValue("height", Napi::Number::New(env, 0), napi_default_jsproperty),
+       InstanceValue("x", Napi::Number::New(env, 0), napi_default_jsproperty),
+       InstanceValue("y", Napi::Number::New(env, 0), napi_default_jsproperty)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -32,7 +34,8 @@ namespace bindings
     return scope.Escape(obj).ToObject();
   }
 
-  XRViewport::XRViewport(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRViewport>(info)
+  XRViewport::XRViewport(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRViewport>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

@@ -61,9 +61,9 @@ public:
    * @param maxId The maximum id value, and the default value is `TrIdTraits<IdType>::MaxId`.
    */
   TrIdGeneratorBase(IdType initialId = 0, IdType maxId = TrIdTraits<IdType>::MaxId)
-      : counter_(initialId),
-        initialId_(initialId),
-        maxId_(maxId)
+      : counter_(initialId)
+      , initialId_(initialId)
+      , maxId_(maxId)
   {
     if (maxId_ < initialId_)
       throw std::runtime_error("The maximum id value should be greater than the initial id value.");
@@ -85,12 +85,18 @@ public:
   /**
    * @returns a `IdType` value that represents the minimum id value, namely the `initialId`.
    */
-  [[nodiscard]] IdType min() const noexcept { return initialId_; }
+  [[nodiscard]] IdType min() const noexcept
+  {
+    return initialId_;
+  }
 
   /**
    * @returns a `IdType` value that represents the maximum id value, namely the `maxId`.
    */
-  [[nodiscard]] IdType max() const noexcept { return maxId_; }
+  [[nodiscard]] IdType max() const noexcept
+  {
+    return maxId_;
+  }
 
 private:
   IdType counter_;   // Current counter value

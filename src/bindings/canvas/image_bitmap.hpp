@@ -20,7 +20,11 @@ namespace canvasbinding
   private:
     static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);
     static Napi::Value OnBlobArrayBufferCallback(const Napi::CallbackInfo &info,
-                                                 float sx, float sy, float sw, float sh, const std::string blobType);
+                                                 float sx,
+                                                 float sy,
+                                                 float sw,
+                                                 float sh,
+                                                 const std::string blobType);
     static Napi::Value OnBlobRejectionCallback(const Napi::CallbackInfo &info);
     Napi::Value Close(const Napi::CallbackInfo &info);
 

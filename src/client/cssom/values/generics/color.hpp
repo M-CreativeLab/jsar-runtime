@@ -30,16 +30,25 @@ namespace client_cssom::values::generics
       }
       static AbsoluteColorVariant From(const SkColor color)
       {
-        return AbsoluteColorVariant{kAbsolute, glm::u32vec4(SkColorGetR(color),
-                                                            SkColorGetG(color),
-                                                            SkColorGetB(color),
-                                                            SkColorGetA(color))};
+        return AbsoluteColorVariant{kAbsolute, glm::u32vec4(SkColorGetR(color), SkColorGetG(color), SkColorGetB(color), SkColorGetA(color))};
       }
 
-      inline uint32_t r() const { return rgba.r; }
-      inline uint32_t g() const { return rgba.g; }
-      inline uint32_t b() const { return rgba.b; }
-      inline uint32_t a() const { return rgba.a; }
+      inline uint32_t r() const
+      {
+        return rgba.r;
+      }
+      inline uint32_t g() const
+      {
+        return rgba.g;
+      }
+      inline uint32_t b() const
+      {
+        return rgba.b;
+      }
+      inline uint32_t a() const
+      {
+        return rgba.a;
+      }
     };
 
     struct ColorFunctionVariant
@@ -93,9 +102,18 @@ namespace client_cssom::values::generics
     }
 
   public:
-    inline bool isAbsolute() const { return std::holds_alternative<AbsoluteColorVariant>(variant_); }
-    inline bool isColorFunction() const { return std::holds_alternative<ColorFunctionVariant>(variant_); }
-    inline bool isCurrentColor() const { return std::holds_alternative<CurrentColorVariant>(variant_); }
+    inline bool isAbsolute() const
+    {
+      return std::holds_alternative<AbsoluteColorVariant>(variant_);
+    }
+    inline bool isColorFunction() const
+    {
+      return std::holds_alternative<ColorFunctionVariant>(variant_);
+    }
+    inline bool isCurrentColor() const
+    {
+      return std::holds_alternative<CurrentColorVariant>(variant_);
+    }
 
     inline SkColor getAbsoluteColor() const
     {

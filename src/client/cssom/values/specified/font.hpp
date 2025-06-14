@@ -39,9 +39,9 @@ namespace client_cssom::values::specified
   {
   public:
     KeywordInfo(FontSizeKeyword keyword)
-        : keyword(keyword),
-          factor(0.0f),
-          offset(0.0f)
+        : keyword(keyword)
+        , factor(0.0f)
+        , offset(0.0f)
     {
     }
 
@@ -220,8 +220,14 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static AbsoluteFontWeight Normal() { return AbsoluteFontWeight(kNormal, 400); }
-    static AbsoluteFontWeight Bold() { return AbsoluteFontWeight(kBold, 700); }
+    static AbsoluteFontWeight Normal()
+    {
+      return AbsoluteFontWeight(kNormal, 400);
+    }
+    static AbsoluteFontWeight Bold()
+    {
+      return AbsoluteFontWeight(kBold, 700);
+    }
     static AbsoluteFontWeight Weight(int weight_number)
     {
       if (weight_number < 1 || weight_number > 1000)
@@ -231,8 +237,8 @@ namespace client_cssom::values::specified
 
   private:
     AbsoluteFontWeight(Tag tag, float weight_number)
-        : tag_(tag),
-          weight_number_(weight_number)
+        : tag_(tag)
+        , weight_number_(weight_number)
     {
     }
 

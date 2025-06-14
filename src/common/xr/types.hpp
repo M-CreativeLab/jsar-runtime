@@ -31,24 +31,30 @@ namespace xr
   class TrXRFrameRenderingInfo
   {
   public:
-    TrXRFrameRenderingInfo() : sessionId(0),
-                               stereoId(0),
-                               viewIndex(-1)
+    TrXRFrameRenderingInfo()
+        : sessionId(0)
+        , stereoId(0)
+        , viewIndex(-1)
     {
     }
-    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that) : sessionId(that.sessionId),
-                                                           stereoId(that.stereoId),
-                                                           viewIndex(that.viewIndex)
+    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that)
+        : sessionId(that.sessionId)
+        , stereoId(that.stereoId)
+        , viewIndex(that.viewIndex)
     {
     }
-    TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex) : sessionId(sessionId),
-                                                                              stereoId(stereoId),
-                                                                              viewIndex(viewIndex)
+    TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex)
+        : sessionId(sessionId)
+        , stereoId(stereoId)
+        , viewIndex(viewIndex)
     {
     }
 
   public:
-    inline bool isValid() { return sessionId > 0 && viewIndex >= 0; }
+    inline bool isValid()
+    {
+      return sessionId > 0 && viewIndex >= 0;
+    }
     inline string toString()
     {
       return "Info(session=" + std::to_string(sessionId) + "," +
@@ -69,19 +75,22 @@ namespace xr
 
   public:
     TrXRFrameRequest(TrXRFrameRequest &that)
-        : TrFrameRequestSimple(that),
-          sessionId(that.sessionId),
-          stereoId(that.stereoId),
-          viewIndex(that.viewIndex),
-          views{that.views[0], that.views[1]},
-          framebufferId(that.framebufferId),
-          framebufferWidth(that.framebufferWidth),
-          framebufferHeight(that.framebufferHeight)
+        : TrFrameRequestSimple(that)
+        , sessionId(that.sessionId)
+        , stereoId(that.stereoId)
+        , viewIndex(that.viewIndex)
+        , views{that.views[0], that.views[1]}
+        , framebufferId(that.framebufferId)
+        , framebufferWidth(that.framebufferWidth)
+        , framebufferHeight(that.framebufferHeight)
     {
       setLocalBaseMatrix(that.localBaseMatrix);
       setViewerBaseMatrix(that.viewerBaseMatrix);
     }
-    TrXRFrameRequest() : TrFrameRequestSimple(TrFrameRequestType::XRFrame) {}
+    TrXRFrameRequest()
+        : TrFrameRequestSimple(TrFrameRequestType::XRFrame)
+    {
+    }
 
   public: // Methods for server-side only
     /**
@@ -112,16 +121,25 @@ namespace xr
       for (int i = 0; i < 16; i++)
         localBaseMatrix[i] = matrixFloats[i];
     }
-    void setLocalBaseMatrix(glm::mat4 matrix) { setLocalBaseMatrix(glm::value_ptr(matrix)); }
+    void setLocalBaseMatrix(glm::mat4 matrix)
+    {
+      setLocalBaseMatrix(glm::value_ptr(matrix));
+    }
     void setViewerBaseMatrix(float *matrixFloats)
     {
       for (int i = 0; i < 16; i++)
         viewerBaseMatrix[i] = matrixFloats[i];
     }
-    void setViewerBaseMatrix(glm::mat4 matrix) { setViewerBaseMatrix(glm::value_ptr(matrix)); }
+    void setViewerBaseMatrix(glm::mat4 matrix)
+    {
+      setViewerBaseMatrix(glm::value_ptr(matrix));
+    }
 
   public: // Methods for client-side only: read matrices
-    TrXRFrameRenderingInfo createRenderingInfo(int viewIndex) { return TrXRFrameRenderingInfo(sessionId, stereoId, viewIndex); }
+    TrXRFrameRenderingInfo createRenderingInfo(int viewIndex)
+    {
+      return TrXRFrameRenderingInfo(sessionId, stereoId, viewIndex);
+    }
 
   public:
     uint32_t sessionId;

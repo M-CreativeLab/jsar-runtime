@@ -34,26 +34,29 @@ namespace webaudio
   void AudioContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::HandleScope scope(env);
-    Napi::Function tpl = DefineClass(env, "AudioContext", {
-                                                              InstanceMethod("createMediaElementSource", &AudioContext::CreateMediaElementSource),
-                                                              InstanceMethod("createMediaStreamSource", &AudioContext::CreateMediaStreamSource),
-                                                              InstanceMethod("createMediaStreamDestination", &AudioContext::CreateMediaStreamDestination),
-                                                              InstanceMethod("createMediaStreamTrackSource", &AudioContext::CreateMediaStreamTrackSource),
-                                                              InstanceMethod("createGain", &AudioContext::CreateGain),
-                                                              InstanceMethod("createAnalyser", &AudioContext::CreateAnalyser),
-                                                              InstanceMethod("createPanner", &AudioContext::CreatePanner),
-                                                              InstanceMethod("createStereoPanner", &AudioContext::CreateStereoPanner),
-                                                              InstanceMethod("createOscillator", &AudioContext::CreateOscillator),
-                                                              InstanceMethod("createBuffer", &AudioContext::CreateBuffer),
-                                                              InstanceMethod("createEmptyBuffer", &AudioContext::CreateEmptyBuffer),
-                                                              InstanceMethod("createBufferSource", &AudioContext::CreateBufferSource),
-                                                              InstanceMethod("createScriptProcessor", &AudioContext::CreateScriptProcessor),
-                                                              InstanceMethod("suspend", &AudioContext::Suspend),
-                                                              InstanceMethod("resume", &AudioContext::Resume),
-                                                              InstanceMethod("close", &AudioContext::Close),
-                                                              InstanceAccessor("currentTime", &AudioContext::CurrentTimeGetter, nullptr),
-                                                              InstanceAccessor("sampleRate", &AudioContext::SampleRateGetter, nullptr),
-                                                          });
+    Napi::Function tpl = DefineClass(
+      env,
+      "AudioContext",
+      {
+        InstanceMethod("createMediaElementSource", &AudioContext::CreateMediaElementSource),
+        InstanceMethod("createMediaStreamSource", &AudioContext::CreateMediaStreamSource),
+        InstanceMethod("createMediaStreamDestination", &AudioContext::CreateMediaStreamDestination),
+        InstanceMethod("createMediaStreamTrackSource", &AudioContext::CreateMediaStreamTrackSource),
+        InstanceMethod("createGain", &AudioContext::CreateGain),
+        InstanceMethod("createAnalyser", &AudioContext::CreateAnalyser),
+        InstanceMethod("createPanner", &AudioContext::CreatePanner),
+        InstanceMethod("createStereoPanner", &AudioContext::CreateStereoPanner),
+        InstanceMethod("createOscillator", &AudioContext::CreateOscillator),
+        InstanceMethod("createBuffer", &AudioContext::CreateBuffer),
+        InstanceMethod("createEmptyBuffer", &AudioContext::CreateEmptyBuffer),
+        InstanceMethod("createBufferSource", &AudioContext::CreateBufferSource),
+        InstanceMethod("createScriptProcessor", &AudioContext::CreateScriptProcessor),
+        InstanceMethod("suspend", &AudioContext::Suspend),
+        InstanceMethod("resume", &AudioContext::Resume),
+        InstanceMethod("close", &AudioContext::Close),
+        InstanceAccessor("currentTime", &AudioContext::CurrentTimeGetter, nullptr),
+        InstanceAccessor("sampleRate", &AudioContext::SampleRateGetter, nullptr),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -62,15 +65,18 @@ namespace webaudio
     exports.Set("AudioContext", tpl);
   }
 
-  AudioContext::AudioContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<AudioContext>(info)
+  AudioContext::AudioContext(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<AudioContext>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     audioContext = lab::MakeRealtimeAudioContext(
-        lab::GetDefaultOutputAudioDeviceConfiguration(),
-        lab::GetDefaultInputAudioDeviceConfiguration());
+      lab::GetDefaultOutputAudioDeviceConfiguration(),
+      lab::GetDefaultInputAudioDeviceConfiguration());
   }
-  AudioContext::~AudioContext() {}
+  AudioContext::~AudioContext()
+  {
+  }
 
   Napi::Value AudioContext::CreateMediaElementSource(const Napi::CallbackInfo &info)
   {

@@ -23,16 +23,19 @@ namespace client_cssom::values::computed
 
   public:
     Context(std::shared_ptr<dom::Node> element_or_text_node)
-        : element_or_text_node_(element_or_text_node),
-          device_(GetDevice(element_or_text_node)),
-          reset_style_(GetDefaultStyleRef(element_or_text_node)),
-          in_media_query_(false),
-          in_container_query_(false)
+        : element_or_text_node_(element_or_text_node)
+        , device_(GetDevice(element_or_text_node))
+        , reset_style_(GetDefaultStyleRef(element_or_text_node))
+        , in_media_query_(false)
+        , in_container_query_(false)
     {
     }
 
   public:
-    inline float rootFontSize() const { return device_.rootFontSize(); }
+    inline float rootFontSize() const
+    {
+      return device_.rootFontSize();
+    }
     float baseFontSize() const
     {
       std::shared_ptr<dom::Node> node = element_or_text_node_.lock();
@@ -62,7 +65,10 @@ namespace client_cssom::values::computed
       // Unreachable case
       assert(false && "Unreachable");
     }
-    inline int baseFontWeight() const { return 400; }
+    inline int baseFontWeight() const
+    {
+      return 400;
+    }
     inline float baseLineHeight() const
     {
       std::shared_ptr<dom::Node> node = element_or_text_node_.lock();
@@ -92,7 +98,10 @@ namespace client_cssom::values::computed
       // Unreachable case
       assert(false && "Unreachable");
     }
-    inline float rootLineHeight() const { return device_.rootLineHeight(); }
+    inline float rootLineHeight() const
+    {
+      return device_.rootLineHeight();
+    }
     inline glm::uvec4 baseViewport() const
     {
       auto device_viewport = device_.viewportSize();
@@ -142,7 +151,10 @@ namespace client_cssom::values::computed
       return nullptr;
     }
 
-    inline const std::optional<ComputedStyle> resetStyle() const { return reset_style_; }
+    inline const std::optional<ComputedStyle> resetStyle() const
+    {
+      return reset_style_;
+    }
     // The parent element's adopted style should be inherited by the child element.
     // This method returns the inherited style from the parent element.
     inline const std::optional<ComputedStyle> inheritedStyle() const

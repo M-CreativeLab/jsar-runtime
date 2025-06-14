@@ -38,19 +38,19 @@ namespace client_layout
   }
 
   LayoutView::LayoutView(shared_ptr<dom::Document> document, const Window &window)
-      : LayoutBlockFlow(document),
-        viewport(window.innerWidth(), window.innerHeight(), window.innerDepth()),
-        taffy_node_allocator_(make_shared<crates::layout2::Allocator>()),
-        hit_test_count_(0),
-        hit_test_cache_hits_(0),
-        hit_test_cache_(make_unique<HitTestCache>())
+      : LayoutBlockFlow(document)
+      , viewport(window.innerWidth(), window.innerHeight(), window.innerDepth())
+      , taffy_node_allocator_(make_shared<crates::layout2::Allocator>())
+      , hit_test_count_(0)
+      , hit_test_cache_hits_(0)
+      , hit_test_cache_(make_unique<HitTestCache>())
   {
   }
 
   bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
   {
     function<void(LayoutObject &, const LayoutObject &)> traverseChildNode =
-        [&traverseChildNode](LayoutObject &object, const LayoutObject &parent)
+      [&traverseChildNode](LayoutObject &object, const LayoutObject &parent)
     {
       if (object.isNone())
         return;
@@ -129,7 +129,7 @@ namespace client_layout
 
     int depth = 1;
     function<void(const LayoutObject &)> printObject =
-        [&options, &depth, &printObject](const LayoutObject &object)
+      [&options, &depth, &printObject](const LayoutObject &object)
     {
       string prefixSpaces = "";
       for (int i = 0; i < depth; i++)
@@ -187,7 +187,8 @@ namespace client_layout
       debugPrintFormattingContext();
   }
 
-  shared_ptr<LayoutBoxModelObject> LayoutView::createBox(const string &displayStr, shared_ptr<dom::Element> element,
+  shared_ptr<LayoutBoxModelObject> LayoutView::createBox(const string &displayStr,
+                                                         shared_ptr<dom::Element> element,
                                                          shared_ptr<LayoutBlock> parentBlock,
                                                          shared_ptr<LayoutObject> beforeObject)
   {

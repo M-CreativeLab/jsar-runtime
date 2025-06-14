@@ -12,11 +12,11 @@ namespace commandbuffers
   public:
     SetViewportCommandBufferRequest() = delete;
     SetViewportCommandBufferRequest(int x, int y, int width, int height)
-        : TrCommandBufferSimpleRequest(),
-          x(x),
-          y(y),
-          width(width),
-          height(height)
+        : TrCommandBufferSimpleRequest()
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
     {
     }
 
@@ -34,11 +34,11 @@ namespace commandbuffers
   public:
     SetScissorCommandBufferRequest() = delete;
     SetScissorCommandBufferRequest(int x, int y, int width, int height)
-        : TrCommandBufferSimpleRequest(),
-          x(x),
-          y(y),
-          width(width),
-          height(height)
+        : TrCommandBufferSimpleRequest()
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
     {
     }
 
@@ -55,9 +55,9 @@ namespace commandbuffers
   public:
     HintCommandBufferRequest() = delete;
     HintCommandBufferRequest(int target, int mode)
-        : TrCommandBufferSimpleRequest(),
-          target(target),
-          mode(mode)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , mode(mode)
     {
     }
 
@@ -72,8 +72,8 @@ namespace commandbuffers
   public:
     LineWidthCommandBufferRequest() = delete;
     LineWidthCommandBufferRequest(float width)
-        : TrCommandBufferSimpleRequest(),
-          width(width)
+        : TrCommandBufferSimpleRequest()
+        , width(width)
     {
     }
 
@@ -87,9 +87,9 @@ namespace commandbuffers
   public:
     PixelStoreiCommandBufferRequest() = delete;
     PixelStoreiCommandBufferRequest(int pname, int param)
-        : TrCommandBufferSimpleRequest(),
-          pname(pname),
-          param(param)
+        : TrCommandBufferSimpleRequest()
+        , pname(pname)
+        , param(param)
     {
     }
 
@@ -104,9 +104,9 @@ namespace commandbuffers
   public:
     PolygonOffsetCommandBufferRequest() = delete;
     PolygonOffsetCommandBufferRequest(float factor, float units)
-        : TrCommandBufferSimpleRequest(),
-          factor(factor),
-          units(units)
+        : TrCommandBufferSimpleRequest()
+        , factor(factor)
+        , units(units)
     {
     }
 
@@ -121,8 +121,8 @@ namespace commandbuffers
   public:
     DepthMaskCommandBufferRequest() = delete;
     DepthMaskCommandBufferRequest(bool flag)
-        : TrCommandBufferSimpleRequest(),
-          flag(flag)
+        : TrCommandBufferSimpleRequest()
+        , flag(flag)
     {
     }
 
@@ -136,8 +136,8 @@ namespace commandbuffers
   public:
     DepthFuncCommandBufferRequest() = delete;
     DepthFuncCommandBufferRequest(int func)
-        : TrCommandBufferSimpleRequest(),
-          func(func)
+        : TrCommandBufferSimpleRequest()
+        , func(func)
     {
     }
 
@@ -151,9 +151,9 @@ namespace commandbuffers
   public:
     DepthRangeCommandBufferRequest() = delete;
     DepthRangeCommandBufferRequest(float n, float f)
-        : TrCommandBufferSimpleRequest(),
-          n(n),
-          f(f)
+        : TrCommandBufferSimpleRequest()
+        , n(n)
+        , f(f)
     {
     }
 
@@ -168,10 +168,10 @@ namespace commandbuffers
   public:
     StencilFuncCommandBufferRequest() = delete;
     StencilFuncCommandBufferRequest(int func, int ref, int mask)
-        : TrCommandBufferSimpleRequest(),
-          func(func),
-          ref(ref),
-          mask(mask)
+        : TrCommandBufferSimpleRequest()
+        , func(func)
+        , ref(ref)
+        , mask(mask)
     {
     }
 
@@ -188,11 +188,11 @@ namespace commandbuffers
   public:
     StencilFuncSeparateCommandBufferRequest() = delete;
     StencilFuncSeparateCommandBufferRequest(int face, int func, int ref, int mask)
-        : TrCommandBufferSimpleRequest(),
-          face(face),
-          func(func),
-          ref(ref),
-          mask(mask)
+        : TrCommandBufferSimpleRequest()
+        , face(face)
+        , func(func)
+        , ref(ref)
+        , mask(mask)
     {
     }
 
@@ -210,8 +210,8 @@ namespace commandbuffers
   public:
     StencilMaskCommandBufferRequest() = delete;
     StencilMaskCommandBufferRequest(int mask)
-        : TrCommandBufferSimpleRequest(),
-          mask(mask)
+        : TrCommandBufferSimpleRequest()
+        , mask(mask)
     {
     }
 
@@ -226,9 +226,9 @@ namespace commandbuffers
   public:
     StencilMaskSeparateCommandBufferRequest() = delete;
     StencilMaskSeparateCommandBufferRequest(int face, int mask)
-        : TrCommandBufferSimpleRequest(),
-          face(face),
-          mask(mask)
+        : TrCommandBufferSimpleRequest()
+        , face(face)
+        , mask(mask)
     {
     }
 
@@ -243,10 +243,10 @@ namespace commandbuffers
   public:
     StencilOpCommandBufferRequest() = delete;
     StencilOpCommandBufferRequest(int fail, int zfail, int zpass)
-        : TrCommandBufferSimpleRequest(),
-          fail(fail),
-          zfail(zfail),
-          zpass(zpass)
+        : TrCommandBufferSimpleRequest()
+        , fail(fail)
+        , zfail(zfail)
+        , zpass(zpass)
     {
     }
 
@@ -263,11 +263,11 @@ namespace commandbuffers
   public:
     StencilOpSeparateCommandBufferRequest() = delete;
     StencilOpSeparateCommandBufferRequest(int face, int fail, int zfail, int zpass)
-        : TrCommandBufferSimpleRequest(),
-          face(face),
-          fail(fail),
-          zfail(zfail),
-          zpass(zpass)
+        : TrCommandBufferSimpleRequest()
+        , face(face)
+        , fail(fail)
+        , zfail(zfail)
+        , zpass(zpass)
     {
     }
 
@@ -284,11 +284,11 @@ namespace commandbuffers
   public:
     BlendColorCommandBufferRequest() = delete;
     BlendColorCommandBufferRequest(float red, float green, float blue, float alpha)
-        : TrCommandBufferSimpleRequest(),
-          red(red),
-          green(green),
-          blue(blue),
-          alpha(alpha)
+        : TrCommandBufferSimpleRequest()
+        , red(red)
+        , green(green)
+        , blue(blue)
+        , alpha(alpha)
     {
     }
 
@@ -305,8 +305,8 @@ namespace commandbuffers
   public:
     BlendEquationCommandBufferRequest() = delete;
     BlendEquationCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
     {
     }
 
@@ -321,9 +321,9 @@ namespace commandbuffers
   public:
     BlendEquationSeparateCommandBufferRequest() = delete;
     BlendEquationSeparateCommandBufferRequest(int modeRGB, int modeAlpha)
-        : TrCommandBufferSimpleRequest(),
-          modeRGB(modeRGB),
-          modeAlpha(modeAlpha)
+        : TrCommandBufferSimpleRequest()
+        , modeRGB(modeRGB)
+        , modeAlpha(modeAlpha)
     {
     }
 
@@ -338,9 +338,9 @@ namespace commandbuffers
   public:
     BlendFuncCommandBufferRequest() = delete;
     BlendFuncCommandBufferRequest(int sfactor, int dfactor)
-        : TrCommandBufferSimpleRequest(),
-          sfactor(sfactor),
-          dfactor(dfactor)
+        : TrCommandBufferSimpleRequest()
+        , sfactor(sfactor)
+        , dfactor(dfactor)
     {
     }
 
@@ -356,11 +356,11 @@ namespace commandbuffers
   public:
     BlendFuncSeparateCommandBufferRequest() = delete;
     BlendFuncSeparateCommandBufferRequest(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
-        : TrCommandBufferSimpleRequest(),
-          srcRGB(srcRGB),
-          dstRGB(dstRGB),
-          srcAlpha(srcAlpha),
-          dstAlpha(dstAlpha)
+        : TrCommandBufferSimpleRequest()
+        , srcRGB(srcRGB)
+        , dstRGB(dstRGB)
+        , srcAlpha(srcAlpha)
+        , dstAlpha(dstAlpha)
     {
     }
 
@@ -378,11 +378,11 @@ namespace commandbuffers
   public:
     ColorMaskCommandBufferRequest() = delete;
     ColorMaskCommandBufferRequest(bool red, bool green, bool blue, bool alpha)
-        : TrCommandBufferSimpleRequest(),
-          red(red),
-          green(green),
-          blue(blue),
-          alpha(alpha)
+        : TrCommandBufferSimpleRequest()
+        , red(red)
+        , green(green)
+        , blue(blue)
+        , alpha(alpha)
     {
     }
 
@@ -399,8 +399,8 @@ namespace commandbuffers
   public:
     CullFaceCommandBufferRequest() = delete;
     CullFaceCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
     {
     }
 
@@ -414,8 +414,8 @@ namespace commandbuffers
   public:
     FrontFaceCommandBufferRequest() = delete;
     FrontFaceCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
     {
     }
 
@@ -430,8 +430,8 @@ namespace commandbuffers
   public:
     CapabilityCommandBufferRequest() = delete;
     CapabilityCommandBufferRequest(int cap)
-        : TrCommandBufferSimpleRequest<Derived, Type>(),
-          cap(cap)
+        : TrCommandBufferSimpleRequest<Derived, Type>()
+        , cap(cap)
     {
     }
 
