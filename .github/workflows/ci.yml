@@ -51,5 +51,3 @@ jobs:
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
-      - name: Build jsbundle for darwin
-        run: make jsbundle darwin
