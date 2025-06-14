@@ -25,9 +25,9 @@ namespace dombinding
     using T = HTMLTemplateElement;
     auto props = HTMLElementBase<HTMLTemplateElement, dom::HTMLTemplateElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLTemplateElement>>(
-        {
-            T::InstanceAccessor("content", &T::ContentGetter, nullptr),
-        });
+      {
+        T::InstanceAccessor("content", &T::ContentGetter, nullptr),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

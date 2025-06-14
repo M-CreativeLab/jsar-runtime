@@ -217,10 +217,10 @@ namespace client_cssom
         index < transition_timing_functions_.size())
     {
       return TransitionProperty{
-          property,
-          transition_durations_[index],
-          transition_delays_[index],
-          transition_timing_functions_[index]};
+        property,
+        transition_durations_[index],
+        transition_delays_[index],
+        transition_timing_functions_[index]};
     }
     return std::nullopt;
   }
@@ -312,55 +312,55 @@ namespace client_cssom
     // border-width
     else if (name == "border-top-width")
       border_width_.top() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
-                                .toComputedValue(context);
+                              .toComputedValue(context);
     else if (name == "border-right-width")
       border_width_.right() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
-                                  .toComputedValue(context);
+                                .toComputedValue(context);
     else if (name == "border-bottom-width")
       border_width_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
-                                   .toComputedValue(context);
+                                 .toComputedValue(context);
     else if (name == "border-left-width")
       border_width_.left() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
-                                 .toComputedValue(context);
+                               .toComputedValue(context);
     // border-style
     else if (name == "border-top-style")
       border_style_.top() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
-                                .toComputedValue(context);
+                              .toComputedValue(context);
     else if (name == "border-right-style")
       border_style_.right() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
-                                  .toComputedValue(context);
+                                .toComputedValue(context);
     else if (name == "border-bottom-style")
       border_style_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
-                                   .toComputedValue(context);
+                                 .toComputedValue(context);
     else if (name == "border-left-style")
       border_style_.left() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
-                                 .toComputedValue(context);
+                               .toComputedValue(context);
     // border-color
     else if (name == "border-top-color")
       border_color_.top() = Parse::ParseSingleValue<values::specified::Color>(value)
-                                .toComputedValue(context);
+                              .toComputedValue(context);
     else if (name == "border-right-color")
       border_color_.right() = Parse::ParseSingleValue<values::specified::Color>(value)
-                                  .toComputedValue(context);
+                                .toComputedValue(context);
     else if (name == "border-bottom-color")
       border_color_.bottom() = Parse::ParseSingleValue<values::specified::Color>(value)
-                                   .toComputedValue(context);
+                                 .toComputedValue(context);
     else if (name == "border-left-color")
       border_color_.left() = Parse::ParseSingleValue<values::specified::Color>(value)
-                                 .toComputedValue(context);
+                               .toComputedValue(context);
     // border-radius
     else if (name == "border-top-left-radius")
       border_radius_.topLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
-                                     .toComputedValue(context);
+                                   .toComputedValue(context);
     else if (name == "border-top-right-radius")
       border_radius_.topRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
-                                      .toComputedValue(context);
+                                    .toComputedValue(context);
     else if (name == "border-bottom-left-radius")
       border_radius_.bottomLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
-                                        .toComputedValue(context);
+                                      .toComputedValue(context);
     else if (name == "border-bottom-right-radius")
       border_radius_.bottomRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
-                                         .toComputedValue(context);
+                                       .toComputedValue(context);
 
     // Font properties
     if (name == "font-family")
@@ -430,22 +430,22 @@ namespace client_cssom
     else if (name == "transition-property")
     {
       transition_properties_ = Parse::ParseSingleValue<values::specified::TransitionPropertySet>(value)
-                                   .toComputedValue(context);
+                                 .toComputedValue(context);
     }
     else if (name == "transition-duration")
     {
       transition_durations_ = Parse::ParseValuesArray<values::specified::Time>(value)
-                                  .toComputedValues<values::computed::Time>(context);
+                                .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-delay")
     {
       transition_delays_ = Parse::ParseValuesArray<values::specified::Time>(value)
-                               .toComputedValues<values::computed::Time>(context);
+                             .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-timing-function")
     {
       transition_timing_functions_ = Parse::ParseValuesArray<values::specified::TimingFunction>(value)
-                                         .toComputedValues<values::computed::TimingFunction>(context);
+                                       .toComputedValues<values::computed::TimingFunction>(context);
     }
   }
 

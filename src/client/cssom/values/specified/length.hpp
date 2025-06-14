@@ -51,23 +51,47 @@ namespace client_cssom::values::specified
     static constexpr const char *UNIT_PC = "pc";
 
   public:
-    static AbsoluteLength Px(float value) { return AbsoluteLength(kPx, value); }
-    static AbsoluteLength In(float value) { return AbsoluteLength(kIn, value); }
-    static AbsoluteLength Cm(float value) { return AbsoluteLength(kCm, value); }
-    static AbsoluteLength Mm(float value) { return AbsoluteLength(kMm, value); }
-    static AbsoluteLength Q(float value) { return AbsoluteLength(kQ, value); }
-    static AbsoluteLength Pt(float value) { return AbsoluteLength(kPt, value); }
-    static AbsoluteLength Pc(float value) { return AbsoluteLength(kPc, value); }
+    static AbsoluteLength Px(float value)
+    {
+      return AbsoluteLength(kPx, value);
+    }
+    static AbsoluteLength In(float value)
+    {
+      return AbsoluteLength(kIn, value);
+    }
+    static AbsoluteLength Cm(float value)
+    {
+      return AbsoluteLength(kCm, value);
+    }
+    static AbsoluteLength Mm(float value)
+    {
+      return AbsoluteLength(kMm, value);
+    }
+    static AbsoluteLength Q(float value)
+    {
+      return AbsoluteLength(kQ, value);
+    }
+    static AbsoluteLength Pt(float value)
+    {
+      return AbsoluteLength(kPt, value);
+    }
+    static AbsoluteLength Pc(float value)
+    {
+      return AbsoluteLength(kPc, value);
+    }
 
   private:
     AbsoluteLength(Tag tag, float value)
-        : tag_(tag),
-          unitless_value_(value)
+        : tag_(tag)
+        , unitless_value_(value)
     {
     }
 
   public:
-    inline float unitlessValue() const { return unitless_value_; }
+    inline float unitlessValue() const
+    {
+      return unitless_value_;
+    }
     inline const char *unit() const
     {
       switch (tag_)
@@ -144,24 +168,51 @@ namespace client_cssom::values::specified
     static constexpr const char *UNIT_RLH = "rlh";
 
   public:
-    static FontRelativeLength Em(float value) { return FontRelativeLength(kEm, value); }
-    static FontRelativeLength Ex(float value) { return FontRelativeLength(kEx, value); }
-    static FontRelativeLength Ch(float value) { return FontRelativeLength(kCh, value); }
-    static FontRelativeLength Cap(float value) { return FontRelativeLength(kCap, value); }
-    static FontRelativeLength Ic(float value) { return FontRelativeLength(kIc, value); }
-    static FontRelativeLength Rem(float value) { return FontRelativeLength(kRem, value); }
-    static FontRelativeLength Lh(float value) { return FontRelativeLength(kLh, value); }
-    static FontRelativeLength Rlh(float value) { return FontRelativeLength(kRlh, value); }
+    static FontRelativeLength Em(float value)
+    {
+      return FontRelativeLength(kEm, value);
+    }
+    static FontRelativeLength Ex(float value)
+    {
+      return FontRelativeLength(kEx, value);
+    }
+    static FontRelativeLength Ch(float value)
+    {
+      return FontRelativeLength(kCh, value);
+    }
+    static FontRelativeLength Cap(float value)
+    {
+      return FontRelativeLength(kCap, value);
+    }
+    static FontRelativeLength Ic(float value)
+    {
+      return FontRelativeLength(kIc, value);
+    }
+    static FontRelativeLength Rem(float value)
+    {
+      return FontRelativeLength(kRem, value);
+    }
+    static FontRelativeLength Lh(float value)
+    {
+      return FontRelativeLength(kLh, value);
+    }
+    static FontRelativeLength Rlh(float value)
+    {
+      return FontRelativeLength(kRlh, value);
+    }
 
   private:
     FontRelativeLength(Tag tag, float value)
-        : tag_(tag),
-          unitless_value_(value)
+        : tag_(tag)
+        , unitless_value_(value)
     {
     }
 
   public:
-    inline float unitlessValue() const { return unitless_value_; }
+    inline float unitlessValue() const
+    {
+      return unitless_value_;
+    }
     const char *unit() const
     {
       switch (tag_)
@@ -236,22 +287,43 @@ namespace client_cssom::values::specified
     static constexpr const char *UNIT_VI = "vi";
 
   public:
-    static ViewportPercentageLength Vw(float value) { return ViewportPercentageLength(kVw, value); }
-    static ViewportPercentageLength Vh(float value) { return ViewportPercentageLength(kVh, value); }
-    static ViewportPercentageLength Vmin(float value) { return ViewportPercentageLength(kVmin, value); }
-    static ViewportPercentageLength Vmax(float value) { return ViewportPercentageLength(kVmax, value); }
-    static ViewportPercentageLength Vb(float value) { return ViewportPercentageLength(kVb, value); }
-    static ViewportPercentageLength Vi(float value) { return ViewportPercentageLength(kVi, value); }
+    static ViewportPercentageLength Vw(float value)
+    {
+      return ViewportPercentageLength(kVw, value);
+    }
+    static ViewportPercentageLength Vh(float value)
+    {
+      return ViewportPercentageLength(kVh, value);
+    }
+    static ViewportPercentageLength Vmin(float value)
+    {
+      return ViewportPercentageLength(kVmin, value);
+    }
+    static ViewportPercentageLength Vmax(float value)
+    {
+      return ViewportPercentageLength(kVmax, value);
+    }
+    static ViewportPercentageLength Vb(float value)
+    {
+      return ViewportPercentageLength(kVb, value);
+    }
+    static ViewportPercentageLength Vi(float value)
+    {
+      return ViewportPercentageLength(kVi, value);
+    }
 
   private:
     ViewportPercentageLength(Tag tag, float value)
-        : tag_(tag),
-          unitless_value_(value)
+        : tag_(tag)
+        , unitless_value_(value)
     {
     }
 
   public:
-    inline float unitlessValue() const { return unitless_value_; }
+    inline float unitlessValue() const
+    {
+      return unitless_value_;
+    }
     const char *unit() const
     {
       switch (tag_)
@@ -317,22 +389,43 @@ namespace client_cssom::values::specified
     static constexpr const char *UNIT_CQMAX = "cqmax";
 
   public:
-    static ContainerRelativeLength Cqw(float value) { return ContainerRelativeLength(kCqw, value); }
-    static ContainerRelativeLength Cqh(float value) { return ContainerRelativeLength(kCqh, value); }
-    static ContainerRelativeLength Cqi(float value) { return ContainerRelativeLength(kCqi, value); }
-    static ContainerRelativeLength Cqb(float value) { return ContainerRelativeLength(kCqb, value); }
-    static ContainerRelativeLength Cqmin(float value) { return ContainerRelativeLength(kCqmin, value); }
-    static ContainerRelativeLength Cqmax(float value) { return ContainerRelativeLength(kCqmax, value); }
+    static ContainerRelativeLength Cqw(float value)
+    {
+      return ContainerRelativeLength(kCqw, value);
+    }
+    static ContainerRelativeLength Cqh(float value)
+    {
+      return ContainerRelativeLength(kCqh, value);
+    }
+    static ContainerRelativeLength Cqi(float value)
+    {
+      return ContainerRelativeLength(kCqi, value);
+    }
+    static ContainerRelativeLength Cqb(float value)
+    {
+      return ContainerRelativeLength(kCqb, value);
+    }
+    static ContainerRelativeLength Cqmin(float value)
+    {
+      return ContainerRelativeLength(kCqmin, value);
+    }
+    static ContainerRelativeLength Cqmax(float value)
+    {
+      return ContainerRelativeLength(kCqmax, value);
+    }
 
   private:
     ContainerRelativeLength(Tag tag, float value)
-        : tag_(tag),
-          unitless_value_(value)
+        : tag_(tag)
+        , unitless_value_(value)
     {
     }
 
   public:
-    inline float unitlessValue() const { return unitless_value_; }
+    inline float unitlessValue() const
+    {
+      return unitless_value_;
+    }
     const char *unit() const
     {
       switch (tag_)
@@ -417,30 +510,30 @@ namespace client_cssom::values::specified
 
   public:
     NoCalcLength()
-        : tag_(kAbsolute),
-          length_(AbsoluteLength::Px(0))
+        : tag_(kAbsolute)
+        , length_(AbsoluteLength::Px(0))
     {
     }
 
   private:
     NoCalcLength(AbsoluteLength absolute_length)
-        : tag_(kAbsolute),
-          length_(absolute_length)
+        : tag_(kAbsolute)
+        , length_(absolute_length)
     {
     }
     NoCalcLength(FontRelativeLength font_relative_length)
-        : tag_(kFontRelative),
-          length_(font_relative_length)
+        : tag_(kFontRelative)
+        , length_(font_relative_length)
     {
     }
     NoCalcLength(ViewportPercentageLength viewport_percentage_length)
-        : tag_(kViewportPercentage),
-          length_(viewport_percentage_length)
+        : tag_(kViewportPercentage)
+        , length_(viewport_percentage_length)
     {
     }
     NoCalcLength(ContainerRelativeLength container_relative_length)
-        : tag_(kContainerRelative),
-          length_(container_relative_length)
+        : tag_(kContainerRelative)
+        , length_(container_relative_length)
     {
     }
 
@@ -726,10 +819,22 @@ namespace client_cssom::values::specified
       assert(false && "Invalid tag.");
     }
 
-    inline bool isZero() const { return unitlessValue() == 0.0f; }
-    inline bool isInfinite() const { return unitlessValue() == std::numeric_limits<float>::infinity(); }
-    inline bool isNan() const { return unitlessValue() != unitlessValue(); }
-    inline bool isNegative() const { return unitlessValue() < 0.0f; }
+    inline bool isZero() const
+    {
+      return unitlessValue() == 0.0f;
+    }
+    inline bool isInfinite() const
+    {
+      return unitlessValue() == std::numeric_limits<float>::infinity();
+    }
+    inline bool isNan() const
+    {
+      return unitlessValue() != unitlessValue();
+    }
+    inline bool isNegative() const
+    {
+      return unitlessValue() < 0.0f;
+    }
 
   private:
     Tag tag_;
@@ -779,20 +884,20 @@ namespace client_cssom::values::specified
 
   public:
     LengthPercentage(float value = 0.0f)
-        : tag_(kLength),
-          value_(NoCalcLength::FromPx(value))
+        : tag_(kLength)
+        , value_(NoCalcLength::FromPx(value))
     {
     }
 
   private:
     LengthPercentage(NoCalcLength length)
-        : tag_(kLength),
-          value_(length)
+        : tag_(kLength)
+        , value_(length)
     {
     }
     LengthPercentage(computed::Percentage percentage)
-        : tag_(kPercentage),
-          value_(percentage)
+        : tag_(kPercentage)
+        , value_(percentage)
     {
     }
 
@@ -871,7 +976,8 @@ namespace client_cssom::values::specified
     using generics::GenericSize<Size, NonNegativeLengthPercentage>::GenericSize;
 
   public:
-    Size() : generics::GenericSize<Size, NonNegativeLengthPercentage>()
+    Size()
+        : generics::GenericSize<Size, NonNegativeLengthPercentage>()
     {
     }
 

@@ -120,31 +120,61 @@ namespace dom
 #undef _REL_TYPE_MAP
 
   public:
-    inline ContentType as() const { return asType_; }
+    inline ContentType as() const
+    {
+      return asType_;
+    }
     inline void setAs(ContentType asType)
     {
       asType_ = asType;
       setAttribute("as", ToString(asType));
     }
-    inline bool blocking() const { return blocking_; }
+    inline bool blocking() const
+    {
+      return blocking_;
+    }
     inline void setBlocking(bool blocking)
     {
       blocking_ = blocking;
       setAttribute("blocking", blocking ? "true" : "false");
     }
-    inline bool disabled() const { return disabled_; }
+    inline bool disabled() const
+    {
+      return disabled_;
+    }
     inline void setDisabled(bool disabled)
     {
       disabled_ = disabled;
       setAttribute("disabled", disabled ? "true" : "false");
     }
-    inline std::string href() const { return getAttribute("href"); }
-    inline void setHref(const std::string &href) { setAttribute("href", href); }
-    inline std::string hreflang() const { return getAttribute("hreflang"); }
-    inline void setHreflang(const std::string &hreflang) { setAttribute("hreflang", hreflang); }
-    inline std::string integrity() const { return getAttribute("integrity"); }
-    inline void setIntegrity(const std::string &integrity) { setAttribute("integrity", integrity); }
-    inline RelType rel() const { return relType_; }
+    inline std::string href() const
+    {
+      return getAttribute("href");
+    }
+    inline void setHref(const std::string &href)
+    {
+      setAttribute("href", href);
+    }
+    inline std::string hreflang() const
+    {
+      return getAttribute("hreflang");
+    }
+    inline void setHreflang(const std::string &hreflang)
+    {
+      setAttribute("hreflang", hreflang);
+    }
+    inline std::string integrity() const
+    {
+      return getAttribute("integrity");
+    }
+    inline void setIntegrity(const std::string &integrity)
+    {
+      setAttribute("integrity", integrity);
+    }
+    inline RelType rel() const
+    {
+      return relType_;
+    }
     inline void setRel(RelType relType)
     {
       relType_ = relType;

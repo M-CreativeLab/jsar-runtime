@@ -17,12 +17,23 @@ namespace canvasbinding
   class CanvasWrap
   {
   public:
-    CanvasWrap() {}
-    CanvasWrap(std::shared_ptr<CanvasType> canvasImpl) : canvasImpl_(canvasImpl) {}
+    CanvasWrap()
+    {
+    }
+    CanvasWrap(std::shared_ptr<CanvasType> canvasImpl)
+        : canvasImpl_(canvasImpl)
+    {
+    }
 
   public:
-    shared_ptr<CanvasType> canvasImpl() { return canvasImpl_; }
-    void setCanvasImpl(shared_ptr<CanvasType> canvasImpl) { canvasImpl_ = canvasImpl; }
+    shared_ptr<CanvasType> canvasImpl()
+    {
+      return canvasImpl_;
+    }
+    void setCanvasImpl(shared_ptr<CanvasType> canvasImpl)
+    {
+      canvasImpl_ = canvasImpl;
+    }
 
   protected:
     Napi::Value GetContext(const Napi::CallbackInfo &info);

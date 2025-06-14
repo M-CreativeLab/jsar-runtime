@@ -28,8 +28,8 @@ namespace dombinding
     {
       auto htmlElement = dataSource.lock();
       return htmlElement != nullptr
-                 ? htmlElement->getDataset(key)
-                 : std::nullopt;
+               ? htmlElement->getDataset(key)
+               : std::nullopt;
     }
     void set(const std::string &key, const std::string &value) override
     {

@@ -53,15 +53,15 @@ namespace scripting_base
       jsObject->Set(context,
                     v8::String::NewFromUtf8Literal(isolate, "next"),
                     v8::FunctionTemplate::New(isolate, Next)->GetFunction(context).ToLocalChecked())
-          .FromJust();
+        .FromJust();
       jsObject->Set(context,
                     v8::String::NewFromUtf8Literal(isolate, "return"),
                     v8::FunctionTemplate::New(isolate, Return)->GetFunction(context).ToLocalChecked())
-          .FromJust();
+        .FromJust();
       jsObject->Set(context,
                     v8::String::NewFromUtf8Literal(isolate, "throw"),
                     v8::FunctionTemplate::New(isolate, Throw)->GetFunction(context).ToLocalChecked())
-          .FromJust();
+        .FromJust();
     }
     virtual ~Iterator() = default;
 
@@ -94,9 +94,8 @@ namespace scripting_base
       if (instance->hasDone_ || instance->dataSource_.empty())
       {
         v8::Local<v8::Object> result = v8::Object::New(isolate);
-        result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"),
-                    v8::Boolean::New(isolate, true))
-            .FromJust();
+        result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, true))
+          .FromJust();
         info.GetReturnValue().Set(result);
         return;
       }
@@ -105,12 +104,10 @@ namespace scripting_base
       instance->dataSource_.erase(instance->dataSource_.begin());
 
       v8::Local<v8::Object> result = v8::Object::New(isolate);
-      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "value"),
-                  instance->createNextValue(isolate, value))
-          .FromJust();
-      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"),
-                  v8::Boolean::New(isolate, false))
-          .FromJust();
+      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "value"), instance->createNextValue(isolate, value))
+        .FromJust();
+      result->Set(context, v8::String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, false))
+        .FromJust();
       info.GetReturnValue().Set(result);
     }
 
@@ -172,7 +169,7 @@ namespace scripting_base
       jsObject->Set(context,
                     v8::Symbol::GetIterator(isolate),
                     v8::FunctionTemplate::New(isolate, GetIterator)->GetFunction(context).ToLocalChecked())
-          .FromJust();
+        .FromJust();
     }
 
   private:

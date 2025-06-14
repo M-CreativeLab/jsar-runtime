@@ -47,8 +47,14 @@ namespace commandbuffers
     }
 
   public:
-    TrCommandBufferBase() : TrIpcSerializableBase() {}
-    TrCommandBufferBase(CommandBufferType type, size_t size) : TrIpcSerializableBase(type, size) {}
+    TrCommandBufferBase()
+        : TrIpcSerializableBase()
+    {
+    }
+    TrCommandBufferBase(CommandBufferType type, size_t size)
+        : TrIpcSerializableBase(type, size)
+    {
+    }
 
   public:
     /**
@@ -93,14 +99,14 @@ namespace commandbuffers
   {
   public:
     TrCommandBufferResponse(CommandBufferType type, size_t size, TrCommandBufferRequest *req)
-        : TrCommandBufferBase(type, size),
-          requestId(req->id)
+        : TrCommandBufferBase(type, size)
+        , requestId(req->id)
     {
       contextId = req->contextId;
     }
     TrCommandBufferResponse(TrCommandBufferResponse &that)
-        : TrCommandBufferBase(that.type, that.size),
-          requestId(that.requestId)
+        : TrCommandBufferBase(that.type, that.size)
+        , requestId(that.requestId)
     {
       contextId = that.contextId;
     }
@@ -147,7 +153,10 @@ namespace commandbuffers
   class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
   {
   public:
-    TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that) : TrCommandBufferResponse(that) {}
+    TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that)
+        : TrCommandBufferResponse(that)
+    {
+    }
     TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
         : TrCommandBufferResponse(type, sizeof(Derived), req)
     {

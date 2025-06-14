@@ -18,9 +18,12 @@ namespace math3d
     static std::array<TrPlane, 6> GetPlanes(const glm::mat4 &transform)
     {
       std::array<TrPlane, 6> frustumPlanes{
-          {TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
-           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
-           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f)}};
+        {TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f)}};
       TrFrustum::GetPlanesToRef(transform, frustumPlanes);
       return frustumPlanes;
     }
@@ -31,9 +34,12 @@ namespace math3d
     static std::array<TrPlane, 6> GetStereoscopicPlanes(const glm::mat4 &transformL, const glm::mat4 &transformR)
     {
       std::array<TrPlane, 6> frustumPlanes{
-          {TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
-           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
-           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f)}};
+        {TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f),
+         TrPlane(0.f, 0.f, 0.f, 0.f)}};
       TrFrustum::GetStereoscopicPlanesToRef(transformL, transformR, frustumPlanes);
       return frustumPlanes;
     }

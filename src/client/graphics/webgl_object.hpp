@@ -31,7 +31,8 @@ namespace client_graphics
      * 
      * @param type The type of the `WebGLObject`.
      */
-    WebGLObject(WebGLObjectType type) : type(type)
+    WebGLObject(WebGLObjectType type)
+        : type(type)
     {
       static TrIdGenerator idGen(0x10);
       id = idGen.get();
@@ -42,21 +43,34 @@ namespace client_graphics
      * @param type The type of the `WebGLObject`.
      * @param id The id of the `WebGLObject`.
      */
-    WebGLObject(WebGLObjectType type, int id) : type(type), id(id) {}
+    WebGLObject(WebGLObjectType type, int id)
+        : type(type)
+        , id(id)
+    {
+    }
 
   public:
     /**
      * Mark this `WebGLObject` to be deleted, and it should not be used anymore.
      */
-    void markDeleted() { deleted_ = true; }
+    void markDeleted()
+    {
+      deleted_ = true;
+    }
     /**
      * @returns if this `WebGLObject` is marked to be deleted.
      */
-    bool isDeleted() { return deleted_; }
+    bool isDeleted()
+    {
+      return deleted_;
+    }
     /**
      * @returns if this `WebGLObject` is valid.
      */
-    bool isValid() { return !deleted_; }
+    bool isValid()
+    {
+      return !deleted_;
+    }
 
   public:
     int id;

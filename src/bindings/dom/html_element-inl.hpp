@@ -11,10 +11,10 @@ namespace dombinding
     using T = HTMLElementBase<ObjectType, HTMLElementType>;
     auto props = ElementBase<ObjectType, HTMLElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-        {
-            T::InstanceAccessor("dataset", &T::DatasetGetter, nullptr),
-            T::InstanceAccessor("style", &T::StyleGetter, nullptr),
-        });
+      {
+        T::InstanceAccessor("dataset", &T::DatasetGetter, nullptr),
+        T::InstanceAccessor("style", &T::StyleGetter, nullptr),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

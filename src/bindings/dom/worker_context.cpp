@@ -11,9 +11,9 @@ namespace dombinding
     auto props = GetClassProperties(env);
     {
       auto newProps = vector<Napi::ClassPropertyDescriptor<WorkerContext>>({
-          InstanceMethod("start", &WorkerContext::Start),
-          InstanceMethod("startFromSource", &WorkerContext::StartFromSource),
-          InstanceMethod("dispatchEvent", &WorkerContext::DispatchEvent),
+        InstanceMethod("start", &WorkerContext::Start),
+        InstanceMethod("startFromSource", &WorkerContext::StartFromSource),
+        InstanceMethod("dispatchEvent", &WorkerContext::DispatchEvent),
       });
       props.insert(props.end(), newProps.begin(), newProps.end());
     }
@@ -23,7 +23,8 @@ namespace dombinding
     exports.Set("WorkerContext", func);
   }
 
-  WorkerContext::WorkerContext(const Napi::CallbackInfo &info) : RuntimeContextBase<WorkerContext, dom::WorkerContext>(info)
+  WorkerContext::WorkerContext(const Napi::CallbackInfo &info)
+      : RuntimeContextBase<WorkerContext, dom::WorkerContext>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

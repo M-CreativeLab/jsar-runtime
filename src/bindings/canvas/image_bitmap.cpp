@@ -10,10 +10,10 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *ImageBitmap::constructor;
   void ImageBitmap::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "ImageBitmap",
-                                      {
-                                          InstanceMethod("close", &ImageBitmap::Close),
-                                      });
+    Napi::Function func = DefineClass(
+      env, "ImageBitmap", {
+                            InstanceMethod("close", &ImageBitmap::Close),
+                          });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -95,10 +95,9 @@ namespace canvasbinding
         };
         auto jsPromiseObject = blobArrayBuffer.ToObject();
         return jsPromiseObject
-            .Get("then")
-            .As<Napi::Function>()
-            .Call(jsPromiseObject, {Napi::Function::New(env, onResolve),
-                                    Napi::Function::New(env, ImageBitmap::OnBlobRejectionCallback)});
+          .Get("then")
+          .As<Napi::Function>()
+          .Call(jsPromiseObject, {Napi::Function::New(env, onResolve), Napi::Function::New(env, ImageBitmap::OnBlobRejectionCallback)});
       }
     }
 
@@ -112,8 +111,9 @@ namespace canvasbinding
     {
       // TODO: support HTMLImageElement, SVGImageElement, HTMLVideoElement, HTMLCanvasElement, Blob and OffscreenCanvas
       // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/createImageBitmap
-      auto msg = "Failed to execute 'createImageBitmap' on 'Window': "
-                 "The provided value is not of type '(HTMLImageElement or HTMLCanvasElement or ImageBitmap or OffscreenCanvas or Blob or ImageData)'";
+      auto msg =
+        "Failed to execute 'createImageBitmap' on 'Window': "
+        "The provided value is not of type '(HTMLImageElement or HTMLCanvasElement or ImageBitmap or OffscreenCanvas or Blob or ImageData)'";
       deferred.Reject(Napi::TypeError::New(env, msg).Value());
     }
     return deferred.Promise();

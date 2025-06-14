@@ -31,15 +31,27 @@ namespace client_layout
     ~LayoutResult() = default;
 
   public:
-    inline EStatus status() const { return status_; }
-    inline const Fragment &fragment() const { return fragment_; }
+    inline EStatus status() const
+    {
+      return status_;
+    }
+    inline const Fragment &fragment() const
+    {
+      return fragment_;
+    }
 
     bool needsResize(const Fragment &) const;
     bool needsRelayout(const Fragment &) const;
 
   private:
-    inline EStatus &status() { return status_; }
-    inline Fragment &fragment() { return fragment_; }
+    inline EStatus &status()
+    {
+      return status_;
+    }
+    inline Fragment &fragment()
+    {
+      return fragment_;
+    }
 
   private:
     EStatus status_ = kSuccess;

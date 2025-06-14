@@ -8,16 +8,19 @@ namespace webaudio
   void AudioNode::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::HandleScope scope(env);
-    Napi::Function tpl = DefineClass(env, "AudioNode", {
-                                                           InstanceMethod("connect", &AudioNode::Connect),
-                                                           InstanceMethod("disconnect", &AudioNode::Disconnect),
-                                                           InstanceAccessor("context", &AudioNode::ContextGetter, nullptr),
-                                                           InstanceAccessor("numberOfInputs", &AudioNode::NumberOfInputsGetter, nullptr),
-                                                           InstanceAccessor("numberOfOutputs", &AudioNode::NumberOfOutputsGetter, nullptr),
-                                                           InstanceAccessor("channelCount", &AudioNode::ChannelCountGetter, nullptr),
-                                                           InstanceAccessor("channelCountMode", &AudioNode::ChannelCountModeGetter, nullptr),
-                                                           InstanceAccessor("channelInterpretation", &AudioNode::ChannelInterpretationGetter, nullptr),
-                                                       });
+    Napi::Function tpl = DefineClass(
+      env,
+      "AudioNode",
+      {
+        InstanceMethod("connect", &AudioNode::Connect),
+        InstanceMethod("disconnect", &AudioNode::Disconnect),
+        InstanceAccessor("context", &AudioNode::ContextGetter, nullptr),
+        InstanceAccessor("numberOfInputs", &AudioNode::NumberOfInputsGetter, nullptr),
+        InstanceAccessor("numberOfOutputs", &AudioNode::NumberOfOutputsGetter, nullptr),
+        InstanceAccessor("channelCount", &AudioNode::ChannelCountGetter, nullptr),
+        InstanceAccessor("channelCountMode", &AudioNode::ChannelCountModeGetter, nullptr),
+        InstanceAccessor("channelInterpretation", &AudioNode::ChannelInterpretationGetter, nullptr),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -26,7 +29,8 @@ namespace webaudio
     exports.Set("AudioNode", tpl);
   }
 
-  AudioNode::AudioNode(const Napi::CallbackInfo &info) : Napi::ObjectWrap<AudioNode>(info)
+  AudioNode::AudioNode(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<AudioNode>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -55,13 +59,13 @@ namespace webaudio
     Napi::String constructorName = constructor.Get("constructor").As<Napi::Object>().Get("name").As<Napi::String>();
 
     if (
-        constructorName.StrictEquals(Napi::String::New(env, "AudioSourceNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "AudioDestinationNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "GainNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "AnalyserNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "PannerNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "StereoPannerNode")) ||
-        constructorName.StrictEquals(Napi::String::New(env, "ScriptProcessorNode")))
+      constructorName.StrictEquals(Napi::String::New(env, "AudioSourceNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "AudioDestinationNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "GainNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "AnalyserNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "PannerNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "StereoPannerNode")) ||
+      constructorName.StrictEquals(Napi::String::New(env, "ScriptProcessorNode")))
     {
       unsigned int outputIndex = info[1].IsNumber() ? info[1].As<Napi::Number>().Uint32Value() : 0;
       unsigned int inputIndex = info[2].IsNumber() ? info[2].As<Napi::Number>().Uint32Value() : 0;
@@ -152,13 +156,13 @@ namespace webaudio
         Napi::Value constructorName = info[0].As<Napi::Object>().Get("constructor").As<Napi::Object>().Get("name");
 
         if (
-            constructorName.StrictEquals(Napi::String::New(env, "AudioSourceNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "AudioDestinationNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "GainNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "AnalyserNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "PannerNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "StereoPannerNode")) ||
-            constructorName.StrictEquals(Napi::String::New(env, "ScriptProcessorNode")))
+          constructorName.StrictEquals(Napi::String::New(env, "AudioSourceNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "AudioDestinationNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "GainNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "AnalyserNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "PannerNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "StereoPannerNode")) ||
+          constructorName.StrictEquals(Napi::String::New(env, "ScriptProcessorNode")))
         {
           Napi::Object srcAudioNodeObj = info.This().As<Napi::Object>();
           AudioNode *srcAudioNode = Napi::ObjectWrap<AudioNode>::Unwrap(srcAudioNodeObj);

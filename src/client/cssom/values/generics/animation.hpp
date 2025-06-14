@@ -20,18 +20,18 @@ namespace client_cssom::values::generics
 
   public:
     GenericTransitionProperty()
-        : tag_(kCustom),
-          property_id_(CustomPropertyId("none"))
+        : tag_(kCustom)
+        , property_id_(CustomPropertyId("none"))
     {
     }
     GenericTransitionProperty(NonCustomPropertyId non_custom_property_id)
-        : tag_(kNonCustom),
-          property_id_(non_custom_property_id)
+        : tag_(kNonCustom)
+        , property_id_(non_custom_property_id)
     {
     }
     GenericTransitionProperty(CustomPropertyId custom_property_id)
-        : tag_(kCustom),
-          property_id_(custom_property_id)
+        : tag_(kCustom)
+        , property_id_(custom_property_id)
     {
     }
 
@@ -62,8 +62,14 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static GenericTransitionBehavior Normal() { return GenericTransitionBehavior(kNormal); }
-    static GenericTransitionBehavior AllowDiscrete() { return GenericTransitionBehavior(kAllowDiscrete); }
+    static GenericTransitionBehavior Normal()
+    {
+      return GenericTransitionBehavior(kNormal);
+    }
+    static GenericTransitionBehavior AllowDiscrete()
+    {
+      return GenericTransitionBehavior(kAllowDiscrete);
+    }
 
     Tag tag() const
     {

@@ -26,14 +26,20 @@ public:
   ~TrInspectorClient();
 
 public:
-  const std::string url() const { return url_; }
-  const http::HeaderFields &headers() const { return headers_; }
+  const std::string url() const
+  {
+    return url_;
+  }
+  const http::HeaderFields &headers() const
+  {
+    return headers_;
+  }
 
 public:
   void tick();
   void respond(http::Response response);
-  void respond(uint32_t code, const std::string& text);
-  void respond(uint32_t code, const rapidjson::Document& json);
+  void respond(uint32_t code, const std::string &text);
+  void respond(uint32_t code, const rapidjson::Document &json);
 
 private:
   bool setNonBlocking();

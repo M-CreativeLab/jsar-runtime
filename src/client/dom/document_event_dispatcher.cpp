@@ -86,8 +86,8 @@ namespace dom
       return false;
 
     auto scrollContainer = !layoutBox->isScrollContainer()
-                               ? layoutBox->containingScrollContainer()
-                               : const_pointer_cast<const client_layout::LayoutBoxModelObject>(layoutBox);
+                             ? layoutBox->containingScrollContainer()
+                             : const_pointer_cast<const client_layout::LayoutBoxModelObject>(layoutBox);
     if (scrollContainer != nullptr)
     {
       current_scroll_target_ = scrollContainer->node();
@@ -129,7 +129,7 @@ namespace dom
 
     is_scroll_in_progress_ = false;
     current_scroll_target_.lock()->dispatchEvent(
-        make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+      make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
 
     current_scroll_start_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
     current_scroll_end_point_ = glm::vec3(0.0f, 0.0f, 0.0f);

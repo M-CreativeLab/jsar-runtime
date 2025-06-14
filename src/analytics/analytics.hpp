@@ -54,8 +54,8 @@ namespace analytics
     PerformanceMeasure createPerformanceMeasure(const char *name);
 
   private:
-    bool ensurePipeDir(const std::string& path);
-    int createNamedPipe(const char* name, int* fd);
+    bool ensurePipeDir(const std::string &path);
+    int createNamedPipe(const char *name, int *fd);
     void writeToPipe(int fd, string text);
     void closeNamedPipe(int fd);
 

@@ -23,6 +23,6 @@ namespace dom
 
     Animation &animate(Keyframes &keyframes);
     std::vector<std::shared_ptr<Animation>> getAnimations(
-        std::optional<GetAnimationsOptions> options = std::nullopt);
+      std::optional<GetAnimationsOptions> options = std::nullopt);
   };
 }

@@ -17,19 +17,19 @@ namespace dombinding
       using T = CharacterDataBase<ObjectType, NodeType>;
       auto props = NodeBase<ObjectType, NodeType>::GetClassProperties(env);
       auto added = std::vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-          {
-              T::InstanceAccessor("data", &T::DataGetter, &T::DataSetter, napi_default_jsproperty),
-              T::InstanceAccessor("length", &T::LengthGetter, nullptr, napi_default_jsproperty),
-              T::InstanceMethod("after", &T::After),
-              T::InstanceMethod("appendData", &T::AppendData),
-              T::InstanceMethod("before", &T::Before),
-              T::InstanceMethod("deleteData", &T::DeleteData),
-              T::InstanceMethod("insertData", &T::InsertData),
-              T::InstanceMethod("remove", &T::Remove),
-              T::InstanceMethod("replaceData", &T::ReplaceData),
-              T::InstanceMethod("replaceWith", &T::ReplaceWith),
-              T::InstanceMethod("substringData", &T::SubstringData),
-          });
+        {
+          T::InstanceAccessor("data", &T::DataGetter, &T::DataSetter, napi_default_jsproperty),
+          T::InstanceAccessor("length", &T::LengthGetter, nullptr, napi_default_jsproperty),
+          T::InstanceMethod("after", &T::After),
+          T::InstanceMethod("appendData", &T::AppendData),
+          T::InstanceMethod("before", &T::Before),
+          T::InstanceMethod("deleteData", &T::DeleteData),
+          T::InstanceMethod("insertData", &T::InsertData),
+          T::InstanceMethod("remove", &T::Remove),
+          T::InstanceMethod("replaceData", &T::ReplaceData),
+          T::InstanceMethod("replaceWith", &T::ReplaceWith),
+          T::InstanceMethod("substringData", &T::SubstringData),
+        });
       props.insert(props.end(), added.begin(), added.end());
       return props;
     }

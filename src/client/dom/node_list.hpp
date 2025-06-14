@@ -55,7 +55,10 @@ namespace dom
     /**
      * @returns An empty node list.
      */
-    static inline NodeList<NodeType> Empty() { return NodeList<NodeType>(); }
+    static inline NodeList<NodeType> Empty()
+    {
+      return NodeList<NodeType>();
+    }
 
   public:
     /**
@@ -63,16 +66,23 @@ namespace dom
      *
      * @param isLive `true` if the node list is live, otherwise `false`, default is `false`, namely static.
      */
-    NodeList(bool isLive) : is_live_(isLive)
+    NodeList(bool isLive)
+        : is_live_(isLive)
     {
     }
 
     // TODO: Implement the live node list.
 
   public:
-    bool isLive() const override { return is_live_; }
+    bool isLive() const override
+    {
+      return is_live_;
+    }
 
-    unsigned int length() const override { return this->size(); }
+    unsigned int length() const override
+    {
+      return this->size();
+    }
     std::shared_ptr<Node> item(unsigned int index) const override;
 
   private:

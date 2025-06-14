@@ -10,13 +10,28 @@ namespace client_cssom::values
     friend class Parse;
 
   public:
-    CSSFloat() : value(0.0f) {}
-    CSSFloat(float v) : value(v) {}
+    CSSFloat()
+        : value(0.0f)
+    {
+    }
+    CSSFloat(float v)
+        : value(v)
+    {
+    }
 
   public:
-    CSSFloat operator+(const float other) const { return CSSFloat(value + other); }
-    CSSFloat operator-(const float other) const { return CSSFloat(value - other); }
-    CSSFloat operator*(const float other) const { return CSSFloat(value * other); }
+    CSSFloat operator+(const float other) const
+    {
+      return CSSFloat(value + other);
+    }
+    CSSFloat operator-(const float other) const
+    {
+      return CSSFloat(value - other);
+    }
+    CSSFloat operator*(const float other) const
+    {
+      return CSSFloat(value * other);
+    }
     CSSFloat operator/(const float other) const
     {
       if (other == 0.0f)
@@ -25,7 +40,10 @@ namespace client_cssom::values
     }
 
   public:
-    inline bool isZero() const { return value == 0.0f; }
+    inline bool isZero() const
+    {
+      return value == 0.0f;
+    }
     std::string toCss() const override
     {
       return std::to_string(value);

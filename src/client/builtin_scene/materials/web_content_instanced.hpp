@@ -34,11 +34,11 @@ namespace builtin_scene::materials
     {
       return mixDefines(Material::defines(),
                         {
-                            "USE_UVS",
-                            "USE_INSTANCE_TRANSFORMS",
-                            "USE_INSTANCE_COLORS",
-                            "USE_INSTANCE_TEXTURE"
-                            // End
+                          "USE_UVS",
+                          "USE_INSTANCE_TRANSFORMS",
+                          "USE_INSTANCE_COLORS",
+                          "USE_INSTANCE_TEXTURE"
+                          // End
                         });
     }
     ShaderRef fragmentShader() override
@@ -67,8 +67,14 @@ namespace builtin_scene::materials
     TextureUpdateStatus updateTexture(WebContent &content);
 
   public:
-    float width() const { return width_; }
-    float height() const { return height_; }
+    float width() const
+    {
+      return width_;
+    }
+    float height() const
+    {
+      return height_;
+    }
 
   private:
     inline client_graphics::WebGLUniformLocation uniform(const std::string &name) const

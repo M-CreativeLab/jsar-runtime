@@ -11,9 +11,9 @@ namespace commandbuffers
   public:
     XRFrameStartCommandBufferRequest() = delete;
     XRFrameStartCommandBufferRequest(int stereoId, int viewIndex)
-        : TrCommandBufferSimpleRequest(),
-          stereoId(stereoId),
-          viewIndex(viewIndex)
+        : TrCommandBufferSimpleRequest()
+        , stereoId(stereoId)
+        , viewIndex(viewIndex)
     {
     }
 
@@ -32,9 +32,9 @@ namespace commandbuffers
   public:
     XRFrameFlushCommandBufferRequest() = delete;
     XRFrameFlushCommandBufferRequest(int stereoId, int viewIndex)
-        : TrCommandBufferSimpleRequest(),
-          stereoId(stereoId),
-          viewIndex(viewIndex)
+        : TrCommandBufferSimpleRequest()
+        , stereoId(stereoId)
+        , viewIndex(viewIndex)
     {
     }
 
@@ -49,9 +49,9 @@ namespace commandbuffers
   public:
     XRFrameEndCommandBufferRequest() = delete;
     XRFrameEndCommandBufferRequest(int stereoId, int viewIndex)
-        : TrCommandBufferSimpleRequest(),
-          stereoId(stereoId),
-          viewIndex(viewIndex)
+        : TrCommandBufferSimpleRequest()
+        , stereoId(stereoId)
+        , viewIndex(viewIndex)
     {
     }
 

@@ -15,8 +15,14 @@ namespace client_cssom::values::generics
     };
 
   public:
-    inline bool isAuto() const { return tag_ == kAuto; }
-    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
 
     inline LengthPercent lengthPercent() const
     {
@@ -44,31 +50,67 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Auto() { return T(kAuto); }
-    static T MaxContent() { return T(kMaxContent); }
-    static T MinContent() { return T(kMinContent); }
-    static T FitContent() { return T(kFitContent); }
-    static T Stretch() { return T(kStretch); }
-    static T LengthPercentage(LengthPercent length_percent) { return T(kLengthPercentage, length_percent); }
+    static T Auto()
+    {
+      return T(kAuto);
+    }
+    static T MaxContent()
+    {
+      return T(kMaxContent);
+    }
+    static T MinContent()
+    {
+      return T(kMinContent);
+    }
+    static T FitContent()
+    {
+      return T(kFitContent);
+    }
+    static T Stretch()
+    {
+      return T(kStretch);
+    }
+    static T LengthPercentage(LengthPercent length_percent)
+    {
+      return T(kLengthPercentage, length_percent);
+    }
 
   public:
     GenericSize()
-        : tag_(kAuto),
-          length_percent_(std::nullopt)
+        : tag_(kAuto)
+        , length_percent_(std::nullopt)
     {
     }
     GenericSize(Tag tag, std::optional<LengthPercent> length_percent = std::nullopt)
-        : tag_(tag),
-          length_percent_(length_percent)
+        : tag_(tag)
+        , length_percent_(length_percent)
     {
     }
 
-    inline bool isAuto() const { return tag_ == kAuto; }
-    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
-    inline bool isMaxContent() const { return tag_ == kMaxContent; }
-    inline bool isMinContent() const { return tag_ == kMinContent; }
-    inline bool isFitContent() const { return tag_ == kFitContent; }
-    inline bool isStretch() const { return tag_ == kStretch; }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
+    inline bool isMaxContent() const
+    {
+      return tag_ == kMaxContent;
+    }
+    inline bool isMinContent() const
+    {
+      return tag_ == kMinContent;
+    }
+    inline bool isFitContent() const
+    {
+      return tag_ == kFitContent;
+    }
+    inline bool isStretch() const
+    {
+      return tag_ == kStretch;
+    }
 
     inline LengthPercent lengthPercent() const
     {
@@ -108,11 +150,26 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T None() { return T(kNone); }
-    static T MaxContent() { return T(kMaxContent); }
-    static T MinContent() { return T(kMinContent); }
-    static T FitContent() { return T(kFitContent); }
-    static T Stretch() { return T(kStretch); }
+    static T None()
+    {
+      return T(kNone);
+    }
+    static T MaxContent()
+    {
+      return T(kMaxContent);
+    }
+    static T MinContent()
+    {
+      return T(kMinContent);
+    }
+    static T FitContent()
+    {
+      return T(kFitContent);
+    }
+    static T Stretch()
+    {
+      return T(kStretch);
+    }
 
   private:
     GenericMaxSize(Tag tag)
@@ -121,12 +178,30 @@ namespace client_cssom::values::generics
     }
 
   public:
-    inline bool isNone() const { return tag_ == kNone; }
-    inline bool isMaxContent() const { return tag_ == kMaxContent; }
-    inline bool isMinContent() const { return tag_ == kMinContent; }
-    inline bool isFitContent() const { return tag_ == kFitContent; }
-    inline bool isStretch() const { return tag_ == kStretch; }
-    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
+    inline bool isNone() const
+    {
+      return tag_ == kNone;
+    }
+    inline bool isMaxContent() const
+    {
+      return tag_ == kMaxContent;
+    }
+    inline bool isMinContent() const
+    {
+      return tag_ == kMinContent;
+    }
+    inline bool isFitContent() const
+    {
+      return tag_ == kFitContent;
+    }
+    inline bool isStretch() const
+    {
+      return tag_ == kStretch;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
 
     inline LengthPercent lengthPercent() const
     {
@@ -150,26 +225,38 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Auto() { return T(kAuto); }
-    static T LengthPercentage(LP length_percent) { return T(kLengthPercentage, length_percent); }
+    static T Auto()
+    {
+      return T(kAuto);
+    }
+    static T LengthPercentage(LP length_percent)
+    {
+      return T(kLengthPercentage, length_percent);
+    }
 
   public:
     GenericMargin()
-        : tag_(kLengthPercentage),
-          length_percent_(LP(0.0f))
+        : tag_(kLengthPercentage)
+        , length_percent_(LP(0.0f))
     {
     }
 
   private:
     GenericMargin(Tag tag, std::optional<LP> length_percent = std::nullopt)
-        : tag_(tag),
-          length_percent_(length_percent)
+        : tag_(tag)
+        , length_percent_(length_percent)
     {
     }
 
   public:
-    inline bool isAuto() const { return tag_ == kAuto; }
-    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
 
     inline LP lengthPercent() const
     {

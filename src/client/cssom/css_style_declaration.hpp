@@ -49,23 +49,23 @@ namespace client_cssom
 
   public:
     CSSStyleDeclaration()
-        : pdb_(std::make_shared<PropertyDeclarationBlock>()),
-          cachedCssText_(std::nullopt)
+        : pdb_(std::make_shared<PropertyDeclarationBlock>())
+        , cachedCssText_(std::nullopt)
     {
     }
     CSSStyleDeclaration(const std::string &cssText)
-        : pdb_(PropertyDeclarationBlock::ParseStyleDeclaration(cssText)),
-          cachedCssText_(std::nullopt)
+        : pdb_(PropertyDeclarationBlock::ParseStyleDeclaration(cssText))
+        , cachedCssText_(std::nullopt)
     {
     }
     CSSStyleDeclaration(std::unique_ptr<PropertyDeclarationBlock> pdb)
-        : pdb_(std::move(pdb)),
-          cachedCssText_(std::nullopt)
+        : pdb_(std::move(pdb))
+        , cachedCssText_(std::nullopt)
     {
     }
     CSSStyleDeclaration(const CSSStyleDeclaration &other)
-        : pdb_(other.pdb_),
-          cachedCssText_(other.cachedCssText_)
+        : pdb_(other.pdb_)
+        , cachedCssText_(other.cachedCssText_)
     {
     }
 
@@ -85,14 +85,23 @@ namespace client_cssom
     /**
      * @returns The number of properties.
      */
-    size_t length() const { return pdb_->size(); }
+    size_t length() const
+    {
+      return pdb_->size();
+    }
 
   public:
     /**
      * Custom the conversion to `LayoutStyle`.
      */
-    bool operator==(const CSSStyleDeclaration &other) const { return equals(other); }
-    bool operator!=(const CSSStyleDeclaration &other) const { return !equals(other); }
+    bool operator==(const CSSStyleDeclaration &other) const
+    {
+      return equals(other);
+    }
+    bool operator!=(const CSSStyleDeclaration &other) const
+    {
+      return !equals(other);
+    }
     /**
      * Custom the conversion to `std::string`.
      */
@@ -217,7 +226,8 @@ namespace client_cssom
      * @param value The new value of the property.
      * @param priority The optional priority, "important".
      */
-    inline void setProperty(const std::string &propertyName, const std::string &value,
+    inline void setProperty(const std::string &propertyName,
+                            const std::string &value,
                             CSSPropertyPriority priority = CSSPropertyPriority::Normal)
     {
       pdb_->setProperty(propertyName, value, priority == CSSPropertyPriority::Important);
@@ -233,7 +243,8 @@ namespace client_cssom
      * @param value The new value of the property.
      * @param priority The optional priority, "important".
      */
-    inline void setPropertyIfNotPresent(const std::string &propertyName, const std::string &value,
+    inline void setPropertyIfNotPresent(const std::string &propertyName,
+                                        const std::string &value,
                                         CSSPropertyPriority priority = CSSPropertyPriority::Normal)
     {
       if (!hasProperty(propertyName))

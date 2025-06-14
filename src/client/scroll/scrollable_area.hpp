@@ -17,7 +17,10 @@ namespace client_scroll
     float scrollHeight() const;
 
     glm::vec3 getScrollOffset() const;
-    inline void scrollBy(const glm::vec3 &offset) { scrollTo(scroll_offset_ + offset); }
+    inline void scrollBy(const glm::vec3 &offset)
+    {
+      scrollTo(scroll_offset_ + offset);
+    }
     void scrollTo(const glm::vec3 &offset);
 
     void updateAfterLayout(const client_layout::Fragment &);

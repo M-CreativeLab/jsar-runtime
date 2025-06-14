@@ -35,12 +35,14 @@ namespace dombinding
 
     static void Init(Napi::Env);
     static Napi::Value NewInstance(Napi::Env, std::shared_ptr<dom::NodeListApi>);
-    static NodeList *Unwrap(v8::Local<v8::Object> object) { return Base::Unwrap(object); }
+    static NodeList *Unwrap(v8::Local<v8::Object> object)
+    {
+      return Base::Unwrap(object);
+    }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
   public:
-    NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info,
-             std::shared_ptr<dom::NodeListApi> list)
+    NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info, std::shared_ptr<dom::NodeListApi> list)
         : scripting_base::ObjectWrap<NodeList, dom::NodeListApi>(isolate, info, list)
     {
       if (!list->isLive())
@@ -49,8 +51,7 @@ namespace dombinding
 
   private:
     static void PropertyGetter(unsigned int index, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void PropertySetter(unsigned int index, v8::Local<v8::Value> value,
-                               const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void PropertySetter(unsigned int index, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void PropertyDeleter(unsigned int index, const v8::PropertyCallbackInfo<v8::Boolean> &info);
     static void PropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
     static void LengthGetter(const v8::FunctionCallbackInfo<v8::Value> &info);

@@ -4,8 +4,9 @@
 namespace media_client
 {
   MediaPlayer::MediaPlayer(MediaContentType contentType)
-      : events_comm::TrEventTarget<media_comm::TrMediaEventType>(),
-        clientContext(TrClientContextPerProcess::Get()), contentType(contentType)
+      : events_comm::TrEventTarget<media_comm::TrMediaEventType>()
+      , clientContext(TrClientContextPerProcess::Get())
+      , contentType(contentType)
   {
     assert(clientContext != nullptr);
     id = clientIdGen.get();
@@ -16,8 +17,8 @@ namespace media_client
   CanPlayTypeResult MediaPlayer::canPlayType(const std::string &mimeType)
   {
     if (
-        mimeType == "audio/mpeg" ||
-        mimeType == "audio/wav")
+      mimeType == "audio/mpeg" ||
+      mimeType == "audio/wav")
       return CanPlayTypeResult::Probably;
     else
       return CanPlayTypeResult::No;

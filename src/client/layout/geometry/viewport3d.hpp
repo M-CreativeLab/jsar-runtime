@@ -18,18 +18,48 @@ namespace client_layout::geometry
     }
 
   public:
-    inline uint32_t width() const { return x; }
-    inline uint32_t height() const { return y; }
-    inline uint32_t depth() const { return z; }
+    inline uint32_t width() const
+    {
+      return x;
+    }
+    inline uint32_t height() const
+    {
+      return y;
+    }
+    inline uint32_t depth() const
+    {
+      return z;
+    }
 
-    inline uint32_t left() const { return 0; }
-    inline uint32_t right() const { return left() + width(); }
-    inline uint32_t top() const { return 0; }
-    inline uint32_t bottom() const { return top() + height(); }
-    inline uint32_t front() const { return depth() / 2; }
-    inline uint32_t back() const { return -front(); }
+    inline uint32_t left() const
+    {
+      return 0;
+    }
+    inline uint32_t right() const
+    {
+      return left() + width();
+    }
+    inline uint32_t top() const
+    {
+      return 0;
+    }
+    inline uint32_t bottom() const
+    {
+      return top() + height();
+    }
+    inline uint32_t front() const
+    {
+      return depth() / 2;
+    }
+    inline uint32_t back() const
+    {
+      return -front();
+    }
 
-    inline glm::uvec3 xyz() const { return glm::uvec3(x, y, z); }
+    inline glm::uvec3 xyz() const
+    {
+      return glm::uvec3(x, y, z);
+    }
 
     friend std::ostream &operator<<(std::ostream &os, const Viewport3d &viewport)
     {

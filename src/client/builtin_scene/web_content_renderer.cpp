@@ -40,11 +40,11 @@ namespace builtin_scene::web_renderer
 
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
     webContentCtx->instancedMeshEntity_ = spawn(
-        hierarchy::Root(true),
-        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward())),
-               false),
-        MeshMaterial3d(materials->add(material)),
-        Transform::FromXYZ(0.0f, 0.0f, 0.0f));
+      hierarchy::Root(true),
+      Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward())),
+             false),
+      MeshMaterial3d(materials->add(material)),
+      Transform::FromXYZ(0.0f, 0.0f, 0.0f));
   }
 
   void RenderBaseSystem::onExecute()
@@ -58,7 +58,8 @@ namespace builtin_scene::web_renderer
       render(item.first, *item.second);
   }
 
-  optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
+  optional<SkPaint> drawBackground(SkCanvas *canvas,
+                                   SkRRect &originalRRect,
                                    const client_layout::Fragment &fragment,
                                    const client_cssom::ComputedStyle &style)
   {
@@ -97,7 +98,8 @@ namespace builtin_scene::web_renderer
   }
 
   // Compute the radius for a specific corner of the rounded rectangle.
-  optional<SkVector> computeRoundedRectRadius(const SkRect &rect, const client_cssom::ComputedStyle &style,
+  optional<SkVector> computeRoundedRectRadius(const SkRect &rect,
+                                              const client_cssom::ComputedStyle &style,
                                               const BorderCorner &corner)
   {
     string name = client_cssom::values::generics::to_string(corner);
@@ -142,10 +144,10 @@ namespace builtin_scene::web_renderer
 
     static SkVector defaultRadius = {0.0f, 0.0f};
     SkVector radii[4] = {
-        borderTopLeftRadius.value_or(defaultRadius),
-        borderTopRightRadius.value_or(defaultRadius),
-        borderBottomRightRadius.value_or(defaultRadius),
-        borderBottomLeftRadius.value_or(defaultRadius)};
+      borderTopLeftRadius.value_or(defaultRadius),
+      borderTopRightRadius.value_or(defaultRadius),
+      borderBottomRightRadius.value_or(defaultRadius),
+      borderBottomLeftRadius.value_or(defaultRadius)};
     roundedRect.setRectRadii(rect, radii);
 
     // Check if the radii are all zero.
@@ -159,7 +161,8 @@ namespace builtin_scene::web_renderer
     return false;
   }
 
-  void setBorderPaintEffect(SkPaint &paint, client_cssom::values::computed::BorderSideStyle borderStyle,
+  void setBorderPaintEffect(SkPaint &paint,
+                            client_cssom::values::computed::BorderSideStyle borderStyle,
                             float strokeWidth)
   {
     if (borderStyle.isNoneOrHidden())
@@ -202,7 +205,8 @@ namespace builtin_scene::web_renderer
     return computedBorderWidth > 0.0f;
   }
 
-  bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
+  bool drawBorders(SkCanvas *canvas,
+                   SkRRect &roundedRect,
                    const client_layout::Fragment &fragment,
                    const client_cssom::ComputedStyle &style)
   {
@@ -227,14 +231,18 @@ namespace builtin_scene::web_renderer
                                   rect.fTop + halfBorderWidth,
                                   roundedRect.radii(SkRRect::kUpperLeft_Corner).x() * 2,
                                   roundedRect.radii(SkRRect::kUpperLeft_Corner).y() * 2),
-                 180.0f, 90.0f, false);
+                 180.0f,
+                 90.0f,
+                 false);
       path.lineTo(rect.fRight - roundedRect.radii(SkRRect::kUpperRight_Corner).x() - halfBorderWidth,
                   rect.fTop + halfBorderWidth);
       path.arcTo(SkRect::MakeXYWH(rect.fRight - roundedRect.radii(SkRRect::kUpperRight_Corner).x() * 2 - halfBorderWidth,
                                   rect.fTop + halfBorderWidth,
                                   roundedRect.radii(SkRRect::kUpperRight_Corner).x() * 2,
                                   roundedRect.radii(SkRRect::kUpperRight_Corner).y() * 2),
-                 270.0f, 90.0f, false);
+                 270.0f,
+                 90.0f,
+                 false);
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
@@ -269,14 +277,18 @@ namespace builtin_scene::web_renderer
                                   rect.fBottom - roundedRect.radii(SkRRect::kLowerRight_Corner).y() * 2 - halfBorderWidth,
                                   roundedRect.radii(SkRRect::kLowerRight_Corner).x() * 2,
                                   roundedRect.radii(SkRRect::kLowerRight_Corner).y() * 2),
-                 0.0f, 90.0f, false);
+                 0.0f,
+                 90.0f,
+                 false);
       path.lineTo(rect.fLeft + roundedRect.radii(SkRRect::kLowerLeft_Corner).x() + halfBorderWidth,
                   rect.fBottom - halfBorderWidth);
       path.arcTo(SkRect::MakeXYWH(rect.fLeft + halfBorderWidth,
                                   rect.fBottom - roundedRect.radii(SkRRect::kLowerLeft_Corner).y() * 2 - halfBorderWidth,
                                   roundedRect.radii(SkRRect::kLowerLeft_Corner).x() * 2,
                                   roundedRect.radii(SkRRect::kLowerLeft_Corner).y() * 2),
-                 90.0f, 90.0f, false);
+                 90.0f,
+                 90.0f,
+                 false);
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
@@ -313,9 +325,7 @@ namespace builtin_scene::web_renderer
     float top = 0.0f;
     float left = 0.0f;
 
-    SkRect rect = SkRect::MakeXYWH(left, top,
-                                   content.logicalWidth() - 2 * left,
-                                   content.logicalHeight() - 2 * top);
+    SkRect rect = SkRect::MakeXYWH(left, top, content.logicalWidth() - 2 * left, content.logicalHeight() - 2 * top);
     SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
@@ -363,7 +373,7 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    SkCanvas* canvas = content.canvas();
+    SkCanvas *canvas = content.canvas();
     canvas->save();
     {
       SkRRect &roundedRect = content.rounded_rect_;
@@ -371,8 +381,11 @@ namespace builtin_scene::web_renderer
 
       SkRect srcRect = SkRect::MakeWH(skImage->width(), skImage->height());
       SkRect dstRect = SkRect::MakeWH(content.logicalWidth(), content.logicalHeight());
-      canvas->drawImageRect(skImage, srcRect, dstRect,
-                            SkSamplingOptions(), nullptr,
+      canvas->drawImageRect(skImage,
+                            srcRect,
+                            dstRect,
+                            SkSamplingOptions(),
+                            nullptr,
                             SkCanvas::kStrict_SrcRectConstraint);
     }
     canvas->restore();
@@ -380,10 +393,10 @@ namespace builtin_scene::web_renderer
   }
 
   RenderTextSystem::RenderTextSystem()
-      : RenderBaseSystem(),
-        clientContext_(TrClientContextPerProcess::Get()),
-        fontCollection_(clientContext_->getFontCacheManager()),
-        paragraphBuilder_(nullptr)
+      : RenderBaseSystem()
+      , clientContext_(TrClientContextPerProcess::Get())
+      , fontCollection_(clientContext_->getFontCacheManager())
+      , paragraphBuilder_(nullptr)
   {
   }
 

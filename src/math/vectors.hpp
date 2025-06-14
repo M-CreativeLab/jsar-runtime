@@ -18,8 +18,14 @@ namespace math
     using glm::vec3::vec3;
 
   public:
-    static const Vec3 Identity() { return Vec3(0.0f, 0.0f, 0.0f); }
-    static const Vec3 One() { return Vec3(1.0f, 1.0f, 1.0f); }
+    static const Vec3 Identity()
+    {
+      return Vec3(0.0f, 0.0f, 0.0f);
+    }
+    static const Vec3 One()
+    {
+      return Vec3(1.0f, 1.0f, 1.0f);
+    }
 
   public:
     Vec3(const glm::vec3 &vec)
@@ -124,18 +130,36 @@ namespace math
     using Vec3::Vec3;
 
   public:
-    static Dir3 Up() { return Dir3(0.0f, 1.0f, 0.0f); }
-    static Dir3 Right() { return Dir3(1.0f, 0.0f, 0.0f); }
-    static Dir3 Forward() { return Dir3(0.0f, 0.0f, -1.0f); }
-    static Dir3 Backward() { return Dir3(0.0f, 0.0f, 1.0f); }
+    static Dir3 Up()
+    {
+      return Dir3(0.0f, 1.0f, 0.0f);
+    }
+    static Dir3 Right()
+    {
+      return Dir3(1.0f, 0.0f, 0.0f);
+    }
+    static Dir3 Forward()
+    {
+      return Dir3(0.0f, 0.0f, -1.0f);
+    }
+    static Dir3 Backward()
+    {
+      return Dir3(0.0f, 0.0f, 1.0f);
+    }
     /**
      * @returns The +Y direction.
      */
-    static inline Dir3 Y() { return Up(); }
+    static inline Dir3 Y()
+    {
+      return Up();
+    }
     /**
      * @returns The +X direction.
      */
-    static inline Dir3 X() { return Right(); }
+    static inline Dir3 X()
+    {
+      return Right();
+    }
   };
 
   /**
@@ -146,8 +170,17 @@ namespace math
     using Vec3::Vec3;
 
   public:
-    size_t width() const { return x; }
-    size_t height() const { return y; }
-    size_t depth() const { return z; }
+    size_t width() const
+    {
+      return x;
+    }
+    size_t height() const
+    {
+      return y;
+    }
+    size_t depth() const
+    {
+      return z;
+    }
   };
 }

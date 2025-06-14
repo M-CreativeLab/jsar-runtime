@@ -17,9 +17,18 @@ namespace client_layout
     ~HitTestResult();
 
   public:
-    std::shared_ptr<dom::Node> innerNode() const { return inner_node_.lock(); }
-    std::shared_ptr<dom::Element> innerElement() const { return inner_element_.lock(); }
-    glm::vec3 hitPoint() const { return hit_point_; }
+    std::shared_ptr<dom::Node> innerNode() const
+    {
+      return inner_node_.lock();
+    }
+    std::shared_ptr<dom::Element> innerElement() const
+    {
+      return inner_element_.lock();
+    }
+    glm::vec3 hitPoint() const
+    {
+      return hit_point_;
+    }
 
     void setNodeAndPosition(std::shared_ptr<dom::Node> node, const glm::vec3 &p)
     {
@@ -27,8 +36,14 @@ namespace client_layout
       setInnerNode(node);
     }
 
-    const HitTestRequest &getHitTestRequest() const { return request_; }
-    void setInnerNode(std::shared_ptr<dom::Node> node) { inner_node_ = node; }
+    const HitTestRequest &getHitTestRequest() const
+    {
+      return request_;
+    }
+    void setInnerNode(std::shared_ptr<dom::Node> node)
+    {
+      inner_node_ = node;
+    }
 
   private:
     friend std::ostream &operator<<(std::ostream &os, const HitTestResult &r);

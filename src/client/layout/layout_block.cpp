@@ -6,8 +6,8 @@ namespace client_layout
   using namespace std;
 
   LayoutBlock::LayoutBlock(shared_ptr<dom::Node> node)
-      : LayoutBox(node),
-        children_(make_shared<LayoutObjectChildList>())
+      : LayoutBox(node)
+      , children_(make_shared<LayoutObjectChildList>())
   {
   }
 

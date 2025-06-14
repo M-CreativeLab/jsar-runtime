@@ -29,14 +29,32 @@ namespace client_layout
     virtual ~FormattingContext() = default;
 
   public:
-    virtual bool isInline() const { return false; }
-    virtual bool isBlock() const { return false; }
-    virtual bool isFlow() const { return false; }
-    virtual bool isFlex() const { return false; }
-    virtual bool isGrid() const { return false; }
+    virtual bool isInline() const
+    {
+      return false;
+    }
+    virtual bool isBlock() const
+    {
+      return false;
+    }
+    virtual bool isFlow() const
+    {
+      return false;
+    }
+    virtual bool isFlex() const
+    {
+      return false;
+    }
+    virtual bool isGrid() const
+    {
+      return false;
+    }
 
     // `computeLayout` updates this fragment with the resulting geometry information.
-    const Fragment &resultingFragment() const { return resulting_fragment_; }
+    const Fragment &resultingFragment() const
+    {
+      return resulting_fragment_;
+    }
     virtual Fragment liveFragment() const = 0;
 
     // Should call this method when the node is added to a parent context.
@@ -55,8 +73,14 @@ namespace client_layout
       setContentSize(glm::vec3(width, height, 0));
     }
     // Enable or disable the content size, only the replaced element needs to use content size.
-    inline void setContentSizeEnabled(bool b) { is_content_size_enabled_ = b; }
-    inline void resetContentSize() { content_size_ = std::nullopt; }
+    inline void setContentSizeEnabled(bool b)
+    {
+      is_content_size_enabled_ = b;
+    }
+    inline void resetContentSize()
+    {
+      content_size_ = std::nullopt;
+    }
     virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
 
     // Set if the formatting context node is empty, which will be ignored in the layout.
@@ -129,7 +153,10 @@ namespace client_layout
 
   private:
     // Taffy implements the layout algorithm for the block formatting context including flow, flex and grid.
-    bool isBlock() const override final { return true; }
+    bool isBlock() const override final
+    {
+      return true;
+    }
   };
 
   class BlockFlowFormattingContext : public BlockFormattingContext<>
@@ -137,7 +164,10 @@ namespace client_layout
     using BlockFormattingContext<>::BlockFormattingContext;
 
   private:
-    bool isFlow() const override final { return true; }
+    bool isFlow() const override final
+    {
+      return true;
+    }
   };
 
   class FlexFormattingContext : public BlockFormattingContext<DisplayInside::kFlex>
@@ -145,7 +175,10 @@ namespace client_layout
     using BlockFormattingContext<DisplayInside::kFlex>::BlockFormattingContext;
 
   private:
-    bool isFlex() const override final { return true; }
+    bool isFlex() const override final
+    {
+      return true;
+    }
   };
 
   class GridFormattingContext : public BlockFormattingContext<DisplayInside::kGrid>
@@ -153,7 +186,10 @@ namespace client_layout
     using BlockFormattingContext<DisplayInside::kGrid>::BlockFormattingContext;
 
   private:
-    bool isGrid() const override final { return true; }
+    bool isGrid() const override final
+    {
+      return true;
+    }
   };
 
   // TODO(yorkie): support inline layout, temporarily use taffy's block layout.
@@ -166,7 +202,13 @@ namespace client_layout
     }
 
   private:
-    bool isInline() const override final { return true; }
-    bool isFlow() const override final { return true; }
+    bool isInline() const override final
+    {
+      return true;
+    }
+    bool isFlow() const override final
+    {
+      return true;
+    }
   };
 }

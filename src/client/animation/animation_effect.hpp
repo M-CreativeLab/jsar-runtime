@@ -41,23 +41,23 @@ namespace dom
       TimingFunction *easing = nullptr;
 
       Timing()
-          : delay(0.0f),
-            duration(0.0f),
-            endDelay(0.0f),
-            iterations(1),
-            iterationStart(0.0f),
-            direction(kDirectionNormal),
-            fill(kFillModeNone)
+          : delay(0.0f)
+          , duration(0.0f)
+          , endDelay(0.0f)
+          , iterations(1)
+          , iterationStart(0.0f)
+          , direction(kDirectionNormal)
+          , fill(kFillModeNone)
       {
       }
       Timing(const Timing &other)
-          : delay(other.delay),
-            duration(other.duration),
-            endDelay(other.endDelay),
-            iterations(other.iterations),
-            iterationStart(other.iterationStart),
-            direction(other.direction),
-            fill(other.fill)
+          : delay(other.delay)
+          , duration(other.duration)
+          , endDelay(other.endDelay)
+          , iterations(other.iterations)
+          , iterationStart(other.iterationStart)
+          , direction(other.direction)
+          , fill(other.fill)
       {
       }
     };
@@ -72,30 +72,30 @@ namespace dom
       std::optional<float> currentIteration;
 
       ComputedTiming()
-          : Timing(),
-            endTime(0.0f),
-            activeDuration(0.0f),
-            localTime(0.0f),
-            progress(std::nullopt),
-            currentIteration(std::nullopt)
+          : Timing()
+          , endTime(0.0f)
+          , activeDuration(0.0f)
+          , localTime(0.0f)
+          , progress(std::nullopt)
+          , currentIteration(std::nullopt)
       {
       }
       ComputedTiming(const Timing &timing)
-          : Timing(timing),
-            endTime(0.0f),
-            activeDuration(0.0f),
-            localTime(0.0f),
-            progress(std::nullopt),
-            currentIteration(std::nullopt)
+          : Timing(timing)
+          , endTime(0.0f)
+          , activeDuration(0.0f)
+          , localTime(0.0f)
+          , progress(std::nullopt)
+          , currentIteration(std::nullopt)
       {
       }
       ComputedTiming(const ComputedTiming &other)
-          : Timing(other),
-            endTime(other.endTime),
-            activeDuration(other.activeDuration),
-            localTime(other.localTime),
-            progress(other.progress),
-            currentIteration(other.currentIteration)
+          : Timing(other)
+          , endTime(other.endTime)
+          , activeDuration(other.activeDuration)
+          , localTime(other.localTime)
+          , progress(other.progress)
+          , currentIteration(other.currentIteration)
       {
       }
     };

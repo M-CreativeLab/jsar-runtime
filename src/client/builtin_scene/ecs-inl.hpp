@@ -181,7 +181,7 @@ namespace builtin_scene::ecs
 
   template <typename QueryComponentType, typename IncludeComponentType>
   std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> App::queryEntitiesWithComponent(
-      std::function<bool(const QueryComponentType &)> filter)
+    std::function<bool(const QueryComponentType &)> filter)
   {
     std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> result;

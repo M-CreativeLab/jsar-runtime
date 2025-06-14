@@ -11,8 +11,8 @@ namespace commandbuffers
   public:
     CreateTextureCommandBufferRequest() = delete;
     CreateTextureCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest(),
-          clientId(clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -26,8 +26,8 @@ namespace commandbuffers
   public:
     DeleteTextureCommandBufferRequest() = delete;
     DeleteTextureCommandBufferRequest(uint32_t texture)
-        : TrCommandBufferSimpleRequest(),
-          texture(texture)
+        : TrCommandBufferSimpleRequest()
+        , texture(texture)
     {
     }
 
@@ -41,9 +41,9 @@ namespace commandbuffers
   public:
     BindTextureCommandBufferRequest() = delete;
     BindTextureCommandBufferRequest(uint32_t target, uint32_t texture)
-        : TrCommandBufferSimpleRequest(),
-          target(target),
-          texture(texture)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , texture(texture)
     {
     }
 
@@ -56,15 +56,16 @@ namespace commandbuffers
   class TextureImageNDCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
-    TextureImageNDCommandBufferRequest(CommandBufferType type) : TrCommandBufferRequest(type, sizeof(T))
+    TextureImageNDCommandBufferRequest(CommandBufferType type)
+        : TrCommandBufferRequest(type, sizeof(T))
     {
     }
     TextureImageNDCommandBufferRequest(TextureImageNDCommandBufferRequest &that)
-        : TrCommandBufferRequest(that),
-          target(that.target),
-          level(that.level),
-          format(that.format),
-          pixelType(that.pixelType)
+        : TrCommandBufferRequest(that)
+        , target(that.target)
+        , level(that.level)
+        , format(that.format)
+        , pixelType(that.pixelType)
     {
     }
     virtual ~TextureImageNDCommandBufferRequest()
@@ -194,8 +195,8 @@ namespace commandbuffers
   {
   public:
     TextureImage2DCommandBufferRequest(uint32_t target, uint32_t level, uint32_t internalformat)
-        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ),
-          internalformat(internalformat)
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ)
+        , internalformat(internalformat)
     {
       this->target = target;
       this->level = level;
@@ -226,9 +227,9 @@ namespace commandbuffers
   {
   public:
     TextureSubImage2DCommandBufferRequest(uint32_t target, uint32_t level, int xoffset, int yoffset)
-        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ),
-          xoffset(xoffset),
-          yoffset(yoffset)
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ)
+        , xoffset(xoffset)
+        , yoffset(yoffset)
     {
       this->target = target;
       this->level = level;
@@ -256,19 +257,23 @@ namespace commandbuffers
 
   public:
     CopyTextureImage2DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t internalFormat,
-        uint32_t x,
-        uint32_t y,
-        uint32_t width,
-        uint32_t height,
-        uint32_t border)
-        : TrCommandBufferSimpleRequest(),
-          target(target),
-          level(level),
-          internalFormat(internalFormat),
-          x(x), y(y), width(width), height(height), border(border)
+      uint32_t target,
+      uint32_t level,
+      uint32_t internalFormat,
+      uint32_t x,
+      uint32_t y,
+      uint32_t width,
+      uint32_t height,
+      uint32_t border)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , level(level)
+        , internalFormat(internalFormat)
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+        , border(border)
     {
     }
 
@@ -292,20 +297,23 @@ namespace commandbuffers
 
   public:
     CopyTextureSubImage2DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t xoffset,
-        uint32_t yoffset,
-        uint32_t x,
-        uint32_t y,
-        uint32_t width,
-        uint32_t height)
-        : TrCommandBufferSimpleRequest(),
-          target(target),
-          level(level),
-          xoffset(xoffset),
-          yoffset(yoffset),
-          x(x), y(y), width(width), height(height)
+      uint32_t target,
+      uint32_t level,
+      uint32_t xoffset,
+      uint32_t yoffset,
+      uint32_t x,
+      uint32_t y,
+      uint32_t width,
+      uint32_t height)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , level(level)
+        , xoffset(xoffset)
+        , yoffset(yoffset)
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
     {
     }
 
@@ -327,8 +335,10 @@ namespace commandbuffers
   public:
     TextureParameteriCommandBufferRequest() = delete;
     TextureParameteriCommandBufferRequest(uint32_t target, uint32_t pname, int32_t param)
-        : TrCommandBufferSimpleRequest(),
-          target(target), pname(pname), param(param)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , pname(pname)
+        , param(param)
     {
     }
 
@@ -345,8 +355,10 @@ namespace commandbuffers
   public:
     TextureParameterfCommandBufferRequest() = delete;
     TextureParameterfCommandBufferRequest(uint32_t target, uint32_t pname, float param)
-        : TrCommandBufferSimpleRequest(),
-          target(target), pname(pname), param(param)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
+        , pname(pname)
+        , param(param)
     {
     }
 
@@ -363,8 +375,8 @@ namespace commandbuffers
   public:
     ActiveTextureCommandBufferRequest() = delete;
     ActiveTextureCommandBufferRequest(uint32_t activeUnit)
-        : TrCommandBufferSimpleRequest(),
-          activeUnit(activeUnit)
+        : TrCommandBufferSimpleRequest()
+        , activeUnit(activeUnit)
     {
       if (activeUnit < WEBGL_TEXTURE0 || activeUnit > WEBGL_TEXTURE31)
         activeUnit = WEBGL_TEXTURE0;
@@ -381,8 +393,8 @@ namespace commandbuffers
   public:
     GenerateMipmapCommandBufferRequest() = delete;
     GenerateMipmapCommandBufferRequest(uint32_t target)
-        : TrCommandBufferSimpleRequest(),
-          target(target)
+        : TrCommandBufferSimpleRequest()
+        , target(target)
     {
     }
 
@@ -443,10 +455,10 @@ namespace commandbuffers
   public:
     TextureStorageNDCommandBufferRequest() = delete;
     TextureStorageNDCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat)
-        : TrCommandBufferSimpleRequest<Derived, Type>(),
-          target(target),
-          levels(levels),
-          internalformat(internalformat)
+        : TrCommandBufferSimpleRequest<Derived, Type>()
+        , target(target)
+        , levels(levels)
+        , internalformat(internalformat)
     {
     }
 
@@ -463,8 +475,9 @@ namespace commandbuffers
   public:
     TextureStorage2DCommandBufferRequest() = delete;
     TextureStorage2DCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat, uint32_t width, uint32_t height)
-        : TextureStorageNDCommandBufferRequest(target, levels, internalformat),
-          width(width), height(height)
+        : TextureStorageNDCommandBufferRequest(target, levels, internalformat)
+        , width(width)
+        , height(height)
     {
     }
 
@@ -480,8 +493,10 @@ namespace commandbuffers
   public:
     TextureStorage3DCommandBufferRequest() = delete;
     TextureStorage3DCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat, uint32_t width, uint32_t height, uint32_t depth)
-        : TextureStorageNDCommandBufferRequest(target, levels, internalformat),
-          width(width), height(height), depth(depth)
+        : TextureStorageNDCommandBufferRequest(target, levels, internalformat)
+        , width(width)
+        , height(height)
+        , depth(depth)
     {
     }
 

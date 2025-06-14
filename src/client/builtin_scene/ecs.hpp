@@ -223,14 +223,20 @@ namespace builtin_scene::ecs
   class Entity
   {
   public:
-    Entity() : id_(idGen_.get()) {}
+    Entity()
+        : id_(idGen_.get())
+    {
+    }
     ~Entity() = default;
 
   public:
     /**
      * @returns The Id of the entity.
      */
-    inline EntityId id() { return id_; }
+    inline EntityId id()
+    {
+      return id_;
+    }
 
   private:
     EntityId id_;
@@ -345,7 +351,10 @@ namespace builtin_scene::ecs
      * @param entity The entity to check.
      * @returns `true` if the component set contains the component of the given entity, `false` otherwise.
      */
-    inline bool contains(EntityId entity) { return entityToIndexMap_.find(entity) != entityToIndexMap_.end(); }
+    inline bool contains(EntityId entity)
+    {
+      return entityToIndexMap_.find(entity) != entityToIndexMap_.end();
+    }
     /**
      * Replace the component of the given entity with the new component.
      *
@@ -551,7 +560,9 @@ namespace builtin_scene::ecs
   class LabeledSystemSet : public ISystemSet
   {
   public:
-    LabeledSystemSet() {}
+    LabeledSystemSet()
+    {
+    }
   };
 
   /**
@@ -560,7 +571,9 @@ namespace builtin_scene::ecs
   class App : public std::enable_shared_from_this<App>
   {
   public:
-    App() {}
+    App()
+    {
+    }
     virtual ~App() = default;
 
   public:
@@ -589,7 +602,7 @@ namespace builtin_scene::ecs
      */
     template <typename ComponentType>
     [[nodiscard]] std::vector<EntityId> queryEntities(
-        std::function<bool(const ComponentType &)> filter = nullptr);
+      std::function<bool(const ComponentType &)> filter = nullptr);
     /**
      * Query all entities with the given query component type and include the include component type.
      *
@@ -601,7 +614,7 @@ namespace builtin_scene::ecs
      */
     template <typename QueryComponentType, typename IncludeComponentType>
     [[nodiscard]] std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
-        std::function<bool(const QueryComponentType &)> filter = nullptr);
+      std::function<bool(const QueryComponentType &)> filter = nullptr);
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -627,7 +640,10 @@ namespace builtin_scene::ecs
      * @returns `true` if the entity has the component of the given type, `false` otherwise.
      */
     template <typename ComponentType>
-    [[nodiscard]] inline bool hasComponent(EntityId entity) { return getComponent<ComponentType>(entity) != nullptr; }
+    [[nodiscard]] inline bool hasComponent(EntityId entity)
+    {
+      return getComponent<ComponentType>(entity) != nullptr;
+    }
     /**
      * Get the component of the given entity.
      *
@@ -803,7 +819,10 @@ namespace builtin_scene::ecs
     }
 
   public:
-    System() : next_(nullptr) {}
+    System()
+        : next_(nullptr)
+    {
+    }
     virtual ~System() = default;
 
   public:
@@ -820,7 +839,10 @@ namespace builtin_scene::ecs
     /**
      * @returns The Id of the system.
      */
-    inline SystemId id() { return id_; }
+    inline SystemId id()
+    {
+      return id_;
+    }
 
   public:
     /**
@@ -875,7 +897,7 @@ namespace builtin_scene::ecs
      */
     template <typename QueryComponentType, typename IncludeComponentType = QueryComponentType>
     inline std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
-        std::function<bool(const QueryComponentType &)> filter = nullptr)
+      std::function<bool(const QueryComponentType &)> filter = nullptr)
     {
       return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>(filter);
     }
@@ -886,7 +908,10 @@ namespace builtin_scene::ecs
      * @returns The Id of the first entity with the given component type.
      */
     template <typename ComponentType>
-    inline std::optional<EntityId> firstEntity() { return connectedApp_->firstEntity<ComponentType>(); }
+    inline std::optional<EntityId> firstEntity()
+    {
+      return connectedApp_->firstEntity<ComponentType>();
+    }
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *

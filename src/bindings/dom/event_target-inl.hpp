@@ -17,25 +17,28 @@ namespace dombinding
 
     if (info.Length() < 1)
     {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "1 argument required, but only " +
-                 to_string(info.Length()) + " present.";
+      auto msg =
+        "Failed to dispatch event on 'EventTarget': "
+        "1 argument required, but only " +
+        to_string(info.Length()) + " present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     if (!info[0].IsObject())
     {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "The event object provided is not an object.";
+      auto msg =
+        "Failed to dispatch event on 'EventTarget': "
+        "The event object provided is not an object.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     if (!info.This().IsObject())
     {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "The 'this' object is not an object.";
+      auto msg =
+        "Failed to dispatch event on 'EventTarget': "
+        "The 'this' object is not an object.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -65,16 +68,18 @@ namespace dombinding
 
     if (info.Length() < 2)
     {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "2 argument required, but only " +
-                 to_string(info.Length()) + " present.";
+      auto msg =
+        "Failed to dispatch event on 'EventTarget': "
+        "2 argument required, but only " +
+        to_string(info.Length()) + " present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsFunction())
     {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "The listener provided is not a function.";
+      auto msg =
+        "Failed to dispatch event on 'EventTarget': "
+        "The listener provided is not a function.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -84,8 +89,8 @@ namespace dombinding
 
   template <typename ObjectType, typename EventTargetType>
   EventTargetWrap<ObjectType, EventTargetType>::EventTargetWrap(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<ObjectType>(info),
-        jsThreadId(std::this_thread::get_id())
+      : Napi::ObjectWrap<ObjectType>(info)
+      , jsThreadId(std::this_thread::get_id())
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -97,10 +102,10 @@ namespace dombinding
 
       Napi::Object callbackObject = callbackFn.ToObject();
       Napi::Function onEventGlobalListenerCallback = callbackObject
-                                                         .Get("bind")
-                                                         .As<Napi::Function>()
-                                                         .Call(callbackObject, {info.This()})
-                                                         .As<Napi::Function>();
+                                                       .Get("bind")
+                                                       .As<Napi::Function>()
+                                                       .Call(callbackObject, {info.This()})
+                                                       .As<Napi::Function>();
       threadSafeGlobalListenerCallback = Napi::ThreadSafeFunction::New(env, onEventGlobalListenerCallback, "EventGlobalListenerCallback", 0, 2);
     }
 
@@ -111,10 +116,10 @@ namespace dombinding
 
       Napi::Object callbackObject = callbackFn.ToObject();
       Napi::Function onEventListenerCallback = callbackObject
-                                                   .Get("bind")
-                                                   .As<Napi::Function>()
-                                                   .Call(callbackObject, {info.This()})
-                                                   .As<Napi::Function>();
+                                                 .Get("bind")
+                                                 .As<Napi::Function>()
+                                                 .Call(callbackObject, {info.This()})
+                                                 .As<Napi::Function>();
       threadSafeListenerCallback = Napi::ThreadSafeFunction::New(env, onEventListenerCallback, "EventListenerCallback", 0, 2);
     }
   }
@@ -138,17 +143,19 @@ namespace dombinding
 
     if (eventTarget == nullptr)
     {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                 "The event target object is not initialized.";
+      auto msg =
+        "Failed to execute 'addEventListener' on 'EventTarget': "
+        "The event target object is not initialized.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     if (info.Length() < 2)
     {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                 "2 arguments required, but only " +
-                 to_string(info.Length()) + " present.";
+      auto msg =
+        "Failed to execute 'addEventListener' on 'EventTarget': "
+        "2 arguments required, but only " +
+        to_string(info.Length()) + " present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -158,8 +165,9 @@ namespace dombinding
 
     if (!listenerValue.IsFunction())
     {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                 "The listener provided is not a function.";
+      auto msg =
+        "Failed to execute 'addEventListener' on 'EventTarget': "
+        "The listener provided is not a function.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -184,20 +192,20 @@ namespace dombinding
          * When the caller thread is not the same as the JavaScript thread, we need to call tsfn.
          */
         threadSafeListenerCallback.NonBlockingCall(
-            [type, event, listenerRef](Napi::Env env, Napi::Function jsCallback)
+          [type, event, listenerRef](Napi::Env env, Napi::Function jsCallback)
+          {
+            Napi::HandleScope scope(env);
+            try
             {
-              Napi::HandleScope scope(env);
-              try
-              {
-                auto jsEvent = dombinding::Event::Make(env, event);
-                jsCallback.Call({jsEvent, listenerRef->Value()});
-              }
-              catch (const Napi::Error &e)
-              {
-                std::string eventTypeStr = dom::EventTypeToString(type);
-                PRINT_LISTENER_ERROR(eventTypeStr, e);
-              }
-            });
+              auto jsEvent = dombinding::Event::Make(env, event);
+              jsCallback.Call({jsEvent, listenerRef->Value()});
+            }
+            catch (const Napi::Error &e)
+            {
+              std::string eventTypeStr = dom::EventTypeToString(type);
+              PRINT_LISTENER_ERROR(eventTypeStr, e);
+            }
+          });
         return;
       }
       else
@@ -235,17 +243,19 @@ namespace dombinding
 
     if (eventTarget == nullptr)
     {
-      auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': "
-                 "The event target object is not initialized.";
+      auto msg =
+        "Failed to execute 'removeEventListener' on 'EventTarget': "
+        "The event target object is not initialized.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     if (info.Length() < 2)
     {
-      auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': "
-                 "2 arguments required, but only " +
-                 to_string(info.Length()) + " present.";
+      auto msg =
+        "Failed to execute 'removeEventListener' on 'EventTarget': "
+        "2 arguments required, but only " +
+        to_string(info.Length()) + " present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -255,8 +265,9 @@ namespace dombinding
 
     if (!listenerValue.IsFunction())
     {
-      auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': "
-                 "The listener provided is not a function.";
+      auto msg =
+        "Failed to execute 'removeEventListener' on 'EventTarget': "
+        "The listener provided is not a function.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -294,16 +305,18 @@ namespace dombinding
 
     if (eventTarget == nullptr)
     {
-      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                 "The event target object is not initialized.";
+      auto msg =
+        "Failed to execute 'dispatchEvent' on 'EventTarget': "
+        "The event target object is not initialized.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     if (info.Length() < 1 || !info[0].IsObject())
     {
-      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                 "1 argument required, but only 0 present.";
+      auto msg =
+        "Failed to execute 'dispatchEvent' on 'EventTarget': "
+        "1 argument required, but only 0 present.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -311,8 +324,9 @@ namespace dombinding
     auto eventObject = info[0].ToObject();
     if (!eventObject.InstanceOf(env.Global().Get("Event").As<Napi::Function>()))
     {
-      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                 "parameter 1 is not of type 'Event'.";
+      auto msg =
+        "Failed to execute 'dispatchEvent' on 'EventTarget': "
+        "parameter 1 is not of type 'Event'.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -337,12 +351,12 @@ namespace dombinding
       if (this->jsThreadId != std::this_thread::get_id())
       {
         this->threadSafeGlobalListenerCallback.NonBlockingCall(
-            [event](Napi::Env env, Napi::Function jsCallback)
-            {
-              Napi::HandleScope scope(env);
-              auto jsEvent = dombinding::Event::Make(env, event);
-              jsCallback.Call({jsEvent});
-            });
+          [event](Napi::Env env, Napi::Function jsCallback)
+          {
+            Napi::HandleScope scope(env);
+            auto jsEvent = dombinding::Event::Make(env, event);
+            jsCallback.Call({jsEvent});
+          });
         return;
       }
       else

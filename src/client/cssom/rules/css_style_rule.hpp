@@ -16,16 +16,25 @@ namespace client_cssom::rules
 
   public:
     CSSStyleRule(crates::css2::stylesheets::StyleRule &inner)
-        : CSSGroupingRule(),
-          selectors_(inner.selectors()),
-          style_(inner.takeBlock())
+        : CSSGroupingRule()
+        , selectors_(inner.selectors())
+        , style_(inner.takeBlock())
     {
     }
 
   public:
-    const crates::css2::selectors::SelectorList& selectors() const { return selectors_; }
-    std::string selectorText() const { return static_cast<std::string>(selectors_); }
-    const CSSStyleDeclaration &style() const { return style_; }
+    const crates::css2::selectors::SelectorList &selectors() const
+    {
+      return selectors_;
+    }
+    std::string selectorText() const
+    {
+      return static_cast<std::string>(selectors_);
+    }
+    const CSSStyleDeclaration &style() const
+    {
+      return style_;
+    }
 
   private:
     crates::css2::selectors::SelectorList selectors_;

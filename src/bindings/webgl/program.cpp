@@ -5,8 +5,7 @@ namespace webgl
   thread_local Napi::FunctionReference *WebGLProgram::constructor;
   void WebGLProgram::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLProgram",
-                                     {InstanceMethod("toString", &WebGLProgram::ToString)});
+    Napi::Function tpl = DefineClass(env, "WebGLProgram", {InstanceMethod("toString", &WebGLProgram::ToString)});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }

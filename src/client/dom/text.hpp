@@ -51,11 +51,20 @@ namespace dom
   public:
     [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
 
-    inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
-    inline const client_cssom::ComputedStyle &adoptedStyleRef() const { return *adoptedStyle_; }
+    inline bool hasAdoptedStyle() const
+    {
+      return adoptedStyle_ != nullptr;
+    }
+    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
+    {
+      return *adoptedStyle_;
+    }
 
   private:
-    bool isText() const override final { return true; }
+    bool isText() const override final
+    {
+      return true;
+    }
 
     void connectedCallback() override;
     void disconnectedCallback() override;

@@ -119,7 +119,8 @@ namespace xr
   class TrXRJointPose
   {
   public:
-    TrXRJointPose(TrXRJointIndex index = TrXRJointIndex::Unset) : index(index)
+    TrXRJointPose(TrXRJointIndex index = TrXRJointIndex::Unset)
+        : index(index)
     {
       glm::mat4 identify = glm::mat4(1.0f);
       setBaseMatrix(identify);
@@ -162,8 +163,8 @@ namespace xr
 
   public:
     TrXRInputSource()
-        : handness(TrHandness::None),
-          targetRayMode(TrXRTargetRayMode::TrackedPointer)
+        : handness(TrHandness::None)
+        , targetRayMode(TrXRTargetRayMode::TrackedPointer)
     {
       for (int i = 0; i < JointsCount; i++)
         joints[i] = TrXRJointPose(static_cast<TrXRJointIndex>(i));
@@ -172,7 +173,8 @@ namespace xr
       id = idGen.get();
       setName("default");
     }
-    TrXRInputSource(TrXRInputSource *from) : id(from->id)
+    TrXRInputSource(TrXRInputSource *from)
+        : id(from->id)
     {
       update(from);
     }
@@ -244,9 +246,9 @@ namespace xr
 
   public:
     TrXRInputSourcesData(TrXRInputSourcesData &that)
-        : gazeInputSource(that.gazeInputSource),
-          mainControllerInputSource(that.mainControllerInputSource),
-          transientPointerInputSource(that.transientPointerInputSource)
+        : gazeInputSource(that.gazeInputSource)
+        , mainControllerInputSource(that.mainControllerInputSource)
+        , transientPointerInputSource(that.transientPointerInputSource)
     {
       handInputSources[0] = that.handInputSources[0];
       handInputSources[1] = that.handInputSources[1];
@@ -277,9 +279,18 @@ namespace xr
     }
 
   public:
-    TrXRInputSource *getGazeInputSource() { return &gazeInputSource; }
-    TrXRInputSource *getMainControllerInputSource() { return &mainControllerInputSource; }
-    TrXRInputSource *getTransientPointerInputSource() { return &transientPointerInputSource; }
+    TrXRInputSource *getGazeInputSource()
+    {
+      return &gazeInputSource;
+    }
+    TrXRInputSource *getMainControllerInputSource()
+    {
+      return &mainControllerInputSource;
+    }
+    TrXRInputSource *getTransientPointerInputSource()
+    {
+      return &transientPointerInputSource;
+    }
     TrXRInputSource *getHandInputSource(int id)
     {
       if (id != 0 && id != 1)
@@ -372,7 +383,8 @@ namespace xr
   class TrXRInputSourcesZone : public TrZone<TrXRInputSourcesData>
   {
   public:
-    TrXRInputSourcesZone(string filename, TrZoneType type) : TrZone<TrXRInputSourcesData>(filename, type)
+    TrXRInputSourcesZone(string filename, TrZoneType type)
+        : TrZone<TrXRInputSourcesData>(filename, type)
     {
       if (type == TrZoneType::Server)
         data = std::make_unique<TrXRInputSourcesData>();
@@ -400,12 +412,33 @@ namespace xr
     }
 
   public:
-    TrXRInputSource *getGazeInputSource() { return data->getGazeInputSource(); }
-    TrXRInputSource *getMainControllerInputSource() { return data->getMainControllerInputSource(); }
-    TrXRInputSource *getTransientPointerInputSource() { return data->getTransientPointerInputSource(); }
-    TrXRInputSource *getHandInputSource(int id) { return data->getHandInputSource(id); }
-    TrXRInputSource *getHandInputSource(TrHandness handness) { return data->getHandInputSource(handness); }
-    TrXRInputSource *getScreenInputSource(int index) { return data->getScreenInputSource(index); }
-    TrXRInputSource *getInputSourceById(int id) { return data->getInputSourceById(id); }
+    TrXRInputSource *getGazeInputSource()
+    {
+      return data->getGazeInputSource();
+    }
+    TrXRInputSource *getMainControllerInputSource()
+    {
+      return data->getMainControllerInputSource();
+    }
+    TrXRInputSource *getTransientPointerInputSource()
+    {
+      return data->getTransientPointerInputSource();
+    }
+    TrXRInputSource *getHandInputSource(int id)
+    {
+      return data->getHandInputSource(id);
+    }
+    TrXRInputSource *getHandInputSource(TrHandness handness)
+    {
+      return data->getHandInputSource(handness);
+    }
+    TrXRInputSource *getScreenInputSource(int index)
+    {
+      return data->getScreenInputSource(index);
+    }
+    TrXRInputSource *getInputSourceById(int id)
+    {
+      return data->getInputSourceById(id);
+    }
   };
 }

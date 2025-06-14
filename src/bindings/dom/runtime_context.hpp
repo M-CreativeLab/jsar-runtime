@@ -22,11 +22,12 @@ namespace dombinding
     {
       using T = RuntimeContextBase<ObjectType, ContextType>;
       return {
-          T::InstanceMethod("setResourceLoader", &T::SetResourceLoader),
+        T::InstanceMethod("setResourceLoader", &T::SetResourceLoader),
       };
     }
-    RuntimeContextBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ObjectType>(info),
-                                                         contextImpl(std::make_shared<ContextType>())
+    RuntimeContextBase(const Napi::CallbackInfo &info)
+        : Napi::ObjectWrap<ObjectType>(info)
+        , contextImpl(std::make_shared<ContextType>())
     {
       contextImpl->initialize();
       contextImpl->scriptingContext->enableDynamicImport();

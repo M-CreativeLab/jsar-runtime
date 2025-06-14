@@ -154,7 +154,7 @@ namespace dombinding
     {
       Napi::TypeError::New(env,
                            "Failed to execute 'importNode' on 'Document': 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -164,8 +164,9 @@ namespace dombinding
     auto nodeImpl = Node::GetImpl(node);
     if (nodeImpl == nullptr)
     {
-      std::string msg = "Failed to execute 'importNode' on 'Document': "
-                        "The node to be imported is not a valid Node object.";
+      std::string msg =
+        "Failed to execute 'importNode' on 'Document': "
+        "The node to be imported is not a valid Node object.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -258,8 +259,8 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(
-          env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -287,8 +288,8 @@ namespace dombinding
     if (info.Length() < 1)
     {
       Napi::TypeError::New(
-          env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
-          .ThrowAsJavaScriptException();
+        env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 

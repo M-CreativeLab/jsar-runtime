@@ -5,11 +5,13 @@ namespace webgl
   thread_local Napi::FunctionReference *WebGLUniformLocation::constructor;
   void WebGLUniformLocation::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLUniformLocation",
-                                     {
-                                         InstanceMethod("toString", &WebGLUniformLocation::ToString),
-                                         InstanceAccessor<&WebGLUniformLocation::NameGetter, nullptr>("name"),
-                                     });
+    Napi::Function tpl = DefineClass(
+      env,
+      "WebGLUniformLocation",
+      {
+        InstanceMethod("toString", &WebGLUniformLocation::ToString),
+        InstanceAccessor<&WebGLUniformLocation::NameGetter, nullptr>("name"),
+      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }
@@ -23,8 +25,8 @@ namespace webgl
   }
 
   WebGLUniformLocation::WebGLUniformLocation(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<WebGLUniformLocation>(info),
-        handle_(std::nullopt)
+      : Napi::ObjectWrap<WebGLUniformLocation>(info)
+      , handle_(std::nullopt)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

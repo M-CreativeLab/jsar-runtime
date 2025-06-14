@@ -15,13 +15,13 @@ namespace client_xr
     XRFrameContext(xr::TrXRSessionContextData sessionContext,
                    xr::TrXRDeviceContextData deviceContext,
                    std::shared_ptr<XRSession> session)
-        : sessionId(sessionContext.sessionId),
-          stereoId(sessionContext.stereoId),
-          stereoTimestamp(sessionContext.timestampOnSettingStereoId),
-          framebufferId(deviceContext.framebufferConf.id),
-          framebufferWidth(deviceContext.framebufferConf.width),
-          framebufferHeight(deviceContext.framebufferConf.height),
-          session(session)
+        : sessionId(sessionContext.sessionId)
+        , stereoId(sessionContext.stereoId)
+        , stereoTimestamp(sessionContext.timestampOnSettingStereoId)
+        , framebufferId(deviceContext.framebufferConf.id)
+        , framebufferWidth(deviceContext.framebufferConf.width)
+        , framebufferHeight(deviceContext.framebufferConf.height)
+        , session(session)
     {
       memcpy(localBaseMatrix, sessionContext.localBaseMatrix, sizeof(localBaseMatrix));
       memcpy(viewerBaseMatrix, deviceContext.stereoFrame.viewerBaseMatrix, sizeof(viewerBaseMatrix));
@@ -92,11 +92,26 @@ namespace client_xr
     XRFrame(XRFrame &other);
 
   public:
-    inline uint32_t id() { return id_; }
-    inline uint32_t stereoId() { return stereoId_; }
-    inline bool active() { return active_; }
-    inline bool animationFrame() { return animationFrame_; }
-    inline std::shared_ptr<XRSession> session() { return session_; }
+    inline uint32_t id()
+    {
+      return id_;
+    }
+    inline uint32_t stereoId()
+    {
+      return stereoId_;
+    }
+    inline bool active()
+    {
+      return active_;
+    }
+    inline bool animationFrame()
+    {
+      return animationFrame_;
+    }
+    inline std::shared_ptr<XRSession> session()
+    {
+      return session_;
+    }
 
   public:
     void startFrame();

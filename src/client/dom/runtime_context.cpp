@@ -39,7 +39,8 @@ namespace dom
     }
   }
 
-  void RuntimeContext::fetchResource(const string &url, const string &responseType,
+  void RuntimeContext::fetchResource(const string &url,
+                                     const string &responseType,
                                      const FunctionCallback &responseCallback,
                                      const optional<FunctionCallback> errorCallback)
   {
@@ -62,12 +63,12 @@ namespace dom
       v8::Local<v8::External> rejectCallbackExternal = v8::External::New(isolate, new FunctionCallback(errorCallback.value()));
       auto reject = v8::Function::New(context, ResolveResource, rejectCallbackExternal);
       fetchPromise->Then(context, resolve.ToLocalChecked(), reject.ToLocalChecked())
-          .ToLocalChecked();
+        .ToLocalChecked();
     }
     else
     {
       fetchPromise->Then(context, resolve.ToLocalChecked())
-          .ToLocalChecked();
+        .ToLocalChecked();
     }
   }
 

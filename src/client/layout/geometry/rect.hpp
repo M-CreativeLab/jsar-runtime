@@ -16,7 +16,12 @@ namespace client_layout::geometry
   public:
     Rect() = default;
     Rect(T top, T right, T bottom, T left)
-        : top_(top), right_(right), bottom_(bottom), left_(left) {}
+        : top_(top)
+        , right_(right)
+        , bottom_(bottom)
+        , left_(left)
+    {
+    }
 
     bool operator==(const Rect<T> &other) const
     {
@@ -31,17 +36,47 @@ namespace client_layout::geometry
     }
 
   public:
-    T &top() { return top_; }
-    T top() const { return top_; }
-    T &right() { return right_; }
-    T right() const { return right_; }
-    T &bottom() { return bottom_; }
-    T bottom() const { return bottom_; }
-    T &left() { return left_; }
-    T left() const { return left_; }
+    T &top()
+    {
+      return top_;
+    }
+    T top() const
+    {
+      return top_;
+    }
+    T &right()
+    {
+      return right_;
+    }
+    T right() const
+    {
+      return right_;
+    }
+    T &bottom()
+    {
+      return bottom_;
+    }
+    T bottom() const
+    {
+      return bottom_;
+    }
+    T &left()
+    {
+      return left_;
+    }
+    T left() const
+    {
+      return left_;
+    }
 
-    T width() const { return right_ - left_; }
-    T height() const { return bottom_ - top_; }
+    T width() const
+    {
+      return right_ - left_;
+    }
+    T height() const
+    {
+      return bottom_ - top_;
+    }
 
     // Move the rectangle by the given offset.
     void move(const glm::vec<2, T, glm::packed_highp> offset)

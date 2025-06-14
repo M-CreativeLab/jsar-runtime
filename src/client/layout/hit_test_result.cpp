@@ -8,17 +8,17 @@ namespace client_layout
   using namespace std;
 
   HitTestResult::HitTestResult()
-      : request_(HitTestRequest::kReadOnly | HitTestRequest::kActive | HitTestRequest::kAvoidCache, nullptr),
-        cacheable_(true)
+      : request_(HitTestRequest::kReadOnly | HitTestRequest::kActive | HitTestRequest::kAvoidCache, nullptr)
+      , cacheable_(true)
   {
   }
 
   HitTestResult::HitTestResult(const HitTestResult &other)
-      : request_(other.request_),
-        cacheable_(other.cacheable_),
-        inner_node_(other.inner_node_),
-        inner_element_(other.inner_element_),
-        hit_point_(other.hit_point_)
+      : request_(other.request_)
+      , cacheable_(other.cacheable_)
+      , inner_node_(other.inner_node_)
+      , inner_element_(other.inner_element_)
+      , hit_point_(other.hit_point_)
   {
   }
 

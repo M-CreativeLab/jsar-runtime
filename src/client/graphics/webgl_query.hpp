@@ -14,6 +14,9 @@ namespace client_graphics
   class WebGLQuery : public WebGLObject
   {
   public:
-    WebGLQuery() : WebGLObject(WebGLObjectType::Query) {}
+    WebGLQuery()
+        : WebGLObject(WebGLObjectType::Query)
+    {
+    }
   };
 }

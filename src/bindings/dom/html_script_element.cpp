@@ -8,10 +8,10 @@ namespace dombinding
     using T = HTMLScriptElement;
     auto props = HTMLElementBase<HTMLScriptElement, dom::HTMLScriptElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>>(
-        {
-            T::InstanceAccessor("async", &T::AsyncGetter, &T::AsyncSetter, napi_default_jsproperty),
-            T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter, napi_default_jsproperty),
-        });
+      {
+        T::InstanceAccessor("async", &T::AsyncGetter, &T::AsyncSetter, napi_default_jsproperty),
+        T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter, napi_default_jsproperty),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

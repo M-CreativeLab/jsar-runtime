@@ -18,7 +18,8 @@
 using namespace std;
 
 TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
-    : fd_(fd), inspector_(inspector)
+    : fd_(fd)
+    , inspector_(inspector)
 {
   struct linger lingerOpt = {1, 1};
   if (setsockopt(fd_, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt)) == -1)
@@ -96,8 +97,7 @@ void TrInspectorClient::tick()
   if (err != HPE_OK)
   {
     string incomingText(buffer_.begin(), buffer_.end());
-    DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n",
-          llhttp_errno_name(err), incomingText.c_str());
+    DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n", llhttp_errno_name(err), incomingText.c_str());
     shouldClose_ = true;
   }
 }

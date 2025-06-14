@@ -63,11 +63,17 @@ public:
   /**
    * @returns The runtime directory to store the Transmute exectable files or the runtime files.
    */
-  inline std::string runtimeDirectory() { return applicationCacheDirectory + "/runtime"; }
+  inline std::string runtimeDirectory()
+  {
+    return applicationCacheDirectory + "/runtime";
+  }
   /**
    * @returns The scripts directory to store the scripts such as the bundle scripts.
    */
-  inline std::string scriptsDirectory() { return applicationCacheDirectory + "/scripts"; }
+  inline std::string scriptsDirectory()
+  {
+    return applicationCacheDirectory + "/scripts";
+  }
 
 public:
   /**
@@ -154,10 +160,22 @@ public:
   ~TrHostPerformanceFileSystem() = default;
 
 public:
-  inline void setFps(int value) { fps->set(value); }
-  inline void setDrawCallsPerFrame(int value) { drawCallsPerFrame->set(value); }
-  inline void setDrawCallsCountPerFrame(int value) { drawCallsCountPerFrame->set(value); }
-  inline void setFrameDuration(double value) { frameDuration->set(value); }
+  inline void setFps(int value)
+  {
+    fps->set(value);
+  }
+  inline void setDrawCallsPerFrame(int value)
+  {
+    drawCallsPerFrame->set(value);
+  }
+  inline void setDrawCallsCountPerFrame(int value)
+  {
+    drawCallsCountPerFrame->set(value);
+  }
+  inline void setFrameDuration(double value)
+  {
+    frameDuration->set(value);
+  }
 
 public:
   unique_ptr<analytics::PerformanceValue<int>> fps;

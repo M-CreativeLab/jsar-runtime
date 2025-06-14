@@ -13,8 +13,14 @@ namespace client_cssom::rules
 
   public:
     std::string name;
-    const CSSRuleList &cssRules() const { return *cssRules_; }
-    size_t length() const { return cssRules_->length(); }
+    const CSSRuleList &cssRules() const
+    {
+      return *cssRules_;
+    }
+    size_t length() const
+    {
+      return cssRules_->length();
+    }
 
   public:
     void appendRule(std::string rule);

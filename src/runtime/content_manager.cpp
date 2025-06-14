@@ -9,8 +9,8 @@ using namespace std;
 using namespace std::filesystem;
 
 TrContentManager::TrContentManager(TrConstellation *constellation)
-    : constellation(constellation),
-      hived(make_unique<TrHiveDaemon>(constellation))
+    : constellation(constellation)
+    , hived(make_unique<TrHiveDaemon>(constellation))
 {
   eventChanServer = new TrOneShotServer<events_comm::TrNativeEventMessage>("eventChan");
 
@@ -266,7 +266,9 @@ void TrContentManager::onDocumentEvent(std::shared_ptr<events_comm::TrNativeEven
  * @param executableName The name of the executable.
  * @param writeContent The function to write the content to the file.
  */
-static void InstallExecutable(string runtimeDir, string executableName, string executableMd5,
+static void InstallExecutable(string runtimeDir,
+                              string executableName,
+                              string executableMd5,
                               std::function<void(FILE *)> writeContent)
 {
   path execPath = path(runtimeDir) / executableName;
@@ -526,5 +528,6 @@ void TrContentManager::preparePreContent()
 void TrContentManager::acceptEventChanClients(int timeout)
 {
   eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
-                             { onNewClientOnEventChan(newClient); }, timeout);
+                             { onNewClientOnEventChan(newClient); },
+                             timeout);
 }

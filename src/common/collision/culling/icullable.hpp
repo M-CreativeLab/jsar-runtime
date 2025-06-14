@@ -11,7 +11,7 @@ namespace collision
     {
       virtual ~TrICullable() = default;
       virtual bool isInFrustum(const std::array<math3d::TrPlane, 6> &frustumPlanes, unsigned int strategy = 0) = 0;
-      virtual bool isCompletelyInFrustum(const std::array<math3d::TrPlane, 6>& frustumPlanes) = 0;
+      virtual bool isCompletelyInFrustum(const std::array<math3d::TrPlane, 6> &frustumPlanes) = 0;
     };
   }
 }

@@ -23,13 +23,34 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static TextAlign Start() { return TextAlign(Tag::kStart); }
-    static TextAlign End() { return TextAlign(Tag::kEnd); }
-    static TextAlign Left() { return TextAlign(Tag::kLeft); }
-    static TextAlign Right() { return TextAlign(Tag::kRight); }
-    static TextAlign Center() { return TextAlign(Tag::kCenter); }
-    static TextAlign Justify() { return TextAlign(Tag::kJustify); }
-    static TextAlign MatchParent() { return TextAlign(Tag::kMatchParent); }
+    static TextAlign Start()
+    {
+      return TextAlign(Tag::kStart);
+    }
+    static TextAlign End()
+    {
+      return TextAlign(Tag::kEnd);
+    }
+    static TextAlign Left()
+    {
+      return TextAlign(Tag::kLeft);
+    }
+    static TextAlign Right()
+    {
+      return TextAlign(Tag::kRight);
+    }
+    static TextAlign Center()
+    {
+      return TextAlign(Tag::kCenter);
+    }
+    static TextAlign Justify()
+    {
+      return TextAlign(Tag::kJustify);
+    }
+    static TextAlign MatchParent()
+    {
+      return TextAlign(Tag::kMatchParent);
+    }
 
   public:
     TextAlign()
@@ -101,8 +122,14 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static Direction LTR() { return Direction(true); }
-    static Direction RTL() { return Direction(false); }
+    static Direction LTR()
+    {
+      return Direction(true);
+    }
+    static Direction RTL()
+    {
+      return Direction(false);
+    }
 
   public:
     Direction()

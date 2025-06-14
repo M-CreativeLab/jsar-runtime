@@ -11,10 +11,10 @@ namespace commandbuffers
   public:
     DrawArraysCommandBufferRequest() = delete;
     DrawArraysCommandBufferRequest(int mode, int first, int count)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode),
-          first(first),
-          count(count)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
+        , first(first)
+        , count(count)
     {
     }
 
@@ -31,11 +31,11 @@ namespace commandbuffers
   public:
     DrawArraysInstancedCommandBufferRequest() = delete;
     DrawArraysInstancedCommandBufferRequest(int mode, int first, int count, int instanceCount)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode),
-          first(first),
-          count(count),
-          instanceCount(instanceCount)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
+        , first(first)
+        , count(count)
+        , instanceCount(instanceCount)
     {
     }
 
@@ -53,11 +53,11 @@ namespace commandbuffers
   public:
     DrawElementsCommandBufferRequest() = delete;
     DrawElementsCommandBufferRequest(int mode, int count, int type, int offset)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode),
-          count(count),
-          indicesType(type),
-          indicesOffset(offset)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
+        , count(count)
+        , indicesType(type)
+        , indicesOffset(offset)
     {
     }
 
@@ -75,12 +75,12 @@ namespace commandbuffers
   public:
     DrawElementsInstancedCommandBufferRequest() = delete;
     DrawElementsInstancedCommandBufferRequest(int mode, int count, int type, int offset, int instanceCount)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode),
-          count(count),
-          indicesType(type),
-          indicesOffset(offset),
-          instanceCount(instanceCount)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
+        , count(count)
+        , indicesType(type)
+        , indicesOffset(offset)
+        , instanceCount(instanceCount)
     {
     }
 
@@ -98,8 +98,8 @@ namespace commandbuffers
   public:
     DrawBuffersCommandBufferRequest() = delete;
     DrawBuffersCommandBufferRequest(size_t n, const uint32_t *bufs)
-        : TrCommandBufferSimpleRequest(),
-          n(n)
+        : TrCommandBufferSimpleRequest()
+        , n(n)
     {
       for (size_t i = 0; i < n; i++)
         this->bufs[i] = bufs[i];
@@ -118,13 +118,13 @@ namespace commandbuffers
   public:
     DrawRangeElementsCommandBufferRequest() = delete;
     DrawRangeElementsCommandBufferRequest(int mode, int start, int end, int count, int type, int offset)
-        : TrCommandBufferSimpleRequest(),
-          mode(mode),
-          start(start),
-          end(end),
-          count(count),
-          indicesType(type),
-          indicesOffset(offset)
+        : TrCommandBufferSimpleRequest()
+        , mode(mode)
+        , start(start)
+        , end(end)
+        , count(count)
+        , indicesType(type)
+        , indicesOffset(offset)
     {
     }
 

@@ -20,11 +20,20 @@ namespace dom
     };
 
   public:
-    inline const DocumentFragment &content() const { return *content_; }
-    inline std::shared_ptr<DocumentFragment> getContent() { return content_; }
+    inline const DocumentFragment &content() const
+    {
+      return *content_;
+    }
+    inline std::shared_ptr<DocumentFragment> getContent()
+    {
+      return content_;
+    }
 
   private:
-    inline DocumentFragment &content() { return *content_; }
+    inline DocumentFragment &content()
+    {
+      return *content_;
+    }
 
   private:
     void createdCallback(bool from_scripting) override;

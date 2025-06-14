@@ -17,12 +17,12 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material(),
-        width_(0.0f),
-        height_(0.0f),
-        textureAtlas_(nullptr),
-        textureOffset_(0.0f, 0.0f),
-        textureScale_(1.0f, 1.0f)
+      : Material()
+      , width_(0.0f)
+      , height_(0.0f)
+      , textureAtlas_(nullptr)
+      , textureOffset_(0.0f, 0.0f)
+      , textureScale_(1.0f, 1.0f)
   {
     this->isOpaque_ = true;
   }
@@ -64,11 +64,7 @@ namespace builtin_scene::materials
 
     // Update the uniforms
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    glContext->uniformMatrix3fv(uniform("textureTransformation"), false,
-                                glm::mat3(
-                                    textureScale_.x, 0.0f, 0.0f,
-                                    0.0f, textureScale_.y, 0.0f,
-                                    textureOffset_.x, textureOffset_.y, 1.0f));
+    glContext->uniformMatrix3fv(uniform("textureTransformation"), false, glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
 
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);

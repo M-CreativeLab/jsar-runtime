@@ -46,7 +46,9 @@ namespace events_comm
   public:
     TrRpcRequest() = default;
     TrRpcRequest(uint32_t documentId, string method, vector<string> args)
-        : documentId(documentId), method(method), args(args)
+        : documentId(documentId)
+        , method(method)
+        , args(args)
     {
     }
 
@@ -100,7 +102,8 @@ namespace events_comm
   {
   public:
     TrRpcResponse() = default;
-    TrRpcResponse(bool success) : success(success)
+    TrRpcResponse(bool success)
+        : success(success)
     {
     }
 
@@ -146,11 +149,11 @@ namespace events_comm
   public:
     TrDocumentRequest() = default;
     TrDocumentRequest(TrDocumentRequestInit &init)
-        : documentId(init.id),
-          url(init.url),
-          disableCache(init.disableCache),
-          isPreview(init.isPreview),
-          runScripts(init.runScripts)
+        : documentId(init.id)
+        , url(init.url)
+        , disableCache(init.disableCache)
+        , isPreview(init.isPreview)
+        , runScripts(init.runScripts)
     {
     }
 
@@ -195,7 +198,8 @@ namespace events_comm
   public:
     TrDocumentEvent() = default;
     TrDocumentEvent(uint32_t documentId, TrDocumentEventType eventType)
-        : documentId(documentId), eventType(eventType)
+        : documentId(documentId)
+        , eventType(eventType)
     {
       auto now = chrono::system_clock::now();
       timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();

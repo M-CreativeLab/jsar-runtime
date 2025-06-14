@@ -11,8 +11,9 @@ namespace commandbuffers
   {
   public:
     CreateProgramCommandBufferRequest() = delete;
-    CreateProgramCommandBufferRequest(int clientId) : TrCommandBufferSimpleRequest(),
-                                                      clientId(clientId)
+    CreateProgramCommandBufferRequest(int clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -26,8 +27,9 @@ namespace commandbuffers
   {
   public:
     DeleteProgramCommandBufferRequest() = delete;
-    DeleteProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
-                                                           clientId(clientId)
+    DeleteProgramCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -41,8 +43,9 @@ namespace commandbuffers
   {
   public:
     LinkProgramCommandBufferRequest() = delete;
-    LinkProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
-                                                         clientId(clientId)
+    LinkProgramCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -55,7 +58,10 @@ namespace commandbuffers
   public:
     ActiveInfo() = default;
     ActiveInfo(const ActiveInfo &that) = default;
-    ActiveInfo(string name, int size, int type) : name(name), size(size), type(type)
+    ActiveInfo(string name, int size, int type)
+        : name(name)
+        , size(size)
+        , type(type)
     {
     }
 
@@ -68,7 +74,9 @@ namespace commandbuffers
   class AttribLocation
   {
   public:
-    AttribLocation(string name, int location) : name(name), location(location)
+    AttribLocation(string name, int location)
+        : name(name)
+        , location(location)
     {
     }
 
@@ -81,7 +89,9 @@ namespace commandbuffers
   {
   public:
     UniformLocation(string name, int location, int size)
-        : name(name), location(location), size(size)
+        : name(name)
+        , location(location)
+        , size(size)
     {
     }
 
@@ -95,7 +105,8 @@ namespace commandbuffers
   {
   public:
     UniformBlock(string name, int index)
-        : name(name), index(index)
+        : name(name)
+        , index(index)
     {
     }
 
@@ -117,10 +128,14 @@ namespace commandbuffers
       : public TrCommandBufferSimpleResponse<LinkProgramCommandBufferResponse>
   {
   public:
-    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that), success(that.success) {}
+    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that)
+        : TrCommandBufferSimpleResponse(that)
+        , success(that.success)
+    {
+    }
     LinkProgramCommandBufferResponse(LinkProgramCommandBufferRequest *req, bool success)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req),
-          success(success)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req)
+        , success(success)
     {
     }
 
@@ -295,8 +310,9 @@ namespace commandbuffers
   {
   public:
     UseProgramCommandBufferRequest() = delete;
-    UseProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
-                                                        clientId(clientId)
+    UseProgramCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -311,16 +327,16 @@ namespace commandbuffers
   public:
     BindAttribLocationCommandBufferRequest() = delete;
     BindAttribLocationCommandBufferRequest(uint32_t program, uint32_t index, const string &name)
-        : TrCommandBufferSimpleRequest(),
-          program(program),
-          attribIndex(index),
-          attribName(name)
+        : TrCommandBufferSimpleRequest()
+        , program(program)
+        , attribIndex(index)
+        , attribName(name)
     {
     }
     BindAttribLocationCommandBufferRequest(BindAttribLocationCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          program(that.program),
-          attribIndex(that.attribIndex)
+        : TrCommandBufferSimpleRequest(that)
+        , program(that.program)
+        , attribIndex(that.attribIndex)
     {
     }
 
@@ -349,9 +365,9 @@ namespace commandbuffers
   public:
     GetProgramParamCommandBufferRequest() = delete;
     GetProgramParamCommandBufferRequest(uint32_t clientId, uint32_t pname)
-        : TrCommandBufferSimpleRequest(),
-          clientId(clientId),
-          pname(pname)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
+        , pname(pname)
     {
     }
 
@@ -365,12 +381,13 @@ namespace commandbuffers
   {
   public:
     GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that), value(that.value)
+        : TrCommandBufferSimpleResponse(that)
+        , value(that.value)
     {
     }
     GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferRequest *req, int value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req),
-          value(value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req)
+        , value(value)
     {
     }
 
@@ -384,8 +401,9 @@ namespace commandbuffers
   {
   public:
     GetProgramInfoLogCommandBufferRequest() = delete;
-    GetProgramInfoLogCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
-                                                               clientId(clientId)
+    GetProgramInfoLogCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -398,8 +416,8 @@ namespace commandbuffers
   {
   public:
     GetProgramInfoLogCommandBufferResponse(GetProgramInfoLogCommandBufferRequest *req, const string infoLog)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req),
-          infoLog(infoLog)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req)
+        , infoLog(infoLog)
     {
     }
 

@@ -17,11 +17,16 @@ namespace collision
   class TrRay
   {
   public:
-    TrRay() : origin(glm::vec3{}), direction(glm::vec3{}), length(0.f) {}
+    TrRay()
+        : origin(glm::vec3{})
+        , direction(glm::vec3{})
+        , length(0.f)
+    {
+    }
     TrRay(const glm::vec3 &origin, const glm::vec3 &direction, float length = 0.f)
-        : origin(origin),
-          direction(direction),
-          length(length)
+        : origin(origin)
+        , direction(direction)
+        , length(length)
     {
     }
     TrRay(const TrRay &ray) = default;
@@ -73,8 +78,7 @@ namespace collision
      * @param intersectionTreshold extra extend to be added to the BoundingBox in all direction.
      * @returns if the box was hit.
      */
-    bool intersectsBoxMinMax(const glm::vec3 &minimum, const glm::vec3 &maximum,
-                             float intersectionTreshold = 0.f) const
+    bool intersectsBoxMinMax(const glm::vec3 &minimum, const glm::vec3 &maximum, float intersectionTreshold = 0.f) const
     {
       const auto newMinimum = glm::vec3(minimum.x - intersectionTreshold,
                                         minimum.y - intersectionTreshold,

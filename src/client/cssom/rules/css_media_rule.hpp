@@ -22,7 +22,10 @@ namespace client_cssom::rules
     }
 
   public:
-    const MediaList &media() const { return *media_; }
+    const MediaList &media() const
+    {
+      return *media_;
+    }
 
   private:
     std::unique_ptr<MediaList> media_;

@@ -13,18 +13,18 @@ namespace client_xr
 
 #define DEFAULT_FRAME_RATE 45
   XRSession::XRSession(XRSessionConfiguration config, shared_ptr<XRSystem> xrSystem)
-      : dom::DOMEventTarget(),
-        device_(xrSystem->device()),
-        eventloop_(xrSystem->eventloop()),
-        id(config.id),
-        mode(config.mode),
-        requestInit(config.requestInit),
-        recommendedContentSize(config.recommendedContentSize),
-        enabledFeatures(config.enabledFeatures),
-        started(false),
-        ended(false),
-        suspended(false),
-        deltaThresholdInFrame_(1000 / DEFAULT_FRAME_RATE)
+      : dom::DOMEventTarget()
+      , device_(xrSystem->device())
+      , eventloop_(xrSystem->eventloop())
+      , id(config.id)
+      , mode(config.mode)
+      , requestInit(config.requestInit)
+      , recommendedContentSize(config.recommendedContentSize)
+      , enabledFeatures(config.enabledFeatures)
+      , started(false)
+      , ended(false)
+      , suspended(false)
+      , deltaThresholdInFrame_(1000 / DEFAULT_FRAME_RATE)
   {
 #undef DEFAULT_FRAME_RATE
     auto clientContext = TrClientContextPerProcess::Get();

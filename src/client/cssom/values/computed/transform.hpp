@@ -12,7 +12,10 @@ namespace client_cssom::values::computed
 {
   class TransformOperation;
   using TransformOperationBase = generics::GenericTransformOperation<TransformOperation,
-                                                                     Angle, CSSFloat, Length, LengthPercentage>;
+                                                                     Angle,
+                                                                     CSSFloat,
+                                                                     Length,
+                                                                     LengthPercentage>;
 
   class TransformOperation : public TransformOperationBase
   {
@@ -89,10 +92,12 @@ namespace client_cssom::values::computed
       auto d = src_matrix.d().value;
       auto e = src_matrix.e().value;
       auto f = src_matrix.f().value;
+      // clang-format off
       target_mat = glm::mat4(a, b, 0.0f, 0.0f,
                              c, d, 0.0f, 0.0f,
                              0.0f, 0.0f, 1.0f, 0.0f,
                              e, f, 0.0f, 1.0f);
+      // clang-format on
     }
     void applyMatrix3D(const generics::GenericMatrix3D<CSSFloat> src_matrix, glm::mat4 &target_mat) const
     {

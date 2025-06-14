@@ -12,8 +12,8 @@ namespace commandbuffers
   public:
     CreateVertexArrayCommandBufferRequest() = delete;
     CreateVertexArrayCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest(),
-          clientId(clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
     {
     }
 
@@ -28,8 +28,8 @@ namespace commandbuffers
   public:
     DeleteVertexArrayCommandBufferRequest() = delete;
     DeleteVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(),
-          vertexArray(vertexArray)
+        : TrCommandBufferSimpleRequest()
+        , vertexArray(vertexArray)
     {
     }
 
@@ -44,8 +44,8 @@ namespace commandbuffers
   public:
     BindVertexArrayCommandBufferRequest() = delete;
     BindVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(),
-          vertexArray(vertexArray)
+        : TrCommandBufferSimpleRequest()
+        , vertexArray(vertexArray)
     {
     }
 
@@ -60,8 +60,8 @@ namespace commandbuffers
   public:
     IsVertexArrayCommandBufferRequest() = delete;
     IsVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(),
-          vertexArray(vertexArray)
+        : TrCommandBufferSimpleRequest()
+        , vertexArray(vertexArray)
     {
     }
 
@@ -73,11 +73,13 @@ namespace commandbuffers
   {
   public:
     IsVertexArrayCommandBufferResponse(IsVertexArrayCommandBufferRequest *req, bool value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req),
-          value(value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req)
+        , value(value)
     {
     }
-    ~IsVertexArrayCommandBufferResponse() {}
+    ~IsVertexArrayCommandBufferResponse()
+    {
+    }
 
   public:
     bool value;

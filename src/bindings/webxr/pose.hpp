@@ -49,8 +49,14 @@ namespace bindings
     }
 
   public:
-    inline glm::mat4 &transform() { return this->handle_->transform.matrix(); }
-    inline bool emulatedPosition() { return this->handle_->emulatedPosition; }
+    inline glm::mat4 &transform()
+    {
+      return this->handle_->transform.matrix();
+    }
+    inline bool emulatedPosition()
+    {
+      return this->handle_->emulatedPosition;
+    }
   };
 
   class XRPose : public XRPoseBase<XRPose>

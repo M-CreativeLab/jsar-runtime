@@ -24,9 +24,9 @@ namespace client_xr
      * Default constructor for `XRRigidTransform`.
      */
     XRRigidTransform() noexcept
-        : position_(glm::vec3(0.0f)),
-          orientation_(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)),
-          matrix_(glm::mat4(1.0f))
+        : position_(glm::vec3(0.0f))
+        , orientation_(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+        , matrix_(glm::mat4(1.0f))
     {
     }
 
@@ -38,9 +38,9 @@ namespace client_xr
      */
     XRRigidTransform(glm::vec3 position,
                      glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f)) noexcept
-        : position_(position),
-          orientation_(orientation),
-          matrix_(glm::mat4_cast(orientation))
+        : position_(position)
+        , orientation_(orientation)
+        , matrix_(glm::mat4_cast(orientation))
     {
       matrix_[3] = glm::vec4(position, 1.0f);
     }
@@ -51,9 +51,9 @@ namespace client_xr
      * @param matrix The transformation matrix.
      */
     explicit XRRigidTransform(glm::mat4 matrix) noexcept
-        : matrix_(matrix),
-          position_(glm::vec3(matrix[3])),
-          orientation_(glm::quat_cast(matrix))
+        : matrix_(matrix)
+        , position_(glm::vec3(matrix[3]))
+        , orientation_(glm::quat_cast(matrix))
     {
     }
 
@@ -73,21 +73,30 @@ namespace client_xr
      *
      * @returns A `glm::mat4` representing the transformation matrix.
      */
-    const glm::mat4 &matrix() const noexcept { return matrix_; }
+    const glm::mat4 &matrix() const noexcept
+    {
+      return matrix_;
+    }
 
     /**
      * Gets the orientation of this transform.
      *
      * @returns A `glm::quat` representing the orientation.
      */
-    const glm::quat &orientation() const noexcept { return orientation_; }
+    const glm::quat &orientation() const noexcept
+    {
+      return orientation_;
+    }
 
     /**
      * Gets the position of this transform.
      *
      * @returns A `glm::vec3` representing the position.
      */
-    const glm::vec3 &position() const noexcept { return position_; }
+    const glm::vec3 &position() const noexcept
+    {
+      return position_;
+    }
 
   private:
     glm::vec3 position_;    // The position component of the transform

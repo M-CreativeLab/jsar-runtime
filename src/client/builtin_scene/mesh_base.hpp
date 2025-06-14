@@ -41,9 +41,18 @@ namespace builtin_scene
     using std::vector<T>::vector;
 
   public:
-    inline void insertIndices(const Indices &indices) { this->insert(this->end(), indices.begin(), indices.end()); }
-    inline size_t dataSize() { return this->size() * sizeof(T); }
-    inline void *dataBuffer() { return this->data(); }
+    inline void insertIndices(const Indices &indices)
+    {
+      this->insert(this->end(), indices.begin(), indices.end());
+    }
+    inline size_t dataSize()
+    {
+      return this->size() * sizeof(T);
+    }
+    inline void *dataBuffer()
+    {
+      return this->data();
+    }
   };
 
   typedef uint64_t MeshVertexAttributeId;
@@ -105,7 +114,10 @@ namespace builtin_scene
     virtual size_t byteLength() const = 0;
 
   public:
-    bool is(const IVertexAttribute &attribute) const { return id() == attribute.id(); }
+    bool is(const IVertexAttribute &attribute) const
+    {
+      return id() == attribute.id();
+    }
   };
 
   /**
@@ -187,18 +199,41 @@ namespace builtin_scene
      * @param format The vertex format.
      */
     VertexAttribute(std::string name, uint64_t id, VertexFormat format)
-        : name_(name), id_(id), format_(format)
+        : name_(name)
+        , id_(id)
+        , format_(format)
     {
     }
 
   public:
-    MeshVertexAttributeId id() const override { return id_; }
-    const std::string name() const override { return name_; }
-    VertexFormat format() const override { return format_; }
-    size_t size() const override { return N; }
-    int type() const override { return Traits::type; }
-    bool normalized() const override { return false; }
-    size_t byteLength() const override { return N * sizeof(Format); }
+    MeshVertexAttributeId id() const override
+    {
+      return id_;
+    }
+    const std::string name() const override
+    {
+      return name_;
+    }
+    VertexFormat format() const override
+    {
+      return format_;
+    }
+    size_t size() const override
+    {
+      return N;
+    }
+    int type() const override
+    {
+      return Traits::type;
+    }
+    bool normalized() const override
+    {
+      return false;
+    }
+    size_t byteLength() const override
+    {
+      return N * sizeof(Format);
+    }
 
   private:
     /**
@@ -225,7 +260,9 @@ namespace builtin_scene
   {
     return std::visit([&](auto &&attrib)
                       { return std::visit([&](auto &&attrib2)
-                                          { return attrib.id() == attrib2.id(); }, rhs); }, lhs);
+                                          { return attrib.id() == attrib2.id(); },
+                                          rhs); },
+                      lhs);
   }
 
   class Vertex
@@ -245,13 +282,21 @@ namespace builtin_scene
   public:
     Vertex() = default;
     Vertex(glm::vec3 position, glm::vec3 normal, glm::vec2 uv)
-        : position(position), normal(normal), uv0(uv)
+        : position(position)
+        , normal(normal)
+        , uv0(uv)
     {
     }
 
   public:
-    size_t size() const { return compactData_.size(); }
-    const void *data() const { return compactData_.data(); }
+    size_t size() const
+    {
+      return compactData_.size();
+    }
+    const void *data() const
+    {
+      return compactData_.data();
+    }
 
   private:
     void insertAttributeToCompactData(const IVertexAttribute &attribute)
@@ -295,7 +340,8 @@ namespace builtin_scene
       for (auto &item : enabledAttributes)
       {
         std::visit([this](auto &&attrib)
-                   { this->insertAttributeToCompactData(attrib); }, item);
+                   { this->insertAttributeToCompactData(attrib); },
+                   item);
       }
     }
 
@@ -359,7 +405,8 @@ namespace builtin_scene
       enabledAttributes_.push_back(attribute);
       // Set the stride when enabling the attribute.
       stride_ += std::visit([](auto &&item)
-                            { return item.byteLength(); }, attribute);
+                            { return item.byteLength(); },
+                            attribute);
       isDirty_ = true;
     }
 
@@ -368,31 +415,40 @@ namespace builtin_scene
      */
     void disableAttribute(const MeshVertexAttribute &attribute)
     {
-      auto it = std::remove_if(enabledAttributes_.begin(), enabledAttributes_.end(),
-                               [&attribute](const MeshVertexAttribute &item)
+      auto it = std::remove_if(enabledAttributes_.begin(), enabledAttributes_.end(), [&attribute](const MeshVertexAttribute &item)
                                { return item == attribute; });
       enabledAttributes_.erase(it, enabledAttributes_.end());
 
       // Set the stride when disabling the attribute.
       stride_ -= std::visit([](auto &&item)
-                            { return item.byteLength(); }, attribute);
+                            { return item.byteLength(); },
+                            attribute);
       isDirty_ = true;
     }
 
     /**
      * Get the enabled vertex attributes.
      */
-    inline const std::vector<MeshVertexAttribute> &attributes() const { return enabledAttributes_; }
+    inline const std::vector<MeshVertexAttribute> &attributes() const
+    {
+      return enabledAttributes_;
+    }
 
     /**
      * Get the number of vertices in the buffer.
      */
-    inline size_t vertexCount() const { return vertices_.size(); }
+    inline size_t vertexCount() const
+    {
+      return vertices_.size();
+    }
 
     /**
      * Get the stride of the vertex buffer.
      */
-    inline size_t stride() const { return stride_; }
+    inline size_t stride() const
+    {
+      return stride_;
+    }
 
     /**
      * Clear the vertex buffer.
@@ -447,8 +503,8 @@ namespace builtin_scene
      * @param name The name of the mesh.
      */
     Mesh(std::string name, PrimitiveTopology primitiveTopology)
-        : name(name),
-          primitiveTopology(primitiveTopology)
+        : name(name)
+        , primitiveTopology(primitiveTopology)
     {
     }
     virtual ~Mesh() = default;
@@ -506,17 +562,26 @@ namespace builtin_scene
      * The attributes stride is the sum of all enabled attributes byte length, that's used by the
      * graphics API to get the correct attribute data.
      */
-    inline size_t attributesStride() const { return vertexBuffer_.stride(); }
+    inline size_t attributesStride() const
+    {
+      return vertexBuffer_.stride();
+    }
 
   public:
     /**
      * @returns The mesh indices.
      */
-    inline const Indices<uint32_t> &indices() const { return indices_; }
+    inline const Indices<uint32_t> &indices() const
+    {
+      return indices_;
+    }
     /**
      * @returns The mesh vertex buffer with all attributes.
      */
-    inline MeshVertexBuffer &vertexBuffer() { return vertexBuffer_; }
+    inline MeshVertexBuffer &vertexBuffer()
+    {
+      return vertexBuffer_;
+    }
     /**
      * Iterate the enabled attributes of the mesh.
      *
@@ -529,7 +594,8 @@ namespace builtin_scene
       for (auto &item : vertexBuffer_.attributes())
       {
         std::visit([&callback](auto &&attrib)
-                   { callback(attrib); }, item);
+                   { callback(attrib); },
+                   item);
         attribsCount += 1;
       }
       return attribsCount;
@@ -537,11 +603,17 @@ namespace builtin_scene
     /**
      * @returns Whether the mesh is dirty to update the vertex buffer data.
      */
-    inline bool isDirty() const { return isDirty_; }
+    inline bool isDirty() const
+    {
+      return isDirty_;
+    }
     /**
      * Set the mesh dirty flag: `true` to update the vertex buffer data, `false` otherwise.
      */
-    inline void setDirty(bool dirty) { isDirty_ = dirty; }
+    inline void setDirty(bool dirty)
+    {
+      isDirty_ = dirty;
+    }
 
   public:
     /**

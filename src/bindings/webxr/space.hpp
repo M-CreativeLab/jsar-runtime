@@ -22,11 +22,26 @@ namespace bindings
     XRSpaceBase(const Napi::CallbackInfo &info);
 
   public:
-    inline std::shared_ptr<HandleType> handle() { return handle_; }
-    inline client_xr::XRSpaceSubType subType() { return handle_->subType; }
-    inline bool isReferenceSpace() { return handle_->isReferenceSpace(); }
-    inline glm::mat4 baseMatrix() { return handle_->baseMatrix(); }
-    inline glm::mat4 inverseBaseMatrix() { return handle_->inverseBaseMatrix(); }
+    inline std::shared_ptr<HandleType> handle()
+    {
+      return handle_;
+    }
+    inline client_xr::XRSpaceSubType subType()
+    {
+      return handle_->subType;
+    }
+    inline bool isReferenceSpace()
+    {
+      return handle_->isReferenceSpace();
+    }
+    inline glm::mat4 baseMatrix()
+    {
+      return handle_->baseMatrix();
+    }
+    inline glm::mat4 inverseBaseMatrix()
+    {
+      return handle_->inverseBaseMatrix();
+    }
 
   protected:
     std::shared_ptr<HandleType> handle_;
@@ -65,7 +80,10 @@ namespace bindings
     void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
 
   public:
-    inline client_xr::XRReferenceSpaceType referenceSpaceType() const { return handle_->referenceSpaceType(); }
+    inline client_xr::XRReferenceSpaceType referenceSpaceType() const
+    {
+      return handle_->referenceSpaceType();
+    }
 
   public:
     static thread_local Napi::FunctionReference *constructor;
@@ -84,8 +102,14 @@ namespace bindings
     Napi::Value EyeGetter(const Napi::CallbackInfo &info);
 
   public:
-    inline client_xr::XREye eye() { return handle_->eye(); }
-    inline glm::mat4 &projectionMatrix() { return handle_->projectionMatrix(); }
+    inline client_xr::XREye eye()
+    {
+      return handle_->eye();
+    }
+    inline glm::mat4 &projectionMatrix()
+    {
+      return handle_->projectionMatrix();
+    }
 
   private:
     static thread_local Napi::FunctionReference *constructor;

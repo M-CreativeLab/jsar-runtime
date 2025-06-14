@@ -22,7 +22,10 @@ namespace jsar::example
     WindowContext(int width, int height);
 
   public:
-    bool isTerminated() { return terminated; }
+    bool isTerminated()
+    {
+      return terminated;
+    }
     TrViewport drawingViewport();
     std::string title();
     StatPanel *createStatPanel();

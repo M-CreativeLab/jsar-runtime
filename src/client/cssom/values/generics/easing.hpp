@@ -29,16 +29,36 @@ namespace client_cssom::values::generics
     {
       float x1, y1, x2, y2;
       CubicBezierDescriptor(float x1, float y1, float x2, float y2)
-          : x1(x1), y1(y1), x2(x2), y2(y2) {}
+          : x1(x1)
+          , y1(y1)
+          , x2(x2)
+          , y2(y2)
+      {
+      }
     };
     using TimingFunctionVariant = std::variant<TimingKeyword, CubicBezierDescriptor>;
 
   public:
-    static T Linear() { return T(kLinear); }
-    static T Ease() { return T(kEase); }
-    static T EaseIn() { return T(kEaseIn); }
-    static T EaseOut() { return T(kEaseOut); }
-    static T EaseInOut() { return T(kEaseInOut); }
+    static T Linear()
+    {
+      return T(kLinear);
+    }
+    static T Ease()
+    {
+      return T(kEase);
+    }
+    static T EaseIn()
+    {
+      return T(kEaseIn);
+    }
+    static T EaseOut()
+    {
+      return T(kEaseOut);
+    }
+    static T EaseInOut()
+    {
+      return T(kEaseInOut);
+    }
     static T CubicBezier(float x1, float y1, float x2, float y2)
     {
       return T(x1, y1, x2, y2);
@@ -46,15 +66,27 @@ namespace client_cssom::values::generics
 
   protected:
     GenericTimingFunction()
-        : tag_(kKeyword), timing_function_(kLinear) {}
+        : tag_(kKeyword)
+        , timing_function_(kLinear)
+    {
+    }
     GenericTimingFunction(TimingKeyword keyword)
-        : tag_(kKeyword), timing_function_(keyword) {}
+        : tag_(kKeyword)
+        , timing_function_(keyword)
+    {
+    }
     GenericTimingFunction(float x1, float y1, float x2, float y2)
-        : tag_(kCubicBezier), timing_function_(CubicBezierDescriptor(x1, y1, x2, y2)) {}
+        : tag_(kCubicBezier)
+        , timing_function_(CubicBezierDescriptor(x1, y1, x2, y2))
+    {
+    }
     // TODO(yorkie): Implement steps() and other timing functions.
 
   public:
-    const TimingFunctionVariant &timing_function() const { return timing_function_; }
+    const TimingFunctionVariant &timing_function() const
+    {
+      return timing_function_;
+    }
     std::string toCss() const override
     {
       switch (tag_)

@@ -21,11 +21,26 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static PositionType Static() { return PositionType(kStatic); }
-    static PositionType Relative() { return PositionType(kRelative); }
-    static PositionType Absolute() { return PositionType(kAbsolute); }
-    static PositionType Fixed() { return PositionType(kFixed); }
-    static PositionType Sticky() { return PositionType(kSticky); }
+    static PositionType Static()
+    {
+      return PositionType(kStatic);
+    }
+    static PositionType Relative()
+    {
+      return PositionType(kRelative);
+    }
+    static PositionType Absolute()
+    {
+      return PositionType(kAbsolute);
+    }
+    static PositionType Fixed()
+    {
+      return PositionType(kFixed);
+    }
+    static PositionType Sticky()
+    {
+      return PositionType(kSticky);
+    }
 
   public:
     PositionType()
@@ -40,11 +55,26 @@ namespace client_cssom::values::generics
     }
 
   public:
-    inline bool isStatic() const { return tag_ == kStatic; }
-    inline bool isRelative() const { return tag_ == kRelative; }
-    inline bool isAbsolute() const { return tag_ == kAbsolute; }
-    inline bool isFixed() const { return tag_ == kFixed; }
-    inline bool isSticky() const { return tag_ == kSticky; }
+    inline bool isStatic() const
+    {
+      return tag_ == kStatic;
+    }
+    inline bool isRelative() const
+    {
+      return tag_ == kRelative;
+    }
+    inline bool isAbsolute() const
+    {
+      return tag_ == kAbsolute;
+    }
+    inline bool isFixed() const
+    {
+      return tag_ == kFixed;
+    }
+    inline bool isSticky() const
+    {
+      return tag_ == kSticky;
+    }
 
     inline crates::layout2::styles::Position toLayoutValue() const
     {
@@ -77,8 +107,8 @@ namespace client_cssom::values::generics
   {
   public:
     GenericPosition(H horizontal, V vertical)
-        : horizontal(horizontal),
-          vertical(vertical)
+        : horizontal(horizontal)
+        , vertical(vertical)
     {
     }
 
@@ -120,7 +150,10 @@ namespace client_cssom::values::generics
     }
 
   public:
-    inline bool isAuto() const { return tag_ == kAuto; }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
     inline Pos getPosition() const
     {
       assert(tag_ == kPosition && "The tag is not position.");
@@ -143,26 +176,38 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Auto() { return T(kAuto); }
-    static T LengthPercentage(LP length_percent) { return T(kLengthPercentage, length_percent); }
+    static T Auto()
+    {
+      return T(kAuto);
+    }
+    static T LengthPercentage(LP length_percent)
+    {
+      return T(kLengthPercentage, length_percent);
+    }
 
   public:
     GenericInset()
-        : tag_(kAuto),
-          length_percent_(std::nullopt)
+        : tag_(kAuto)
+        , length_percent_(std::nullopt)
     {
     }
 
   private:
     GenericInset(Tag tag, std::optional<LP> length_percent = std::nullopt)
-        : tag_(tag),
-          length_percent_(length_percent)
+        : tag_(tag)
+        , length_percent_(length_percent)
     {
     }
 
   public:
-    inline bool isAuto() const { return tag_ == kAuto; }
-    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
 
     inline LP lengthPercent() const
     {

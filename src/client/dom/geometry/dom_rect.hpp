@@ -22,15 +22,30 @@ namespace dom::geometry
 
   public:
     DOMRectReadOnly(float x = 0.0f, float y = 0.0f, float width = 0.0f, float height = 0.0f)
-        : x_(x), y_(y), width_(width), height_(height)
+        : x_(x)
+        , y_(y)
+        , width_(width)
+        , height_(height)
     {
     }
 
   public:
-    float x() const { return x_; }
-    float y() const { return y_; }
-    float width() const { return width_; }
-    float height() const { return height_; }
+    float x() const
+    {
+      return x_;
+    }
+    float y() const
+    {
+      return y_;
+    }
+    float width() const
+    {
+      return width_;
+    }
+    float height() const
+    {
+      return height_;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const DOMRectReadOnly &rect)
@@ -62,14 +77,38 @@ namespace dom::geometry
     }
 
   public:
-    float x() const { return DOMRectReadOnly::x(); }
-    float y() const { return DOMRectReadOnly::y(); }
-    float width() const { return DOMRectReadOnly::width(); }
-    float height() const { return DOMRectReadOnly::height(); }
+    float x() const
+    {
+      return DOMRectReadOnly::x();
+    }
+    float y() const
+    {
+      return DOMRectReadOnly::y();
+    }
+    float width() const
+    {
+      return DOMRectReadOnly::width();
+    }
+    float height() const
+    {
+      return DOMRectReadOnly::height();
+    }
 
-    float &x() { return x_; }
-    float &y() { return y_; }
-    float &width() { return width_; }
-    float &height() { return height_; }
+    float &x()
+    {
+      return x_;
+    }
+    float &y()
+    {
+      return y_;
+    }
+    float &width()
+    {
+      return width_;
+    }
+    float &height()
+    {
+      return height_;
+    }
   };
 }

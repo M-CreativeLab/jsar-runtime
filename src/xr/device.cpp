@@ -20,9 +20,9 @@ namespace xr
   static TrIdGenerator sessionIdGen(1);
 
   Device::Device(TrConstellation *constellation)
-      : m_Constellation(constellation),
-        m_FieldOfView(0.0f),
-        m_ActiveEyeId(0)
+      : m_Constellation(constellation)
+      , m_FieldOfView(0.0f)
+      , m_ActiveEyeId(0)
   {
     // Initialize the command chan server
     m_CommandChanServer = std::make_unique<ipc::TrOneShotServer<TrXRCommandMessage>>("xrCommandChan");
@@ -386,14 +386,35 @@ namespace xr
       return m_InputSourcesZone->getFilename();
   }
 
-  TrXRInputSource *Device::getGazeInputSource() { return m_InputSourcesZone->getGazeInputSource(); }
-  TrXRInputSource *Device::getMainControllerInputSource() { return m_InputSourcesZone->getMainControllerInputSource(); }
-  TrXRInputSource *Device::getHandInputSource(int id) { return m_InputSourcesZone->getHandInputSource(id); }
-  TrXRInputSource *Device::getHandInputSource(TrHandness handness) { return m_InputSourcesZone->getHandInputSource(handness); }
-  TrXRInputSource *Device::getScreenControllerInputSource(int index) { return m_InputSourcesZone->getScreenInputSource(index); }
-  TrXRInputSource *Device::getInputSourceById(int id) { return m_InputSourcesZone->getInputSourceById(id); }
+  TrXRInputSource *Device::getGazeInputSource()
+  {
+    return m_InputSourcesZone->getGazeInputSource();
+  }
+  TrXRInputSource *Device::getMainControllerInputSource()
+  {
+    return m_InputSourcesZone->getMainControllerInputSource();
+  }
+  TrXRInputSource *Device::getHandInputSource(int id)
+  {
+    return m_InputSourcesZone->getHandInputSource(id);
+  }
+  TrXRInputSource *Device::getHandInputSource(TrHandness handness)
+  {
+    return m_InputSourcesZone->getHandInputSource(handness);
+  }
+  TrXRInputSource *Device::getScreenControllerInputSource(int index)
+  {
+    return m_InputSourcesZone->getScreenInputSource(index);
+  }
+  TrXRInputSource *Device::getInputSourceById(int id)
+  {
+    return m_InputSourcesZone->getInputSourceById(id);
+  }
 
-  int Device::getCommandChanPort() { return m_CommandChanServer->getPort(); }
+  int Device::getCommandChanPort()
+  {
+    return m_CommandChanServer->getPort();
+  }
   void Device::startCommandClientWatcher()
   {
     m_CommandClientWatcherRunning = true;

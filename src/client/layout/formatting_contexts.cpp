@@ -22,7 +22,8 @@ namespace client_layout
   }
 
   FormattingContext::FormattingContext(DisplayType type, shared_ptr<LayoutView> view)
-      : type(type), view_(view)
+      : type(type)
+      , view_(view)
   {
   }
 
@@ -52,8 +53,8 @@ namespace client_layout
   }
 
   TaffyBasedFormattingContext::TaffyBasedFormattingContext(const DisplayType type, shared_ptr<LayoutView> view)
-      : FormattingContext(type, view),
-        node_(make_unique<crates::layout2::Node>(view->taffyNodeAllocatorRef()))
+      : FormattingContext(type, view)
+      , node_(make_unique<crates::layout2::Node>(view->taffyNodeAllocatorRef()))
   {
   }
 

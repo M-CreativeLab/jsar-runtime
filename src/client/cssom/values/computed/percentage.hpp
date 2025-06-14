@@ -28,12 +28,30 @@ namespace client_cssom::values::computed
     Percentage &operator=(Percentage &&) = default;
     ~Percentage() = default;
 
-    bool operator==(const Percentage &other) const { return value_ == other.value_; }
-    bool operator==(float other) const { return value_ == other; }
-    bool operator<(const Percentage &other) const { return value_ < other.value_; }
-    bool operator<(float other) const { return value_ < other; }
-    bool operator>(const Percentage &other) const { return value_ > other.value_; }
-    bool operator>(float other) const { return value_ > other; }
+    bool operator==(const Percentage &other) const
+    {
+      return value_ == other.value_;
+    }
+    bool operator==(float other) const
+    {
+      return value_ == other;
+    }
+    bool operator<(const Percentage &other) const
+    {
+      return value_ < other.value_;
+    }
+    bool operator<(float other) const
+    {
+      return value_ < other;
+    }
+    bool operator>(const Percentage &other) const
+    {
+      return value_ > other.value_;
+    }
+    bool operator>(float other) const
+    {
+      return value_ > other;
+    }
 
   public:
     std::string toCss() const override
@@ -42,7 +60,10 @@ namespace client_cssom::values::computed
     }
 
     // Returns the value of the percentage in the range of [0.0f, 1.0f].
-    inline float value() const { return value_; }
+    inline float value() const
+    {
+      return value_;
+    }
     inline Percentage abs() const
     {
       return Percentage(std::abs(value_));

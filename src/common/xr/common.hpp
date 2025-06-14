@@ -186,21 +186,46 @@ namespace xr
   class TrXRView
   {
   public:
-    TrXRView(uint32_t viewIndex = 0) : viewIndex(viewIndex)
+    TrXRView(uint32_t viewIndex = 0)
+        : viewIndex(viewIndex)
     {
     }
 
   public:
-    inline void setViewport(TrViewport viewport) { this->viewport = viewport; }
-    inline void setViewport(int w, int h, int x = 0, int y = 0) { this->viewport = TrViewport(w, h, x, y); }
-    inline void setViewMatrix(float *matrixFloats) { setMatrix(TrXRViewMatrixType::View, matrixFloats); }
-    inline void setViewMatrix(glm::mat4 matrix) { setViewMatrix(glm::value_ptr(matrix)); }
-    inline void setProjectionMatrix(float *matrixFloats) { setMatrix(TrXRViewMatrixType::Projection, matrixFloats); }
-    inline void setProjectionMatrix(glm::mat4 matrix) { setProjectionMatrix(glm::value_ptr(matrix)); }
+    inline void setViewport(TrViewport viewport)
+    {
+      this->viewport = viewport;
+    }
+    inline void setViewport(int w, int h, int x = 0, int y = 0)
+    {
+      this->viewport = TrViewport(w, h, x, y);
+    }
+    inline void setViewMatrix(float *matrixFloats)
+    {
+      setMatrix(TrXRViewMatrixType::View, matrixFloats);
+    }
+    inline void setViewMatrix(glm::mat4 matrix)
+    {
+      setViewMatrix(glm::value_ptr(matrix));
+    }
+    inline void setProjectionMatrix(float *matrixFloats)
+    {
+      setMatrix(TrXRViewMatrixType::Projection, matrixFloats);
+    }
+    inline void setProjectionMatrix(glm::mat4 matrix)
+    {
+      setProjectionMatrix(glm::value_ptr(matrix));
+    }
 
   public:
-    inline glm::mat4 getViewMatrix() { return glm::make_mat4(viewMatrix); }
-    inline glm::mat4 getProjectionMatrix() { return glm::make_mat4(projectionMatrix); }
+    inline glm::mat4 getViewMatrix()
+    {
+      return glm::make_mat4(viewMatrix);
+    }
+    inline glm::mat4 getProjectionMatrix()
+    {
+      return glm::make_mat4(projectionMatrix);
+    }
 
   private:
     inline void setMatrix(TrXRViewMatrixType type, float *matrixFloats)

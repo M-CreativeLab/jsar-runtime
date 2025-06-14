@@ -28,7 +28,8 @@ namespace client_cssom::selectors
   // Check if the element matches the specified selector component.
   // NOTE: The component should not be a combinator.
   bool matchesSelectorComponentNonCombinator(const css2::selectors::Component &component,
-                                             const shared_ptr<HTMLElement> element, MatchingContext &context)
+                                             const shared_ptr<HTMLElement> element,
+                                             MatchingContext &context)
   {
     assert(!component.isCombinator());
 
@@ -51,7 +52,8 @@ namespace client_cssom::selectors
     return false;
   }
 
-  bool matchesSelectorComponent(const css2::selectors::Selector &selector, std::vector<css2::selectors::Component>::const_iterator &it,
+  bool matchesSelectorComponent(const css2::selectors::Selector &selector,
+                                std::vector<css2::selectors::Component>::const_iterator &it,
                                 const shared_ptr<HTMLElement> element,
                                 MatchingContext &context)
   {

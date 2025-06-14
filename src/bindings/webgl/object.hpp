@@ -74,7 +74,10 @@ namespace webgl
   {
   public:
     static void Init(Napi::Env env);
-    WebGLObject(const Napi::CallbackInfo &info) : WebGLObjectBase<WebGLObject>(info) {}
+    WebGLObject(const Napi::CallbackInfo &info)
+        : WebGLObjectBase<WebGLObject>(info)
+    {
+    }
 
   private:
     static thread_local Napi::FunctionReference *constructor;

@@ -25,13 +25,13 @@ namespace bindings
 #undef XX
 
       Napi::Function tpl = DefineClass(
-          env,
-          "NativeEventTarget",
-          {
-              StaticValue("EventTypes", jsEventTypes),
-              StaticValue("DocumentEventTypes", jsDocumentEventTypes),
-              InstanceMethod("dispatchEvent", &NativeEventTarget::DispatchEvent),
-          });
+        env,
+        "NativeEventTarget",
+        {
+          StaticValue("EventTypes", jsEventTypes),
+          StaticValue("DocumentEventTypes", jsDocumentEventTypes),
+          InstanceMethod("dispatchEvent", &NativeEventTarget::DispatchEvent),
+        });
       constructor = new Napi::FunctionReference();
       *constructor = Napi::Persistent(tpl);
       env.SetInstanceData(constructor);
@@ -39,7 +39,8 @@ namespace bindings
       exports.Set("NativeEventTarget", tpl);
     }
 
-    NativeEventTarget::NativeEventTarget(const Napi::CallbackInfo &info) : Napi::ObjectWrap<NativeEventTarget>(info)
+    NativeEventTarget::NativeEventTarget(const Napi::CallbackInfo &info)
+        : Napi::ObjectWrap<NativeEventTarget>(info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
@@ -57,11 +58,11 @@ namespace bindings
       }
 
       eventListener = Napi::ThreadSafeFunction::New(
-          env,
-          info[0].As<Napi::Function>(),
-          "NativeEventTarget",
-          0,
-          1);
+        env,
+        info[0].As<Napi::Function>(),
+        "NativeEventTarget",
+        0,
+        1);
 
       recvingEvents = true;
       eventRecvThread = thread([this]()
@@ -130,9 +131,9 @@ namespace bindings
       auto eventType = static_cast<TrNativeEventType>(jsType.As<Napi::Number>().Int32Value());
       auto detailJsonSrc = jsDetail.As<Napi::String>().Utf8Value();
       if (
-          eventType != TrNativeEventType::RpcRequest &&
-          eventType != TrNativeEventType::RpcResponse &&
-          eventType != TrNativeEventType::DocumentEvent)
+        eventType != TrNativeEventType::RpcRequest &&
+        eventType != TrNativeEventType::RpcResponse &&
+        eventType != TrNativeEventType::DocumentEvent)
       {
         string msg = "The event type is not supported: " + to_string(static_cast<int>(eventType));
         Napi::Error::New(env, msg).ThrowAsJavaScriptException();

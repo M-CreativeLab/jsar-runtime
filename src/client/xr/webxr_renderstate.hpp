@@ -20,24 +20,25 @@ namespace client_xr
   class XRRenderState
   {
   public:
-    XRRenderState() : baseLayer(nullptr),
-                      depthFar(1000.0),
-                      depthNear(0.1),
-                      inlineVerticalFieldOfView(0)
+    XRRenderState()
+        : baseLayer(nullptr)
+        , depthFar(1000.0)
+        , depthNear(0.1)
+        , inlineVerticalFieldOfView(0)
     {
     }
     XRRenderState(xr::RenderState *stateData)
-        : baseLayer(std::make_shared<XRWebGLLayer>(*stateData->baseLayer)),
-          depthFar(stateData->depthFar),
-          depthNear(stateData->depthNear),
-          inlineVerticalFieldOfView(stateData->inlineVerticalFieldOfView)
+        : baseLayer(std::make_shared<XRWebGLLayer>(*stateData->baseLayer))
+        , depthFar(stateData->depthFar)
+        , depthNear(stateData->depthNear)
+        , inlineVerticalFieldOfView(stateData->inlineVerticalFieldOfView)
     {
     }
     XRRenderState(XRRenderState &state)
-        : baseLayer(state.baseLayer),
-          depthFar(state.depthFar),
-          depthNear(state.depthNear),
-          inlineVerticalFieldOfView(state.inlineVerticalFieldOfView)
+        : baseLayer(state.baseLayer)
+        , depthFar(state.depthFar)
+        , depthNear(state.depthNear)
+        , inlineVerticalFieldOfView(state.inlineVerticalFieldOfView)
     {
     }
 

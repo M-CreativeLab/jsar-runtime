@@ -5,24 +5,51 @@
 
 namespace xr
 {
-  FrameContextBySessionId::FrameContextBySessionId(int sessionId) : m_SessionId(sessionId)
+  FrameContextBySessionId::FrameContextBySessionId(int sessionId)
+      : m_SessionId(sessionId)
   {
   }
-  FrameContextBySessionId::~FrameContextBySessionId() {}
+  FrameContextBySessionId::~FrameContextBySessionId()
+  {
+  }
 
-  int FrameContextBySessionId::getSessionId() { return m_SessionId; }
-  float *FrameContextBySessionId::getLocalTransform() { return m_LocalTransform; }
+  int FrameContextBySessionId::getSessionId()
+  {
+    return m_SessionId;
+  }
+  float *FrameContextBySessionId::getLocalTransform()
+  {
+    return m_LocalTransform;
+  }
   void FrameContextBySessionId::setLocalTransform(float *transform)
   {
     memcpy(m_LocalTransform, transform, sizeof(float) * 16);
   }
 
-  void DeviceFrame::start() { m_Ended = false; }
-  void DeviceFrame::end() { m_Ended = true; }
-  bool DeviceFrame::ended() { return m_Ended; }
-  bool DeviceFrame::isMultiPass() { return m_IsMultiPass; }
-  float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
-  glm::mat4 DeviceFrame::getLocalTransform(int id) { return m_XrDevice->getLocalTransformUnsafe(id); }
+  void DeviceFrame::start()
+  {
+    m_Ended = false;
+  }
+  void DeviceFrame::end()
+  {
+    m_Ended = true;
+  }
+  bool DeviceFrame::ended()
+  {
+    return m_Ended;
+  }
+  bool DeviceFrame::isMultiPass()
+  {
+    return m_IsMultiPass;
+  }
+  float *DeviceFrame::getViewerTransform()
+  {
+    return m_ViewerTransform;
+  }
+  glm::mat4 DeviceFrame::getLocalTransform(int id)
+  {
+    return m_XrDevice->getLocalTransformUnsafe(id);
+  }
 
   FrameContextBySessionId *DeviceFrame::addSession(int sessionId)
   {
@@ -61,8 +88,9 @@ namespace xr
   }
 
   MultiPassFrame::MultiPassFrame(
-      xr::Device *device,
-      int stereoId) : DeviceFrame(device)
+    xr::Device *device,
+    int stereoId)
+      : DeviceFrame(device)
   {
     m_IsMultiPass = true;
     m_CurrentStereoId = stereoId;
@@ -76,9 +104,14 @@ namespace xr
     memcpy(m_ViewerProjectionMatrix, projectionMatrix, sizeof(float) * 16);
   }
 
-  MultiPassFrame::~MultiPassFrame() {}
+  MultiPassFrame::~MultiPassFrame()
+  {
+  }
 
-  int MultiPassFrame::getActiveEyeId() { return m_ActiveEyeId; }
+  int MultiPassFrame::getActiveEyeId()
+  {
+    return m_ActiveEyeId;
+  }
 
   /**
    * Get glm::mat4 from a view matrix float array.

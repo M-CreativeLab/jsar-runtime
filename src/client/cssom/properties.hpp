@@ -364,17 +364,30 @@ namespace client_cssom
 
   private:
     NonCustomPropertyId(ShorthandId shorthand_id)
-        : bit_(static_cast<uint16_t>(shorthand_id)),
-          is_shorthand_(true) {}
+        : bit_(static_cast<uint16_t>(shorthand_id))
+        , is_shorthand_(true)
+    {
+    }
     NonCustomPropertyId(LonghandId longhand_id)
-        : bit_(static_cast<uint16_t>(longhand_id)),
-          is_shorthand_(false) {}
+        : bit_(static_cast<uint16_t>(longhand_id))
+        , is_shorthand_(false)
+    {
+    }
 
   public:
-    uint32_t bit() const { return bit_; }
+    uint32_t bit() const
+    {
+      return bit_;
+    }
 
-    bool operator==(const NonCustomPropertyId &other) const { return bit_ == other.bit_; }
-    bool operator!=(const NonCustomPropertyId &other) const { return !(*this == other); }
+    bool operator==(const NonCustomPropertyId &other) const
+    {
+      return bit_ == other.bit_;
+    }
+    bool operator!=(const NonCustomPropertyId &other) const
+    {
+      return !(*this == other);
+    }
     operator std::string() const
     {
       if (is_shorthand_)
@@ -397,13 +410,16 @@ namespace client_cssom
   {
   public:
     CustomPropertyId(const std::string &css)
-        : css_(css),
-          custom_bit_(ComputeUniqueHash(css))
+        : css_(css)
+        , custom_bit_(ComputeUniqueHash(css))
     {
     }
 
   public:
-    uint32_t bit() const { return custom_bit_; }
+    uint32_t bit() const
+    {
+      return custom_bit_;
+    }
 
     bool operator==(const CustomPropertyId &other) const
     {
@@ -413,7 +429,10 @@ namespace client_cssom
     {
       return !(*this == other);
     }
-    operator std::string() const { return css_; }
+    operator std::string() const
+    {
+      return css_;
+    }
     friend std::ostream &operator<<(std::ostream &os, const CustomPropertyId &id)
     {
       os << "CustomPropertyId(" << std::string(id) << ")";
@@ -467,9 +486,15 @@ namespace client_cssom
 
   private:
     PropertyId(NonCustomPropertyId non_custom_property_id)
-        : tag_(kNonCustom), id_(non_custom_property_id) {}
+        : tag_(kNonCustom)
+        , id_(non_custom_property_id)
+    {
+    }
     PropertyId(CustomPropertyId custom_property_id)
-        : tag_(kCustom), id_(custom_property_id) {}
+        : tag_(kCustom)
+        , id_(custom_property_id)
+    {
+    }
 
   private:
     Tag tag_;

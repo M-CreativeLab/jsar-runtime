@@ -8,14 +8,16 @@ namespace xr
   class RenderState
   {
   public:
-    RenderState() : depthFar(1000.0),
-                    depthNear(0.1),
-                    inlineVerticalFieldOfView(0)
+    RenderState()
+        : depthFar(1000.0)
+        , depthNear(0.1)
+        , inlineVerticalFieldOfView(0)
     {
     }
-    RenderState(RenderState *state) : depthFar(state->depthFar),
-                                      depthNear(state->depthNear),
-                                      inlineVerticalFieldOfView(state->inlineVerticalFieldOfView)
+    RenderState(RenderState *state)
+        : depthFar(state->depthFar)
+        , depthNear(state->depthNear)
+        , inlineVerticalFieldOfView(state->inlineVerticalFieldOfView)
     {
       if (state->baseLayer != nullptr)
       {

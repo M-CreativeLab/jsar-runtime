@@ -29,9 +29,9 @@ namespace webgl
      * @return Napi::Object The new instance of `WebGLFramebuffer`.
      */
     static Napi::Object NewInstance(
-        Napi::Env env,
-        std::shared_ptr<client_graphics::WebGLFramebuffer> handle,
-        bool isHostFramebuffer = false)
+      Napi::Env env,
+      std::shared_ptr<client_graphics::WebGLFramebuffer> handle,
+      bool isHostFramebuffer = false)
     {
       Napi::EscapableHandleScope scope(env);
       Napi::Object obj;
@@ -51,7 +51,8 @@ namespace webgl
 
   public:
     WebGLFramebuffer(const Napi::CallbackInfo &info)
-        : WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>(info), isHost(false)
+        : WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>(info)
+        , isHost(false)
     {
     }
 

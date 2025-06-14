@@ -72,8 +72,14 @@ namespace client_layout
     LayoutBox(std::shared_ptr<dom::Node> node);
 
   public:
-    const char *name() const override { return "LayoutBox"; }
-    bool isBox() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutBox";
+    }
+    bool isBox() const override final
+    {
+      return true;
+    }
 
     std::shared_ptr<LayoutBox> firstChildBox() const;
     std::shared_ptr<LayoutBox> lastChildBox() const;
@@ -94,7 +100,10 @@ namespace client_layout
                                    clientHeight());
     }
 
-    geometry::Rect<float> noOverflowRect() const { return physicalPaddingBoxRect(); }
+    geometry::Rect<float> noOverflowRect() const
+    {
+      return physicalPaddingBoxRect();
+    }
     geometry::Rect<float> scrollableOverflowRect() const;
 
     // These methods don't mean the box *actually* has top/left overflow. They mean that *if* the box overflows, it will
@@ -108,8 +117,14 @@ namespace client_layout
     // Sets the scrollable-overflow from the current set of layout-results.
     void setScrollableOverflowFromLayoutResults();
 
-    float contentLeft() const { return clientLeft() + borderLeft(); }
-    float contentTop() const { return clientTop() + borderTop(); }
+    float contentLeft() const
+    {
+      return clientLeft() + borderLeft();
+    }
+    float contentTop() const
+    {
+      return clientTop() + borderTop();
+    }
     float contentWidth() const
     {
       return transmute::common::math_utils::ClampNegativeToZero(clientWidth() - paddingLeft() - paddingRight());
@@ -125,14 +140,14 @@ namespace client_layout
     float contentLogicalWidth() const
     {
       return isHorizontalWritingMode()
-                 ? contentWidth()
-                 : contentHeight();
+               ? contentWidth()
+               : contentHeight();
     }
     float contentLogicalHeight() const
     {
       return isHorizontalWritingMode()
-                 ? contentHeight()
-                 : contentWidth();
+               ? contentHeight()
+               : contentWidth();
     }
 
     float clientLeft() const;
@@ -143,43 +158,50 @@ namespace client_layout
     float clientLogicalWidth() const
     {
       return isHorizontalWritingMode()
-                 ? clientWidth()
-                 : clientHeight();
+               ? clientWidth()
+               : clientHeight();
     }
     float clientLogicalHeight() const
     {
       return isHorizontalWritingMode()
-                 ? clientHeight()
-                 : clientWidth();
+               ? clientHeight()
+               : clientWidth();
     }
 
     virtual float scrollWidth() const;
     virtual float scrollHeight() const;
 
-    bool isUserScrollable() const { return hasScrollableOverflowX() || hasScrollableOverflowY(); }
+    bool isUserScrollable() const
+    {
+      return hasScrollableOverflowX() || hasScrollableOverflowY();
+    }
     virtual void autoScroll(const glm::vec3 &offset);
     void scrollTo(const glm::vec3 &offset);
     void scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
-    bool hasScrollableOverflowX() const { return scrollsOverflowX() && scrollWidth() != clientWidth(); }
-    bool hasScrollableOverflowY() const { return scrollsOverflowY() && scrollHeight() != clientHeight(); }
+    bool hasScrollableOverflowX() const
+    {
+      return scrollsOverflowX() && scrollWidth() != clientWidth();
+    }
+    bool hasScrollableOverflowY() const
+    {
+      return scrollsOverflowY() && scrollHeight() != clientHeight();
+    }
     bool scrollsOverflowX() const;
     bool scrollsOverflowY() const;
 
     glm::vec3 scrollOrigin() const;
     glm::vec3 scrolledContentOffset() const;
 
-    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
-                     HitTestPhase) override;
+    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase) override;
     // Returns if this box has overflow that is hit-testable.
     bool hasHitTestableOverflow() const;
     // Fast check if `NodeAtPoint` may find a hit based on the bounding box intersection.
     bool mayIntersect(const HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset) const;
 
   protected:
-    virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
-                                 HitTestPhase);
+    virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
 
     bool computeLayout(const ConstraintSpace &) override;
     void updateFromStyle() override;
@@ -187,8 +209,14 @@ namespace client_layout
   private:
     bool isHorizontalWritingMode() const;
 
-    inline bool scrollableOverflowIsSet() const { return overflow_ != nullptr && overflow_->scrollableOverflow; }
-    inline bool visualOverflowIsSet() const { return overflow_ != nullptr && overflow_->visualOverflow; }
+    inline bool scrollableOverflowIsSet() const
+    {
+      return overflow_ != nullptr && overflow_->scrollableOverflow;
+    }
+    inline bool visualOverflowIsSet() const
+    {
+      return overflow_ != nullptr && overflow_->visualOverflow;
+    }
 
     glm::vec3 computeSize() const;
     void invalidateCachedGeometry();

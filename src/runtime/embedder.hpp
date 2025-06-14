@@ -65,19 +65,31 @@ public: // API for configuration and operations
    *
    * @returns true if the runtime is started, false otherwise.
    */
-  inline bool start() { return constellation->initialize(); }
+  inline bool start()
+  {
+    return constellation->initialize();
+  }
   /**
    * Shutdown the runtime.
    */
-  inline void shutdown() { constellation->shutdown(); }
+  inline void shutdown()
+  {
+    constellation->shutdown();
+  }
   /**
    * @returns the server-side fps of the runtime.
    */
-  inline uint32_t getFps() { return constellation->renderer->getFps(); }
+  inline uint32_t getFps()
+  {
+    return constellation->renderer->getFps();
+  }
   /**
    * @returns the server-side uptime of the runtime.
    */
-  inline uint32_t getUptime() { return constellation->renderer->getUptime(); }
+  inline uint32_t getUptime()
+  {
+    return constellation->renderer->getUptime();
+  }
   /**
    * @returns the version of the runtime.
    */
@@ -113,7 +125,10 @@ public:
    * @param engine The host engine to check, e.g. Unity, Unreal, Cocos.
    * @returns `true` if the embedder is embedding with the host engine, `false` otherwise.
    */
-  inline bool isEmbeddingWith(TrHostEngine engine) { return hostEngine == engine; }
+  inline bool isEmbeddingWith(TrHostEngine engine)
+  {
+    return hostEngine == engine;
+  }
 
 public:
   std::shared_ptr<TrConstellation> constellation;

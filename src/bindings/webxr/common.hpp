@@ -111,7 +111,10 @@ namespace bindings
     /**
      * @returns the WebXR object handle.
      */
-    inline std::shared_ptr<HandleType> handle() { return handle_; }
+    inline std::shared_ptr<HandleType> handle()
+    {
+      return handle_;
+    }
 
   protected:
     std::shared_ptr<HandleType> handle_ = nullptr;

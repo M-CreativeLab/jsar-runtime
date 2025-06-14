@@ -14,11 +14,11 @@ namespace webgl
 
 #define ADD_WEBGL_CONSTANT(name)                              \
   InstanceValue(#name, Napi::Number::New(env, WEBGL_##name)), \
-      StaticValue(#name, Napi::Number::New(env, WEBGL_##name)),
+    StaticValue(#name, Napi::Number::New(env, WEBGL_##name)),
 
 #define ADD_WEBGL2_CONSTANT(name)                              \
   InstanceValue(#name, Napi::Number::New(env, WEBGL2_##name)), \
-      StaticValue(#name, Napi::Number::New(env, WEBGL2_##name)),
+    StaticValue(#name, Napi::Number::New(env, WEBGL2_##name)),
 
 #define WEBGL1_CONSTANTS_CLEARING_BUFFERS \
   ADD_WEBGL_CONSTANT(DEPTH_BUFFER_BIT)    \
@@ -678,149 +678,149 @@ namespace webgl
 
 #define WEBGL1_ACCESSORS(T)                                                                           \
   InstanceAccessor("drawingBufferWidth", &T::DrawingBufferWidthGetter, &T::DrawingBufferWidthSetter), \
-      InstanceAccessor("drawingBufferHeight", &T::DrawingBufferHeightGetter, &T::DrawingBufferHeightSetter)
+    InstanceAccessor("drawingBufferHeight", &T::DrawingBufferHeightGetter, &T::DrawingBufferHeightSetter)
 
-#define WEBGL1_METHODS(T)                                                         \
-  InstanceMethod("makeXRCompatible", &T::MakeXRCompatible),                       \
-      InstanceMethod("setDefaultCoordHandedness", &T::SetDefaultCoordHandedness), \
-      InstanceMethod("isContextLost", &T::IsContextLost),                         \
-      InstanceMethod("getContextAttributes", &T::GetContextAttributes),           \
-      InstanceMethod("createProgram", &T::CreateProgram),                         \
-      InstanceMethod("deleteProgram", &T::DeleteProgram),                         \
-      InstanceMethod("linkProgram", &T::LinkProgram),                             \
-      InstanceMethod("useProgram", &T::UseProgram),                               \
-      InstanceMethod("bindAttribLocation", &T::BindAttribLocation),               \
-      InstanceMethod("getProgramParameter", &T::GetProgramParameter),             \
-      InstanceMethod("getProgramInfoLog", &T::GetProgramInfoLog),                 \
-      InstanceMethod("attachShader", &T::AttachShader),                           \
-      InstanceMethod("detachShader", &T::DetachShader),                           \
-      InstanceMethod("createShader", &T::CreateShader),                           \
-      InstanceMethod("deleteShader", &T::DeleteShader),                           \
-      InstanceMethod("shaderSource", &T::ShaderSource, napi_default_jsproperty),  \
-      InstanceMethod("compileShader", &T::CompileShader),                         \
-      InstanceMethod("getShaderSource", &T::GetShaderSource),                     \
-      InstanceMethod("getShaderParameter", &T::GetShaderParameter),               \
-      InstanceMethod("getShaderInfoLog", &T::GetShaderInfoLog),                   \
-      InstanceMethod("createBuffer", &T::CreateBuffer),                           \
-      InstanceMethod("deleteBuffer", &T::DeleteBuffer),                           \
-      InstanceMethod("bindBuffer", &T::BindBuffer),                               \
-      InstanceMethod("bufferData", &T::BufferData, napi_default_jsproperty),      \
-      InstanceMethod("bufferSubData", &T::BufferSubData),                         \
-      InstanceMethod("createFramebuffer", &T::CreateFramebuffer),                 \
-      InstanceMethod("deleteFramebuffer", &T::DeleteFramebuffer),                 \
-      InstanceMethod("bindFramebuffer", &T::BindFramebuffer),                     \
-      InstanceMethod("framebufferRenderbuffer", &T::FramebufferRenderbuffer),     \
-      InstanceMethod("framebufferTexture2D", &T::FramebufferTexture2D),           \
-      InstanceMethod("checkFramebufferStatus", &T::CheckFramebufferStatus),       \
-      InstanceMethod("createRenderbuffer", &T::CreateRenderbuffer),               \
-      InstanceMethod("deleteRenderbuffer", &T::DeleteRenderbuffer),               \
-      InstanceMethod("bindRenderbuffer", &T::BindRenderbuffer),                   \
-      InstanceMethod("renderbufferStorage", &T::RenderbufferStorage),             \
-      InstanceMethod("createTexture", &T::CreateTexture),                         \
-      InstanceMethod("deleteTexture", &T::DeleteTexture),                         \
-      InstanceMethod("bindTexture", &T::BindTexture),                             \
-      InstanceMethod("texImage2D", &T::TexImage2D),                               \
-      InstanceMethod("texSubImage2D", &T::TexSubImage2D),                         \
-      InstanceMethod("copyTexImage2D", &T::CopyTexImage2D),                       \
-      InstanceMethod("copyTexSubImage2D", &T::CopyTexSubImage2D),                 \
-      InstanceMethod("texParameteri", &T::TexParameteri),                         \
-      InstanceMethod("texParameterf", &T::TexParameterf),                         \
-      InstanceMethod("activeTexture", &T::ActiveTexture),                         \
-      InstanceMethod("generateMipmap", &T::GenerateMipmap),                       \
-      InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),     \
-      InstanceMethod("disableVertexAttribArray", &T::DisableVertexAttribArray),   \
-      InstanceMethod("vertexAttribPointer", &T::VertexAttribPointer),             \
-      InstanceMethod("getActiveAttrib", &T::GetActiveAttrib),                     \
-      InstanceMethod("getActiveUniform", &T::GetActiveUniform),                   \
-      InstanceMethod("getAttribLocation", &T::GetAttribLocation),                 \
-      InstanceMethod("getUniformLocation", &T::GetUniformLocation),               \
-      InstanceMethod("uniform1f", &T::Uniform1f),                                 \
-      InstanceMethod("uniform1fv", &T::Uniform1fv),                               \
-      InstanceMethod("uniform1i", &T::Uniform1i),                                 \
-      InstanceMethod("uniform1iv", &T::Uniform1iv),                               \
-      InstanceMethod("uniform2f", &T::Uniform2f),                                 \
-      InstanceMethod("uniform2fv", &T::Uniform2fv),                               \
-      InstanceMethod("uniform2i", &T::Uniform2i),                                 \
-      InstanceMethod("uniform2iv", &T::Uniform2iv),                               \
-      InstanceMethod("uniform3f", &T::Uniform3f),                                 \
-      InstanceMethod("uniform3fv", &T::Uniform3fv),                               \
-      InstanceMethod("uniform3i", &T::Uniform3i),                                 \
-      InstanceMethod("uniform3iv", &T::Uniform3iv),                               \
-      InstanceMethod("uniform4f", &T::Uniform4f),                                 \
-      InstanceMethod("uniform4fv", &T::Uniform4fv),                               \
-      InstanceMethod("uniform4i", &T::Uniform4i),                                 \
-      InstanceMethod("uniform4iv", &T::Uniform4iv),                               \
-      InstanceMethod("uniformMatrix2fv", &T::UniformMatrix2fv),                   \
-      InstanceMethod("uniformMatrix3fv", &T::UniformMatrix3fv),                   \
-      InstanceMethod("uniformMatrix4fv", &T::UniformMatrix4fv),                   \
-      InstanceMethod("drawArrays", &T::DrawArrays),                               \
-      InstanceMethod("drawElements", &T::DrawElements),                           \
-      InstanceMethod("hint", &T::Hint),                                           \
-      InstanceMethod("lineWidth", &T::LineWidth),                                 \
-      InstanceMethod("pixelStorei", &T::PixelStorei),                             \
-      InstanceMethod("polygonOffset", &T::PolygonOffset),                         \
-      InstanceMethod("viewport", &T::Viewport),                                   \
-      InstanceMethod("scissor", &T::Scissor),                                     \
-      InstanceMethod("clearColor", &T::ClearColor),                               \
-      InstanceMethod("clearDepth", &T::ClearDepth),                               \
-      InstanceMethod("clearStencil", &T::ClearStencil),                           \
-      InstanceMethod("clear", &T::Clear),                                         \
-      InstanceMethod("depthMask", &T::DepthMask),                                 \
-      InstanceMethod("depthFunc", &T::DepthFunc),                                 \
-      InstanceMethod("depthRange", &T::DepthRange),                               \
-      InstanceMethod("stencilFunc", &T::StencilFunc),                             \
-      InstanceMethod("stencilFuncSeparate", &T::StencilFuncSeparate),             \
-      InstanceMethod("stencilMask", &T::StencilMask),                             \
-      InstanceMethod("stencilMaskSeparate", &T::StencilMaskSeparate),             \
-      InstanceMethod("stencilOp", &T::StencilOp),                                 \
-      InstanceMethod("stencilOpSeparate", &T::StencilOpSeparate),                 \
-      InstanceMethod("blendColor", &T::BlendColor),                               \
-      InstanceMethod("blendEquation", &T::BlendEquation),                         \
-      InstanceMethod("blendEquationSeparate", &T::BlendEquationSeparate),         \
-      InstanceMethod("blendFunc", &T::BlendFunc),                                 \
-      InstanceMethod("blendFuncSeparate", &T::BlendFuncSeparate),                 \
-      InstanceMethod("colorMask", &T::ColorMask),                                 \
-      InstanceMethod("cullFace", &T::CullFace),                                   \
-      InstanceMethod("frontFace", &T::FrontFace),                                 \
-      InstanceMethod("enable", &T::Enable),                                       \
-      InstanceMethod("disable", &T::Disable),                                     \
-      InstanceMethod("getParameter", &T::GetParameter),                           \
-      InstanceMethod("getShaderPrecisionFormat", &T::GetShaderPrecisionFormat),   \
-      InstanceMethod("getError", &T::GetError),                                   \
-      InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions)
+#define WEBGL1_METHODS(T)                                                       \
+  InstanceMethod("makeXRCompatible", &T::MakeXRCompatible),                     \
+    InstanceMethod("setDefaultCoordHandedness", &T::SetDefaultCoordHandedness), \
+    InstanceMethod("isContextLost", &T::IsContextLost),                         \
+    InstanceMethod("getContextAttributes", &T::GetContextAttributes),           \
+    InstanceMethod("createProgram", &T::CreateProgram),                         \
+    InstanceMethod("deleteProgram", &T::DeleteProgram),                         \
+    InstanceMethod("linkProgram", &T::LinkProgram),                             \
+    InstanceMethod("useProgram", &T::UseProgram),                               \
+    InstanceMethod("bindAttribLocation", &T::BindAttribLocation),               \
+    InstanceMethod("getProgramParameter", &T::GetProgramParameter),             \
+    InstanceMethod("getProgramInfoLog", &T::GetProgramInfoLog),                 \
+    InstanceMethod("attachShader", &T::AttachShader),                           \
+    InstanceMethod("detachShader", &T::DetachShader),                           \
+    InstanceMethod("createShader", &T::CreateShader),                           \
+    InstanceMethod("deleteShader", &T::DeleteShader),                           \
+    InstanceMethod("shaderSource", &T::ShaderSource, napi_default_jsproperty),  \
+    InstanceMethod("compileShader", &T::CompileShader),                         \
+    InstanceMethod("getShaderSource", &T::GetShaderSource),                     \
+    InstanceMethod("getShaderParameter", &T::GetShaderParameter),               \
+    InstanceMethod("getShaderInfoLog", &T::GetShaderInfoLog),                   \
+    InstanceMethod("createBuffer", &T::CreateBuffer),                           \
+    InstanceMethod("deleteBuffer", &T::DeleteBuffer),                           \
+    InstanceMethod("bindBuffer", &T::BindBuffer),                               \
+    InstanceMethod("bufferData", &T::BufferData, napi_default_jsproperty),      \
+    InstanceMethod("bufferSubData", &T::BufferSubData),                         \
+    InstanceMethod("createFramebuffer", &T::CreateFramebuffer),                 \
+    InstanceMethod("deleteFramebuffer", &T::DeleteFramebuffer),                 \
+    InstanceMethod("bindFramebuffer", &T::BindFramebuffer),                     \
+    InstanceMethod("framebufferRenderbuffer", &T::FramebufferRenderbuffer),     \
+    InstanceMethod("framebufferTexture2D", &T::FramebufferTexture2D),           \
+    InstanceMethod("checkFramebufferStatus", &T::CheckFramebufferStatus),       \
+    InstanceMethod("createRenderbuffer", &T::CreateRenderbuffer),               \
+    InstanceMethod("deleteRenderbuffer", &T::DeleteRenderbuffer),               \
+    InstanceMethod("bindRenderbuffer", &T::BindRenderbuffer),                   \
+    InstanceMethod("renderbufferStorage", &T::RenderbufferStorage),             \
+    InstanceMethod("createTexture", &T::CreateTexture),                         \
+    InstanceMethod("deleteTexture", &T::DeleteTexture),                         \
+    InstanceMethod("bindTexture", &T::BindTexture),                             \
+    InstanceMethod("texImage2D", &T::TexImage2D),                               \
+    InstanceMethod("texSubImage2D", &T::TexSubImage2D),                         \
+    InstanceMethod("copyTexImage2D", &T::CopyTexImage2D),                       \
+    InstanceMethod("copyTexSubImage2D", &T::CopyTexSubImage2D),                 \
+    InstanceMethod("texParameteri", &T::TexParameteri),                         \
+    InstanceMethod("texParameterf", &T::TexParameterf),                         \
+    InstanceMethod("activeTexture", &T::ActiveTexture),                         \
+    InstanceMethod("generateMipmap", &T::GenerateMipmap),                       \
+    InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),     \
+    InstanceMethod("disableVertexAttribArray", &T::DisableVertexAttribArray),   \
+    InstanceMethod("vertexAttribPointer", &T::VertexAttribPointer),             \
+    InstanceMethod("getActiveAttrib", &T::GetActiveAttrib),                     \
+    InstanceMethod("getActiveUniform", &T::GetActiveUniform),                   \
+    InstanceMethod("getAttribLocation", &T::GetAttribLocation),                 \
+    InstanceMethod("getUniformLocation", &T::GetUniformLocation),               \
+    InstanceMethod("uniform1f", &T::Uniform1f),                                 \
+    InstanceMethod("uniform1fv", &T::Uniform1fv),                               \
+    InstanceMethod("uniform1i", &T::Uniform1i),                                 \
+    InstanceMethod("uniform1iv", &T::Uniform1iv),                               \
+    InstanceMethod("uniform2f", &T::Uniform2f),                                 \
+    InstanceMethod("uniform2fv", &T::Uniform2fv),                               \
+    InstanceMethod("uniform2i", &T::Uniform2i),                                 \
+    InstanceMethod("uniform2iv", &T::Uniform2iv),                               \
+    InstanceMethod("uniform3f", &T::Uniform3f),                                 \
+    InstanceMethod("uniform3fv", &T::Uniform3fv),                               \
+    InstanceMethod("uniform3i", &T::Uniform3i),                                 \
+    InstanceMethod("uniform3iv", &T::Uniform3iv),                               \
+    InstanceMethod("uniform4f", &T::Uniform4f),                                 \
+    InstanceMethod("uniform4fv", &T::Uniform4fv),                               \
+    InstanceMethod("uniform4i", &T::Uniform4i),                                 \
+    InstanceMethod("uniform4iv", &T::Uniform4iv),                               \
+    InstanceMethod("uniformMatrix2fv", &T::UniformMatrix2fv),                   \
+    InstanceMethod("uniformMatrix3fv", &T::UniformMatrix3fv),                   \
+    InstanceMethod("uniformMatrix4fv", &T::UniformMatrix4fv),                   \
+    InstanceMethod("drawArrays", &T::DrawArrays),                               \
+    InstanceMethod("drawElements", &T::DrawElements),                           \
+    InstanceMethod("hint", &T::Hint),                                           \
+    InstanceMethod("lineWidth", &T::LineWidth),                                 \
+    InstanceMethod("pixelStorei", &T::PixelStorei),                             \
+    InstanceMethod("polygonOffset", &T::PolygonOffset),                         \
+    InstanceMethod("viewport", &T::Viewport),                                   \
+    InstanceMethod("scissor", &T::Scissor),                                     \
+    InstanceMethod("clearColor", &T::ClearColor),                               \
+    InstanceMethod("clearDepth", &T::ClearDepth),                               \
+    InstanceMethod("clearStencil", &T::ClearStencil),                           \
+    InstanceMethod("clear", &T::Clear),                                         \
+    InstanceMethod("depthMask", &T::DepthMask),                                 \
+    InstanceMethod("depthFunc", &T::DepthFunc),                                 \
+    InstanceMethod("depthRange", &T::DepthRange),                               \
+    InstanceMethod("stencilFunc", &T::StencilFunc),                             \
+    InstanceMethod("stencilFuncSeparate", &T::StencilFuncSeparate),             \
+    InstanceMethod("stencilMask", &T::StencilMask),                             \
+    InstanceMethod("stencilMaskSeparate", &T::StencilMaskSeparate),             \
+    InstanceMethod("stencilOp", &T::StencilOp),                                 \
+    InstanceMethod("stencilOpSeparate", &T::StencilOpSeparate),                 \
+    InstanceMethod("blendColor", &T::BlendColor),                               \
+    InstanceMethod("blendEquation", &T::BlendEquation),                         \
+    InstanceMethod("blendEquationSeparate", &T::BlendEquationSeparate),         \
+    InstanceMethod("blendFunc", &T::BlendFunc),                                 \
+    InstanceMethod("blendFuncSeparate", &T::BlendFuncSeparate),                 \
+    InstanceMethod("colorMask", &T::ColorMask),                                 \
+    InstanceMethod("cullFace", &T::CullFace),                                   \
+    InstanceMethod("frontFace", &T::FrontFace),                                 \
+    InstanceMethod("enable", &T::Enable),                                       \
+    InstanceMethod("disable", &T::Disable),                                     \
+    InstanceMethod("getParameter", &T::GetParameter),                           \
+    InstanceMethod("getShaderPrecisionFormat", &T::GetShaderPrecisionFormat),   \
+    InstanceMethod("getError", &T::GetError),                                   \
+    InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions)
 
-#define WEBGL2_METHODS(T)                                                                   \
-  InstanceMethod("readBuffer", &T::ReadBuffer),                                             \
-      InstanceMethod("bindBufferBase", &T::BindBufferBase),                                 \
-      InstanceMethod("bindBufferRange", &T::BindBufferRange),                               \
-      InstanceMethod("blitFramebuffer", &T::BlitFramebuffer),                               \
-      InstanceMethod("renderbufferStorageMultisample", &T::RenderbufferStorageMultisample), \
-      InstanceMethod("createVertexArray", &T::CreateVertexArray),                           \
-      InstanceMethod("deleteVertexArray", &T::DeleteVertexArray),                           \
-      InstanceMethod("bindVertexArray", &T::BindVertexArray),                               \
-      InstanceMethod("texImage3D", &T::TexImage3D),                                         \
-      InstanceMethod("texSubImage3D", &T::TexSubImage3D),                                   \
-      InstanceMethod("texStorage2D", &T::TexStorage2D),                                     \
-      InstanceMethod("texStorage3D", &T::TexStorage3D),                                     \
-      InstanceMethod("getUniformBlockIndex", &T::GetUniformBlockIndex),                     \
-      InstanceMethod("uniformBlockBinding", &T::UniformBlockBinding),                       \
-      InstanceMethod("vertexAttribIPointer", &T::VertexAttribIPointer),                     \
-      InstanceMethod("vertexAttribDivisor", &T::VertexAttribDivisor),                       \
-      InstanceMethod("drawBuffers", &T::DrawBuffers),                                       \
-      InstanceMethod("drawArraysInstanced", &T::DrawArraysInstanced),                       \
-      InstanceMethod("drawElementsInstanced", &T::DrawElementsInstanced),                   \
-      InstanceMethod("drawRangeElements", &T::DrawRangeElements)
+#define WEBGL2_METHODS(T)                                                                 \
+  InstanceMethod("readBuffer", &T::ReadBuffer),                                           \
+    InstanceMethod("bindBufferBase", &T::BindBufferBase),                                 \
+    InstanceMethod("bindBufferRange", &T::BindBufferRange),                               \
+    InstanceMethod("blitFramebuffer", &T::BlitFramebuffer),                               \
+    InstanceMethod("renderbufferStorageMultisample", &T::RenderbufferStorageMultisample), \
+    InstanceMethod("createVertexArray", &T::CreateVertexArray),                           \
+    InstanceMethod("deleteVertexArray", &T::DeleteVertexArray),                           \
+    InstanceMethod("bindVertexArray", &T::BindVertexArray),                               \
+    InstanceMethod("texImage3D", &T::TexImage3D),                                         \
+    InstanceMethod("texSubImage3D", &T::TexSubImage3D),                                   \
+    InstanceMethod("texStorage2D", &T::TexStorage2D),                                     \
+    InstanceMethod("texStorage3D", &T::TexStorage3D),                                     \
+    InstanceMethod("getUniformBlockIndex", &T::GetUniformBlockIndex),                     \
+    InstanceMethod("uniformBlockBinding", &T::UniformBlockBinding),                       \
+    InstanceMethod("vertexAttribIPointer", &T::VertexAttribIPointer),                     \
+    InstanceMethod("vertexAttribDivisor", &T::VertexAttribDivisor),                       \
+    InstanceMethod("drawBuffers", &T::DrawBuffers),                                       \
+    InstanceMethod("drawArraysInstanced", &T::DrawArraysInstanced),                       \
+    InstanceMethod("drawElementsInstanced", &T::DrawElementsInstanced),                   \
+    InstanceMethod("drawRangeElements", &T::DrawRangeElements)
 
   Napi::Object WebGLRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(
-        env,
-        "WebGLRenderingContext",
-        {
-            WEBGL1_CONSTANTS,
-            WEBGL1_METHODS(WebGLRenderingContext),
-            WEBGL1_ACCESSORS(WebGLRenderingContext),
-        });
+      env,
+      "WebGLRenderingContext",
+      {
+        WEBGL1_CONSTANTS,
+        WEBGL1_METHODS(WebGLRenderingContext),
+        WEBGL1_ACCESSORS(WebGLRenderingContext),
+      });
     WebGLRenderingContext::constructor = new Napi::FunctionReference();
     *WebGLRenderingContext::constructor = Napi::Persistent(tpl);
     env.SetInstanceData(WebGLRenderingContext::constructor);
@@ -836,15 +836,15 @@ namespace webgl
   Napi::Object WebGL2RenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(
-        env,
-        "WebGL2RenderingContext",
-        {
-            WEBGL1_CONSTANTS,
-            WEBGL2_CONSTANTS,
-            WEBGL1_METHODS(WebGL2RenderingContext),
-            WEBGL2_METHODS(WebGL2RenderingContext),
-            WEBGL1_ACCESSORS(WebGL2RenderingContext),
-        });
+      env,
+      "WebGL2RenderingContext",
+      {
+        WEBGL1_CONSTANTS,
+        WEBGL2_CONSTANTS,
+        WEBGL1_METHODS(WebGL2RenderingContext),
+        WEBGL2_METHODS(WebGL2RenderingContext),
+        WEBGL1_ACCESSORS(WebGL2RenderingContext),
+      });
     WebGL2RenderingContext::constructor = new Napi::FunctionReference();
     *WebGL2RenderingContext::constructor = Napi::Persistent(tpl);
     env.SetInstanceData(WebGL2RenderingContext::constructor);
@@ -865,7 +865,7 @@ namespace webgl
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "getParameter() takes 1 argument.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -921,13 +921,13 @@ namespace webgl
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "readBuffer() takes 1 argument.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "readBuffer() 1st argument(src) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -944,25 +944,25 @@ namespace webgl
     if (info.Length() < 3)
     {
       Napi::TypeError::New(env, "bindBufferBase() takes 3 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferBase() 1st argument(target) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferBase() 2nd argument(index) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsObject() || WebGLBuffer::IsInstanceOf(info[2]))
     {
       Napi::TypeError::New(env, "bindBufferBase() 3rd argument(buffer) must be an `WebGLBuffer` object.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -989,37 +989,37 @@ namespace webgl
     if (info.Length() < 5)
     {
       Napi::TypeError::New(env, "bindBufferRange() takes 5 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferRange() 1st argument(target) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferRange() 2nd argument(index) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsObject() || WebGLBuffer::IsInstanceOf(info[2]))
     {
       Napi::TypeError::New(env, "bindBufferRange() 3rd argument(buffer) must be an `WebGLBuffer` object.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[3].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferRange() 4th argument(offset) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[4].IsNumber())
     {
       Napi::TypeError::New(env, "bindBufferRange() 5th argument(size) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1030,7 +1030,10 @@ namespace webgl
     auto size = info[4].As<Napi::Number>().Uint32Value();
 
     glContext_->bindBufferRange(static_cast<client_graphics::WebGLBufferBindingTarget>(target),
-                                index, buffer->handle(), offset, size);
+                                index,
+                                buffer->handle(),
+                                offset,
+                                size);
     return env.Undefined();
   }
 
@@ -1042,7 +1045,7 @@ namespace webgl
     if (info.Length() < 10)
     {
       Napi::TypeError::New(env, "blitFramebuffer() takes 10 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1069,7 +1072,7 @@ namespace webgl
     if (info.Length() < 5)
     {
       Napi::TypeError::New(env, "renderbufferStorageMultisample() takes 5 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1080,7 +1083,10 @@ namespace webgl
     auto height = info[4].ToNumber().Int32Value();
 
     glContext_->renderbufferStorageMultisample(static_cast<client_graphics::WebGLRenderbufferBindingTarget>(target),
-                                               samples, internalformat, width, height);
+                                               samples,
+                                               internalformat,
+                                               width,
+                                               height);
     return env.Undefined();
   }
 
@@ -1099,13 +1105,13 @@ namespace webgl
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "deleteVertexArray() takes 1 argument.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsObject() || !WebGLVertexArray::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "deleteVertexArray() 1st argument(vao) must be an `WebGLVertexArray` object.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1122,7 +1128,7 @@ namespace webgl
     if (TR_UNLIKELY(info.Length() <= 0))
     {
       Napi::TypeError::New(env, "bindVertexArray() takes 1 argument.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1147,7 +1153,7 @@ namespace webgl
     {
       string msg = "texImage3D() takes 10 arguments, but got " + to_string(info.Length()) + ".";
       Napi::TypeError::New(env, msg)
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1165,7 +1171,7 @@ namespace webgl
     if (info[9].IsNumber())
     {
       Napi::TypeError::New(env, "texImage3D() with `offset` is not supported.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1187,12 +1193,17 @@ namespace webgl
     else
     {
       Napi::TypeError::New(env, "texImage3D() with source is not supported.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     glContext_->texImage3D(static_cast<client_graphics::WebGLTexture3DTarget>(target),
-                           level, internalformat, width, height, depth, border,
+                           level,
+                           internalformat,
+                           width,
+                           height,
+                           depth,
+                           border,
                            static_cast<client_graphics::WebGLTextureFormat>(format),
                            static_cast<client_graphics::WebGLPixelType>(pixelType),
                            pixels);
@@ -1207,7 +1218,7 @@ namespace webgl
     if (info.Length() < 11)
     {
       Napi::TypeError::New(env, "texSubImage3D() takes 11 or 12 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1226,7 +1237,7 @@ namespace webgl
     if (jsSourceData.IsNumber())
     {
       Napi::TypeError::New(env, "texSubImage3D() 11th argument(offset) is not supported.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1252,12 +1263,18 @@ namespace webgl
     else
     {
       Napi::TypeError::New(env, "texSubImage3D() 11th argument(pixels) must be an ArrayBuffer or TypedArray.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     glContext_->texSubImage3D(static_cast<client_graphics::WebGLTexture3DTarget>(target),
-                              level, xoffset, yoffset, zoffset, width, height, depth,
+                              level,
+                              xoffset,
+                              yoffset,
+                              zoffset,
+                              width,
+                              height,
+                              depth,
                               static_cast<client_graphics::WebGLTextureFormat>(format),
                               static_cast<client_graphics::WebGLPixelType>(type),
                               pixels);
@@ -1272,7 +1289,7 @@ namespace webgl
     if (info.Length() < 5)
     {
       Napi::TypeError::New(env, "texStorage2D() takes 5 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1283,7 +1300,10 @@ namespace webgl
     auto height = info[4].ToNumber().Uint32Value();
 
     glContext_->texStorage2D(static_cast<client_graphics::WebGLTexture2DTarget>(target),
-                             levels, internalformat, width, height);
+                             levels,
+                             internalformat,
+                             width,
+                             height);
     return env.Undefined();
   }
 
@@ -1295,7 +1315,7 @@ namespace webgl
     if (info.Length() < 6)
     {
       Napi::TypeError::New(env, "texStorage3D() takes 6 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1307,7 +1327,11 @@ namespace webgl
     auto depth = info[5].ToNumber().Uint32Value();
 
     glContext_->texStorage3D(static_cast<client_graphics::WebGLTexture3DTarget>(target),
-                             levels, internalformat, width, height, depth);
+                             levels,
+                             internalformat,
+                             width,
+                             height,
+                             depth);
     return env.Undefined();
   }
 
@@ -1319,19 +1343,19 @@ namespace webgl
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "getUniformBlockIndex() takes 2 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getUniformBlockIndex() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsString())
     {
       Napi::TypeError::New(env, "getUniformBlockIndex() 2nd argument(name) must be a string.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1348,25 +1372,25 @@ namespace webgl
     if (info.Length() < 3)
     {
       Napi::TypeError::New(env, "uniformBlockBinding() takes 3 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "uniformBlockBinding() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "uniformBlockBinding() 2nd argument(uniformBlockIndex) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsNumber())
     {
       Napi::TypeError::New(env, "uniformBlockBinding() 3rd argument(uniformBlockBinding) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1385,37 +1409,37 @@ namespace webgl
     if (info.Length() < 5)
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() takes 5 arguments: index, size, type, stride, offset.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() 1st argument(index) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() 2nd argument(size) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() 3rd argument(type) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[3].IsBoolean())
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() 4th argument(stride) must be a boolean.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[4].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribIPointer() 5th argument(offset) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1437,19 +1461,19 @@ namespace webgl
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "vertexAttribDivisor() takes 2 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribDivisor() 1st argument(index) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "vertexAttribDivisor() 2nd argument(divisor) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1468,13 +1492,13 @@ namespace webgl
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "drawBuffers() takes 1 argument.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsArray())
     {
       Napi::TypeError::New(env, "drawBuffers() 1st argument(buffers) must be an array.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1485,7 +1509,7 @@ namespace webgl
       if (!jsBuffers.Get(i).IsNumber())
       {
         Napi::TypeError::New(env, "drawBuffers() 1st argument(buffers) must be an array of numbers.")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return env.Undefined();
       }
       buffers.push_back(jsBuffers.Get(i).As<Napi::Number>().Uint32Value());
@@ -1502,31 +1526,31 @@ namespace webgl
     if (info.Length() < 4)
     {
       Napi::TypeError::New(env, "drawArraysInstanced() takes 4 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "drawArraysInstanced() 1st argument(mode) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "drawArraysInstanced() 2nd argument(first) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsNumber())
     {
       Napi::TypeError::New(env, "drawArraysInstanced() 3rd argument(count) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[3].IsNumber())
     {
       Napi::TypeError::New(env, "drawArraysInstanced() 4th argument(instanceCount) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1546,37 +1570,37 @@ namespace webgl
     if (info.Length() < 5)
     {
       Napi::TypeError::New(env, "drawElementsInstanced() takes 5 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "drawElementsInstanced() 1st argument(mode) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "drawElementsInstanced() 2nd argument(count) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsNumber())
     {
       Napi::TypeError::New(env, "drawElementsInstanced() 3rd argument(type) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[3].IsNumber())
     {
       Napi::TypeError::New(env, "drawElementsInstanced() 4th argument(offset) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[4].IsNumber())
     {
       Napi::TypeError::New(env, "drawElementsInstanced() 5th argument(instanceCount) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1598,43 +1622,43 @@ namespace webgl
     if (info.Length() < 6)
     {
       Napi::TypeError::New(env, "drawRangeElements() takes 6 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 1st argument(mode) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 2nd argument(start) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 3rd argument(end) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[3].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 4th argument(count) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[4].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 5th argument(type) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[5].IsNumber())
     {
       Napi::TypeError::New(env, "drawRangeElements() 6th argument(offset) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 

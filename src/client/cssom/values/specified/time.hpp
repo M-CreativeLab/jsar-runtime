@@ -38,8 +38,14 @@ namespace client_cssom::values::specified
       assert(false && "Invalid time unit.");
       return "";
     }
-    inline bool isSeconds() const { return unit_ == kSeconds; }
-    inline bool isMilliseconds() const { return unit_ == kMilliseconds; }
+    inline bool isSeconds() const
+    {
+      return unit_ == kSeconds;
+    }
+    inline bool isMilliseconds() const
+    {
+      return unit_ == kMilliseconds;
+    }
 
   private:
     bool parse(const std::string &input) override

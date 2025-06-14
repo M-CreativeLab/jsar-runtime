@@ -30,13 +30,19 @@ namespace crates
   class ModuleExtension
   {
   public:
-    ModuleExtension(holocron::ModuleExtensionIndex index) : index(index) {}
+    ModuleExtension(holocron::ModuleExtensionIndex index)
+        : index(index)
+    {
+    }
 
   public:
     /**
      * Returns if this module has no extension.
      */
-    inline bool isNone() { return index == holocron::ModuleExtensionIndex::kNone; }
+    inline bool isNone()
+    {
+      return index == holocron::ModuleExtensionIndex::kNone;
+    }
 
     /**
      * Returns if this module is a text source module.
@@ -146,17 +152,18 @@ namespace crates
     }
 
   private:
-    Url(holocron::WHATWGUrl whatwgUrl) : host(whatwgUrl.host),
-                                         hostname(whatwgUrl.hostname),
-                                         href(whatwgUrl.href),
-                                         origin(whatwgUrl.origin),
-                                         password(whatwgUrl.password),
-                                         pathname(whatwgUrl.pathname),
-                                         port(whatwgUrl.port),
-                                         protocol(whatwgUrl.protocol),
-                                         search(whatwgUrl.search),
-                                         username(whatwgUrl.username),
-                                         hash(whatwgUrl.hash)
+    Url(holocron::WHATWGUrl whatwgUrl)
+        : host(whatwgUrl.host)
+        , hostname(whatwgUrl.hostname)
+        , href(whatwgUrl.href)
+        , origin(whatwgUrl.origin)
+        , password(whatwgUrl.password)
+        , pathname(whatwgUrl.pathname)
+        , port(whatwgUrl.port)
+        , protocol(whatwgUrl.protocol)
+        , search(whatwgUrl.search)
+        , username(whatwgUrl.username)
+        , hash(whatwgUrl.hash)
     {
     }
 

@@ -17,7 +17,8 @@ namespace dom
   class TimingFunction
   {
   protected:
-    TimingFunction(TimingFunctionType type) : type_(type)
+    TimingFunction(TimingFunctionType type)
+        : type_(type)
     {
     }
 
@@ -26,9 +27,18 @@ namespace dom
     std::unique_ptr<TimingFunction> clone() const;
 
   public:
-    virtual bool isLinear() const { return false; }
-    virtual bool isCubicBezier() const { return false; }
-    virtual bool isSteps() const { return false; }
+    virtual bool isLinear() const
+    {
+      return false;
+    }
+    virtual bool isCubicBezier() const
+    {
+      return false;
+    }
+    virtual bool isSteps() const
+    {
+      return false;
+    }
 
     virtual std::string toString() const = 0;
     virtual double evaluate(double fraction) const = 0;
@@ -57,11 +67,13 @@ namespace dom
     {
     }
     explicit LinearTimingFunction(std::vector<glm::vec3> points)
-        : TimingFunction(TimingFunctionType::Linear), points_(std::move(points))
+        : TimingFunction(TimingFunctionType::Linear)
+        , points_(std::move(points))
     {
     }
     LinearTimingFunction(const LinearTimingFunction &other)
-        : TimingFunction(other.type_), points_(other.points_)
+        : TimingFunction(other.type_)
+        , points_(other.points_)
     {
     }
 
@@ -69,7 +81,10 @@ namespace dom
     ~LinearTimingFunction() override = default;
 
   public:
-    bool isLinear() const override final { return true; }
+    bool isLinear() const override final
+    {
+      return true;
+    }
 
     std::string toString() const override;
     double evaluate(double fraction) const override;

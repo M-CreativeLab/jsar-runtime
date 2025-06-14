@@ -13,11 +13,18 @@ namespace builtin_scene
   class BoundingBox : public ecs::Component
   {
   public:
-    BoundingBox() : ecs::Component(), width_(0.0f), height_(0.0f), depth_(0.0f)
+    BoundingBox()
+        : ecs::Component()
+        , width_(0.0f)
+        , height_(0.0f)
+        , depth_(0.0f)
     {
     }
     BoundingBox(float width, float height, float depth)
-        : ecs::Component(), width_(width), height_(height), depth_(depth)
+        : ecs::Component()
+        , width_(width)
+        , height_(height)
+        , depth_(depth)
     {
       assert(width_ >= 0.0f);
       assert(height_ >= 0.0f);
@@ -30,17 +37,35 @@ namespace builtin_scene
 
   public:
     // The width in pixel.
-    inline float width() const { return width_; }
+    inline float width() const
+    {
+      return width_;
+    }
     // The height in pixel.
-    inline float height() const { return height_; }
+    inline float height() const
+    {
+      return height_;
+    }
     // The depth in pixel.
-    inline float depth() const { return depth_; }
+    inline float depth() const
+    {
+      return depth_;
+    }
     // The size in pixel.
-    inline glm::vec3 size() const { return glm::vec3(width_, height_, depth_); }
+    inline glm::vec3 size() const
+    {
+      return glm::vec3(width_, height_, depth_);
+    }
     // The min point of the bounding box.
-    inline glm::vec3 min() const { return glm::vec3(-width_ / 2.0f, -height_ / 2.0f, -depth_ / 2.0f); }
+    inline glm::vec3 min() const
+    {
+      return glm::vec3(-width_ / 2.0f, -height_ / 2.0f, -depth_ / 2.0f);
+    }
     // The max point of the bounding box.
-    inline glm::vec3 max() const { return glm::vec3(width_ / 2.0f, height_ / 2.0f, depth_ / 2.0f); }
+    inline glm::vec3 max() const
+    {
+      return glm::vec3(width_ / 2.0f, height_ / 2.0f, depth_ / 2.0f);
+    }
 
     /**
      * Update the size of the bounding box.
@@ -77,7 +102,10 @@ namespace builtin_scene
      *
      * @returns The difference between this bounding box and the other.
      */
-    glm::vec3 operator-(const BoundingBox &other) const { return diff(other); }
+    glm::vec3 operator-(const BoundingBox &other) const
+    {
+      return diff(other);
+    }
 
   private:
     float width_;

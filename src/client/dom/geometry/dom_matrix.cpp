@@ -12,11 +12,9 @@ namespace dom::geometry
     return DOMMatrix::FromMatrix(*this).translateSelf(tx, ty, tz);
   }
 
-  DOMMatrix DOMMatrixReadOnly::scale(float scaleX, float scaleY, float scaleZ,
-                                     float originX, float originY, float originZ) const
+  DOMMatrix DOMMatrixReadOnly::scale(float scaleX, float scaleY, float scaleZ, float originX, float originY, float originZ) const
   {
-    return DOMMatrix::FromMatrix(*this).scaleSelf(scaleX, scaleY, scaleZ,
-                                                  originX, originY, originZ);
+    return DOMMatrix::FromMatrix(*this).scaleSelf(scaleX, scaleY, scaleZ, originX, originY, originZ);
   }
 
   DOMMatrix DOMMatrixReadOnly::multiply(const DOMMatrix &other) const
@@ -30,8 +28,7 @@ namespace dom::geometry
     return *this;
   }
 
-  DOMMatrix &DOMMatrix::scaleSelf(float scaleX, float scaleY, float scaleZ,
-                                  float originX, float originY, float originZ)
+  DOMMatrix &DOMMatrix::scaleSelf(float scaleX, float scaleY, float scaleZ, float originX, float originY, float originZ)
   {
     matrix_ = glm::scale(matrix_, glm::vec3(scaleX, scaleY, scaleZ));
     return *this;

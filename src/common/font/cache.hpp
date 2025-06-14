@@ -167,9 +167,7 @@ namespace font
       }
       return nullptr;
     }
-    sk_sp<SkTypeface> onMatchFamilyStyleCharacter(const char familyName[], const SkFontStyle &style,
-                                                  const char *bcp47[], int bcp47Count,
-                                                  SkUnichar character) const override
+    sk_sp<SkTypeface> onMatchFamilyStyleCharacter(const char familyName[], const SkFontStyle &style, const char *bcp47[], int bcp47Count, SkUnichar character) const override
     {
       if (systemFontMgr_ != nullptr)
       {
@@ -281,8 +279,8 @@ namespace font
   {
   public:
     FontCacheManager()
-        : fontMgr_(sk_make_sp<MutipleDirectoriesFontMgr>()),
-          fontCollection_(sk_make_sp<skia::textlayout::FontCollection>())
+        : fontMgr_(sk_make_sp<MutipleDirectoriesFontMgr>())
+        , fontCollection_(sk_make_sp<skia::textlayout::FontCollection>())
     {
 #ifdef __APPLE__
       addFontsAt("/Library/Fonts");
@@ -326,9 +324,15 @@ namespace font
 
   public:
     // implicit conversion to SkFontMgr
-    operator sk_sp<SkFontMgr>() const { return fontMgr_; }
+    operator sk_sp<SkFontMgr>() const
+    {
+      return fontMgr_;
+    }
     // implicit conversion to skia::textlayout::FontCollection
-    operator sk_sp<skia::textlayout::FontCollection>() const { return fontCollection_; }
+    operator sk_sp<skia::textlayout::FontCollection>() const
+    {
+      return fontCollection_;
+    }
 
   private:
     void addFontsAt(std::string root)

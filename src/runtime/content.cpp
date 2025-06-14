@@ -19,7 +19,8 @@
 
 using namespace std;
 
-TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
+TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr)
+    : contentManager(contentMgr)
 {
   static TrIdGenerator idGen(0x100);
   id = idGen.get();
@@ -153,7 +154,8 @@ void TrContentRuntime::logDocumentEvent(events_comm::TrDocumentEvent &docEvent)
   if (prevDocumentEventTime != 0)
     duration = docEvent.timestamp - prevDocumentEventTime;
   prevDocumentEventTime = docEvent.timestamp;
-  DEBUG(LOG_TAG_METRICS, "content#%d received DocumentEvent(\"%s\") at %zu (+%dms)",
+  DEBUG(LOG_TAG_METRICS,
+        "content#%d received DocumentEvent(\"%s\") at %zu (+%dms)",
         docEvent.documentId,
         docEvent.toString().c_str(),
         docEvent.timestamp,
@@ -259,8 +261,10 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
     auto contentRenderer = renderer->getContentRenderer(id, contextId);
     if (TR_UNLIKELY(contentRenderer == nullptr))
     {
-      DEBUG(LOG_TAG_ERROR, "There is no available ContentRenderer for the content(%d) with context(%d)",
-            id, static_cast<int>(contextId));
+      DEBUG(LOG_TAG_ERROR,
+            "There is no available ContentRenderer for the content(%d) with context(%d)",
+            id,
+            static_cast<int>(contextId));
       delete commandBuffer;
       return;
     }

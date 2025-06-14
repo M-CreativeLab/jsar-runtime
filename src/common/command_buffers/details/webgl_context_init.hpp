@@ -37,18 +37,18 @@ namespace commandbuffers
     {
     }
     WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that),
-          drawingViewport(that.drawingViewport),
-          maxCombinedTextureImageUnits(that.maxCombinedTextureImageUnits),
-          maxCubeMapTextureSize(that.maxCubeMapTextureSize),
-          maxFragmentUniformVectors(that.maxFragmentUniformVectors),
-          maxRenderbufferSize(that.maxRenderbufferSize),
-          maxTextureImageUnits(that.maxTextureImageUnits),
-          maxTextureSize(that.maxTextureSize),
-          maxVaryingVectors(that.maxVaryingVectors),
-          maxVertexAttribs(that.maxVertexAttribs),
-          maxVertexTextureImageUnits(that.maxVertexTextureImageUnits),
-          maxVertexUniformVectors(that.maxVertexUniformVectors)
+        : TrCommandBufferSimpleResponse(that)
+        , drawingViewport(that.drawingViewport)
+        , maxCombinedTextureImageUnits(that.maxCombinedTextureImageUnits)
+        , maxCubeMapTextureSize(that.maxCubeMapTextureSize)
+        , maxFragmentUniformVectors(that.maxFragmentUniformVectors)
+        , maxRenderbufferSize(that.maxRenderbufferSize)
+        , maxTextureImageUnits(that.maxTextureImageUnits)
+        , maxTextureSize(that.maxTextureSize)
+        , maxVaryingVectors(that.maxVaryingVectors)
+        , maxVertexAttribs(that.maxVertexAttribs)
+        , maxVertexTextureImageUnits(that.maxVertexTextureImageUnits)
+        , maxVertexUniformVectors(that.maxVertexUniformVectors)
     {
     }
     ~WebGL1ContextInitCommandBufferResponse()
@@ -104,7 +104,9 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES, req)
     {
     }
-    ~WebGL2ContextInitCommandBufferResponse() {}
+    ~WebGL2ContextInitCommandBufferResponse()
+    {
+    }
 
   public:
     int max3DTextureSize;

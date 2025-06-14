@@ -51,9 +51,9 @@ public:
   bool test();
 
 public:
-  uint32_t documentId; // Document ID associated with the child process
-  pid_t pid;           // Process ID of the child process
-  int childPipes[2];   // Pipes for communication with the child process
+  uint32_t documentId;    // Document ID associated with the child process
+  pid_t pid;              // Process ID of the child process
+  int childPipes[2];      // Pipes for communication with the child process
   std::string lastOutput; // Last output from the child process
 };
 
@@ -103,15 +103,15 @@ private:
 
 public:
   TrClientEntry *clientEntry = nullptr; // Client entry associated with the server
-  int port; // Port on which the server listens
-  bool isChild = false; // Flag to indicate if the server is a child process
+  int port;                             // Port on which the server listens
+  bool isChild = false;                 // Flag to indicate if the server is a child process
 
-public: // Fields used by client
+public:                              // Fields used by client
   TrDocumentRequestInit requestInit; // Request initialization data
 
 private:
-  bool running = false; // Flag to indicate if the server is running
+  bool running = false;                                            // Flag to indicate if the server is running
   std::vector<std::shared_ptr<TrHiveChildProcess>> childProcesses; // List of child processes
-  std::unique_ptr<WorkerThread> checkingStatusWorker; // Worker thread for checking status
-  std::shared_mutex childProcessesMutex; // Mutex for thread-safe access to child processes
+  std::unique_ptr<WorkerThread> checkingStatusWorker;              // Worker thread for checking status
+  std::shared_mutex childProcessesMutex;                           // Mutex for thread-safe access to child processes
 };

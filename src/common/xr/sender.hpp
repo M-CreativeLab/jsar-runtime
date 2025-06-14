@@ -11,7 +11,8 @@ namespace xr
   class TrXRCommandSender : public ipc::TrChannelSender<TrXRCommandMessage>
   {
   public:
-    TrXRCommandSender(ipc::TrOneShotClient<TrXRCommandMessage> *client) : ipc::TrChannelSender<TrXRCommandMessage>(client)
+    TrXRCommandSender(ipc::TrOneShotClient<TrXRCommandMessage> *client)
+        : ipc::TrChannelSender<TrXRCommandMessage>(client)
     {
     }
 

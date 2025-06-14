@@ -32,10 +32,16 @@ namespace webgl
   class WebGLUniformError : public std::runtime_error
   {
   public:
-    WebGLUniformError(const std::string &msg) : std::runtime_error(msg) {}
+    WebGLUniformError(const std::string &msg)
+        : std::runtime_error(msg)
+    {
+    }
 
   public:
-    string message(const std::string method) { return method + "() " + what(); }
+    string message(const std::string method)
+    {
+      return method + "() " + what();
+    }
   };
 
   enum class WebGLRenderingContextSourceType : uint32_t
@@ -178,10 +184,22 @@ namespace webgl
     void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
-    std::shared_ptr<ContextType> getContext() { return glContext_; }
-    int getDrawingBufferWidth() { return glContext_->drawingBufferWidth(); }
-    int getDrawingBufferHeight() { return glContext_->drawingBufferHeight(); }
-    bool isWebGL2Context() { return glContext_->isWebGL2(); }
+    std::shared_ptr<ContextType> getContext()
+    {
+      return glContext_;
+    }
+    int getDrawingBufferWidth()
+    {
+      return glContext_->drawingBufferWidth();
+    }
+    int getDrawingBufferHeight()
+    {
+      return glContext_->drawingBufferHeight();
+    }
+    bool isWebGL2Context()
+    {
+      return glContext_->isWebGL2();
+    }
 
   protected:
     // Get the `canvas::ImageSource` from the given JavaScript object, such as an `HTMLImageElement`,

@@ -14,13 +14,29 @@ namespace crates::layout2
   class Point
   {
   public:
-    Point(T x, T y) : x_(x), y_(y) {}
+    Point(T x, T y)
+        : x_(x)
+        , y_(y)
+    {
+    }
 
   public:
-    T &x() { return x_; }
-    T x() const { return x_; }
-    T &y() { return y_; }
-    T y() const { return y_; }
+    T &x()
+    {
+      return x_;
+    }
+    T x() const
+    {
+      return x_;
+    }
+    T &y()
+    {
+      return y_;
+    }
+    T y() const
+    {
+      return y_;
+    }
 
   private:
     T x_;
@@ -37,17 +53,46 @@ namespace crates::layout2
   {
   public:
     Rect(T top, T right, T bottom, T left)
-        : top_(top), right_(right), bottom_(bottom), left_(left) {}
+        : top_(top)
+        , right_(right)
+        , bottom_(bottom)
+        , left_(left)
+    {
+    }
 
   public:
-    T &top() { return top_; }
-    T top() const { return top_; }
-    T &right() { return right_; }
-    T right() const { return right_; }
-    T &bottom() { return bottom_; }
-    T bottom() const { return bottom_; }
-    T &left() { return left_; }
-    T left() const { return left_; }
+    T &top()
+    {
+      return top_;
+    }
+    T top() const
+    {
+      return top_;
+    }
+    T &right()
+    {
+      return right_;
+    }
+    T right() const
+    {
+      return right_;
+    }
+    T &bottom()
+    {
+      return bottom_;
+    }
+    T bottom() const
+    {
+      return bottom_;
+    }
+    T &left()
+    {
+      return left_;
+    }
+    T left() const
+    {
+      return left_;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const Rect<T> &style)
@@ -81,17 +126,24 @@ namespace crates::layout2
     friend class LayoutStyle;
 
   public:
-    CSSKeyword(T handle = defaultValue) : handle_(handle)
+    CSSKeyword(T handle = defaultValue)
+        : handle_(handle)
     {
     }
     ~CSSKeyword() = default;
 
   public:
-    operator T() const { return handle_; }
+    operator T() const
+    {
+      return handle_;
+    }
 
   protected:
     virtual std::optional<T> parse(const std::string &input) = 0;
-    virtual std::string stringify() const { return ""; }
+    virtual std::string stringify() const
+    {
+      return "";
+    }
 
   protected:
     T handle_;
@@ -158,10 +210,22 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static Display Block() { return Display(holocron::layout::Display::Block); }
-      static Display Flex() { return Display(holocron::layout::Display::Flex); }
-      static Display Grid() { return Display(holocron::layout::Display::Grid); }
-      static Display None() { return Display(holocron::layout::Display::None); }
+      static Display Block()
+      {
+        return Display(holocron::layout::Display::Block);
+      }
+      static Display Flex()
+      {
+        return Display(holocron::layout::Display::Flex);
+      }
+      static Display Grid()
+      {
+        return Display(holocron::layout::Display::Grid);
+      }
+      static Display None()
+      {
+        return Display(holocron::layout::Display::None);
+      }
 
     public:
       Display(const std::string &input)
@@ -202,8 +266,14 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static BoxSizing ContentBox() { return BoxSizing(holocron::layout::BoxSizing::ContentBox); }
-      static BoxSizing BorderBox() { return BoxSizing(holocron::layout::BoxSizing::BorderBox); }
+      static BoxSizing ContentBox()
+      {
+        return BoxSizing(holocron::layout::BoxSizing::ContentBox);
+      }
+      static BoxSizing BorderBox()
+      {
+        return BoxSizing(holocron::layout::BoxSizing::BorderBox);
+      }
 
     public:
       BoxSizing(const std::string &input)
@@ -244,10 +314,22 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static Overflow Visible() { return Overflow(holocron::layout::Overflow::Visible); }
-      static Overflow Hidden() { return Overflow(holocron::layout::Overflow::Hidden); }
-      static Overflow Scroll() { return Overflow(holocron::layout::Overflow::Scroll); }
-      static Overflow Clip() { return Overflow(holocron::layout::Overflow::Clip); }
+      static Overflow Visible()
+      {
+        return Overflow(holocron::layout::Overflow::Visible);
+      }
+      static Overflow Hidden()
+      {
+        return Overflow(holocron::layout::Overflow::Hidden);
+      }
+      static Overflow Scroll()
+      {
+        return Overflow(holocron::layout::Overflow::Scroll);
+      }
+      static Overflow Clip()
+      {
+        return Overflow(holocron::layout::Overflow::Clip);
+      }
 
     public:
       Overflow(const std::string &input)
@@ -288,8 +370,14 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static Position Relative() { return Position(holocron::layout::Position::Relative); }
-      static Position Absolute() { return Position(holocron::layout::Position::Absolute); }
+      static Position Relative()
+      {
+        return Position(holocron::layout::Position::Relative);
+      }
+      static Position Absolute()
+      {
+        return Position(holocron::layout::Position::Absolute);
+      }
 
     public:
       Position(const std::string &input)
@@ -297,8 +385,14 @@ namespace crates::layout2
         handle_ = parse(input).value_or(holocron::layout::Position::Relative);
       }
 
-      inline bool isRelative() const { return handle_ == holocron::layout::Position::Relative; }
-      inline bool isAbsolute() const { return handle_ == holocron::layout::Position::Absolute; }
+      inline bool isRelative() const
+      {
+        return handle_ == holocron::layout::Position::Relative;
+      }
+      inline bool isAbsolute() const
+      {
+        return handle_ == holocron::layout::Position::Absolute;
+      }
 
     private:
       std::optional<holocron::layout::Position> parse(const std::string &input) override
@@ -333,10 +427,22 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static FlexDirection Row() { return FlexDirection(holocron::layout::FlexDirection::Row); }
-      static FlexDirection Column() { return FlexDirection(holocron::layout::FlexDirection::Column); }
-      static FlexDirection RowReverse() { return FlexDirection(holocron::layout::FlexDirection::RowReverse); }
-      static FlexDirection ColumnReverse() { return FlexDirection(holocron::layout::FlexDirection::ColumnReverse); }
+      static FlexDirection Row()
+      {
+        return FlexDirection(holocron::layout::FlexDirection::Row);
+      }
+      static FlexDirection Column()
+      {
+        return FlexDirection(holocron::layout::FlexDirection::Column);
+      }
+      static FlexDirection RowReverse()
+      {
+        return FlexDirection(holocron::layout::FlexDirection::RowReverse);
+      }
+      static FlexDirection ColumnReverse()
+      {
+        return FlexDirection(holocron::layout::FlexDirection::ColumnReverse);
+      }
 
     public:
       FlexDirection(const std::string &input)
@@ -377,9 +483,18 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
-      static FlexWrap NoWrap() { return FlexWrap(holocron::layout::FlexWrap::NoWrap); }
-      static FlexWrap Wrap() { return FlexWrap(holocron::layout::FlexWrap::Wrap); }
-      static FlexWrap WrapReverse() { return FlexWrap(holocron::layout::FlexWrap::WrapReverse); }
+      static FlexWrap NoWrap()
+      {
+        return FlexWrap(holocron::layout::FlexWrap::NoWrap);
+      }
+      static FlexWrap Wrap()
+      {
+        return FlexWrap(holocron::layout::FlexWrap::Wrap);
+      }
+      static FlexWrap WrapReverse()
+      {
+        return FlexWrap(holocron::layout::FlexWrap::WrapReverse);
+      }
 
     public:
       FlexWrap(const std::string &input)
@@ -420,8 +535,11 @@ namespace crates::layout2
       using CSSKeyword<I, defaultValue>::CSSKeyword;
 
     public:
-#define XX(tag, _) \
-  static T tag() { return T(I::tag); }
+#define XX(tag, _)    \
+  static T tag()      \
+  {                   \
+    return T(I::tag); \
+  }
       BOX_ALIGNMENT_MAP(XX)
 #undef XX
 
@@ -472,7 +590,10 @@ namespace crates::layout2
       using BoxAlignmentProperty::BoxAlignmentProperty;
 
     public:
-      static AlignSelf Auto() { return AlignSelf(holocron::layout::AlignSelf::Auto); }
+      static AlignSelf Auto()
+      {
+        return AlignSelf(holocron::layout::AlignSelf::Auto);
+      }
 
     protected:
       std::optional<holocron::layout::AlignSelf> parse(const std::string &input) override
@@ -507,8 +628,11 @@ namespace crates::layout2
       using CSSKeyword<I, I::Stretch>::CSSKeyword;
 
     public:
-#define XX(tag, _) \
-  static T tag() { return T(I::tag); }
+#define XX(tag, _)    \
+  static T tag()      \
+  {                   \
+    return T(I::tag); \
+  }
       CONTENT_SPACING_MAP(XX)
 #undef XX
 
@@ -561,37 +685,37 @@ namespace crates::layout2
       inline static LengthPercentage Length(float value)
       {
         auto inner = holocron::layout::LengthPercentage{
-            .tag = holocron::layout::LengthPercentageTag::Length,
-            .length = {value}};
+          .tag = holocron::layout::LengthPercentageTag::Length,
+          .length = {value}};
         return LengthPercentage(inner);
       }
       inline static LengthPercentage Percentage(float percent)
       {
         auto inner = holocron::layout::LengthPercentage{
-            .tag = holocron::layout::LengthPercentageTag::Percentage,
-            .percentage = {percent}};
+          .tag = holocron::layout::LengthPercentageTag::Percentage,
+          .percentage = {percent}};
         return LengthPercentage(inner);
       }
 
     public:
       LengthPercentage(const std::string &input = "")
           : inner_(holocron::layout::LengthPercentage{
-                .tag = holocron::layout::LengthPercentageTag::Length,
-                .length = {0.0f}})
+              .tag = holocron::layout::LengthPercentageTag::Length,
+              .length = {0.0f}})
       {
         if (input.ends_with("%"))
         {
           auto value = std::stof(input.substr(0, input.size() - 1)) / 100.0f;
           inner_ = holocron::layout::LengthPercentage{
-              .tag = holocron::layout::LengthPercentageTag::Percentage,
-              .percentage = {value}};
+            .tag = holocron::layout::LengthPercentageTag::Percentage,
+            .percentage = {value}};
         }
         else if (input.ends_with("px"))
         {
           auto value = std::stof(input.substr(0, input.size() - 2));
           inner_ = holocron::layout::LengthPercentage{
-              .tag = holocron::layout::LengthPercentageTag::Length,
-              .length = {value}};
+            .tag = holocron::layout::LengthPercentageTag::Length,
+            .length = {value}};
         }
       }
       LengthPercentage(holocron::layout::LengthPercentage lengthPercentage)
@@ -600,8 +724,14 @@ namespace crates::layout2
       }
 
     public:
-      inline bool isLength() const { return inner_.tag == holocron::layout::LengthPercentageTag::Length; }
-      inline bool isPercent() const { return inner_.tag == holocron::layout::LengthPercentageTag::Percentage; }
+      inline bool isLength() const
+      {
+        return inner_.tag == holocron::layout::LengthPercentageTag::Length;
+      }
+      inline bool isPercent() const
+      {
+        return inner_.tag == holocron::layout::LengthPercentageTag::Percentage;
+      }
 
     public:
       friend std::ostream &operator<<(std::ostream &os, const LengthPercentage &value)
@@ -609,7 +739,10 @@ namespace crates::layout2
         os << static_cast<std::string>(value);
         return os;
       }
-      operator holocron::layout::LengthPercentage() const { return inner_; }
+      operator holocron::layout::LengthPercentage() const
+      {
+        return inner_;
+      }
       operator std::string() const
       {
         if (isLength())
@@ -636,20 +769,29 @@ namespace crates::layout2
        * @param value The length value.
        * @returns The length dimension.
        */
-      inline static T Length(float value) { return T(I{.tag = S::Length, .length = {value}}); }
+      inline static T Length(float value)
+      {
+        return T(I{.tag = S::Length, .length = {value}});
+      }
       /**
        * A percent dimension.
        *
        * @param value The percent value between 0 and 1.
        * @returns The percent dimension.
        */
-      inline static T Percentage(float percent) { return T(I{.tag = S::Percentage, .percentage = {percent}}); }
+      inline static T Percentage(float percent)
+      {
+        return T(I{.tag = S::Percentage, .percentage = {percent}});
+      }
       /**
        * An auto dimension without value.
        *
        * @returns The auto dimension.
        */
-      inline static T Auto() { return T(); }
+      inline static T Auto()
+      {
+        return T();
+      }
 
     public:
       LengthPercentageAutoLike(const std::string &input = "")
@@ -677,9 +819,18 @@ namespace crates::layout2
       }
 
     public:
-      inline bool isLength() const { return inner_.tag == S::Length; }
-      inline bool isPercent() const { return inner_.tag == S::Percentage; }
-      inline bool isAuto() const { return inner_.tag == S::Auto; }
+      inline bool isLength() const
+      {
+        return inner_.tag == S::Length;
+      }
+      inline bool isPercent() const
+      {
+        return inner_.tag == S::Percentage;
+      }
+      inline bool isAuto() const
+      {
+        return inner_.tag == S::Auto;
+      }
       inline float value() const
       {
         if (isLength())
@@ -696,7 +847,10 @@ namespace crates::layout2
         os << static_cast<std::string>(value);
         return os;
       }
-      operator I() const { return inner_; }
+      operator I() const
+      {
+        return inner_;
+      }
       operator std::string() const
       {
         if (isLength())
@@ -737,9 +891,18 @@ namespace crates::layout2
       using LengthPercentageAutoLike::LengthPercentageAutoLike;
 
     public:
-      inline static LengthPercentageAuto Length(float value) { return LengthPercentageAutoLike::Length(value); }
-      inline static LengthPercentageAuto Percentage(float percent) { return LengthPercentageAutoLike::Percentage(percent); }
-      inline static LengthPercentageAuto Auto() { return LengthPercentageAutoLike::Auto(); }
+      inline static LengthPercentageAuto Length(float value)
+      {
+        return LengthPercentageAutoLike::Length(value);
+      }
+      inline static LengthPercentageAuto Percentage(float percent)
+      {
+        return LengthPercentageAutoLike::Percentage(percent);
+      }
+      inline static LengthPercentageAuto Auto()
+      {
+        return LengthPercentageAutoLike::Auto();
+      }
     };
 
     class Dimension
@@ -750,9 +913,18 @@ namespace crates::layout2
       using LengthPercentageAutoLike::LengthPercentageAutoLike;
 
     public:
-      inline static Dimension Length(float value) { return LengthPercentageAutoLike::Length(value); }
-      inline static Dimension Percentage(float percent) { return LengthPercentageAutoLike::Percentage(percent); }
-      inline static Dimension Auto() { return LengthPercentageAutoLike::Auto(); }
+      inline static Dimension Length(float value)
+      {
+        return LengthPercentageAutoLike::Length(value);
+      }
+      inline static Dimension Percentage(float percent)
+      {
+        return LengthPercentageAutoLike::Percentage(percent);
+      }
+      inline static Dimension Auto()
+      {
+        return LengthPercentageAutoLike::Auto();
+      }
     };
 
 #undef DISPLAY_MAP
@@ -770,227 +942,447 @@ namespace crates::layout2
   public:
     LayoutStyle()
         : style_({
-              // display
-              styles::Display::Block(),
-              // box sizing
-              styles::BoxSizing::ContentBox(),
-              // overflow
-              holocron::layout::OverflowXY{
-                  .x = holocron::layout::Overflow::Visible,
-                  .y = holocron::layout::Overflow::Visible,
-              },
-              // scrollbar_width
-              2.0f,
-              // position
-              styles::Position::Relative(),
-              // inset
-              holocron::layout::LengthPercentageAutoRect{
-                  .top = styles::LengthPercentageAuto::Auto(),
-                  .right = styles::LengthPercentageAuto::Auto(),
-                  .bottom = styles::LengthPercentageAuto::Auto(),
-                  .left = styles::LengthPercentageAuto::Auto(),
-              },
-              // width
-              styles::Dimension::Auto(),
-              // height
-              styles::Dimension::Auto(),
-              // width range
-              holocron::layout::DimensionRange{
-                  .min = styles::Dimension::Auto(),
-                  .max = styles::Dimension::Auto(),
-              },
-              // height range
-              holocron::layout::DimensionRange{
-                  .min = styles::Dimension::Auto(),
-                  .max = styles::Dimension::Auto(),
-              },
-              // margin
-              holocron::layout::LengthPercentageAutoRect{
-                  .top = styles::LengthPercentageAuto::Length(0.0f),
-                  .right = styles::LengthPercentageAuto::Length(0.0f),
-                  .bottom = styles::LengthPercentageAuto::Length(0.0f),
-                  .left = styles::LengthPercentageAuto::Length(0.0f),
-              },
-              // padding
-              holocron::layout::LengthPercentageRect{
-                  .top = styles::LengthPercentage::Length(0.0f),
-                  .right = styles::LengthPercentage::Length(0.0f),
-                  .bottom = styles::LengthPercentage::Length(0.0f),
-                  .left = styles::LengthPercentage::Length(0.0f),
-              },
-              // border
-              holocron::layout::LengthPercentageRect{
-                  .top = styles::LengthPercentage::Length(0.0f),
-                  .right = styles::LengthPercentage::Length(0.0f),
-                  .bottom = styles::LengthPercentage::Length(0.0f),
-                  .left = styles::LengthPercentage::Length(0.0f),
-              },
-              // alignment and spacing
-              styles::AlignItems::Stretch(),
-              styles::AlignSelf::Auto(),
-              styles::AlignContent::Stretch(),
-              styles::JustifyItems::Stretch(),
-              styles::JustifySelf::Stretch(),
-              styles::JustifyContent::FlexStart(),
-              // gap
-              holocron::layout::LengthPercentageXY{
-                  .x = styles::LengthPercentage::Length(0.0f),
-                  .y = styles::LengthPercentage::Length(0.0f),
-              },
-              // flex properties
-              styles::FlexDirection::Row(),
-              styles::FlexWrap::NoWrap(),
-              // flex basis
-              styles::Dimension::Auto(),
-              // flex grow
-              0.0f,
-              // flex shrink
-              1.0f,
-              // grid properties
-              "none", // grid-template-rows
-              "none", // grid-template-columns
-              "auto", // grid-auto-rows
-              "auto", // grid-auto-columns
-              "row",  // grid-auto-flow
-              "auto", // grid-row-start
-              "auto", // grid-row-end
-              "auto", // grid-column-start
-              "auto", // grid-column-end
+            // display
+            styles::Display::Block(),
+            // box sizing
+            styles::BoxSizing::ContentBox(),
+            // overflow
+            holocron::layout::OverflowXY{
+              .x = holocron::layout::Overflow::Visible,
+              .y = holocron::layout::Overflow::Visible,
+            },
+            // scrollbar_width
+            2.0f,
+            // position
+            styles::Position::Relative(),
+            // inset
+            holocron::layout::LengthPercentageAutoRect{
+              .top = styles::LengthPercentageAuto::Auto(),
+              .right = styles::LengthPercentageAuto::Auto(),
+              .bottom = styles::LengthPercentageAuto::Auto(),
+              .left = styles::LengthPercentageAuto::Auto(),
+            },
+            // width
+            styles::Dimension::Auto(),
+            // height
+            styles::Dimension::Auto(),
+            // width range
+            holocron::layout::DimensionRange{
+              .min = styles::Dimension::Auto(),
+              .max = styles::Dimension::Auto(),
+            },
+            // height range
+            holocron::layout::DimensionRange{
+              .min = styles::Dimension::Auto(),
+              .max = styles::Dimension::Auto(),
+            },
+            // margin
+            holocron::layout::LengthPercentageAutoRect{
+              .top = styles::LengthPercentageAuto::Length(0.0f),
+              .right = styles::LengthPercentageAuto::Length(0.0f),
+              .bottom = styles::LengthPercentageAuto::Length(0.0f),
+              .left = styles::LengthPercentageAuto::Length(0.0f),
+            },
+            // padding
+            holocron::layout::LengthPercentageRect{
+              .top = styles::LengthPercentage::Length(0.0f),
+              .right = styles::LengthPercentage::Length(0.0f),
+              .bottom = styles::LengthPercentage::Length(0.0f),
+              .left = styles::LengthPercentage::Length(0.0f),
+            },
+            // border
+            holocron::layout::LengthPercentageRect{
+              .top = styles::LengthPercentage::Length(0.0f),
+              .right = styles::LengthPercentage::Length(0.0f),
+              .bottom = styles::LengthPercentage::Length(0.0f),
+              .left = styles::LengthPercentage::Length(0.0f),
+            },
+            // alignment and spacing
+            styles::AlignItems::Stretch(),
+            styles::AlignSelf::Auto(),
+            styles::AlignContent::Stretch(),
+            styles::JustifyItems::Stretch(),
+            styles::JustifySelf::Stretch(),
+            styles::JustifyContent::FlexStart(),
+            // gap
+            holocron::layout::LengthPercentageXY{
+              .x = styles::LengthPercentage::Length(0.0f),
+              .y = styles::LengthPercentage::Length(0.0f),
+            },
+            // flex properties
+            styles::FlexDirection::Row(),
+            styles::FlexWrap::NoWrap(),
+            // flex basis
+            styles::Dimension::Auto(),
+            // flex grow
+            0.0f,
+            // flex shrink
+            1.0f,
+            // grid properties
+            "none", // grid-template-rows
+            "none", // grid-template-columns
+            "auto", // grid-auto-rows
+            "auto", // grid-auto-columns
+            "row",  // grid-auto-flow
+            "auto", // grid-row-start
+            "auto", // grid-row-end
+            "auto", // grid-column-start
+            "auto", // grid-column-end
           })
     {
     }
-    LayoutStyle(holocron::layout::Style style) : style_(style)
+    LayoutStyle(holocron::layout::Style style)
+        : style_(style)
     {
     }
 
   public:
     // Display property
-    const styles::Display display() const { return style_.display; }
-    void setDisplay(styles::Display value) { style_.display = value; }
+    const styles::Display display() const
+    {
+      return style_.display;
+    }
+    void setDisplay(styles::Display value)
+    {
+      style_.display = value;
+    }
 
     // BoxSizing property
-    const styles::BoxSizing boxSizing() const { return style_.boxSizing; }
-    void setBoxSizing(styles::BoxSizing value) { style_.boxSizing = value; }
+    const styles::BoxSizing boxSizing() const
+    {
+      return style_.boxSizing;
+    }
+    void setBoxSizing(styles::BoxSizing value)
+    {
+      style_.boxSizing = value;
+    }
 
     // Overflow property
     const Point<styles::Overflow> overflow() const
     {
       return Point<styles::Overflow>(style_.overflow.x, style_.overflow.y);
     }
-    void setOverflowX(styles::Overflow value) { style_.overflow.x = value; }
-    void setOverflowY(styles::Overflow value) { style_.overflow.y = value; }
+    void setOverflowX(styles::Overflow value)
+    {
+      style_.overflow.x = value;
+    }
+    void setOverflowY(styles::Overflow value)
+    {
+      style_.overflow.y = value;
+    }
 
     // Scrollbar width property
-    const float scrollbarWidth() const { return style_.scrollbarWidth; }
-    void setScrollbarWidth(float value) { style_.scrollbarWidth = value; }
+    const float scrollbarWidth() const
+    {
+      return style_.scrollbarWidth;
+    }
+    void setScrollbarWidth(float value)
+    {
+      style_.scrollbarWidth = value;
+    }
 
     // Position property
-    const styles::Position position() const { return style_.position; }
-    void setPosition(styles::Position value) { style_.position = value; }
+    const styles::Position position() const
+    {
+      return style_.position;
+    }
+    void setPosition(styles::Position value)
+    {
+      style_.position = value;
+    }
     const Rect<styles::LengthPercentageAuto> inset() const
     {
       return Rect<styles::LengthPercentageAuto>(
-          styles::LengthPercentageAuto(style_.inset.top),
-          styles::LengthPercentageAuto(style_.inset.right),
-          styles::LengthPercentageAuto(style_.inset.bottom),
-          styles::LengthPercentageAuto(style_.inset.left));
+        styles::LengthPercentageAuto(style_.inset.top),
+        styles::LengthPercentageAuto(style_.inset.right),
+        styles::LengthPercentageAuto(style_.inset.bottom),
+        styles::LengthPercentageAuto(style_.inset.left));
     }
-    void setTop(styles::LengthPercentageAuto value) { style_.inset.top = value; }
-    void setRight(styles::LengthPercentageAuto value) { style_.inset.right = value; }
-    void setBottom(styles::LengthPercentageAuto value) { style_.inset.bottom = value; }
-    void setLeft(styles::LengthPercentageAuto value) { style_.inset.left = value; }
+    void setTop(styles::LengthPercentageAuto value)
+    {
+      style_.inset.top = value;
+    }
+    void setRight(styles::LengthPercentageAuto value)
+    {
+      style_.inset.right = value;
+    }
+    void setBottom(styles::LengthPercentageAuto value)
+    {
+      style_.inset.bottom = value;
+    }
+    void setLeft(styles::LengthPercentageAuto value)
+    {
+      style_.inset.left = value;
+    }
 
     // Size properties
-    styles::Dimension width() const { return styles::Dimension(style_.width); }
-    void setWidth(const styles::Dimension value) { style_.width = value; }
-    styles::Dimension height() const { return styles::Dimension(style_.height); }
-    void setHeight(const styles::Dimension value) { style_.height = value; }
+    styles::Dimension width() const
+    {
+      return styles::Dimension(style_.width);
+    }
+    void setWidth(const styles::Dimension value)
+    {
+      style_.width = value;
+    }
+    styles::Dimension height() const
+    {
+      return styles::Dimension(style_.height);
+    }
+    void setHeight(const styles::Dimension value)
+    {
+      style_.height = value;
+    }
 
     // Size range properties
-    styles::Dimension minWidth() const { return styles::Dimension(style_.widthRange.min); }
-    void setMinWidth(const styles::Dimension value) { style_.widthRange.min = value; }
-    styles::Dimension maxWidth() const { return styles::Dimension(style_.widthRange.max); }
-    void setMaxWidth(const styles::Dimension value) { style_.widthRange.max = value; }
-    styles::Dimension minHeight() const { return styles::Dimension(style_.heightRange.min); }
-    void setMinHeight(const styles::Dimension value) { style_.heightRange.min = value; }
-    styles::Dimension maxHeight() const { return styles::Dimension(style_.heightRange.max); }
-    void setMaxHeight(const styles::Dimension value) { style_.heightRange.max = value; }
+    styles::Dimension minWidth() const
+    {
+      return styles::Dimension(style_.widthRange.min);
+    }
+    void setMinWidth(const styles::Dimension value)
+    {
+      style_.widthRange.min = value;
+    }
+    styles::Dimension maxWidth() const
+    {
+      return styles::Dimension(style_.widthRange.max);
+    }
+    void setMaxWidth(const styles::Dimension value)
+    {
+      style_.widthRange.max = value;
+    }
+    styles::Dimension minHeight() const
+    {
+      return styles::Dimension(style_.heightRange.min);
+    }
+    void setMinHeight(const styles::Dimension value)
+    {
+      style_.heightRange.min = value;
+    }
+    styles::Dimension maxHeight() const
+    {
+      return styles::Dimension(style_.heightRange.max);
+    }
+    void setMaxHeight(const styles::Dimension value)
+    {
+      style_.heightRange.max = value;
+    }
 
     // Spacing properties
     const Rect<styles::LengthPercentageAuto> margin() const
     {
       return Rect<styles::LengthPercentageAuto>(
-          styles::LengthPercentageAuto(style_.margin.top),
-          styles::LengthPercentageAuto(style_.margin.right),
-          styles::LengthPercentageAuto(style_.margin.bottom),
-          styles::LengthPercentageAuto(style_.margin.left));
+        styles::LengthPercentageAuto(style_.margin.top),
+        styles::LengthPercentageAuto(style_.margin.right),
+        styles::LengthPercentageAuto(style_.margin.bottom),
+        styles::LengthPercentageAuto(style_.margin.left));
     }
-    void setMarginTop(styles::LengthPercentageAuto value) { style_.margin.top = value; }
-    void setMarginRight(styles::LengthPercentageAuto value) { style_.margin.right = value; }
-    void setMarginBottom(styles::LengthPercentageAuto value) { style_.margin.bottom = value; }
-    void setMarginLeft(styles::LengthPercentageAuto value) { style_.margin.left = value; }
+    void setMarginTop(styles::LengthPercentageAuto value)
+    {
+      style_.margin.top = value;
+    }
+    void setMarginRight(styles::LengthPercentageAuto value)
+    {
+      style_.margin.right = value;
+    }
+    void setMarginBottom(styles::LengthPercentageAuto value)
+    {
+      style_.margin.bottom = value;
+    }
+    void setMarginLeft(styles::LengthPercentageAuto value)
+    {
+      style_.margin.left = value;
+    }
     const Rect<styles::LengthPercentage> padding() const
     {
       return Rect<styles::LengthPercentage>(
-          styles::LengthPercentage(style_.padding.top),
-          styles::LengthPercentage(style_.padding.right),
-          styles::LengthPercentage(style_.padding.bottom),
-          styles::LengthPercentage(style_.padding.left));
+        styles::LengthPercentage(style_.padding.top),
+        styles::LengthPercentage(style_.padding.right),
+        styles::LengthPercentage(style_.padding.bottom),
+        styles::LengthPercentage(style_.padding.left));
     }
-    void setPaddingTop(styles::LengthPercentage value) { style_.padding.top = value; }
-    void setPaddingRight(styles::LengthPercentage value) { style_.padding.right = value; }
-    void setPaddingBottom(styles::LengthPercentage value) { style_.padding.bottom = value; }
-    void setPaddingLeft(styles::LengthPercentage value) { style_.padding.left = value; }
+    void setPaddingTop(styles::LengthPercentage value)
+    {
+      style_.padding.top = value;
+    }
+    void setPaddingRight(styles::LengthPercentage value)
+    {
+      style_.padding.right = value;
+    }
+    void setPaddingBottom(styles::LengthPercentage value)
+    {
+      style_.padding.bottom = value;
+    }
+    void setPaddingLeft(styles::LengthPercentage value)
+    {
+      style_.padding.left = value;
+    }
     const Rect<styles::LengthPercentage> border() const
     {
       return Rect<styles::LengthPercentage>(
-          styles::LengthPercentage(style_.border.top),
-          styles::LengthPercentage(style_.border.right),
-          styles::LengthPercentage(style_.border.bottom),
-          styles::LengthPercentage(style_.border.left));
+        styles::LengthPercentage(style_.border.top),
+        styles::LengthPercentage(style_.border.right),
+        styles::LengthPercentage(style_.border.bottom),
+        styles::LengthPercentage(style_.border.left));
     }
-    void setBorderTop(styles::LengthPercentage value) { style_.border.top = value; }
-    void setBorderRight(styles::LengthPercentage value) { style_.border.right = value; }
-    void setBorderBottom(styles::LengthPercentage value) { style_.border.bottom = value; }
-    void setBorderLeft(styles::LengthPercentage value) { style_.border.left = value; }
+    void setBorderTop(styles::LengthPercentage value)
+    {
+      style_.border.top = value;
+    }
+    void setBorderRight(styles::LengthPercentage value)
+    {
+      style_.border.right = value;
+    }
+    void setBorderBottom(styles::LengthPercentage value)
+    {
+      style_.border.bottom = value;
+    }
+    void setBorderLeft(styles::LengthPercentage value)
+    {
+      style_.border.left = value;
+    }
 
     // Flex properties
-    styles::AlignItems alignItems() const { return style_.alignItems; }
-    void setAlignItems(styles::AlignItems value) { style_.alignItems = value; }
-    styles::AlignSelf alignSelf() const { return style_.alignSelf; }
-    void setAlignSelf(styles::AlignSelf value) { style_.alignSelf = value; }
-    styles::AlignContent alignContent() const { return style_.alignContent; }
-    void setAlignContent(styles::AlignContent value) { style_.alignContent = value; }
-    styles::JustifyItems justifyItems() const { return style_.justifyItems; }
-    void setJustifyItems(styles::JustifyItems value) { style_.justifyItems = value; }
-    styles::JustifySelf justifySelf() const { return style_.justifySelf; }
-    void setJustifySelf(styles::JustifySelf value) { style_.justifySelf = value; }
-    styles::JustifyContent justifyContent() const { return style_.justifyContent; }
-    void setJustifyContent(styles::JustifyContent value) { style_.justifyContent = value; }
-    styles::LengthPercentage rowGap() const { return styles::LengthPercentage(style_.gap.x); }
-    void setRowGap(styles::LengthPercentage value) { style_.gap.x = value; }
-    styles::LengthPercentage columnGap() const { return styles::LengthPercentage(style_.gap.y); }
-    void setColumnGap(styles::LengthPercentage value) { style_.gap.y = value; }
-    styles::FlexDirection flexDirection() const { return style_.flexDirection; }
-    void setFlexDirection(styles::FlexDirection value) { style_.flexDirection = value; }
-    styles::FlexWrap flexWrap() const { return style_.flexWrap; }
-    void setFlexWrap(styles::FlexWrap value) { style_.flexWrap = value; }
-    styles::Dimension flexBasis() const { return styles::Dimension(style_.flexBasis); }
-    void setFlexBasis(styles::Dimension value) { style_.flexBasis = value; }
-    const float flexGrow() const { return style_.flexGrow; }
-    void setFlexGrow(float value) { style_.flexGrow = value; }
-    const float flexShrink() const { return style_.flexShrink; }
-    void setFlexShrink(float value) { style_.flexShrink = value; }
+    styles::AlignItems alignItems() const
+    {
+      return style_.alignItems;
+    }
+    void setAlignItems(styles::AlignItems value)
+    {
+      style_.alignItems = value;
+    }
+    styles::AlignSelf alignSelf() const
+    {
+      return style_.alignSelf;
+    }
+    void setAlignSelf(styles::AlignSelf value)
+    {
+      style_.alignSelf = value;
+    }
+    styles::AlignContent alignContent() const
+    {
+      return style_.alignContent;
+    }
+    void setAlignContent(styles::AlignContent value)
+    {
+      style_.alignContent = value;
+    }
+    styles::JustifyItems justifyItems() const
+    {
+      return style_.justifyItems;
+    }
+    void setJustifyItems(styles::JustifyItems value)
+    {
+      style_.justifyItems = value;
+    }
+    styles::JustifySelf justifySelf() const
+    {
+      return style_.justifySelf;
+    }
+    void setJustifySelf(styles::JustifySelf value)
+    {
+      style_.justifySelf = value;
+    }
+    styles::JustifyContent justifyContent() const
+    {
+      return style_.justifyContent;
+    }
+    void setJustifyContent(styles::JustifyContent value)
+    {
+      style_.justifyContent = value;
+    }
+    styles::LengthPercentage rowGap() const
+    {
+      return styles::LengthPercentage(style_.gap.x);
+    }
+    void setRowGap(styles::LengthPercentage value)
+    {
+      style_.gap.x = value;
+    }
+    styles::LengthPercentage columnGap() const
+    {
+      return styles::LengthPercentage(style_.gap.y);
+    }
+    void setColumnGap(styles::LengthPercentage value)
+    {
+      style_.gap.y = value;
+    }
+    styles::FlexDirection flexDirection() const
+    {
+      return style_.flexDirection;
+    }
+    void setFlexDirection(styles::FlexDirection value)
+    {
+      style_.flexDirection = value;
+    }
+    styles::FlexWrap flexWrap() const
+    {
+      return style_.flexWrap;
+    }
+    void setFlexWrap(styles::FlexWrap value)
+    {
+      style_.flexWrap = value;
+    }
+    styles::Dimension flexBasis() const
+    {
+      return styles::Dimension(style_.flexBasis);
+    }
+    void setFlexBasis(styles::Dimension value)
+    {
+      style_.flexBasis = value;
+    }
+    const float flexGrow() const
+    {
+      return style_.flexGrow;
+    }
+    void setFlexGrow(float value)
+    {
+      style_.flexGrow = value;
+    }
+    const float flexShrink() const
+    {
+      return style_.flexShrink;
+    }
+    void setFlexShrink(float value)
+    {
+      style_.flexShrink = value;
+    }
 
-    void setGridTemplateRows(const std::string &value) { style_.gridTemplateRows = value; }
-    void setGridTemplateColumns(const std::string &value) { style_.gridTemplateColumns = value; }
-    void setGridAutoRows(const std::string &value) { style_.gridAutoRows = value; }
-    void setGridAutoColumns(const std::string &value) { style_.gridAutoColumns = value; }
-    void setGridAutoFlow(const std::string &value) { style_.gridAutoFlow = value; }
-    void setGridRowStart(const std::string &value) { style_.gridRowStart = value; }
-    void setGridRowEnd(const std::string &value) { style_.gridRowEnd = value; }
-    void setGridColumnStart(const std::string &value) { style_.gridColumnStart = value; }
-    void setGridColumnEnd(const std::string &value) { style_.gridColumnEnd = value; }
+    void setGridTemplateRows(const std::string &value)
+    {
+      style_.gridTemplateRows = value;
+    }
+    void setGridTemplateColumns(const std::string &value)
+    {
+      style_.gridTemplateColumns = value;
+    }
+    void setGridAutoRows(const std::string &value)
+    {
+      style_.gridAutoRows = value;
+    }
+    void setGridAutoColumns(const std::string &value)
+    {
+      style_.gridAutoColumns = value;
+    }
+    void setGridAutoFlow(const std::string &value)
+    {
+      style_.gridAutoFlow = value;
+    }
+    void setGridRowStart(const std::string &value)
+    {
+      style_.gridRowStart = value;
+    }
+    void setGridRowEnd(const std::string &value)
+    {
+      style_.gridRowEnd = value;
+    }
+    void setGridColumnStart(const std::string &value)
+    {
+      style_.gridColumnStart = value;
+    }
+    void setGridColumnEnd(const std::string &value)
+    {
+      style_.gridColumnEnd = value;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
@@ -1033,7 +1425,10 @@ namespace crates::layout2
          << "}";
       return os;
     }
-    operator holocron::layout::Style() const { return style_; }
+    operator holocron::layout::Style() const
+    {
+      return style_;
+    }
 
   private:
     holocron::layout::Style style_;
@@ -1050,7 +1445,8 @@ namespace crates::layout2
     friend class Node;
 
   public:
-    Allocator() : handle(holocron::layout::createAllocator())
+    Allocator()
+        : handle(holocron::layout::createAllocator())
     {
     }
 
@@ -1064,27 +1460,27 @@ namespace crates::layout2
 
   public:
     Layout()
-        : width_(0.0f),
-          height_(0.0f),
-          content_width_(0.0f),
-          content_height_(0.0f),
-          x_(0.0f),
-          y_(0.0f),
-          border_(0.0f, 0.0f, 0.0f, 0.0f),
-          padding_(0.0f, 0.0f, 0.0f, 0.0f)
+        : width_(0.0f)
+        , height_(0.0f)
+        , content_width_(0.0f)
+        , content_height_(0.0f)
+        , x_(0.0f)
+        , y_(0.0f)
+        , border_(0.0f, 0.0f, 0.0f, 0.0f)
+        , padding_(0.0f, 0.0f, 0.0f, 0.0f)
     {
     }
 
   private:
     Layout(holocron::layout::LayoutOutput output)
-        : width_(output.width),
-          height_(output.height),
-          content_width_(output.contentWidth),
-          content_height_(output.contentHeight),
-          x_(output.x),
-          y_(output.y),
-          border_(NumberRect(output.border)),
-          padding_(NumberRect(output.padding))
+        : width_(output.width)
+        , height_(output.height)
+        , content_width_(output.contentWidth)
+        , content_height_(output.contentHeight)
+        , x_(output.x)
+        , y_(output.y)
+        , border_(NumberRect(output.border))
+        , padding_(NumberRect(output.padding))
     {
     }
 
@@ -1094,48 +1490,72 @@ namespace crates::layout2
      *
      * @returns The style width in pixels.
      */
-    inline float width() const { return width_; }
+    inline float width() const
+    {
+      return width_;
+    }
 
     /**
      * The computed height in pixels from the node's style.
      *
      * @returns The style height in pixels.
      */
-    inline float height() const { return height_; }
+    inline float height() const
+    {
+      return height_;
+    }
 
     /**
      * The actual width in pixels after layout, which is computed by its children.
      *
      * @returns The content width in pixels.
      */
-    inline float contentWidth() const { return content_width_; }
+    inline float contentWidth() const
+    {
+      return content_width_;
+    }
 
     /**
      * The actual height in pixels after layout, which is computed by its children.
      *
      * @returns The content height in pixels.
      */
-    inline float contentHeight() const { return content_height_; }
+    inline float contentHeight() const
+    {
+      return content_height_;
+    }
 
     /**
      * @returns The node x position.
      */
-    inline float left() const { return x_; }
+    inline float left() const
+    {
+      return x_;
+    }
 
     /**
      * @returns The node y position.
      */
-    inline float top() const { return y_; }
+    inline float top() const
+    {
+      return y_;
+    }
 
     /**
      * @returns The node border.
      */
-    inline Rect<float> border() const { return border_; }
+    inline Rect<float> border() const
+    {
+      return border_;
+    }
 
     /**
      * @returns The node padding.
      */
-    inline Rect<float> padding() const { return padding_; }
+    inline Rect<float> padding() const
+    {
+      return padding_;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
@@ -1228,11 +1648,17 @@ namespace crates::layout2
     /**
      * @returns The child count of this layout node.
      */
-    inline size_t childCount() { return holocron::layout::getChildCount(*node_); }
+    inline size_t childCount()
+    {
+      return holocron::layout::getChildCount(*node_);
+    }
     /**
      * @returns The layout style of this node.
      */
-    inline LayoutStyle style() { return holocron::layout::getNodeStyle(*node_); }
+    inline LayoutStyle style()
+    {
+      return holocron::layout::getNodeStyle(*node_);
+    }
     /**
      * Set the layout style of this node.
      *
@@ -1245,13 +1671,19 @@ namespace crates::layout2
     /**
      * Manually mark this node as dirty to recompute the layout.
      */
-    inline void markDirty() { holocron::layout::markNodeDirty(*node_); }
+    inline void markDirty()
+    {
+      holocron::layout::markNodeDirty(*node_);
+    }
     /**
      * Get whether this node is dirty and need to recompute the layout.
      *
      * @returns Whether this node is dirty.
      */
-    inline bool isDirty() { return holocron::layout::isNodeDirty(*node_); }
+    inline bool isDirty()
+    {
+      return holocron::layout::isNodeDirty(*node_);
+    }
     /**
      * Compute the layout of this node (and its children) with the specified parent width and height. Call this
      * method will mark all nodes as not dirty.

@@ -55,11 +55,11 @@ namespace builtin_scene
     friend std::ostream &operator<<(std::ostream &os, const WebContentTextStyle &style)
     {
       std::string foreground_display = style.foregroundColor.has_value()
-                                           ? std::to_string(style.foregroundColor.value())
-                                           : "null";
+                                         ? std::to_string(style.foregroundColor.value())
+                                         : "null";
       std::string background_display = style.backgroundColor.has_value()
-                                           ? std::to_string(style.backgroundColor.value())
-                                           : "null";
+                                         ? std::to_string(style.backgroundColor.value())
+                                         : "null";
 
       os << "WebContentTextStyle { " << std::endl
          << "       color: " << style.color << std::endl
@@ -115,36 +115,72 @@ namespace builtin_scene
     /**
      * The content name.
      */
-    inline const std::string &name() const { return name_; }
+    inline const std::string &name() const
+    {
+      return name_;
+    }
 
     // Returns if the surface is valid.
     bool resetSkSurface(float width, float height);
     SkCanvas *canvas() const;
 
-    inline const client_cssom::ComputedStyle &style() const { return style_; }
+    inline const client_cssom::ComputedStyle &style() const
+    {
+      return style_;
+    }
     void setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent = nullptr);
 
-    inline const std::optional<client_layout::Fragment> &fragment() const { return last_fragment_; }
-    inline void setFragment(const client_layout::Fragment &fragment) { last_fragment_ = fragment; }
+    inline const std::optional<client_layout::Fragment> &fragment() const
+    {
+      return last_fragment_;
+    }
+    inline void setFragment(const client_layout::Fragment &fragment)
+    {
+      last_fragment_ = fragment;
+    }
 
-    inline float physicalWidth() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
-    inline float physicalHeight() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
-    inline float logicalWidth() const { return physicalWidth() / device_pixel_ratio_; }
-    inline float logicalHeight() const { return physicalHeight() / device_pixel_ratio_; }
+    inline float physicalWidth() const
+    {
+      return surface_ == nullptr ? 0.0f : surface_->width();
+    }
+    inline float physicalHeight() const
+    {
+      return surface_ == nullptr ? 0.0f : surface_->height();
+    }
+    inline float logicalWidth() const
+    {
+      return physicalWidth() / device_pixel_ratio_;
+    }
+    inline float logicalHeight() const
+    {
+      return physicalHeight() / device_pixel_ratio_;
+    }
 
     // Check if the surface needs to be resized.
     bool needsResize(float w, float h) const;
 
-    inline glm::vec4 backgroundColor() const { return background_color_; }
+    inline glm::vec4 backgroundColor() const
+    {
+      return background_color_;
+    }
     inline void setBackgroundColor(float r, float g, float b, float a)
     {
       background_color_ = glm::vec4(r, g, b, a);
     }
 
-    inline std::shared_ptr<Texture> textureRect() const { return texture_; }
-    inline const Texture &textureRectRef() const { return *texture_; }
+    inline std::shared_ptr<Texture> textureRect() const
+    {
+      return texture_;
+    }
+    inline const Texture &textureRectRef() const
+    {
+      return *texture_;
+    }
     // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
-    inline int texturePad() const { return texture_pad_; }
+    inline int texturePad() const
+    {
+      return texture_pad_;
+    }
 
     /**
      * Init or resize the texture.
@@ -153,8 +189,14 @@ namespace builtin_scene
      * @returns The texture or `nullptr` if the texture is not used.
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
-    inline void setEnabled(bool enabled) { enabled_ = enabled; }
-    inline bool isEnabled() const { return enabled_; }
+    inline void setEnabled(bool enabled)
+    {
+      enabled_ = enabled;
+    }
+    inline bool isEnabled() const
+    {
+      return enabled_;
+    }
     /**
      * Set the web content to use the texture or not.
      *
@@ -168,13 +210,25 @@ namespace builtin_scene
       if (is_texture_using_ != value)
         is_texture_using_ = value;
     }
-    inline bool isOpaque() const { return is_opaque_; }
-    inline bool isTransparent() const { return !is_opaque_; }
-    inline void setOpaque(bool b) { is_opaque_ = b; }
+    inline bool isOpaque() const
+    {
+      return is_opaque_;
+    }
+    inline bool isTransparent() const
+    {
+      return !is_opaque_;
+    }
+    inline void setOpaque(bool b)
+    {
+      is_opaque_ = b;
+    }
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
-    inline bool isDirty() const { return is_dirty_; }
+    inline bool isDirty() const
+    {
+      return is_dirty_;
+    }
     /**
      * Mark the content as dirty or not.
      *
@@ -214,7 +268,10 @@ namespace builtin_scene
     friend class web_renderer::InitSystem;
 
   public:
-    ecs::EntityId instancedMeshEntity() const { return instancedMeshEntity_; }
+    ecs::EntityId instancedMeshEntity() const
+    {
+      return instancedMeshEntity_;
+    }
 
   private:
     ecs::EntityId instancedMeshEntity_;
@@ -231,7 +288,10 @@ namespace builtin_scene
       using ecs::System::System;
 
     public:
-      const std::string name() const override { return "web_render.InitSystem"; }
+      const std::string name() const override
+      {
+        return "web_render.InitSystem";
+      }
       void onExecute() override;
     };
 
@@ -294,7 +354,10 @@ namespace builtin_scene
       using RenderBaseSystem::RenderBaseSystem;
 
     public:
-      const std::string name() const override { return "web_render.RenderBackgroundSystem"; }
+      const std::string name() const override
+      {
+        return "web_render.RenderBackgroundSystem";
+      }
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
@@ -306,7 +369,10 @@ namespace builtin_scene
       using RenderBaseSystem::RenderBaseSystem;
 
     public:
-      const std::string name() const override { return "web_render.RenderImageSystem"; }
+      const std::string name() const override
+      {
+        return "web_render.RenderImageSystem";
+      }
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
@@ -328,7 +394,10 @@ namespace builtin_scene
       RenderTextSystem();
 
     public:
-      const std::string name() const override { return "web_render.RenderTextSystem"; }
+      const std::string name() const override
+      {
+        return "web_render.RenderTextSystem";
+      }
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
@@ -348,7 +417,10 @@ namespace builtin_scene
       using RenderBaseSystem::RenderBaseSystem;
 
     public:
-      const std::string name() const override { return "web_render.UpdateTextureSystem"; }
+      const std::string name() const override
+      {
+        return "web_render.UpdateTextureSystem";
+      }
 
     public:
       void render(ecs::EntityId entity, WebContent &content) override;
@@ -381,9 +453,9 @@ namespace builtin_scene
       auto updateTexture = System::Make<UpdateTextureSystem>();
 
       renderBackground
-          ->chain(renderImage)
-          ->chain(renderText)
-          ->chain(updateTexture);
+        ->chain(renderImage)
+        ->chain(renderText)
+        ->chain(updateTexture);
       app.addSystem(SchedulerLabel::kUpdate, renderBackground);
     }
   };

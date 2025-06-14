@@ -28,15 +28,15 @@ namespace dombinding
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
       tpl->InstanceTemplate()->SetHandler(v8::NamedPropertyHandlerConfiguration(
-          DOMStringMap::PropertyGetter<InstanceType>,  // Getter
-          DOMStringMap::PropertySetter<InstanceType>,  // Setter
-          nullptr,                                     // Query
-          DOMStringMap::PropertyDeleter<InstanceType>, // Deleter
-          nullptr,                                     // Enumerator
-          nullptr,                                     // Definer
-          nullptr,                                     // Descriptor
-          Local<Value>(),
-          PropertyHandlerFlags::kNone));
+        DOMStringMap::PropertyGetter<InstanceType>,  // Getter
+        DOMStringMap::PropertySetter<InstanceType>,  // Setter
+        nullptr,                                     // Query
+        DOMStringMap::PropertyDeleter<InstanceType>, // Deleter
+        nullptr,                                     // Enumerator
+        nullptr,                                     // Definer
+        nullptr,                                     // Descriptor
+        Local<Value>(),
+        PropertyHandlerFlags::kNone));
 
       Local<Function> constructor = tpl->GetFunction(context).ToLocalChecked();
       constructor->SetName(String::NewFromUtf8(isolate, "DOMStringMap").ToLocalChecked());
@@ -46,7 +46,7 @@ namespace dombinding
 
       auto finalizer = [](const WeakCallbackInfo<InstanceType> &info)
       {
-        InstanceType* wrapper = info.GetParameter();
+        InstanceType *wrapper = info.GetParameter();
         if (wrapper != nullptr)
         {
           wrapper->persistentHandle.Reset();
@@ -87,7 +87,7 @@ namespace dombinding
       if (value.has_value())
       {
         info.GetReturnValue().Set(
-            v8::String::NewFromUtf8(isolate, value->c_str()).ToLocalChecked());
+          v8::String::NewFromUtf8(isolate, value->c_str()).ToLocalChecked());
       }
       else
       {
@@ -97,8 +97,7 @@ namespace dombinding
 
     template <typename InstanceType>
       requires std::is_base_of_v<DOMStringMap, InstanceType>
-    static void PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value,
-                               const v8::PropertyCallbackInfo<v8::Value> &info)
+    static void PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       v8::Isolate *isolate = info.GetIsolate();
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
@@ -108,7 +107,7 @@ namespace dombinding
       if (externalValue.IsEmpty())
       {
         isolate->ThrowException(v8::Exception::TypeError(
-            v8::String::NewFromUtf8Literal(isolate, "Internal error: missing instance")));
+          v8::String::NewFromUtf8Literal(isolate, "Internal error: missing instance")));
         return;
       }
 
@@ -116,7 +115,7 @@ namespace dombinding
       if (!instance)
       {
         isolate->ThrowException(v8::Exception::TypeError(
-            v8::String::NewFromUtf8Literal(isolate, "Internal error: instance is null")));
+          v8::String::NewFromUtf8Literal(isolate, "Internal error: instance is null")));
         return;
       }
 
@@ -127,7 +126,7 @@ namespace dombinding
       if (maybe_str.IsEmpty())
       {
         isolate->ThrowException(v8::Exception::TypeError(
-            v8::String::NewFromUtf8Literal(isolate, "Value must be a string")));
+          v8::String::NewFromUtf8Literal(isolate, "Value must be a string")));
         return;
       }
       v8::Local<v8::String> str = maybe_str.ToLocalChecked();

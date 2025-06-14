@@ -13,11 +13,13 @@ namespace bindings::webxr
   void XRSystem::Init(Napi::Env env)
   {
 #define MODULE_NAME "XRSystem"
-    Function tpl = DefineClass(env, MODULE_NAME,
-                               {
-                                   InstanceMethod("isSessionSupported", &XRSystem::IsSessionSupported, napi_default_method),
-                                   InstanceMethod("requestSession", &XRSystem::RequestSession, napi_default_method),
-                               });
+    Function tpl = DefineClass(
+      env,
+      MODULE_NAME,
+      {
+        InstanceMethod("isSessionSupported", &XRSystem::IsSessionSupported, napi_default_method),
+        InstanceMethod("requestSession", &XRSystem::RequestSession, napi_default_method),
+      });
 
     constructor = new FunctionReference();
     *constructor = Persistent(tpl);
@@ -33,7 +35,8 @@ namespace bindings::webxr
     return scope.Escape(obj).ToObject();
   }
 
-  XRSystem::XRSystem(const CallbackInfo &info) : ObjectWrap<XRSystem>(info)
+  XRSystem::XRSystem(const CallbackInfo &info)
+      : ObjectWrap<XRSystem>(info)
   {
     auto env = info.Env();
     HandleScope scope(env);

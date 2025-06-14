@@ -9,8 +9,8 @@ using namespace std;
 namespace client_xr
 {
   XRInputSource::XRInputSource(shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData)
-      : session_(session),
-        inputSourceData_(inputSourceData)
+      : session_(session)
+      , inputSourceData_(inputSourceData)
   {
   }
 
@@ -63,8 +63,8 @@ namespace client_xr
   }
 
   XRInputSourceArray::XRInputSourceArray(shared_ptr<XRSession> session)
-      : session_(session),
-        device_(session->device())
+      : session_(session)
+      , device_(session->device())
   {
   }
 
@@ -124,12 +124,8 @@ namespace client_xr
     }
     else
     {
-      set_difference(newInputSourceIds.begin(), newInputSourceIds.end(),
-                     currentInputSourceIds.begin(), currentInputSourceIds.end(),
-                     inserter(addedInputSourceIds, addedInputSourceIds.begin()));
-      set_difference(currentInputSourceIds.begin(), currentInputSourceIds.end(),
-                     newInputSourceIds.begin(), newInputSourceIds.end(),
-                     inserter(removedInputSourceIds, removedInputSourceIds.begin()));
+      set_difference(newInputSourceIds.begin(), newInputSourceIds.end(), currentInputSourceIds.begin(), currentInputSourceIds.end(), inserter(addedInputSourceIds, addedInputSourceIds.begin()));
+      set_difference(currentInputSourceIds.begin(), currentInputSourceIds.end(), newInputSourceIds.begin(), newInputSourceIds.end(), inserter(removedInputSourceIds, removedInputSourceIds.begin()));
     }
 
     /**

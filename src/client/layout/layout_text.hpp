@@ -24,14 +24,26 @@ namespace client_layout
     LayoutText(std::shared_ptr<dom::Text> textNode);
 
   public:
-    const char *name() const override { return "LayoutText"; }
-    bool isText() const override final { return true; }
-    bool isEmptyText() const override final { return plainTextLength() == 0; }
+    const char *name() const override
+    {
+      return "LayoutText";
+    }
+    bool isText() const override final
+    {
+      return true;
+    }
+    bool isEmptyText() const override final
+    {
+      return plainTextLength() == 0;
+    }
 
     std::shared_ptr<dom::Text> textNode() const;
     std::string plainText() const;
     std::string transformedText() const;
-    inline size_t plainTextLength() const { return plainText().length(); }
+    inline size_t plainTextLength() const
+    {
+      return plainText().length();
+    }
 
     // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;

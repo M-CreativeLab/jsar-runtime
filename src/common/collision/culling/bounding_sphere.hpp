@@ -15,13 +15,13 @@ namespace collision
     {
     public:
       TrBoundingSphere(const glm::vec3 min, const glm::vec3 &max, const glm::mat4 &worldMatrix)
-          : center{glm::vec3{}},
-            centerWorld{glm::vec3{}},
-            radius{0.f},
-            radiusWorld{0.f},
-            minimum{glm::vec3{}},
-            maximum{glm::vec3{}},
-            worldBaseMatrix{glm::mat4{1.0}}
+          : center{glm::vec3{}}
+          , centerWorld{glm::vec3{}}
+          , radius{0.f}
+          , radiusWorld{0.f}
+          , minimum{glm::vec3{}}
+          , maximum{glm::vec3{}}
+          , worldBaseMatrix{glm::mat4{1.0}}
       {
         reConstruct(min, max, worldMatrix);
       }

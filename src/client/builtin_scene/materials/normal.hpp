@@ -11,7 +11,10 @@ namespace builtin_scene::materials
     NormalMaterial() = default;
 
   public:
-    const std::string name() const override { return "NormalMaterial"; }
+    const std::string name() const override
+    {
+      return "NormalMaterial";
+    }
     const std::vector<std::string> defines() const override
     {
       return {"USE_NORMALS"};

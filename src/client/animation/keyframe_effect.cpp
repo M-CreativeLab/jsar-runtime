@@ -8,12 +8,12 @@ namespace dom
   KeyframeEffect::KeyframeEffect(shared_ptr<dom::Element> target,
                                  optional<Keyframes> keyframes,
                                  const KeyframeEffectOptions options)
-      : AnimationEffect(),
-        target_(target),
-        keyframes_(make_unique<Keyframes>(*keyframes)),
-        composite_(options.composite.value_or(CompositeReplace)),
-        iteration_composite_(options.iterationComposite.value_or(CompositeReplace)),
-        pseudo_element_str_(options.pseudoElement)
+      : AnimationEffect()
+      , target_(target)
+      , keyframes_(make_unique<Keyframes>(*keyframes))
+      , composite_(options.composite.value_or(CompositeReplace))
+      , iteration_composite_(options.iterationComposite.value_or(CompositeReplace))
+      , pseudo_element_str_(options.pseudoElement)
   {
   }
 

@@ -6,13 +6,12 @@ namespace browserbinding
   thread_local Napi::FunctionReference *Location::constructor;
   void Location::Init(Napi::Env env)
   {
-    Napi::Function func = DefineClass(env, "Location",
-                                      {
-                                          InstanceMethod("assign", &Location::Assign, napi_property_attributes::napi_default_jsproperty),
-                                          InstanceMethod("reload", &Location::Reload, napi_property_attributes::napi_default_jsproperty),
-                                          InstanceMethod("replace", &Location::Replace, napi_property_attributes::napi_default_jsproperty),
-                                          InstanceMethod("toString", &Location::ToString, napi_property_attributes::napi_default_jsproperty),
-                                      });
+    Napi::Function func = DefineClass(env, "Location", {
+                                                         InstanceMethod("assign", &Location::Assign, napi_property_attributes::napi_default_jsproperty),
+                                                         InstanceMethod("reload", &Location::Reload, napi_property_attributes::napi_default_jsproperty),
+                                                         InstanceMethod("replace", &Location::Replace, napi_property_attributes::napi_default_jsproperty),
+                                                         InstanceMethod("toString", &Location::ToString, napi_property_attributes::napi_default_jsproperty),
+                                                       });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.Global().Set("Location", func);

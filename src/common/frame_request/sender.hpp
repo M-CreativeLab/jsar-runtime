@@ -7,8 +7,13 @@ namespace frame_request
   class TrFrameRequestSender : public ipc::TrChannelSender<TrFrameRequestMessage>
   {
   public:
-    TrFrameRequestSender(ipc::TrOneShotClient<TrFrameRequestMessage> *client) : ipc::TrChannelSender<TrFrameRequestMessage>(client) {}
-    ~TrFrameRequestSender() {}
+    TrFrameRequestSender(ipc::TrOneShotClient<TrFrameRequestMessage> *client)
+        : ipc::TrChannelSender<TrFrameRequestMessage>(client)
+    {
+    }
+    ~TrFrameRequestSender()
+    {
+    }
 
   public:
     template <typename T>

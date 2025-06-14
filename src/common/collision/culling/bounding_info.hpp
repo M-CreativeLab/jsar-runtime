@@ -18,8 +18,8 @@ namespace collision
     {
     public:
       TrBoundingInfo(const glm::vec3 min, const glm::vec3 &max, const glm::mat4 &worldMatrix)
-          : boundingBox(min, max, worldMatrix),
-            boundingSphere(min, max, worldMatrix)
+          : boundingBox(min, max, worldMatrix)
+          , boundingSphere(min, max, worldMatrix)
       {
       }
       ~TrBoundingInfo() override = default;

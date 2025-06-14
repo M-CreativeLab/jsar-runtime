@@ -12,9 +12,18 @@ namespace math
     using glm::quat::quat;
 
   public:
-    static Quat Identity() { return Quat::FromXYZW(0, 0, 0, 1); }
-    static Quat Zero() { return Quat(0, 0, 0, 0); }
-    static Quat Nan() { return Quat(NAN, NAN, NAN, NAN); }
+    static Quat Identity()
+    {
+      return Quat::FromXYZW(0, 0, 0, 1);
+    }
+    static Quat Zero()
+    {
+      return Quat(0, 0, 0, 0);
+    }
+    static Quat Nan()
+    {
+      return Quat(NAN, NAN, NAN, NAN);
+    }
 
   public:
     /**

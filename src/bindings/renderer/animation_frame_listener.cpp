@@ -5,9 +5,7 @@ namespace bindings
   thread_local Napi::FunctionReference *AnimationFrameListener::constructor;
   Napi::Object AnimationFrameListener::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "AnimationFrameListener",
-                                      {InstanceMethod("connect", &AnimationFrameListener::Connect),
-                                       InstanceMethod("isConnected", &AnimationFrameListener::IsConnected)});
+    Napi::Function func = DefineClass(env, "AnimationFrameListener", {InstanceMethod("connect", &AnimationFrameListener::Connect), InstanceMethod("isConnected", &AnimationFrameListener::IsConnected)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -17,7 +15,8 @@ namespace bindings
     return exports;
   }
 
-  AnimationFrameListener::AnimationFrameListener(const Napi::CallbackInfo &info) : Napi::ObjectWrap<AnimationFrameListener>(info)
+  AnimationFrameListener::AnimationFrameListener(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<AnimationFrameListener>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

@@ -41,8 +41,14 @@ namespace canvasbinding
     ~ImageData();
 
   public:
-    inline size_t width() { return dataImpl->width(); }
-    inline size_t height() { return dataImpl->height(); }
+    inline size_t width()
+    {
+      return dataImpl->width();
+    }
+    inline size_t height()
+    {
+      return dataImpl->height();
+    }
 
   public:
     static thread_local Napi::FunctionReference *constructor;

@@ -26,12 +26,12 @@ namespace commandbuffers
     COMMAND_BUFFER_UNKNOWN = 0,
 
     /** Context */
-    COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ,  // Create a WebGL context.
-    COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ,  // Remove a WebGL context.
-    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ,    // Initialize a WebGL1 context.
-    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,    // Response of the WebGL1 context initialization.
-    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ,   // Initialize a WebGL2 context.
-    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES,   // Response of the WebGL2 context initialization.
+    COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ, // Create a WebGL context.
+    COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ, // Remove a WebGL context.
+    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ,   // Initialize a WebGL1 context.
+    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,   // Response of the WebGL1 context initialization.
+    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ,  // Initialize a WebGL2 context.
+    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES,  // Response of the WebGL2 context initialization.
 
     /** Extensions */
     COMMAND_BUFFER_GET_EXTENSIONS_REQ,
@@ -245,17 +245,17 @@ namespace commandbuffers
   template <CommandBufferType Type>
   concept is_commandbuffer_request = (
 #define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
-      TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
+    TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
 #undef XX
-          false);
+      false);
 
   // Check this command type is a response type.
   template <CommandBufferType Type>
   concept is_commandbuffer_response = (
 #define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
-      TR_COMMAND_BUFFER_RESPONSES_MAP(XX)
+    TR_COMMAND_BUFFER_RESPONSES_MAP(XX)
 #undef XX
-          false);
+      false);
 
   using namespace ipc;
   class TrCommandBufferMessage : public TrIpcMessage<TrCommandBufferMessage, CommandBufferType>

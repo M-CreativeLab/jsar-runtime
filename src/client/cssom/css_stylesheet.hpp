@@ -21,8 +21,14 @@ namespace client_cssom
     CSSStyleSheet(std::optional<CSSStyleSheetInit> init = std::nullopt);
 
   public:
-    const CSSRuleList &cssRules() const { return *cssRules_; }
-    std::shared_ptr<rules::CSSImportRule> ownerRule() const { return ownerRule_.lock(); }
+    const CSSRuleList &cssRules() const
+    {
+      return *cssRules_;
+    }
+    std::shared_ptr<rules::CSSImportRule> ownerRule() const
+    {
+      return ownerRule_.lock();
+    }
 
   public:
     void deleteRule(CSSRuleIndex index);

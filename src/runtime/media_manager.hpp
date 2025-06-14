@@ -171,7 +171,10 @@ public:
   /**
    * It returns the command channel's port number for clients to connect.
    */
-  inline int chanPort() { return commandChanServer->getPort(); }
+  inline int chanPort()
+  {
+    return commandChanServer->getPort();
+  }
 
 private:
   void onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &chanClient);

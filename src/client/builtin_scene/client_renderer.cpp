@@ -41,8 +41,10 @@ namespace builtin_scene
         glContext_->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
       }
       instancedMesh.setup(glContext_,
-                          vao, glContext_->createBuffer(),
-                          transparentVao, glContext_->createBuffer());
+                          vao,
+                          glContext_->createBuffer(),
+                          transparentVao,
+                          glContext_->createBuffer());
     }
   }
 
@@ -170,7 +172,9 @@ namespace builtin_scene
     // TODO: update the instance data
   }
 
-  void Renderer::drawMesh3d(const ecs::EntityId &entity, shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
+  void Renderer::drawMesh3d(const ecs::EntityId &entity,
+                            shared_ptr<Mesh3d> mesh,
+                            shared_ptr<MeshMaterial3d> material,
                             shared_ptr<Transform> transform,
                             shared_ptr<Transform> parentTransform,
                             optional<XRRenderTarget> renderTarget)
@@ -306,11 +310,10 @@ namespace builtin_scene
     }
   }
 
-  optional<glm::mat4> Renderer::updateTransformationMatrix(
-      shared_ptr<WebGLProgram> program,
-      shared_ptr<Transform> transform,
-      shared_ptr<Transform> parentTransform,
-      bool forceUpdate)
+  optional<glm::mat4> Renderer::updateTransformationMatrix(shared_ptr<WebGLProgram> program,
+                                                           shared_ptr<Transform> transform,
+                                                           shared_ptr<Transform> parentTransform,
+                                                           bool forceUpdate)
   {
     assert(program != nullptr);
 
@@ -400,10 +403,10 @@ namespace builtin_scene
 
     // Create a mesh for the volume mask
     auto entity = spawn(
-        Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 1.0f))),
-        MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
-        Transform::FromXYZ(0.0f, 0.0f, 0.0f)
-            .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
+      Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 1.0f))),
+      MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
+      Transform::FromXYZ(0.0f, 0.0f, 0.0f)
+        .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
     renderer->setVolumeMask(entity);
   }
 
@@ -560,7 +563,8 @@ namespace builtin_scene
       renderer.disableVolumeMask();
   }
 
-  void RenderSystem::traverseAndRender(ecs::EntityId entity, Renderer &renderer,
+  void RenderSystem::traverseAndRender(ecs::EntityId entity,
+                                       Renderer &renderer,
                                        optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto renderEntity = [this, &renderer, renderTarget](ecs::EntityId entity) -> bool
@@ -590,7 +594,9 @@ namespace builtin_scene
     }
   }
 
-  void RenderSystem::renderMesh(ecs::EntityId &entity, shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
+  void RenderSystem::renderMesh(ecs::EntityId &entity,
+                                shared_ptr<Mesh3d> meshComponent,
+                                Renderer &renderer,
                                 optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto materialComponent = getComponent<MeshMaterial3d>(entity);

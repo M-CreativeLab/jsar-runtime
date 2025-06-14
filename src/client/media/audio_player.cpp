@@ -2,7 +2,8 @@
 
 namespace media_client
 {
-  AudioPlayer::AudioPlayer() : MediaPlayer(MediaContentType::Audio)
+  AudioPlayer::AudioPlayer()
+      : MediaPlayer(MediaContentType::Audio)
   {
   }
 }

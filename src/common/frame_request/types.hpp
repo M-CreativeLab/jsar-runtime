@@ -35,7 +35,10 @@ namespace frame_request
     }
 
   public:
-    TrFrameRequestType getType() { return type; }
+    TrFrameRequestType getType()
+    {
+      return type;
+    }
   };
 
   typedef function<void(TrFrameRequestMessage &)> TrFrameRequestFn;
@@ -43,12 +46,16 @@ namespace frame_request
   {
   public:
     TrFrameRequestCallback(TrFrameRequestType type, TrFrameRequestFn fn)
-        : type(type), fn(fn)
+        : type(type)
+        , fn(fn)
     {
     }
 
   public:
-    void operator()(TrFrameRequestMessage &message) { return fn(message); }
+    void operator()(TrFrameRequestMessage &message)
+    {
+      return fn(message);
+    }
 
   public:
     TrFrameRequestType type;
@@ -72,14 +79,23 @@ namespace frame_request
     }
 
   public:
-    TrFrameRequestBase() : TrIpcSerializableBase() {}
-    TrFrameRequestBase(TrFrameRequestType type, size_t size) : TrIpcSerializableBase(type, size) {}
+    TrFrameRequestBase()
+        : TrIpcSerializableBase()
+    {
+    }
+    TrFrameRequestBase(TrFrameRequestType type, size_t size)
+        : TrIpcSerializableBase(type, size)
+    {
+    }
 
   public:
     /**
      * Renew the id of the frame request, it's used to make this frame request as a new one.
      */
-    void renewId() { id = frameRequestIdGen.get(); }
+    void renewId()
+    {
+      id = frameRequestIdGen.get();
+    }
 
   public:
     uint32_t id = frameRequestIdGen.get();
@@ -90,7 +106,8 @@ namespace frame_request
   {
   public:
     TrFrameRequestSimple(TrFrameRequestSimple &that)
-        : TrFrameRequestBase(that.type, that.size), time(that.time)
+        : TrFrameRequestBase(that.type, that.size)
+        , time(that.time)
     {
     }
     TrFrameRequestSimple(TrFrameRequestType type)
@@ -112,7 +129,10 @@ namespace frame_request
   class TrAnimationFrameRequest : public TrFrameRequestSimple<TrAnimationFrameRequest>
   {
   public:
-    TrAnimationFrameRequest(TrAnimationFrameRequest &that) : TrFrameRequestSimple(that) {}
+    TrAnimationFrameRequest(TrAnimationFrameRequest &that)
+        : TrFrameRequestSimple(that)
+    {
+    }
     TrAnimationFrameRequest()
         : TrFrameRequestSimple(TrFrameRequestType::AnimationFrame)
     {

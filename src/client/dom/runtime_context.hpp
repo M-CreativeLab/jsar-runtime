@@ -18,10 +18,13 @@ namespace dom
   class RuntimeContext : public std::enable_shared_from_this<RuntimeContext>
   {
   public:
-    RuntimeContext() : isolate(v8::Isolate::GetCurrent())
+    RuntimeContext()
+        : isolate(v8::Isolate::GetCurrent())
     {
     }
-    virtual ~RuntimeContext() {}
+    virtual ~RuntimeContext()
+    {
+    }
 
   public:
     /**
@@ -51,7 +54,8 @@ namespace dom
      * @param responseCallback The callback to call when the resource is fetched.
      * @param errorCallback The callback to be called when an error occurs during fetching the resource.
      */
-    void fetchResource(const std::string &url, const std::string &responseType,
+    void fetchResource(const std::string &url,
+                       const std::string &responseType,
                        const FunctionCallback &responseCallback,
                        const std::optional<FunctionCallback> errorCallback = std::nullopt);
 

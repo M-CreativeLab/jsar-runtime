@@ -28,7 +28,10 @@ namespace dombinding
   class NodeContainer
   {
   public:
-    NodeContainer(shared_ptr<NodeType> node) : node(node) {}
+    NodeContainer(shared_ptr<NodeType> node)
+        : node(node)
+    {
+    }
 
   public:
     std::shared_ptr<NodeType> node;

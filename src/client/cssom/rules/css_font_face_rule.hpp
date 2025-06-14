@@ -12,7 +12,10 @@ namespace client_cssom::rules
     using CSSRule::CSSRule;
 
   public:
-    const CSSStyleDeclaration &style() const { return style_; }
+    const CSSStyleDeclaration &style() const
+    {
+      return style_;
+    }
 
   private:
     CSSStyleDeclaration style_;

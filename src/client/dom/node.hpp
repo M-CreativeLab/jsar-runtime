@@ -173,13 +173,19 @@ namespace dom
      *
      * @returns a vector of the child nodes.
      */
-    inline std::vector<std::shared_ptr<Node>> getChildNodes() { return childNodes; }
+    inline std::vector<std::shared_ptr<Node>> getChildNodes()
+    {
+      return childNodes;
+    }
     /**
      * Get the parent node of the current node.
      *
      * @returns a shared pointer to the parent node.
      */
-    inline std::shared_ptr<Node> getParentNode() const { return parentNode.lock(); }
+    inline std::shared_ptr<Node> getParentNode() const
+    {
+      return parentNode.lock();
+    }
     /**
      * Get the parent `Element` node of the current node, if the node has no parent, or if that parent is not an
      * `Element`, this property returns `null`.
@@ -228,8 +234,8 @@ namespace dom
     {
       auto _parentNode = getParentNode();
       return _parentNode == nullptr
-                 ? nullptr
-                 : std::dynamic_pointer_cast<T>(_parentNode);
+               ? nullptr
+               : std::dynamic_pointer_cast<T>(_parentNode);
     }
     /**
      * Get the owner document reference.
@@ -262,18 +268,48 @@ namespace dom
     }
 
   public:
-    virtual bool isElement() const { return false; }
-    virtual bool isHTMLElement() const { return false; }
-    virtual bool isDocument() const { return false; }
-    virtual bool isDocumentFragment() const { return false; }
-    virtual bool isHTMLDocument() const { return false; }
-    virtual bool isCharacterData() const { return false; }
-    virtual bool isText() const { return false; }
-    virtual bool isHTMLMeshElement() const { return false; }
-    bool isElementOrText() const { return isElement() || isText(); }
+    virtual bool isElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLElement() const
+    {
+      return false;
+    }
+    virtual bool isDocument() const
+    {
+      return false;
+    }
+    virtual bool isDocumentFragment() const
+    {
+      return false;
+    }
+    virtual bool isHTMLDocument() const
+    {
+      return false;
+    }
+    virtual bool isCharacterData() const
+    {
+      return false;
+    }
+    virtual bool isText() const
+    {
+      return false;
+    }
+    virtual bool isHTMLMeshElement() const
+    {
+      return false;
+    }
+    bool isElementOrText() const
+    {
+      return isElement() || isText();
+    }
 
     // If this node can be rendered.
-    virtual bool isRenderable() const { return renderable.value_or(false); }
+    virtual bool isRenderable() const
+    {
+      return renderable.value_or(false);
+    }
 
     /**
      * Set the node value.
@@ -304,7 +340,10 @@ namespace dom
      *
      * @returns True if the node has child nodes, otherwise false.
      */
-    inline bool hasChildNodes() const { return childNodes.size() > 0; }
+    inline bool hasChildNodes() const
+    {
+      return childNodes.size() > 0;
+    }
 
     /**
      * The `isEqualNode()` method of the `Node` interface tests whether two nodes are equal. Two nodes are equal when they have the
@@ -340,7 +379,10 @@ namespace dom
     }
 
   public:
-    bool operator==(const Node &other) const { return isEqualNode(other); }
+    bool operator==(const Node &other) const
+    {
+      return isEqualNode(other);
+    }
 
   protected:
     /**

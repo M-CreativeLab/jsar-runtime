@@ -277,9 +277,9 @@ namespace dom
     static DOMEventInit Default()
     {
       return DOMEventInit{
-          .bubbles = true,
-          .cancelable = true,
-          .composed = false,
+        .bubbles = true,
+        .cancelable = true,
+        .composed = false,
       };
     }
 
@@ -312,19 +312,19 @@ namespace dom
      * @param init The event initialization options.
      */
     Event(DOMEventConstructorType constructor, DOMEventType type, DOMEventInit init = DOMEventInit::Default())
-        : events_comm::TrEvent<DOMEventType>(type),
-          constructor_(constructor),
-          bubbles_(init.bubbles),
-          cancelable_(init.cancelable),
-          composed_(init.composed)
+        : events_comm::TrEvent<DOMEventType>(type)
+        , constructor_(constructor)
+        , bubbles_(init.bubbles)
+        , cancelable_(init.cancelable)
+        , composed_(init.composed)
     {
     }
     Event(Event &that)
-        : events_comm::TrEvent<DOMEventType>(that),
-          constructor_(that.constructor_),
-          bubbles_(that.bubbles_),
-          cancelable_(that.cancelable_),
-          composed_(that.composed_)
+        : events_comm::TrEvent<DOMEventType>(that)
+        , constructor_(that.constructor_)
+        , bubbles_(that.bubbles_)
+        , cancelable_(that.cancelable_)
+        , composed_(that.composed_)
     {
     }
 
@@ -332,26 +332,41 @@ namespace dom
     /**
      * The constructor type of the event.
      */
-    DOMEventConstructorType constructor() const { return constructor_; }
+    DOMEventConstructorType constructor() const
+    {
+      return constructor_;
+    }
     /**
      * The bubbles read-only property of the `Event` interface indicates whether the event bubbles up through the DOM tree or not.
      */
-    inline bool bubbles() { return bubbles_; }
+    inline bool bubbles()
+    {
+      return bubbles_;
+    }
     /**
      * The cancelable read-only property of the Event interface indicates whether the event can be canceled, and therefore prevented as if the event never happened.
      */
-    inline bool cancelable() { return cancelable_; }
+    inline bool cancelable()
+    {
+      return cancelable_;
+    }
     /**
      * The read-only composed property of the Event interface returns a boolean value which indicates whether or not the event will propagate across the shadow DOM boundary
      * into the standard DOM.
      */
-    inline bool composed() { return composed_; }
+    inline bool composed()
+    {
+      return composed_;
+    }
     /**
      * The type read-only property of the Event interface returns a string representing the type of the event.
      *
      * @returns The event type string, such as "click", "keydown", etc.
      */
-    inline std::string typeStr() { return EventTypeToString(type, true); }
+    inline std::string typeStr()
+    {
+      return EventTypeToString(type, true);
+    }
 
   public:
     void preventDefault()

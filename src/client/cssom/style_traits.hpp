@@ -87,7 +87,7 @@ namespace client_cssom
                                                 { return !std::isspace(ch); }));
         token.erase(std::find_if(token.rbegin(), token.rend(), [](int ch)
                                  { return !std::isspace(ch); })
-                        .base(),
+                      .base(),
                     token.end());
 
         values.push_back(ParseSingleValue<T>(token));

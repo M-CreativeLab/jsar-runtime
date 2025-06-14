@@ -22,7 +22,7 @@ namespace dombinding
     Napi::Value MediaGetter(const Napi::CallbackInfo &info);
     void MediaSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value NameGetter(const Napi::CallbackInfo &info);
-    void NameSetter(const Napi::CallbackInfo &info, const Napi::Value &value);  
+    void NameSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

@@ -11,7 +11,8 @@
 using namespace std;
 
 TrInspectorServer::TrInspectorServer(std::shared_ptr<TrInspector> inspector)
-    : fd_(-1), inspector_(inspector)
+    : fd_(-1)
+    , inspector_(inspector)
 {
   fd_ = socket(AF_INET, SOCK_STREAM, 0);
   if (fd_ == -1)

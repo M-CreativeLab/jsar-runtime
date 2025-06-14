@@ -13,7 +13,9 @@ namespace ipc
     TrIpcSerializableBase()
     {
     }
-    TrIpcSerializableBase(MessageEnum type, size_t size) : type(type), size(size)
+    TrIpcSerializableBase(MessageEnum type, size_t size)
+        : type(type)
+        , size(size)
     {
     }
     virtual ~TrIpcSerializableBase()

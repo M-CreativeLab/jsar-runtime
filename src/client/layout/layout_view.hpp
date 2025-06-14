@@ -32,17 +32,32 @@ namespace client_layout
     LayoutView(std::shared_ptr<dom::Document>, const browser::Window &);
 
   public:
-    const char *name() const final override { return "LayoutView"; }
-    bool isLayoutView() const final override { return true; }
+    const char *name() const final override
+    {
+      return "LayoutView";
+    }
+    bool isLayoutView() const final override
+    {
+      return true;
+    }
 
-    crates::layout2::Allocator &taffyNodeAllocatorRef() const { return *taffy_node_allocator_; }
+    crates::layout2::Allocator &taffyNodeAllocatorRef() const
+    {
+      return *taffy_node_allocator_;
+    }
     bool computeLayout(const ConstraintSpace &avilableSpace) override final;
 
     bool hitTest(const HitTestRay &, HitTestResult &);
     bool hitTestNoLifecycleUpdate(const HitTestRay &, HitTestResult &);
 
-    size_t hitTestCount() const { return hit_test_count_; }
-    size_t hitTestCacheHits() const { return hit_test_cache_hits_; }
+    size_t hitTestCount() const
+    {
+      return hit_test_count_;
+    }
+    size_t hitTestCacheHits() const
+    {
+      return hit_test_cache_hits_;
+    }
     void clearHitTestCache();
 
     size_t computeMinimumWidth();
@@ -107,17 +122,23 @@ namespace client_layout
       // - No timestamp.
       // - Enable text content.
       // - Enable showing block recursively.
-      static DebugOptions Default() { return DebugOptions(false); }
+      static DebugOptions Default()
+      {
+        return DebugOptions(false);
+      }
       // The disabled options for `debugPrint()`, no debug information.
-      static DebugOptions Disabled() { return DebugOptions(true); }
+      static DebugOptions Disabled()
+      {
+        return DebugOptions(true);
+      }
       // The full options for `debugPrint()`, all debug information enabled.
       static DebugOptions Full()
       {
         return Default()
-            .withFormattingContext(true)
-            .withTimestamp(true)
-            .withTextContent(true)
-            .withBlockRecursively(true);
+          .withFormattingContext(true)
+          .withTimestamp(true)
+          .withTextContent(true)
+          .withBlockRecursively(true);
       }
     };
     // Print the debug information of the layout tree.
@@ -133,7 +154,8 @@ namespace client_layout
      * @param beforeObject The reference box to insert the new box before.
      * @returns The new box.
      */
-    std::shared_ptr<LayoutBoxModelObject> createBox(const std::string &display, std::shared_ptr<dom::Element> element,
+    std::shared_ptr<LayoutBoxModelObject> createBox(const std::string &display,
+                                                    std::shared_ptr<dom::Element> element,
                                                     std::shared_ptr<LayoutBlock> parentBlock,
                                                     std::shared_ptr<LayoutObject> beforeObject = nullptr);
 

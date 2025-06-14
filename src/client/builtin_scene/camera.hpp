@@ -15,7 +15,10 @@ namespace builtin_scene
     using ecs::Component::Component;
 
   public:
-    bool active() { return active_; }
+    bool active()
+    {
+      return active_;
+    }
 
   private:
     bool active_ = false;
@@ -28,7 +31,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "CameraStartupSystem"; }
+    const std::string name() const override
+    {
+      return "CameraStartupSystem";
+    }
     void onExecute() override
     {
       // Create the camera for rendering.
@@ -42,7 +48,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "CameraUpdateSystem"; }
+    const std::string name() const override
+    {
+      return "CameraUpdateSystem";
+    }
     void onExecute() override
     {
       auto cameraEntity = firstEntity<Camera>();

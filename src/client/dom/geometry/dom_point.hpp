@@ -23,15 +23,30 @@ namespace dom::geometry
 
   public:
     DOMPointReadOnly(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 1.0f)
-        : x_(x), y_(y), z_(z), w_(w)
+        : x_(x)
+        , y_(y)
+        , z_(z)
+        , w_(w)
     {
     }
 
   public:
-    float x() const { return x_; }
-    float y() const { return y_; }
-    float z() const { return z_; }
-    float w() const { return w_; }
+    float x() const
+    {
+      return x_;
+    }
+    float y() const
+    {
+      return y_;
+    }
+    float z() const
+    {
+      return z_;
+    }
+    float w() const
+    {
+      return w_;
+    }
 
   public:
     DOMPoint matrixTransform(const DOMMatrixReadOnly &matrix);
@@ -55,9 +70,21 @@ namespace dom::geometry
     using DOMPointReadOnly::DOMPointReadOnly;
 
   public:
-    float &x() { return x_; }
-    float &y() { return y_; }
-    float &z() { return z_; }
-    float &w() { return w_; }
+    float &x()
+    {
+      return x_;
+    }
+    float &y()
+    {
+      return y_;
+    }
+    float &z()
+    {
+      return z_;
+    }
+    float &w()
+    {
+      return w_;
+    }
   };
 }

@@ -32,16 +32,18 @@ namespace bindings
 
   void XRWebGLLayer::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRWebGLLayer",
-                                     {InstanceAccessor("antialias", &XRWebGLLayer::AntialiasGetter, nullptr),
-                                      InstanceAccessor("ignoreDepthValues", &XRWebGLLayer::IgnoreDepthValuesGetter, nullptr),
-                                      InstanceAccessor("multiviewRequired", &XRWebGLLayer::MultiviewRequiredGetter, nullptr),
-                                      InstanceAccessor("framebuffer", &XRWebGLLayer::FramebufferGetter, nullptr),
-                                      InstanceAccessor("framebufferWidth", &XRWebGLLayer::FramebufferWidthGetter, nullptr),
-                                      InstanceAccessor("framebufferHeight", &XRWebGLLayer::FramebufferHeightGetter, nullptr),
-                                      InstanceAccessor("fixedFoveation", &XRWebGLLayer::FixedFoveationGetter, &XRWebGLLayer::FixedFoveationSetter),
-                                      InstanceMethod("getViewport", &XRWebGLLayer::GetViewport),
-                                      StaticMethod("getNativeFramebufferScaleFactor", &XRWebGLLayer::GetNativeFramebufferScaleFactor)});
+    Napi::Function tpl = DefineClass(
+      env,
+      "XRWebGLLayer",
+      {InstanceAccessor("antialias", &XRWebGLLayer::AntialiasGetter, nullptr),
+       InstanceAccessor("ignoreDepthValues", &XRWebGLLayer::IgnoreDepthValuesGetter, nullptr),
+       InstanceAccessor("multiviewRequired", &XRWebGLLayer::MultiviewRequiredGetter, nullptr),
+       InstanceAccessor("framebuffer", &XRWebGLLayer::FramebufferGetter, nullptr),
+       InstanceAccessor("framebufferWidth", &XRWebGLLayer::FramebufferWidthGetter, nullptr),
+       InstanceAccessor("framebufferHeight", &XRWebGLLayer::FramebufferHeightGetter, nullptr),
+       InstanceAccessor("fixedFoveation", &XRWebGLLayer::FixedFoveationGetter, &XRWebGLLayer::FixedFoveationSetter),
+       InstanceMethod("getViewport", &XRWebGLLayer::GetViewport),
+       StaticMethod("getNativeFramebufferScaleFactor", &XRWebGLLayer::GetNativeFramebufferScaleFactor)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -62,8 +64,8 @@ namespace bindings
   }
 
   XRWebGLLayer::XRWebGLLayer(const Napi::CallbackInfo &info)
-      : XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>(info),
-        session(nullptr)
+      : XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>(info)
+      , session(nullptr)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -85,7 +87,7 @@ namespace bindings
     if (!sessionValue.IsObject() || !XRSession::IsInstanceOf(sessionValue))
     {
       Napi::TypeError::New(env, "session must be an `XRSession` object.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return;
     }
     session = Napi::ObjectWrap<XRSession>::Unwrap(sessionValue.As<Napi::Object>());
@@ -94,7 +96,7 @@ namespace bindings
     if (!contextValue.IsObject())
     {
       Napi::TypeError::New(env, "XRWebGLLayer constructor requires a WebGLRenderingContext or WebGLRenderingContext2 object as the second argument")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return;
     }
 

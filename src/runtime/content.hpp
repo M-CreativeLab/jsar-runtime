@@ -204,13 +204,16 @@ public: // WebXR methods
   inline bool sendXRCommandResponse(xr::TrXRCommandBase<CommandType> &resp)
   {
     return (xrCommandChanSender != nullptr)
-               ? xrCommandChanSender->sendCommand(resp)
-               : false;
+             ? xrCommandChanSender->sendCommand(resp)
+             : false;
   }
   /**
    * @returns a `std::vector` of the `XRSession` instances, which includes all the WebXR sessions by the content.
    */
-  inline std::vector<xr::TrXRSession *> &getXRSessions() { return xrSessionsStack; }
+  inline std::vector<xr::TrXRSession *> &getXRSessions()
+  {
+    return xrSessionsStack;
+  }
   /**
    * Get the current active XRSession, it means the top of the sessions stack.
    *

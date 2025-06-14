@@ -5,11 +5,13 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *HTMLRenderingContext::constructor;
   void HTMLRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function tpl = DefineClass(env, "HTMLRenderingContext",
-                                     {
-                                         InstanceMethod("setHTML", &HTMLRenderingContext::SetHTML),
-                                         InstanceMethod("fillRect", &HTMLRenderingContext::DispatchEvent),
-                                     });
+    Napi::Function tpl = DefineClass(
+      env,
+      "HTMLRenderingContext",
+      {
+        InstanceMethod("setHTML", &HTMLRenderingContext::SetHTML),
+        InstanceMethod("fillRect", &HTMLRenderingContext::DispatchEvent),
+      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     exports.Set("HTMLRenderingContext", tpl);
@@ -22,7 +24,8 @@ namespace canvasbinding
     return scope.Escape(napi_value(instance)).ToObject();
   }
 
-  HTMLRenderingContext::HTMLRenderingContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<HTMLRenderingContext>(info)
+  HTMLRenderingContext::HTMLRenderingContext(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<HTMLRenderingContext>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

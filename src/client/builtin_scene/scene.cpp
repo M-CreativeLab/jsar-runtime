@@ -51,9 +51,9 @@ namespace builtin_scene
   };
 
   Scene::Scene(TrClientContextPerProcess *clientContext)
-      : ecs::App(),
-        clientContext_(clientContext),
-        glContext_(clientContext->createHostWebGLContext())
+      : ecs::App()
+      , clientContext_(clientContext)
+      , glContext_(clientContext->createHostWebGLContext())
   {
     assert(glContext_ != nullptr);
 
@@ -95,8 +95,8 @@ namespace builtin_scene
       else
       {
         clientContext_->addEventListener(
-            TrClientContextEventType::ScriptingEventLoopReady, [this](auto _type, auto _event)
-            { setupXRSession(); });
+          TrClientContextEventType::ScriptingEventLoopReady, [this](auto _type, auto _event)
+          { setupXRSession(); });
       }
     }
   }
@@ -114,8 +114,7 @@ namespace builtin_scene
     xrSession_->requestAnimationFrame(frameCallback_);
   }
 
-  ecs::EntityId Scene::createElement(string name, shared_ptr<dom::Node> node,
-                                     optional<ecs::EntityId> parent)
+  ecs::EntityId Scene::createElement(string name, shared_ptr<dom::Node> node, optional<ecs::EntityId> parent)
   {
     Transform defaultTransform = Transform::FromXYZ(0.0f, 0.0f, 0.0f);
     BoundingBox defaultBoundingBox = BoundingBox();
@@ -127,11 +126,11 @@ namespace builtin_scene
       if (elementNode != nullptr && elementNode->is("body"))
         isRootRenderable = true; // Only the body element as Root is renderable by default.
       return spawn(
-          hierarchy::Element(name, node),
-          hierarchy::Children(),
-          hierarchy::Root(isRootRenderable),
-          BoundingBox(),
-          defaultTransform);
+        hierarchy::Element(name, node),
+        hierarchy::Children(),
+        hierarchy::Root(isRootRenderable),
+        BoundingBox(),
+        defaultTransform);
     }
     else
     {
@@ -150,11 +149,11 @@ namespace builtin_scene
       }
 
       auto newEntity = spawn(
-          hierarchy::Element(name, node),
-          hierarchy::Children(),
-          hierarchy::Parent(parentEntity, rootEntity),
-          BoundingBox(),
-          defaultTransform);
+        hierarchy::Element(name, node),
+        hierarchy::Children(),
+        hierarchy::Parent(parentEntity, rootEntity),
+        BoundingBox(),
+        defaultTransform);
 
       // Update the parent's children
       auto children = getComponent<hierarchy::Children>(parentEntity);
@@ -216,7 +215,7 @@ namespace builtin_scene
     // Initialize the WebXR experience
     {
       xrExperience->updateReferenceSpace(
-          xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
+        xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
 
       // Update the multiview flag if required
       if (xrExperience->multiviewRequired())

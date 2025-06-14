@@ -51,16 +51,46 @@ namespace client_cssom::values::generics
     };
 
   public:
-    static T Hidden() { return T(kHidden); }
-    static T None() { return T(kNone); }
-    static T Inset() { return T(kInset); }
-    static T Groove() { return T(kGroove); }
-    static T Outset() { return T(kOutset); }
-    static T Ridge() { return T(kRidge); }
-    static T Dotted() { return T(kDotted); }
-    static T Dashed() { return T(kDashed); }
-    static T Solid() { return T(kSolid); }
-    static T Double() { return T(kDouble); }
+    static T Hidden()
+    {
+      return T(kHidden);
+    }
+    static T None()
+    {
+      return T(kNone);
+    }
+    static T Inset()
+    {
+      return T(kInset);
+    }
+    static T Groove()
+    {
+      return T(kGroove);
+    }
+    static T Outset()
+    {
+      return T(kOutset);
+    }
+    static T Ridge()
+    {
+      return T(kRidge);
+    }
+    static T Dotted()
+    {
+      return T(kDotted);
+    }
+    static T Dashed()
+    {
+      return T(kDashed);
+    }
+    static T Solid()
+    {
+      return T(kSolid);
+    }
+    static T Double()
+    {
+      return T(kDouble);
+    }
 
   public:
     GenericBorderStyle()
@@ -75,15 +105,42 @@ namespace client_cssom::values::generics
     }
 
   public:
-    inline bool isNoneOrHidden() const { return tag_ == kNone || tag_ == kHidden; }
-    inline bool isInset() const { return tag_ == kInset; }
-    inline bool isGroove() const { return tag_ == kGroove; }
-    inline bool isOutset() const { return tag_ == kOutset; }
-    inline bool isRidge() const { return tag_ == kRidge; }
-    inline bool isDotted() const { return tag_ == kDotted; }
-    inline bool isDashed() const { return tag_ == kDashed; }
-    inline bool isSolid() const { return tag_ == kSolid; }
-    inline bool isDouble() const { return tag_ == kDouble; }
+    inline bool isNoneOrHidden() const
+    {
+      return tag_ == kNone || tag_ == kHidden;
+    }
+    inline bool isInset() const
+    {
+      return tag_ == kInset;
+    }
+    inline bool isGroove() const
+    {
+      return tag_ == kGroove;
+    }
+    inline bool isOutset() const
+    {
+      return tag_ == kOutset;
+    }
+    inline bool isRidge() const
+    {
+      return tag_ == kRidge;
+    }
+    inline bool isDotted() const
+    {
+      return tag_ == kDotted;
+    }
+    inline bool isDashed() const
+    {
+      return tag_ == kDashed;
+    }
+    inline bool isSolid() const
+    {
+      return tag_ == kSolid;
+    }
+    inline bool isDouble() const
+    {
+      return tag_ == kDouble;
+    }
 
     std::string toCss() const override
     {
@@ -124,10 +181,16 @@ namespace client_cssom::values::generics
   {
   public:
     GenericBorderCornerRadius() = default;
-    GenericBorderCornerRadius(const L &value) : value_(value) {}
+    GenericBorderCornerRadius(const L &value)
+        : value_(value)
+    {
+    }
 
   public:
-    const L &lengthPercentage() const { return value_; }
+    const L &lengthPercentage() const
+    {
+      return value_;
+    }
 
   protected:
     L value_;
@@ -142,22 +205,46 @@ namespace client_cssom::values::generics
                         const C &top_right,
                         const C &bottom_right,
                         const C &bottom_left)
-        : top_left_(top_left),
-          top_right_(top_right),
-          bottom_right_(bottom_right),
-          bottom_left_(bottom_left)
+        : top_left_(top_left)
+        , top_right_(top_right)
+        , bottom_right_(bottom_right)
+        , bottom_left_(bottom_left)
     {
     }
 
   public:
-    const C &topLeft() const { return top_left_; }
-    C& topLeft() { return top_left_; }
-    const C &topRight() const { return top_right_; }
-    C& topRight() { return top_right_; }
-    const C &bottomLeft() const { return bottom_left_; }
-    C& bottomLeft() { return bottom_left_; }
-    const C &bottomRight() const { return bottom_right_; }
-    C& bottomRight() { return bottom_right_; }
+    const C &topLeft() const
+    {
+      return top_left_;
+    }
+    C &topLeft()
+    {
+      return top_left_;
+    }
+    const C &topRight() const
+    {
+      return top_right_;
+    }
+    C &topRight()
+    {
+      return top_right_;
+    }
+    const C &bottomLeft() const
+    {
+      return bottom_left_;
+    }
+    C &bottomLeft()
+    {
+      return bottom_left_;
+    }
+    const C &bottomRight() const
+    {
+      return bottom_right_;
+    }
+    C &bottomRight()
+    {
+      return bottom_right_;
+    }
 
     // Support for accessing corners using BorderCorner enum
     const C &operator[](const BorderCorner &corner) const

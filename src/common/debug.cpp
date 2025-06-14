@@ -93,9 +93,7 @@ namespace stylized_shell
   inline void start(FILE *stream, bool enabled, Style style, TextColor text)
   {
     if (enabled)
-      fprintf(stream, "\033[%d;%dm",
-              static_cast<uint32_t>(style),
-              static_cast<uint32_t>(text));
+      fprintf(stream, "\033[%d;%dm", static_cast<uint32_t>(style), static_cast<uint32_t>(text));
   }
 
   inline void end(FILE *stream, bool enabled)
@@ -169,20 +167,17 @@ void _SetProcessTitleOnDarwin(const std::string &name)
   // Private CFType used in these LaunchServices calls.
   typedef CFTypeRef PrivateLSASN;
   typedef PrivateLSASN (*LSGetCurrentApplicationASNType)();
-  typedef OSStatus (*LSSetApplicationInformationItemType)(int, PrivateLSASN,
-                                                          CFStringRef,
-                                                          CFStringRef,
-                                                          CFDictionaryRef *);
+  typedef OSStatus (*LSSetApplicationInformationItemType)(int, PrivateLSASN, CFStringRef, CFStringRef, CFDictionaryRef *);
 
   static LSGetCurrentApplicationASNType ls_get_current_application_asn_func =
-      NULL;
+    NULL;
   static LSSetApplicationInformationItemType
-      ls_set_application_information_item_func = NULL;
+    ls_set_application_information_item_func = NULL;
   static CFStringRef ls_display_name_key = NULL;
   if (!symbol_lookup_status)
   {
     CFBundleRef launch_services_bundle =
-        CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
+      CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
     if (!launch_services_bundle)
     {
       symbol_lookup_status = 2;
@@ -190,9 +185,9 @@ void _SetProcessTitleOnDarwin(const std::string &name)
     }
 
     ls_get_current_application_asn_func =
-        reinterpret_cast<LSGetCurrentApplicationASNType>(
-            CFBundleGetFunctionPointerForName(
-                launch_services_bundle, CFSTR("_LSGetCurrentApplicationASN")));
+      reinterpret_cast<LSGetCurrentApplicationASNType>(
+        CFBundleGetFunctionPointerForName(
+          launch_services_bundle, CFSTR("_LSGetCurrentApplicationASN")));
     if (!ls_get_current_application_asn_func)
     {
       symbol_lookup_status = 2;
@@ -200,10 +195,10 @@ void _SetProcessTitleOnDarwin(const std::string &name)
     }
 
     ls_set_application_information_item_func =
-        reinterpret_cast<LSSetApplicationInformationItemType>(
-            CFBundleGetFunctionPointerForName(
-                launch_services_bundle,
-                CFSTR("_LSSetApplicationInformationItem")));
+      reinterpret_cast<LSSetApplicationInformationItemType>(
+        CFBundleGetFunctionPointerForName(
+          launch_services_bundle,
+          CFSTR("_LSSetApplicationInformationItem")));
     if (!ls_set_application_information_item_func)
     {
       symbol_lookup_status = 2;
@@ -211,8 +206,8 @@ void _SetProcessTitleOnDarwin(const std::string &name)
     }
 
     const CFStringRef *key_pointer = reinterpret_cast<const CFStringRef *>(
-        CFBundleGetDataPointerForName(launch_services_bundle,
-                                      CFSTR("_kLSDisplayNameKey")));
+      CFBundleGetDataPointerForName(launch_services_bundle,
+                                    CFSTR("_kLSDisplayNameKey")));
     ls_display_name_key = key_pointer ? *key_pointer : NULL;
     if (!ls_display_name_key)
     {
@@ -235,12 +230,9 @@ void _SetProcessTitleOnDarwin(const std::string &name)
   // Constant used by WebKit; what exactly it means is unknown.
   const int magic_session_constant = -2;
   CFStringRef process_name =
-      CFStringCreateWithCString(NULL, title, kCFStringEncodingUTF8);
+    CFStringCreateWithCString(NULL, title, kCFStringEncodingUTF8);
   OSErr err =
-      ls_set_application_information_item_func(magic_session_constant, asn,
-                                               ls_display_name_key,
-                                               process_name,
-                                               NULL /* optional out param */);
+    ls_set_application_information_item_func(magic_session_constant, asn, ls_display_name_key, process_name, NULL /* optional out param */);
 }
 #endif
 
@@ -279,8 +271,8 @@ std::string _DemangleSymbol(const std::string &symbol)
 {
   int status;
   std::unique_ptr<char, void (*)(void *)> result(
-      abi::__cxa_demangle(symbol.c_str(), nullptr, nullptr, &status),
-      std::free);
+    abi::__cxa_demangle(symbol.c_str(), nullptr, nullptr, &status),
+    std::free);
   return (status == 0) ? result.get() : symbol;
 }
 
@@ -351,9 +343,7 @@ void _PrintsStacktraceOnSignal(int signal)
         symbol = info.dli_sname;
         int status = 0;
         char *demangled = __cxxabiv1::__cxa_demangle(symbol, 0, 0, &status);
-        fprintf(stdout, "  #%d pc %p %s",
-                n, addr,
-                status == 0 && demangled != nullptr ? demangled : symbol);
+        fprintf(stdout, "  #%d pc %p %s", n, addr, status == 0 && demangled != nullptr ? demangled : symbol);
 
         if (demangled != nullptr)
           free(demangled);
@@ -379,13 +369,13 @@ void _PrintsStacktraceOnSignal(int signal)
 
 // Signals to be watched
 constexpr int SIGNALS[] = {
-    SIGABRT,
-    SIGSEGV,
+  SIGABRT,
+  SIGSEGV,
 #ifndef _WIN32
-    SIGHUP,
-    SIGQUIT,
-    SIGBUS,
-    SIGSYS,
+  SIGHUP,
+  SIGQUIT,
+  SIGBUS,
+  SIGSYS,
 #endif
 };
 

@@ -7,8 +7,8 @@ using namespace std;
 using namespace renderer;
 
 TrEmbedder::TrEmbedder(TrHostEngine hostEngine)
-    : constellation(make_shared<TrConstellation>(this)),
-      hostEngine(hostEngine)
+    : constellation(make_shared<TrConstellation>(this))
+    , hostEngine(hostEngine)
 {
   struct sigaction sa;
   if (sigaction(SIGPIPE, nullptr, &sa) == -1)

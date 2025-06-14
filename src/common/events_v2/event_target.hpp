@@ -16,15 +16,16 @@ namespace events_comm
    * The Event Target template class.
    */
   template <
-      typename EventType,
-      typename EventInstance = TrEvent<EventType>,
-      typename EventCallback = std::function<void(EventType, std::shared_ptr<EventInstance>)>,
-      typename EventListener = TrEventListener<EventType, EventInstance>>
+    typename EventType,
+    typename EventInstance = TrEvent<EventType>,
+    typename EventCallback = std::function<void(EventType, std::shared_ptr<EventInstance>)>,
+    typename EventListener = TrEventListener<EventType, EventInstance>>
   class TrEventTarget
   {
   public:
     TrEventTarget() = default;
-    TrEventTarget(const TrEventTarget &other) : eventToListenersMap(other.eventToListenersMap) {};
+    TrEventTarget(const TrEventTarget &other)
+        : eventToListenersMap(other.eventToListenersMap) {};
     virtual ~TrEventTarget() = default;
 
   public:

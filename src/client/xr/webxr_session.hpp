@@ -58,15 +58,21 @@ namespace client_xr
   {
   public:
     XRFrameCallbackWrapper(XRFrameCallback callback)
-        : callback(callback), cancelled(false)
+        : callback(callback)
+        , cancelled(false)
     {
       static TrIdGenerator callbackIdGen(1);
       handle = callbackIdGen.get();
     }
-    ~XRFrameCallbackWrapper() {}
+    ~XRFrameCallbackWrapper()
+    {
+    }
 
   public:
-    void cancel() { cancelled = true; }
+    void cancel()
+    {
+      cancelled = true;
+    }
     void operator()(uint32_t time, std::shared_ptr<XRFrame> frame, void *env)
     {
       callback(time, frame, env);
@@ -140,7 +146,10 @@ namespace client_xr
     /**
      * @returns the `XRDeviceClient` object.
      */
-    inline std::shared_ptr<XRDeviceClient> device() const { return device_; }
+    inline std::shared_ptr<XRDeviceClient> device() const
+    {
+      return device_;
+    }
     /**
      * Get the `WebGLContext` object to be used for this WebXR session.
      *
@@ -159,27 +168,45 @@ namespace client_xr
     /**
      * @returns `true` if the session is immersive, `false` otherwise.
      */
-    inline bool immersive() { return xr::IsImmersive(mode); }
+    inline bool immersive()
+    {
+      return xr::IsImmersive(mode);
+    }
     /**
      * @returns the blend mode to mixing the application content with the host environment.
      */
-    inline XREnvironmentBlendMode environmentBlendMode() const { return environmentBlendMode_; }
+    inline XREnvironmentBlendMode environmentBlendMode() const
+    {
+      return environmentBlendMode_;
+    }
     /**
      * @returns the `XRRenderState` object that represents the current render state of the session.
      */
-    inline XRRenderState renderState() { return XRRenderState(*activeRenderState_); }
+    inline XRRenderState renderState()
+    {
+      return XRRenderState(*activeRenderState_);
+    }
     /**
      * @returns the frame time of the session.
      */
-    inline std::chrono::steady_clock::time_point frameTime() { return frameTimepoint_; }
+    inline std::chrono::steady_clock::time_point frameTime()
+    {
+      return frameTimepoint_;
+    }
     /**
      * @returns the viewer reference space of the session.
      */
-    inline std::shared_ptr<XRReferenceSpace> viewerSpace() { return viewerSpace_; }
+    inline std::shared_ptr<XRReferenceSpace> viewerSpace()
+    {
+      return viewerSpace_;
+    }
     /**
      * @returns the local reference space of the session.
      */
-    inline std::shared_ptr<XRReferenceSpace> localSpace() { return localSpace_; }
+    inline std::shared_ptr<XRReferenceSpace> localSpace()
+    {
+      return localSpace_;
+    }
 
   public:
     /**
@@ -283,15 +310,24 @@ namespace client_xr
      *
      * @returns `true` if a new frame is started and not ended.
      */
-    inline bool runsInFrame() { return currentFrameRequestData_ != nullptr; }
+    inline bool runsInFrame()
+    {
+      return currentFrameRequestData_ != nullptr;
+    }
     /**
      * Mark the current frame is started, it will set the current frame request data, and `runInFrame()` will return `true`.
      */
-    inline void markCurrentFrameStarted(xr::TrXRFrameRequest *reqData) { currentFrameRequestData_ = reqData; }
+    inline void markCurrentFrameStarted(xr::TrXRFrameRequest *reqData)
+    {
+      currentFrameRequestData_ = reqData;
+    }
     /**
      * Mark the current frame is ended, it will clear the current frame request data, and `runInFrame()` will return `false`.
      */
-    inline void markCurrentFrameEnded() { currentFrameRequestData_ = nullptr; }
+    inline void markCurrentFrameEnded()
+    {
+      currentFrameRequestData_ = nullptr;
+    }
     /**
      * Append the rendering info to the specific command buffer.
      *

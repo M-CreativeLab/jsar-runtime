@@ -13,10 +13,10 @@ namespace dom
   public:
     Keyframe();
     Keyframe(const Keyframe &other)
-        : properties_(other.properties_),
-          offset_(other.offset_),
-          timing_function_(other.timing_function_ ? other.timing_function_->clone() : nullptr),
-          composite_(other.composite_)
+        : properties_(other.properties_)
+        , offset_(other.offset_)
+        , timing_function_(other.timing_function_ ? other.timing_function_->clone() : nullptr)
+        , composite_(other.composite_)
     {
     }
 

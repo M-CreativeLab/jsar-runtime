@@ -13,8 +13,7 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *ImageData::constructor;
   void ImageData::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "ImageData",
-                                      {});
+    Napi::Function func = DefineClass(env, "ImageData", {});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     exports.Set("ImageData", func);
@@ -78,13 +77,13 @@ namespace canvasbinding
       if (dataArrayValue.TypedArrayType() != napi_uint8_clamped_array)
       {
         Napi::TypeError::New(env, "ImageData(data) must accept Uint8ClampedArray")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return;
       }
       if (!info[1].IsNumber())
       {
         Napi::TypeError::New(env, "ImageData(dataArray, width) must accept number as 2nd arg")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return;
       }
 

@@ -9,6 +9,9 @@ namespace dom
     using Animation::Animation;
 
   public:
-    bool isCSSTransition() const override { return true; }
+    bool isCSSTransition() const override
+    {
+      return true;
+    }
   };
 }

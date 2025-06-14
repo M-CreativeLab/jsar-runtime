@@ -75,9 +75,9 @@
 // COM-like Release macro
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(a) \
-	if (a)                \
-	{                     \
-		a->Release();       \
-		a = NULL;           \
-	}
+  if (a)                \
+  {                     \
+    a->Release();       \
+    a = NULL;           \
+  }
 #endif

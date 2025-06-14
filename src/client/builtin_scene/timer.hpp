@@ -21,8 +21,8 @@ namespace builtin_scene
 
   public:
     Timer(uint32_t interval)
-        : interval_(interval),
-          timestamp_(timestampInMilliseconds())
+        : interval_(interval)
+        , timestamp_(timestampInMilliseconds())
     {
     }
 
@@ -30,7 +30,10 @@ namespace builtin_scene
     /**
      * @returns the timestamp in milliseconds.
      */
-    long long timestamp() { return timestamp_; }
+    long long timestamp()
+    {
+      return timestamp_;
+    }
 
   private:
     uint32_t interval_;
@@ -43,7 +46,10 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    const std::string name() const override { return "TimerSystem"; }
+    const std::string name() const override
+    {
+      return "TimerSystem";
+    }
     void onExecute() override
     {
       auto timer = getResource<Timer>();

@@ -10,7 +10,13 @@ namespace client_layout
     using LayoutBoxModelObject::LayoutBoxModelObject;
 
   public:
-    const char *name() const override { return "LayoutNone"; }
-    bool isNone() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutNone";
+    }
+    bool isNone() const override final
+    {
+      return true;
+    }
   };
 }

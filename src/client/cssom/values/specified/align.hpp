@@ -55,11 +55,26 @@ namespace client_cssom::values::specified
       if (extra_flags.has_value())
         flag_bits_ |= (*extra_flags & ADDITIONAL_MASK);
     }
-    inline Tag tag() const { return static_cast<Tag>(flag_bits_ & ~ADDITIONAL_MASK); }
-    inline uint8_t extraFlags() const { return flag_bits_ & ADDITIONAL_MASK; }
-    inline bool isLegacy() const { return extraFlags() == LEGACY; }
-    inline bool isSafe() const { return extraFlags() == SAFE; }
-    inline bool isUnsafe() const { return extraFlags() == UNSAFE; }
+    inline Tag tag() const
+    {
+      return static_cast<Tag>(flag_bits_ & ~ADDITIONAL_MASK);
+    }
+    inline uint8_t extraFlags() const
+    {
+      return flag_bits_ & ADDITIONAL_MASK;
+    }
+    inline bool isLegacy() const
+    {
+      return extraFlags() == LEGACY;
+    }
+    inline bool isSafe() const
+    {
+      return extraFlags() == SAFE;
+    }
+    inline bool isUnsafe() const
+    {
+      return extraFlags() == UNSAFE;
+    }
 
     std::string toCss() const override
     {
@@ -158,7 +173,10 @@ namespace client_cssom::values::specified
     using AlignFlags::AlignFlags;
 
   public:
-    static T Normal() { return T(kNormal); }
+    static T Normal()
+    {
+      return T(kNormal);
+    }
 
   protected:
     bool parse(const std::string &input) override
@@ -246,7 +264,10 @@ namespace client_cssom::values::specified
     using AlignFlags::AlignFlags;
 
   public:
-    static T Auto() { return T(kAuto); }
+    static T Auto()
+    {
+      return T(kAuto);
+    }
 
   protected:
     bool parse(const std::string &input) override
@@ -339,7 +360,10 @@ namespace client_cssom::values::specified
     using AlignFlags::AlignFlags;
 
   public:
-    static AlignItems Normal() { return AlignItems(kNormal); }
+    static AlignItems Normal()
+    {
+      return AlignItems(kNormal);
+    }
 
   private:
     bool parse(const std::string &input) override
@@ -390,8 +414,14 @@ namespace client_cssom::values::specified
     using AlignFlags::AlignFlags;
 
   public:
-    static JustifyItems Legacy() { return JustifyItems(kAuto, LEGACY); }
-    static JustifyItems Normal() { return JustifyItems(kNormal); }
+    static JustifyItems Legacy()
+    {
+      return JustifyItems(kAuto, LEGACY);
+    }
+    static JustifyItems Normal()
+    {
+      return JustifyItems(kNormal);
+    }
 
   private:
     bool parse(const std::string &input) override

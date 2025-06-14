@@ -10,7 +10,10 @@ namespace client_cssom::values::specified
 {
   class TransformOperation;
   using TransformOperationBase = generics::GenericTransformOperation<TransformOperation,
-                                                                     Angle, Number, NoCalcLength, LengthPercentage>;
+                                                                     Angle,
+                                                                     Number,
+                                                                     NoCalcLength,
+                                                                     LengthPercentage>;
 
   class TransformOperation : public TransformOperationBase,
                              public ToComputedValue<computed::TransformOperation>
@@ -91,9 +94,9 @@ namespace client_cssom::values::specified
       {
         const auto &specified_translate_3d = getTranslate3D();
         return computed::TransformOperation::Translate3D(
-            specified_translate_3d.x().toComputedValue(context),
-            specified_translate_3d.y().toComputedValue(context),
-            specified_translate_3d.z().toComputedValue(context));
+          specified_translate_3d.x().toComputedValue(context),
+          specified_translate_3d.y().toComputedValue(context),
+          specified_translate_3d.z().toComputedValue(context));
       }
 
       assert(false && "Invalid transform operation type.");
@@ -192,7 +195,7 @@ namespace client_cssom::values::specified
     void addTranslate(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
     {
       const auto &inner_translate =
-          inner_operation.getImplAs<crates::css2::values::specified::transform::Translate>();
+        inner_operation.getImplAs<crates::css2::values::specified::transform::Translate>();
       operations_.push_back(TransformOperation::Translate(LengthPercentage::From(inner_translate.x),
                                                           LengthPercentage::From(inner_translate.y)));
     }
@@ -214,7 +217,7 @@ namespace client_cssom::values::specified
     void addTranslate3D(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
     {
       const auto &inner_translate3d =
-          inner_operation.getImplAs<crates::css2::values::specified::transform::Translate3D>();
+        inner_operation.getImplAs<crates::css2::values::specified::transform::Translate3D>();
       operations_.push_back(TransformOperation::Translate3D(LengthPercentage::From(inner_translate3d.x),
                                                             LengthPercentage::From(inner_translate3d.y),
                                                             NoCalcLength::FromPx(inner_translate3d.z.numberValue())));

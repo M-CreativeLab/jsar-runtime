@@ -8,9 +8,13 @@ namespace client_graphics
   class WebGLActiveInfo
   {
   public:
-    WebGLActiveInfo() {}
+    WebGLActiveInfo()
+    {
+    }
     WebGLActiveInfo(const commandbuffers::ActiveInfo &info)
-        : name(info.name), size(info.size), type(info.type)
+        : name(info.name)
+        , size(info.size)
+        , type(info.type)
     {
     }
 

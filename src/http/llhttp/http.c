@@ -1,3 +1,5 @@
+// clang-format off
+
 #include <stdio.h>
 #ifndef LLHTTP__TEST
 # include "../llhttp.h"

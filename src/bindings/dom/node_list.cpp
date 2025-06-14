@@ -46,15 +46,15 @@ namespace dombinding
                                                  v8::FunctionTemplate::New(isolate, LengthGetter),
                                                  v8::FunctionTemplate::New(isolate, LengthSetter));
     tpl->InstanceTemplate()->SetHandler(v8::IndexedPropertyHandlerConfiguration(
-        PropertyGetter,         // Getter
-        PropertySetter,         // Setter
-        nullptr,                // Query
-        PropertyDeleter,        // Deleter
-        PropertyEnumerator,     // Enumerator
-        nullptr,                // Definer
-        nullptr,                // Descriptor
-        v8::Local<v8::Value>(), // Data
-        v8::PropertyHandlerFlags::kNone));
+      PropertyGetter,         // Getter
+      PropertySetter,         // Setter
+      nullptr,                // Query
+      PropertyDeleter,        // Deleter
+      PropertyEnumerator,     // Enumerator
+      nullptr,                // Definer
+      nullptr,                // Descriptor
+      v8::Local<v8::Value>(), // Data
+      v8::PropertyHandlerFlags::kNone));
   }
 
   void NodeList::PropertyGetter(unsigned int index, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -69,19 +69,18 @@ namespace dombinding
       info.GetReturnValue().Set(instance->get(index));
   }
 
-  void NodeList::PropertySetter(unsigned int index, v8::Local<v8::Value> value,
-                                const v8::PropertyCallbackInfo<v8::Value> &info)
+  void NodeList::PropertySetter(unsigned int index, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     v8::Isolate *isolate = info.GetIsolate();
     isolate->ThrowException(v8::Exception::TypeError(
-        v8::String::NewFromUtf8Literal(isolate, "Setting properties on NodeList is not implemented yet.")));
+      v8::String::NewFromUtf8Literal(isolate, "Setting properties on NodeList is not implemented yet.")));
   }
 
   void NodeList::PropertyDeleter(unsigned int index, const v8::PropertyCallbackInfo<v8::Boolean> &info)
   {
     v8::Isolate *isolate = info.GetIsolate();
     isolate->ThrowException(v8::Exception::TypeError(
-        v8::String::NewFromUtf8Literal(isolate, "Deleting properties on NodeList is not implemented yet.")));
+      v8::String::NewFromUtf8Literal(isolate, "Deleting properties on NodeList is not implemented yet.")));
   }
 
   void NodeList::PropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info)
@@ -116,7 +115,7 @@ namespace dombinding
   {
     v8::Isolate *isolate = info.GetIsolate();
     isolate->ThrowException(v8::Exception::TypeError(
-        v8::String::NewFromUtf8Literal(isolate, "Setting the length property on NodeList is not allowed.")));
+      v8::String::NewFromUtf8Literal(isolate, "Setting the length property on NodeList is not allowed.")));
   }
 
   void NodeList::Values(const v8::FunctionCallbackInfo<v8::Value> &info)

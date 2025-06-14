@@ -18,8 +18,14 @@ namespace client_layout
     using LayoutReplaced::LayoutReplaced;
 
   public:
-    const char *name() const override { return "LayoutImage"; }
-    bool isLayoutImage() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutImage";
+    }
+    bool isLayoutImage() const override final
+    {
+      return true;
+    }
 
     // Adjusts the image size according to the style, and returns `false` if the size is not changed.
     bool adjustImageSize();

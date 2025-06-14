@@ -36,7 +36,8 @@ namespace jsar::example
   class PongResponse : public events_comm::TrRpcResponse
   {
   public:
-    PongResponse() : TrRpcResponse(true)
+    PongResponse()
+        : TrRpcResponse(true)
     {
       dataDoc = make_unique<rapidjson::Document>();
       dataDoc->SetObject();
@@ -48,7 +49,8 @@ namespace jsar::example
   class DesktopEmbedder : public TrEmbedder
   {
   public:
-    DesktopEmbedder() : TrEmbedder()
+    DesktopEmbedder()
+        : TrEmbedder()
     {
       auto renderer = constellation->renderer;
       auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation.get());
@@ -194,8 +196,8 @@ namespace jsar::example
        * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
        */
       windowCtx_ = glassMonitor == nullptr
-                       ? std::make_unique<WindowContext>(width, height)
-                       : std::make_unique<WindowContext>(glassMonitor);
+                     ? std::make_unique<WindowContext>(width, height)
+                     : std::make_unique<WindowContext>(glassMonitor);
 
       if (windowCtx_->isTerminated())
         return false;
@@ -428,14 +430,26 @@ namespace jsar::example
         // Blit the render target to the default framebuffer
         glBindFramebuffer(GL_READ_FRAMEBUFFER, render_target_);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, drawingViewport.width(), drawingViewport.height(),
-                          0, 0, drawingViewport.width(), drawingViewport.height(),
+        glBlitFramebuffer(0,
+                          0,
+                          drawingViewport.width(),
+                          drawingViewport.height(),
+                          0,
+                          0,
+                          drawingViewport.width(),
+                          drawingViewport.height(),
                           GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                           GL_NEAREST);
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
-        glBlitFramebuffer(0, 0, drawingViewport.width(), drawingViewport.height(),
-                          0, 0, drawingViewport.width(), drawingViewport.height(),
+        glBlitFramebuffer(0,
+                          0,
+                          drawingViewport.width(),
+                          drawingViewport.height(),
+                          0,
+                          0,
+                          drawingViewport.width(),
+                          drawingViewport.height(),
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                           GL_NEAREST);
 

@@ -59,7 +59,7 @@ namespace client_layout
     glm::vec4 originalPoint(0, 0, 0, 1);
 
     glm::vec3 normal = glm::normalize(glm::vec3(
-        glm::inverse(glm::transpose(latestMatrix)) * originalNormal));
+      glm::inverse(glm::transpose(latestMatrix)) * originalNormal));
 
     glm::vec3 point = glm::vec3(latestMatrix * originalPoint);
     float distance = -glm::dot(normal, point);
@@ -79,8 +79,8 @@ namespace client_layout
   geometry::Rect<float> LayoutBox::scrollableOverflowRect() const
   {
     return scrollableOverflowIsSet()
-               ? overflow_->scrollableOverflow->scrollableOverflowRect()
-               : noOverflowRect();
+             ? overflow_->scrollableOverflow->scrollableOverflowRect()
+             : noOverflowRect();
   }
 
   bool LayoutBox::hasTopOverflow() const
@@ -91,11 +91,11 @@ namespace client_layout
     // TODO(yorkie): implement ComputedStyle to improve the performance.
     const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
     string direction = elementStyle.hasProperty("direction")
-                           ? elementStyle.getPropertyValue("direction")
-                           : "ltr";
+                         ? elementStyle.getPropertyValue("direction")
+                         : "ltr";
     string writingMode = elementStyle.hasProperty("writing-mode")
-                             ? elementStyle.getPropertyValue("writing-mode")
-                             : "horizontal-tb";
+                           ? elementStyle.getPropertyValue("writing-mode")
+                           : "horizontal-tb";
     if (writingMode == "horizontal-tb")
       return false;
     else if (writingMode == "sideways-lr")
@@ -113,15 +113,15 @@ namespace client_layout
     // TODO(yorkie): implement ComputedStyle to improve the performance.
     const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
     string direction = elementStyle.hasProperty("direction")
-                           ? elementStyle.getPropertyValue("direction")
-                           : "ltr";
+                         ? elementStyle.getPropertyValue("direction")
+                         : "ltr";
 
     if (isHorizontalWritingMode())
       return direction != "ltr";
 
     string writingMode = elementStyle.hasProperty("writing-mode")
-                             ? elementStyle.getPropertyValue("writing-mode")
-                             : "horizontal-tb";
+                           ? elementStyle.getPropertyValue("writing-mode")
+                           : "horizontal-tb";
     if (writingMode == "horizontal-tb")
       return direction != "ltr";
     else if (writingMode == "vertical-lr" || writingMode == "vertical-rl")
@@ -139,7 +139,7 @@ namespace client_layout
     if (isScrollContainer())
     {
       getScrollableArea()
-          ->updateAfterLayout(formattingContext().liveFragment());
+        ->updateAfterLayout(formattingContext().liveFragment());
     }
   }
 
@@ -262,8 +262,8 @@ namespace client_layout
   glm::vec3 LayoutBox::scrollOrigin() const
   {
     return getScrollableArea()
-               ? getScrollableArea()->scrollOrigin()
-               : glm::vec3(0, 0, 0);
+             ? getScrollableArea()->scrollOrigin()
+             : glm::vec3(0, 0, 0);
   }
 
   glm::vec3 LayoutBox::scrolledContentOffset() const
@@ -273,9 +273,7 @@ namespace client_layout
     return getScrollableArea()->getScrollOffset();
   }
 
-  bool LayoutBox::nodeAtPoint(HitTestResult &r, const HitTestRay &ray,
-                              const glm::vec3 &accumulatedOffset,
-                              HitTestPhase phase)
+  bool LayoutBox::nodeAtPoint(HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset, HitTestPhase phase)
   {
     if (!mayIntersect(r, ray, accumulatedOffset))
       return false;
@@ -303,8 +301,7 @@ namespace client_layout
     return false;
   }
 
-  bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray,
-                               const glm::vec3 &accumulatedOffset) const
+  bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
   {
     optional<geometry::BoundingBox> overflowBox = nullopt;
     if (hasHitTestableOverflow())
@@ -330,8 +327,7 @@ namespace client_layout
     }
   }
 
-  bool LayoutBox::hitTestChildren(HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset,
-                                  HitTestPhase phase)
+  bool LayoutBox::hitTestChildren(HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset, HitTestPhase phase)
   {
     for (auto child = slowLastChild(); child;
          child = child->prevSibling())
@@ -374,8 +370,8 @@ namespace client_layout
   {
     auto nodeStyle = styleRef();
     string writingMode = nodeStyle.hasProperty("writing-mode")
-                             ? nodeStyle.getPropertyValue("writing-mode")
-                             : "horizontal-tb";
+                           ? nodeStyle.getPropertyValue("writing-mode")
+                           : "horizontal-tb";
     return writingMode == "horizontal-tb" || writingMode == "sideways-lr";
   }
 

@@ -8,14 +8,13 @@ using namespace std;
 namespace events_comm
 {
   static TrIdGenerator listenerIdGenerator(1);
-  template <typename EventType, typename EventInstance,
-            typename Callback = function<void(EventType, std::shared_ptr<EventInstance>)>>
+  template <typename EventType, typename EventInstance, typename Callback = function<void(EventType, std::shared_ptr<EventInstance>)>>
   class TrEventListener
   {
   public:
     TrEventListener(Callback eventCallback)
-        : eventCallback(eventCallback),
-          id(listenerIdGenerator.get())
+        : eventCallback(eventCallback)
+        , id(listenerIdGenerator.get())
     {
     }
     void operator()(EventType type, std::shared_ptr<EventInstance> event)

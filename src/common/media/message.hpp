@@ -49,7 +49,10 @@ namespace media_comm
     }
 
   public:
-    TrMediaCommandType getType() { return type; }
+    TrMediaCommandType getType()
+    {
+      return type;
+    }
   };
 
   class TrMediaCommandBase : public ipc::TrIpcSerializableBase<TrMediaCommandMessage, TrMediaCommandType>
@@ -70,23 +73,36 @@ namespace media_comm
     }
 
   public:
-    TrMediaCommandBase() : TrIpcSerializableBase() {}
-    TrMediaCommandBase(TrMediaCommandType type, size_t size) : TrIpcSerializableBase(type, size) {}
+    TrMediaCommandBase()
+        : TrIpcSerializableBase()
+    {
+    }
+    TrMediaCommandBase(TrMediaCommandType type, size_t size)
+        : TrIpcSerializableBase(type, size)
+    {
+    }
   };
 
   template <typename T>
   class TrMediaRequestSimple : public TrMediaCommandBase
   {
   public:
-    TrMediaRequestSimple(TrMediaRequestSimple &that) : TrMediaCommandBase(that.type, that.size) {}
-    TrMediaRequestSimple(TrMediaCommandType type) : TrMediaCommandBase(type, sizeof(T)) {}
+    TrMediaRequestSimple(TrMediaRequestSimple &that)
+        : TrMediaCommandBase(that.type, that.size)
+    {
+    }
+    TrMediaRequestSimple(TrMediaCommandType type)
+        : TrMediaCommandBase(type, sizeof(T))
+    {
+    }
   };
 
   class TrCreateSoundRequest : public TrMediaRequestSimple<TrCreateSoundRequest>
   {
   public:
     TrCreateSoundRequest(uint32_t clientId)
-        : TrMediaRequestSimple(TrMediaCommandType::CreateSoundRequest), clientId(clientId)
+        : TrMediaRequestSimple(TrMediaCommandType::CreateSoundRequest)
+        , clientId(clientId)
     {
     }
 
@@ -98,7 +114,8 @@ namespace media_comm
   {
   public:
     TrDestroySoundRequest(uint32_t clientId)
-        : TrMediaRequestSimple(TrMediaCommandType::DestroySoundRequest), clientId(clientId)
+        : TrMediaRequestSimple(TrMediaCommandType::DestroySoundRequest)
+        , clientId(clientId)
     {
     }
 
@@ -110,7 +127,8 @@ namespace media_comm
   {
   public:
     TrPlayRequest(uint32_t clientId)
-        : TrMediaRequestSimple(TrMediaCommandType::PlayRequest), clientId(clientId)
+        : TrMediaRequestSimple(TrMediaCommandType::PlayRequest)
+        , clientId(clientId)
     {
     }
 
@@ -122,7 +140,8 @@ namespace media_comm
   {
   public:
     TrPauseRequest(uint32_t clientId)
-        : TrMediaRequestSimple(TrMediaCommandType::PauseRequest), clientId(clientId)
+        : TrMediaRequestSimple(TrMediaCommandType::PauseRequest)
+        , clientId(clientId)
     {
     }
 
@@ -134,7 +153,9 @@ namespace media_comm
   {
   public:
     TrSeekRequest(uint32_t clientId, float seconds)
-        : TrMediaRequestSimple(TrMediaCommandType::SeekRequest), clientId(clientId), seconds(seconds)
+        : TrMediaRequestSimple(TrMediaCommandType::SeekRequest)
+        , clientId(clientId)
+        , seconds(seconds)
     {
     }
 
@@ -147,7 +168,8 @@ namespace media_comm
   {
   public:
     TrCloseRequest(uint32_t clientId)
-        : TrMediaRequestSimple(TrMediaCommandType::CloseRequest), clientId(clientId)
+        : TrMediaRequestSimple(TrMediaCommandType::CloseRequest)
+        , clientId(clientId)
     {
     }
 
@@ -159,19 +181,19 @@ namespace media_comm
   {
   public:
     TrSetSrcDataRequest(TrSetSrcDataRequest &that)
-        : TrMediaRequestSimple(that),
-          clientId(that.clientId),
-          srcData(nullptr),
-          sizeInBytes(0),
-          initialVolume(that.initialVolume),
-          loopingAtStart(that.loopingAtStart)
+        : TrMediaRequestSimple(that)
+        , clientId(that.clientId)
+        , srcData(nullptr)
+        , sizeInBytes(0)
+        , initialVolume(that.initialVolume)
+        , loopingAtStart(that.loopingAtStart)
     {
     }
     TrSetSrcDataRequest(uint32_t clientId, void *srcData, size_t size)
-        : TrMediaRequestSimple(TrMediaCommandType::SetSrcDataRequest),
-          clientId(clientId),
-          srcData(srcData),
-          sizeInBytes(size)
+        : TrMediaRequestSimple(TrMediaCommandType::SetSrcDataRequest)
+        , clientId(clientId)
+        , srcData(srcData)
+        , sizeInBytes(size)
     {
     }
 
@@ -208,7 +230,9 @@ namespace media_comm
   {
   public:
     TrSetVolumeRequest(uint32_t clientId, float volume)
-        : TrMediaRequestSimple(TrMediaCommandType::SetVolumeRequest), clientId(clientId), volume(volume)
+        : TrMediaRequestSimple(TrMediaCommandType::SetVolumeRequest)
+        , clientId(clientId)
+        , volume(volume)
     {
     }
 
@@ -221,7 +245,9 @@ namespace media_comm
   {
   public:
     TrSetLoopingRequest(uint32_t clientId, bool looping)
-        : TrMediaRequestSimple(TrMediaCommandType::SetLoopingRequest), clientId(clientId), looping(looping)
+        : TrMediaRequestSimple(TrMediaCommandType::SetLoopingRequest)
+        , clientId(clientId)
+        , looping(looping)
     {
     }
 
@@ -241,7 +267,9 @@ namespace media_comm
   {
   public:
     TrEnableAudioSpatializationRequest(uint32_t clientId, bool enabled)
-        : TrMediaRequestSimple(TrMediaCommandType::EnableAudioSpatializationRequest), clientId(clientId), enabled(enabled)
+        : TrMediaRequestSimple(TrMediaCommandType::EnableAudioSpatializationRequest)
+        , clientId(clientId)
+        , enabled(enabled)
     {
     }
 
@@ -255,8 +283,8 @@ namespace media_comm
   {
   public:
     TrOnMediaMetadata(uint32_t clientId)
-        : TrMediaCommandBase(TrMediaCommandType::OnMediaMetadata, sizeof(TrOnMediaMetadata)),
-          clientId(clientId)
+        : TrMediaCommandBase(TrMediaCommandType::OnMediaMetadata, sizeof(TrOnMediaMetadata))
+        , clientId(clientId)
     {
     }
 
@@ -331,8 +359,9 @@ namespace media_comm
   {
   public:
     TrOnMediaEvent(TrMediaEventType eventType, uint32_t clientId)
-        : TrMediaCommandBase(TrMediaCommandType::OnMediaEvent, sizeof(TrOnMediaEvent)),
-          eventType(eventType), clientId(clientId)
+        : TrMediaCommandBase(TrMediaCommandType::OnMediaEvent, sizeof(TrOnMediaEvent))
+        , eventType(eventType)
+        , clientId(clientId)
     {
     }
 

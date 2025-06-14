@@ -57,9 +57,9 @@ namespace dom::events
       return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
                                           DOMEventType::MouseEnter,
                                           dom::DOMEventInit{
-                                              .bubbles = false,
-                                              .cancelable = false,
-                                              .composed = false,
+                                            .bubbles = false,
+                                            .cancelable = false,
+                                            .composed = false,
                                           });
     }
 
@@ -68,30 +68,75 @@ namespace dom::events
       return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
                                           DOMEventType::MouseLeave,
                                           dom::DOMEventInit{
-                                              .bubbles = false,
-                                              .cancelable = false,
-                                              .composed = false,
+                                            .bubbles = false,
+                                            .cancelable = false,
+                                            .composed = false,
                                           });
     }
 
   public:
-    EventTarget relatedTarget() const { return related_target_; }
-    int button() const { return button_; }
-    int buttons() const { return buttons_; }
+    EventTarget relatedTarget() const
+    {
+      return related_target_;
+    }
+    int button() const
+    {
+      return button_;
+    }
+    int buttons() const
+    {
+      return buttons_;
+    }
 
-    unsigned int clientX() const { return client_xy_.x; }
-    unsigned int clientY() const { return client_xy_.y; }
-    unsigned int movementX() const { return movement_xy_.x; }
-    unsigned int movementY() const { return movement_xy_.y; }
-    unsigned int offsetX() const { return offset_xy_.x; }
-    unsigned int offsetY() const { return offset_xy_.y; }
-    unsigned int pageX() const { return page_xy_.x; }
-    unsigned int pageY() const { return page_xy_.y; }
+    unsigned int clientX() const
+    {
+      return client_xy_.x;
+    }
+    unsigned int clientY() const
+    {
+      return client_xy_.y;
+    }
+    unsigned int movementX() const
+    {
+      return movement_xy_.x;
+    }
+    unsigned int movementY() const
+    {
+      return movement_xy_.y;
+    }
+    unsigned int offsetX() const
+    {
+      return offset_xy_.x;
+    }
+    unsigned int offsetY() const
+    {
+      return offset_xy_.y;
+    }
+    unsigned int pageX() const
+    {
+      return page_xy_.x;
+    }
+    unsigned int pageY() const
+    {
+      return page_xy_.y;
+    }
 
-    bool altKey() const { return alt_key_; }
-    bool ctrlKey() const { return ctrl_key_; }
-    bool metaKey() const { return meta_key_; }
-    bool shiftKey() const { return shift_key_; }
+    bool altKey() const
+    {
+      return alt_key_;
+    }
+    bool ctrlKey() const
+    {
+      return ctrl_key_;
+    }
+    bool metaKey() const
+    {
+      return meta_key_;
+    }
+    bool shiftKey() const
+    {
+      return shift_key_;
+    }
 
     bool getModifierState(const std::string &key) const;
 

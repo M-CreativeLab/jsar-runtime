@@ -598,8 +598,12 @@ namespace canvas
       std::cerr << "Failed to load image to draw" << std::endl;
       return;
     }
-    skCanvas->drawImageRect(imageSource, srcRect, dstRect,
-                            SkSamplingOptions(), &imagePaint, SkCanvas::kFast_SrcRectConstraint);
+    skCanvas->drawImageRect(imageSource,
+                            srcRect,
+                            dstRect,
+                            SkSamplingOptions(),
+                            &imagePaint,
+                            SkCanvas::kFast_SrcRectConstraint);
     this->notifyCanvasUpdated();
   }
 
@@ -621,8 +625,14 @@ namespace canvas
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::drawImage(std::shared_ptr<ImageSource> image,
-                                                       float sx, float sy, float sWidth, float sHeight,
-                                                       float dx, float dy, float dWidth, float dHeight)
+                                                       float sx,
+                                                       float sy,
+                                                       float sWidth,
+                                                       float sHeight,
+                                                       float dx,
+                                                       float dy,
+                                                       float dWidth,
+                                                       float dHeight)
   {
     SkRect dstRect = SkRect::MakeXYWH(dx, dy, dWidth, dHeight);
     SkRect srcRect = SkRect::MakeXYWH(sx, sy, sWidth, sHeight);
@@ -699,8 +709,12 @@ namespace canvas
 
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::putImageData(std::shared_ptr<ImageSource> image,
-                                                          float dx, float dy,
-                                                          float dirtyX, float dirtyY, float dirtyWidth, float dirtyHeight)
+                                                          float dx,
+                                                          float dy,
+                                                          float dirtyX,
+                                                          float dirtyY,
+                                                          float dirtyWidth,
+                                                          float dirtyHeight)
   {
     if (TR_UNLIKELY(skCanvas == nullptr))
       return false;
@@ -737,8 +751,12 @@ namespace canvas
     {
       skCanvas->save();
       skCanvas->concat(invertedCtm);
-      skCanvas->drawImageRect(image->makeSkImage(), srcRect, dstRect,
-                              SkSamplingOptions(), nullptr, SkCanvas::kFast_SrcRectConstraint);
+      skCanvas->drawImageRect(image->makeSkImage(),
+                              srcRect,
+                              dstRect,
+                              SkSamplingOptions(),
+                              nullptr,
+                              SkCanvas::kFast_SrcRectConstraint);
       skCanvas->restore();
       this->notifyCanvasUpdated();
       return true;
@@ -832,9 +850,14 @@ namespace canvas
 
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::ellipseToSkPath(std::shared_ptr<SkPath> path,
-                                                             float x, float y,
-                                                             float radiusX, float radiusY, float rotation,
-                                                             float startAngle, float endAngle, bool ccw)
+                                                             float x,
+                                                             float y,
+                                                             float radiusX,
+                                                             float radiusY,
+                                                             float rotation,
+                                                             float startAngle,
+                                                             float endAngle,
+                                                             bool ccw)
   {
     if (radiusX < 0 || radiusY < 0)
       return false;

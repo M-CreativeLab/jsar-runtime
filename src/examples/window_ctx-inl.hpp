@@ -45,7 +45,9 @@ namespace jsar::example
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   }
 
-  WindowContext::WindowContext(int width, int height) : width(width), height(height)
+  WindowContext::WindowContext(int width, int height)
+      : width(width)
+      , height(height)
   {
     aspect = (float)width / (float)height;
     initWindow(nullptr);
@@ -121,7 +123,11 @@ namespace jsar::example
     GLfloat depth;
     glReadPixels(screenCoord.x * contentScaling[0],
                  screenCoord.y * contentScaling[1],
-                 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+                 1,
+                 1,
+                 GL_DEPTH_COMPONENT,
+                 GL_FLOAT,
+                 &depth);
     screenCoord.z = depth;
 
     // Update the main input source's target ray

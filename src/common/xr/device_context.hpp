@@ -16,7 +16,9 @@ namespace xr
   class TrDeviceInit final
   {
   public:
-    TrDeviceInit() {}
+    TrDeviceInit()
+    {
+    }
     ~TrDeviceInit() = default;
 
   public:
@@ -59,11 +61,17 @@ namespace xr
     /**
      * If the renderer should render contents as multipass mode.
      */
-    bool renderedAsMultipass() { return stereoRenderingMode == TrStereoRenderingMode::MultiPass; }
+    bool renderedAsMultipass()
+    {
+      return stereoRenderingMode == TrStereoRenderingMode::MultiPass;
+    }
     /**
      * If the renderer should use multiview mode to render contents.
      */
-    bool multiviewRequired() { return stereoRenderingMode == TrStereoRenderingMode::SinglePassMultiview || stereoRenderingMode == TrStereoRenderingMode::SinglePassInstanced; }
+    bool multiviewRequired()
+    {
+      return stereoRenderingMode == TrStereoRenderingMode::SinglePassMultiview || stereoRenderingMode == TrStereoRenderingMode::SinglePassInstanced;
+    }
   };
 
   class TrXRStereoFrameInfo
@@ -94,7 +102,10 @@ namespace xr
      * @param viewIndex The view index, 0 or 1.
      * @returns The view reference.
      */
-    TrXRView &getView(uint32_t viewIndex) { return views[viewIndex]; }
+    TrXRView &getView(uint32_t viewIndex)
+    {
+      return views[viewIndex];
+    }
     /**
      * Update the viewer's base matrix.
      *
@@ -111,11 +122,11 @@ namespace xr
   public:
     TrXRDeviceContextData() = default;
     TrXRDeviceContextData(TrXRDeviceContextData &that)
-        : enabled(that.enabled.load()),
-          stereoRenderingMode(that.stereoRenderingMode),
-          recommendedFov(that.recommendedFov.load()),
-          stereoFrame(that.stereoFrame),
-          framebufferConf(that.framebufferConf)
+        : enabled(that.enabled.load())
+        , stereoRenderingMode(that.stereoRenderingMode)
+        , recommendedFov(that.recommendedFov.load())
+        , stereoFrame(that.stereoFrame)
+        , framebufferConf(that.framebufferConf)
     {
     }
     ~TrXRDeviceContextData() = default;
@@ -146,7 +157,8 @@ namespace xr
   class TrXRDeviceContextZone : public TrZone<TrXRDeviceContextData>
   {
   public:
-    TrXRDeviceContextZone(string filename, TrZoneType type) : TrZone<TrXRDeviceContextData>(filename, type)
+    TrXRDeviceContextZone(string filename, TrZoneType type)
+        : TrZone<TrXRDeviceContextData>(filename, type)
     {
       if (type == TrZoneType::Server)
         data = std::make_unique<TrXRDeviceContextData>();
@@ -160,9 +172,18 @@ namespace xr
       data->enabled = enabled;
       data->stereoRenderingMode = mode;
     }
-    TrXRView &getStereoView(uint32_t viewIndex) { return data->stereoFrame.getView(viewIndex); }
-    void updateRecommendedFov(float fov) { data->recommendedFov = fov; }
-    void updateViewerBaseMatrix(float *matrixValues) { data->stereoFrame.updateViewerBaseMatrix(matrixValues); }
+    TrXRView &getStereoView(uint32_t viewIndex)
+    {
+      return data->stereoFrame.getView(viewIndex);
+    }
+    void updateRecommendedFov(float fov)
+    {
+      data->recommendedFov = fov;
+    }
+    void updateViewerBaseMatrix(float *matrixValues)
+    {
+      data->stereoFrame.updateViewerBaseMatrix(matrixValues);
+    }
     void updateViewFramebuffer(int viewIndex, int framebufferId, TrViewport viewport, bool useDoubleWide)
     {
       assert(viewIndex >= 0 && viewIndex < 2);
@@ -173,7 +194,13 @@ namespace xr
       view.viewFramebuffer = framebufferId;
       view.viewport = viewport;
     }
-    TrXRStereoFrameInfo &getStereoFrame() { return data->stereoFrame; }
-    TrXRFramebufferConfig &getFramebufferConfig() { return data->framebufferConf; }
+    TrXRStereoFrameInfo &getStereoFrame()
+    {
+      return data->stereoFrame;
+    }
+    TrXRFramebufferConfig &getFramebufferConfig()
+    {
+      return data->framebufferConf;
+    }
   };
 }

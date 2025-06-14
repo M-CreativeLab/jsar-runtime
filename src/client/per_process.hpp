@@ -111,9 +111,18 @@ public:
   ~TrClientPerformanceFileSystem() = default;
 
 public:
-  inline void setFps(int value) { fps->set(value); }
-  inline void setFrameDuration(double value) { frameDuration->set(value); }
-  inline void setLongFrames(int value) { longFrames->set(value); }
+  inline void setFps(int value)
+  {
+    fps->set(value);
+  }
+  inline void setFrameDuration(double value)
+  {
+    frameDuration->set(value);
+  }
+  inline void setLongFrames(int value)
+  {
+    longFrames->set(value);
+  }
 
 public:
   std::unique_ptr<analytics::PerformanceValue<int>> fps;
@@ -158,7 +167,10 @@ public:
    */
   static TrClientContextPerProcess *Create();
   static TrClientContextPerProcess *Get();
-  static const TrClientEnvironmentPerProcess &GetEnvironmentRef() { return Get()->env; }
+  static const TrClientEnvironmentPerProcess &GetEnvironmentRef()
+  {
+    return Get()->env;
+  }
 
 public:
   TrClientContextPerProcess();
@@ -181,7 +193,10 @@ public:
   /**
    * Get the current performance time in milliseconds.
    */
-  inline double performanceNow() { return static_cast<double>(uv_hrtime() - startedAt) / 1e6; }
+  inline double performanceNow()
+  {
+    return static_cast<double>(uv_hrtime() - startedAt) / 1e6;
+  }
 
 public: // SNR(Script Not Responsible) methods
   /**
@@ -299,22 +314,37 @@ public: // commandbuffer methods
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
 public: // WebXR methods
-  inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient() { return xrDeviceClient; }
-  xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }
-  xr::TrXRInputSourcesZone *getXRInputSourcesZone() { return xrInputSourcesZoneClient.get(); }
+  inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
+  {
+    return xrDeviceClient;
+  }
+  xr::TrXRDeviceContextZone *getXRDeviceContextZone()
+  {
+    return xrDeviceContextZoneClient.get();
+  }
+  xr::TrXRInputSourcesZone *getXRInputSourcesZone()
+  {
+    return xrInputSourcesZoneClient.get();
+  }
 
   /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
    *
    * @returns the framebuffer's width
    */
-  int getFramebufferWidth() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width; }
+  int getFramebufferWidth()
+  {
+    return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width;
+  }
   /**
    * Get the framebuffer's height, or zero if the XR is not enabled.
    *
    * @returns the framebuffer's height
    */
-  int getFramebufferHeight() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height; }
+  int getFramebufferHeight()
+  {
+    return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height;
+  }
   /**
    * Check if the framebuffer is double-wide, or false if the XR is not enabled.
    *
@@ -323,7 +353,10 @@ public: // WebXR methods
    *
    * @returns true if the framebuffer is double width
    */
-  bool isFramebufferDoubleWide() { return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide; }
+  bool isFramebufferDoubleWide()
+  {
+    return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide;
+  }
 
   /**
    * Send an XR command to the XR channel.
@@ -364,15 +397,24 @@ public:
   /**
    * @returns the scripting thread's event loop.
    */
-  inline uv_loop_t *getScriptingEventLoop() { return scriptingEventLoop; }
-  inline bool isScriptingEventLoopReady() { return scriptingEventLoop != nullptr; }
+  inline uv_loop_t *getScriptingEventLoop()
+  {
+    return scriptingEventLoop;
+  }
+  inline bool isScriptingEventLoopReady()
+  {
+    return scriptingEventLoop != nullptr;
+  }
   inline void setScriptingEventLoop(napi_env env)
   {
     scriptingThreadId = std::this_thread::get_id();
     napi_get_uv_event_loop(env, &scriptingEventLoop);
     dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
   }
-  inline std::shared_ptr<ScriptEnvironment> getScriptingEnvironment() { return scriptingEnv; }
+  inline std::shared_ptr<ScriptEnvironment> getScriptingEnvironment()
+  {
+    return scriptingEnv;
+  }
   inline ScriptEnvironment &createScriptingEnv(int id, string &scriptsDir)
   {
     assert(scriptingEnv == nullptr);
@@ -385,8 +427,14 @@ public:
     assert(scriptingThreadId != std::nullopt && "The scripting thread is not set.");
     return std::this_thread::get_id() == scriptingThreadId.value();
   }
-  inline font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
-  inline TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
+  inline font::FontCacheManager &getFontCacheManager()
+  {
+    return *fontCacheManager;
+  }
+  inline TrClientPerformanceFileSystem &getPerfFs()
+  {
+    return *perfFs;
+  }
 
 private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);

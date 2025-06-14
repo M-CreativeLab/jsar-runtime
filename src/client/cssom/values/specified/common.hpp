@@ -21,17 +21,38 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static AllowedNumbericType Default() { return AllowedNumbericType(); }
-    static AllowedNumbericType All() { return AllowedNumbericType(kAll); }
-    static AllowedNumbericType NonNegative() { return AllowedNumbericType(kNonNegative); }
-    static AllowedNumbericType AtLeastOne() { return AllowedNumbericType(kAtLeastOne); }
-    static AllowedNumbericType ZeroToOne() { return AllowedNumbericType(kZeroToOne); }
+    static AllowedNumbericType Default()
+    {
+      return AllowedNumbericType();
+    }
+    static AllowedNumbericType All()
+    {
+      return AllowedNumbericType(kAll);
+    }
+    static AllowedNumbericType NonNegative()
+    {
+      return AllowedNumbericType(kNonNegative);
+    }
+    static AllowedNumbericType AtLeastOne()
+    {
+      return AllowedNumbericType(kAtLeastOne);
+    }
+    static AllowedNumbericType ZeroToOne()
+    {
+      return AllowedNumbericType(kZeroToOne);
+    }
 
   public:
-    AllowedNumbericType() : tag_(kAll) {}
+    AllowedNumbericType()
+        : tag_(kAll)
+    {
+    }
 
   private:
-    AllowedNumbericType(Tag tag) : tag_(tag) {}
+    AllowedNumbericType(Tag tag)
+        : tag_(tag)
+    {
+    }
 
   public:
     // Clamp the value following the rules of this numeric type.
@@ -64,8 +85,8 @@ namespace client_cssom::values::specified
 
   public:
     Number(float value = 0.0f, std::optional<AllowedNumbericType> clamping_mode = std::nullopt)
-        : value_(value),
-          calc_clamping_mode_(clamping_mode)
+        : value_(value)
+        , calc_clamping_mode_(clamping_mode)
     {
     }
 
@@ -78,14 +99,20 @@ namespace client_cssom::values::specified
     }
 
   public:
-    std::string toCss() const override { return std::to_string(value_); }
+    std::string toCss() const override
+    {
+      return std::to_string(value_);
+    }
     CSSFloat toComputedValue(computed::Context &) const override
     {
       if (calc_clamping_mode_.has_value())
         return calc_clamping_mode_->clamp(value_);
       return value_;
     }
-    inline bool wasCalc() const { return calc_clamping_mode_.has_value(); }
+    inline bool wasCalc() const
+    {
+      return calc_clamping_mode_.has_value();
+    }
 
   private:
     float value_;

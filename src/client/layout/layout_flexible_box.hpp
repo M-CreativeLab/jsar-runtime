@@ -9,7 +9,13 @@ namespace client_layout
     using LayoutBlock::LayoutBlock;
 
   public:
-    const char *name() const override { return "LayoutFlexBox"; }
-    bool isFlexibleBox() const override final { return true; }
+    const char *name() const override
+    {
+      return "LayoutFlexBox";
+    }
+    bool isFlexibleBox() const override final
+    {
+      return true;
+    }
   };
 }

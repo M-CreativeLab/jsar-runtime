@@ -14,8 +14,8 @@ namespace client_layout
   using namespace client_cssom;
 
   LayoutObject::LayoutObject(shared_ptr<dom::Node> node)
-      : node_(node),
-        formattingContext_(nullptr)
+      : node_(node)
+      , formattingContext_(nullptr)
   {
     if (dom::Node::Is<dom::Document>(node))
       scene_ = dom::Node::As<dom::Document>(node)->scene;
@@ -178,29 +178,29 @@ namespace client_layout
   shared_ptr<LayoutView> LayoutObject::view()
   {
     return isLayoutView()
-               ? dynamic_pointer_cast<LayoutView>(shared_from_this())
-               : document()->layoutView();
+             ? dynamic_pointer_cast<LayoutView>(shared_from_this())
+             : document()->layoutView();
   }
 
   LayoutView &LayoutObject::viewRef()
   {
     return isLayoutView()
-               ? dynamic_cast<LayoutView &>(*this)
-               : document()->layoutViewRef();
+             ? dynamic_cast<LayoutView &>(*this)
+             : document()->layoutViewRef();
   }
 
   shared_ptr<const LayoutView> LayoutObject::view() const
   {
     return isLayoutView()
-               ? dynamic_pointer_cast<const LayoutView>(shared_from_this())
-               : document()->layoutView();
+             ? dynamic_pointer_cast<const LayoutView>(shared_from_this())
+             : document()->layoutView();
   }
 
   const LayoutView &LayoutObject::viewRef() const
   {
     return isLayoutView()
-               ? dynamic_cast<const LayoutView &>(*this)
-               : document()->layoutViewRef();
+             ? dynamic_cast<const LayoutView &>(*this)
+             : document()->layoutViewRef();
   }
 
   void LayoutObject::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -221,8 +221,7 @@ namespace client_layout
     // 1. Create the entity
     auto createEntity = [this](Scene &scene)
     {
-      entity_ = scene.createElement(node()->nodeName, node(),
-                                    parent() == nullptr ? nullopt : parent()->entity_);
+      entity_ = scene.createElement(node()->nodeName, node(), parent() == nullptr ? nullopt : parent()->entity_);
     };
 
     useSceneWithCallback(createEntity);
@@ -656,23 +655,19 @@ namespace client_layout
                                       const HitTestRay &hitTestRay,
                                       const glm::vec3 &accumulatedOffset)
   {
-    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
-                    HitTestPhase::kForeground))
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset, HitTestPhase::kForeground))
     {
       return true;
     }
-    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
-                    HitTestPhase::kFloat))
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset, HitTestPhase::kFloat))
     {
       return true;
     }
-    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
-                    HitTestPhase::kDescendantBlockBackgrounds))
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset, HitTestPhase::kDescendantBlockBackgrounds))
     {
       return true;
     }
-    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
-                    HitTestPhase::kSelfBlockBackground))
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset, HitTestPhase::kSelfBlockBackground))
     {
       return true;
     }
@@ -714,14 +709,12 @@ namespace client_layout
         auto webContextCtx = scene.getResource<WebContentContext>();
         assert(webContextCtx != nullptr && "The web content context must be set.");
         scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
-            .getHandleCheckedAsRef<InstancedMeshBase>()
-            .addInstance(entity); // Add the entity to the instanced mesh.
+          .getHandleCheckedAsRef<InstancedMeshBase>()
+          .addInstance(entity); // Add the entity to the instanced mesh.
 
         // Add `WebContent` component to the entity.
         auto fragment = this->fragment();
-        scene.addComponent(entity, WebContent(string(this->debugName()),
-                                              fragment.contentWidth(),
-                                              fragment.contentHeight()));
+        scene.addComponent(entity, WebContent(string(this->debugName()), fragment.contentWidth(), fragment.contentHeight()));
       }
     };
     useSceneWithCallback(configEntity);
@@ -736,8 +729,8 @@ namespace client_layout
         auto webContextCtx = scene.getResource<WebContentContext>();
         assert(webContextCtx != nullptr);
         scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
-            .getHandleCheckedAsRef<InstancedMeshBase>()
-            .removeInstance(entity); // Remove the entity from the instanced mesh.
+          .getHandleCheckedAsRef<InstancedMeshBase>()
+          .removeInstance(entity); // Remove the entity from the instanced mesh.
       }
     };
     useSceneWithCallback(removeInstance);

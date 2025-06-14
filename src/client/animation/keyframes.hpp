@@ -8,7 +8,10 @@ namespace dom
   class Keyframes : std::vector<Keyframe>
   {
   public:
-    static Keyframes Empty() { return Keyframes(); }
+    static Keyframes Empty()
+    {
+      return Keyframes();
+    }
 
   public:
     Keyframes()

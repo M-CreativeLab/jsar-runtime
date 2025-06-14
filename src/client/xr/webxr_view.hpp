@@ -51,28 +51,40 @@ namespace client_xr
      *
      * @returns An `XRViewport` object describing the size and position of the view.
      */
-    inline XRViewport &viewport() { return viewport_; }
+    inline XRViewport &viewport()
+    {
+      return viewport_;
+    }
 
     /**
      * Gets the projection matrix of this view.
      *
      * @returns A `glm::mat4` object representing the projection matrix.
      */
-    glm::mat4 projectionMatrix() const { return projectionMatrix_; }
+    glm::mat4 projectionMatrix() const
+    {
+      return projectionMatrix_;
+    }
 
     /**
      * Gets the recommended viewport scale for this view.
      *
      * @returns A number greater than 0.0 and less than or equal to 1.0; or `null` if no recommendation is available.
      */
-    float recommendedViewportScale() const { return viewportScale_; }
+    float recommendedViewportScale() const
+    {
+      return viewportScale_;
+    }
 
     /**
      * Gets the transform of this view.
      *
      * @returns A `XRRigidTransform` object specifying the position and orientation of the viewpoint.
      */
-    XRRigidTransform transform() const { return transform_; }
+    XRRigidTransform transform() const
+    {
+      return transform_;
+    }
 
   public:
     /**

@@ -5,17 +5,17 @@ namespace client_layout
   using namespace std;
 
   Fragment::Fragment(const dom::geometry::DOMRect &rect)
-      : size_(rect.width(), rect.height(), 1.0f),
-        content_size_(std::nullopt),
-        position_(rect.x(), rect.y(), 0.0f),
-        border_(0.0f, 0.0f, 0.0f, 0.0f),
-        padding_(0.0f, 0.0f, 0.0f, 0.0f)
+      : size_(rect.width(), rect.height(), 1.0f)
+      , content_size_(std::nullopt)
+      , position_(rect.x(), rect.y(), 0.0f)
+      , border_(0.0f, 0.0f, 0.0f, 0.0f)
+      , padding_(0.0f, 0.0f, 0.0f, 0.0f)
   {
   }
 
   Fragment::Fragment(const crates::layout2::Layout &nativeLayout)
-      : size_(nativeLayout.width(), nativeLayout.height(), 1.0f),
-        position_(nativeLayout.left(), nativeLayout.top(), 0.0f)
+      : size_(nativeLayout.width(), nativeLayout.height(), 1.0f)
+      , position_(nativeLayout.left(), nativeLayout.top(), 0.0f)
   {
     if (nativeLayout.contentWidth() == 0 && nativeLayout.contentHeight() == 0)
     {

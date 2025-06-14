@@ -26,9 +26,9 @@ namespace builtin_scene
       {
         // Add the multiview extension
         std::vector<std::string> prependLines = {
-            "#extension GL_OVR_multiview2 : require",
-            "layout(num_views = 2) in;",
-            "#define VIEW_ID gl_ViewID_OVR"};
+          "#extension GL_OVR_multiview2 : require",
+          "layout(num_views = 2) in;",
+          "#define VIEW_ID gl_ViewID_OVR"};
         source = ConcatSource(source, prependLines);
       }
     }

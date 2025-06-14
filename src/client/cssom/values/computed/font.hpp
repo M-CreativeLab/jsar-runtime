@@ -16,20 +16,35 @@ namespace client_cssom::values::computed
     static constexpr float FONT_MEDIUM_PX = 16.0f;
     static constexpr float FONT_LARGE_PX = 20.0f;
 
-    static FontSize Large() { return FontSize(FONT_SMALL_PX); }
-    static FontSize Medium() { return FontSize(FONT_MEDIUM_PX); }
-    static FontSize Small() { return FontSize(FONT_LARGE_PX); }
+    static FontSize Large()
+    {
+      return FontSize(FONT_SMALL_PX);
+    }
+    static FontSize Medium()
+    {
+      return FontSize(FONT_MEDIUM_PX);
+    }
+    static FontSize Small()
+    {
+      return FontSize(FONT_LARGE_PX);
+    }
 
   public:
     FontSize(float sizeInPx = FONT_MEDIUM_PX)
-        : computed_size_(sizeInPx),
-          used_size_(sizeInPx)
+        : computed_size_(sizeInPx)
+        , used_size_(sizeInPx)
     {
     }
 
   public:
-    Length computedSize() const { return computed_size_; }
-    Length usedSize() const { return used_size_; }
+    Length computedSize() const
+    {
+      return computed_size_;
+    }
+    Length usedSize() const
+    {
+      return used_size_;
+    }
 
   private:
     NonNegativeLength computed_size_;
@@ -45,10 +60,22 @@ namespace client_cssom::values::computed
     static constexpr int LIGHTER = 100;
 
   public:
-    static FontWeight Normal() { return FontWeight(NORMAL); }
-    static FontWeight Bold() { return FontWeight(BOLD); }
-    static FontWeight Bolder() { return FontWeight(BOLDER); }
-    static FontWeight Lighter() { return FontWeight(LIGHTER); }
+    static FontWeight Normal()
+    {
+      return FontWeight(NORMAL);
+    }
+    static FontWeight Bold()
+    {
+      return FontWeight(BOLD);
+    }
+    static FontWeight Bolder()
+    {
+      return FontWeight(BOLDER);
+    }
+    static FontWeight Lighter()
+    {
+      return FontWeight(LIGHTER);
+    }
 
   public:
     FontWeight(int value = NORMAL)
@@ -56,7 +83,10 @@ namespace client_cssom::values::computed
     {
     }
 
-    int value() const { return value_; }
+    int value() const
+    {
+      return value_;
+    }
 
   private:
     int value_;
@@ -72,8 +102,14 @@ namespace client_cssom::values::computed
       kOblique,
     };
 
-    static FontStyle Normal() { return FontStyle(Slant::kNormal); }
-    static FontStyle Italic() { return FontStyle(Slant::kItalic); }
+    static FontStyle Normal()
+    {
+      return FontStyle(Slant::kNormal);
+    }
+    static FontStyle Italic()
+    {
+      return FontStyle(Slant::kItalic);
+    }
     static FontStyle Oblique(std::optional<Angle> angle = std::nullopt)
     {
       FontStyle oblique_style(Slant::kOblique);
@@ -87,7 +123,10 @@ namespace client_cssom::values::computed
     {
     }
 
-    Slant slant() const { return slant_; }
+    Slant slant() const
+    {
+      return slant_;
+    }
     operator SkFontStyle::Slant() const
     {
       switch (slant_)

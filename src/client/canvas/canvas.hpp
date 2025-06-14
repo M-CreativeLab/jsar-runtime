@@ -36,10 +36,10 @@ namespace canvas
      */
     CanvasBase(std::optional<int> width = std::nullopt,
                std::optional<int> height = std::nullopt)
-        : ImageSource(),
-          widthToSet(width.has_value() ? static_cast<uint32_t>(width.value()) : DEFAULT_CANVAS_WIDTH),
-          heightToSet(height.has_value() ? static_cast<uint32_t>(height.value()) : DEFAULT_CANVAS_HEIGHT),
-          bitmap_(std::make_shared<SkBitmap>())
+        : ImageSource()
+        , widthToSet(width.has_value() ? static_cast<uint32_t>(width.value()) : DEFAULT_CANVAS_WIDTH)
+        , heightToSet(height.has_value() ? static_cast<uint32_t>(height.value()) : DEFAULT_CANVAS_HEIGHT)
+        , bitmap_(std::make_shared<SkBitmap>())
     {
       resetSkSurface();
     }
@@ -122,12 +122,18 @@ namespace canvas
     /**
      * Resizes the canvas to the specified width and height.
      */
-    inline void resize() { resetSkSurface(); }
+    inline void resize()
+    {
+      resetSkSurface();
+    }
 
     /**
      * @returns The constant shared pointer to the SkBitmap that stores the canvas content.
      */
-    inline std::shared_ptr<const SkBitmap> getSkBitmap() const { return bitmap_; }
+    inline std::shared_ptr<const SkBitmap> getSkBitmap() const
+    {
+      return bitmap_;
+    }
 
   protected:
     /**
@@ -135,7 +141,10 @@ namespace canvas
      *
      * @returns A shared pointer to the derived class instance.
      */
-    std::shared_ptr<T> getPtr() { return this->shared_from_this(); }
+    std::shared_ptr<T> getPtr()
+    {
+      return this->shared_from_this();
+    }
 
     /**
      * Resets the Skia surface to match the current width and height.

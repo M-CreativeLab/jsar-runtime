@@ -24,9 +24,9 @@ namespace dombinding
     {
       using T = EventWrap<ObjectType, HandleType>;
       return {
-          T::InstanceAccessor("type", &T::TypeGetter, nullptr),
-          T::InstanceAccessor("bubbles", &T::BubblesGetter, nullptr),
-          T::InstanceAccessor("cancelable", &T::CancelableGetter, nullptr),
+        T::InstanceAccessor("type", &T::TypeGetter, nullptr),
+        T::InstanceAccessor("bubbles", &T::BubblesGetter, nullptr),
+        T::InstanceAccessor("cancelable", &T::CancelableGetter, nullptr),
       };
     }
     static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<HandleType> handle)
@@ -48,9 +48,10 @@ namespace dombinding
 
       if (info.Length() < 1)
       {
-        auto msg = "Failed to construct 'Event': "
-                   "1 argument required, but only " +
-                   std::to_string(info.Length()) + " present.";
+        auto msg =
+          "Failed to construct 'Event': "
+          "1 argument required, but only " +
+          std::to_string(info.Length()) + " present.";
         Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
         return;
       }

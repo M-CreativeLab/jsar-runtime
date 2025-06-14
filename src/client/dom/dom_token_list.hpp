@@ -18,9 +18,9 @@ namespace dom
     DOMTokenList(std::string input = "",
                  std::vector<std::string> supportedTokens = {},
                  std::function<void(const DOMTokenList &)> updateCallback = nullptr)
-        : std::vector<std::string>(),
-          supportedTokens_(supportedTokens),
-          updateCallback_(updateCallback)
+        : std::vector<std::string>()
+        , supportedTokens_(supportedTokens)
+        , updateCallback_(updateCallback)
     {
       resetFrom(input);
     }
@@ -31,9 +31,9 @@ namespace dom
      * @param input The initial value of the list.
      */
     DOMTokenList(DOMTokenList &other, std::string input)
-        : std::vector<std::string>(),
-          supportedTokens_(other.supportedTokens_),
-          updateCallback_(other.updateCallback_)
+        : std::vector<std::string>()
+        , supportedTokens_(other.supportedTokens_)
+        , updateCallback_(other.updateCallback_)
     {
       resetFrom(input);
     }
@@ -48,7 +48,10 @@ namespace dom
      *
      * @returns The number of tokens in the list.
      */
-    inline size_t length() const { return size(); }
+    inline size_t length() const
+    {
+      return size();
+    }
     /**
      * A stringifier property that returns the value of the list as a string.
      *
@@ -198,7 +201,10 @@ namespace dom
     }
 
   public:
-    operator std::string() const { return value(); }
+    operator std::string() const
+    {
+      return value();
+    }
     friend std::ostream &operator<<(std::ostream &os, const DOMTokenList &list)
     {
       os << list.value();

@@ -13,6 +13,9 @@ namespace client_graphics
   class WebGLRenderbuffer : public WebGLObject
   {
   public:
-    WebGLRenderbuffer() : WebGLObject(WebGLObjectType::Renderbuffer) {}
+    WebGLRenderbuffer()
+        : WebGLObject(WebGLObjectType::Renderbuffer)
+    {
+    }
   };
 }

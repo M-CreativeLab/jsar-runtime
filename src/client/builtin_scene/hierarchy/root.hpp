@@ -7,7 +7,8 @@ namespace builtin_scene::hierarchy
   class Root : public ecs::Component
   {
   public:
-    Root(bool renderable = false) : renderable(renderable)
+    Root(bool renderable = false)
+        : renderable(renderable)
     {
     }
 

@@ -5,7 +5,7 @@
 namespace client_cssom
 {
   using namespace std;
-  
+
   bool CSSStyleDeclaration::equals(const CSSStyleDeclaration &other) const
   {
     if (length() != other.length()) // quick check if the length is different
@@ -40,10 +40,9 @@ namespace client_cssom
         auto value = other.getPropertyValue(name);
         if (getPropertyValue(name) != value)
         {
-          setProperty(name, value,
-                      isOtherPropImportant
-                          ? CSSPropertyPriority::Important
-                          : CSSPropertyPriority::Normal);
+          setProperty(name,
+                      value,
+                      isOtherPropImportant ? CSSPropertyPriority::Important : CSSPropertyPriority::Normal);
           isChanged = true;
         }
       }

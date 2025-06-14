@@ -16,15 +16,36 @@ namespace client_cssom::values::computed
     {
     }
 
-    bool operator==(const CSSPixelLength &other) const { return value == other.value; }
-    bool operator==(float other) const { return value == other; }
-    bool operator<(const CSSPixelLength &other) const { return value < other.value; }
-    bool operator<(float other) const { return value < other; }
-    bool operator>(const CSSPixelLength &other) const { return value > other.value; }
-    bool operator>(float other) const { return value > other; }
+    bool operator==(const CSSPixelLength &other) const
+    {
+      return value == other.value;
+    }
+    bool operator==(float other) const
+    {
+      return value == other;
+    }
+    bool operator<(const CSSPixelLength &other) const
+    {
+      return value < other.value;
+    }
+    bool operator<(float other) const
+    {
+      return value < other;
+    }
+    bool operator>(const CSSPixelLength &other) const
+    {
+      return value > other.value;
+    }
+    bool operator>(float other) const
+    {
+      return value > other;
+    }
 
   public:
-    inline float px() const { return value; }
+    inline float px() const
+    {
+      return value;
+    }
 
     // Returns the absolute value of the CSSPixelLength.
     inline CSSPixelLength abs() const

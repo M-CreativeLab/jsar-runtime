@@ -25,13 +25,14 @@ namespace client_xr
   class XRViewerPose : public XRPose
   {
   public:
-    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix,
-                 std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
-    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform,
-                 std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 
   public:
-    std::vector<std::shared_ptr<XRView>> &views() { return views_; }
+    std::vector<std::shared_ptr<XRView>> &views()
+    {
+      return views_;
+    }
 
   private:
     void setupViews(std::shared_ptr<XRReferenceSpace> baseReferenceSpace);

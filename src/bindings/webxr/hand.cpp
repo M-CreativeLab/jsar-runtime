@@ -13,14 +13,15 @@ namespace bindings
   {
 #define MODULE_NAME "XRHand"
     Napi::Function tpl = DefineClass(
-        env, MODULE_NAME,
-        {
-            InstanceMethod("entries", &XRHand::Entries),
-            InstanceMethod("forEach", &XRHand::ForEach),
-            InstanceMethod("get", &XRHand::Get),
-            InstanceMethod("keys", &XRHand::Keys),
-            InstanceMethod("values", &XRHand::Values),
-        });
+      env,
+      MODULE_NAME,
+      {
+        InstanceMethod("entries", &XRHand::Entries),
+        InstanceMethod("forEach", &XRHand::ForEach),
+        InstanceMethod("get", &XRHand::Get),
+        InstanceMethod("keys", &XRHand::Keys),
+        InstanceMethod("values", &XRHand::Values),
+      });
 
     constructor = new FunctionReference();
     *constructor = Persistent(tpl);
@@ -38,7 +39,8 @@ namespace bindings
     return scope.Escape(instance).ToObject();
   }
 
-  XRHand::XRHand(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRHand>(info)
+  XRHand::XRHand(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRHand>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

@@ -22,12 +22,30 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static DisplayOutside None() { return DisplayOutside(kNone); }
-    static DisplayOutside Inline() { return DisplayOutside(kInline); }
-    static DisplayOutside Block() { return DisplayOutside(kBlock); }
-    static DisplayOutside TableCaption() { return DisplayOutside(kTableCaption); }
-    static DisplayOutside InternalTable() { return DisplayOutside(kInternalTable); }
-    static DisplayOutside InternalTableCaption() { return DisplayOutside(kTableCaption); }
+    static DisplayOutside None()
+    {
+      return DisplayOutside(kNone);
+    }
+    static DisplayOutside Inline()
+    {
+      return DisplayOutside(kInline);
+    }
+    static DisplayOutside Block()
+    {
+      return DisplayOutside(kBlock);
+    }
+    static DisplayOutside TableCaption()
+    {
+      return DisplayOutside(kTableCaption);
+    }
+    static DisplayOutside InternalTable()
+    {
+      return DisplayOutside(kInternalTable);
+    }
+    static DisplayOutside InternalTableCaption()
+    {
+      return DisplayOutside(kTableCaption);
+    }
 
   public:
     DisplayOutside()
@@ -42,9 +60,18 @@ namespace client_cssom::values::specified
     }
 
   public:
-    inline bool isNone() const { return tag_ == kNone; }
-    inline bool isInline() const { return tag_ == kInline; }
-    inline bool isBlock() const { return tag_ == kBlock; }
+    inline bool isNone() const
+    {
+      return tag_ == kNone;
+    }
+    inline bool isInline() const
+    {
+      return tag_ == kInline;
+    }
+    inline bool isBlock() const
+    {
+      return tag_ == kBlock;
+    }
 
   private:
     Tag tag_;
@@ -68,14 +95,38 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static DisplayInside None() { return DisplayInside(kNone); }
-    static DisplayInside Contents() { return DisplayInside(kContents); }
-    static DisplayInside Flow() { return DisplayInside(kFlow); }
-    static DisplayInside FlowRoot() { return DisplayInside(kFlowRoot); }
-    static DisplayInside Flex() { return DisplayInside(kFlex); }
-    static DisplayInside Grid() { return DisplayInside(kGrid); }
-    static DisplayInside Table() { return DisplayInside(kTable); }
-    static DisplayInside Ruby() { return DisplayInside(kRuby); }
+    static DisplayInside None()
+    {
+      return DisplayInside(kNone);
+    }
+    static DisplayInside Contents()
+    {
+      return DisplayInside(kContents);
+    }
+    static DisplayInside Flow()
+    {
+      return DisplayInside(kFlow);
+    }
+    static DisplayInside FlowRoot()
+    {
+      return DisplayInside(kFlowRoot);
+    }
+    static DisplayInside Flex()
+    {
+      return DisplayInside(kFlex);
+    }
+    static DisplayInside Grid()
+    {
+      return DisplayInside(kGrid);
+    }
+    static DisplayInside Table()
+    {
+      return DisplayInside(kTable);
+    }
+    static DisplayInside Ruby()
+    {
+      return DisplayInside(kRuby);
+    }
 
   public:
     DisplayInside()
@@ -90,10 +141,22 @@ namespace client_cssom::values::specified
     }
 
   public:
-    inline bool isNone() const { return tag_ == kNone; }
-    inline bool isFlex() const { return tag_ == kFlex; }
-    inline bool isGrid() const { return tag_ == kGrid; }
-    inline bool isFlexOrGrid() const { return isFlex() || isGrid(); }
+    inline bool isNone() const
+    {
+      return tag_ == kNone;
+    }
+    inline bool isFlex() const
+    {
+      return tag_ == kFlex;
+    }
+    inline bool isGrid() const
+    {
+      return tag_ == kGrid;
+    }
+    inline bool isFlexOrGrid() const
+    {
+      return isFlex() || isGrid();
+    }
 
   private:
     Tag tag_;
@@ -113,23 +176,50 @@ namespace client_cssom::values::specified
     static constexpr uint16_t INSIDE_MASK = 0b0000000011111111;
     static constexpr uint16_t OUTSIDE_SHIFT = 8;
 
-    static Display None() { return Display(DisplayOutside::kNone, DisplayInside::kNone); }
-    static Display Contents() { return Display(DisplayOutside::kNone, DisplayInside::kContents); }
-    static Display Inline() { return Display(DisplayOutside::kInline, DisplayInside::kFlow); }
+    static Display None()
+    {
+      return Display(DisplayOutside::kNone, DisplayInside::kNone);
+    }
+    static Display Contents()
+    {
+      return Display(DisplayOutside::kNone, DisplayInside::kContents);
+    }
+    static Display Inline()
+    {
+      return Display(DisplayOutside::kInline, DisplayInside::kFlow);
+    }
     static Display InlineBlock()
     {
       return Display(DisplayOutside::kInline, DisplayInside::kFlowRoot);
     }
-    static Display Block() { return Display(DisplayOutside::kBlock, DisplayInside::kFlow); }
+    static Display Block()
+    {
+      return Display(DisplayOutside::kBlock, DisplayInside::kFlow);
+    }
     static Display FlowRoot()
     {
       return Display(DisplayOutside::kBlock, DisplayInside::kFlowRoot);
     }
-    static Display Flex() { return Display(DisplayOutside::kBlock, DisplayInside::kFlex); }
-    static Display InlineFlex() { return Display(DisplayOutside::kInline, DisplayInside::kFlex); }
-    static Display Grid() { return Display(DisplayOutside::kBlock, DisplayInside::kGrid); }
-    static Display InlineGrid() { return Display(DisplayOutside::kInline, DisplayInside::kGrid); }
-    static Display Table() { return Display(DisplayOutside::kBlock, DisplayInside::kTable); }
+    static Display Flex()
+    {
+      return Display(DisplayOutside::kBlock, DisplayInside::kFlex);
+    }
+    static Display InlineFlex()
+    {
+      return Display(DisplayOutside::kInline, DisplayInside::kFlex);
+    }
+    static Display Grid()
+    {
+      return Display(DisplayOutside::kBlock, DisplayInside::kGrid);
+    }
+    static Display InlineGrid()
+    {
+      return Display(DisplayOutside::kInline, DisplayInside::kGrid);
+    }
+    static Display Table()
+    {
+      return Display(DisplayOutside::kBlock, DisplayInside::kTable);
+    }
     static Display InlineTable()
     {
       return Display(DisplayOutside::kInline, DisplayInside::kTable);
@@ -235,8 +325,14 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static BoxSizing ContentBox() { return BoxSizing(kContentBox); }
-    static BoxSizing BorderBox() { return BoxSizing(kBorderBox); }
+    static BoxSizing ContentBox()
+    {
+      return BoxSizing(kContentBox);
+    }
+    static BoxSizing BorderBox()
+    {
+      return BoxSizing(kBorderBox);
+    }
 
   public:
     BoxSizing()
@@ -302,11 +398,26 @@ namespace client_cssom::values::specified
     };
 
   public:
-    static Overflow Visible() { return Overflow(kVisible); }
-    static Overflow Hidden() { return Overflow(kHidden); }
-    static Overflow Scroll() { return Overflow(kScroll); }
-    static Overflow Auto() { return Overflow(kAuto); }
-    static Overflow Clip() { return Overflow(kClip); }
+    static Overflow Visible()
+    {
+      return Overflow(kVisible);
+    }
+    static Overflow Hidden()
+    {
+      return Overflow(kHidden);
+    }
+    static Overflow Scroll()
+    {
+      return Overflow(kScroll);
+    }
+    static Overflow Auto()
+    {
+      return Overflow(kAuto);
+    }
+    static Overflow Clip()
+    {
+      return Overflow(kClip);
+    }
 
   public:
     Overflow()
@@ -376,11 +487,26 @@ namespace client_cssom::values::specified
       }
     }
 
-    inline bool isVisible() const { return tag_ == kVisible; }
-    inline bool isHidden() const { return tag_ == kHidden; }
-    inline bool isScroll() const { return tag_ == kScroll; }
-    inline bool isAuto() const { return tag_ == kAuto; }
-    inline bool isClip() const { return tag_ == kClip; }
+    inline bool isVisible() const
+    {
+      return tag_ == kVisible;
+    }
+    inline bool isHidden() const
+    {
+      return tag_ == kHidden;
+    }
+    inline bool isScroll() const
+    {
+      return tag_ == kScroll;
+    }
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isClip() const
+    {
+      return tag_ == kClip;
+    }
 
     // Compbined checks
     inline bool isAutoOrScroll() const

@@ -12,7 +12,10 @@ namespace client_cssom::rules
 
   public:
     std::string keyText;
-    const CSSStyleDeclaration &style() const { return style_; }
+    const CSSStyleDeclaration &style() const
+    {
+      return style_;
+    }
 
   private:
     CSSStyleDeclaration style_;

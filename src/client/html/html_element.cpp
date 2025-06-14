@@ -54,8 +54,12 @@ namespace dom
   }
 
   // TODO: Implement the following methods.
-  void HTMLElement::blur() {}
-  void HTMLElement::focus() {}
+  void HTMLElement::blur()
+  {
+  }
+  void HTMLElement::focus()
+  {
+  }
   void HTMLElement::click()
   {
     // TODO(yorkie): support disabled state.

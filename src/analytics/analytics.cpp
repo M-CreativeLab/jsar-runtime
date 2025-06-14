@@ -11,7 +11,9 @@ namespace analytics
   const char *PIPE_PREFIX = "/dev/shm/jsar/analytics";
 
   PerformanceMeasure::PerformanceMeasure(const char *name, Analytics *analytics, int writeFd)
-      : name(name), analytics(analytics), fd(writeFd)
+      : name(name)
+      , analytics(analytics)
+      , fd(writeFd)
   {
     start = high_resolution_clock::now();
   }
@@ -104,8 +106,7 @@ namespace analytics
     string pipeName = pipeDir + "/" + string(name);
     if (mkfifo(pipeName.c_str(), S_IRWXO) != 0)
     {
-      DEBUG(LOG_KEY, "failed to create named pipe: %s, error(%d): %s",
-            pipeName.c_str(), errno, strerror(errno));
+      DEBUG(LOG_KEY, "failed to create named pipe: %s, error(%d): %s", pipeName.c_str(), errno, strerror(errno));
       return -1;
     }
     else

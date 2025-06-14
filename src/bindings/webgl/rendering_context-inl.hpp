@@ -81,11 +81,11 @@ namespace webgl
       jsThis.Set("_screenCanvas", canvas);
     }
     else if (
-        sourceType == WebGLRenderingContextSourceType::kCanvas ||
-        sourceType == WebGLRenderingContextSourceType::kOffscreenCanvas)
+      sourceType == WebGLRenderingContextSourceType::kCanvas ||
+      sourceType == WebGLRenderingContextSourceType::kOffscreenCanvas)
     {
       Napi::TypeError::New(env, "WebGL context creation has not yet supported from canvas or offscreen canvas.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return;
     }
     else
@@ -132,7 +132,7 @@ namespace webgl
     if (!info[0].IsString())
     {
       Napi::TypeError::New(env, "setDefaultCoordHandedness() 1st argument must be a string.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -148,7 +148,7 @@ namespace webgl
     else
     {
       Napi::TypeError::New(env, "setDefaultCoordHandedness() 1st argument must be 'left' or 'right'.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
     }
     return env.Undefined();
   }
@@ -203,7 +203,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "deleteProgram() 1st argument must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -256,7 +256,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "useProgram() 1st argument must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -279,19 +279,19 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "bindAttribLocation() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[1].IsNumber())
     {
       Napi::TypeError::New(env, "bindAttribLocation() 2nd argument(index) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[2].IsString())
     {
       Napi::TypeError::New(env, "bindAttribLocation() 3rd argument(name) must be a string.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -317,7 +317,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getProgramParameter() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -349,7 +349,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getProgramInfoLog() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -379,13 +379,13 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "attachShader() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!WebGLShader::IsInstanceOf(info[1]))
     {
       Napi::TypeError::New(env, "attachShader() 2nd argument(shader) must be an instance of `WebGLShader`.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -410,7 +410,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "detachShader() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -591,13 +591,13 @@ namespace webgl
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "bindBuffer() takes 2 arguments.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "the first argument(target) should be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -633,7 +633,7 @@ namespace webgl
     if (info[1].IsNumber())
     {
       Napi::TypeError::New(env, "bufferData(target, size, usage) is not supported yet.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -709,7 +709,7 @@ namespace webgl
     if (!info[2].IsArrayBuffer() && !info[2].IsTypedArray())
     {
       Napi::TypeError::New(env, "the 3rd argument should be an ArrayBuffer or TypedArray when calling bufferSubData().")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -751,7 +751,7 @@ namespace webgl
     else
     {
       Napi::TypeError::New(env, "the 2nd argument(data) should be an ArrayBuffer, TypedArray or DataView in bufferData().")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -779,11 +779,11 @@ namespace webgl
       return env.Undefined();
     }
     else if (
-        !info[0].IsObject() ||
-        !info[0].As<Napi::Object>().InstanceOf(WebGLFramebuffer::constructor->Value()))
+      !info[0].IsObject() ||
+      !info[0].As<Napi::Object>().InstanceOf(WebGLFramebuffer::constructor->Value()))
     {
       Napi::TypeError::New(env, "deleteFramebuffer() 1st argument must be a WebGLFramebuffer.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -807,7 +807,7 @@ namespace webgl
     if (!info[0].IsNumber()) // target
     {
       Napi::TypeError::New(env, "the first argument must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -842,10 +842,10 @@ namespace webgl
     auto renderbuffer = Napi::ObjectWrap<WebGLRenderbuffer>::Unwrap(info[3].As<Napi::Object>());
 
     glContext_->framebufferRenderbuffer(
-        static_cast<client_graphics::WebGLFramebufferBindingTarget>(target),
-        static_cast<client_graphics::WebGLFramebufferAttachment>(attachment),
-        static_cast<client_graphics::WebGLRenderbufferBindingTarget>(renderbuffertarget),
-        renderbuffer->handle());
+      static_cast<client_graphics::WebGLFramebufferBindingTarget>(target),
+      static_cast<client_graphics::WebGLFramebufferAttachment>(attachment),
+      static_cast<client_graphics::WebGLRenderbufferBindingTarget>(renderbuffertarget),
+      renderbuffer->handle());
     return env.Undefined();
   }
 
@@ -863,8 +863,7 @@ namespace webgl
     auto jsTexture = info[3];
     if (!jsTexture.IsObject() || WebGLTexture::IsInstanceOf(jsTexture))
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidOperation,
-                           "texture isn't 0 or the name of an existing texture object");
+      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidOperation, "texture isn't 0 or the name of an existing texture object");
       return env.Undefined();
     }
 
@@ -876,8 +875,7 @@ namespace webgl
 
     if (target != WEBGL_FRAMEBUFFER)
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum,
-                           "target must be FRAMEBUFFER");
+      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum, "target must be FRAMEBUFFER");
       return env.Undefined();
     }
     if (textarget != WEBGL_TEXTURE_2D &&
@@ -888,17 +886,16 @@ namespace webgl
         textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
         textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum,
-                           "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
+      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum, "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
       return env.Undefined();
     }
 
     glContext_->framebufferTexture2D(
-        static_cast<client_graphics::WebGLFramebufferBindingTarget>(target),
-        static_cast<client_graphics::WebGLFramebufferAttachment>(attachment),
-        static_cast<client_graphics::WebGLTexture2DTarget>(textarget),
-        texture->handle(),
-        level);
+      static_cast<client_graphics::WebGLFramebufferBindingTarget>(target),
+      static_cast<client_graphics::WebGLFramebufferAttachment>(attachment),
+      static_cast<client_graphics::WebGLTexture2DTarget>(textarget),
+      texture->handle(),
+      level);
     return env.Undefined();
   }
 
@@ -942,7 +939,7 @@ namespace webgl
     if (info.Length() < 1 || !WebGLRenderbuffer::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "deleteRenderbuffer() takes 1 argument and it must be a WebGLRenderbuffer.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -965,7 +962,7 @@ namespace webgl
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "the first argument should be a number when calling bindRenderbuffer().")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1000,7 +997,9 @@ namespace webgl
     auto height = info[3].As<Napi::Number>().Int32Value();
 
     glContext_->renderbufferStorage(static_cast<client_graphics::WebGLRenderbufferBindingTarget>(target),
-                                    internalformat, width, height);
+                                    internalformat,
+                                    width,
+                                    height);
     return env.Undefined();
   }
 
@@ -1048,7 +1047,7 @@ namespace webgl
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "the target to bindTexture() is invalid.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1067,7 +1066,7 @@ namespace webgl
     else
     {
       Napi::TypeError::New(env, "the texture to bindTexture() is invalid, must be null or a WebGLTexture object.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
     }
     return env.Undefined();
   }
@@ -1106,8 +1105,9 @@ namespace webgl
       shared_ptr<canvas::ImageSource> imageSource = getImageSourceFromObject(env, info[5].ToObject());
       if (imageSource == nullptr)
       {
-        auto msg = "Failed to execute 'texImage2D' on 'WebGLRenderingContext': parameter 5 is not of type "
-                   "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
+        auto msg =
+          "Failed to execute 'texImage2D' on 'WebGLRenderingContext': parameter 5 is not of type "
+          "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
         Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
         return env.Undefined();
       }
@@ -1115,7 +1115,7 @@ namespace webgl
       if (!imageSource->readPixels(imagePixmap))
       {
         Napi::TypeError::New(env, "Failed to read pixels from image source.")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
@@ -1134,7 +1134,7 @@ namespace webgl
         debugObject.Set("height", info[4]);
         env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({debugObject});
         Napi::TypeError::New(env, "width or height is not a number.")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
@@ -1175,15 +1175,15 @@ namespace webgl
     }
 
     glContext_->texImage2D(
-        static_cast<client_graphics::WebGLTexture2DTarget>(target),
-        level,
-        internalformat,
-        width,
-        height,
-        border,
-        static_cast<client_graphics::WebGLTextureFormat>(format),
-        static_cast<client_graphics::WebGLPixelType>(pixelType),
-        pixelsData);
+      static_cast<client_graphics::WebGLTexture2DTarget>(target),
+      level,
+      internalformat,
+      width,
+      height,
+      border,
+      static_cast<client_graphics::WebGLTextureFormat>(format),
+      static_cast<client_graphics::WebGLPixelType>(pixelType),
+      pixelsData);
     return env.Undefined();
   }
 
@@ -1225,8 +1225,9 @@ namespace webgl
       shared_ptr<canvas::ImageSource> imageSource = getImageSourceFromObject(env, imageSourceValue.ToObject());
       if (imageSource == nullptr)
       {
-        auto msg = "Failed to execute 'texSubImage2D' on 'WebGLRenderingContext': parameter 6 is not of type "
-                   "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
+        auto msg =
+          "Failed to execute 'texSubImage2D' on 'WebGLRenderingContext': parameter 6 is not of type "
+          "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
         Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
         return env.Undefined();
       }
@@ -1234,7 +1235,7 @@ namespace webgl
       if (!imageSource->readPixels(imagePixmap))
       {
         Napi::TypeError::New(env, "Failed to call `texSubImage2D`: unable to read pixels from image source.")
-            .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
@@ -1275,15 +1276,15 @@ namespace webgl
     }
 
     glContext_->texSubImage2D(
-        static_cast<client_graphics::WebGLTexture2DTarget>(target),
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        static_cast<client_graphics::WebGLTextureFormat>(format),
-        static_cast<client_graphics::WebGLPixelType>(pixelType),
-        pixelsData);
+      static_cast<client_graphics::WebGLTexture2DTarget>(target),
+      level,
+      xoffset,
+      yoffset,
+      width,
+      height,
+      static_cast<client_graphics::WebGLTextureFormat>(format),
+      static_cast<client_graphics::WebGLPixelType>(pixelType),
+      pixelsData);
     return env.Undefined();
   }
 
@@ -1303,14 +1304,14 @@ namespace webgl
     int border = info[7].As<Napi::Number>().Int32Value();
 
     glContext_->copyTexImage2D(
-        static_cast<client_graphics::WebGLTexture2DTarget>(target),
-        level,
-        internalformat,
-        x,
-        y,
-        width,
-        height,
-        border);
+      static_cast<client_graphics::WebGLTexture2DTarget>(target),
+      level,
+      internalformat,
+      x,
+      y,
+      width,
+      height,
+      border);
     return env.Undefined();
   }
 
@@ -1330,14 +1331,14 @@ namespace webgl
     int height = info[7].As<Napi::Number>().Int32Value();
 
     glContext_->copyTexSubImage2D(
-        static_cast<client_graphics::WebGLTexture2DTarget>(target),
-        level,
-        xoffset,
-        yoffset,
-        x,
-        y,
-        width,
-        height);
+      static_cast<client_graphics::WebGLTexture2DTarget>(target),
+      level,
+      xoffset,
+      yoffset,
+      x,
+      y,
+      width,
+      height);
     return env.Undefined();
   }
 
@@ -1352,9 +1353,9 @@ namespace webgl
     int param = info[2].As<Napi::Number>().Int32Value();
 
     glContext_->texParameteri(
-        static_cast<client_graphics::WebGLTextureTarget>(target),
-        static_cast<client_graphics::WebGLTextureParameterName>(pname),
-        param);
+      static_cast<client_graphics::WebGLTextureTarget>(target),
+      static_cast<client_graphics::WebGLTextureParameterName>(pname),
+      param);
     return env.Undefined();
   }
 
@@ -1369,9 +1370,9 @@ namespace webgl
     float param = info[2].As<Napi::Number>().FloatValue();
 
     glContext_->texParameterf(
-        static_cast<client_graphics::WebGLTextureTarget>(target),
-        static_cast<client_graphics::WebGLTextureParameterName>(pname),
-        param);
+      static_cast<client_graphics::WebGLTextureTarget>(target),
+      static_cast<client_graphics::WebGLTextureParameterName>(pname),
+      param);
     return env.Undefined();
   }
 
@@ -1389,7 +1390,7 @@ namespace webgl
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "activeTexture() 1st argument(texture) must be a number.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1479,7 +1480,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getActiveAttrib() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1508,7 +1509,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getActiveUniform() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1537,7 +1538,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getAttribLocation() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1564,7 +1565,7 @@ namespace webgl
     if (!WebGLProgram::IsInstanceOf(info[0]))
     {
       Napi::TypeError::New(env, "getUniformLocation() 1st argument(program) must be a WebGLProgram.")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1592,7 +1593,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value())) \
     {                                                                                                              \
       Napi::TypeError::New(env, "uniform1" #X "() 1st argument(program) must be a WebGLUniformLocation object.")   \
-          .ThrowAsJavaScriptException();                                                                           \
+        .ThrowAsJavaScriptException();                                                                             \
       return env.Undefined();                                                                                      \
     }                                                                                                              \
                                                                                                                    \
@@ -1618,7 +1619,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value())) \
     {                                                                                                              \
       Napi::TypeError::New(env, "uniform2" #X "() 1st argument(program) must be a WebGLUniformLocation object.")   \
-          .ThrowAsJavaScriptException();                                                                           \
+        .ThrowAsJavaScriptException();                                                                             \
       return env.Undefined();                                                                                      \
     }                                                                                                              \
                                                                                                                    \
@@ -1645,7 +1646,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value())) \
     {                                                                                                              \
       Napi::TypeError::New(env, "uniform3" #X "() 1st argument(program) must be a WebGLUniformLocation object.")   \
-          .ThrowAsJavaScriptException();                                                                           \
+        .ThrowAsJavaScriptException();                                                                             \
       return env.Undefined();                                                                                      \
     }                                                                                                              \
                                                                                                                    \
@@ -1673,7 +1674,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value())) \
     {                                                                                                              \
       Napi::TypeError::New(env, "uniform4" #X "() 1st argument(program) must be a WebGLUniformLocation object.")   \
-          .ThrowAsJavaScriptException();                                                                           \
+        .ThrowAsJavaScriptException();                                                                             \
       return env.Undefined();                                                                                      \
     }                                                                                                              \
                                                                                                                    \
@@ -1711,10 +1712,10 @@ namespace webgl
    */
   template <typename ValueType>
   vector<ValueType> getUniformValuesVector(
-      Napi::Env env,
-      Napi::Value jsValues,
-      napi_typedarray_type valueTypedArrayType,
-      size_t n)
+    Napi::Env env,
+    Napi::Value jsValues,
+    napi_typedarray_type valueTypedArrayType,
+    size_t n)
   {
     if (valueTypedArrayType != napi_float32_array && valueTypedArrayType != napi_int32_array)
       throw WebGLUniformError("TypedArray type should be either napi_float32_array or napi_int32_array.");
@@ -1778,7 +1779,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))  \
     {                                                                                                               \
       Napi::TypeError::New(env, "uniform" #N #X "v() 1st argument(program) must be a WebGLUniformLocation object.") \
-          .ThrowAsJavaScriptException();                                                                            \
+        .ThrowAsJavaScriptException();                                                                              \
       return env.Undefined();                                                                                       \
     }                                                                                                               \
                                                                                                                     \
@@ -1818,7 +1819,7 @@ namespace webgl
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))      \
     {                                                                                                                   \
       Napi::TypeError::New(env, "uniformMatrix" #N "fv() 1st argument(program) must be a WebGLUniformLocation object.") \
-          .ThrowAsJavaScriptException();                                                                                \
+        .ThrowAsJavaScriptException();                                                                                  \
       return env.Undefined();                                                                                           \
     }                                                                                                                   \
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());                         \
@@ -1835,8 +1836,8 @@ namespace webgl
       }                                                                                                                 \
       auto placeholderId = (WebGLMatrixPlaceholderId)placeholderIdValue.ToNumber().Uint32Value();                       \
       auto handedness = matricesArray.Get(WEBGL_PLACEHOLDERS_USE_RIGHTHANDED_KEY).ToBoolean()                           \
-                            ? MatrixHandedness::MATRIX_RIGHT_HANDED                                                     \
-                            : MatrixHandedness::MATRIX_LEFT_HANDED;                                                     \
+                          ? MatrixHandedness::MATRIX_RIGHT_HANDED                                                       \
+                          : MatrixHandedness::MATRIX_LEFT_HANDED;                                                       \
       MatrixComputationGraph computationGraph(placeholderId, handedness);                                               \
                                                                                                                         \
       if (matricesArray.Has(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY))                                                     \
@@ -1849,7 +1850,7 @@ namespace webgl
     if (length % (N * N) != 0)                                                                                          \
     {                                                                                                                   \
       Napi::TypeError::New(env, "uniformMatrix" #N "fv() takes " #N "x" #N " float elements array.")                    \
-          .ThrowAsJavaScriptException();                                                                                \
+        .ThrowAsJavaScriptException();                                                                                  \
       return env.Undefined();                                                                                           \
     }                                                                                                                   \
     std::vector<float> values(length);                                                                                  \
@@ -1952,7 +1953,7 @@ namespace webgl
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "pixelStorei() 1st argument(pname) must be a number")
-          .ThrowAsJavaScriptException();
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -2534,7 +2535,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferWidth is readonly.")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename ContextType>
@@ -2551,7 +2552,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
-        .ThrowAsJavaScriptException();
+      .ThrowAsJavaScriptException();
   }
 
   template <typename ObjectType, typename ContextType>
@@ -2571,10 +2572,10 @@ namespace webgl
     {
       // Prints the object if not supported.
       env.Global()
-          .Get("console")
-          .As<Napi::Object>()
-          .Get("log")
-          .As<Napi::Function>()({imageSourceObject});
+        .Get("console")
+        .As<Napi::Object>()
+        .Get("log")
+        .As<Napi::Function>()({imageSourceObject});
 
       /**
        * TODO(yorkie): support HTMLVideoElement

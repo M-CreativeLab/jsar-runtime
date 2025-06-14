@@ -24,9 +24,9 @@ namespace canvasbinding
     using T = OffscreenCanvasRenderingContext2D;
     auto props = CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>>(
-        {
-            T::InstanceMethod("commit", &T::Commit),
-        });
+      {
+        T::InstanceMethod("commit", &T::Commit),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

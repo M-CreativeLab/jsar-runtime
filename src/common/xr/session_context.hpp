@@ -11,15 +11,17 @@ namespace xr
   class TrXRSessionContextData
   {
   public:
-    TrXRSessionContextData(uint32_t sessionId) : sessionId(sessionId)
+    TrXRSessionContextData(uint32_t sessionId)
+        : sessionId(sessionId)
     {
       glm::mat4 identity = glm::mat4(1.0f);
       memcpy(localBaseMatrix, glm::value_ptr(identity), sizeof(localBaseMatrix));
     }
-    TrXRSessionContextData(TrXRSessionContextData &that) : sessionId(that.sessionId.load()),
-                                                           stereoId(that.stereoId.load()),
-                                                           timestampOnSettingStereoId(that.timestampOnSettingStereoId),
-                                                           pendingStereoFramesCount(that.pendingStereoFramesCount.load())
+    TrXRSessionContextData(TrXRSessionContextData &that)
+        : sessionId(that.sessionId.load())
+        , stereoId(that.stereoId.load())
+        , timestampOnSettingStereoId(that.timestampOnSettingStereoId)
+        , pendingStereoFramesCount(that.pendingStereoFramesCount.load())
     {
       memcpy(localBaseMatrix, that.localBaseMatrix, sizeof(localBaseMatrix));
     }
@@ -120,8 +122,7 @@ namespace xr
      * @param sessionId the session id.
      * @returns the new `TrXRSessionContextZone` instance.
      */
-    static inline std::unique_ptr<TrXRSessionContextZone> Make(string filename, TrZoneType type,
-                                                               optional<uint32_t> sessionId = nullopt)
+    static inline std::unique_ptr<TrXRSessionContextZone> Make(string filename, TrZoneType type, optional<uint32_t> sessionId = nullopt)
     {
       return std::make_unique<TrXRSessionContextZone>(filename, type, sessionId);
     }
@@ -150,14 +151,41 @@ namespace xr
     }
 
   public:
-    uint32_t getSessionId() { return data->sessionId; }
-    uint32_t getStereoId() { return data->stereoId; }
-    int getPendingStereoFramesCount() { return data->pendingStereoFramesCount; }
-    void setStereoId(uint32_t id) { data->setStereoId(id); }
-    void setPendingStereoFramesCount(int count) { data->setPendingStereoFramesCount(count); }
-    void setInFrustum(bool value) { data->setInFrustum(value); }
-    void setLocalBaseMatrix(float *matrixValues) { data->setLocalBaseMatrix(matrixValues); }
-    void getCollisionBoxMinMax(float *min, float *max) { data->getCollisionBoxMinMax(min, max); }
-    void setCollisionBoxMinMax(float *min, float *max) { data->setCollisionBoxMinMax(min, max); }
+    uint32_t getSessionId()
+    {
+      return data->sessionId;
+    }
+    uint32_t getStereoId()
+    {
+      return data->stereoId;
+    }
+    int getPendingStereoFramesCount()
+    {
+      return data->pendingStereoFramesCount;
+    }
+    void setStereoId(uint32_t id)
+    {
+      data->setStereoId(id);
+    }
+    void setPendingStereoFramesCount(int count)
+    {
+      data->setPendingStereoFramesCount(count);
+    }
+    void setInFrustum(bool value)
+    {
+      data->setInFrustum(value);
+    }
+    void setLocalBaseMatrix(float *matrixValues)
+    {
+      data->setLocalBaseMatrix(matrixValues);
+    }
+    void getCollisionBoxMinMax(float *min, float *max)
+    {
+      data->getCollisionBoxMinMax(min, max);
+    }
+    void setCollisionBoxMinMax(float *min, float *max)
+    {
+      data->setCollisionBoxMinMax(min, max);
+    }
   };
 }

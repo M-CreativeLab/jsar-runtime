@@ -19,14 +19,19 @@ namespace builtin_scene
   public:
     TextureAtlas(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                  client_graphics::WebGLTextureUnit unit = client_graphics::WebGLTextureUnit::kTexture0,
-                 int width = kDefaultSize, int height = kDefaultSize);
+                 int width = kDefaultSize,
+                 int height = kDefaultSize);
     ~TextureAtlas();
 
   public:
     std::shared_ptr<Texture> addTexture(int width, int height, bool autoDownscale = false);
-    std::shared_ptr<Texture> resizeTexture(std::shared_ptr<Texture> texture, int width, int height, bool autoDownscale = false);
+    std::shared_ptr<Texture> resizeTexture(std::shared_ptr<Texture> texture,
+                                           int width,
+                                           int height,
+                                           bool autoDownscale = false);
     void removeTexture(const Texture &texture);
-    void updateTexture(const Texture &texture, const unsigned char *pixels,
+    void updateTexture(const Texture &texture,
+                       const unsigned char *pixels,
                        client_graphics::WebGLTextureFormat format = client_graphics::WebGLTextureFormat::kRGBA,
                        client_graphics::WebGLPixelType pixelType = client_graphics::WebGLPixelType::kUnsignedByte);
 

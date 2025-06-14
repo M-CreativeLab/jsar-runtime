@@ -7,18 +7,21 @@ namespace bindings
   thread_local Napi::FunctionReference *ClientContext::constructor;
   void ClientContext::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "ClientContext",
-                                      {
-                                          InstanceMethod("keepAlive", &ClientContext::KeepAlive),
-                                          InstanceMethod("fastPerformanceNow", &ClientContext::FastPerformanceNow),
-                                      });
+    Napi::Function func = DefineClass(
+      env,
+      "ClientContext",
+      {
+        InstanceMethod("keepAlive", &ClientContext::KeepAlive),
+        InstanceMethod("fastPerformanceNow", &ClientContext::FastPerformanceNow),
+      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     exports.Set("ClientContext", func);
   }
 
-  ClientContext::ClientContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ClientContext>(info)
+  ClientContext::ClientContext(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<ClientContext>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -51,9 +54,11 @@ namespace bindings
     // Disable the host webgl context for worker threads
     if (!isWorker)
     {
-      thisObject.Set("gl", clientContext->webglVersion == 2
-                               ? ::webgl::WebGL2RenderingContext::MakeFromHost(env)
-                               : ::webgl::WebGLRenderingContext::MakeFromHost(env));
+      thisObject.Set(
+        "gl",
+        clientContext->webglVersion == 2
+          ? ::webgl::WebGL2RenderingContext::MakeFromHost(env)
+          : ::webgl::WebGLRenderingContext::MakeFromHost(env));
     }
 
     if (clientContext->xrDeviceInit.enabled == true)

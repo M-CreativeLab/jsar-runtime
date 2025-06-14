@@ -18,7 +18,10 @@ namespace builtin_scene
     /**
      * The identity transform.
      */
-    static const Transform Identity() { return Transform(); }
+    static const Transform Identity()
+    {
+      return Transform();
+    }
     /**
      * Creates a new transform from the given translation.
      *
@@ -101,15 +104,24 @@ namespace builtin_scene
     /**
      * The translation of the transform.
      */
-    inline math::Vec3 translation() { return translation_; }
+    inline math::Vec3 translation()
+    {
+      return translation_;
+    }
     /**
      * The rotation of the transform.
      */
-    inline math::Quat rotation() { return rotation_; }
+    inline math::Quat rotation()
+    {
+      return rotation_;
+    }
     /**
      * The scale of the transform.
      */
-    inline math::Vec3 scale() { return scale_; }
+    inline math::Vec3 scale()
+    {
+      return scale_;
+    }
     /**
      * Get the matrix representation of the transform without clearing the dirty flag.
      *
@@ -180,19 +192,28 @@ namespace builtin_scene
      *
      * @param x The x component of the translation.
      */
-    inline void setX(float x) { setTranslation(x, translation_.y, translation_.z); }
+    inline void setX(float x)
+    {
+      setTranslation(x, translation_.y, translation_.z);
+    }
     /**
      * Set the y component of the translation.
      *
      * @param y The y component of the translation.
      */
-    inline void setY(float y) { setTranslation(translation_.x, y, translation_.z); }
+    inline void setY(float y)
+    {
+      setTranslation(translation_.x, y, translation_.z);
+    }
     /**
      * Set the z component of the translation.
      *
      * @param z The z component of the translation.
      */
-    inline void setZ(float z) { setTranslation(translation_.x, translation_.y, z); }
+    inline void setZ(float z)
+    {
+      setTranslation(translation_.x, translation_.y, z);
+    }
     /**
      * Set the rotation.
      *
@@ -273,18 +294,27 @@ namespace builtin_scene
      *
      * @returns The accumulated matrix.
      */
-    inline const glm::mat4 &accumulatedMatrix() const { return accumulatedMatrix_; }
+    inline const glm::mat4 &accumulatedMatrix() const
+    {
+      return accumulatedMatrix_;
+    }
     /**
      * Set the accumulated matrix.
      *
      * @param mat The accumulated matrix.
      * @see accumulatedMatrix() to learn more about the accumulated matrix.
      */
-    inline void setAccumulatedMatrix(glm::mat4 mat) { accumulatedMatrix_ = mat; }
+    inline void setAccumulatedMatrix(glm::mat4 mat)
+    {
+      accumulatedMatrix_ = mat;
+    }
     /**
      * @returns If the post transform is initialized.
      */
-    inline bool hasPostTransform() const { return postTransform_ != nullptr; }
+    inline bool hasPostTransform() const
+    {
+      return postTransform_ != nullptr;
+    }
     /**
      * Get the post transform reference to update, and initialize if it is not initialized.
      *
@@ -299,7 +329,7 @@ namespace builtin_scene
     /**
      * @returns The last computed matrix to upload to the GPU.
      */
-    const glm::mat4& lastComputedMatrix() const
+    const glm::mat4 &lastComputedMatrix() const
     {
       return lastMatrix_;
     }

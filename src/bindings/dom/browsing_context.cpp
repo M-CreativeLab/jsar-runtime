@@ -10,7 +10,7 @@ namespace dombinding
     auto props = GetClassProperties(env);
     {
       auto newProps = vector<Napi::ClassPropertyDescriptor<BrowsingContext>>({
-          InstanceMethod("start", &BrowsingContext::Start),
+        InstanceMethod("start", &BrowsingContext::Start),
       });
       props.insert(props.end(), newProps.begin(), newProps.end());
     }
@@ -49,7 +49,7 @@ namespace dombinding
         return env.Undefined();
       }
     }
-    
+
     auto inputType = dom::InputType::URL;
     if (info.Length() >= 3 && info[3].IsString())
     {

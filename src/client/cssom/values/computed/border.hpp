@@ -77,14 +77,20 @@ namespace client_cssom::values::computed
     using generics::GenericBorderCornerRadius<NonNegativeLengthPercentage>::GenericBorderCornerRadius;
 
   public:
-    static BorderCornerRadius Zero() { return BorderCornerRadius(0.0f); }
+    static BorderCornerRadius Zero()
+    {
+      return BorderCornerRadius(0.0f);
+    }
 
   public:
     BorderCornerRadius(float px)
         : GenericBorderCornerRadius(NonNegativeLengthPercentage::Length(px))
     {
     }
-    bool isZero() const { return value_ == 0.0f; }
+    bool isZero() const
+    {
+      return value_ == 0.0f;
+    }
   };
 
   // A computed value for the `border-radius` property.

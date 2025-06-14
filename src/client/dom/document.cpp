@@ -16,24 +16,20 @@ namespace dom
   using namespace std;
   using namespace pugi;
 
-  shared_ptr<Document> Document::Make(string contentType, DocumentType documentType,
-                                      shared_ptr<BrowsingContext> browsingContext,
-                                      bool autoConnect)
+  shared_ptr<Document> Document::Make(string contentType, DocumentType documentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
   {
     return make_shared<Document>(contentType, documentType, browsingContext, autoConnect);
   }
 
-  Document::Document(string contentType, DocumentType documentType,
-                     shared_ptr<BrowsingContext> browsingContext,
-                     bool autoConnect)
-      : Node(NodeType::DOCUMENT_NODE, "#document", nullopt),
-        contentType(contentType),
-        documentType(documentType),
-        scene(TrClientContextPerProcess::Get()->builtinScene),
-        browsingContext(browsingContext),
-        auto_connect_(autoConnect),
-        default_view_(TrClientContextPerProcess::Get()->window),
-        timeline_(make_shared<DocumentTimeline>())
+  Document::Document(string contentType, DocumentType documentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
+      : Node(NodeType::DOCUMENT_NODE, "#document", nullopt)
+      , contentType(contentType)
+      , documentType(documentType)
+      , scene(TrClientContextPerProcess::Get()->builtinScene)
+      , browsingContext(browsingContext)
+      , auto_connect_(autoConnect)
+      , default_view_(TrClientContextPerProcess::Get()->window)
+      , timeline_(make_shared<DocumentTimeline>())
   {
     assert(browsingContext != nullptr);
     assert(default_view_.lock() != nullptr);
@@ -459,7 +455,7 @@ namespace dom
 
       // Serialize the children of the node.
       function<void(string &, const shared_ptr<Node>)> serializeChildren =
-          [&depthToSpaces, &serializeChildren, &serializeNode](string &s, const shared_ptr<Node> node)
+        [&depthToSpaces, &serializeChildren, &serializeNode](string &s, const shared_ptr<Node> node)
       {
         for (auto childNode : node->childNodes)
         {
@@ -509,7 +505,7 @@ namespace dom
     assert(contextDocument != nullptr);
 
     shared_ptr<Document> document = Document::Make(
-        "text/html", DocumentType::kHTML, contextDocument->browsingContext, false);
+      "text/html", DocumentType::kHTML, contextDocument->browsingContext, false);
     document->setSource("<html>" + input + "</html>", true);
 
     auto htmlElement = document->documentElement();
@@ -518,8 +514,8 @@ namespace dom
   }
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
-      : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layout_view_(nullptr)
+      : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect)
+      , layout_view_(nullptr)
   {
   }
 

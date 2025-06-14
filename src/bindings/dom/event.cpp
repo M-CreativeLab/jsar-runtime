@@ -27,15 +27,15 @@ namespace dombinding
     {
     case dom::DOMEventConstructorType::kXRSessionEvent:
       instance = XRSessionEvent::NewInstance(
-          env, dynamic_pointer_cast<client_xr::XRSessionEvent>(nativeEvent));
+        env, dynamic_pointer_cast<client_xr::XRSessionEvent>(nativeEvent));
       break;
     case dom::DOMEventConstructorType::kXRInputSourceEvent:
       instance = XRInputSourceEvent::NewInstance(
-          env, dynamic_pointer_cast<client_xr::XRInputSourceEvent>(nativeEvent));
+        env, dynamic_pointer_cast<client_xr::XRInputSourceEvent>(nativeEvent));
       break;
     case dom::DOMEventConstructorType::kXRInputSourcesChangeEvent:
       instance = XRInputSourcesChangeEvent::NewInstance(
-          env, dynamic_pointer_cast<client_xr::XRInputSourcesChangeEvent>(nativeEvent));
+        env, dynamic_pointer_cast<client_xr::XRInputSourcesChangeEvent>(nativeEvent));
       break;
     case dom::DOMEventConstructorType::kEvent:
     default:

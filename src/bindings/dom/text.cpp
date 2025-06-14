@@ -22,11 +22,11 @@ namespace dombinding
   {
     auto props = CharacterDataBase<Text, dom::Text>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<Text>>(
-        {
-            InstanceAccessor("assignedSlot", &Text::AssignedSlotGetter, nullptr),
-            InstanceAccessor("wholeText", &Text::WholeTextGetter, nullptr),
-            InstanceMethod("splitText", &Text::SplitText),
-        });
+      {
+        InstanceAccessor("assignedSlot", &Text::AssignedSlotGetter, nullptr),
+        InstanceAccessor("wholeText", &Text::WholeTextGetter, nullptr),
+        InstanceMethod("splitText", &Text::SplitText),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }

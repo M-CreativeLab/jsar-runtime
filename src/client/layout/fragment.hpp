@@ -17,7 +17,10 @@ namespace client_layout
 
   public:
     // Create a none fragment which has a size of 0x0.
-    static Fragment None() { return Fragment(dom::geometry::DOMRect(0, 0, 0, 0)); }
+    static Fragment None()
+    {
+      return Fragment(dom::geometry::DOMRect(0, 0, 0, 0));
+    }
 
   public:
     Fragment() = default;
@@ -45,15 +48,36 @@ namespace client_layout
       return dom::geometry::DOMRect(position_.x, position_.y, size_.x, size_.y);
     }
 
-    inline bool isNone() const { return size_.x == 0.0f && size_.y == 0.0f; }
+    inline bool isNone() const
+    {
+      return size_.x == 0.0f && size_.y == 0.0f;
+    }
 
     // Position
-    inline glm::vec3 xyz() const { return position_; }
-    inline float left() const { return position_.x; }
-    inline float right() const { return position_.x + size_.x; }
-    inline float top() const { return position_.y; }
-    inline float bottom() const { return position_.y + size_.y; }
-    inline float z() const { return position_.z; }
+    inline glm::vec3 xyz() const
+    {
+      return position_;
+    }
+    inline float left() const
+    {
+      return position_.x;
+    }
+    inline float right() const
+    {
+      return position_.x + size_.x;
+    }
+    inline float top() const
+    {
+      return position_.y;
+    }
+    inline float bottom() const
+    {
+      return position_.y + size_.y;
+    }
+    inline float z() const
+    {
+      return position_.z;
+    }
 
     // Returns a new `Fragment` object which moves the child fragment based on current fragment.
     // Such as a parent `Fragment(20, 0, 100, 100)`, moves the child `Fragment(10, 10, 50, 50)`, it will produce a new
@@ -72,9 +96,18 @@ namespace client_layout
                        height(),
                        depth());
     }
-    inline float width() const { return size_.x; }
-    inline float height() const { return size_.y; }
-    inline float depth() const { return size_.z; }
+    inline float width() const
+    {
+      return size_.x;
+    }
+    inline float height() const
+    {
+      return size_.y;
+    }
+    inline float depth() const
+    {
+      return size_.z;
+    }
 
     inline glm::vec3 contentSize() const
     {
@@ -82,13 +115,28 @@ namespace client_layout
                        contentHeight(),
                        contentDepth());
     }
-    inline float contentWidth() const { return content_size_.has_value() ? content_size_->x : size_.x; }
-    inline float contentHeight() const { return content_size_.has_value() ? content_size_->y : size_.y; }
-    inline float contentDepth() const { return content_size_.has_value() ? content_size_->z : size_.z; }
+    inline float contentWidth() const
+    {
+      return content_size_.has_value() ? content_size_->x : size_.x;
+    }
+    inline float contentHeight() const
+    {
+      return content_size_.has_value() ? content_size_->y : size_.y;
+    }
+    inline float contentDepth() const
+    {
+      return content_size_.has_value() ? content_size_->z : size_.z;
+    }
 
     // Border
-    inline const geometry::Rect<float> &border() const { return border_; }
-    inline const geometry::Rect<float> &padding() const { return padding_; }
+    inline const geometry::Rect<float> &border() const
+    {
+      return border_;
+    }
+    inline const geometry::Rect<float> &padding() const
+    {
+      return padding_;
+    }
 
     bool visibleInViewport(const geometry::Viewport3d &) const;
 
@@ -97,9 +145,18 @@ namespace client_layout
     {
       size_ = glm::vec3(width, height, depth);
     }
-    inline void setWidth(float width) { size_.x = width; }
-    inline void setHeight(float height) { size_.y = height; }
-    inline void setDepth(float depth) { size_.z = depth; }
+    inline void setWidth(float width)
+    {
+      size_.x = width;
+    }
+    inline void setHeight(float height)
+    {
+      size_.y = height;
+    }
+    inline void setDepth(float depth)
+    {
+      size_.z = depth;
+    }
 
     inline void setBorder(float top, float right, float bottom, float left)
     {

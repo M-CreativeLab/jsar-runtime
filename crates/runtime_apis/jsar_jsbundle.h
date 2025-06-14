@@ -91,8 +91,8 @@ namespace carbonite
   {
   public:
     StringReference(const unsigned char *ptr, size_t len)
-        : ptr_(const_cast<unsigned char *>(ptr)),
-          len_(len)
+        : ptr_(const_cast<unsigned char *>(ptr))
+        , len_(len)
     {
     }
     StringReference(const StringReference &) = default;
@@ -101,9 +101,18 @@ namespace carbonite
     StringReference &operator=(const StringReference &) = default;
 
   public:
-    inline unsigned char *data() { return ptr_; }
-    inline const unsigned char *data() const { return ptr_; }
-    inline size_t size() const { return len_; }
+    inline unsigned char *data()
+    {
+      return ptr_;
+    }
+    inline const unsigned char *data() const
+    {
+      return ptr_;
+    }
+    inline size_t size() const
+    {
+      return len_;
+    }
 
   private:
     unsigned char *ptr_;

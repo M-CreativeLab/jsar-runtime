@@ -16,17 +16,17 @@ namespace commandbuffers
   {
   public:
     MatrixComputationGraph()
-        : handedness(MatrixHandedness::MATRIX_LEFT_HANDED),
-          placeholderId(WebGLMatrixPlaceholderId::NotSet),
-          inverseMatrix(false),
-          multiview(false)
+        : handedness(MatrixHandedness::MATRIX_LEFT_HANDED)
+        , placeholderId(WebGLMatrixPlaceholderId::NotSet)
+        , inverseMatrix(false)
+        , multiview(false)
     {
     }
     MatrixComputationGraph(WebGLMatrixPlaceholderId placeholder, MatrixHandedness handedness = MatrixHandedness::MATRIX_LEFT_HANDED)
-        : placeholderId(placeholder),
-          handedness(handedness),
-          inverseMatrix(false),
-          multiview(false)
+        : placeholderId(placeholder)
+        , handedness(handedness)
+        , inverseMatrix(false)
+        , multiview(false)
     {
     }
 
@@ -47,10 +47,10 @@ namespace commandbuffers
   public:
     UniformBlockBindingCommandBufferRequest() = delete;
     UniformBlockBindingCommandBufferRequest(uint32_t program, uint32_t uniformBlockIndex, uint32_t uniformBlockBinding)
-        : TrCommandBufferSimpleRequest(),
-          program(program),
-          uniformBlockIndex(uniformBlockIndex),
-          uniformBlockBinding(uniformBlockBinding)
+        : TrCommandBufferSimpleRequest()
+        , program(program)
+        , uniformBlockIndex(uniformBlockIndex)
+        , uniformBlockBinding(uniformBlockBinding)
     {
     }
 
@@ -65,9 +65,9 @@ namespace commandbuffers
   {
   public:
     Uniform1fCommandBufferRequest(uint32_t location, float v0)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
     {
     }
 
@@ -82,14 +82,14 @@ namespace commandbuffers
   public:
     Uniform1fvCommandBufferRequest() = delete;
     Uniform1fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform1fvCommandBufferRequest(Uniform1fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -119,9 +119,9 @@ namespace commandbuffers
   public:
     Uniform1iCommandBufferRequest() = delete;
     Uniform1iCommandBufferRequest(uint32_t location, int v0)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
     {
     }
 
@@ -136,14 +136,14 @@ namespace commandbuffers
   public:
     Uniform1ivCommandBufferRequest() = delete;
     Uniform1ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform1ivCommandBufferRequest(Uniform1ivCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -173,10 +173,10 @@ namespace commandbuffers
   public:
     Uniform2fCommandBufferRequest() = delete;
     Uniform2fCommandBufferRequest(uint32_t location, float v0, float v1)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0),
-          v1(v1)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
+        , v1(v1)
     {
     }
 
@@ -192,14 +192,14 @@ namespace commandbuffers
   public:
     Uniform2fvCommandBufferRequest() = delete;
     Uniform2fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform2fvCommandBufferRequest(Uniform2fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -229,10 +229,10 @@ namespace commandbuffers
   public:
     Uniform2iCommandBufferRequest() = delete;
     Uniform2iCommandBufferRequest(uint32_t location, int v0, int v1)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0),
-          v1(v1)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
+        , v1(v1)
     {
     }
 
@@ -248,14 +248,14 @@ namespace commandbuffers
   public:
     Uniform2ivCommandBufferRequest() = delete;
     Uniform2ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform2ivCommandBufferRequest(Uniform2ivCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -285,11 +285,11 @@ namespace commandbuffers
   public:
     Uniform3fCommandBufferRequest() = delete;
     Uniform3fCommandBufferRequest(uint32_t location, float v0, float v1, float v2)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0),
-          v1(v1),
-          v2(v2)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
+        , v1(v1)
+        , v2(v2)
     {
     }
 
@@ -306,14 +306,14 @@ namespace commandbuffers
   public:
     Uniform3fvCommandBufferRequest() = delete;
     Uniform3fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform3fvCommandBufferRequest(Uniform3fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -343,11 +343,11 @@ namespace commandbuffers
   public:
     Uniform3iCommandBufferRequest() = delete;
     Uniform3iCommandBufferRequest(uint32_t location, int v0, int v1, int v2)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          v0(v0),
-          v1(v1),
-          v2(v2)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , v0(v0)
+        , v1(v1)
+        , v2(v2)
     {
     }
 
@@ -364,14 +364,14 @@ namespace commandbuffers
   public:
     Uniform3ivCommandBufferRequest() = delete;
     Uniform3ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest(),
-          location(location),
-          values(values)
+        : TrCommandBufferSimpleRequest()
+        , location(location)
+        , values(values)
     {
     }
     Uniform3ivCommandBufferRequest(Uniform3ivCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that),
-          location(that.location)
+        : TrCommandBufferSimpleRequest(that)
+        , location(that.location)
     {
     }
 
@@ -400,12 +400,12 @@ namespace commandbuffers
   {
   public:
     Uniform4xCommandBufferRequest(CommandBufferType type, uint32_t location, Tv v0, Tv v1, Tv v2, Tv v3)
-        : TrCommandBufferRequest(type, sizeof(Tb)),
-          location(location),
-          v0(v0),
-          v1(v1),
-          v2(v2),
-          v3(v3)
+        : TrCommandBufferRequest(type, sizeof(Tb))
+        , location(location)
+        , v0(v0)
+        , v1(v1)
+        , v2(v2)
+        , v3(v3)
     {
     }
 
@@ -432,14 +432,14 @@ namespace commandbuffers
   {
   public:
     Uniform4xvCommandBufferRequest(Uniform4xvCommandBufferRequest &that)
-        : TrCommandBufferRequest(that),
-          location(that.location)
+        : TrCommandBufferRequest(that)
+        , location(that.location)
     {
     }
     Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t location, const std::vector<Tv> &values)
-        : TrCommandBufferRequest(type, sizeof(Tb)),
-          location(location),
-          values(values)
+        : TrCommandBufferRequest(type, sizeof(Tb))
+        , location(location)
+        , values(values)
     {
     }
 
@@ -512,16 +512,16 @@ namespace commandbuffers
   {
   public:
     UniformMatrixNfvCommandBufferRequest(UniformMatrixNfvCommandBufferRequest &that)
-        : TrCommandBufferRequest(that),
-          location(that.location),
-          transpose(that.transpose),
-          computationGraph4values(that.computationGraph4values)
+        : TrCommandBufferRequest(that)
+        , location(that.location)
+        , transpose(that.transpose)
+        , computationGraph4values(that.computationGraph4values)
     {
     }
     UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t location, bool transpose)
-        : TrCommandBufferRequest(type, sizeof(T)),
-          location(location),
-          transpose(transpose)
+        : TrCommandBufferRequest(type, sizeof(T))
+        , location(location)
+        , transpose(transpose)
     {
     }
 

@@ -32,7 +32,10 @@ public:
   /**
    * Check if the hive daemon process is started.
    */
-  inline bool started() { return daemonPid > 0; }
+  inline bool started()
+  {
+    return daemonPid > 0;
+  }
   /**
    * Start the hive daemon process, and wait for it's ready for incubating contents.
    */

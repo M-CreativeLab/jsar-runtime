@@ -18,9 +18,9 @@ using namespace std;
 TrSoundSource::TrSoundSource(TrMediaManager *mediaManager,
                              shared_ptr<TrContentRuntime> content,
                              uint32_t id)
-    : mediaManager(mediaManager),
-      content(content),
-      id(id)
+    : mediaManager(mediaManager)
+    , content(content)
+    , id(id)
 {
 }
 
@@ -162,7 +162,9 @@ void TrMediaManager::DataCallback(ma_device *pDevice, void *pOutput, const void 
 }
 
 TrMediaManager::TrMediaManager(TrConstellation *constellation)
-    : constellation(constellation), initialized(false), soundSources()
+    : constellation(constellation)
+    , initialized(false)
+    , soundSources()
 {
   {
     ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);

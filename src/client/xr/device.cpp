@@ -13,8 +13,8 @@ namespace client_xr
       throw std::runtime_error("failed to send XR command(IsSessionSupportedRequest).");
 
     auto resp = clientContext_->recvXrCommand<xr::IsSessionSupportedResponse>(
-        xr::TrXRCmdType::IsSessionSupportedResponse,
-        requestTimeout_);
+      xr::TrXRCmdType::IsSessionSupportedResponse,
+      requestTimeout_);
     if (resp == nullptr)
       throw std::runtime_error("failed to receive XR command(SessionResponse).");
 
@@ -39,9 +39,9 @@ namespace client_xr
   bool XRDeviceClient::supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType)
   {
     if (
-        referenceSpaceType == XRReferenceSpaceType::kLocal ||
-        referenceSpaceType == XRReferenceSpaceType::kViewer ||
-        referenceSpaceType == XRReferenceSpaceType::kUnbounded)
+      referenceSpaceType == XRReferenceSpaceType::kLocal ||
+      referenceSpaceType == XRReferenceSpaceType::kViewer ||
+      referenceSpaceType == XRReferenceSpaceType::kUnbounded)
     {
       return true;
     }

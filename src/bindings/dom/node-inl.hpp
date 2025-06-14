@@ -21,7 +21,7 @@ namespace dombinding
 
     auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-        {
+      {
 #define _NODE_TYPE_MAP(XX)        \
   XX(ATTRIBUTE_NODE)              \
   XX(CDATA_SECTION_NODE)          \
@@ -38,38 +38,38 @@ namespace dombinding
 
 #define XX(TYPE) T::StaticValue(#TYPE, Napi::Number::New(env, static_cast<int>(dom::NodeType::TYPE))), \
                  T::InstanceValue(#TYPE, Napi::Number::New(env, static_cast<int>(dom::NodeType::TYPE))),
-            _NODE_TYPE_MAP(XX)
+        _NODE_TYPE_MAP(XX)
 #undef XX
 #undef _NODE_TYPE_MAP
 
-            // Getters & Setters
-            T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
-            T::InstanceAccessor("nodeName", &T::NodeNameGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("nodeType", &T::NodeTypeGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("nodeValue", &T::NodeValueGetter, &T::NodeValueSetter, napi_default_jsproperty),
-            T::InstanceAccessor("baseURI", &T::BaseURIGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("ownerDocument", &T::OwnerDocumentGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("parentNode", &T::ParentNodeGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("parentElement", &T::ParentElementGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("previousSibling", &T::PreviousSiblingGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("nextSibling", &T::NextSiblingGetter, nullptr, napi_default_jsproperty),
-            T::InstanceAccessor("textContent", &T::TextContentGetter, &T::TextContentSetter, napi_default_jsproperty),
+        // Getters & Setters
+        T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
+        T::InstanceAccessor("nodeName", &T::NodeNameGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("nodeType", &T::NodeTypeGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("nodeValue", &T::NodeValueGetter, &T::NodeValueSetter, napi_default_jsproperty),
+        T::InstanceAccessor("baseURI", &T::BaseURIGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("ownerDocument", &T::OwnerDocumentGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("parentNode", &T::ParentNodeGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("parentElement", &T::ParentElementGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("previousSibling", &T::PreviousSiblingGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("nextSibling", &T::NextSiblingGetter, nullptr, napi_default_jsproperty),
+        T::InstanceAccessor("textContent", &T::TextContentGetter, &T::TextContentSetter, napi_default_jsproperty),
 
-            // Methods
-            T::InstanceMethod("appendChild", &T::AppendChild),
-            T::InstanceMethod("removeChild", &T::RemoveChild),
-            T::InstanceMethod("replaceChild", &T::ReplaceChild),
-            T::InstanceMethod("cloneNode", &T::CloneNode),
-            T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
-            T::InstanceMethod("contains", &T::Contains),
-            T::InstanceMethod("getRootNode", &T::GetRootNode),
-            T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
-            T::InstanceMethod("insertBefore", &T::InsertBefore),
-        });
+        // Methods
+        T::InstanceMethod("appendChild", &T::AppendChild),
+        T::InstanceMethod("removeChild", &T::RemoveChild),
+        T::InstanceMethod("replaceChild", &T::ReplaceChild),
+        T::InstanceMethod("cloneNode", &T::CloneNode),
+        T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
+        T::InstanceMethod("contains", &T::Contains),
+        T::InstanceMethod("getRootNode", &T::GetRootNode),
+        T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
+        T::InstanceMethod("insertBefore", &T::InsertBefore),
+      });
     props.insert(props.end(), added.begin(), added.end());
     return props;
   }
@@ -95,8 +95,8 @@ namespace dombinding
       return nullptr;
 
     auto nodeImplExternal = valueObject
-                                .Get(NODE_IMPL_FIELD)
-                                .As<Napi::External<NodeContainer<dom::Node>>>();
+                              .Get(NODE_IMPL_FIELD)
+                              .As<Napi::External<NodeContainer<dom::Node>>>();
     return nodeImplExternal.Data()->node;
   }
 
@@ -156,8 +156,8 @@ namespace dombinding
 
     std::optional<std::string> nodeValue = this->node->nodeValue();
     return !nodeValue.has_value()
-               ? env.Null()
-               : Napi::String::New(env, nodeValue.value());
+             ? env.Null()
+             : Napi::String::New(env, nodeValue.value());
   }
 
   template <typename ObjectType, typename NodeType>
@@ -272,8 +272,8 @@ namespace dombinding
 
     auto previousSiblingNode = this->node->previousSibling();
     return previousSiblingNode == nullptr
-               ? env.Null()
-               : Node::NewInstance(env, previousSiblingNode);
+             ? env.Null()
+             : Node::NewInstance(env, previousSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>
@@ -284,8 +284,8 @@ namespace dombinding
 
     auto nextSiblingNode = this->node->nextSibling();
     return nextSiblingNode == nullptr
-               ? env.Null()
-               : Node::NewInstance(env, nextSiblingNode);
+             ? env.Null()
+             : Node::NewInstance(env, nextSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>
@@ -331,9 +331,9 @@ namespace dombinding
     }
 
     auto jsChildNodeImplExternal = info[0]
-                                       .ToObject()
-                                       .Get(NODE_IMPL_FIELD)
-                                       .As<Napi::External<NodeContainer<dom::Node>>>();
+                                     .ToObject()
+                                     .Get(NODE_IMPL_FIELD)
+                                     .As<Napi::External<NodeContainer<dom::Node>>>();
     auto childNodeImpl = jsChildNodeImplExternal.Data()->node;
     node->appendChild(childNodeImpl);
     return info[0].ToObject();
@@ -354,9 +354,9 @@ namespace dombinding
     }
 
     auto jsChildNodeImplExternal = info[0]
-                                       .ToObject()
-                                       .Get(NODE_IMPL_FIELD)
-                                       .As<Napi::External<NodeContainer<dom::Node>>>();
+                                     .ToObject()
+                                     .Get(NODE_IMPL_FIELD)
+                                     .As<Napi::External<NodeContainer<dom::Node>>>();
     auto childNodeImpl = jsChildNodeImplExternal.Data()->node;
     node->removeChild(childNodeImpl);
     return env.Undefined();
@@ -379,15 +379,15 @@ namespace dombinding
     }
 
     auto jsNewChildNodeImplExternal = info[0]
-                                          .ToObject()
-                                          .Get(NODE_IMPL_FIELD)
-                                          .As<Napi::External<NodeContainer<dom::Node>>>();
+                                        .ToObject()
+                                        .Get(NODE_IMPL_FIELD)
+                                        .As<Napi::External<NodeContainer<dom::Node>>>();
     auto newChildNodeImpl = jsNewChildNodeImplExternal.Data()->node;
 
     auto jsOldChildNodeImplExternal = info[1]
-                                          .ToObject()
-                                          .Get(NODE_IMPL_FIELD)
-                                          .As<Napi::External<NodeContainer<dom::Node>>>();
+                                        .ToObject()
+                                        .Get(NODE_IMPL_FIELD)
+                                        .As<Napi::External<NodeContainer<dom::Node>>>();
     auto oldChildNodeImpl = jsOldChildNodeImplExternal.Data()->node;
 
     if (node->replaceChild(newChildNodeImpl, oldChildNodeImpl) == nullptr)
@@ -466,8 +466,8 @@ namespace dombinding
 
     auto insertedNode = this->node->insertBefore(newChildNodeImpl, refChildNodeImpl);
     return insertedNode == nullptr
-               ? env.Undefined()
-               : Node::NewInstance(env, insertedNode);
+             ? env.Undefined()
+             : Node::NewInstance(env, insertedNode);
   }
 
   template <typename ObjectType, typename NodeType>

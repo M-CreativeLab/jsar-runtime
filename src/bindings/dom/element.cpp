@@ -71,8 +71,7 @@ namespace dombinding
     return MakeFromImpl(env, element).ToObject();
   }
 
-  Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName,
-                              shared_ptr<dom::Document> ownerDocument)
+  Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName, shared_ptr<dom::Document> ownerDocument)
   {
     const ElementInit init = {namespaceURI, tagName, ownerDocument};
 #define XX(tagNameStr, className)                              \

@@ -41,8 +41,8 @@ namespace dom
 
   public:
     HTMLImageElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("IMG", ownerDocument),
-          canvas::ImageSource()
+        : HTMLElement("IMG", ownerDocument)
+        , canvas::ImageSource()
     {
     }
 
@@ -50,7 +50,8 @@ namespace dom
     void createdCallback(bool from_scripting) override;
     void connectedCallback() override;
     void attributeChangedCallback(const std::string &name,
-                                  const std::string &oldValue, const std::string &newValue) override;
+                                  const std::string &oldValue,
+                                  const std::string &newValue) override;
 
     inline geometry::DOMRect getImageClientRect() const
     {
@@ -128,8 +129,14 @@ namespace dom
      */
     std::string alt;
 
-    inline size_t width() const override { return width_.value_or(0); }
-    inline size_t height() const override { return height_.value_or(0); }
+    inline size_t width() const override
+    {
+      return width_.value_or(0);
+    }
+    inline size_t height() const override
+    {
+      return height_.value_or(0);
+    }
     inline void setWidth(size_t width)
     {
       width_ = width;
@@ -141,30 +148,48 @@ namespace dom
       onSizeDidChange();
     }
 
-    inline LoadingHint loading() const { return loading_; }
-    inline DecodingType decoding() const { return decoding_; }
+    inline LoadingHint loading() const
+    {
+      return loading_;
+    }
+    inline DecodingType decoding() const
+    {
+      return decoding_;
+    }
 
     /**
      * @returns a boolean value which indicates that the image is to be used by a server-side image map. This may only
      * be used on images located within an <a> element.
      */
-    inline bool isMap() const { return is_map_; }
+    inline bool isMap() const
+    {
+      return is_map_;
+    }
 
     /**
      * This property on the `HTMLImageElement` interface reflects the value of the HTML `usemap` attribute, which is a
      * string providing the name of the client-side image map to apply to the image.
      */
-    inline std::string useMap() const { return use_map_; }
+    inline std::string useMap() const
+    {
+      return use_map_;
+    }
 
     /**
      * @returns The natural width of the image in pixels.
      */
-    inline int naturalWidth() const { return sk_bitmap_ ? sk_bitmap_->width() : 0; }
+    inline int naturalWidth() const
+    {
+      return sk_bitmap_ ? sk_bitmap_->width() : 0;
+    }
 
     /**
      * @returns The natural height of the image in pixels.
      */
-    inline int naturalHeight() const { return sk_bitmap_ ? sk_bitmap_->height() : 0; }
+    inline int naturalHeight() const
+    {
+      return sk_bitmap_ ? sk_bitmap_->height() : 0;
+    }
 
   private:
     uv_async_t load_async_handle_;

@@ -21,7 +21,8 @@ namespace webgl
     return scope.Escape(napi_value(obj)).ToObject();
   }
 
-  WebGLActiveInfo::WebGLActiveInfo(const Napi::CallbackInfo &info) : Napi::ObjectWrap<WebGLActiveInfo>(info)
+  WebGLActiveInfo::WebGLActiveInfo(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<WebGLActiveInfo>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

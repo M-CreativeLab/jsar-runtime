@@ -22,8 +22,8 @@ namespace dombinding::events
     EscapableHandleScope scope(env);
     auto props = GetClassProperties(env);
     auto added = {
-        InstanceValue("frame", env.Null(), napi_default_jsproperty),
-        InstanceValue("inputSource", env.Null(), napi_default_jsproperty),
+      InstanceValue("frame", env.Null(), napi_default_jsproperty),
+      InstanceValue("inputSource", env.Null(), napi_default_jsproperty),
     };
     props.insert(props.end(), added.begin(), added.end());
     Function func = DefineClass(env, "XRInputSourceEvent", props);

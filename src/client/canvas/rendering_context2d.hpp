@@ -113,15 +113,25 @@ namespace canvas
     void drawImage(std::shared_ptr<ImageSource> image, float dx, float dy);
     void drawImage(std::shared_ptr<ImageSource> image, float dx, float dy, float dWidth, float dHeight);
     void drawImage(std::shared_ptr<ImageSource> image,
-                   float sx, float sy, float sWidth, float sHeight,
-                   float dx, float dy, float dWidth, float dHeight);
+                   float sx,
+                   float sy,
+                   float sWidth,
+                   float sHeight,
+                   float dx,
+                   float dy,
+                   float dWidth,
+                   float dHeight);
     std::shared_ptr<ImageData> createImageData(float width, float height, const std::string &colorSpace = "srgb");
     std::shared_ptr<ImageData> createImageData(std::shared_ptr<ImageData> otherImageData);
     std::shared_ptr<ImageData> getImageData(float x, float y, float width, float height);
     bool putImageData(std::shared_ptr<ImageSource> image, float dx, float dy);
     bool putImageData(std::shared_ptr<ImageSource> image,
-                      float dx, float dy,
-                      float dirtyX, float dirtyY, float dirtyWidth, float dirtyHeight);
+                      float dx,
+                      float dy,
+                      float dirtyX,
+                      float dirtyY,
+                      float dirtyWidth,
+                      float dirtyHeight);
     void save();
     void restore();
 
@@ -133,8 +143,15 @@ namespace canvas
     SkPaint getStrokePaint();
     SkPaint *getShadowPaint(SkPaint &basePaint);
     void closeSkPath(std::shared_ptr<SkPath> path);
-    bool ellipseToSkPath(std::shared_ptr<SkPath> path, float x, float y, float radiusX, float radiusY, float rotation,
-                         float startAngle, float endAngle, bool ccw);
+    bool ellipseToSkPath(std::shared_ptr<SkPath> path,
+                         float x,
+                         float y,
+                         float radiusX,
+                         float radiusY,
+                         float rotation,
+                         float startAngle,
+                         float endAngle,
+                         bool ccw);
 
   private:
     SkCanvas *skCanvas;

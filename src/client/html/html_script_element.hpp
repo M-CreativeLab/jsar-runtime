@@ -37,8 +37,14 @@ namespace dom
              type == "text/javascript" ||
              type == "application/javascript";
     }
-    inline bool isModuleScript() { return type == "module"; }
-    inline bool isImportMap() { return type == "importmap"; }
+    inline bool isModuleScript()
+    {
+      return type == "module";
+    }
+    inline bool isImportMap()
+    {
+      return type == "importmap";
+    }
     inline void setAsync(bool value)
     {
       async = value;
@@ -59,7 +65,10 @@ namespace dom
     void beforeLoadedCallback() override;
 
   private:
-    bool isRenderable() const override final { return false; }
+    bool isRenderable() const override final
+    {
+      return false;
+    }
     void loadSource();
     void compileScript(const string &source, bool isTypeScript);
     void scheduleScriptExecution();

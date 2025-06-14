@@ -24,14 +24,20 @@ namespace client_cssom
     }
 
   public:
-    Layout() : crates::layout2::Layout(), depth_(0.0f) {};
+    Layout()
+        : crates::layout2::Layout()
+        , depth_(0.0f) {};
     Layout(crates::layout2::Layout &&layout, float depth = 0.0f)
-        : crates::layout2::Layout(layout), depth_(depth)
+        : crates::layout2::Layout(layout)
+        , depth_(depth)
     {
     }
 
   public:
-    inline float depth() const { return depth_; }
+    inline float depth() const
+    {
+      return depth_;
+    }
     inline glm::vec2 xy() const
     {
       return {left() + offsetX_,

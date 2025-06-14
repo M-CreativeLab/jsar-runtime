@@ -17,7 +17,10 @@ namespace commandbuffers
       : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>
   {
   public:
-    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that) {}
+    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse &that)
+        : TrCommandBufferSimpleResponse(that)
+    {
+    }
     GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, req)
     {

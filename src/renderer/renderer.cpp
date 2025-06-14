@@ -13,9 +13,9 @@ namespace renderer
   using CommandBufferChanServer = ipc::TrOneShotServer<TrCommandBufferMessage>;
 
   TrRenderer::TrRenderer(TrConstellation *constellation)
-      : constellation(constellation),
-        api(nullptr),
-        commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
+      : constellation(constellation)
+      , api(nullptr)
+      , commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
   }
 
@@ -128,8 +128,7 @@ namespace renderer
     // Remove the existing content renderer if it has been added again.
     if (TR_UNLIKELY(removeContentRenderer(content->id, contextId)))
     {
-      DEBUG(LOG_TAG_ERROR, "Detected the ContentRenderer(%d, %d) has been added multiple times, so it will be replaced.",
-            content->id, static_cast<int>(contextId));
+      DEBUG(LOG_TAG_ERROR, "Detected the ContentRenderer(%d, %d) has been added multiple times, so it will be replaced.", content->id, static_cast<int>(contextId));
     }
 
     // Create a new content renderer and add it to the renderer.
@@ -211,8 +210,8 @@ namespace renderer
       auto content = contentRenderer->getContent();
 
       if (
-          (content != nullptr && content->id == contentId) &&
-          contentRenderer->contextId == contextId)
+        (content != nullptr && content->id == contentId) &&
+        contentRenderer->contextId == contextId)
       {
         contentRenderers.erase(it);
         return true;

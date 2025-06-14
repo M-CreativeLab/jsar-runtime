@@ -9,7 +9,8 @@ namespace renderer
 {
   using namespace std;
 
-  inline std::string GetContentRendererId(shared_ptr<TrContentRuntime> content, uint8_t contextId,
+  inline std::string GetContentRendererId(shared_ptr<TrContentRuntime> content,
+                                          uint8_t contextId,
                                           std::optional<std::string> suffix = std::nullopt)
   {
     auto id = "content_renderer#" +
@@ -34,15 +35,15 @@ namespace renderer
   }
 
   TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation)
-      : content(weak_ptr<TrContentRuntime>(content)),
-        contentId(content->id),
-        contextId(contextId),
-        constellation(constellation),
-        xrDevice(constellation->xrDevice.get()),
-        targetFrameRate(constellation->renderer->clientDefaultFrameRate),
-        glContext(nullptr),
-        glContextForBackup(nullptr),
-        usingBackupContext(false)
+      : content(weak_ptr<TrContentRuntime>(content))
+      , contentId(content->id)
+      , contextId(contextId)
+      , constellation(constellation)
+      , xrDevice(constellation->xrDevice.get())
+      , targetFrameRate(constellation->renderer->clientDefaultFrameRate)
+      , glContext(nullptr)
+      , glContextForBackup(nullptr)
+      , usingBackupContext(false)
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
@@ -90,8 +91,7 @@ namespace renderer
     contentRef->onCommandBuffersExecuted();
     if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20)
     {
-      DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
-            contentRef->id, lastFrameErrorsCount);
+      DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10", contentRef->id, lastFrameErrorsCount);
       contentRef->dispose();
     }
   }
@@ -112,8 +112,8 @@ namespace renderer
   {
     auto contentRef = getContent();
     return contentRef == nullptr
-               ? INVALID_PID
-               : contentRef->pid.load();
+             ? INVALID_PID
+             : contentRef->pid.load();
   }
 
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
@@ -194,8 +194,10 @@ namespace renderer
         {
           if (frame->ended(viewIndex))
           {
-            DEBUG(LOG_TAG_ERROR, "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
-                  req->type, stereoId);
+            DEBUG(LOG_TAG_ERROR,
+                  "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
+                  req->type,
+                  stereoId);
             delete req;
           }
           else
@@ -318,7 +320,7 @@ namespace renderer
     {
       auto frame = *it;
       if (
-          !frame->available() /** Remove this frame when frame is still inavialble when executing */
+        !frame->available() /** Remove this frame when frame is still inavialble when executing */
       )
       {
 #ifdef TR_RENDERER_ENABLE_VERBOSE
@@ -335,8 +337,8 @@ namespace renderer
         if (frame->needFlush(viewIndex))
         {
           if (
-              viewIndex == 0 ||
-              (viewIndex == 1 && frame->ended(0)))
+            viewIndex == 0 ||
+            (viewIndex == 1 && frame->ended(0)))
           {
             auto &commandBuffers = frame->getCommandBuffers(viewIndex);
             exec(frame->getId(), commandBuffers);

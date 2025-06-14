@@ -67,18 +67,17 @@ namespace dom
       data_ = processTextContent(node.value());
   }
 
-  CharacterData::CharacterData(NodeType nodeType, std::string nodeName, const string &data,
-                               shared_ptr<Document> ownerDocument)
-      : Node(nodeType, nodeName, ownerDocument),
-        data_(data)
+  CharacterData::CharacterData(NodeType nodeType, std::string nodeName, const string &data, shared_ptr<Document> ownerDocument)
+      : Node(nodeType, nodeName, ownerDocument)
+      , data_(data)
   {
   }
 
   CharacterData::CharacterData(const CharacterData &other)
-      : Node(other),
-        data_(other.data_),
-        nextElementSibling_(other.nextElementSibling_),
-        previousElementSibling_(other.previousElementSibling_)
+      : Node(other)
+      , data_(other.data_)
+      , nextElementSibling_(other.nextElementSibling_)
+      , previousElementSibling_(other.previousElementSibling_)
   {
   }
 

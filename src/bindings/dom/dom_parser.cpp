@@ -6,15 +6,15 @@ namespace dombinding
   thread_local Napi::FunctionReference *DOMParser::constructor;
   void DOMParser::Init(Napi::Env env)
   {
-    Napi::Function func = DefineClass(env, "DOMParser",
-                                      {InstanceMethod("parseFromString", &DOMParser::ParseFromString)});
+    Napi::Function func = DefineClass(env, "DOMParser", {InstanceMethod("parseFromString", &DOMParser::ParseFromString)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.Global().Set("DOMParser", func);
   }
 
-  DOMParser::DOMParser(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DOMParser>(info)
+  DOMParser::DOMParser(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<DOMParser>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
