@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: "18"
           registry-url: "https://registry.npmjs.org"
+          scope: '@yodaos-jsar'
 
       - name: Install dependencies
         run: npm ci

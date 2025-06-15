@@ -73,4 +73,8 @@ To use the types provided by this package, configure the types package in your p
 const readmePath = path.join(webApisDir, 'README.md');
 fs.writeFileSync(readmePath, readmeContent);
 
-execSync('npm publish', { cwd: webApisDir, stdio: 'inherit' });
+execSync('npm publish', { 
+  cwd: webApisDir, 
+  stdio: 'inherit',
+  env: { ...process.env }  // Pass all environment variables including NODE_AUTH_TOKEN
+});
