@@ -268,7 +268,8 @@ declare namespace Transmute {
   }
 
   /**
-   * A browsing context is an environment in which an agent displays a `Document`. The HTML or depreated XSML document depends on this context to bootstrap.
+   * A browsing context is an environment in which an agent displays a `Document`. The HTML or depreated XSML document 
+   * depends on this context to bootstrap.
    */
   class BrowsingContext extends RuntimeContext {
     /**

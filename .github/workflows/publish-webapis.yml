@@ -1,0 +1,50 @@
+name: Publish Web APIs
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check if types or package.json changed
+        id: changed-files
+        run: |
+          # Get the list of files changed in the commit that triggered the workflow
+          git fetch origin ${{ github.event.workflow_run.head_branch }}
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.workflow_run.head_sha }}^ ${{ github.event.workflow_run.head_sha }})
+
+          # Check if any files in types/ directory or package.json were changed
+          if echo "$CHANGED_FILES" | grep -q -E '^types/|^package.json$'; then
+            echo "Files in types/ or package.json changed, proceeding with publish"
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "No relevant files changed, skipping publish"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish Web APIs
+        if: steps.changed-files.outputs.should_publish == 'true'
+        run: npm run publish:webapis -- --release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
