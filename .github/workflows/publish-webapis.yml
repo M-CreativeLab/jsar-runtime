@@ -29,6 +29,6 @@ jobs:
         run: npm ci
 
       - name: Publish Web APIs
-        run: npm run publish:webapis -- --release
+        run: npm run publish:webapis
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
