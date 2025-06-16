@@ -42,6 +42,13 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup clang
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: clang-15
+          cmake: true
+          ccache: true
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:

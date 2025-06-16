@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <ostream>
