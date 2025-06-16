@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <TargetConditionals.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreText/CoreText.h>
 #include <Carbon/Carbon.h>
 #endif
 #endif

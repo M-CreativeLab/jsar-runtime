@@ -65,4 +65,3 @@ jobs:
         run: |
           npm ci
           make jsbundle
-          make darwin CLEAN=yes INSPECTOR=yes
