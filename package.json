@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",
-    "@yodaos-jsar/dom": "file:../jsar-dom",
-    "babylonjs": "file:../Babylon.js/packages/public/umd/babylonjs",
+    "@yodaos-jsar/dom": "0.3.1",
+    "babylonjs": "github:M-CreativeLab/Babylon.js#v6.44.0-jsar-release",
     "cache-control-parser": "^2.0.6",
     "minimist": "^1.2.8",
     "openai": "^4.98.0",
