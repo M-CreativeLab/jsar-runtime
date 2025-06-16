@@ -1,7 +1,7 @@
-import { ApiStreamTextChunk } from '../../../../api/transform/stream';
-import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, CssFragment } from '../../interfaces';
-import { CssOutputFragment, FRAGMENT_FIELD, HTMLOutputFragment } from '../../prompts/jsonl/worker.prompt';
-import { Parser } from '../interface';
+import { ApiStreamTextChunk } from '../../../api/transform/stream';
+import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, CssFragment } from '../interfaces';
+import { CssOutputFragment, FRAGMENT_FIELD, HTMLOutputFragment } from '../prompts/worker.prompt';
+import { Parser } from './interface';
 
 export interface HtmlStreamItem {
   eventType: MoudleParserEventType;

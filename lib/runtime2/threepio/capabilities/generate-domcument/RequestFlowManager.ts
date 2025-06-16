@@ -8,13 +8,13 @@ import {
   MoudleParserEventType,
   MoudleFragmentTask,
 } from './interfaces';
+import { createModuleTask } from './taskDecomposer';
 import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 import { getPlanPrompt } from './prompts';
-import { StreamPlannerParser } from './parsers/jsonl/StreamPlannerParser';
+import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { ApiStream } from '../../api/transform/stream';
-import { createModuleTask } from './TaskDecomposer';
 
 export interface RequestFlowManager {
   on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
@@ -27,8 +27,12 @@ export class RequestFlowManager extends EventEmitter {
     const plannerParser = new StreamPlannerParser();
     const systemPrompt = getPlanPrompt();
     try {
-      const stream = callLLM(input, systemPrompt);
-      await this.#processPlannerStream(stream, plannerParser, taskPromises, () => { headerParsed = true; });
+      // callLLM now returns an object { stream, callId }
+      const llmResponse = await callLLM(input, systemPrompt);
+      const { stream: plannerStream, callId: plannerCallId } = llmResponse;
+      reportThreepioInfo(`Planner LLM call initiated with callId: ${plannerCallId}`);
+
+      await this.#processPlannerStream(plannerStream, plannerParser, taskPromises, () => { headerParsed = true; }, plannerCallId);
       await Promise.all(taskPromises);
       reportThreepioInfo('All tasks completed.');
     } catch (error) {
@@ -41,7 +45,8 @@ export class RequestFlowManager extends EventEmitter {
     stream: ApiStream,
     plannerParser: StreamPlannerParser,
     taskPromises: Promise<void>[],
-    onHeaderParsed: () => void
+    onHeaderParsed: () => void,
+    plannerParentCallId: string // The callId of the LLM call that generated this plan
   ) {
     const parserStreamPromise = (async () => {
       for await (const item of plannerParser.stream()) {
@@ -60,15 +65,17 @@ export class RequestFlowManager extends EventEmitter {
               reportThreepioError('Module parsed before root node was created. Aborting.');
               break;
             }
-            const moduleParentId = 'moudle' + taskPromises.length;
+            const moduleParentId = 'moudle' + taskPromises.length; // This is a DOM ID, not the call parent ID
             module.parentId = moduleParentId;
-            const task = createModuleTask(module, '', moduleParentId);
+            // When creating a module task, the plannerParentCallId is the parent for the LLM call *within* that task generation.
+            const task = createModuleTask(module, '', moduleParentId /* This is for DOM element id */);
             this.#emitData('append', {
               type: FragmentType.Moudle,
               fragment: { id: moduleParentId, content: module.layout } as MoudleFragment
             });
 
-            const p = this.#generateModuleFragments(task);
+            // Pass the plannerParentCallId to #generateModuleFragments, so it can be used as parentId for LLM calls within module generation
+            const p = this.#generateModuleFragments(task, plannerParentCallId);
             taskPromises.push(p);
             break;
 
@@ -97,11 +104,12 @@ export class RequestFlowManager extends EventEmitter {
     await Promise.all([parserStreamPromise, inputPromise]);
   }
 
-  async #generateModuleFragments(task: MoudleFragmentTask): Promise<void> {
+  async #generateModuleFragments(task: MoudleFragmentTask, parentCallId: string): Promise<void> { // Added parentCallId
     try {
-      reportThreepioInfo(`Generating fragment for task: ${task.moudle.name}`);
+      reportThreepioInfo(`Generating fragment for task: ${task.moudle.name} with parentCallId: ${parentCallId}`);
 
-      for await (const fragment of generateStructuralStream(task)) {
+      // Pass parentCallId to generateStructuralStream
+      for await (const fragment of generateStructuralStream(task, parentCallId)) {
         if (fragment.eventType === 'append') {
           this.#emitData('append', fragment.data);
         } else if (fragment.error) {

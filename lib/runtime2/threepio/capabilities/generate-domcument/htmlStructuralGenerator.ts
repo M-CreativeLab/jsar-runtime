@@ -2,15 +2,18 @@ import { MoudleFragmentTask } from './interfaces';
 import { callLLM } from '../../utils/llmClient';
 import { reportThreepioInfo } from '../../utils/threepioLog';
 import { getWorkerPrompt } from './prompts';
-import { HtmlStreamItem, StreamHtmlParser } from './parsers/jsonl/StreamHtmlParser';
+import { HtmlStreamItem, StreamHtmlParser } from './parsers/StreamHtmlParser';
 
-export async function* generateStructuralStream(task: MoudleFragmentTask): AsyncGenerator<HtmlStreamItem, void, unknown> {
+export async function* generateStructuralStream(task: MoudleFragmentTask, parentCallId: string): AsyncGenerator<HtmlStreamItem, void, unknown> {
   const prompt = createPrompt(task);
   const input = JSON.stringify(task.moudle);
   const htmlParser = new StreamHtmlParser(task.moudle.name);
 
-  reportThreepioInfo(`Calling LLM with input: ${input} prompt: ${prompt.substring(0, 100)}...`);
-  const stream = await callLLM(input, prompt);
+  reportThreepioInfo(`
+    Requesting LLM for module ${task.moudle.name} with parentCallId: ${parentCallId}. 
+    Input: ${input}, Prompt: ${prompt.substring(0, 20)}...`);
+  const { stream } = await callLLM(input, prompt, parentCallId);
+  reportThreepioInfo(`LLM stream obtained for module ${task.moudle.name}.`);
 
   const parserStreamPromise = (async function* () {
     for await (const item of htmlParser.stream()) {

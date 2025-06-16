@@ -1,4 +1,4 @@
-import { ParsedPlannerFields } from '../../interfaces';
+import { ParsedPlannerFields } from '../interfaces';
 
 export const PLANNER_PROMPT = `
 LLM 提示词:应用流式规划师 (JSONL)

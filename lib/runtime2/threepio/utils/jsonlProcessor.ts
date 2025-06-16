@@ -8,14 +8,9 @@ export interface ProcessedJsonLine {
   error?: { message: string; code: string };
 }
 
-/**
- * JsonlStreamProcessor is a utility class to process JSON Lines (JSONL) format data from a stream.
- */
 export class JsonlStreamProcessor {
   #buffer: string = '';
   #lineStartIndex: number = 0;
-
-  constructor() { }
 
   public *processChunk(chunk: string): Generator<ProcessedJsonLine, void, unknown> {
     if (chunk === null) return;
@@ -33,7 +28,7 @@ export class JsonlStreamProcessor {
       }
     }
 
-    if (this.#lineStartIndex > 1024) {
+    if (this.#lineStartIndex > 1024) { 
       this.#buffer = this.#buffer.substring(this.#lineStartIndex);
       this.#lineStartIndex = 0;
     }

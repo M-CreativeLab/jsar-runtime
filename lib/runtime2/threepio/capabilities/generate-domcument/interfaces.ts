@@ -65,7 +65,6 @@ export interface HtmlFragment extends Fragment {
 }
 
 export interface CssFragment extends Fragment {
-
 }
 
 /**

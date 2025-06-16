@@ -1,6 +1,6 @@
-import { ParsedHeader, ParsedModule, ParsedPlannerFields } from '../../interfaces';
-import { ApiStreamTextChunk } from '../../../../api/transform/stream';
-import { Parser } from '../interface';
+import { ParsedHeader, ParsedModule, ParsedPlannerFields } from '../interfaces';
+import { ApiStreamTextChunk } from '../../../api/transform/stream';
+import { Parser } from './interface';
 
 export interface PlannerStreamItem {
   type: 'header' | 'module' | 'end' | 'error';
