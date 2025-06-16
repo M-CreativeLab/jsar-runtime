@@ -58,6 +58,96 @@ namespace client_cssom
         "text-indent"};
       return inherited_properties.find(property) != inherited_properties.end();
     }
+    static bool IsAnimatableProperty(const std::string &property)
+    {
+      static const std::unordered_set<std::string> animatable_properties = {
+        // CSS Transforms
+        "transform",
+        "transform-origin",
+        "perspective",
+        "perspective-origin",
+        "backface-visibility",
+
+        // Basic Box Model
+        "width",
+        "height",
+        "max-width",
+        "max-height",
+        "min-width",
+        "min-height",
+        "margin",
+        "margin-top",
+        "margin-right",
+        "margin-bottom",
+        "margin-left",
+        "padding",
+        "padding-top",
+        "padding-right",
+        "padding-bottom",
+        "padding-left",
+
+        // Border
+        "border-width",
+        "border-top-width",
+        "border-right-width",
+        "border-bottom-width",
+        "border-left-width",
+        "border-radius",
+        "border-top-left-radius",
+        "border-top-right-radius",
+        "border-bottom-right-radius",
+        "border-bottom-left-radius",
+        "border-color",
+        "border-top-color",
+        "border-right-color",
+        "border-bottom-color",
+        "border-left-color",
+
+        // Positioning
+        "top",
+        "right",
+        "bottom",
+        "left",
+
+        // Flexbox
+        "flex-grow",
+        "flex-shrink",
+        "flex-basis",
+        "gap",
+        "row-gap",
+        "column-gap",
+
+        // Colors and Backgrounds
+        "color",
+        "background-color",
+        "background-position",
+        "background-size",
+        "background-image",
+        "box-shadow",
+        "text-shadow",
+
+        // Text
+        "font-size",
+        "font-weight",
+        "letter-spacing",
+        "word-spacing",
+        "line-height",
+        "text-indent",
+        "vertical-align",
+
+        // Visibility and Opacity
+        "opacity",
+        "visibility",
+        "z-index",
+        "clip",
+        "clip-path",
+
+        // CSS Filters
+        "filter",
+        "backdrop-filter",
+      };
+      return animatable_properties.find(property) != animatable_properties.end();
+    }
 
     // Create a `ComputedStyle` from a `CSSStyleDeclaration` and a target node to create context.
     static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node);

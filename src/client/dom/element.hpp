@@ -293,7 +293,7 @@ namespace dom
 
     // Adopt the specified style to the element, it will copy the style properties to the element's adopted style, and
     // update the layout node's style.
-    bool adoptStyle(const client_cssom::ComputedStyle &newStyle);
+    bool adoptStyle(const client_cssom::ComputedStyle &);
 
     /**
      * A utility method to use the scene weak reference safely.
@@ -315,7 +315,7 @@ namespace dom
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
-    bool adoptStyleDirectly(const client_cssom::ComputedStyle &newStyle);
+    bool adoptStyleDirectly(const client_cssom::ComputedStyle &);
     bool setActionState(bool &state, bool value);
 
   public:

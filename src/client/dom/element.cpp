@@ -244,13 +244,6 @@ namespace dom
         reinitCSSBoxes();
       }
     }
-
-    if (adopted_style_->hasTransitionProperties())
-    {
-      elementAnimationsRef()
-        .cssAnimations()
-        .setTransitions(*adopted_style_, ownerDocument->timeline());
-    }
   }
 
   void Element::initCSSBoxes()
@@ -736,16 +729,25 @@ namespace dom
     }
   }
 
-  bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
+  bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)
   {
-    adopted_style_ = make_unique<client_cssom::ComputedStyle>(new_style);
+    // 1. Update the css transitions if the new computed style has transition properties.
+    ElementAnimations &element_animations = elementAnimationsRef();
+    if (new_computed_style.hasTransitionProperties())
+    {
+      auto owner_document = getOwnerDocumentReferenceAs<HTMLDocument>(true);
+      element_animations.cssAnimations().setTransitions(new_computed_style, owner_document->timeline());
+    }
+
+    // 2. Update the adopted style.
+    adopted_style_ = make_unique<client_cssom::ComputedStyle>(new_computed_style);
     styleAdoptedCallback();
 
-    // Compute the animated style.
+    // 3. Compute the animated style.
     client_cssom::ComputedStyle animated_style = *adopted_style_;
-    if (!elementAnimationsRef().isEmpty())
+    if (!element_animations.isEmpty())
     {
-      bool is_animated = elementAnimationsRef().updateFrameToStyle(animated_style);
+      bool is_animated = element_animations.updateFrameToStyle(animated_style);
       if (is_animated)
       {
         // If the element has animations to apply, mark the element as dirty thus it could be re-calculated in the next
@@ -754,7 +756,7 @@ namespace dom
       }
     }
 
-    // Update the layout node style.
+    // 4. Update the layout node style from the animated style.
     bool updated = false;
     for (auto box : boxes_)
     {
