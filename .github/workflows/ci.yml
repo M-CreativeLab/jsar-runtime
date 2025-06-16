@@ -45,6 +45,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: nightly-2025-01-06
           targets: aarch64-apple-darwin,x86_64-apple-darwin
   
       - name: Set up Node.js
@@ -56,6 +57,5 @@ jobs:
       - name: Build for macOS ARM64
         run: |
           npm ci
-          ls -lh ./node_modules
           make jsbundle
           make darwin CLEAN=yes INSPECTOR=yes
