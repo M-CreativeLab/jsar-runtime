@@ -42,21 +42,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+  
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
 
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
       - name: Build for macOS ARM64
         run: |
+          npm ci
+          ls -lh ./node_modules
           make jsbundle
           make darwin CLEAN=yes INSPECTOR=yes
