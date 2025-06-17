@@ -28,8 +28,7 @@ export class RequestFlowManager extends EventEmitter {
     const systemPrompt = getPlanPrompt();
     try {
       // callLLM now returns an object { stream, callId }
-      const llmResponse = await callLLM(input, systemPrompt);
-      const { stream: plannerStream, callId: plannerCallId } = llmResponse;
+      const { stream: plannerStream, callId: plannerCallId } = await callLLM(input, systemPrompt);
       reportThreepioInfo(`Planner LLM call initiated with callId: ${plannerCallId}`);
 
       await this.#processPlannerStream(plannerStream, plannerParser, taskPromises, () => { headerParsed = true; }, plannerCallId);
