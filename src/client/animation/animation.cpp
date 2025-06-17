@@ -1,11 +1,13 @@
-#include "./animation.hpp"
+#include "./animation-inl.hpp"
+#include "./animation_effect.hpp"
+#include "./animation_timeline.hpp"
 
 namespace dom
 {
   using namespace std;
 
   Animation::Animation(unique_ptr<AnimationEffect> effect,
-                       shared_ptr<const AnimationTimeline> timeline)
+                       shared_ptr<AnimationTimeline> timeline)
       : effect_(move(effect))
       , timeline_(timeline)
       , id_("")
@@ -15,6 +17,16 @@ namespace dom
       , current_time_(0.0f)
       , playbackRate(1.0f)
   {
+  }
+
+  Animation::~Animation()
+  {
+    if (!timeline_.expired())
+    {
+      auto timeline = timeline_.lock();
+      if (timeline)
+        timeline->detachInvalidAnimations();
+    }
   }
 
   void Animation::cancel()
@@ -91,5 +103,30 @@ namespace dom
 
     // TODO(yorkie): update the property based on the animation effect.
     return false;
+  }
+
+  std::optional<float> Animation::currentTime() const
+  {
+    if (!played() ||
+        timeline_.expired() ||
+        !timeline_.lock()->isActive())
+      return std::nullopt;
+    else
+      return current_time_;
+  }
+
+  void Animation::setCurrentTime(float time)
+  {
+    current_time_ = time;
+  }
+
+  const AnimationEffect &Animation::effect() const
+  {
+    return *effect_;
+  }
+
+  AnimationEffect &Animation::effect()
+  {
+    return *effect_;
   }
 }

@@ -124,16 +124,22 @@ namespace dom
     std::string cookie() const;
     void setCookie(const std::string &new_cookies);
 
+    std::shared_ptr<DocumentTimeline> timeline()
+    {
+      return timeline_;
+    }
     std::shared_ptr<const DocumentTimeline> timeline() const
     {
       return timeline_;
     }
     const DocumentTimeline &timelineRef() const
     {
+      assert(timeline_ != nullptr && "The timeline is not set.");
       return *timeline_;
     }
     DocumentTimeline &timelineRef()
     {
+      assert(timeline_ != nullptr && "The timeline is not set.");
       return *timeline_;
     }
 

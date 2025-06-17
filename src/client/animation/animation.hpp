@@ -4,16 +4,21 @@
 #include <string>
 #include <client/cssom/computed_style.hpp>
 
-#include "./animation_effect.hpp"
-#include "./animation_timeline.hpp"
-
 namespace dom
 {
-  class Animation
+  class AnimationEffect;
+  class AnimationTimeline;
+
+  class Animation : public std::enable_shared_from_this<Animation>
   {
   public:
-    Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<const AnimationTimeline>);
-    virtual ~Animation() = default;
+    // Construct a new animation with specific type `T`.
+    template <typename T>
+    static std::shared_ptr<T> MakeAnimation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
+
+  public:
+    Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
+    virtual ~Animation();
 
   public:
     virtual bool isCSSAnimation() const
@@ -38,28 +43,11 @@ namespace dom
     bool updatePropertyToStyle(client_cssom::ComputedStyle &, const std::string &property);
 
   public:
-    std::optional<float> currentTime() const
-    {
-      if (!played() ||
-          timeline_.expired() ||
-          !timeline_.lock()->isActive())
-        return std::nullopt;
-      else
-        return current_time_;
-    }
-    void setCurrentTime(float time)
-    {
-      current_time_ = time;
-    }
+    std::optional<float> currentTime() const;
+    void setCurrentTime(float time);
 
-    const AnimationEffect &effect() const
-    {
-      return *effect_;
-    }
-    AnimationEffect &effect()
-    {
-      return *effect_;
-    }
+    const AnimationEffect &effect() const;
+    AnimationEffect &effect();
 
     std::string id() const
     {
@@ -110,7 +98,7 @@ namespace dom
     std::string id_;
     float current_time_ = 0;
     std::unique_ptr<AnimationEffect> effect_;
-    std::weak_ptr<const AnimationTimeline> timeline_;
+    std::weak_ptr<AnimationTimeline> timeline_;
     bool ready_ = false;
     bool pending_ = false;
     PlayState play_state_ = kPlayStateIdle;

@@ -195,6 +195,25 @@ namespace client_cssom
     // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
     bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
 
+    // If this `ComputedStyle` is affected by animation/transition, then the unanimated "base" style is called the
+    // "base computed style". It is used to compute the animated style.
+    //
+    // This method returns if the base computed style is set, namely if the computed style is affected by animations or
+    // transitions.
+    inline bool hasBaseComputedStyle() const
+    {
+      return base_computed_style_ != nullptr;
+    }
+    // Returns the base computed style, it asserts that the base computed style is set.
+    inline const ComputedStyle *getBaseComputedStyle() const
+    {
+      return base_computed_style_.get();
+    }
+    inline const ComputedStyle *getBaseComputedStyleOrThis() const
+    {
+      return hasBaseComputedStyle() ? getBaseComputedStyle() : this;
+    }
+
     // Properties
     inline const values::computed::Display &display() const
     {
@@ -415,6 +434,7 @@ namespace client_cssom
     void setPropertyInternal(const std::string &name, const std::string &value);
     void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
     void computeShorthandProperties(values::computed::Context &);
+    void updateBaseComputedStyle();
 
   private:
     // Box model
@@ -489,6 +509,7 @@ namespace client_cssom
     std::vector<values::computed::Time> transition_durations_;
     std::vector<values::computed::Time> transition_delays_;
     std::vector<values::computed::TimingFunction> transition_timing_functions_;
+    std::shared_ptr<ComputedStyle> base_computed_style_;
 
   private: // Bitfields for computed style properties.
 #define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME) \

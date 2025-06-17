@@ -1,3 +1,7 @@
+#include <client/animation/animation_effect.hpp>
+#include <client/animation/animation_timeline.hpp>
+#include <client/animation/animation-inl.hpp>
+
 #include "./css_animations.hpp"
 
 namespace dom
@@ -8,11 +12,15 @@ namespace dom
   {
   }
 
-  size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &style,
-                                       shared_ptr<const AnimationTimeline> timeline)
+  void CSSAnimations::clearTransitions()
   {
-    // Clear existing transitions.
     transitions_.clear();
+  }
+
+  size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &style,
+                                       shared_ptr<AnimationTimeline> timeline)
+  {
+    clearTransitions();
 
     int len = style.getTransitionPropertiesCount();
     for (size_t index = 0; index < len; ++index)
@@ -23,7 +31,7 @@ namespace dom
 
       auto property = transition_property->property;
       auto effect = make_unique<AnimationEffect>(*transition_property);
-      auto animation = make_shared<CSSTransition>(move(effect), timeline);
+      auto animation = Animation::MakeAnimation<CSSTransition>(move(effect), timeline);
       auto animatables = AnimatableProperties::FromTransitionProperty(property);
       auto transition_animation = make_shared<RunningTransition>(animation, animatables);
       transitions_.emplace(property.toCss(), transition_animation);

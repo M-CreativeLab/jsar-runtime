@@ -27,16 +27,21 @@ namespace dom
     assert(document_ != nullptr);
     document_->timelineRef().updateCurrentTime();
 
-    auto root = document_->getDirtyRootTextOrElement();
+    auto dirty_root = document_->getDirtyRootTextOrElement();
     auto scene = document_->scene;
     if (TR_UNLIKELY(scene == nullptr))
       return;
 
-    const auto &clientEnv = TrClientContextPerProcess::GetEnvironmentRef();
-    auto layoutView = document_->layoutView();
-    if (root != nullptr)
+    const auto &client_env = TrClientContextPerProcess::GetEnvironmentRef();
+    auto layout_view = document_->layoutView();
+
+    // 1. Compute the running animations.
+    document_->timelineRef().serviceAnimations();
+
+    // 2. Recalculate the styles and layout from the current dirty root.
+    if (dirty_root != nullptr)
     {
-      // Compute each element's styles.
+      // 2.1 Compute each element's styles.
       auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
       {
         element->adoptStyle(document_->defaultView()->getComputedStyle(element));
@@ -46,25 +51,25 @@ namespace dom
       {
         textNode->adoptStyle(document_->defaultView()->getComputedStyle(textNode));
       };
-      traverseElementOrTextNode(root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
+      traverseElementOrTextNode(dirty_root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
 
-      // Compute the layout from the root element.
+      // 2.2 Compute the layout from the root element.
       // TODO(yorkie): compute the layout from the root?
-      layoutView->computeLayout(targetSpace());
-      layoutView->debugPrint("After layout",
+      layout_view->computeLayout(targetSpace());
+      layout_view->debugPrint("After layout",
                              LayoutView::DebugOptions::Default()
-                               .withFormattingContext(clientEnv.debugLayoutFormattingContext)
-                               .withDisabled(clientEnv.debugLayoutTree == false));
+                               .withFormattingContext(client_env.debugLayoutFormattingContext)
+                               .withDisabled(client_env.debugLayoutTree == false));
     }
 
-    // Visit the layout view to render CSS boxes.
-    if (root != nullptr || isScrolling())
+    // 3. Visit the layout view to render CSS boxes.
+    if (dirty_root != nullptr || isScrolling())
     {
       // TODO(yorkie): visit the tree from the root?
-      LayoutViewVisitor::visit(*layoutView);
+      LayoutViewVisitor::visit(*layout_view);
     }
 
-    // Do hit test and dispatch the related events.
+    // 4. Do hit test and dispatch the related events.
     DocumentEventDispatcher::hitTestAndDispatchEvents();
   }
 

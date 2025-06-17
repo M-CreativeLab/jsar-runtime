@@ -17,6 +17,13 @@ namespace dom
     DocumentTimeline();
     DocumentTimeline(const DocumentTimelineInit init);
 
+    bool isDocumentTimeline() const override
+    {
+      return true;
+    }
+
+    void scheduleNextService() override;
+
   private:
     void updateCurrentTime()
     {

@@ -99,7 +99,8 @@ namespace dom
         return *it->second;
       return std::nullopt;
     }
-    size_t setTransitions(const client_cssom::ComputedStyle &, std::shared_ptr<const AnimationTimeline>);
+    void clearTransitions();
+    size_t setTransitions(const client_cssom::ComputedStyle &, std::shared_ptr<AnimationTimeline>);
     bool updateFrameToStyle(client_cssom::ComputedStyle &);
 
   private:

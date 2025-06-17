@@ -170,6 +170,7 @@ namespace client_cssom
 
     // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
     computeShorthandProperties(context);
+    updateBaseComputedStyle();
     return true;
   }
 
@@ -204,6 +205,7 @@ namespace client_cssom
       // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
       computeShorthandProperties(context.value());
     }
+    updateBaseComputedStyle();
     return true;
   }
 
@@ -452,5 +454,10 @@ namespace client_cssom
   void ComputedStyle::computeShorthandProperties(values::computed::Context &context)
   {
     // TODO: implement shorthand properties
+  }
+
+  void ComputedStyle::updateBaseComputedStyle()
+  {
+    // TODO: implement updateBaseComputedStyle
   }
 }

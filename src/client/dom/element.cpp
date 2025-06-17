@@ -731,12 +731,18 @@ namespace dom
 
   bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)
   {
-    // 1. Update the css transitions if the new computed style has transition properties.
     ElementAnimations &element_animations = elementAnimationsRef();
+    CSSAnimations &css_animations = element_animations.cssAnimations();
+
+    // 1. Update the css transitions if the new computed style has transition properties.
     if (new_computed_style.hasTransitionProperties())
     {
       auto owner_document = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-      element_animations.cssAnimations().setTransitions(new_computed_style, owner_document->timeline());
+      css_animations.setTransitions(new_computed_style, owner_document->timeline());
+    }
+    else
+    {
+      css_animations.clearTransitions();
     }
 
     // 2. Update the adopted style.

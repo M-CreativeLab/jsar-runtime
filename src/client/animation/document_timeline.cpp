@@ -11,4 +11,9 @@ namespace dom
       : AnimationTimeline()
   {
   }
+
+  void DocumentTimeline::scheduleNextService()
+  {
+    // TODO(yorkie): implement the animation scheduling.
+  }
 }
