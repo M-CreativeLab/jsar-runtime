@@ -1,7 +1,7 @@
 <div align="center">
   <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="300">
   <p align="center">
-    JSAR: a revolutionary <b>Browser Engine Library</b> designed for Metaverse.
+    JSAR: a revolutionary <b>Browser Engine Library</b> designed for The Spatial Web.
     <br>
     <br>
     <a href="/docs/manual/introduction.mdx">User Manual</a>
@@ -33,19 +33,17 @@
 
 ## Introduction
 
-### ✨ Bringing Web Technologies to Life in Metaverse
+### ✨ Bringing Web Technologies to Spatialized Spaces
 
-JSAR is a revolutionary **browser engine library** designed for the next computing era (Metaverse). It enables you to 
+JSAR is a revolutionary **browser engine library** designed for The Spatial Web. It enables developers to 
 create immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly 
 integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 ### 🌟 Why Choose JSAR?
 
-- 🎯 **3D-First Design** - Unlike traditional browsers, JSAR is optimized from the ground up for 3D and spatial computing
-- 🔧 **Easy Integration** - Supports multiple rendering backends and platform integrations
-- 📱 **Cross-Platform Compatible** - Supports both Android and macOS platforms
-- ⚡ **High Performance** - A builtin ECS to achieve the GPU-driven renderer for elements
+- 🎯 **Spatialized Design** - Unlike traditional browsers, JSAR is optimized from the ground up for the specialized spaces.
 - 🌐 **Web Standards Compliant** - Supports WebXR, WebGL, Web APIs, and other modern Web standards
+- ⚡ **High Performance** - A builtin ECS to achieve the GPU-driven renderer for elements
 
 ## Overview
 
