@@ -57,9 +57,9 @@ namespace dom
       // TODO(yorkie): compute the layout from the root?
       layout_view->computeLayout(targetSpace());
       layout_view->debugPrint("After layout",
-                             LayoutView::DebugOptions::Default()
-                               .withFormattingContext(client_env.debugLayoutFormattingContext)
-                               .withDisabled(client_env.debugLayoutTree == false));
+                              LayoutView::DebugOptions::Default()
+                                .withFormattingContext(client_env.debugLayoutFormattingContext)
+                                .withDisabled(client_env.debugLayoutTree == false));
     }
 
     // 3. Visit the layout view to render CSS boxes.
