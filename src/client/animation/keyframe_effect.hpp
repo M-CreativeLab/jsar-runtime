@@ -45,6 +45,14 @@ namespace dom
     void setKeyframes(std::optional<Keyframes>);
 
     std::shared_ptr<Element> effectTarget() const;
+    Composite composite() const
+    {
+      return composite_;
+    }
+    Composite iterationComposite() const
+    {
+      return iteration_composite_;
+    }
 
   private:
     Composite composite_ = CompositeReplace;

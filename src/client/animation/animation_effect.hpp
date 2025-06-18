@@ -7,6 +7,12 @@
 
 namespace dom
 {
+  enum TimingUpdateReason
+  {
+    kTimingUpdateOnDemand,
+    kTimingUpdateForAnimationFrame
+  };
+
   class AnimationEffect
   {
   public:

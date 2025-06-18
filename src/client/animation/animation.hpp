@@ -1,12 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <client/cssom/computed_style.hpp>
+#include "./animation_effect.hpp"
 
 namespace dom
 {
-  class AnimationEffect;
   class AnimationTimeline;
   class Element;
 
@@ -43,7 +44,7 @@ namespace dom
     }
 
     // Returns whether the animation is finished.
-    bool update();
+    bool update(TimingUpdateReason);
 
     void cancel();
     void commitStyles();
@@ -60,6 +61,11 @@ namespace dom
   public:
     std::optional<float> currentTime() const;
     void setCurrentTime(float time);
+
+    std::optional<float> startTime() const
+    {
+      return start_time_;
+    }
 
     const AnimationEffect &effect() const;
     AnimationEffect &effect();
@@ -89,6 +95,11 @@ namespace dom
       return play_state_ == kPlayStateRunning ||
              play_state_ == kPlayStatePaused;
     }
+
+    float playbackRate() const
+    {
+      return playback_rate_;
+    }
     PlayState playState() const
     {
       return play_state_;
@@ -105,13 +116,16 @@ namespace dom
       return replace_state_;
     }
 
-  public:
-    float playbackRate;
-    float startTime;
+  private:
+    std::optional<float> calculateStartTime(float current_time) const;
+    std::optional<float> calculateCurrentTime() const;
 
   private:
     std::string id_;
-    float current_time_ = 0;
+    std::optional<float> start_time_;
+    std::optional<float> hold_time_;
+    float playback_rate_ = 1.0f;
+
     std::unique_ptr<AnimationEffect> effect_;
     std::weak_ptr<AnimationTimeline> timeline_;
     bool ready_ = false;

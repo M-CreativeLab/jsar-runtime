@@ -14,8 +14,7 @@ namespace dom
       , pending_(false)
       , ready_(false)
       , play_state_(kPlayStateIdle)
-      , current_time_(0.0f)
-      , playbackRate(1.0f)
+      , playback_rate_(1.0f)
   {
   }
 
@@ -29,7 +28,7 @@ namespace dom
     }
   }
 
-  bool Animation::update()
+  bool Animation::update(TimingUpdateReason reason)
   {
     // TODO(yorkie): update the animation timings, and mark the target elements to be needed to recalculate styles.
     return true;
@@ -68,7 +67,6 @@ namespace dom
   void Animation::play()
   {
     play_state_ = kPlayStateRunning;
-    current_time_ = 0.0f;
   }
 
   void Animation::reverse()
@@ -77,7 +75,7 @@ namespace dom
 
   void Animation::updatePlaybackRate(float playback_rate)
   {
-    playbackRate = playback_rate;
+    playback_rate_ = playback_rate;
   }
 
   bool Animation::updateFrameToStyle(client_cssom::ComputedStyle &)
@@ -113,17 +111,20 @@ namespace dom
 
   std::optional<float> Animation::currentTime() const
   {
-    if (!played() ||
-        timeline_.expired() ||
-        !timeline_.lock()->isActive())
-      return std::nullopt;
-    else
-      return current_time_;
+    return hold_time_ ? hold_time_ : calculateCurrentTime();
   }
 
   void Animation::setCurrentTime(float time)
   {
-    current_time_ = time;
+    if (hold_time_ || !start_time_ || timeline_.expired() || !timeline_.lock()->isActive() ||
+        playback_rate_ == 0.0f)
+    {
+      hold_time_ = time;
+    }
+    else
+    {
+      start_time_ = calculateStartTime(time);
+    }
   }
 
   const AnimationEffect &Animation::effect() const
@@ -134,5 +135,30 @@ namespace dom
   AnimationEffect &Animation::effect()
   {
     return *effect_;
+  }
+
+  optional<float> Animation::calculateStartTime(float current_time) const
+  {
+    optional<float> start_time;
+    if (timeline_.expired())
+    {
+      auto timeline_time = timeline_.lock()->currentTime();
+      if (timeline_time.has_value())
+        start_time = timeline_time.value() - current_time / playback_rate_;
+    }
+    return start_time;
+  }
+
+  optional<float> Animation::calculateCurrentTime() const
+  {
+    if (!start_time_.has_value() || timeline_.expired())
+      return std::nullopt;
+    auto timeline = timeline_.lock();
+    if (!timeline->isActive())
+      return std::nullopt;
+
+    auto timeline_time = timeline->currentTime();
+    assert(timeline_time.has_value() && "The timeline time should be valid.");
+    return (timeline_time.value() - start_time_.value()) * playback_rate_;
   }
 }

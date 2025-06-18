@@ -32,7 +32,7 @@ namespace dom
       keyframes_->empty();
   }
 
-  std::shared_ptr<Element> KeyframeEffect::effectTarget() const
+  shared_ptr<Element> KeyframeEffect::effectTarget() const
   {
     if (target_.expired())
       return nullptr;

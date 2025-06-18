@@ -35,7 +35,7 @@ namespace dom
     auto layout_view = document_->layoutView();
 
     // 1. Compute the running animations.
-    document_->timelineRef().serviceAnimations();
+    document_->timelineRef().serviceAnimations(kTimingUpdateForAnimationFrame);
 
     // 2. Recalculate the styles and layout from the current dirty root.
     if (dirty_root != nullptr)

@@ -46,7 +46,7 @@ namespace dom
   }
 
   // This implements https://www.w3.org/TR/web-animations-1/#update-animations-and-send-events
-  void AnimationTimeline::serviceAnimations()
+  void AnimationTimeline::serviceAnimations(TimingUpdateReason reason)
   {
     updateCurrentTime();
 
@@ -59,7 +59,7 @@ namespace dom
 
     for (const auto &animation : animations)
     {
-      if (animation->update())
+      if (animation->update(reason))
       {
         // TODO(yorkie): Dispatch events for the animation.
       }

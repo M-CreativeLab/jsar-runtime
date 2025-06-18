@@ -47,7 +47,7 @@ namespace dom
     virtual void animationDetached(std::shared_ptr<Animation>);
     virtual void detachInvalidAnimations();
 
-    virtual void serviceAnimations();
+    virtual void serviceAnimations(TimingUpdateReason);
     virtual void scheduleNextService() = 0;
 
     virtual bool hasAnimations() const
