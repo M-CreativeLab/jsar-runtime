@@ -17,7 +17,7 @@ namespace dom
     }
 
     void clearOwningElement() override;
-    // The owning element of a transition refers to the element or pseudo-element to which the `transition-property` 
+    // The owning element of a transition refers to the element or pseudo-element to which the `transition-property`
     // property was applied that generated the animation.
     std::shared_ptr<Element> owningElement() const override;
 
