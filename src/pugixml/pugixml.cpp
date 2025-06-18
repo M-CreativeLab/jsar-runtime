@@ -3390,10 +3390,6 @@ PUGI_IMPL_NS_BEGIN
 								if (!*s) break;
 								goto LOC_TAG;
 							}
-							else
-							{
-								s++;
-							}
 							// end of tag
 						}
 						else if (PUGI_IMPL_IS_CHARTYPE(ch, ct_space))
