@@ -3371,7 +3371,11 @@ PUGI_IMPL_NS_BEGIN
 											char_t* close_tag_name = pcdata_end + 2;
 											size_t len = strlen(cursor->name) * sizeof(char_t);
 											if (memcmp(close_tag_name, cursor->name, len) == 0)
-												break;
+											{
+												char_t next_char = close_tag_name[len / sizeof(char_t)];
+												if (next_char == '>')
+													break;
+											}
 										}
 										pcdata_end++;
 									}
