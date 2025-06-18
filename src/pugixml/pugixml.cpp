@@ -3362,7 +3362,6 @@ PUGI_IMPL_NS_BEGIN
 							{
 								char_t* parsed_pcdata = s;
 								{
-									char_t* pcdata_start = s;
 									char_t* pcdata_end = s;
 									while (*pcdata_end)
 									{
