@@ -4,6 +4,7 @@
 
 namespace dom
 {
+  class Element;
   class CSSAnimation : public Animation
   {
   public:
@@ -11,5 +12,11 @@ namespace dom
     {
       return true;
     }
+
+    void clearOwningElement() override;
+    std::shared_ptr<Element> owningElement() const override;
+
+  private:
+    std::weak_ptr<Element> owning_element_;
   };
 }

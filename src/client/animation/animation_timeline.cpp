@@ -2,7 +2,9 @@
 
 namespace dom
 {
-  void AnimationTimeline::animationAttached(std::shared_ptr<Animation> animation)
+  using namespace std;
+
+  void AnimationTimeline::animationAttached(shared_ptr<Animation> animation)
   {
     if (TR_UNLIKELY(animation == nullptr))
       return;
@@ -11,7 +13,7 @@ namespace dom
     animations_.push_back(animation);
   }
 
-  void AnimationTimeline::animationDetached(std::shared_ptr<Animation> target_animation)
+  void AnimationTimeline::animationDetached(shared_ptr<Animation> target_animation)
   {
     if (TR_UNLIKELY(target_animation == nullptr))
       return;
@@ -43,8 +45,24 @@ namespace dom
     }
   }
 
+  // This implements https://www.w3.org/TR/web-animations-1/#update-animations-and-send-events
   void AnimationTimeline::serviceAnimations()
   {
-    // TODO(yorkie): implement this.
+    updateCurrentTime();
+
+    vector<shared_ptr<Animation>> animations;
+    for (auto &animation : animations_)
+    {
+      if (TR_LIKELY(!animation.expired()))
+        animations.push_back(animation.lock());
+    }
+
+    for (const auto &animation : animations)
+    {
+      if (animation->update())
+      {
+        // TODO(yorkie): Dispatch events for the animation.
+      }
+    }
   }
 }

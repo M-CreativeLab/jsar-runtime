@@ -315,7 +315,7 @@ namespace dom
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
-    bool adoptStyleDirectly(const client_cssom::ComputedStyle &);
+    bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
     bool setActionState(bool &state, bool value);
 
   public:

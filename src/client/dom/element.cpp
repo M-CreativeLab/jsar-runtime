@@ -134,7 +134,7 @@ namespace dom
     Node::connectedCallback();
 
     initCSSBoxes();
-    adoptStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
+    recalcStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
   }
 
   void Element::disconnectedCallback()
@@ -348,7 +348,7 @@ namespace dom
     if (adopted_style_ != nullptr && // Pass if `adopted_style_` is not set.
         ComputedStyle::ComputeDifference(new_style, *adopted_style_) == ComputedStyle::kEqual)
       return false;
-    return adoptStyleDirectly(new_style);
+    return recalcStyleDirectly(new_style);
   }
 
   void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -729,7 +729,7 @@ namespace dom
     }
   }
 
-  bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)
+  bool Element::recalcStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)
   {
     ElementAnimations &element_animations = elementAnimationsRef();
     CSSAnimations &css_animations = element_animations.cssAnimations();

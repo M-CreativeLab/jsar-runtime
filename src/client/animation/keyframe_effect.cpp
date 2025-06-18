@@ -1,3 +1,5 @@
+#include <client/dom/element.hpp>
+
 #include "./keyframe_effect.hpp"
 #include "./keyframes.hpp"
 
@@ -28,5 +30,12 @@ namespace dom
       keyframes_ = make_unique<Keyframes>(*keyframes);
     else
       keyframes_->empty();
+  }
+
+  std::shared_ptr<Element> KeyframeEffect::effectTarget() const
+  {
+    if (target_.expired())
+      return nullptr;
+    return target_.lock();
   }
 }

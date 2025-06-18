@@ -8,6 +8,7 @@ namespace dom
 {
   class AnimationEffect;
   class AnimationTimeline;
+  class Element;
 
   class Animation : public std::enable_shared_from_this<Animation>
   {
@@ -29,6 +30,20 @@ namespace dom
     {
       return false;
     }
+    virtual std::shared_ptr<Element> owningElement() const
+    {
+      return nullptr;
+    }
+    virtual void clearOwningElement()
+    {
+    }
+    inline bool isOwned() const
+    {
+      return owningElement() != nullptr;
+    }
+
+    // Returns whether the animation is finished.
+    bool update();
 
     void cancel();
     void commitStyles();

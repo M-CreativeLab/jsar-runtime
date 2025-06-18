@@ -29,6 +29,12 @@ namespace dom
     }
   }
 
+  bool Animation::update()
+  {
+    // TODO(yorkie): update the animation timings, and mark the target elements to be needed to recalculate styles.
+    return true;
+  }
+
   void Animation::cancel()
   {
     play_state_ = kPlayStateIdle;

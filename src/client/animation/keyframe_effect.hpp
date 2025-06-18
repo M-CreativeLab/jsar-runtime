@@ -38,16 +38,18 @@ namespace dom
       std::optional<std::string> pseudoElement;
     };
 
-    KeyframeEffect(std::shared_ptr<dom::Element> target, std::optional<Keyframes>, const KeyframeEffectOptions);
+    KeyframeEffect(std::shared_ptr<Element> target, std::optional<Keyframes>, const KeyframeEffectOptions);
 
   public:
     Keyframes getKeyframes() const;
     void setKeyframes(std::optional<Keyframes>);
 
+    std::shared_ptr<Element> effectTarget() const;
+
   private:
     Composite composite_ = CompositeReplace;
     Composite iteration_composite_ = CompositeReplace;
-    std::weak_ptr<dom::Element> target_;
+    std::weak_ptr<Element> target_;
     std::optional<std::string> pseudo_element_str_;
     std::unique_ptr<Keyframes> keyframes_;
   };
