@@ -2969,7 +2969,22 @@ PUGI_IMPL_NS_BEGIN
 						 (name[0] == 't' && memcmp(name, "track", 6) == 0);
 		default:
 			return false;
-    }
+		}
+	}
+
+	inline bool is_pcdata_tag(const char* name) {
+		size_t len = strlen(name);
+		switch (len) {
+		case 5:  // <title>, <style>
+			return (name[0] == 't' && memcmp(name, "title", 5) == 0) ||
+			       (name[0] == 's' && memcmp(name, "style", 5) == 0);
+		case 6:  // <script>
+			return name[0] == 's' && memcmp(name, "script", 6) == 0;
+		case 8:  // <textarea>
+			return name[0] == 't' && memcmp(name, "textarea", 8) == 0;
+		default:
+			return false;
+		}
 	}
 
 	struct xml_parser
@@ -3342,6 +3357,41 @@ PUGI_IMPL_NS_BEGIN
 							{
 								PUGI_IMPL_POPNODE();
 								s++;
+							}
+							else if (is_pcdata_tag(cursor->name))
+							{
+								char_t* parsed_pcdata = s;
+								{
+									char_t* pcdata_end = s;
+									while (*pcdata_end)
+									{
+										if (pcdata_end[0] == '<' && pcdata_end[1] == '/')
+										{
+											char_t* close_tag_name = pcdata_end + 2;
+											size_t len = strlen(cursor->name) * sizeof(char_t);
+											if (memcmp(close_tag_name, cursor->name, len) == 0)
+											{
+												char_t next_char = close_tag_name[len / sizeof(char_t)];
+												if (next_char == '>')
+													break;
+											}
+										}
+										pcdata_end++;
+									}
+									*pcdata_end = 0;
+									s = pcdata_end + 1;
+								}
+
+								// Append pcdata node as a child
+								xml_node_struct* prev_cursor = cursor;
+								PUGI_IMPL_PUSHNODE(node_pcdata);
+								cursor->value = parsed_pcdata;
+
+								// Pop since this is a standalone.
+								cursor = prev_cursor;
+
+								if (!*s) break;
+								goto LOC_TAG;
 							}
 							// end of tag
 						}
