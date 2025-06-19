@@ -115,7 +115,7 @@ namespace dom
     }
 
     // Trigger text change at the beginning to ensure the text boxes are updated.
-    for (const auto &textBox: textBoxes_)
+    for (const auto &textBox : textBoxes_)
       textBox->textDidChange();
   }
 
