@@ -51,6 +51,10 @@ namespace dom
   public:
     [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
 
+    inline const client_cssom::CSSStyleDeclaration &defaultStyle() const
+    {
+      return defaultStyle_;
+    }
     inline bool hasAdoptedStyle() const
     {
       return adoptedStyle_ != nullptr;
@@ -75,7 +79,7 @@ namespace dom
     void resetCSSBoxes(bool skipCheck = false);
 
     bool adoptStyle(const client_cssom::ComputedStyle &);
-    bool adoptStyleDirectly(const client_cssom::ComputedStyle &);
+    bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
 
   private:
     client_cssom::CSSStyleDeclaration defaultStyle_;

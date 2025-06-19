@@ -227,8 +227,8 @@ namespace browser
     }
 
     /**
-     * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and resolving any basic
-     * computation those values may contain.
+     * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and 
+     * resolving any basic computation those values may contain.
      *
      * @param elementOrTextNode The element or text node to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.

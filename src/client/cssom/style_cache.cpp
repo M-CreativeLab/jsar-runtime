@@ -18,20 +18,29 @@ namespace client_cssom
     return nullptr;
   }
 
-  shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode, bool useElementStyle)
+  shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode,
+                                                    bool useElementStyle)
   {
     assert(elementOrTextNode != nullptr);
 
     shared_ptr<ComputedStyle> newStyle = nullptr;
-    if (useElementStyle && elementOrTextNode->isHTMLElement())
+    if (elementOrTextNode->isHTMLElement())
     {
       auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
       assert(element != nullptr && "The element must be an HTMLElement");
-      newStyle = make_shared<ComputedStyle>(element->style(), values::computed::Context::From(element));
+      newStyle = make_shared<ComputedStyle>(useElementStyle ? element->style() : element->defaultStyle(),
+                                            values::computed::Context::From(element));
+    }
+    else if (elementOrTextNode->isText())
+    {
+      auto textNode = dynamic_pointer_cast<dom::Text>(elementOrTextNode);
+      newStyle = make_shared<ComputedStyle>(textNode->defaultStyle(),
+                                            values::computed::Context::From(textNode));
     }
     else
     {
-      newStyle = make_shared<ComputedStyle>();
+      assert(false && "Only HTMLElement or Text node can be used to create a style.");
+      return nullptr;
     }
 
     assert(newStyle != nullptr);

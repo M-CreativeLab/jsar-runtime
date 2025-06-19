@@ -311,9 +311,9 @@ namespace dombinding
       return;
 
     else if (value.IsString())
-      node->textContent(value.As<Napi::String>());
+      node->setTextContent(value.As<Napi::String>());
     else
-      node->textContent("");
+      node->setTextContent("");
   }
 
   template <typename ObjectType, typename NodeType>

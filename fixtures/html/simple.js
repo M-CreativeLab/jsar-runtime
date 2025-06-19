@@ -49,12 +49,11 @@ run(async () => {
   // test append style
   await sleep(1000);
   const style = document.createElement('style');
-  const cssSource = document.createTextNode(`
+  style.textContent = `
     body {
       background-color: lightgray;
     }
-  `);
-  style.appendChild(cssSource);
+  `;
   document.head.appendChild(style);
 
   await sleep(1000);
@@ -64,9 +63,16 @@ run(async () => {
   bar.style.backgroundColor = 'green';
   document.body.replaceChild(bar, some);
 
-  bar.addEventListener('click', (event) => {
+  bar.addEventListener('click', () => {
     document.body.removeChild(bar);
   });
+
+  await sleep(500);
+  const script = document.createElement('script');
+  script.textContent = `
+    console.info('hello from dynamically added script!');
+  `;
+  document.body.appendChild(script);
 
   // await sleep(1000);
   // const main = document.querySelector('main');

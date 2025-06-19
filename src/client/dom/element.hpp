@@ -205,7 +205,7 @@ namespace dom
       assert(adopted_style_ != nullptr && "The adopted style should not be null.");
       return *adopted_style_;
     }
-    const client_cssom::CSSStyleDeclaration &defaultStyleRef() const
+    const client_cssom::CSSStyleDeclaration &defaultStyle() const
     {
       return defaultStyle_;
     }

@@ -9,30 +9,30 @@
     main {
       padding: 30px;
     }
-    h1, p {
+
+    h1,
+    p {
       font-size: 100px;
     }
   </style>
-  <script>
-    const h1 = document.querySelector('h1');
-    const p = document.querySelector('p');
-    const text = document.createTextNode('');
-    p.appendChild(text);
-    h1.firstChild.nodeValue += 'Timer';
-
-    setInterval(() => {
-      const now = new Date();
-      text.nodeValue = `${now.getSeconds()}`;
-      console.info(`Timer: ${now.getSeconds()}`);
-    }, 1000);
-  </script>
 </head>
 
 <body style="background-color: #fff;">
   <main>
     <h1>Tool: </h1>
-    <p></p>
+    <p>(?)</p>
   </main>
 </body>
+
+<script>
+  const h1 = document.querySelector('h1');
+  const p = document.querySelector('p');
+  h1.firstChild.nodeValue += 'Timer';
+
+  setInterval(() => {
+    const now = new Date();
+    p.textContent = `${now.getMilliseconds()}ms`;
+  }, 1);
+</script>
 
 </html>

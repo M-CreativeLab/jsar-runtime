@@ -249,10 +249,31 @@ namespace dom
     return resultStr;
   }
 
-  // TODO: Implement the set text content method.
-  void Node::textContent(const string &value)
+  void Node::setTextContent(const string &value)
   {
-    throw runtime_error("The textContent property writable is not implemented yet.");
+    if (nodeType == NodeType::TEXT_NODE ||
+        nodeType == NodeType::CDATA_SECTION_NODE)
+    {
+      setNodeValue(value);
+      return;
+    }
+
+    // If the node has only one text or CDATA child node, modify the child node's value to avoid removing and adding
+    // node.
+    if (childNodes.size() == 1)
+    {
+      auto firstChild = childNodes.front();
+      if (firstChild->nodeType == NodeType::TEXT_NODE ||
+          firstChild->nodeType == NodeType::CDATA_SECTION_NODE)
+      {
+        firstChild->setNodeValue(value);
+        return;
+      }
+    }
+
+    // Otherwise, create a new text node and append it to the current node
+    auto textNode = make_shared<Text>(value, getOwnerDocumentReference());
+    replaceAll(textNode);
   }
 
   Document &Node::getOwnerDocumentChecked() const

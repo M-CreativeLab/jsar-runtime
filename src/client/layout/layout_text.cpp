@@ -182,7 +182,7 @@ namespace client_layout
         space == last_space_.value() &&
         !is_text_content_dirty_)
     {
-      // No need to adjust if the space is not changed and the text content is not dirty.
+      // No need to adjust if the space is not changed or the text content is not dirty.
       return;
     }
 
