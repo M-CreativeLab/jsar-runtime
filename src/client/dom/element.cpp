@@ -134,7 +134,13 @@ namespace dom
     Node::connectedCallback();
 
     initCSSBoxes();
-    recalcStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
+    {
+      auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
+      assert(window != nullptr &&
+             "The window must not be null in a TextNode().");
+      auto initial_style = window->getComputedStyle(shared_from_this());
+      recalcStyleDirectly(initial_style);
+    }
   }
 
   void Element::disconnectedCallback()

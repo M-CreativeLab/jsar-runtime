@@ -106,13 +106,23 @@ namespace dom
     CharacterData::connectedCallback();
 
     initCSSBoxes();
-    adoptStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
+    {
+      auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
+      assert(window != nullptr &&
+             "The window must not be null in a TextNode().");
+      auto initial_style = window->getComputedStyle(shared_from_this());
+      recalcStyleDirectly(initial_style);
+    }
+
+    // Trigger text change at the beginning to ensure the text boxes are updated.
+    for (const auto &textBox: textBoxes_)
+      textBox->textDidChange();
   }
 
   void Text::disconnectedCallback()
   {
-    CharacterData::disconnectedCallback();
     resetCSSBoxes();
+    CharacterData::disconnectedCallback();
   }
 
   void Text::nodeValueChangedCallback(const std::string &newValue)
@@ -170,10 +180,10 @@ namespace dom
     if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
         ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
       return false;
-    return adoptStyleDirectly(new_style);
+    return recalcStyleDirectly(new_style);
   }
 
-  bool Text::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
+  bool Text::recalcStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
     adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
 

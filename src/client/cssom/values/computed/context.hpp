@@ -160,7 +160,7 @@ namespace client_cssom::values::computed
     inline const std::optional<ComputedStyle> inheritedStyle() const
     {
       auto parent_element = parentElement();
-      if (parent_element == nullptr)
+      if (parent_element == nullptr || !parent_element->hasAdoptedStyle())
         return ComputedStyle();
       else
         return parent_element->adoptedStyleRef();
@@ -169,6 +169,8 @@ namespace client_cssom::values::computed
   private:
     static const Device &GetDevice(std::shared_ptr<dom::Node> element_or_text_node)
     {
+      assert(element_or_text_node != nullptr && "The element or text node must not be null.");
+
       std::shared_ptr<browser::Window> window;
       if (element_or_text_node->isDocument())
       {
@@ -187,7 +189,7 @@ namespace client_cssom::values::computed
       {
         auto element = dynamic_pointer_cast<dom::Element>(element_or_text_node);
         if (element != nullptr)
-          return ComputedStyle(element->defaultStyleRef(), std::nullopt);
+          return ComputedStyle(element->defaultStyle(), std::nullopt);
       }
       return std::nullopt; // No default style for text nodes.
     }

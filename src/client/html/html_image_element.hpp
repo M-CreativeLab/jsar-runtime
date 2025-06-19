@@ -55,7 +55,7 @@ namespace dom
 
     inline geometry::DOMRect getImageClientRect() const
     {
-      return geometry::DOMRect(0, 0, sk_bitmap_->width(), sk_bitmap_->height());
+      return geometry::DOMRect(0, 0, naturalWidth(), naturalHeight());
     }
     bool readPixels(SkPixmap &dst) const override
     {

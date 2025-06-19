@@ -211,7 +211,7 @@ namespace dom
      *
      * @param value The text content to set.
      */
-    void textContent(const std::string &value);
+    void setTextContent(const std::string &value);
     /**
      * Check if the current node has a specific type of parent node.
      */

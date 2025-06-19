@@ -14,6 +14,8 @@ namespace client_layout
 
   class LayoutText final : public LayoutObject
   {
+    friend class LayoutView;
+
   public:
     /**
      * Construct a text sequence.
