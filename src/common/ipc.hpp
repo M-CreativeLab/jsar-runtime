@@ -160,7 +160,7 @@ namespace ipc
       if (debug)
       {
         DEBUG(LOG_TAG_ERROR, "Sending data to the channel:");
-        DEBUG(LOG_TAG_ERROR, "  fd: %d", fd);
+        DEBUG(LOG_TAG_ERROR, "  fd: %d at %p", fd, this);
         if (client != nullptr)
         {
           DEBUG(LOG_TAG_ERROR, "  client invalid: %s", client->invalid() ? "true" : "false");

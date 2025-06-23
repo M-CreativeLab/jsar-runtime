@@ -204,6 +204,7 @@ void TrHiveDaemon::onNewChanClient(TrOneShotClient<hive_comm::TrHiveCommandMessa
   }
   commandReceiver = make_unique<hive_comm::TrHiveCommandReceiver>(&client);
   commandSender = make_unique<hive_comm::TrHiveCommandSender>(&client);
+  DEBUG(LOG_TAG_ERROR, "New command channel client connected: %d", client.getPid());
 }
 
 void TrHiveDaemon::acceptChanClient(int timeout)
