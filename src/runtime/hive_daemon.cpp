@@ -197,14 +197,17 @@ void TrHiveDaemon::onDeamonProcess()
 
 void TrHiveDaemon::onNewChanClient(TrOneShotClient<hive_comm::TrHiveCommandMessage> &client)
 {
-  if (commandReceiver != nullptr || commandSender != nullptr)
+  if (commandReceiver == nullptr && commandSender == nullptr)
   {
-    commandReceiver.reset();
-    commandSender.reset();
+    commandReceiver = make_unique<hive_comm::TrHiveCommandReceiver>(&client);
+    commandSender = make_unique<hive_comm::TrHiveCommandSender>(&client);
   }
-  commandReceiver = make_unique<hive_comm::TrHiveCommandReceiver>(&client);
-  commandSender = make_unique<hive_comm::TrHiveCommandSender>(&client);
-  DEBUG(LOG_TAG_ERROR, "New command channel client connected: %d", client.getPid());
+  else
+  {
+    commandChanServer->removeClient(&client);
+    DEBUG(LOG_TAG_ERROR,
+          "Received a new hived command channel client, but the command receiver or sender is already initialized.");
+  }
 }
 
 void TrHiveDaemon::acceptChanClient(int timeout)
