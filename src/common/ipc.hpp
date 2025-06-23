@@ -165,19 +165,13 @@ namespace ipc
     {
       return sendRaw(&data, sizeof(data));
     }
-    bool sendRaw(const void *data, size_t size, bool debug = false)
+    bool sendRaw(const void *data, size_t size)
     {
       if (fd == -1 ||
           client == nullptr ||
           client->invalid())
       {
         DEBUG(LOG_TAG_ERROR, "Failed to send data because the client is invalid or disconnected.");
-        DEBUG(LOG_TAG_ERROR, "  fd: %d", fd);
-        if (client != nullptr)
-        {
-          DEBUG(LOG_TAG_ERROR, "  client invalid: %s", client->invalid() ? "true" : "false");
-          DEBUG(LOG_TAG_ERROR, "  client connected: %s", client->isConnected() ? "true" : "false");
-        }
         return false;
       }
 

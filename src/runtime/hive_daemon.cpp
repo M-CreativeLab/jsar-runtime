@@ -237,6 +237,7 @@ bool TrHiveDaemon::checkDaemonAlive()
         DEBUG(LOG_TAG_ERROR, "The hive(%d) exits with code(%d)", daemonPid, WEXITSTATUS(status));
       else // Stopped
         DEBUG(LOG_TAG_ERROR, "The hive(%d) is stopped with a signal: %d", daemonPid, WSTOPSIG(status));
+      daemonPid = -1;
       return false;
     }
     else if (WIFSIGNALED(status))
@@ -247,6 +248,7 @@ bool TrHiveDaemon::checkDaemonAlive()
             daemonPid,
             WTERMSIG(status),
             WCOREDUMP(status));
+      daemonPid = -1;
       return false;
     }
   }
