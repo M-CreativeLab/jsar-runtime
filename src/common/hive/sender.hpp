@@ -49,7 +49,7 @@ namespace hive_comm
         return false;
       }
 
-      auto r = sendRaw(data, size);
+      auto r = sendRaw(data, size, true);
       free(data);
       
       if (!r)

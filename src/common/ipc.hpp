@@ -155,8 +155,20 @@ namespace ipc
     {
       return sendRaw(&data, sizeof(data));
     }
-    bool sendRaw(const void *data, size_t size)
+    bool sendRaw(const void *data, size_t size, bool debug = false)
     {
+      if (debug)
+      {
+        DEBUG(LOG_TAG_ERROR, "Sending data to the channel:");
+        DEBUG(LOG_TAG_ERROR, "  fd: %d", fd);
+        if (client != nullptr)
+        {
+          DEBUG(LOG_TAG_ERROR, "  client invalid: %s", client->invalid() ? "true" : "false");
+          DEBUG(LOG_TAG_ERROR, "  client connected: %s", client->isConnected() ? "true" : "false");
+        }
+        DEBUG(LOG_TAG_ERROR, "==========================================");
+      }
+
       if (fd == -1 ||
           client == nullptr ||
           client->invalid())
