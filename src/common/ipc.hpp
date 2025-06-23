@@ -151,24 +151,22 @@ namespace ipc
     }
 
   public:
+    inline int getFd() const
+    {
+      return fd;
+    }
+
+    inline TrOneShotClient<T> *getClient() const
+    {
+      return client;
+    }
+
     bool send(T data)
     {
       return sendRaw(&data, sizeof(data));
     }
     bool sendRaw(const void *data, size_t size, bool debug = false)
     {
-      if (debug)
-      {
-        DEBUG(LOG_TAG_ERROR, "Sending data to the channel:");
-        DEBUG(LOG_TAG_ERROR, "  fd: %d at %p", fd, this);
-        if (client != nullptr)
-        {
-          DEBUG(LOG_TAG_ERROR, "  client invalid: %s", client->invalid() ? "true" : "false");
-          DEBUG(LOG_TAG_ERROR, "  client connected: %s", client->isConnected() ? "true" : "false");
-        }
-        DEBUG(LOG_TAG_ERROR, "==========================================");
-      }
-
       if (fd == -1 ||
           client == nullptr ||
           client->invalid())
@@ -229,9 +227,14 @@ namespace ipc
     }
 
   public:
-    int getFd()
+    inline int getFd() const
     {
       return fd;
+    }
+
+    inline TrOneShotClient<T> *getClient() const
+    {
+      return client;
     }
 
     /**
@@ -376,7 +379,7 @@ namespace ipc
       disconnect();
     }
 
-  private:
+  public:
     bool connect(int port, bool blocking)
     {
       if (connected == true)
@@ -411,6 +414,8 @@ namespace ipc
       }
       connected = false;
     }
+
+  private:
     bool sendHandshake(int customId)
     {
       if (fd == -1 || connected == false)
