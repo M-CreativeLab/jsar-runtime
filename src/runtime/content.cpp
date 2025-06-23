@@ -43,8 +43,15 @@ void TrContentRuntime::preStart()
     assert(pid > 0 && "The process ID should be valid.");
     this->pid = pid;
   };
-  contentManager->hived->createClient(init, setupContentOnCreated);
-  reportDocumentEvent(TrDocumentEventType::SpawnProcess);
+  if (contentManager->hived->createClient(init, setupContentOnCreated))
+  {
+    reportDocumentEvent(TrDocumentEventType::SpawnProcess);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to pre-start the content(%d) process.", id);
+    available = false; // If the process creation fails, set available to false.
+  }
 }
 
 void TrContentRuntime::start(TrDocumentRequestInit &init)

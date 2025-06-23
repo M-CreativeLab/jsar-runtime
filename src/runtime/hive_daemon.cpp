@@ -103,8 +103,17 @@ bool TrHiveDaemon::createClient(TrDocumentRequestInit &requestInit, function<voi
     unique_lock<shared_mutex> lock(mutexForCreateProcessCallbacks);
     pendingCreateProcessCallbacks[req.documentId] = callback;
   }
-  DEBUG(LOG_TAG_CONTENT, "Dispatching a `CreateClientRequest(%d)`", req.documentId);
-  return commandSender->sendCommand(req);
+
+  if (commandSender->sendCommand(req))
+  {
+    DEBUG(LOG_TAG_CONTENT, "CreateClientRequest(%d) is dispatched successfully", req.documentId);
+    return true;
+  }
+  else
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to dispatch CreateClientRequest(%d)", req.documentId);
+    return false;
+  }
 }
 
 bool TrHiveDaemon::terminateClient(uint32_t id)
