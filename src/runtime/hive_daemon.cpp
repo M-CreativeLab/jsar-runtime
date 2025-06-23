@@ -98,47 +98,19 @@ bool TrHiveDaemon::createClient(TrDocumentRequestInit &requestInit, function<voi
     return false;
   }
 
+  unique_lock<shared_mutex> lock(mutexForCommand);
   hive_comm::TrCreateClientRequest req(requestInit);
   {
     unique_lock<shared_mutex> lock(mutexForCreateProcessCallbacks);
     pendingCreateProcessCallbacks[req.documentId] = callback;
   }
-
-  // Print the current thread id
-  auto tid = std::this_thread::get_id();
-  std::stringstream ss;
-  ss << tid;
-  std::string idStr = ss.str();
-  DEBUG(LOG_TAG_CONTENT,
-        "CreateClientRequest(%d) is sent from thread %s",
-        req.documentId,
-        idStr.c_str());
-
-  if (commandSender->sendCommand(req))
-  {
-    DEBUG(LOG_TAG_CONTENT, "CreateClientRequest(%d) is dispatched successfully", req.documentId);
-    return true;
-  }
-  else
-  {
-    DEBUG(LOG_TAG_ERROR, "Failed to dispatch CreateClientRequest(%d)", req.documentId);
-    return false;
-  }
+  return commandSender->sendCommand(req);
 }
 
 bool TrHiveDaemon::terminateClient(uint32_t id)
 {
   assert(commandSender != nullptr);
-
-  auto tid = std::this_thread::get_id();
-  std::stringstream ss;
-  ss << tid;
-  std::string idStr = ss.str();
-  DEBUG(LOG_TAG_CONTENT,
-        "TerminateClientRequest(%d) is sent from thread %s",
-        id,
-        idStr.c_str());
-
+  unique_lock<shared_mutex> lock(mutexForCommand);
   hive_comm::TrTerminateClientRequest req(id);
   return commandSender->sendCommand(req);
 }

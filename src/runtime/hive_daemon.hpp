@@ -138,4 +138,5 @@ private:
   std::unique_ptr<WorkerThread> recvWorker = nullptr;
   std::map<uint32_t, function<void(pid_t)>> pendingCreateProcessCallbacks;
   std::shared_mutex mutexForCreateProcessCallbacks;
+  std::shared_mutex mutexForCommand;
 };
