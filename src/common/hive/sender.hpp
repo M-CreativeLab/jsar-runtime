@@ -51,7 +51,7 @@ namespace hive_comm
 
       auto r = sendRaw(data, size);
       free(data);
-      
+
       if (!r)
       {
         DEBUG(LOG_TAG_ERROR, "Failed to send HiveCommand(%d) to the peer", command.type);
