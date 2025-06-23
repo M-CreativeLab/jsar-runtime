@@ -118,7 +118,7 @@ shared_ptr<TrContentRuntime> TrContentManager::makeContent()
         DEBUG(LOG_TAG_CONTENT,
               "Selected an pre-content runtime #%d(%d) for use",
               content->id,
-              content->pid);
+              content->pid.load());
         break;
       }
     }
