@@ -94,6 +94,10 @@ private:
    */
   bool checkDaemonAlive();
   /**
+   * Clean up daemon resources when it exits unexpectedly.
+   */
+  void cleanupDaemonResources();
+  /**
    * Try to receive the output from the daemon process.
    *
    * @returns true if the output is received.

@@ -36,8 +36,14 @@ void TrContentRuntime::preStart()
   // Send the create process request to the hive daemon.
   TrDocumentRequestInit init;
   init.id = id;
-  contentManager->hived->createClient(init, [this](pid_t pid)
-                                      { this->pid = pid; });
+
+  auto setupContentOnCreated = [this](pid_t pid)
+  {
+    DEBUG(LOG_TAG_CONTENT, "Content(%d) is created with pid: %d", id, pid);
+    assert(pid > 0 && "The process ID should be valid.");
+    this->pid = pid;
+  };
+  contentManager->hived->createClient(init, setupContentOnCreated);
   reportDocumentEvent(TrDocumentEventType::SpawnProcess);
 }
 
