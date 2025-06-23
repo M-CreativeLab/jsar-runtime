@@ -79,16 +79,15 @@ void TrContentRuntime::resume()
 
 void TrContentRuntime::dispose(bool waitsForExit)
 {
-  assert(pid != 0);
-  if (pid == INVALID_PID) // The process is not started or exited.
-    return;
-
   available = false;
   disableRendering = true;
   contentManager->constellation->mediaManager->removeSoundSourcesByContent(id); // Remove the sound sources.
   contentManager->hived->terminateClient(id);
+
   if (waitsForExit)
   {
+    assert(pid != INVALID_PID);
+
     DEBUG(LOG_TAG_CONTENT, "Waiting for the content(%d) to exit...", id);
     unique_lock<mutex> lock(exitingMutex);
     exitedCv.wait(lock, [this]
