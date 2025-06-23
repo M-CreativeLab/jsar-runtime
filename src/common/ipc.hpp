@@ -148,14 +148,29 @@ namespace ipc
     }
 
   public:
+    inline int getFd() const
+    {
+      return fd;
+    }
+
+    inline TrOneShotClient<T> *getClient() const
+    {
+      return client;
+    }
+
     bool send(T data)
     {
       return sendRaw(&data, sizeof(data));
     }
     bool sendRaw(const void *data, size_t size)
     {
-      if (fd == -1 || client == nullptr || client->invalid())
+      if (fd == -1 ||
+          client == nullptr ||
+          client->invalid())
+      {
+        DEBUG(LOG_TAG_ERROR, "Failed to send data because the client is invalid or disconnected.");
         return false;
+      }
 
       int bytesSent = 0;
       while (bytesSent < size)
@@ -168,7 +183,7 @@ namespace ipc
             continue;
           if (errno == ECONNRESET || errno == EPIPE)
             client->invalid(true);
-          DEBUG(LOG_TAG_IPC, "Failed to send data(bytes=%d): %s", remaining, strerror(errno));
+          DEBUG(LOG_TAG_ERROR, "Failed to send data(bytes=%d): %s", remaining, strerror(errno));
           return false;
         }
         else
@@ -202,7 +217,15 @@ namespace ipc
     }
 
   public:
-    int getFd() { return fd; }
+    inline int getFd() const
+    {
+      return fd;
+    }
+
+    inline TrOneShotClient<T> *getClient() const
+    {
+      return client;
+    }
 
     /**
      * Try to receive a new instance T with a timeout.
@@ -342,7 +365,7 @@ namespace ipc
       disconnect();
     }
 
-  private:
+  public:
     bool connect(int port, bool blocking)
     {
       if (connected == true)
@@ -377,6 +400,8 @@ namespace ipc
       }
       connected = false;
     }
+
+  private:
     bool sendHandshake(int customId)
     {
       if (fd == -1 || connected == false)

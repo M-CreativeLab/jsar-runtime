@@ -35,7 +35,7 @@ namespace hive_comm
 
       if (TR_UNLIKELY(message == nullptr))
       {
-        DEBUG(LOG_TAG_CONTENT, "Failed to serialize HiveCommand(%d)", command.type);
+        DEBUG(LOG_TAG_ERROR, "Failed to create message for hive command: type=%d", command.type);
         return false;
       }
 
@@ -44,11 +44,23 @@ namespace hive_comm
       auto success = message->serialize(&data, &size);
       delete message;
       if (!success)
+      {
+        DEBUG(LOG_TAG_ERROR, "Failed to serialize HiveCommand(%d) from message", command.type);
         return false;
+      }
 
       auto r = sendRaw(data, size);
       free(data);
-      return r;
+
+      if (!r)
+      {
+        DEBUG(LOG_TAG_ERROR, "Failed to send HiveCommand(%d) to the peer", command.type);
+        return false;
+      }
+      else
+      {
+        return true;
+      }
     }
   };
 }

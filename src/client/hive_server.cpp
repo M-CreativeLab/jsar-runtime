@@ -209,6 +209,10 @@ void TrHiveServer::onCreateClient(hive_comm::TrCreateClientRequest &req, hive_co
     }
     isChild = true;
     running = false;
+
+    auto client = sender.getClient();
+    assert(client != nullptr);
+    client->disconnect(); // Disconnect the client at the child process.
   }
 }
 

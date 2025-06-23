@@ -33,9 +33,22 @@ void TrContentRuntime::preStart()
   // Send the create process request to the hive daemon.
   TrDocumentRequestInit init;
   init.id = id;
-  contentManager->hived->createClient(init, [this](pid_t pid)
-                                      { this->pid = pid; });
-  reportDocumentEvent(TrDocumentEventType::SpawnProcess);
+
+  auto setupContentOnCreated = [this](pid_t pid)
+  {
+    DEBUG(LOG_TAG_CONTENT, "Content(%d) is created with pid: %d", id, pid);
+    assert(pid > 0 && "The process ID should be valid.");
+    this->pid = pid;
+  };
+  if (contentManager->hived->createClient(init, setupContentOnCreated))
+  {
+    reportDocumentEvent(TrDocumentEventType::SpawnProcess);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to pre-start the content(%d) process.", id);
+    available = false; // If the process creation fails, set available to false.
+  }
 }
 
 void TrContentRuntime::start(TrDocumentRequestInit &init)
@@ -63,16 +76,15 @@ void TrContentRuntime::resume()
 
 void TrContentRuntime::dispose(bool waitsForExit)
 {
-  assert(pid != 0);
-  if (pid == INVALID_PID) // The process is not started or exited.
-    return;
-
   available = false;
   disableRendering = true;
   contentManager->constellation->mediaManager->removeSoundSourcesByContent(id); // Remove the sound sources.
   contentManager->hived->terminateClient(id);
+
   if (waitsForExit)
   {
+    assert(pid != INVALID_PID);
+
     DEBUG(LOG_TAG_CONTENT, "Waiting for the content(%d) to exit...", id);
     unique_lock<mutex> lock(exitingMutex);
     exitedCv.wait(lock, [this]

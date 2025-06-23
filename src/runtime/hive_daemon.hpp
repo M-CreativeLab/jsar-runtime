@@ -91,6 +91,10 @@ private:
    */
   bool checkDaemonAlive();
   /**
+   * Clean up daemon resources when it exits unexpectedly.
+   */
+  void cleanupDaemonResources();
+  /**
    * Try to receive the output from the daemon process.
    *
    * @returns true if the output is received.
@@ -131,4 +135,5 @@ private:
   std::unique_ptr<WorkerThread> recvWorker = nullptr;
   std::map<uint32_t, function<void(pid_t)>> pendingCreateProcessCallbacks;
   std::shared_mutex mutexForCreateProcessCallbacks;
+  std::shared_mutex mutexForCommand;
 };

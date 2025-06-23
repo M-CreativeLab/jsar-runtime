@@ -232,6 +232,14 @@ public: // WebXR methods
   bool removeXRSession(xr::TrXRSession *session);
 
 private:
+  inline bool isUsed() const
+  {
+    return used.load();
+  }
+  inline void setUsed()
+  {
+    used = true;
+  }
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
@@ -297,7 +305,7 @@ private:
    */
   std::atomic<bool> started = false;
   /**
-   * The flag `available` is to indicate the content is available for the client process, it's set to true when the client process is
+   * The flag `available` is to indicate the content is available for the client process, it's set to `true` when the client process is
    * started or pre-started.
    */
   std::atomic<bool> available = false;
