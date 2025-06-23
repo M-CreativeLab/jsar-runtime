@@ -93,8 +93,12 @@ void TrHiveDaemon::shutdown()
 bool TrHiveDaemon::createClient(TrDocumentRequestInit &requestInit, function<void(pid_t)> callback)
 {
   if (commandSender == nullptr)
+  {
+    DEBUG(LOG_TAG_ERROR, "Skipped creating a client because the command sender is not initialized.");
     return false;
+  }
 
+  unique_lock<shared_mutex> lock(mutexForCommand);
   hive_comm::TrCreateClientRequest req(requestInit);
   {
     unique_lock<shared_mutex> lock(mutexForCreateProcessCallbacks);
@@ -106,7 +110,7 @@ bool TrHiveDaemon::createClient(TrDocumentRequestInit &requestInit, function<voi
 bool TrHiveDaemon::terminateClient(uint32_t id)
 {
   assert(commandSender != nullptr);
-
+  unique_lock<shared_mutex> lock(mutexForCommand);
   hive_comm::TrTerminateClientRequest req(id);
   return commandSender->sendCommand(req);
 }
@@ -115,7 +119,12 @@ void TrHiveDaemon::tick()
 {
   recvOutput();
   if (!checkDaemonAlive())
+  {
+    DEBUG(LOG_TAG_ERROR, "The hive daemon is not alive, cleaning up and restarting...");
+    cleanupDaemonResources();
+    start();
     return;
+  }
 
   // Check for new client
   acceptChanClient(0);
@@ -188,13 +197,17 @@ void TrHiveDaemon::onDeamonProcess()
 
 void TrHiveDaemon::onNewChanClient(TrOneShotClient<hive_comm::TrHiveCommandMessage> &client)
 {
-  if (commandReceiver != nullptr || commandSender != nullptr)
+  if (commandReceiver == nullptr && commandSender == nullptr)
   {
-    commandReceiver.reset();
-    commandSender.reset();
+    commandReceiver = make_unique<hive_comm::TrHiveCommandReceiver>(&client);
+    commandSender = make_unique<hive_comm::TrHiveCommandSender>(&client);
   }
-  commandReceiver = make_unique<hive_comm::TrHiveCommandReceiver>(&client);
-  commandSender = make_unique<hive_comm::TrHiveCommandSender>(&client);
+  else
+  {
+    commandChanServer->removeClient(&client);
+    DEBUG(LOG_TAG_ERROR,
+          "Received a new hived command channel client, but the command receiver or sender is already initialized.");
+  }
 }
 
 void TrHiveDaemon::acceptChanClient(int timeout)
@@ -240,6 +253,45 @@ bool TrHiveDaemon::checkDaemonAlive()
     }
   }
   return true;
+}
+
+void TrHiveDaemon::cleanupDaemonResources()
+{
+  // Reset daemon state
+  daemonPid = -1;
+  daemonReady = false;
+
+  // Close child pipes if they're open
+  if (childPipes[0] != -1)
+  {
+    close(childPipes[0]);
+    childPipes[0] = -1;
+  }
+  if (childPipes[1] != -1)
+  {
+    close(childPipes[1]);
+    childPipes[1] = -1;
+  }
+
+  // Stop and reset command receiver worker
+  if (recvWorker != nullptr)
+  {
+    recvWorker->stop();
+    recvWorker.reset();
+  }
+
+  // Reset command channel components
+  if (commandReceiver != nullptr)
+    commandReceiver.reset();
+  if (commandSender != nullptr)
+    commandSender.reset();
+  if (commandChanServer != nullptr)
+    commandChanServer.reset();
+
+  // Clear pending callbacks and notify them of failure
+  pendingCreateProcessCallbacks.clear();
+
+  DEBUG(LOG_TAG_CONTENT, "Hive daemon resources cleaned up.");
 }
 
 bool TrHiveDaemon::recvOutput()
@@ -304,6 +356,8 @@ void TrHiveDaemon::recvCommand()
     case hive_comm::TrHiveCommandType::CreateClientResponse:
     {
       auto res = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrCreateClientResponse>(commandMessage);
+      DEBUG(LOG_TAG_CONTENT, "<< CreateClientResponse(%d) with pid(%d)", res.documentId, res.pid);
+
       function<void(pid_t)> callback;
       {
         shared_lock<shared_mutex> lock(mutexForCreateProcessCallbacks);
@@ -311,15 +365,20 @@ void TrHiveDaemon::recvCommand()
         if (it != pendingCreateProcessCallbacks.end())
         {
           callback = it->second;
+          pendingCreateProcessCallbacks.erase(it);
         }
       }
-      if (callback)
+
+      if (TR_LIKELY(callback))
         callback(res.pid);
+      else
+        DEBUG(LOG_TAG_ERROR, "No callback found for CreateClientResponse(%d)", res.documentId);
       break;
     }
     case hive_comm::TrHiveCommandType::TerminateClientResponse:
     {
       auto res = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrTerminateClientResponse>(commandMessage);
+      DEBUG(LOG_TAG_CONTENT, "<< TerminateClientResponse(%d)", res.documentId);
       // TODO: handle the response?
       break;
     }
@@ -331,7 +390,8 @@ void TrHiveDaemon::recvCommand()
     case hive_comm::TrHiveCommandType::OnExitEvent:
     {
       auto exitEvent = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrOnExitEvent>(commandMessage);
-      DEBUG(LOG_TAG_ERROR, "Received exit event from client(%d): %d", exitEvent.documentId, exitEvent.code);
+      DEBUG(LOG_TAG_CONTENT, "<< OnExitEvent(%d) with code(%d)", exitEvent.documentId, exitEvent.code);
+
       auto contentToExit = constellation->contentManager->getContent(exitEvent.documentId, true);
       if (contentToExit != nullptr)
         contentToExit->onClientProcessExited(exitEvent.code);

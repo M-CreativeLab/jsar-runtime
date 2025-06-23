@@ -105,21 +105,33 @@ shared_ptr<TrContentRuntime> TrContentManager::makeContent()
     unique_lock<shared_mutex> lock(contentsMutex);
     for (auto content : contents)
     {
-      if (!content->used)
+      // Check if the content is available and not destroyed.
+      if (!content->available ||
+          content->pid == INVALID_PID ||
+          content->shouldDestroy)
+        continue;
+
+      if (!content->isUsed())
       {
-        content->used = true;
+        content->setUsed();
         contentToUse = content;
+        DEBUG(LOG_TAG_CONTENT,
+              "Selected an pre-content runtime #%d(%d) for use",
+              content->id,
+              content->pid.load());
         break;
       }
     }
   }
+
   if (contentToUse == nullptr)
   {
     // Create a new content runtime when there is no available content.
     contentToUse = TrContentRuntime::Make(this);
+    DEBUG(LOG_TAG_CONTENT, "Failed to find an available content, creating a new one #%d", contentToUse->id);
     {
       unique_lock<shared_mutex> lock(contentsMutex);
-      contentToUse->used = true;
+      contentToUse->setUsed();
       contents.push_back(contentToUse);
     }
   }
