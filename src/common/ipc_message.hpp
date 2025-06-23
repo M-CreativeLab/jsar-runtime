@@ -191,7 +191,10 @@ namespace ipc
 
       char *buffer = (char *)malloc(bufferSize);
       if (buffer == nullptr)
+      {
+        DEBUG(LOG_TAG_ERROR, "[OOM] Failed to allocate memory(%zu bytes) for IPC message", bufferSize);
         return false; // out of memory
+      }
 
       size_t offset = 0;
       // Write header
