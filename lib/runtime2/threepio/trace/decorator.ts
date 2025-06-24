@@ -12,7 +12,6 @@ export type TraceOptions = {
 
 interface TraceConfiguration {
   type: TraceType;
-  metrics?: ("duration" | "tokens" | "streamTokens")[];
 }
 
 export function MonitorTaskFlow(config: TraceConfiguration) {
