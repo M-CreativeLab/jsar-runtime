@@ -4,7 +4,7 @@ import { DomOperator } from './DomOperator';
 import { EmitData } from './interfaces';
 import { getThreepioApiProvider, getThreepioApiModelId, getThreepioApiEndpoint } from '@transmute/env';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
-import { LLMMonitoringService } from '../../utils/LLMMonitoringService';
+import { TraceManager } from '../../trace/TraceManager';
 
 export const APP_ROOT_ID = 'app-root';
 
@@ -48,7 +48,6 @@ export class GenerateDocumentCapability implements Capability {
         this.#operator.operate(this.#document, data);
       });
       await this.#manager.executeFlow(input);
-      LLMMonitoringService.getInstance().printAll();
       const htmlcontext = `
       <html>
         <head>${this.#document.head.innerHTML}</head>

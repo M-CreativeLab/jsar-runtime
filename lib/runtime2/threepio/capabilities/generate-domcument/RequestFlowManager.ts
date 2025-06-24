@@ -7,32 +7,81 @@ import {
   ParsedModule,
   MoudleParserEventType,
   MoudleFragmentTask,
+  HeaderFragment,
 } from './interfaces';
-import { createModuleTask } from './taskDecomposer';
+import { getPlanPrompt, getWorkerPrompt } from './prompts';
 import { callLLM } from '../../utils/llmClient';
-import { generateStructuralStream } from './htmlStructuralGenerator';
-import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
-import { getPlanPrompt } from './prompts';
-import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { ApiStream } from '../../api/transform/stream';
+import { StreamPlannerParser } from './parsers/StreamPlannerParser';
+import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
+import { TraceOptions, MonitorTaskFlow } from '../../trace/decorator';
+import { StreamHtmlParser } from './parsers/StreamHtmlParser';
+import { HtmlGenerateStream, PlannerGenerateStream } from './parsers/interface';
+import { TraceManager } from '../../trace/TraceManager';
+
+type ProcessPlannerParam = {
+  input: string,
+  plannerParser: StreamPlannerParser;
+  taskPromises: Promise<void>[];
+} & TraceOptions;
+
+/**
+ * Converts a single parsed module into a SkeletonNode and an FragmentTask.
+ * This is designed to be called incrementally as modules are parsed.
+ * @param module Parsed module information.
+ * @param overallDesignTheme The overall design theme from the page header.
+ * @param appName The application name from the page header.
+ * @returns An object containing the new SkeletonNode and its corresponding FragmentTask.
+ */
+function createModuleTask(parentRequestId: string, module: ParsedModule): MoudleFragmentTask {
+  const systemPrompt = createPrompt({ pageGoal: module.description, parentId: parentRequestId });
+  return {
+    systemPrompt,
+    input: JSON.stringify(module),
+    parentRequestId,
+    moudle: module,
+    fragmentType: FragmentType.HTML,
+    context: {
+      pageGoal: module.name,
+    },
+  };
+}
+
+/**
+ * Creates a prompt for generating HTML fragments based on the provided task.
+ * The prompt includes the page goal, parent ID, and design system information.
+ * @param task - The MoudleFragmentTask containing context and module information.
+ * @returns An object containing the input JSON string and the formatted prompt string.
+ */
+export function createPrompt(options: { pageGoal: string, parentId: string, designSystemInfo?: string }): string {
+  const { pageGoal, parentId, designSystemInfo } = options;
+  let prompt = getWorkerPrompt();
+  prompt = prompt.replace(/{{PAGE_GOAL}}/g, pageGoal);
+  prompt = prompt.replace(/{{PARENT_ID}}/g, parentId);
+  prompt = prompt.replace(/{{DESIGN_SYSTEM_INFO}}/g, designSystemInfo);
+  return prompt;
+}
 
 export interface RequestFlowManager {
   on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
 }
 
 export class RequestFlowManager extends EventEmitter {
+  @MonitorTaskFlow({ type: 'task' })
   public async executeFlow(input: string): Promise<void> {
-    let headerParsed = false;
     let taskPromises: Promise<void>[] = [];
-    const plannerParser = new StreamPlannerParser();
-    const systemPrompt = getPlanPrompt();
     try {
-      // callLLM now returns an object { stream, callId }
-      const { stream: plannerStream, callId: plannerCallId } = await callLLM(input, systemPrompt);
-      reportThreepioInfo(`Planner LLM call initiated with callId: ${plannerCallId}`);
-
-      await this.#processPlannerStream(plannerStream, plannerParser, taskPromises, () => { headerParsed = true; }, plannerCallId);
+      await this.processPlannerRequest(
+        {
+          input,
+          taskPromises,
+          parentRequestId: input,
+          requestId: input,
+          plannerParser: new StreamPlannerParser()
+        }
+      );
       await Promise.all(taskPromises);
+      TraceManager.printAll();
       reportThreepioInfo('All tasks completed.');
     } catch (error) {
       reportThreepioError('Error during flow execution:', error);
@@ -40,75 +89,81 @@ export class RequestFlowManager extends EventEmitter {
     }
   }
 
-  async #processPlannerStream(
-    stream: ApiStream,
-    plannerParser: StreamPlannerParser,
-    taskPromises: Promise<void>[],
-    onHeaderParsed: () => void,
-    plannerParentCallId: string // The callId of the LLM call that generated this plan
-  ) {
-    const parserStreamPromise = (async () => {
-      for await (const item of plannerParser.stream()) {
-        switch (item.type) {
-          case 'header':
-            const header = item.data as ParsedHeader;
-            onHeaderParsed();
-            const layout = header.layout.replace(/height/g, 'min-height');
-            reportThreepioInfo(`Header parsed layout: ${layout}`);
-            this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
-            break;
-
-          case 'module':
-            const module = item.data as ParsedModule;
-            if (!onHeaderParsed) {
-              reportThreepioError('Module parsed before root node was created. Aborting.');
-              break;
-            }
-            const moduleParentId = 'moudle' + taskPromises.length; // This is a DOM ID, not the call parent ID
-            module.parentId = moduleParentId;
-            // When creating a module task, the plannerParentCallId is the parent for the LLM call *within* that task generation.
-            const task = createModuleTask(module, '', moduleParentId /* This is for DOM element id */);
-            this.#emitData('append', {
-              type: FragmentType.Moudle,
-              fragment: { id: moduleParentId, content: module.layout } as MoudleFragment
-            });
-
-            // Pass the plannerParentCallId to #generateModuleFragments, so it can be used as parentId for LLM calls within module generation
-            const p = this.#generateModuleFragments(task, plannerParentCallId);
-            taskPromises.push(p);
-            break;
-
-          case 'error':
-            const errorData = item.data as { error: Error; content: string };
-            reportThreepioError('Planner parsing error:', errorData.error.message);
-            break;
-
-          case 'end':
-            const endData = item.data as { processedCount: number };
-            reportThreepioInfo('Planner parsing completed. Processed:', endData.processedCount);
-            break;
-        }
-      }
-    })();
-
-    const inputPromise = (async () => {
-      for await (const chunk of stream) {
-        if (chunk.type === 'text') {
-          plannerParser.parseTextChunk(chunk);
-        }
-      }
-      plannerParser.endStream();
-    })();
-
-    await Promise.all([parserStreamPromise, inputPromise]);
+  @MonitorTaskFlow({ type: 'planRequest' })
+  async processPlannerRequest(plannerParam: ProcessPlannerParam): Promise<void> {
+    const systemPrompt = getPlanPrompt();
+    const { input } = plannerParam;
+    const { stream, requestId } = callLLM({ input, systemPrompt });
+    const plannerItemStream = this.#processApiStream(stream);
+    await this.#processPlannerStream({ requestId, parentRequestId: input, ...plannerParam }, plannerItemStream);
   }
 
-  async #generateModuleFragments(task: MoudleFragmentTask, parentCallId: string): Promise<void> { // Added parentCallId
-    try {
-      reportThreepioInfo(`Generating fragment for task: ${task.moudle.name} with parentCallId: ${parentCallId}`);
+  async* #processApiStream(stream: ApiStream): PlannerGenerateStream {
+    const plannerParser = new StreamPlannerParser();
+    const parsingPromise = (async () => {
+      try {
+        for await (const chunk of stream) {
+          if (chunk.type === 'text') {
+            plannerParser.parseTextChunk(chunk);
+          }
+        }
+      } finally {
+        plannerParser.endStream();
+      }
+    })();
+    yield* plannerParser.stream();
+    await parsingPromise;
+  }
 
-      // Pass parentCallId to generateStructuralStream
-      for await (const fragment of generateStructuralStream(task, parentCallId)) {
+  async #processPlannerStream(plannerParam: ProcessPlannerParam, planStream: PlannerGenerateStream) {
+    const { taskPromises, requestId, parentRequestId } = plannerParam;
+    let headerHasBeenParsed = false;
+    for await (const item of planStream) {
+      switch (item.type) {
+        case 'header':
+          const header = item.data as ParsedHeader;
+          headerHasBeenParsed = true;
+          const layout = header.layout.replace(/height/g, 'min-height');
+          reportThreepioInfo(`Header parsed layout: ${layout}`);
+          this.#emitData('append', {
+            requestId,
+            parentRequestId,
+            type: FragmentType.Header,
+            fragment: { content: layout, rawContent: header } as HeaderFragment
+          });
+          break;
+        case 'module':
+          const module = item.data as ParsedModule;
+          if (!headerHasBeenParsed) {
+            reportThreepioError('Module parsed before header was processed. Aborting.');
+            break;
+          }
+          const moduleParentId = 'moudle' + taskPromises.length;
+          module.parentId = moduleParentId;
+          const task = createModuleTask(requestId, module);
+          this.#emitData('append', {
+            type: FragmentType.Moudle,
+            fragment: { id: moduleParentId, content: module.layout, rawContent: module } as MoudleFragment,
+            requestId,
+            parentRequestId
+          });
+          taskPromises.push(this.#createModuleFragments(task));
+          break;
+        case 'error':
+          const errorData = item.data as { error: Error; content: string };
+          reportThreepioError('Planner parsing error:', errorData.error.message);
+          break;
+        case 'end':
+          const endData = item.data as { processedCount: number };
+          reportThreepioInfo('Planner parsing completed. Processed:', endData.processedCount);
+          break;
+      }
+    }
+  }
+
+  async #createModuleFragments(task: MoudleFragmentTask): Promise<void> {
+    try {
+      for await (const fragment of this.#createMoudleStream(task)) {
         if (fragment.eventType === 'append') {
           this.#emitData('append', fragment.data);
         } else if (fragment.error) {
@@ -118,6 +173,39 @@ export class RequestFlowManager extends EventEmitter {
     } catch (error) {
       reportThreepioError(`Error generating fragment for task ${task}:`, error);
     }
+  }
+
+  #createMoudleStream(task: MoudleFragmentTask): HtmlGenerateStream {
+    const { systemPrompt, input } = task;
+    const { stream, requestId } = callLLM({ input, systemPrompt });
+    task.requestId = requestId;
+    return this.processMoudleStream(task, stream);
+  }
+
+  @MonitorTaskFlow({ type: 'moudleRequest' })
+  async* processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): HtmlGenerateStream {
+    const htmlParser = new StreamHtmlParser(task.parentRequestId);
+    const parserStreamPromise = (async function* () {
+      for await (const item of htmlParser.stream()) {
+        if (item.eventType === 'append') {
+          item.data.requestId = task.requestId;
+          item.data.parentRequestId = task.parentRequestId;
+        }
+        yield item;
+      }
+    })();
+
+    const inputPromise = (async () => {
+      for await (const chunk of stream) {
+        if (chunk.type === 'text') {
+          htmlParser.parseTextChunk(chunk);
+        }
+      }
+      htmlParser.endStream();
+    })();
+
+    yield* parserStreamPromise;
+    await inputPromise;
   }
 
   #emitData(event: string, data: EmitData) {

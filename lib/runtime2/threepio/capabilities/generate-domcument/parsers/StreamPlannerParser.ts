@@ -1,11 +1,6 @@
-import { ParsedHeader, ParsedModule, ParsedPlannerFields } from '../interfaces';
+import { Parser, PlannerStreamItem } from './interface';
 import { ApiStreamTextChunk } from '../../../api/transform/stream';
-import { Parser } from './interface';
-
-export interface PlannerStreamItem {
-  type: 'header' | 'module' | 'end' | 'error';
-  data?: ParsedHeader | ParsedModule | { processedCount: number } | { error: Error; content: string };
-}
+import { ParsedHeader, ParsedModule, ParsedPlannerFields } from '../interfaces';
 
 export class StreamPlannerParser implements Parser {
   #isEnded = false;

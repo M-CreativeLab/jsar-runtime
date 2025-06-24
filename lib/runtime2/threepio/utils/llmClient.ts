@@ -1,6 +1,5 @@
 import { buildApiHandler } from '../api';
 import { ApiConfiguration } from '../shared/api';
-import { ApiStream, ApiStreamErrorChunk, ApiStreamTextChunk } from '../api/transform/stream';
 import { ApiProvider } from '../shared/api';
 import {
   getThreepioApiKey,
@@ -8,17 +7,18 @@ import {
   getThreepioApiModelId,
   getThreepioApiEndpoint,
 } from '../../../bindings/env';
-import { JsonlStreamProcessor } from './jsonlProcessor';
-import { reportThreepioError } from './threepioLog';
-import { LLMMonitoringService } from './LLMMonitoringService';
+import { JsonlProcessor } from './JsonlProcessor';
+import { reportThreepioError, reportThreepioInfo } from './threepioLog';
+import { ApiStream, ApiStreamErrorChunk, ApiStreamTextChunk } from '../api/transform/stream';
 
-const monitoringService = LLMMonitoringService.getInstance();
-
-export async function callLLM(
+interface CallLLMOptions {
   input: string,
   systemPrompt: string,
-  parentId?: string | null
-): Promise<{ stream: ApiStream; callId: string }> {
+}
+
+export function callLLM(options: CallLLMOptions): { stream: ApiStream, requestId: string } {
+  const { input, systemPrompt } = options;
+  const requestId = input.substring(0, 10) + Date.now();
   const config: ApiConfiguration = {
     apiProvider: getThreepioApiProvider() as ApiProvider,
     apiModelId: getThreepioApiModelId(),
@@ -26,49 +26,32 @@ export async function callLLM(
     endpoint: getThreepioApiEndpoint(),
   };
   const handler = buildApiHandler(config);
-
-  const callId = monitoringService.startCall(input, parentId || undefined);
-  monitoringService.recordSystemPrompt(callId, systemPrompt);
-  monitoringService.recordInput(callId, input);
-
   try {
     const originalStream = handler.createMessage(systemPrompt, [{ role: 'user', content: input }]);
-    const processedStream = processJsonlStream(originalStream, callId);
-    return { stream: processedStream, callId };
+    const processedStream = processJsonlStream(originalStream, requestId);
+    return { stream: processedStream, requestId }; // Return the callId for downstream use
   } catch (error: any) {
-    monitoringService.recordError(callId, error.message || String(error));
     throw error;
   }
 }
 
 async function* processJsonlStream(
   sourceStream: ApiStream,
-  callId: string // Pass callId for monitoring
+  requestId: string
 ): ApiStream {
-  const jsonlProcessor = new JsonlStreamProcessor();
+  const jsonlProcessor = new JsonlProcessor();
   try {
     for await (const sourceChunk of sourceStream) {
       if (sourceChunk.type === 'text') {
+        reportThreepioInfo(`Processing chunk: ${sourceChunk.text}`, requestId, Date.now());
         for (const processedLine of jsonlProcessor.processChunk(sourceChunk.text)) {
           if (processedLine.error) {
             const errorMessage = processedLine.error.message;
-            monitoringService.recordError(callId, `JSONL parsing error: ${errorMessage}`);
-            reportThreepioError(errorMessage, callId);
+            reportThreepioError(errorMessage, requestId);
             yield {
               type: 'error',
               error: processedLine.error
             } as ApiStreamErrorChunk;
-          } else if (processedLine.jsonContent) {
-            yield {
-              type: 'text',
-              text: processedLine.rawLine
-            } as ApiStreamTextChunk;
-            const endTime = Date.now();
-            monitoringService.addJsonOutputTiming(callId, {
-              endTime,
-              jsonContent: processedLine.jsonContent,
-              rawLine: processedLine.rawLine
-            });
           } else {
             yield {
               type: 'text',
@@ -84,31 +67,21 @@ async function* processJsonlStream(
     for (const processedLine of jsonlProcessor.flush()) {
       if (processedLine.error) {
         const errorMessage = processedLine.error.message;
-        monitoringService.recordError(callId, `JSONL flushing error: ${errorMessage}`);
-        reportThreepioError(errorMessage, callId);
+        reportThreepioError(errorMessage, requestId);
         yield {
           type: 'error',
           error: processedLine.error
         } as ApiStreamErrorChunk;
-      } else if (processedLine.jsonContent) {
+      } else {
         yield {
           type: 'text',
           text: processedLine.rawLine
         } as ApiStreamTextChunk;
-        const endTime = Date.now();
-        monitoringService.addJsonOutputTiming(callId, {
-          endTime,
-          jsonContent: processedLine.jsonContent,
-          rawLine: processedLine.rawLine
-        });
       }
     }
   } catch (error: any) {
     const errorMessage = `Critical error in LLM stream processing: ${error.message}`;
-    monitoringService.recordError(callId, errorMessage);
-    reportThreepioError(errorMessage, callId);
+    reportThreepioError(errorMessage, requestId);
     yield { type: 'error', error: { message: errorMessage, code: 'STREAM_PROCESSING_ERROR' } };
-  } finally {
-    monitoringService.endCall(callId);
   }
 }

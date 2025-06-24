@@ -1,6 +1,7 @@
 import { APP_ROOT_ID } from '.';
+import { MonitorTaskFlow } from '../../trace/decorator';
 import { reportThreepioError, reportThreepioInfo, reportThreepioWarning } from '../../utils/threepioLog';
-import { EmitData } from './interfaces';
+import { EmitData, HtmlFragment } from './interfaces';
 
 function appendHtml(htmlstr: string, element: Element) {
   const tempDiv = document.createElement('div');
@@ -17,13 +18,13 @@ export class DomOperator {
       return;
     }
     const { type, fragment } = data;
-    const { id, content, parentId } = fragment as any;
+    const { id, content } = fragment as any;
     switch (type) {
       case 'html':
-        this.#appendFragment(document, parentId, content);
+        this.appendFragment(data, document);
         break;
       case 'css':
-        this.#appendCss(document, content);
+        this.appendCss(data, document);
         break;
       case 'header':
         if (!content) {
@@ -32,13 +33,18 @@ export class DomOperator {
         }
         const headerCssfragment = `#${APP_ROOT_ID}{${content}}`;
         reportThreepioInfo('Processed  Header append CSS:', headerCssfragment);
-        this.#appendCss(document, headerCssfragment);
+        data.fragment = { content: headerCssfragment, parentId: APP_ROOT_ID, ...data.fragment } as HtmlFragment;
+        this.appendCss(data, document);
         break;
       case 'moudle':
+        const htmlFragment = fragment as HtmlFragment;
         const moudleHtmlfragment = `<div id=\'${id}\'></div>`;
         const moudleCssfragment = `#${id}{${content}}`;
-        this.#appendFragment(document, APP_ROOT_ID, moudleHtmlfragment);
-        this.#appendCss(document, moudleCssfragment);
+        htmlFragment.parentId = APP_ROOT_ID;
+        data.fragment.content = moudleHtmlfragment;
+        this.appendFragment(data, document);
+        data.fragment.content = moudleCssfragment;
+        this.appendCss(data, document);
         reportThreepioInfo('Processed moudle append CSS:', moudleCssfragment);
         break;
       default:
@@ -51,7 +57,14 @@ export class DomOperator {
    * @param content  css content to be appended.
    * @description This method appends the provided CSS content to the document's head element.
    */
-  #appendCss(document: Document, content: string): void {
+  @MonitorTaskFlow({ type: 'opera' })
+  protected appendCss(data: EmitData, document: Document): void {
+    const { fragment } = data;
+    const { content } = fragment;
+    if (document == null) {
+      reportThreepioWarning('Document is null, cannot operate on it.');
+      return;
+    }
     reportThreepioInfo('Processed append CSS:', content);
     const styleElement = document.createElement('style');
     styleElement.appendChild(document.createTextNode(content));
@@ -74,9 +87,14 @@ export class DomOperator {
    * @param content  The HTML content to be appended.
    * @description This method appends the provided HTML content to the document's body element.
    */
-  #appendFragment(document: Document, parentId: string, content: string): void {
-    reportThreepioInfo('Process append HTML:', parentId, content);
-    try {
+  @MonitorTaskFlow({ type: 'opera' })
+  protected appendFragment(data: EmitData, document: Document): void {
+    const { fragment } = data;
+    const { content, parentId } = fragment as any;
+    if (document == null) {
+      reportThreepioWarning('Document is null, cannot operate on it.');
+      return;
+    } try {
       if (parentId === null) {
         appendHtml(content, document.body);
       } else {

@@ -1,13 +1,7 @@
+import { HtmlStreamItem, Parser } from './interface';
 import { ApiStreamTextChunk } from '../../../api/transform/stream';
-import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, CssFragment } from '../interfaces';
+import { FragmentType, HtmlFragment, CssFragment } from '../interfaces';
 import { CssOutputFragment, FRAGMENT_FIELD, HTMLOutputFragment } from '../prompts/worker.prompt';
-import { Parser } from './interface';
-
-export interface HtmlStreamItem {
-  eventType: MoudleParserEventType;
-  data: EmitData | null;
-  error?: Error;
-}
 
 export class StreamHtmlParser implements Parser {
   readonly #taskId: string;
@@ -122,7 +116,7 @@ export class StreamHtmlParser implements Parser {
       eventType: 'append',
       data: {
         type: FragmentType.HTML,
-        fragment
+        fragment,
       }
     };
   }
@@ -140,7 +134,7 @@ export class StreamHtmlParser implements Parser {
       eventType: 'append',
       data: {
         type: FragmentType.CSS,
-        fragment
+        fragment,
       }
     };
   }
