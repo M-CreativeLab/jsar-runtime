@@ -1,6 +1,6 @@
-import util from 'util';
 import { TaskFlowSpan, SpanContext } from "./TaskFlowSpan";
 import { reportThreepioWarning } from "../utils/threepioLog";
+import util from 'util';
 
 export class TraceManager {
   private static RootSpans: TaskFlowSpan[] = [];

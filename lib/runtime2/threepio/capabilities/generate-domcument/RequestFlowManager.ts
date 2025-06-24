@@ -14,10 +14,9 @@ import { callLLM } from '../../utils/llmClient';
 import { ApiStream } from '../../api/transform/stream';
 import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
-import { TraceOptions, MonitorTaskFlow } from '../../trace/decorator';
+import { TraceOptions, wrapTaskFlowMonitor } from '../../trace/wrapTaskFlowMonitor';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
 import { HtmlGenerateStream, PlannerGenerateStream } from './parsers/interface';
-import { TraceManager } from '../../trace/TraceManager';
 
 type ProcessPlannerParam = {
   input: string,
@@ -67,11 +66,11 @@ export interface RequestFlowManager {
 }
 
 export class RequestFlowManager extends EventEmitter {
-  @MonitorTaskFlow({ type: 'task' })
   public async executeFlow(input: string): Promise<void> {
     let taskPromises: Promise<void>[] = [];
     try {
-      await this.processPlannerRequest(
+      const planRequest = wrapTaskFlowMonitor(this.#processPlannerRequest.bind(this), { type: 'planRequest' });
+      await planRequest(
         {
           input,
           taskPromises,
@@ -79,9 +78,8 @@ export class RequestFlowManager extends EventEmitter {
           requestId: input,
           plannerParser: new StreamPlannerParser()
         }
-      );
+        , { type: 'planRequest' });
       await Promise.all(taskPromises);
-      TraceManager.printAll();
       reportThreepioInfo('All tasks completed.');
     } catch (error) {
       reportThreepioError('Error during flow execution:', error);
@@ -89,8 +87,7 @@ export class RequestFlowManager extends EventEmitter {
     }
   }
 
-  @MonitorTaskFlow({ type: 'planRequest' })
-  async processPlannerRequest(plannerParam: ProcessPlannerParam): Promise<void> {
+  async #processPlannerRequest(plannerParam: ProcessPlannerParam): Promise<void> {
     const systemPrompt = getPlanPrompt();
     const { input } = plannerParam;
     const { stream, requestId } = callLLM({ input, systemPrompt });
@@ -98,7 +95,7 @@ export class RequestFlowManager extends EventEmitter {
     await this.#processPlannerStream({ requestId, parentRequestId: input, ...plannerParam }, plannerItemStream);
   }
 
-  async* #processApiStream(stream: ApiStream): PlannerGenerateStream {
+  async * #processApiStream(stream: ApiStream): PlannerGenerateStream {
     const plannerParser = new StreamPlannerParser();
     const parsingPromise = (async () => {
       try {
@@ -179,11 +176,11 @@ export class RequestFlowManager extends EventEmitter {
     const { systemPrompt, input } = task;
     const { stream, requestId } = callLLM({ input, systemPrompt });
     task.requestId = requestId;
-    return this.processMoudleStream(task, stream);
+    const wrap = wrapTaskFlowMonitor(this.#processMoudleStream.bind(this), { type: 'moudleRequest' });
+    return wrap(task, stream);
   }
 
-  @MonitorTaskFlow({ type: 'moudleRequest' })
-  async* processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): HtmlGenerateStream {
+  async * #processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): HtmlGenerateStream {
     const htmlParser = new StreamHtmlParser(task.parentRequestId);
     const parserStreamPromise = (async function* () {
       for await (const item of htmlParser.stream()) {

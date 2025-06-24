@@ -1,5 +1,5 @@
 import { reportThreepioWarning } from "../utils/threepioLog";
-import { TraceOptions, TraceType } from "./decorator";
+import { TraceOptions, TraceType } from "./wrapTaskFlowMonitor";
 
 export type SpanContext = TraceOptions & {
   name: string,

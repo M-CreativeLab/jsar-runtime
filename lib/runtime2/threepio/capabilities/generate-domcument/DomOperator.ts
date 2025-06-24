@@ -1,5 +1,5 @@
 import { APP_ROOT_ID } from '.';
-import { MonitorTaskFlow } from '../../trace/decorator';
+import { wrapTaskFlowMonitor } from '../../trace/wrapTaskFlowMonitor';
 import { reportThreepioError, reportThreepioInfo, reportThreepioWarning } from '../../utils/threepioLog';
 import { EmitData, HtmlFragment } from './interfaces';
 
@@ -17,14 +17,16 @@ export class DomOperator {
       reportThreepioWarning('Document is null, cannot operate on it.');
       return;
     }
+    const appendCss = wrapTaskFlowMonitor(this.appendCss.bind(this), { type: 'opera' });
+    const appendFragment = wrapTaskFlowMonitor(this.appendFragment.bind(this), { type: 'opera' });
     const { type, fragment } = data;
     const { id, content } = fragment as any;
     switch (type) {
       case 'html':
-        this.appendFragment(data, document);
+        appendFragment(data, document);
         break;
       case 'css':
-        this.appendCss(data, document);
+        appendCss(data, document);
         break;
       case 'header':
         if (!content) {
@@ -34,7 +36,7 @@ export class DomOperator {
         const headerCssfragment = `#${APP_ROOT_ID}{${content}}`;
         reportThreepioInfo('Processed  Header append CSS:', headerCssfragment);
         data.fragment = { content: headerCssfragment, parentId: APP_ROOT_ID, ...data.fragment } as HtmlFragment;
-        this.appendCss(data, document);
+        appendCss(data, document);
         break;
       case 'moudle':
         const htmlFragment = fragment as HtmlFragment;
@@ -42,9 +44,9 @@ export class DomOperator {
         const moudleCssfragment = `#${id}{${content}}`;
         htmlFragment.parentId = APP_ROOT_ID;
         data.fragment.content = moudleHtmlfragment;
-        this.appendFragment(data, document);
+        appendFragment(data, document);
         data.fragment.content = moudleCssfragment;
-        this.appendCss(data, document);
+        appendCss(data, document);
         reportThreepioInfo('Processed moudle append CSS:', moudleCssfragment);
         break;
       default:
@@ -57,7 +59,6 @@ export class DomOperator {
    * @param content  css content to be appended.
    * @description This method appends the provided CSS content to the document's head element.
    */
-  @MonitorTaskFlow({ type: 'opera' })
   protected appendCss(data: EmitData, document: Document): void {
     const { fragment } = data;
     const { content } = fragment;
@@ -87,7 +88,6 @@ export class DomOperator {
    * @param content  The HTML content to be appended.
    * @description This method appends the provided HTML content to the document's body element.
    */
-  @MonitorTaskFlow({ type: 'opera' })
   protected appendFragment(data: EmitData, document: Document): void {
     const { fragment } = data;
     const { content, parentId } = fragment as any;

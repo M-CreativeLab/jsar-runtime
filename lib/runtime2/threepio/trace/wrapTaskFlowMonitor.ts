@@ -3,56 +3,64 @@ import { TraceManager } from './TraceManager';
 import { reportThreepioError } from '../utils/threepioLog';
 import { EmitData, MoudleFragmentTask } from '../capabilities/generate-domcument/interfaces';
 
+/**
+ * define the trace type
+ */
 export type TraceType = 'task' | 'planRequest' | 'moudleRequest' | 'opera';
 
+/**
+ * define the trace options
+ */
 export type TraceOptions = {
   requestId?: string;
   parentRequestId?: string;
 }
 
+/**
+ * define the trace configuration
+ */
 interface TraceConfiguration {
   type: TraceType;
 }
 
-export function MonitorTaskFlow(config: TraceConfiguration) {
-  return function (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
-    descriptor.value = function (...args: any[]) {
-      const ctx = createSpanContext(config, args);
-      const span = TraceManager.getSpan(ctx);
-      const result = originalMethod.apply(this, args);
-      if (result && typeof result[Symbol.asyncIterator] === 'function') {
-        return wrapAsyncGenerator(result, span);
-      } else {
-        return Promise.resolve(result)
-          .then(async (res) => {
-            return res;
-          })
-          .catch((err) => {
-            span.error(err);
-            throw err;
-          })
-          .finally(() => {
-            span.end();
-          });
-      }
-    };
-  };
-}
-
-function wrapAsyncGenerator(
-  gen: AsyncGenerator<any>,
-  span: TaskFlowSpan
-): AsyncGenerator<any> {
-  async function* wrapped() {
-    for await (const value of gen) {
-      yield value;
+/**
+ * Wraps a function with a task flow monitor.
+ * how to use:
+ * wrapTaskFlowMonitor(async (input) => {await manager.executePlan(input);}, { type: 'planRequest' })(input);
+ * Determine the span type based on the type parameter to handle different tracing logic
+ * @param fn The function to be traced
+ * @param config The configuration for the trace
+ * @returns 
+ */
+export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, config: TraceConfiguration): T {
+  return (function (this: any, ...args: any[]) {
+    const ctx = createSpanContext(config, args);
+    const span = TraceManager.getSpan(ctx);
+    const result = fn.apply(this, args);
+    if (result && typeof result[Symbol.asyncIterator] === 'function') {
+      return wrapAsyncGenerator(result, span);
+    } else {
+      return Promise.resolve(result)
+        .then(async (res) => {
+          return res;
+        })
+        .catch((err) => {
+          span.error(err);
+          throw err;
+        })
+        .finally(() => {
+          span.end();
+        });
     }
-    span.end();
-  }
-  return wrapped();
+  }) as T;
 }
 
+/**
+ * Creates a span context for a given configuration and arguments.
+ * @param config The configuration for the trace
+ * @param args The arguments passed to the function
+ * @returns 
+ */
 function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext {
   const traceType = config.type;
   const ctx = { traceType } as SpanContext;
@@ -111,4 +119,17 @@ function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext
       reportThreepioError(`Unknown traceable type: ${name}`);
       break;
   }
+}
+
+function wrapAsyncGenerator(
+  gen: AsyncGenerator<any>,
+  span: TaskFlowSpan
+): AsyncGenerator<any> {
+  async function* wrapped() {
+    for await (const value of gen) {
+      yield value;
+    }
+    span.end();
+  }
+  return wrapped();
 }

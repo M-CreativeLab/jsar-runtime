@@ -1,4 +1,4 @@
-import { TraceOptions } from "../../trace/decorator";
+import { TraceOptions } from "../../trace/wrapTaskFlowMonitor";
 /**
  * Event types for the emitter.
  */
