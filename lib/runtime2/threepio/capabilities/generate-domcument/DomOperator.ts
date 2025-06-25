@@ -17,8 +17,8 @@ export class DomOperator {
       reportThreepioWarning('Document is null, cannot operate on it.');
       return;
     }
-    const appendCss = wrapTaskFlowMonitor(this.appendCss.bind(this), { type: 'opera' });
-    const appendFragment = wrapTaskFlowMonitor(this.appendFragment.bind(this), { type: 'opera' });
+    const appendCss = wrapTaskFlowMonitor(this.appendCss.bind(this), { type: 'operatDom' });
+    const appendFragment = wrapTaskFlowMonitor(this.appendFragment.bind(this), { type: 'operatDom' });
     const { type, fragment } = data;
     const { id, content } = fragment as any;
     switch (type) {

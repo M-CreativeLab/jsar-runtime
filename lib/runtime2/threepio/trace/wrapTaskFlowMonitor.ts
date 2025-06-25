@@ -4,9 +4,15 @@ import { reportThreepioError } from '../utils/threepioLog';
 import { EmitData, MoudleFragmentTask } from '../capabilities/generate-domcument/interfaces';
 
 /**
- * define the trace type
+ * This type is used to categorize different tracing operations within the task flow.
+ * @description
+ * It can be one of the following:
+ * 'fullFlow' for the entire task flow,
+ * 'planRequest' for plan requests,
+ * 'moudleRequest' for module requests,
+ * 'operatDom' for DOM operations.
  */
-export type TraceType = 'task' | 'planRequest' | 'moudleRequest' | 'opera';
+export type TraceType = 'fullFlow' | 'planRequest' | 'moudleRequest' | 'operatDom';
 
 /**
  * define the trace options
@@ -65,7 +71,7 @@ function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext
   const traceType = config.type;
   const ctx = { traceType } as SpanContext;
   switch (traceType) {
-    case 'task':
+    case 'fullFlow':
       return {
         requestId: args[0],
         parentRequestId: '',
@@ -82,7 +88,7 @@ function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext
           ...ctx
         };
       }
-    case 'opera':
+    case 'operatDom':
       {
         const data = args[0] as EmitData;
         let fieldName = `opera`;//-${data.type.toString()}`;

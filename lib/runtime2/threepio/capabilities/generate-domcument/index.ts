@@ -48,7 +48,7 @@ export class GenerateDocumentCapability implements Capability {
         reportThreepioInfo('Agent: Received append data:', data);
         this.#operator.operate(this.#document, data);
       });
-      await wrapTaskFlowMonitor(this.#manager.executeFlow.bind(this.#manager), { type: 'task' })(input);
+      await wrapTaskFlowMonitor(this.#manager.executeFlow.bind(this.#manager), { type: 'fullFlow' })(input);
       TraceManager.printAll();
       const htmlcontext = `
       <html>
