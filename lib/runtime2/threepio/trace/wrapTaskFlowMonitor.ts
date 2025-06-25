@@ -1,18 +1,8 @@
-import { TaskFlowSpan, SpanContext } from './TaskFlowSpan';
+import { TraceType } from './interface';
 import { TraceManager } from './TraceManager';
 import { reportThreepioError } from '../utils/threepioLog';
+import { TaskFlowSpan, SpanContext } from './TaskFlowSpan';
 import { EmitData, MoudleFragmentTask } from '../capabilities/generate-domcument/interfaces';
-
-/**
- * This type is used to categorize different tracing operations within the task flow.
- * @description
- * It can be one of the following:
- * 'fullFlow' for the entire task flow,
- * 'planRequest' for plan requests,
- * 'moudleRequest' for module requests,
- * 'operatDom' for DOM operations.
- */
-export type TraceType = 'fullFlow' | 'planRequest' | 'moudleRequest' | 'operatDom';
 
 /**
  * define the trace options
@@ -41,7 +31,7 @@ interface TraceConfiguration {
 export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, config: TraceConfiguration): T {
   return (function (this: any, ...args: any[]) {
     const ctx = createSpanContext(config, args);
-    const span = TraceManager.getSpan(ctx);
+    const span = TraceManager.Instance.getSpan(ctx);
     const result = fn.apply(this, args);
     if (result && typeof result[Symbol.asyncIterator] === 'function') {
       return wrapAsyncGenerator(result, span);
@@ -55,7 +45,7 @@ export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, co
           throw err;
         })
         .finally(() => {
-          span.end();
+          TraceManager.Instance.endSpan(span);
         });
     }
   }) as T;
@@ -63,6 +53,7 @@ export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, co
 
 /**
  * Creates a span context for a given configuration and arguments.
+ * 
  * @param config The configuration for the trace
  * @param args The arguments passed to the function
  * @returns 
@@ -88,12 +79,11 @@ function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext
           ...ctx
         };
       }
-    case 'operatDom':
+    case 'DOMOperation':
       {
         const data = args[0] as EmitData;
-        let fieldName = `opera`;//-${data.type.toString()}`;
         const metadata = {
-          [fieldName]: {
+          'DOMOperation': {
             type: data.type,
             data: data.fragment,
             startTime: Date.now(),
@@ -128,14 +118,14 @@ function createSpanContext(config: TraceConfiguration, args: any[]): SpanContext
 }
 
 function wrapAsyncGenerator(
-  gen: AsyncGenerator<any>,
+  generator: AsyncGenerator<any>,
   span: TaskFlowSpan
 ): AsyncGenerator<any> {
   async function* wrapped() {
-    for await (const value of gen) {
+    for await (const value of generator) {
       yield value;
     }
-    span.end();
+    TraceManager.Instance.endSpan(span);
   }
   return wrapped();
 }

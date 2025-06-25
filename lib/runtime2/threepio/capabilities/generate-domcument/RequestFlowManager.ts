@@ -16,7 +16,7 @@ import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 import { TraceOptions, wrapTaskFlowMonitor } from '../../trace/wrapTaskFlowMonitor';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
-import { HtmlGenerateStream, PlannerGenerateStream } from './parsers/interface';
+import { HTMLStream, PlannerStream } from './parsers/interface';
 
 type ProcessPlannerParam = {
   input: string,
@@ -95,14 +95,12 @@ export class RequestFlowManager extends EventEmitter {
     await this.#processPlannerStream({ requestId, parentRequestId: input, ...plannerParam }, plannerItemStream);
   }
 
-  async * #processApiStream(stream: ApiStream): PlannerGenerateStream {
+  async* #processApiStream(stream: ApiStream): PlannerStream {
     const plannerParser = new StreamPlannerParser();
     const parsingPromise = (async () => {
       try {
         for await (const chunk of stream) {
-          if (chunk.type === 'text') {
-            plannerParser.parseTextChunk(chunk);
-          }
+          plannerParser.parseChunk(chunk);
         }
       } finally {
         plannerParser.endStream();
@@ -112,7 +110,7 @@ export class RequestFlowManager extends EventEmitter {
     await parsingPromise;
   }
 
-  async #processPlannerStream(plannerParam: ProcessPlannerParam, planStream: PlannerGenerateStream) {
+  async #processPlannerStream(plannerParam: ProcessPlannerParam, planStream: PlannerStream) {
     const { taskPromises, requestId, parentRequestId } = plannerParam;
     let headerHasBeenParsed = false;
     for await (const item of planStream) {
@@ -172,7 +170,7 @@ export class RequestFlowManager extends EventEmitter {
     }
   }
 
-  #createMoudleStream(task: MoudleFragmentTask): HtmlGenerateStream {
+  #createMoudleStream(task: MoudleFragmentTask): HTMLStream {
     const { systemPrompt, input } = task;
     const { stream, requestId } = callLLM({ input, systemPrompt });
     task.requestId = requestId;
@@ -180,7 +178,7 @@ export class RequestFlowManager extends EventEmitter {
     return wrap(task, stream);
   }
 
-  async * #processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): HtmlGenerateStream {
+  async * #processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): HTMLStream {
     const htmlParser = new StreamHtmlParser(task.parentRequestId);
     const parserStreamPromise = (async function* () {
       for await (const item of htmlParser.stream()) {
@@ -194,9 +192,7 @@ export class RequestFlowManager extends EventEmitter {
 
     const inputPromise = (async () => {
       for await (const chunk of stream) {
-        if (chunk.type === 'text') {
-          htmlParser.parseTextChunk(chunk);
-        }
+        htmlParser.parseChunk(chunk);
       }
       htmlParser.endStream();
     })();

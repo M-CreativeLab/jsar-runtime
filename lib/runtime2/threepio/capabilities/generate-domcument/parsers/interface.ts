@@ -1,21 +1,21 @@
-import { ApiStreamTextChunk } from "../../../api/transform/stream";
+import { ApiStreamChunk } from "../../../api/transform/stream";
 import { EmitData, MoudleParserEventType, ParsedHeader, ParsedModule } from "../interfaces";
 
 /**
  * Stream for generating HTML fragments.
  */
-export type HtmlGenerateStream = AsyncGenerator<HtmlStreamItem, void, unknown>;
+export type HTMLStream = AsyncGenerator<HtmlStreamItem, void, unknown>;
 
 /**
  * Stream for generating planner items.
  */
-export type PlannerGenerateStream = AsyncGenerator<PlannerStreamItem, void, unknown>;
+export type PlannerStream = AsyncGenerator<PlannerStreamItem, void, unknown>;
 
 /**
  * Parser interface for processing text chunks from the API stream.
  */
 export interface Parser {
-  parseTextChunk(chunk: ApiStreamTextChunk): void;
+  parseChunk(chunk: ApiStreamChunk): void;
   endStream(): void;
 }
 

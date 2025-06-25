@@ -1,9 +1,14 @@
+export interface JsonObject {
+  [key: string]: any;
+}
+
 export interface ProcessedJsonLine {
   rawLine: string;
+  jsonContent?: JsonObject;
   error?: { message: string; code: string };
 }
 
-export class JsonlProcessor {
+export class JSONLProcessor {
   #buffer: string = '';
   #lineStartIndex: number = 0;
 
@@ -44,8 +49,20 @@ export class JsonlProcessor {
   #parseLine(line: string): ProcessedJsonLine | null {
     const trimmedLine = line.trim();
     if (!trimmedLine) return null;
-    return {
-      rawLine: trimmedLine
-    };
+    try {
+      // validate json object
+      return {
+        rawLine: trimmedLine,
+        jsonContent: JSON.parse(trimmedLine) as JsonObject,
+      };
+    } catch (error) {
+      return {
+        rawLine: trimmedLine,
+        error: {
+          message: `JSON parsing error for line: "${trimmedLine}". Error: ${(error as Error).message}`,
+          code: 'JSON_PARSE_ERROR'
+        }
+      };
+    }
   }
 }

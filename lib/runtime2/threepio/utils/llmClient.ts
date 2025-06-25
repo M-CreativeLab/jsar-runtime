@@ -6,10 +6,11 @@ import {
   getThreepioApiProvider,
   getThreepioApiModelId,
   getThreepioApiEndpoint,
+  isDebugging,
 } from '../../../bindings/env';
-import { JsonlProcessor } from './JsonlProcessor';
+import { JSONLProcessor } from './JSONLProcessor';
 import { reportThreepioError, reportThreepioInfo } from './threepioLog';
-import { ApiStream, ApiStreamErrorChunk, ApiStreamTextChunk } from '../api/transform/stream';
+import { ApiStream, ApiStreamErrorChunk, ApiStreamJSONChunk } from '../api/transform/stream';
 
 interface CallLLMOptions {
   input: string,
@@ -39,12 +40,14 @@ async function* processJsonlStream(
   sourceStream: ApiStream,
   requestId: string
 ): ApiStream {
-  const jsonlProcessor = new JsonlProcessor();
+  const jsonlProcessor = new JSONLProcessor();
   try {
     for await (const sourceChunk of sourceStream) {
       if (sourceChunk.type === 'text') {
-        reportThreepioInfo(`Processing chunk: ${sourceChunk.text}`, requestId, Date.now());
         for (const processedLine of jsonlProcessor.processChunk(sourceChunk.text)) {
+          if (isDebugging) {
+            reportThreepioInfo('Processing text chunk', sourceChunk.text, 'requestId', requestId);
+          }
           if (processedLine.error) {
             const errorMessage = processedLine.error.message;
             reportThreepioError(errorMessage, requestId);
@@ -54,9 +57,9 @@ async function* processJsonlStream(
             } as ApiStreamErrorChunk;
           } else {
             yield {
-              type: 'text',
-              text: processedLine.rawLine
-            } as ApiStreamTextChunk;
+              type: 'json',
+              jsonObject: processedLine.jsonContent
+            } as ApiStreamJSONChunk;
           }
         }
       } else if (sourceChunk.type === 'usage') {
@@ -74,9 +77,9 @@ async function* processJsonlStream(
         } as ApiStreamErrorChunk;
       } else {
         yield {
-          type: 'text',
-          text: processedLine.rawLine
-        } as ApiStreamTextChunk;
+          type: 'json',
+          jsonObject: processedLine.jsonContent
+        } as ApiStreamJSONChunk;
       }
     }
   } catch (error: any) {

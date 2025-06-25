@@ -1,24 +1,25 @@
 import { Parser, PlannerStreamItem } from './interface';
-import { ApiStreamTextChunk } from '../../../api/transform/stream';
+import { ApiStreamChunk } from '../../../api/transform/stream';
 import { ParsedHeader, ParsedModule, ParsedPlannerFields } from '../interfaces';
+import { JsonObject } from '../../../utils/JSONLProcessor';
 
 export class StreamPlannerParser implements Parser {
   #isEnded = false;
   #processedCount = 0;
-  #pendingChunks: string[] = [];
   #resolve: ((value: PlannerStreamItem | null) => void) | null = null;
   #queue: PlannerStreamItem[] = [];
 
-  public parseTextChunk(chunk: ApiStreamTextChunk): void {
-    if (this.#isEnded || chunk.type !== 'text' || !chunk.text) {
+  public parseChunk(chunk: ApiStreamChunk): void {
+    if (this.#isEnded || chunk.type !== 'json' || !chunk.jsonObject) {
       return;
     }
 
-    const trimmedLine = chunk.text.trim();
-    if (trimmedLine) {
-      this.#pendingChunks.push(trimmedLine);
-      this.#processQueue();
+    const item = this.#transformObject(chunk.jsonObject);
+    if (item) {
+      this.#processedCount++;
+      this.#queue.push(item);
     }
+    this.#processQueue();
   }
 
   public endStream(): void {
@@ -33,27 +34,19 @@ export class StreamPlannerParser implements Parser {
   }
 
   public async* stream(): AsyncGenerator<PlannerStreamItem, void, unknown> {
-    while (!this.#isEnded || this.#queue.length > 0 || this.#pendingChunks.length > 0) {
-      while (this.#pendingChunks.length > 0) {
-        const chunk = this.#pendingChunks.shift()!;
-        const item = this.#parseJsonLine(chunk);
-        if (item) {
-          this.#processedCount++;
-          yield item;
-        }
-      }
-
+    while (true) {
       while (this.#queue.length > 0) {
         yield this.#queue.shift()!;
       }
 
-      if (!this.#isEnded && this.#queue.length === 0 && this.#pendingChunks.length === 0) {
-        await new Promise<void>(resolve => {
-          this.#resolve = () => resolve();
-          setTimeout(() => resolve(), 10); // 防止死锁
-        });
-        this.#resolve = null;
+      if (this.#isEnded && this.#queue.length === 0) {
+        break;
       }
+
+      await new Promise<void>(resolve => {
+        this.#resolve = () => resolve();
+      });
+      this.#resolve = null;
     }
   }
 
@@ -63,32 +56,31 @@ export class StreamPlannerParser implements Parser {
     }
   }
 
-  #parseJsonLine(jsonString: string): PlannerStreamItem | null {
+  #transformObject(data: JsonObject): PlannerStreamItem | null {
     try {
-      const data = JSON.parse(jsonString);
       if (!data || typeof data !== 'object' || !data.type) {
         return null;
       }
       switch (data.type) {
         case 'planHeader':
-          return this.#processPlanHeader(data);
+          return this.#transformPlanHeader(data);
         case 'planModule':
-          return this.#processPlanModule(data);
+          return this.#transformPlanModule(data);
         default:
           return {
             type: 'error',
-            data: { error: new Error(`Unknown type: ${data.type}`), content: jsonString }
+            data: { error: new Error(`Unknown type: ${data.type}`), content: JSON.stringify(data) }
           };
       }
     } catch (error) {
       return {
         type: 'error',
-        data: { error: error as Error, content: jsonString }
+        data: { error: error as Error, content: JSON.stringify(data) }
       };
     }
   }
 
-  #processPlanHeader(data: any): PlannerStreamItem | null {
+  #transformPlanHeader(data: JsonObject): PlannerStreamItem | null {
     const requiredFields = [ParsedPlannerFields.name, ParsedPlannerFields.theme, ParsedPlannerFields.layout];
     const missingFields = requiredFields.filter(field => !data[field]);
 
@@ -108,7 +100,7 @@ export class StreamPlannerParser implements Parser {
     return { type: 'header', data: header };
   }
 
-  #processPlanModule(data: any): PlannerStreamItem | null {
+  #transformPlanModule(data: JsonObject): PlannerStreamItem | null {
     const requiredFields = [ParsedPlannerFields.name, ParsedPlannerFields.layout, ParsedPlannerFields.description];
     const missingFields = requiredFields.filter(field => !data[field]);
 

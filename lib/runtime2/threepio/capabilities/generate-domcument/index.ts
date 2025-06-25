@@ -49,7 +49,7 @@ export class GenerateDocumentCapability implements Capability {
         this.#operator.operate(this.#document, data);
       });
       await wrapTaskFlowMonitor(this.#manager.executeFlow.bind(this.#manager), { type: 'fullFlow' })(input);
-      TraceManager.printAll();
+      TraceManager.Instance.printAll();
       const htmlcontext = `
       <html>
         <head>${this.#document.head.innerHTML}</head>

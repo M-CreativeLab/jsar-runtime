@@ -1,96 +1,120 @@
-import { TaskFlowSpan, SpanContext } from "./TaskFlowSpan";
-import { reportThreepioWarning } from "../utils/threepioLog";
 import util from 'util';
+import { TimePoint, TimePointOptions } from "./TimePoint";
+import { TaskFlowSpan, SpanContext } from "./TaskFlowSpan";
 
 export class TraceManager {
-  private static RootSpans: TaskFlowSpan[] = [];
+  public static Instance = new TraceManager();
+  #callGragh: TaskFlowSpan[] = [];
+  #timePoints: TimePoint[] = [];
 
-  public static getSpan(context: SpanContext): TaskFlowSpan {
-    const span = this.findSpanByRequestId(context.requestId);
+  public getSpan(context: SpanContext): TaskFlowSpan {
+    let span = this.#findSpanByRequestId(context.requestId);
+    // insert time point
+    const timePoint = this.#createTimePoint({
+      type: context.traceType,
+      requestId: context.requestId,
+      status: 'start',
+    });
     if (span) {
-      this.updateMetadata(context);
-      return span;
+      if (context.metadata) {
+        this.#updateMetadata(context.metadata, span);
+      }
+      timePoint.status = 'intermediate';
     } else {
-      return this.createSpan(context);
+      timePoint.status = 'start';
+      span = this.#createSpan(context);
+    }
+    span.addTimePointId(timePoint.id);
+    this.#addTimePoint(timePoint);
+    return span;
+  }
+
+  public getTimePointsByCallId(callId: string): TimePoint[] {
+    return this.#timePoints.filter(p => p.callId === callId);
+  }
+
+  public updateSpanMetric(requestId: string, key: string, value: number) {
+    const span = this.#findSpanByRequestId(requestId);
+    if (span) {
+      span.metric(key, value);
     }
   }
 
-  public static findSpanByRequestId(requestId: string, spans: TaskFlowSpan[] = this.RootSpans): TaskFlowSpan | undefined {
+
+  public endSpan(span: TaskFlowSpan) {
+    const timePoint = this.#createTimePoint({
+      type: span.context.traceType,
+      requestId: span.context.requestId,
+      status: 'end',
+    });
+    span.end(timePoint.id);
+  }
+
+  public addError(requestId: string, err: Error) {
+    const span = this.#findSpanByRequestId(requestId);
+    if (span) {
+      span.error(err);
+    }
+  }
+
+  public printAll(): void {
+    console.log(util.inspect(this.#callGragh.map((root) => this.#spanToJSON(root)), { depth: null, colors: true }));
+  }
+
+  #updateMetadata(metadata: Record<string, any>, span: TaskFlowSpan) {
+    Object.entries(metadata).forEach(([key, value]) => {
+      span.context.metadata[key] = span.context.metadata[key]
+        ? [...(Array.isArray(span.context.metadata[key]) ? span.context.metadata[key] : [span.context.metadata[key]]), value]
+        : [value];
+    });
+  }
+
+  #addTimePoint(timePoint: TimePoint) {
+    this.#timePoints.push(timePoint);
+  }
+
+  #findSpanByRequestId(requestId: string, spans: TaskFlowSpan[] = this.#callGragh): TaskFlowSpan | undefined {
     for (const span of spans) {
       if (span.context.requestId === requestId) return span;
       if (span?.children.length > 0) {
-        const found = this.findSpanByRequestId(requestId, span.children);
+        const found = this.#findSpanByRequestId(requestId, span.children);
         if (found) return found;
       }
     }
     return undefined;
   }
 
-  public static updateSpanMetric(requestId: string, key: string, value: number) {
-    const span = this.findSpanByRequestId(requestId);
-    if (span) {
-      span.metric(key, value);
-    }
+  #createTimePoint(timePoint: Omit<TimePointOptions, 'time'>) {
+    const tp = new TimePoint({
+      time: Date.now(),
+      ...timePoint,
+    });
+    this.#addTimePoint(tp);
+    return tp;
   }
 
-  public static updateMetadata(ctx: SpanContext) {
-    const span = this.findSpanByRequestId(ctx.requestId);
-    if (span) {
-      Object.entries(ctx.metadata).forEach(([key, value]) => {
-        span.context.metadata[key] = span.context.metadata[key]
-          ? [...(Array.isArray(span.context.metadata[key]) ? span.context.metadata[key] : [span.context.metadata[key]]), value]
-          : [value];
-      });
-    } else {
-      reportThreepioWarning(`TaskFlowSpan not found for requestId: ${ctx.requestId}`);
-    }
-  }
-
-  public static addError(requestId: string, err: Error) {
-    const span = this.findSpanByRequestId(requestId);
-    if (span) {
-      span.error(err);
-    }
-  }
-
-  public static endSpan(requestId: string) {
-    const span = this.findSpanByRequestId(requestId);
-    if (span) {
-      span.end();
-    }
-  }
-
-  public static clear() {
-    this.RootSpans = [];
-  }
-
-  public static printAll(): void {
-    console.log(util.inspect(this.RootSpans.map((root) => this.spanToJSON(root)), { depth: null, colors: true }));
-  }
-
-  private static createSpan(context: SpanContext): TaskFlowSpan {
-    const span = new TaskFlowSpan(context, Date.now());
+  #createSpan(context: SpanContext): TaskFlowSpan {
+    const span = new TaskFlowSpan(context);
     if (context.parentRequestId) {
-      const parent = this.findSpanByRequestId(context.parentRequestId);
+      const parent = this.#findSpanByRequestId(context.parentRequestId);
       parent.children.push(span);
     } else {
-      this.RootSpans.push(span);
+      this.#callGragh.push(span);
     }
     return span;
   }
 
-  private static spanToJSON(span: TaskFlowSpan): any {
+  #spanToJSON(span: TaskFlowSpan): any {
     return {
       traceType: span.context.traceType,
       name: span.context.name,
-      startTime: span.startTime,
-      endTime: span.endTime,
       requestId: span.context.requestId,
       parentRequestId: span.context.parentRequestId,
       metrics: span.metrics,
+      timePoints: span.timePointIds,
       metadata: span.context.metadata,
       childCout: span.children.length,
-      children: span.children.map((child) => this.spanToJSON(child)),
+      children: span.children.map((child) => this.#spanToJSON(child)),
       error: span.errorInfo?.message,
     };
   }

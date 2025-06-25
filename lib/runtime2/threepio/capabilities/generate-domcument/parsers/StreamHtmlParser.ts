@@ -1,13 +1,12 @@
 import { HtmlStreamItem, Parser } from './interface';
-import { ApiStreamTextChunk } from '../../../api/transform/stream';
+import { ApiStreamChunk } from '../../../api/transform/stream';
 import { FragmentType, HtmlFragment, CssFragment } from '../interfaces';
 import { CssOutputFragment, FRAGMENT_FIELD, HTMLOutputFragment } from '../prompts/worker.prompt';
+import { JsonObject } from '../../../utils/JSONLProcessor';
 
 export class StreamHtmlParser implements Parser {
   readonly #taskId: string;
   #isEnded = false;
-  #processedCount = 0;
-  #pendingChunks: string[] = [];
   #queue: HtmlStreamItem[] = [];
   #resolve: (() => void) | null = null;
 
@@ -15,16 +14,16 @@ export class StreamHtmlParser implements Parser {
     this.#taskId = taskId;
   }
 
-  public parseTextChunk(chunk: ApiStreamTextChunk): void {
-    if (this.#isEnded || chunk.type !== 'text' || !chunk.text) {
+  public parseChunk(chunk: ApiStreamChunk): void {
+    if (this.#isEnded || chunk.type !== 'json' || !chunk.jsonObject) {
       return;
     }
 
-    const trimmedLine = chunk.text.trim();
-    if (trimmedLine) {
-      this.#pendingChunks.push(trimmedLine);
-      this.#processQueue();
+    const item = this.#transformObject(chunk.jsonObject);
+    if (item) {
+      this.#queue.push(item);
     }
+    this.#processQueue();
   }
 
   public endStream(): void {
@@ -39,27 +38,19 @@ export class StreamHtmlParser implements Parser {
   }
 
   public async* stream(): AsyncGenerator<HtmlStreamItem, void, unknown> {
-    while (!this.#isEnded || this.#queue.length > 0 || this.#pendingChunks.length > 0) {
-      while (this.#pendingChunks.length > 0) {
-        const chunk = this.#pendingChunks.shift()!;
-        const item = this.#parseJsonLine(chunk);
-        if (item) {
-          this.#processedCount++;
-          yield item;
-        }
-      }
-
+    while (true) {
       while (this.#queue.length > 0) {
         yield this.#queue.shift()!;
       }
 
-      if (!this.#isEnded && this.#queue.length === 0 && this.#pendingChunks.length === 0) {
-        await new Promise<void>(resolve => {
-          this.#resolve = resolve;
-          setTimeout(() => resolve(), 10);
-        });
-        this.#resolve = null;
+      if (this.#isEnded && this.#queue.length === 0) {
+        break;
       }
+
+      await new Promise<void>(resolve => {
+        this.#resolve = resolve;
+      });
+      this.#resolve = null;
     }
   }
 
@@ -69,9 +60,8 @@ export class StreamHtmlParser implements Parser {
     }
   }
 
-  #parseJsonLine(line: string): HtmlStreamItem | null {
+  #transformObject(jsonData: JsonObject): HtmlStreamItem | null {
     try {
-      const jsonData = JSON.parse(line);
       if (!jsonData || typeof jsonData !== 'object' || !jsonData.type) {
         return {
           eventType: 'error',
@@ -82,9 +72,9 @@ export class StreamHtmlParser implements Parser {
 
       switch (jsonData.type) {
         case 'htmlNode':
-          return this.#processHtmlNode(jsonData as HTMLOutputFragment);
+          return this.#transformHtmlNode(jsonData as HTMLOutputFragment);
         case 'cssRule':
-          return this.#processCssRule(jsonData as CssOutputFragment);
+          return this.#transformCssRule(jsonData as CssOutputFragment);
         default:
           return {
             eventType: 'error',
@@ -101,7 +91,7 @@ export class StreamHtmlParser implements Parser {
     }
   }
 
-  #processHtmlNode(htmlNode: HTMLOutputFragment): HtmlStreamItem | null {
+  #transformHtmlNode(htmlNode: HTMLOutputFragment): HtmlStreamItem | null {
     const parentId = htmlNode[FRAGMENT_FIELD.PARENT_ID];
     const element = htmlNode[FRAGMENT_FIELD.HTML];
 
@@ -121,7 +111,7 @@ export class StreamHtmlParser implements Parser {
     };
   }
 
-  #processCssRule(cssRule: CssOutputFragment): HtmlStreamItem | null {
+  #transformCssRule(cssRule: CssOutputFragment): HtmlStreamItem | null {
     const rule = cssRule[FRAGMENT_FIELD.CSSTEXT];
 
     if (!rule || !rule.trim()) {
