@@ -2,6 +2,14 @@ import { reportThreepioWarning } from '../utils/threepioLog';
 import { Span, TraceType } from './interface';
 import { TraceOptions } from './wrapTaskFlowMonitor';
 
+/**
+ * This type is used to define the context of a span in the task flow.
+ * It includes the name of the span, the type of trace, and optional metadata.
+ * @description
+ * SpanContext is used to provide additional information about the span,
+ * such as its name, type, and any metadata that may be relevant.
+ * It is used to create a new span in the task flow.
+ */
 export type SpanContext = TraceOptions & {
   name: string,
   traceType: TraceType,
