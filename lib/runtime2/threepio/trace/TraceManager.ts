@@ -1,36 +1,51 @@
 import util from 'util';
-import { TimePoint, TimePointOptions } from "./TimePoint";
-import { TaskFlowSpan, SpanContext } from "./TaskFlowSpan";
+import { TimePoint, TimePointOptions } from './TimePoint';
+import { TaskFlowSpan, SpanContext } from './TaskFlowSpan';
 
+interface CallNode {
+  requestId: string;
+  TaskFlowSpan: TaskFlowSpan[];
+  children: CallNode[];
+}
 export class TraceManager {
   public static Instance = new TraceManager();
-  #callGragh: TaskFlowSpan[] = [];
+  #callGragh: CallNode[] = [];
   #timePoints: TimePoint[] = [];
 
-  public getSpan(context: SpanContext): TaskFlowSpan {
+  public getOrNewSpan(context: SpanContext): TaskFlowSpan {
     let span = this.#findSpanByRequestId(context.requestId);
-    // insert time point
-    const timePoint = this.#createTimePoint({
-      type: context.traceType,
-      requestId: context.requestId,
-      status: 'start',
-    });
     if (span) {
       if (context.metadata) {
         this.#updateMetadata(context.metadata, span);
       }
-      timePoint.status = 'intermediate';
+      // insert time point
+      const timePoint = this.#createTimePoint({
+        type: context.traceType,
+        requestId: context.requestId,
+      });
+      span.addTimePointId(timePoint.id);
+      this.#addTimePoint(timePoint);
     } else {
-      timePoint.status = 'start';
       span = this.#createSpan(context);
     }
+    return span;
+  }
+
+  public createSpan(ctx: SpanContext): TaskFlowSpan {
+    const node = this.#getOrNewCallNode(ctx.requestId, ctx.parentRequestId);
+    const span = this.#createSpan(ctx);
+    const timePoint = this.#createTimePoint({
+      type: ctx.traceType,
+      requestId: ctx.requestId,
+    });
     span.addTimePointId(timePoint.id);
+    node.TaskFlowSpan.push(span);
     this.#addTimePoint(timePoint);
     return span;
   }
 
   public getTimePointsByCallId(callId: string): TimePoint[] {
-    return this.#timePoints.filter(p => p.callId === callId);
+    return this.#timePoints.filter(p => p.referenceId === callId);
   }
 
   public updateSpanMetric(requestId: string, key: string, value: number) {
@@ -40,16 +55,6 @@ export class TraceManager {
     }
   }
 
-
-  public endSpan(span: TaskFlowSpan) {
-    const timePoint = this.#createTimePoint({
-      type: span.context.traceType,
-      requestId: span.context.requestId,
-      status: 'end',
-    });
-    span.end(timePoint.id);
-  }
-
   public addError(requestId: string, err: Error) {
     const span = this.#findSpanByRequestId(requestId);
     if (span) {
@@ -57,8 +62,43 @@ export class TraceManager {
     }
   }
 
+  public endSpan(span: TaskFlowSpan) {
+    span.end();
+  }
+
   public printAll(): void {
-    console.log(util.inspect(this.#callGragh.map((root) => this.#spanToJSON(root)), { depth: null, colors: true }));
+    console.log(util.inspect(this.#callGragh.map((root) => this.toJSON(root)
+    ), { depth: null, colors: true }));
+  }
+
+  public print() {
+    console.log(this.#callGragh.map((root) => this.toJSON(root)));
+    console.log(this.#timePoints);
+  }
+
+  public toJSON(node: CallNode) {
+    return {
+      children: node.children.map(child => this.toJSON(child)),
+      TaskFlowSpan: node.TaskFlowSpan.map(span => span.toJSON()),
+    }
+  }
+
+  #getOrNewCallNode(requestId: string, parentRequestId: string): CallNode {
+    let node = this.#findCallNodeByRequestId(requestId);
+    if (!node) {
+      node = {
+        requestId,
+        children: [],
+        TaskFlowSpan: [],
+      };
+      if (parentRequestId) {
+        const parent = this.#findCallNodeByRequestId(parentRequestId);
+        parent.children.push(node);
+      } else {
+        this.#callGragh.push(node);
+      }
+    }
+    return node;
   }
 
   #updateMetadata(metadata: Record<string, any>, span: TaskFlowSpan) {
@@ -73,11 +113,22 @@ export class TraceManager {
     this.#timePoints.push(timePoint);
   }
 
-  #findSpanByRequestId(requestId: string, spans: TaskFlowSpan[] = this.#callGragh): TaskFlowSpan | undefined {
-    for (const span of spans) {
-      if (span.context.requestId === requestId) return span;
-      if (span?.children.length > 0) {
-        const found = this.#findSpanByRequestId(requestId, span.children);
+  #findSpanByRequestId(requestId: string): TaskFlowSpan | undefined {
+    for (const node of this.#callGragh) {
+      for (const span of node.TaskFlowSpan) {
+        if (span.context.requestId === requestId) {
+          return span;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  #findCallNodeByRequestId(requestId: string, callNodes: CallNode[] = this.#callGragh): CallNode | undefined {
+    for (const node of callNodes) {
+      if (node.requestId === requestId) return node;
+      if (node?.children.length > 0) {
+        const found = this.#findCallNodeByRequestId(requestId, node.children);
         if (found) return found;
       }
     }
@@ -86,36 +137,13 @@ export class TraceManager {
 
   #createTimePoint(timePoint: Omit<TimePointOptions, 'time'>) {
     const tp = new TimePoint({
-      time: Date.now(),
+      time: performance.now(),
       ...timePoint,
     });
-    this.#addTimePoint(tp);
     return tp;
   }
 
   #createSpan(context: SpanContext): TaskFlowSpan {
-    const span = new TaskFlowSpan(context);
-    if (context.parentRequestId) {
-      const parent = this.#findSpanByRequestId(context.parentRequestId);
-      parent.children.push(span);
-    } else {
-      this.#callGragh.push(span);
-    }
-    return span;
-  }
-
-  #spanToJSON(span: TaskFlowSpan): any {
-    return {
-      traceType: span.context.traceType,
-      name: span.context.name,
-      requestId: span.context.requestId,
-      parentRequestId: span.context.parentRequestId,
-      metrics: span.metrics,
-      timePoints: span.timePointIds,
-      metadata: span.context.metadata,
-      childCout: span.children.length,
-      children: span.children.map((child) => this.#spanToJSON(child)),
-      error: span.errorInfo?.message,
-    };
+    return new TaskFlowSpan(context);
   }
 }

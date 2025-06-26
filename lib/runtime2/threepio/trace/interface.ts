@@ -15,3 +15,15 @@ export type TraceType = TraceGenerateDomType;
  * 'DOMOperation' for DOM operations.
  */
 export type TraceGenerateDomType = 'fullFlow' | 'planRequest' | 'moudleRequest' | 'DOMOperation';
+
+/**
+ * Span is an interface that represents a single span in the task flow.
+ * It contains  metrics, error information, and start and end time.
+ */
+export interface Span {
+  metric(key: string, value: any);
+  error(err: Error);
+  start(): void;
+  end(): void;
+  toJSON(): { [key: string]: any };
+}

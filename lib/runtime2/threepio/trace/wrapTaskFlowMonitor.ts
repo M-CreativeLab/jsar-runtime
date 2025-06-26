@@ -31,7 +31,7 @@ interface TraceConfiguration {
 export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, config: TraceConfiguration): T {
   return (function (this: any, ...args: any[]) {
     const ctx = createSpanContext(config, args);
-    const span = TraceManager.Instance.getSpan(ctx);
+    const span = TraceManager.Instance.createSpan(ctx);
     const result = fn.apply(this, args);
     if (result && typeof result[Symbol.asyncIterator] === 'function') {
       return wrapAsyncGenerator(result, span);

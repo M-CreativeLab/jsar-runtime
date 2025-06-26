@@ -1,5 +1,5 @@
 import { reportThreepioWarning } from '../utils/threepioLog';
-import { TraceType } from './interface';
+import { Span, TraceType } from './interface';
 import { TraceOptions } from './wrapTaskFlowMonitor';
 
 export type SpanContext = TraceOptions & {
@@ -8,13 +8,16 @@ export type SpanContext = TraceOptions & {
   metadata?: Record<string, any>
 };
 
-export class TaskFlowSpan {
+export class TaskFlowSpan implements Span {
   public metrics: Record<string, any> = {};
   public errorInfo: Error | null = null;
-  public children: TaskFlowSpan[] = [];
   public timePointIds: string[] = [];
+  public endTime: number = 0;
+  public startTime: number = 0;
 
-  constructor(public context: SpanContext) { }
+  constructor(public context: SpanContext) {
+    this.start();
+  }
 
   public metric(key: string, value: any) {
     this.metrics[key] = value;
@@ -24,8 +27,12 @@ export class TaskFlowSpan {
     this.errorInfo = err;
   }
 
-  public end(timePointId: string) {
-    this.addTimePointId(timePointId);
+  public start() {
+    this.startTime = performance.now()
+  }
+
+  public end(): void {
+    this.endTime = performance.now();
     if (this.errorInfo) {
       reportThreepioWarning(`[Trace] Error in ${this.context.traceType}:`, this.errorInfo);
     }
@@ -33,5 +40,18 @@ export class TaskFlowSpan {
 
   public addTimePointId(timePointId: string) {
     this.timePointIds.push(timePointId);
+  }
+
+  toJSON(): { [key: string]: any } {
+    return {
+      traceType: this.context.traceType,
+      name: this.context.name,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      timePointIds: this.timePointIds,
+      metrics: this.metrics,
+      metadata: this.context.metadata,
+      errorInfo: this.errorInfo,
+    }
   }
 }
