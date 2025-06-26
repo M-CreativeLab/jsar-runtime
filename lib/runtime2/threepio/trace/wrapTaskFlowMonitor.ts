@@ -10,7 +10,7 @@ import { EmitData, MoudleFragmentTask } from '../capabilities/generate-domcument
 export type TraceOptions = {
   requestId?: string;
   parentRequestId?: string;
-}
+};
 
 /**
  * define the trace configuration

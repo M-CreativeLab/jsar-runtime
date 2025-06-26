@@ -4,7 +4,7 @@ export type TimePointOptions = {
   type: TraceType,
   time: number,
   requestId: string,
-}
+};
 
 export class TimePoint {
   type: TraceType;
