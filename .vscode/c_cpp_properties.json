@@ -12,6 +12,33 @@
             "cppStandard": "c++20",
             "intelliSenseMode": "macos-clang-arm64",
             "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "Android",
+            "defines": [
+                "__ANDROID__",
+                "__ANDROID_API__=26"
+            ],
+            "compilerPath": "${env:ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android26-clang++",
+            "compileCommands": "${workspaceFolder}/build/targets/android/compile_commands.json",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-arm64",
+            "includePath": [
+                "${env:ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include",
+                "${env:ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android",
+                "${env:ANDROID_NDK_HOME}/sources/cxx-stl/llvm-libc++/include",
+                "${env:ANDROID_NDK_HOME}/sources/android/support/include"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${env:ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include",
+                    "${env:ANDROID_NDK_HOME}/sources/cxx-stl/llvm-libc++/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

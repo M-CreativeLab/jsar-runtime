@@ -161,10 +161,12 @@ namespace jsar::example
         }
       }
 
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-      glfwWindowHint(GLFW_SAMPLES, samples);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
       glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+      glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+      glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+      glfwWindowHint(GLFW_SAMPLES, samples);
 
       if (width == -1 || height == -1)
       {
@@ -229,7 +231,11 @@ namespace jsar::example
 
       // Make the context available before starting the embedder
       glfwMakeContextCurrent(windowCtx_->window);
+      glfwSwapInterval(1);
       {
+        auto version = glGetString(GL_VERSION);
+        fprintf(stdout, "OpenGL version: %s\n", version);
+
         // Get environment variables for OpenGL context
         const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
         if (str != NULL && strcmp(str, "1") == 0)

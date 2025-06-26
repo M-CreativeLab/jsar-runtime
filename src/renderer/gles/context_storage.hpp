@@ -3,8 +3,8 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <common/viewport.hpp>
 
-#include "common/viewport.hpp"
 #include "./common.hpp"
 #include "./object_manager.hpp"
 
@@ -12,136 +12,145 @@ class OpenGLTextureBinding
 {
 public:
   OpenGLTextureBinding(GLenum target, GLuint texture)
-      : m_Target(target)
-      , m_Texture(texture)
+      : target_(target)
+      , texture_(texture)
   {
   }
-  OpenGLTextureBinding(OpenGLTextureBinding &from)
-      : m_Target(from.m_Target)
-      , m_Texture(from.m_Texture)
+  OpenGLTextureBinding(OpenGLTextureBinding &) = default;
+
+  inline void reset(GLenum target, GLuint texture)
   {
+    target_ = target;
+    texture_ = texture;
   }
-  inline void Reset(GLenum target, GLuint texture)
+  inline GLenum target()
   {
-    m_Target = target;
-    m_Texture = texture;
+    return target_;
   }
-  inline GLenum GetTarget()
+  inline GLint texture()
   {
-    return m_Target;
-  }
-  inline GLint GetTexture()
-  {
-    return m_Texture;
+    return texture_;
   }
 
-public:
-  GLenum m_Target;
-  GLuint m_Texture;
+private:
+  GLenum target_;
+  GLuint texture_;
 };
 
 class OpenGLBlendingFunc
 {
 public:
   OpenGLBlendingFunc()
-      : m_Src(GL_ONE)
-      , m_Dst(GL_ZERO)
-      , m_IsSeparate(false)
+      : src_(GL_ONE)
+      , dst_(GL_ZERO)
+      , is_separate_(false)
   {
   }
   OpenGLBlendingFunc(OpenGLBlendingFunc *from)
-      : m_Src(from->m_Src)
-      , m_Dst(from->m_Dst)
-      , m_SrcAlpha(from->m_SrcAlpha)
-      , m_DstAlpha(from->m_DstAlpha)
+      : src_(from->src_)
+      , dst_(from->dst_)
+      , src_alpha_(from->src_alpha_)
+      , dst_alpha_(from->dst_alpha_)
   {
   }
 
 public:
-  inline bool IsSeparate()
+  void setToCurrentContext()
   {
-    return m_IsSeparate;
+    if (is_separate_)
+      glBlendFuncSeparate(src_, dst_, src_alpha_, dst_alpha_);
+    else
+      glBlendFunc(src_, dst_);
   }
-  inline GLenum GetSrc()
+
+  inline bool isSeparate()
   {
-    return m_Src;
+    return is_separate_;
   }
-  inline GLenum GetDst()
+  inline GLenum src()
   {
-    return m_Dst;
+    return src_;
   }
-  inline GLenum GetSrcRgb()
+  inline GLenum dst()
   {
-    return m_Src;
+    return dst_;
   }
-  inline GLenum GetDstRgb()
+  inline GLenum srcRGB()
   {
-    return m_Dst;
+    return src_;
   }
-  inline GLenum GetSrcAlpha()
+  inline GLenum dstRGB()
   {
-    return m_SrcAlpha;
+    return dst_;
   }
-  inline GLenum GetDstAlpha()
+  inline GLenum srcAlpha()
   {
-    return m_DstAlpha;
+    return src_alpha_;
   }
-  inline void Reset(GLenum src, GLenum dst)
+  inline GLenum dstAlpha()
   {
-    m_Src = src;
-    m_Dst = dst;
-    m_IsSeparate = false;
+    return dst_alpha_;
   }
-  inline void Reset(GLenum srcRgb, GLenum dstRgb, GLenum srcAlpha, GLenum dstAlpha)
+  inline void reset(GLenum src, GLenum dst)
   {
-    m_Src = srcRgb;
-    m_Dst = dstRgb;
-    m_SrcAlpha = srcAlpha;
-    m_DstAlpha = dstAlpha;
-    m_IsSeparate = true;
+    src_ = src;
+    dst_ = dst;
+    is_separate_ = false;
   }
-  void Print()
+  inline void reset(GLenum srcRgb, GLenum dstRgb, GLenum srcAlpha, GLenum dstAlpha)
+  {
+    src_ = srcRgb;
+    dst_ = dstRgb;
+    src_alpha_ = srcAlpha;
+    dst_alpha_ = dstAlpha;
+    is_separate_ = true;
+  }
+  void print()
   {
     DEBUG(DEBUG_TAG, "OpenGLBlendingFunc");
-    DEBUG(DEBUG_TAG, "  Separate: %s", m_IsSeparate ? "Yes" : "No");
-    if (m_IsSeparate)
+    DEBUG(DEBUG_TAG, "  Separate: %s", is_separate_ ? "Yes" : "No");
+    if (is_separate_)
     {
-      DEBUG(DEBUG_TAG, "  SrcRGB: %d", m_Src);
-      DEBUG(DEBUG_TAG, "  DstRGB: %d", m_Dst);
-      DEBUG(DEBUG_TAG, "  SrcAlpha: %d", m_SrcAlpha);
-      DEBUG(DEBUG_TAG, "  DstAlpha: %d", m_DstAlpha);
+      DEBUG(DEBUG_TAG, "  SrcRGB: %d", src_);
+      DEBUG(DEBUG_TAG, "  DstRGB: %d", dst_);
+      DEBUG(DEBUG_TAG, "  SrcAlpha: %d", src_alpha_);
+      DEBUG(DEBUG_TAG, "  DstAlpha: %d", dst_alpha_);
     }
     else
     {
-      DEBUG(DEBUG_TAG, "  SrcRGB: %d", m_Src);
-      DEBUG(DEBUG_TAG, "  DstRGB: %d", m_Dst);
+      DEBUG(DEBUG_TAG, "  SrcRGB: %d", src_);
+      DEBUG(DEBUG_TAG, "  DstRGB: %d", dst_);
     }
 
     DEBUG(DEBUG_TAG, "  Current OpenGL states:");
-    GLint blendDstAlpha;
-    glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha);
-    GLint blendDstRGB;
-    glGetIntegerv(GL_BLEND_DST_RGB, &blendDstRGB);
-    DEBUG(DEBUG_TAG, "  DstAlpha=%s", gles::glBlendFuncToString(blendDstAlpha).c_str());
-    DEBUG(DEBUG_TAG, "  DstRGB=%s", gles::glBlendFuncToString(blendDstRGB).c_str());
+    GLint blend_dst_alpha;
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst_alpha);
+    GLint blend_dst_rgb;
+    glGetIntegerv(GL_BLEND_DST_RGB, &blend_dst_rgb);
+    DEBUG(DEBUG_TAG, "  DstAlpha=%s", gles::glBlendFuncToString(blend_dst_alpha).c_str());
+    DEBUG(DEBUG_TAG, "  DstRGB=%s", gles::glBlendFuncToString(blend_dst_rgb).c_str());
 
-    GLint blendSrcAlpha;
-    glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrcAlpha);
-    GLint blendSrcRGB;
-    glGetIntegerv(GL_BLEND_SRC_RGB, &blendSrcRGB);
-    DEBUG(DEBUG_TAG, "  SrcAlpha=%s", gles::glBlendFuncToString(blendSrcAlpha).c_str());
-    DEBUG(DEBUG_TAG, "  SrcRGB=%s", gles::glBlendFuncToString(blendSrcRGB).c_str());
+    GLint blend_src_alpha;
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src_alpha);
+    GLint blend_src_rgb;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &blend_src_rgb);
+    DEBUG(DEBUG_TAG, "  SrcAlpha=%s", gles::glBlendFuncToString(blend_src_alpha).c_str());
+    DEBUG(DEBUG_TAG, "  SrcRGB=%s", gles::glBlendFuncToString(blend_src_rgb).c_str());
   }
 
 private:
-  bool m_IsSeparate = false;
-  GLenum m_Src;
-  GLenum m_Dst;
-  GLenum m_SrcAlpha;
-  GLenum m_DstAlpha;
+  bool is_separate_ = false;
+  GLenum src_;
+  GLenum dst_;
+  GLenum src_alpha_;
+  GLenum dst_alpha_;
 };
 
-class OpenGLContextStorage
+/**
+ * The `ContextGLStorage` class is used to store the OpenGL or OpenGL ES context state, and it can be used to restore
+ * the context state.
+ */
+class ContextGLStorage
 {
   struct Rect
   {
@@ -187,20 +196,20 @@ class OpenGLContextStorage
   };
 
 public:
-  OpenGLContextStorage(std::string name)
-      : m_Name(name)
+  ContextGLStorage(std::string name)
+      : name_(name)
   {
     glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
     glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
   }
-  OpenGLContextStorage(std::string name, OpenGLContextStorage *from)
-      : m_Name(name)
+  ContextGLStorage(std::string name, ContextGLStorage *from)
+      : name_(name)
   {
     // Viewport
-    m_Viewport[0] = from->m_Viewport[0];
-    m_Viewport[1] = from->m_Viewport[1];
-    m_Viewport[2] = from->m_Viewport[2];
-    m_Viewport[3] = from->m_Viewport[3];
+    viewport_[0] = from->viewport_[0];
+    viewport_[1] = from->viewport_[1];
+    viewport_[2] = from->viewport_[2];
+    viewport_[3] = from->viewport_[3];
 
     // States
     m_CullFaceEnabled = from->m_CullFaceEnabled;
@@ -241,76 +250,68 @@ public:
     for (auto it = from->m_TextureBindingsWithUnit.begin(); it != from->m_TextureBindingsWithUnit.end(); it++)
       m_TextureBindingsWithUnit[it->first] = std::make_shared<OpenGLTextureBinding>(*it->second);
   }
-  ~OpenGLContextStorage()
+  ~ContextGLStorage()
   {
   }
 
-  void RecordViewport(int x, int y, int w, int h);
-  void RecordCapability(GLenum cap, bool enabled);
-  void RecordCullFace(GLenum mode);
-  void RecordFrontFace(GLenum mode);
-  void RecordColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
-  void RecordDepthMask(GLboolean enabled);
-  void RecordBlendFunc(GLenum sfactor, GLenum dfactor);
-  void RecordBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
-  void RecordStencilMask(GLenum face, GLuint mask);
-  void RecordStencilFunc(GLenum face, GLenum func, GLint ref, GLuint mask);
-  void RecordStencilOp(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
-  void RecordProgram(int program);
-  void RecordArrayBuffer(int buffer);
-  void RecordElementArrayBuffer(int buffer);
-  void RecordFramebuffer(int buffer);
-  void RecordRenderbuffer(int buffer);
-  void RecordVertexArrayObject(int vao);
-  void RecordActiveTextureUnit(int unit);
-  void RecordTextureBindingWithUnit(GLenum target, GLuint texture);
+  void onViewportChanged(int x, int y, int w, int h);
+  void onCapabilityEnabled(GLenum cap, bool enabled);
+  void onSetCullFace(GLenum mode);
+  void onSetFrontFace(GLenum mode);
+  void onSetColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
+  void onSetDepthMask(GLboolean enabled);
+  void onSetBlendFunc(GLenum sfactor, GLenum dfactor);
+  void onSetBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
+  void onSetStencilMask(GLenum face, GLuint mask);
+  void onSetStencilFunc(GLenum face, GLenum func, GLint ref, GLuint mask);
+  void onSetStencilOp(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
 
-  const char *GetName()
+  const char *name()
   {
-    return m_Name.c_str();
+    return name_.c_str();
   }
-  TrViewport GetViewport()
+  TrViewport viewport()
   {
-    return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]);
+    return TrViewport(viewport_[2], viewport_[3], viewport_[0], viewport_[1]);
   }
-  GLint GetProgram()
+  GLint program()
   {
     return m_ProgramId;
   }
-  GLint GetArrayBuffer()
+  GLint arrayBuffer()
   {
     return m_ArrayBufferId;
   }
-  GLint GetElementArrayBuffer()
+  GLint elementArrayBuffer()
   {
     return m_ElementArrayBufferId;
   }
-  GLint GetFramebuffer()
+  GLint framebuffer()
   {
     return m_FramebufferId;
   }
-  GLint GetRenderbuffer()
+  GLint renderbuffer()
   {
     return m_RenderbufferId;
   }
-  GLint GetVertexArrayObject()
+  GLint vertexArrayObject()
   {
     return m_VertexArrayObjectId;
   }
-  GLenum GetActiveTextureUnit()
+  GLenum activeTextureUnit()
   {
     return m_LastActiveTextureUnit;
   }
 
-  void ResetProgram(int programToReset);
-  void Restore();
-  void Print();
-  void ClearTextureBindings();
+  void resetProgram(int programToReset);
+  void restore();
+  void print();
+  void clearTextureBindings();
 
 protected:
-  std::string m_Name;
-  GLint m_Viewport[4] = {-1, -1, -1, -1};
-  bool m_ForceChanged = false;
+  std::string name_;
+  GLint viewport_[4] = {-1, -1, -1, -1};
+  bool is_force_changed_ = false;
 
 protected: /** Global States */
   // Culling & face
@@ -355,22 +356,6 @@ protected: /** OpenGLES objects */
   std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
 };
 
-class OpenGLHostContextStorage : public OpenGLContextStorage
-{
-public:
-  OpenGLHostContextStorage()
-      : OpenGLContextStorage("Host")
-  {
-    Record();
-  }
-
-public:
-  void Record();
-  void RecordTextureBindingFromHost();
-  void ConfigureFramebuffer();
-  void RestoreFramebuffer();
-};
-
 class OpenGLNamesStorage : public std::map<GLuint, bool>
 {
 public:
@@ -398,51 +383,5 @@ public:
   }
 };
 
-class OpenGLAppContextStorage : public OpenGLContextStorage
-{
-public:
-  OpenGLAppContextStorage(std::string name);
-  OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from);
-
-public:
-  void RecordViewport(int x, int y, int w, int h);
-  void RecordProgramOnCreated(GLuint program);
-  void RecordProgramOnDeleted(GLuint program);
-  void RecordShaderOnCreated(GLuint shader);
-  void RecordShaderOnDeleted(GLuint shader);
-  void RecordBufferOnCreated(GLuint buffer);
-  void RecordBufferOnDeleted(GLuint buffer);
-  void RecordFramebufferOnCreated(GLuint buffer);
-  void RecordFramebufferOnDeleted(GLuint buffer);
-  void RecordRenderbufferOnCreated(GLuint buffer);
-  void RecordRenderbufferOnDeleted(GLuint buffer);
-  void RecordVertexArrayObjectOnCreated(GLuint vao);
-  void RecordVertexArrayObjectOnDeleted(GLuint vao);
-  void RecordTextureOnCreated(GLuint texture);
-  void RecordTextureOnDeleted(GLuint texture);
-  void RecordSamplerOnCreated(GLuint sampler);
-  void RecordSamplerOnDeleted(GLuint sampler);
-
-public:
-  void MarkAsDirty();
-  bool IsDirty();
-  bool IsChanged(OpenGLAppContextStorage *other);
-
-public:
-  gles::GLObjectManager &ObjectManagerRef()
-  {
-    return *m_GLObjectManager;
-  }
-
-private:
-  bool m_Dirty = false;
-  std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
-  OpenGLNamesStorage m_Programs;
-  OpenGLNamesStorage m_Shaders;
-  OpenGLNamesStorage m_Buffers;
-  OpenGLNamesStorage m_Framebuffers;
-  OpenGLNamesStorage m_Renderbuffers;
-  OpenGLNamesStorage m_VertexArrayObjects;
-  OpenGLNamesStorage m_Textures;
-  OpenGLNamesStorage m_Samplers;
-};
+#include "./context_host.hpp"
+#include "./context_app.hpp"

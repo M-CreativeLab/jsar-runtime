@@ -140,7 +140,7 @@ namespace renderer
     /**
      * @returns The host graphics context.
      */
-    OpenGLHostContextStorage *getOpenGLContext()
+    ContextGLHost *getOpenGLContext()
     {
       return glHostContext;
     }
@@ -227,7 +227,7 @@ namespace renderer
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
-    OpenGLHostContextStorage *glHostContext = nullptr;
+    ContextGLHost *glHostContext = nullptr;
     ContentRenderersList contentRenderers;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 

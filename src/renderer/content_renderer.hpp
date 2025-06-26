@@ -75,7 +75,7 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    OpenGLAppContextStorage *getOpenGLContext();
+    ContextGLApp *getOpenGLContext();
     inline shared_ptr<TrContentRuntime> getContent()
     {
       return content.lock();
@@ -155,8 +155,8 @@ namespace renderer
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
-    std::unique_ptr<OpenGLAppContextStorage> glContext;
-    std::unique_ptr<OpenGLAppContextStorage> glContextForBackup;
+    std::unique_ptr<ContextGLApp> glContext;
+    std::unique_ptr<ContextGLApp> glContextForBackup;
     bool isGraphicsContextsInitialized = false;
     bool usingBackupContext = false;
     xr::Device *xrDevice = nullptr;

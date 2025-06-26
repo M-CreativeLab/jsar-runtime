@@ -23,9 +23,9 @@ namespace renderer
       : contentRenderer(contentRenderer)
   {
     assert(contentRenderer != nullptr && contentRenderer->glContext != nullptr);
-    string contextName = contentRenderer->glContext->GetName();
-    contentRenderer->glContextForBackup = std::make_unique<OpenGLAppContextStorage>(contextName + "~backup",
-                                                                                    contentRenderer->glContext.get());
+    string contextName = contentRenderer->glContext->name();
+    contentRenderer->glContextForBackup = std::make_unique<ContextGLApp>(contextName + "~backup",
+                                                                         contentRenderer->glContext.get());
     contentRenderer->usingBackupContext = true;
   }
 
@@ -103,7 +103,7 @@ namespace renderer
     return contentRef->sendCommandBufferResponse(res);
   }
 
-  OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
+  ContextGLApp *TrContentRenderer::getOpenGLContext()
   {
     return usingBackupContext ? glContextForBackup.get() : glContext.get();
   }
@@ -232,9 +232,6 @@ namespace renderer
       executeCommandBuffers(false);
       if (getContent()->used && xrDevice->enabled())
       {
-        // FIXME: This make sure the XR frame will be rendered in the host context.
-        constellation->renderer->glHostContext->ConfigureFramebuffer();
-
         // Execute the XR frame
         switch (xrDevice->getStereoRenderingMode())
         {
@@ -254,9 +251,6 @@ namespace renderer
         default:
           break;
         }
-
-        // Restore the framebuffer configuration
-        constellation->renderer->glHostContext->RestoreFramebuffer();
       }
     }
     onEndFrame();
@@ -264,9 +258,9 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
-    glContext->Restore();
+    glContext->onFrameWillStart();
     if (constellation->renderer->isAppContextSummaryEnabled)
-      glContext->Print();
+      glContext->print();
 
     // Reset frame states
     drawCallsPerFrame = 0;
@@ -275,6 +269,7 @@ namespace renderer
 
   void TrContentRenderer::onEndFrame()
   {
+    glContext->onFrameEnded();
   }
 
   void TrContentRenderer::initializeGraphicsContextsOnce()
@@ -283,8 +278,10 @@ namespace renderer
       return;
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
-    glContext = std::make_unique<OpenGLAppContextStorage>(idStrBase);
-    glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup");
+    glContext = std::make_unique<ContextGLApp>(idStrBase);
+    glContext->initialize(constellation->renderer->glHostContext);
+    glContextForBackup = std::make_unique<ContextGLApp>(idStrBase + "~backup");
+
     isGraphicsContextsInitialized = true;
   }
 
