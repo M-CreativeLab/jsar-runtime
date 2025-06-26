@@ -8,7 +8,6 @@ interface CallNode {
   children: CallNode[];
 }
 export class TraceManager {
-  public static Instance = new TraceManager();
   #callGragh: CallNode[] = [];
   #timePoints: TimePoint[] = [];
 

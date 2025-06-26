@@ -4,6 +4,8 @@ import { reportThreepioError } from '../utils/threepioLog';
 import { TaskFlowSpan, SpanContext } from './TaskFlowSpan';
 import { EmitData, MoudleFragmentTask } from '../capabilities/generate-domcument/interfaces';
 
+export const traceManager = new TraceManager();
+
 /**
  * define the trace options
  */
@@ -31,7 +33,7 @@ interface TraceConfiguration {
 export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, config: TraceConfiguration): T {
   return (function (this: any, ...args: any[]) {
     const ctx = createSpanContext(config, args);
-    const span = TraceManager.Instance.createSpan(ctx);
+    const span = traceManager.createSpan(ctx);
     const result = fn.apply(this, args);
     if (result && typeof result[Symbol.asyncIterator] === 'function') {
       return wrapAsyncGenerator(result, span);
@@ -45,7 +47,7 @@ export function wrapTaskFlowMonitor<T extends (...args: any[]) => any>(fn: T, co
           throw err;
         })
         .finally(() => {
-          TraceManager.Instance.endSpan(span);
+          traceManager.endSpan(span);
         });
     }
   }) as T;
@@ -125,7 +127,7 @@ function wrapAsyncGenerator(
     for await (const value of generator) {
       yield value;
     }
-    TraceManager.Instance.endSpan(span);
+    traceManager.endSpan(span);
   }
   return wrapped();
 }
