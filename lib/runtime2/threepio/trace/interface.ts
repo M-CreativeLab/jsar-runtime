@@ -46,7 +46,7 @@ export interface SpanAttributes {
  * The relationship between span and timepoint is like the relationship between a line and points.
  *  A line consists of multiple points (including endpoints start, end and other points)
  */
-export interface Span<> extends ISerializable {
+export interface Span extends ISerializable {
   readonly startPoint: TimePoint;
   readonly endPoint: TimePoint;
   readonly attributes: Attributes;
