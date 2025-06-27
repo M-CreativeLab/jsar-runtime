@@ -14,24 +14,25 @@ export class TraceManager {
   #timePoints: TimePoint[] = [];
 
   startSpan(options: SpanOptions): Span {
-    const { requestId, parentRequestId } = options.context;
     options.context.timepointsRef = this.#timePoints;
     const span = new SpanImp(options) as Span;
     this.#spans.push(span);
-    // build call graph
-    this.#getOrNewCallNode(requestId, parentRequestId);
     return span;
   }
 
-  public addError(span: Span, err: Error): void {
+  buildCallGraph(requestId: string, parentRequestId: string): void {
+    this.#getOrNewCallNode(requestId, parentRequestId);
+  }
+
+  addError(span: Span, err: Error): void {
     span.reportError(err);
   }
 
-  public endSpan(span: Span) {
+  endSpan(span: Span) {
     span.end();
   }
 
-  public printAll(): void {
+  printAll(): void {
     console.log(
       util.inspect(this.#callGraghs.map((root) => this.toJSON(root)),
       ), { depth: null, colors: true },
@@ -41,13 +42,13 @@ export class TraceManager {
         { depth: null, colors: true }));
   }
 
-  public print() {
+  print() {
     console.log(this.#callGraghs.map((root) => this.toJSON(root)));
     console.log(this.#spans);
     console.log(this.#timePoints);
   }
 
-  public toJSON(node: CallNode) {
+  toJSON(node: CallNode) {
     return {
       requestId: node.requestId,
       children: node.children.map(child => this.toJSON(child)),

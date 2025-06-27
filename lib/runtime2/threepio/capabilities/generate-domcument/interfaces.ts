@@ -1,4 +1,4 @@
-import { TraceOptions } from "../../trace/interface";
+import { TraceOptions } from "./trace/interface";
 
 /**
  * Event types for the emitter.

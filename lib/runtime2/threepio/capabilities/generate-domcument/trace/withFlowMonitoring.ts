@@ -6,6 +6,7 @@ export const traceManager = new TraceManager();
 
 export function startActiveSpan<F extends (span: Span) => unknown>(options: SpanOptions, fn: F): ReturnType<F> {
   const span = traceManager.startSpan(options);
+  traceManager.buildCallGraph(options.context.requestId, options.context.parentRequestId);
   try {
     const result = fn(span);
     if (result && typeof result === 'object' &&

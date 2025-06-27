@@ -1,5 +1,5 @@
 import { APP_ROOT_ID } from '.';
-import { startActiveSpan } from '../../trace/withFlowMonitoring';
+import { startActiveSpan } from './trace/withFlowMonitoring';
 import { reportThreepioError, reportThreepioInfo, reportThreepioWarning } from '../../utils/threepioLog';
 import { EmitData, HtmlFragment } from './interfaces';
 
@@ -13,10 +13,10 @@ function appendHtml(htmlstr: string, element: Element) {
 
 export class DomOperator {
   public operate(document: Document, data: EmitData): void {
-    // if (document == null) {
-    //   reportThreepioWarning('Document is null, cannot operate on it.');
-    //   return;
-    // }
+    if (document == null) {
+      reportThreepioWarning('Document is null, cannot operate on it.');
+      return;
+    }
     const { type, fragment } = data;
     const { id, content } = fragment as any;
     switch (type) {
@@ -109,7 +109,8 @@ export class DomOperator {
       if (document == null) {
         reportThreepioWarning('Document is null, cannot operate on it.');
         return;
-      } try {
+      }
+      try {
         if (parentId === null) {
           appendHtml(content, document.body);
         } else {

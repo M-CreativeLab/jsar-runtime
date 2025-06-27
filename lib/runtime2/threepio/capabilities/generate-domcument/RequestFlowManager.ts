@@ -16,8 +16,8 @@ import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
 import { HTMLStream, PlannerStream } from './parsers/interface';
-import { TraceOptions } from '../../trace/interface';
-import { startActiveSpan, } from '../../trace/withFlowMonitoring';
+import { TraceOptions } from './trace/interface';
+import { startActiveSpan, } from './trace/withFlowMonitoring';
 
 type ProcessPlannerParam = {
   input: string,

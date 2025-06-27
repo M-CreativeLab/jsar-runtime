@@ -1,8 +1,9 @@
-import { reportThreepioWarning } from '../utils/threepioLog';
-import { AllTraceTypes, Attributes, Span, SpanAttributes, TraceOptions } from './interface';
+import { reportThreepioWarning } from '../../../utils/threepioLog';
+import { AllTraceTypes, Attributes, Span, SpanAttributes, TraceOptions, TraceType } from './interface';
 import { TimePoint } from './TimePoint';
 
 type TraceState = 'ok' | 'error';
+
 /**
  * SpanContext is used to provide additional information about the span,
  * such as its name, type, and any metadata that may be relevant.
@@ -10,8 +11,6 @@ type TraceState = 'ok' | 'error';
  */
 export type SpanContext = {
   timepointsRef?: TimePoint[],
-  traceId?: string,
-  spanId?: string
   traceState?: TraceState,
 } & TraceOptions;
 
@@ -28,10 +27,10 @@ export type SpanOptions = {
 export class SpanImp implements Span {
   readonly attributes: Attributes = {};
   readonly context: SpanContext;
-  readonly traceType: AllTraceTypes;
+  readonly traceType: TraceType;
   readonly errorInfo: Error[] = [];
   readonly startPoint: TimePoint;
-  public endPoint: TimePoint;
+  endPoint: TimePoint;
 
   constructor(options: SpanOptions) {
     this.context = options.context;
@@ -39,45 +38,44 @@ export class SpanImp implements Span {
     this.startPoint = this.#createTimePoint()
   }
 
-  public getSpanContext(): SpanContext {
+  getSpanContext(): SpanContext {
     return this.context;
   }
 
-  public setAttribute(key: string, value: any): this {
+  setAttribute(key: string, value: any): this {
     this.attributes[key] = value;
     return this;
   }
 
-  public setAttributes(attributes: SpanAttributes): this {
+  setAttributes(attributes: SpanAttributes): this {
     Object.assign(this.attributes, attributes);
     return this;
   }
 
-  public reportError(err: Error): void {
+  reportError(err: Error): void {
     this.context.traceState = 'error';
     this.errorInfo.push(err);
   }
 
-  public end(): void {
+  end(): void {
     this.endPoint = this.#createTimePoint();
     if (this.errorInfo.length > 0) {
       reportThreepioWarning(`[Trace] Error in ${this.traceType}:`, this.errorInfo);
     }
   }
 
-  public toJSON(): { [key: string]: any } {
+  toJSON(): { [key: string]: any } {
     return {
       traceType: this.traceType,
       startTime: this.startPoint,
       endTime: this.endPoint,
       errorInfo: this.errorInfo,
-    }
+    };
   }
 
   #createTimePoint(): TimePoint {
     const timePoint = new TimePoint({
       type: this.traceType,
-      time: performance.now(),
       requestId: this.context.requestId,
     });
     if (this.context.timepointsRef) {

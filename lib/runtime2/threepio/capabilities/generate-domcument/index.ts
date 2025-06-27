@@ -4,7 +4,7 @@ import { DomOperator } from './DomOperator';
 import { EmitData } from './interfaces';
 import { getThreepioApiProvider, getThreepioApiModelId, getThreepioApiEndpoint } from '@transmute/env';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
-import { startActiveSpan, traceManager } from '../../trace/withFlowMonitoring';
+import { startActiveSpan, traceManager } from './trace/withFlowMonitoring';
 
 export const APP_ROOT_ID = 'app-root';
 
