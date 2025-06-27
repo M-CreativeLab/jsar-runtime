@@ -1,4 +1,5 @@
-import { TraceOptions } from "../../trace/wrapTaskFlowMonitor";
+import { TraceOptions } from "../../trace/interface";
+
 /**
  * Event types for the emitter.
  */

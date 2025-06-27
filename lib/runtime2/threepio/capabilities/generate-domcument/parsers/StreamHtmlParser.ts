@@ -107,6 +107,7 @@ export class StreamHtmlParser implements Parser {
       data: {
         type: FragmentType.HTML,
         fragment,
+        requestId: '',
       }
     };
   }
@@ -125,6 +126,7 @@ export class StreamHtmlParser implements Parser {
       data: {
         type: FragmentType.CSS,
         fragment,
+        requestId: '',
       }
     };
   }
