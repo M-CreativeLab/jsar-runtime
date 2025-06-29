@@ -32,7 +32,7 @@ export function callLLM(options: CallLLMOptions): { stream: ApiStream, requestId
     const processedStream = processJsonlStream(originalStream, requestId);
     return { stream: processedStream, requestId }; // Return the callId for downstream use
   } catch (error: any) {
-    throw error;
+    reportThreepioError(error.message, requestId);
   }
 }
 
@@ -46,7 +46,7 @@ async function* processJsonlStream(
       if (sourceChunk.type === 'text') {
         for (const processedLine of jsonlProcessor.processChunk(sourceChunk.text)) {
           if (isDebugging) {
-            reportThreepioInfo('Processing text chunk', sourceChunk.text, 'requestId', requestId);
+            reportThreepioInfo('Debug:Processing text chunk', sourceChunk.text, 'requestId', requestId);
           }
           if (processedLine.error) {
             const errorMessage = processedLine.error.message;

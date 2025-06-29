@@ -1,7 +1,6 @@
 import util from 'util';
-import { Span } from './interface';
 import { TimePoint } from './TimePoint';
-import { SpanImp, SpanOptions } from './Span';
+import { Span, SpanOptions } from './Span';
 
 interface CallNode {
   requestId: string;
@@ -14,14 +13,18 @@ export class TraceManager {
   #timePoints: TimePoint[] = [];
 
   startSpan(options: SpanOptions): Span {
-    options.context.timepointsRef = this.#timePoints;
-    const span = new SpanImp(options) as Span;
+    options.context.manager = this;
+    const span = new Span(options) as Span;
     this.#spans.push(span);
     return span;
   }
 
   buildCallGraph(requestId: string, parentRequestId: string): void {
     this.#getOrNewCallNode(requestId, parentRequestId);
+  }
+
+  addTimePoint(timePoint: TimePoint): void {
+    this.#timePoints.push(timePoint);
   }
 
   addError(span: Span, err: Error): void {

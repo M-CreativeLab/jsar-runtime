@@ -1,8 +1,7 @@
-import { reportThreepioWarning } from '../../../utils/threepioLog';
-import { AllTraceTypes, Attributes, Span, SpanAttributes, TraceOptions, TraceType } from './interface';
 import { TimePoint } from './TimePoint';
-
-type TraceState = 'ok' | 'error';
+import { TraceManager } from './TraceManager';
+import { reportThreepioWarning } from '../../../utils/threepioLog';
+import { Attributes, ISerializable, SpanAttributes, TraceOptions, TraceType } from './interface';
 
 /**
  * SpanContext is used to provide additional information about the span,
@@ -10,8 +9,7 @@ type TraceState = 'ok' | 'error';
  * It is used to create a new span in the task flow.
  */
 export type SpanContext = {
-  timepointsRef?: TimePoint[],
-  traceState?: TraceState,
+  manager?: TraceManager,
 } & TraceOptions;
 
 /**
@@ -20,22 +18,23 @@ export type SpanContext = {
  */
 export type SpanOptions = {
   name: string,
-  traceType: AllTraceTypes,
+  traceType: TraceType,
   context: SpanContext,
 };
 
-export class SpanImp implements Span {
+export class Span implements ISerializable {
   readonly attributes: Attributes = {};
   readonly context: SpanContext;
   readonly traceType: TraceType;
   readonly errorInfo: Error[] = [];
-  readonly startPoint: TimePoint;
-  endPoint: TimePoint;
+  public readonly startPoint: TimePoint;
+  public readonly endPoint: TimePoint;
 
   constructor(options: SpanOptions) {
     this.context = options.context;
     this.traceType = options.traceType;
-    this.startPoint = this.#createTimePoint()
+    this.startPoint = this.#createTimePoint();
+    this.endPoint = this.#createTimePoint();
   }
 
   getSpanContext(): SpanContext {
@@ -53,12 +52,11 @@ export class SpanImp implements Span {
   }
 
   reportError(err: Error): void {
-    this.context.traceState = 'error';
     this.errorInfo.push(err);
   }
 
   end(): void {
-    this.endPoint = this.#createTimePoint();
+    this.endPoint.time = performance.now();
     if (this.errorInfo.length > 0) {
       reportThreepioWarning(`[Trace] Error in ${this.traceType}:`, this.errorInfo);
     }
@@ -70,6 +68,7 @@ export class SpanImp implements Span {
       startTime: this.startPoint,
       endTime: this.endPoint,
       errorInfo: this.errorInfo,
+      attributes: this.attributes,
     };
   }
 
@@ -78,8 +77,8 @@ export class SpanImp implements Span {
       type: this.traceType,
       requestId: this.context.requestId,
     });
-    if (this.context.timepointsRef) {
-      this.context.timepointsRef.push(timePoint);
+    if (this.context.manager) {
+      this.context.manager.addTimePoint(timePoint);
     }
     return timePoint;
   }

@@ -24,12 +24,7 @@ export class StreamPlannerParser implements Parser {
 
   public endStream(): void {
     if (this.#isEnded) return;
-
     this.#isEnded = true;
-    this.#queue.push({
-      type: 'end',
-      data: { processedCount: this.#processedCount }
-    });
     this.#processQueue();
   }
 

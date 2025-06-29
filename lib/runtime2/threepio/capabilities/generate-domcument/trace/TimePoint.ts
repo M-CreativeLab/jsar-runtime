@@ -7,15 +7,15 @@ export type TimePointOptions = {
 
 export class TimePoint implements ISerializable {
   type: TraceType;
-  time: number = performance.now();
-  id: number;
+  id: string;
   referenceId: string;
+  time: number = performance.now();
   private static Counter: number = 0;
 
   constructor(options: TimePointOptions) {
     this.type = options.type;
     this.referenceId = options.requestId;
-    this.id = TimePoint.Counter++;
+    this.id = (TimePoint.Counter++).toString();
   }
 
   toJSON(): { [key: string]: any; } {

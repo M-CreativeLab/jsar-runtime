@@ -1,10 +1,9 @@
-import { Span } from './interface';
-import { SpanOptions } from './Span';
+import { Span, SpanOptions } from './Span';
 import { TraceManager } from './TraceManager';
 
 export const traceManager = new TraceManager();
 
-export function startActiveSpan<F extends (span: Span) => unknown>(options: SpanOptions, fn: F): ReturnType<F> {
+export function startSpan<F extends (span: Span) => unknown>(options: SpanOptions, fn: F): ReturnType<F> {
   const span = traceManager.startSpan(options);
   traceManager.buildCallGraph(options.context.requestId, options.context.parentRequestId);
   try {
@@ -25,7 +24,7 @@ export function startActiveSpan<F extends (span: Span) => unknown>(options: Span
   }
 }
 
-export function startActiveGeneratorSpan<T>(
+export function startGeneratorSpan<T>(
   options: SpanOptions,
   generatorFn: (span: Span) => AsyncGenerator<T>
 ): AsyncGenerator<T> {

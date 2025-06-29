@@ -1,5 +1,3 @@
-import { TimePoint } from "./TimePoint";
-
 export type AllTraceTypes = TraceGenerateDomType;
 
 /**
@@ -49,22 +47,4 @@ export interface Attributes {
 
 export interface SpanAttributes {
   [key: string]: any;
-}
-
-/**
- * Span is an interface that represents a single span in the task flow.
- * The relationship between span and timepoint is like the relationship between a line and points.
- *  A line consists of multiple points (including endpoints start, end and other points)
- */
-export interface Span extends ISerializable {
-  readonly startPoint: TimePoint;
-  readonly endPoint: TimePoint;
-  readonly attributes: Attributes;
-  readonly errorInfo: Error[];
-  readonly traceType: TraceType;
-
-  reportError(err: Error): void;
-  setAttribute(key: string, value: any): this;
-  setAttributes(attributes: SpanAttributes): this;
-  end(): void;
 }

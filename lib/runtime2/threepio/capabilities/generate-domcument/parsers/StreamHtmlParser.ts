@@ -18,7 +18,6 @@ export class StreamHtmlParser implements Parser {
     if (this.#isEnded || chunk.type !== 'json' || !chunk.jsonObject) {
       return;
     }
-
     const item = this.#transformObject(chunk.jsonObject);
     if (item) {
       this.#queue.push(item);
@@ -28,12 +27,7 @@ export class StreamHtmlParser implements Parser {
 
   public endStream(): void {
     if (this.#isEnded) return;
-
     this.#isEnded = true;
-    this.#queue.push({
-      eventType: 'streamEnd',
-      data: null
-    });
     this.#processQueue();
   }
 
@@ -69,7 +63,6 @@ export class StreamHtmlParser implements Parser {
           error: new Error('Invalid JSON structure')
         };
       }
-
       switch (jsonData.type) {
         case 'htmlNode':
           return this.#transformHtmlNode(jsonData as HTMLOutputFragment);
