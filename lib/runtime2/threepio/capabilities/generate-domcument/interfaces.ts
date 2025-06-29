@@ -120,7 +120,7 @@ export type MoudleFragmentTask = {
   fragmentType: FragmentType; // Type of fragment to generate
   moudle: ParsedModule;       // Module information
   input: string,
-  systemPrompt: string
+  systemPrompt: string,
   context: {                  // Context for the task
     pageGoal: string;         // The goal of the page
     designSystemInfo?: string; // Design system information

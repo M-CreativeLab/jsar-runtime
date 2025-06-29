@@ -99,7 +99,7 @@ export class RequestFlowManager extends EventEmitter {
     }, async (span) => {
       span.setAttributes({ systemPrompt, ...plannerParam });
       await this.#processPlannerStream({ requestId, parentRequestId: input, ...plannerParam }, stream);
-    })
+    });
   }
 
   async #processPlannerStream(plannerParam: ProcessPlannerParam, stream: ApiStream): Promise<void> {
