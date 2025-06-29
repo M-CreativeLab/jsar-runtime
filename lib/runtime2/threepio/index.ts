@@ -1,11 +1,11 @@
 import { Capability } from './capabilities/interface';
-// import { GenerateDocumentCapability } from './capabilities/generate-domcument';
+import { GenerateDocumentCapability } from './capabilities/generate-domcument';
 
 export class Threepio {
   #capabilities: Capability[] = [];
 
-  constructor() {
-    // this.#capabilities.push(new GenerateDocumentCapability(browsingContext));
+  constructor(browsingContext: Transmute.BrowsingContext) {
+    this.#capabilities.push(new GenerateDocumentCapability(browsingContext));
   }
 
   public async request(input: string): Promise<void> {
