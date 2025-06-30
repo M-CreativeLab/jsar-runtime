@@ -1,7 +1,7 @@
 import util from 'util';
+import fs from 'fs';
 import { TimePoint } from './TimePoint';
 import { Span, SpanOptions } from './Span';
-
 interface CallNode {
   requestId: string;
   children: CallNode[];
@@ -56,6 +56,31 @@ export class TraceManager {
       requestId: node.requestId,
       children: node.children.map(child => this.toJSON(child)),
     };
+  }
+
+  save(input: string, html: string, dir: string): void {
+    const callGrahgs = this.#callGraghs.map((root) => this.toJSON(root));
+    const spans = this.#spans.map(span => span.toJSON());
+    const timePoints = this.#timePoints;
+    const jsonData = {
+      callGrahgs: callGrahgs,
+      spans: spans,
+      timePoints: timePoints,
+      html: html,
+    }
+    dir = process.cwd() + dir;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const name = input + new Date().toISOString().replace(/[:.]/g, '-');
+    const path = `${dir}/${name}.trace.json`;
+    fs.promises.writeFile(path, JSON.stringify(jsonData, null, 2))
+      .then(() => {
+        console.log(`Trace saved to ${path}`);
+      })
+      .catch((err) => {
+        console.error(`Error saving trace data: ${err}`);
+      });
   }
 
   #getOrNewCallNode(requestId: string, parentRequestId: string): CallNode {

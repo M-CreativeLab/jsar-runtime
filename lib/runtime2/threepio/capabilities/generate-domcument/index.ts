@@ -59,14 +59,15 @@ export class GenerateDocumentCapability implements Capability {
       traceManager.printAll();
       const htmlcontext = `
       <html>
-        <head>${this.#document.head.innerHTML}</head>
-        <body style="display:flex; justify-content:center; align-items:center;">
-          <div id=\"${APP_ROOT_ID}\">
-          ${this.#document.body.innerHTML}
-          </div>
-        </body>
+      <head>${this.#document.head.innerHTML}</head>
+      <body style="display:flex; justify-content:center; align-items:center;">
+      <div id=\"${APP_ROOT_ID}\">
+      ${this.#document.body.innerHTML}
+      </div>
+      </body>
       </html>
       `;
+      // traceManager.save(input, htmlcontext, `/docs/threepio/trace/`);
       reportThreepioInfo('Agent: Generated HTML content:', htmlcontext);
     } catch (error) {
       reportThreepioError('Agent: Error creating task:', error);
