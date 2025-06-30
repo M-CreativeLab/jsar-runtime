@@ -68,10 +68,6 @@ export class DomOperator {
         parentRequestId: data.parentRequestId,
       }
     }, () => {
-      if (document == null) {
-        reportThreepioWarning('Document is null, cannot operate on it.');
-        return;
-      }
       reportThreepioInfo('Processed append CSS:', content);
       const styleElement = document.createElement('style');
       styleElement.appendChild(document.createTextNode(content));
@@ -106,10 +102,6 @@ export class DomOperator {
     }, (span) => {
       const { fragment } = data;
       const { content, parentId } = fragment as any;
-      if (document == null) {
-        reportThreepioWarning('Document is null, cannot operate on it.');
-        return;
-      }
       try {
         if (parentId === null) {
           appendHtml(content, document.body);
