@@ -67,7 +67,6 @@ export class GenerateDocumentCapability implements Capability {
       </body>
       </html>
       `;
-      // traceManager.save(input, htmlcontext, `/docs/threepio/trace/`);
       reportThreepioInfo('Agent: Generated HTML content:', htmlcontext);
     } catch (error) {
       reportThreepioError('Agent: Error creating task:', error);
