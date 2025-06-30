@@ -7,10 +7,10 @@ Threepio 的 trace（追踪）模块用于对整个 LLM 驱动的页面生成流
 通过分析收集的信息，达成渐进式生成页面的目标。
 ### 渐进式指标
 
-| 指标                                | 含义描述                     | 阈值   |
-| ----------------------------------- | ---------------------------- | ------ |
-| FCP（First Contentful Paint）       | 首次绘制任何文本、图片等内容 | ≤ 1.8s |
-| FGI（Fragment Generation Interval） | 页面内容生成间隔             | ≤1s    |
+| 指标                               | 含义描述          | 阈值   |
+| ---------------------------------- | ----------------- | ------ |
+| PFP（Page Frame Paint）            | 页面/应用框架绘制 | ≤ 1.8s |
+| CGI（Content Generation Interval） | 页面内容生成间隔  | ≤1s    |
 
 主要功能包括：
 - 自动追踪每个请求（如页面规划、模块生成、HTML 解析等）的开始、结束时间和耗时。
@@ -21,7 +21,7 @@ Threepio 的 trace（追踪）模块用于对整个 LLM 驱动的页面生成流
 ## 如何使用 trace 模块
 
 1. **自动集成**：
-   RequestFlowManager 等核心流程类已自动集成 trace，无需手动调用。只需正常调用 `executeFlow(input)`，trace 数据会自动采集。
+   RequestFlowManager 等核心流程类已自动集成 trace，无需手动调用。使用 `startSpan`，对目标函数作为callback，trace 数据会自动采集。
 
 2. **事件监听**：
    可通过监听 RequestFlowManager 的事件（如 `append`）获取每个阶段的追踪数据。
