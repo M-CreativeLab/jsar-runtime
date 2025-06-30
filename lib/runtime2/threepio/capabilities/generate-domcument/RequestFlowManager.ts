@@ -16,7 +16,7 @@ import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
 import { TraceOptions } from './trace/interface';
-import { startSpan, } from './trace/withFlowMonitoring';
+import { startSpan } from './trace/withFlowMonitoring';
 
 type ProcessPlannerParam = {
   input: string,
@@ -176,12 +176,19 @@ export class RequestFlowManager extends EventEmitter {
 
   async #processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): Promise<void> {
     const htmlParser = new StreamHtmlParser(task.parentRequestId);
-    const inputPromise = (async () => {
+    // const inputPromise = (async () => {
+    //   for await (const chunk of stream) {
+    //     htmlParser.parseChunk(chunk);
+    //   }
+    //   htmlParser.endStream();
+    // })();
+    const inputPromise = new Promise<void>(async (resolve) => {
       for await (const chunk of stream) {
         htmlParser.parseChunk(chunk);
       }
       htmlParser.endStream();
-    })();
+      resolve();
+    });
     for await (const item of htmlParser.stream()) {
       if (item.eventType === 'append') {
         item.data.requestId = task.requestId;

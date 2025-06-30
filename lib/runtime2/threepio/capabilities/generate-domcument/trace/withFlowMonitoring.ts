@@ -13,7 +13,9 @@ export function startSpan<F extends (span: Span) => unknown>(options: SpanOption
       return wrapAsyncGenerator(result as AsyncGenerator<any, any, any>, span) as ReturnType<F>;
     }
     if (result instanceof Promise) {
-      return result.finally(() => span.end()) as ReturnType<F>;
+      return result
+        .catch((error) => { span.reportError(error as Error); })
+        .finally(() => span.end()) as ReturnType<F>;
     }
     span.end();
     return result as ReturnType<F>;
@@ -22,26 +24,6 @@ export function startSpan<F extends (span: Span) => unknown>(options: SpanOption
     span.end();
     throw error;
   }
-}
-
-export function startGeneratorSpan<T>(
-  options: SpanOptions,
-  generatorFn: (span: Span) => AsyncGenerator<T>
-): AsyncGenerator<T> {
-  return (async function* () {
-    const span = traceManager.startSpan(options);
-    try {
-      const generator = generatorFn(span);
-      for await (const value of generator) {
-        yield value;
-      }
-    } catch (error) {
-      span.reportError(error as Error);
-      throw error;
-    } finally {
-      span.end();
-    }
-  })();
 }
 
 function wrapAsyncGenerator(

@@ -1,7 +1,7 @@
 import { APP_ROOT_ID } from '.';
 import { startSpan } from './trace/withFlowMonitoring';
-import { reportThreepioError, reportThreepioInfo, reportThreepioWarning } from '../../utils/threepioLog';
 import { EmitData, HtmlFragment } from './interfaces';
+import { reportThreepioError, reportThreepioInfo, reportThreepioWarning } from '../../utils/threepioLog';
 
 function appendHtml(htmlstr: string, element: Element) {
   const tempDiv = document.createElement('div');

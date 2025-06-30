@@ -1,5 +1,3 @@
-export type AllTraceTypes = TraceGenerateDomType;
-
 /**
  * This type is used to categorize different tracing operations within the task flow.
  * @description
@@ -16,13 +14,13 @@ export type TraceGenerateDomType = 'fullFlow' | 'planRequest' | 'moudleRequest' 
  * @description
  * TraceGenerateDomType is a subset of TraceType. 
  * */
-export type TraceType = string;
+export type TraceType = TraceGenerateDomType;
 
 /**
  * define the trace configuration
  */
 export type TraceConfiguration = {
-  traceType: AllTraceTypes;
+  traceType: TraceType;
   data?: { [key: string]: any }
 } & TraceOptions;
 

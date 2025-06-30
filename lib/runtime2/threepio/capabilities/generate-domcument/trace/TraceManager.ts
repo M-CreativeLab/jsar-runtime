@@ -55,7 +55,7 @@ export class TraceManager {
     return {
       requestId: node.requestId,
       children: node.children.map(child => this.toJSON(child)),
-    }
+    };
   }
 
   #getOrNewCallNode(requestId: string, parentRequestId: string): CallNode {

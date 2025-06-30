@@ -43,11 +43,12 @@ async function* processJsonlStream(
   const jsonlProcessor = new JSONLProcessor();
   try {
     for await (const sourceChunk of sourceStream) {
+      if (isDebugging) {
+        reportThreepioInfo('Source chunk:', { chunk: sourceChunk, requestId });
+      }
       if (sourceChunk.type === 'text') {
         for (const processedLine of jsonlProcessor.processChunk(sourceChunk.text)) {
-          if (isDebugging) {
-            reportThreepioInfo('Debug:Processing text chunk', sourceChunk.text, 'requestId', requestId);
-          }
+
           if (processedLine.error) {
             const errorMessage = processedLine.error.message;
             reportThreepioError(errorMessage, requestId);
