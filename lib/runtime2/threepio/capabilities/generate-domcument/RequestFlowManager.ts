@@ -176,12 +176,6 @@ export class RequestFlowManager extends EventEmitter {
 
   async #processMoudleStream(task: MoudleFragmentTask, stream: ApiStream): Promise<void> {
     const htmlParser = new StreamHtmlParser(task.parentRequestId);
-    // const inputPromise = (async () => {
-    //   for await (const chunk of stream) {
-    //     htmlParser.parseChunk(chunk);
-    //   }
-    //   htmlParser.endStream();
-    // })();
     const inputPromise = new Promise<void>(async (resolve) => {
       for await (const chunk of stream) {
         htmlParser.parseChunk(chunk);
