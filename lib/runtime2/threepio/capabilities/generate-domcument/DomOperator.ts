@@ -67,7 +67,8 @@ export class DomOperator {
         requestId: data.requestId,
         parentRequestId: data.parentRequestId,
       }
-    }, () => {
+    }, (span) => {
+      span.setAttributes(data);
       reportThreepioInfo('Processed append CSS:', content);
       const styleElement = document.createElement('style');
       styleElement.appendChild(document.createTextNode(content));
@@ -100,6 +101,7 @@ export class DomOperator {
         parentRequestId: data.parentRequestId,
       }
     }, (span) => {
+      span.setAttributes(data);
       const { fragment } = data;
       const { content, parentId } = fragment as any;
       try {

@@ -169,6 +169,7 @@ export class RequestFlowManager extends EventEmitter {
       }
     },
       async (span) => {
+        span.setAttributes(task);
         await this.#processMoudleStream(task, stream);
       }
     );
