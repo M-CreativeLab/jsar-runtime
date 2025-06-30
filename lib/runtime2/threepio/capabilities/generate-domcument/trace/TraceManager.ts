@@ -63,11 +63,12 @@ export class TraceManager {
     const spans = this.#spans.map(span => span.toJSON());
     const timePoints = this.#timePoints;
     const jsonData = {
+      input: input,
       callGrahgs: callGrahgs,
       spans: spans,
       timePoints: timePoints,
-      html: html,
-    }
+      html: html
+    };
     dir = process.cwd() + dir;
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
