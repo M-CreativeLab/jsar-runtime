@@ -1,5 +1,5 @@
-import { ApiStreamChunk } from "../../../api/transform/stream";
-import { EmitData, MoudleParserEventType, ParsedHeader, ParsedModule } from "../interfaces";
+import { ApiStreamChunk } from '../../../api/transform/stream';
+import { EmitData, MoudleParserEventType, ParsedHeader, ParsedModule } from '../interfaces';
 
 /**
  * Stream for generating HTML fragments.
