@@ -4,6 +4,7 @@ import { DomOperator } from './DomOperator';
 import { EmitData } from './interfaces';
 import { getThreepioApiProvider, getThreepioApiModelId, getThreepioApiEndpoint } from '@transmute/env';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
+import { startSpan, traceManager } from './trace/withFlowMonitoring';
 
 export const APP_ROOT_ID = 'app-root';
 
@@ -46,15 +47,24 @@ export class GenerateDocumentCapability implements Capability {
         reportThreepioInfo('Agent: Received append data:', data);
         this.#operator.operate(this.#document, data);
       });
-      await this.#manager.executeFlow(input);
+      await startSpan({
+        name: input,
+        traceType: 'fullFlow',
+        context: {
+          requestId: input
+        }
+      }, async (span) => {
+        await this.#manager.executeFlow(input);
+      });
+      traceManager.printAll();
       const htmlcontext = `
       <html>
-        <head>${this.#document.head.innerHTML}</head>
-        <body style="display:flex; justify-content:center; align-items:center;">
-          <div id=\"${APP_ROOT_ID}\">
-          ${this.#document.body.innerHTML}
-          </div>
-        </body>
+      <head>${this.#document.head.innerHTML}</head>
+      <body style="display:flex; justify-content:center; align-items:center;">
+      <div id=\"${APP_ROOT_ID}\">
+      ${this.#document.body.innerHTML}
+      </div>
+      </body>
       </html>
       `;
       reportThreepioInfo('Agent: Generated HTML content:', htmlcontext);

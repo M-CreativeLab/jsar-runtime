@@ -1,3 +1,5 @@
+import { TraceOptions } from './trace/interface';
+
 /**
  * Event types for the emitter.
  */
@@ -39,10 +41,10 @@ export interface ParsedModule {
  * Data structure for emitted data during the planning or fragment generation process.
  * Includes the fragment type and the fragment content.
  */
-export interface EmitData {
+export type EmitData = {
   type: FragmentType;      // The type of fragment being emitted
   fragment: Fragment;      // The fragment data
-}
+} & TraceOptions;
 
 /**
  * Base interface for all fragment types.
@@ -52,9 +54,17 @@ export interface Fragment {
 }
 
 /**
- * Fragment representing module content.
+ * define header fragment
+ */
+export interface HeaderFragment extends Fragment {
+  rawContent: ParsedHeader;
+}
+
+/**
+ *  define moudle fragment
  */
 export interface MoudleFragment extends Fragment {
+  rawContent: ParsedModule;
 }
 
 /**
@@ -65,7 +75,6 @@ export interface HtmlFragment extends Fragment {
 }
 
 export interface CssFragment extends Fragment {
-
 }
 
 /**
@@ -107,14 +116,16 @@ export interface FragmentTask {
 /**
  * Task structure for LLM module fragment generation.
  */
-export interface MoudleFragmentTask {
+export type MoudleFragmentTask = {
   fragmentType: FragmentType; // Type of fragment to generate
   moudle: ParsedModule;       // Module information
+  input: string,
+  systemPrompt: string,
   context: {                  // Context for the task
     pageGoal: string;         // The goal of the page
-    designSystemInfo: string; // Design system information
+    designSystemInfo?: string; // Design system information
   };
-}
+} & TraceOptions;
 
 /**
  * Result structure for LLM tasks.
