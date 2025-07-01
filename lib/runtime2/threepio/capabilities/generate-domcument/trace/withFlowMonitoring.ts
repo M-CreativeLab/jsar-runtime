@@ -8,10 +8,6 @@ export function startSpan<F extends (span: Span) => unknown>(options: SpanOption
   traceManager.buildCallGraph(options.context.requestId, options.context.parentRequestId);
   try {
     const result = fn(span);
-    if (result && typeof result === 'object' &&
-      typeof (result as any)[Symbol.asyncIterator] === 'function') {
-      return wrapAsyncGenerator(result as AsyncGenerator<any, any, any>, span) as ReturnType<F>;
-    }
     if (result instanceof Promise) {
       return result
         .catch((error) => { span.reportError(error as Error); })
@@ -24,17 +20,4 @@ export function startSpan<F extends (span: Span) => unknown>(options: SpanOption
     span.end();
     throw error;
   }
-}
-
-function wrapAsyncGenerator(
-  generator: AsyncGenerator<any>,
-  span: Span
-): AsyncGenerator<any> {
-  async function* wrapped() {
-    for await (const value of generator) {
-      yield value;
-    }
-    traceManager.endSpan(span);
-  }
-  return wrapped();
 }
