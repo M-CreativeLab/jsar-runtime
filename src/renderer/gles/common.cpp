@@ -393,6 +393,36 @@ namespace gles
     }
   }
 
+  std::string glTextureTargetToString(GLenum target)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (target)
+    {
+      // Texture Targets
+      CASE(GL_TEXTURE_2D);
+      CASE(GL_TEXTURE_3D);
+      CASE(GL_TEXTURE_CUBE_MAP);
+      CASE(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+      CASE(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+      CASE(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+      CASE(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+      CASE(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+      CASE(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+      CASE(GL_TEXTURE_2D_ARRAY);
+      CASE(GL_TEXTURE_2D_MULTISAMPLE);
+      CASE(GL_TEXTURE_2D_MULTISAMPLE_ARRAY);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << target;
+      return ss.str();
+    }
+#undef CASE
+  }
+
   std::string glTextureInternalFormatToString(GLenum format)
   {
 #define CASE(x) \
@@ -452,6 +482,12 @@ namespace gles
       CASE(GL_RGBA16UI);
       CASE(GL_RGBA32I);
       CASE(GL_RGBA32UI);
+      CASE(GL_DEPTH24_STENCIL8);
+      CASE(GL_DEPTH32F_STENCIL8);
+      CASE(GL_DEPTH_COMPONENT16);
+      CASE(GL_DEPTH_COMPONENT24);
+      CASE(GL_DEPTH_COMPONENT32F);
+      CASE(GL_STENCIL_INDEX8);
     default:
       std::stringstream ss;
       ss << "0x" << std::hex << format;

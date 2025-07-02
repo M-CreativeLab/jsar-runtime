@@ -55,6 +55,7 @@ ContextGLApp::ContextGLApp(string name)
 
 ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
     : ContextGLStorage(name, from)
+    , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
     , m_GLObjectManager(from->m_GLObjectManager)
 {
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
@@ -67,27 +68,26 @@ ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
   m_Samplers = OpenGLNamesStorage(&from->m_Samplers);
 }
 
-void ContextGLApp::initialize(ContextGLHost *host_context)
+void ContextGLApp::initializeContext(ContextGLHost *host_context)
 {
   assert(host_context != nullptr && "Host context must not be null");
-  if (!m_DefaultRenderTarget.has_value())
-  {
-    m_DefaultRenderTarget = host_context->createRenderTarget();
-    m_FramebufferId = m_DefaultRenderTarget.value_or(0);
-  }
 }
 
-void ContextGLApp::onFrameWillStart()
+GLuint ContextGLApp::currentDefaultRenderTarget() const
 {
-  if (m_DefaultRenderTarget.has_value())
-  {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_DefaultRenderTarget.value());
-    glClear(GL_STENCIL_BUFFER_BIT);
-  }
-  restore();
+  return m_CurrentDefaultRenderTarget;
 }
 
-void ContextGLApp::onFrameEnded()
+void ContextGLApp::onFrameWillStart(ContextGLHost *host_context)
+{
+  m_CurrentDefaultRenderTarget = host_context->currentFramebufferId();
+  glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentDefaultRenderTarget);
+  glClear(GL_STENCIL_BUFFER_BIT);
+
+  ContextGLStorage::restore();
+}
+
+void ContextGLApp::onFrameEnded(ContextGLHost *host_context)
 {
 }
 

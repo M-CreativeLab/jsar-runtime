@@ -105,6 +105,7 @@ namespace gles
   std::string glBlendFuncToString(GLenum func);
   std::string glDrawBufferTargetToString(GLenum target);
   std::string glFramebufferAttachmentToString(GLenum attachment);
+  std::string glTextureTargetToString(GLenum target);
   std::string glTextureInternalFormatToString(GLenum format);
   std::string glTextureFormatToString(GLenum format);
   /**

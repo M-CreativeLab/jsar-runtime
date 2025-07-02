@@ -219,10 +219,10 @@ void ContextGLStorage::restore()
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
   }
 
-  if (m_FramebufferId >= 0)
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+  if (m_FramebufferId.has_value())
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
   if (m_RenderbufferId >= 0)
-    glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId.value());
   bindBuffersError = glGetError();
 
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)

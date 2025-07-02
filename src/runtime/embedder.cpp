@@ -57,7 +57,7 @@ bool TrEmbedder::onFrame()
   auto frameDuration = perfCounter.duration();
   if (frameDuration > 2.0)
     DEBUG(LOG_TAG_ERROR, "Detected a long tick(>=2ms) in host frame: \n%s", perfCounter.toString().c_str());
-  constellation->getPerfFs()->setFrameDuration(frameDuration);
+  constellation->perfFs->setFrameDuration(frameDuration);
 #endif
   return true;
 }

@@ -24,11 +24,6 @@ CRATES_FORCE_REBUILD ?= no
 # Define the INSPECTOR flag (default is no) that will build the inspector
 INSPECTOR ?= no
 
-# Update the flags if RELEASE is set to yes
-ifeq ($(RELEASE), yes)
-	CLEAN := yes
-endif
-
 # This makefile defines a function `build_crates` to build Rust crates using Cargo.
 # 
 # Usage:

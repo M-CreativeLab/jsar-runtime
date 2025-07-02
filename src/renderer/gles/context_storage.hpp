@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 #include <common/viewport.hpp>
 
 #include "./common.hpp"
@@ -266,39 +267,39 @@ public:
   void onSetStencilFunc(GLenum face, GLenum func, GLint ref, GLuint mask);
   void onSetStencilOp(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
 
-  const char *name()
+  const char *name() const
   {
     return name_.c_str();
   }
-  TrViewport viewport()
+  TrViewport viewport() const
   {
     return TrViewport(viewport_[2], viewport_[3], viewport_[0], viewport_[1]);
   }
-  GLint program()
+  GLint program() const
   {
     return m_ProgramId;
   }
-  GLint arrayBuffer()
+  GLint arrayBuffer() const
   {
     return m_ArrayBufferId;
   }
-  GLint elementArrayBuffer()
+  GLint elementArrayBuffer() const
   {
     return m_ElementArrayBufferId;
   }
-  GLint framebuffer()
+  GLuint framebuffer() const
   {
-    return m_FramebufferId;
+    return m_FramebufferId.value_or(0);
   }
-  GLint renderbuffer()
+  GLuint renderbuffer() const
   {
-    return m_RenderbufferId;
+    return m_RenderbufferId.value_or(0);
   }
-  GLint vertexArrayObject()
+  GLint vertexArrayObject() const
   {
     return m_VertexArrayObjectId;
   }
-  GLenum activeTextureUnit()
+  GLenum activeTextureUnit() const
   {
     return m_LastActiveTextureUnit;
   }
@@ -349,8 +350,8 @@ protected: /** OpenGLES objects */
   GLint m_ProgramId = 0;
   GLint m_ArrayBufferId = 0;
   GLint m_ElementArrayBufferId = 0;
-  GLint m_FramebufferId = 0;
-  GLint m_RenderbufferId = 0;
+  std::optional<GLuint> m_FramebufferId;
+  std::optional<GLuint> m_RenderbufferId;
   GLint m_VertexArrayObjectId = 0;
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
   std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;

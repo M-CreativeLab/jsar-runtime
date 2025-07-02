@@ -251,6 +251,16 @@ namespace renderer
     return removeContentRenderers(content.id);
   }
 
+  void TrRenderer::iterateContentRenderers(function<void(const TrContentRenderer &)> callback) const
+  {
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    for (auto contentRenderer : contentRenderers)
+    {
+      if (contentRenderer != nullptr)
+        callback(*contentRenderer);
+    }
+  }
+
   void TrRenderer::setDrawingViewport(TrViewport viewport)
   {
     api->SetDrawingViewport(viewport);

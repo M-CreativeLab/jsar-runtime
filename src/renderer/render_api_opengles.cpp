@@ -150,7 +150,7 @@ private:
       DEBUG(logTag,
             "    Framebuffer: %d (%s)",
             framebuffer,
-            glCheckFramebufferStatus(GL_FRAMEBUFFER) ? "Complete" : "Incomplete");
+            glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "Complete" : "Incomplete");
     }
 
     // Print LINK_STATUS, VALIDATE_STATUS
@@ -158,8 +158,15 @@ private:
       GLint linkStatus, validateStatus;
       glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
       glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
-      DEBUG(logTag, "    Program: LINK_STATUS=%d", linkStatus);
-      DEBUG(logTag, "    Program: VALIDATE_STATUS=%d", validateStatus);
+      DEBUG(logTag, "    Program: LINK_STATUS=%s", linkStatus == GL_TRUE ? "Ok" : "Failed");
+      DEBUG(logTag, "    Program: VALIDATE_STATUS=%s", validateStatus == GL_TRUE ? "Ok" : "Failed");
+
+      if (linkStatus != GL_TRUE || validateStatus != GL_TRUE)
+      {
+        GLchar infoLog[512];
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+        DEBUG(logTag, "    Program: INFO_LOG(%s)", infoLog);
+      }
     }
 
     // Print Element Array
@@ -265,7 +272,6 @@ private:
     {
       GLboolean depthEnabled;
       glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
-      if (depthEnabled)
       {
         DEBUG(logTag, "    Depth State:");
         DEBUG(logTag, "      Enabled=%s", depthEnabled ? "Yes" : "No");
@@ -281,6 +287,20 @@ private:
         GLfloat depthRange[2];
         glGetFloatv(GL_DEPTH_RANGE, depthRange);
         DEBUG(logTag, "      Range=(%f, %f)", depthRange[0], depthRange[1]);
+      }
+    }
+
+    // Print Stencil State
+    {
+      GLboolean stencilEnabled;
+      glGetBooleanv(GL_STENCIL_TEST, &stencilEnabled);
+      {
+        DEBUG(logTag, "    Stencil State:");
+        DEBUG(logTag, "      Enabled=%s", stencilEnabled ? "Yes" : "No");
+
+        GLint stencilMask;
+        glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
+        DEBUG(logTag, "      Mask=%d", stencilMask);
       }
     }
   }
@@ -919,10 +939,10 @@ private:
     GLuint framebuffer;
 
     /**
-		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
-		 */
-    if (req->framebuffer == -1)
-      framebuffer = GetRenderer()->getOpenGLContext()->framebuffer();
+     * TODO(yorkie): Now we use 0 or -1 to indicate the default render target, should we use enum instead?
+     */
+    if (req->framebuffer == 0 || req->framebuffer == -1)
+      framebuffer = reqContentRenderer->getOpenGLContext()->currentDefaultRenderTarget();
     else
       framebuffer = glObjectManager.FindFramebuffer(req->framebuffer);
 
@@ -2228,40 +2248,25 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 #ifdef ANDROID
 /**
  * Custom debug callback for KHR_debug extension.
+ * 
+ * @see https://registry.khronos.org/OpenGL/extensions/KHR/KHR_debug.txt
  */
 static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
-  if (
-    source == GL_DEBUG_SOURCE_WINDOW_SYSTEM ||
-    source == GL_DEBUG_SOURCE_THIRD_PARTY ||
-    source == GL_DEBUG_SOURCE_OTHER ||
-    type == GL_DEBUG_TYPE_PERFORMANCE ||
-    type == GL_DEBUG_TYPE_MARKER)
-    return;
-
+  bool skip = false;
   string sourceStr;
+
   switch (source)
   {
   case GL_DEBUG_SOURCE_API:
     sourceStr = "API";
     break;
-  case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-    sourceStr = "Window System";
-    break;
-  case GL_DEBUG_SOURCE_SHADER_COMPILER:
-    sourceStr = "Shader Compiler";
-    break;
-  case GL_DEBUG_SOURCE_THIRD_PARTY:
-    sourceStr = "Third Party";
-    break;
   case GL_DEBUG_SOURCE_APPLICATION:
     sourceStr = "Application";
     break;
-  case GL_DEBUG_SOURCE_OTHER:
-    sourceStr = "Other";
-    break;
   default:
     sourceStr = "Unknown";
+    skip = true;
     break;
   }
 
@@ -2280,20 +2285,23 @@ static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenu
   case GL_DEBUG_TYPE_PORTABILITY:
     typeStr = "Portability";
     break;
-  case GL_DEBUG_TYPE_PERFORMANCE:
-    typeStr = "Performance";
-    break;
   case GL_DEBUG_TYPE_OTHER:
     typeStr = "Other";
+    break;
+  case GL_DEBUG_TYPE_PERFORMANCE:
+    typeStr = "Performance";
     break;
   case GL_DEBUG_TYPE_MARKER:
     typeStr = "Marker";
     break;
   default:
     typeStr = "Unknown";
+    skip = true;
     break;
   }
-  DEBUG(LOG_TAG_ERROR, "[KHR_debug] source=(%s) type=(%s): %s", sourceStr.c_str(), typeStr.c_str(), message);
+
+  if (!skip)
+    DEBUG(LOG_TAG_ERROR, "[KHR_debug] source=(%s) type=(%s): %s", sourceStr.c_str(), typeStr.c_str(), message);
 }
 #endif
 

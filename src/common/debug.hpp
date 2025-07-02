@@ -54,6 +54,13 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #endif
 
 /**
+ * Enable the performance counter for the runtime statistics.
+ */
+#define TR_ENABLE_PERF_COUNTER 1
+// Uncomment the following line to enable performance counter for the runtime statistics.
+#undef TR_ENABLE_PERF_COUNTER
+
+/**
  * Print a debug message to the console.
  */
 void DEBUG(const char *tag, const char *format, ...);

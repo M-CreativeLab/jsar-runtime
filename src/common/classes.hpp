@@ -7,6 +7,9 @@ class TrContentRuntime;
 class TrSoundSource;
 class TrMediaManager;
 
+// Inspector classes
+class TrInspector;
+
 namespace renderer
 {
   class TrRenderer;

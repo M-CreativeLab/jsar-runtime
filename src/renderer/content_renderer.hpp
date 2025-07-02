@@ -45,6 +45,7 @@ namespace renderer
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
+    friend class ::TrInspector;
     friend class xr::TrXRSession;
 
   public:
@@ -164,6 +165,9 @@ namespace renderer
   private: // command buffers & rendering frames
     std::shared_mutex commandBufferRequestsMutex;
     std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
+    std::atomic<bool> isDefaultCommandQueuePending = false;
+    std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
+
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
     /**

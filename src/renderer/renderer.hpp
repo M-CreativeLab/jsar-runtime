@@ -205,6 +205,12 @@ namespace renderer
      * @returns The count of the removed content renderers.
      */
     size_t removeContentRenderers(TrContentRuntime &content);
+    /**
+     * Iterate all the content renderers and call the callback function for each renderer.
+     * 
+     * @param callback The callback function to be called for each content renderer.
+     */
+    void iterateContentRenderers(std::function<void(const TrContentRenderer &)> callback) const;
 
   public: // API for host update
     void setDrawingViewport(TrViewport viewport);
@@ -240,7 +246,7 @@ namespace renderer
     bool enableFpsCalc = true;
 
   private: // fields for senders management
-    std::shared_mutex contentRendererMutex;
+    mutable std::shared_mutex contentRendererMutex;
 
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;

@@ -16,6 +16,7 @@
         {
             "name": "Android",
             "defines": [
+                "ANDROID",
                 "__ANDROID__",
                 "__ANDROID_API__=26"
             ],

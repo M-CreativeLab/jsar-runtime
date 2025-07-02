@@ -1,7 +1,13 @@
 #pragma once
 
 #include <optional>
+#include <memory>
+#include <unordered_map>
+
 #include "./context_storage.hpp"
+#include "./framebuffer.hpp"
+
+typedef GLuint HostFramebufferIdentifier;
 
 class ContextGLHost;
 class ContextGLApp : public ContextGLStorage
@@ -12,10 +18,11 @@ public:
 
 public:
   // Initialize the render target(framebuffer) for this context.
-  void initialize(ContextGLHost *);
+  void initializeContext(ContextGLHost *);
+  GLuint currentDefaultRenderTarget() const;
 
-  void onFrameWillStart();
-  void onFrameEnded();
+  void onFrameWillStart(ContextGLHost *);
+  void onFrameEnded(ContextGLHost *);
 
   void onProgramChanged(int program);
   void onArrayBufferChanged(int vbo);
@@ -57,7 +64,8 @@ public:
 
 private:
   bool m_Dirty = false;
-  std::optional<GLuint> m_DefaultRenderTarget;
+  GLuint m_CurrentDefaultRenderTarget;
+
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
   OpenGLNamesStorage m_Programs;
   OpenGLNamesStorage m_Shaders;
