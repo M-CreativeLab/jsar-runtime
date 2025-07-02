@@ -150,18 +150,8 @@ void ContextGLHost::recordTextureBindingFromHost()
 
 void ContextGLHost::restore()
 {
-  glClear(GL_STENCIL_BUFFER_BIT);
   ContextGLStorage::restore();
-}
-
-void ContextGLHost::configureFramebuffer()
-{
-  glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value_or(0));
-}
-
-void ContextGLHost::restoreFramebuffer()
-{
-  glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value_or(0));
+  glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 void ContextGLHost::onHostFramebufferChanged()

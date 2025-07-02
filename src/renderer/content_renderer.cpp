@@ -311,6 +311,8 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
+    frameStartTime = chrono::system_clock::now();
+
     glContext->onFrameWillStart(constellation->renderer->glHostContext);
     if (constellation->renderer->isAppContextSummaryEnabled)
       glContext->print();
@@ -323,6 +325,10 @@ namespace renderer
   void TrContentRenderer::onEndFrame()
   {
     glContext->onFrameEnded(constellation->renderer->glHostContext);
+
+    frameEndTime = chrono::system_clock::now();
+    frameDuration = chrono::duration_cast<chrono::milliseconds>(frameEndTime - frameStartTime);
+    maxFrameDuration = max(maxFrameDuration, frameDuration);
   }
 
   void TrContentRenderer::initializeGraphicsContextsOnce()

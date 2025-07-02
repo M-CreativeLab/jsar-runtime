@@ -183,12 +183,19 @@ bool TrInspector::getStatistics(rapidjson::Document &json)
   {
     rapidjson::Value descriptor;
     descriptor.SetObject();
-    descriptor.AddMember("id", rapidjson::Value().SetInt(content_renderer.contentId), allocator);
+    descriptor.AddMember("contentId", rapidjson::Value().SetInt(content_renderer.contentId), allocator);
+    descriptor.AddMember("contextId", rapidjson::Value().SetInt(content_renderer.contextId), allocator);
     descriptor.AddMember("drawCallsPerFrame",
                          rapidjson::Value().SetInt(content_renderer.drawCallsPerFrame),
                          allocator);
     descriptor.AddMember("drawCallsCountPerFrame",
                          rapidjson::Value().SetInt(content_renderer.drawCallsCountPerFrame),
+                         allocator);
+    descriptor.AddMember("frameDuration",
+                         rapidjson::Value().SetInt64(content_renderer.frameDuration.count()),
+                         allocator);
+    descriptor.AddMember("maxFrameDuration",
+                         rapidjson::Value().SetInt64(content_renderer.maxFrameDuration.count()),
                          allocator);
     renderers_list.PushBack(descriptor, allocator);
   };

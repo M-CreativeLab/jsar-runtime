@@ -1340,7 +1340,13 @@ private:
   {
     glGenerateMipmap(req->target);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
       DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", options.isDefaultQueue, req->target);
+
+      GLuint currentTextureBinding;
+      glGetIntegerv(req->target == GL_TEXTURE_2D ? GL_TEXTURE_BINDING_2D : GL_TEXTURE_BINDING_3D, (GLint *)&currentTextureBinding);
+      DEBUG(DEBUG_TAG, "    current texture binding: %d", currentTextureBinding);
+    }
   }
   TR_OPENGL_FUNC void OnTexImage3D(TextureImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {

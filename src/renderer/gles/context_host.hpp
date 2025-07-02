@@ -24,9 +24,6 @@ public:
   void recordTextureBindingFromHost();
   void restore();
 
-  void configureFramebuffer();
-  void restoreFramebuffer();
-
   inline const GLuint currentFramebufferId() const
   {
     return m_FramebufferId.value_or(0);

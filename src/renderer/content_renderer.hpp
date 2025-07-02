@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <vector>
 #include <shared_mutex>
 #include <common/classes.hpp>
@@ -186,6 +187,11 @@ namespace renderer
      * The number to describe the vertices count to be drawn per frame.
      */
     size_t drawCallsCountPerFrame = 0;
+
+    std::chrono::time_point<std::chrono::system_clock> frameStartTime;
+    std::chrono::time_point<std::chrono::system_clock> frameEndTime;
+    std::chrono::milliseconds frameDuration = std::chrono::milliseconds(0);
+    std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
 
   private: // frame rate control
     uint32_t targetFrameRate;
