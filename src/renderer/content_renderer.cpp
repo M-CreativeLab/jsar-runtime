@@ -244,13 +244,6 @@ namespace renderer
       // If the default command queue is pending, we consider this time of XR frame might be skipped.
       if (isDefaultCommandQueuePending == true)
       {
-        if (defaultCommandQueueSkipTimes > 0)
-        {
-          shouldSkipXRFrame = true;
-          // Decrement the skip times, if it reaches 0, we will not skip the XR frame anymore.
-          defaultCommandQueueSkipTimes--;
-        }
-
         // `defaultCommandQueueSkipTimes` is updated to a positive value such as +2 when there is a default command
         // received.
         //
