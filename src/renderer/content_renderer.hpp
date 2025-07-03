@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <vector>
 #include <shared_mutex>
 #include <common/classes.hpp>
@@ -45,6 +46,7 @@ namespace renderer
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
+    friend class ::TrInspector;
     friend class xr::TrXRSession;
 
   public:
@@ -75,7 +77,7 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    OpenGLAppContextStorage *getOpenGLContext();
+    ContextGLApp *getOpenGLContext();
     inline shared_ptr<TrContentRuntime> getContent()
     {
       return content.lock();
@@ -155,8 +157,8 @@ namespace renderer
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
-    std::unique_ptr<OpenGLAppContextStorage> glContext;
-    std::unique_ptr<OpenGLAppContextStorage> glContextForBackup;
+    std::unique_ptr<ContextGLApp> glContext;
+    std::unique_ptr<ContextGLApp> glContextForBackup;
     bool isGraphicsContextsInitialized = false;
     bool usingBackupContext = false;
     xr::Device *xrDevice = nullptr;
@@ -164,6 +166,9 @@ namespace renderer
   private: // command buffers & rendering frames
     std::shared_mutex commandBufferRequestsMutex;
     std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
+    std::atomic<bool> isDefaultCommandQueuePending = false;
+    std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
+
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
     /**
@@ -182,6 +187,11 @@ namespace renderer
      * The number to describe the vertices count to be drawn per frame.
      */
     size_t drawCallsCountPerFrame = 0;
+
+    std::chrono::time_point<std::chrono::system_clock> frameStartTime;
+    std::chrono::time_point<std::chrono::system_clock> frameEndTime;
+    std::chrono::milliseconds frameDuration = std::chrono::milliseconds(0);
+    std::chrono::milliseconds maxFrameDuration = std::chrono::milliseconds(0);
 
   private: // frame rate control
     uint32_t targetFrameRate;

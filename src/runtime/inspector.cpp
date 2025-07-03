@@ -1,5 +1,6 @@
 #include <memory>
 #include <rapidjson/document.h>
+#include <renderer/renderer.hpp>
 
 #include "./inspector.hpp"
 #include "./constellation.hpp"
@@ -40,6 +41,10 @@ void TrInspector::onRequest(TrInspectorClient &requestClient)
   else if (requestUrl == "/json/protocol")
   {
     handleRequest(std::bind(&TrInspector::getProtocol, this, _1), requestClient);
+  }
+  else if (requestUrl == "/json/statistics")
+  {
+    handleRequest(std::bind(&TrInspector::getStatistics, this, _1), requestClient);
   }
   else
   {
@@ -158,5 +163,44 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);
   json.AddMember("domains", domains, allocator);
+  return true;
+}
+
+bool TrInspector::getStatistics(rapidjson::Document &json)
+{
+  auto embedder = constellation->getEmbedder();
+
+  json.SetObject();
+  auto &allocator = json.GetAllocator();
+
+  json.AddMember("uptime", rapidjson::Value().SetInt64(embedder->getUptime()), allocator);
+  json.AddMember("fps", rapidjson::Value().SetInt(embedder->getFps()), allocator);
+
+  // add renderers
+  rapidjson::Value renderers_list;
+  renderers_list.SetArray();
+  auto add_content_renderer_fields = [&renderers_list, &allocator](const renderer::TrContentRenderer &content_renderer)
+  {
+    rapidjson::Value descriptor;
+    descriptor.SetObject();
+    descriptor.AddMember("contentId", rapidjson::Value().SetInt(content_renderer.contentId), allocator);
+    descriptor.AddMember("contextId", rapidjson::Value().SetInt(content_renderer.contextId), allocator);
+    descriptor.AddMember("drawCallsPerFrame",
+                         rapidjson::Value().SetInt(content_renderer.drawCallsPerFrame),
+                         allocator);
+    descriptor.AddMember("drawCallsCountPerFrame",
+                         rapidjson::Value().SetInt(content_renderer.drawCallsCountPerFrame),
+                         allocator);
+    descriptor.AddMember("frameDuration",
+                         rapidjson::Value().SetInt64(content_renderer.frameDuration.count()),
+                         allocator);
+    descriptor.AddMember("maxFrameDuration",
+                         rapidjson::Value().SetInt64(content_renderer.maxFrameDuration.count()),
+                         allocator);
+    renderers_list.PushBack(descriptor, allocator);
+  };
+  constellation->renderer->iterateContentRenderers(add_content_renderer_fields);
+  json.AddMember("renderers", renderers_list, allocator);
+
   return true;
 }

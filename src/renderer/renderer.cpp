@@ -41,7 +41,7 @@ namespace renderer
   {
     if (api == nullptr)
       return;
-    glHostContext = new OpenGLHostContextStorage();
+    glHostContext = new ContextGLHost();
 
     assert(watcherRunning == false);
     startWatchers();
@@ -59,13 +59,13 @@ namespace renderer
     if (contentRenderers.empty())
       return;
 
-    glHostContext->Record();
+    glHostContext->recordFromHost();
     // Update the view's framebuffer and viewport when the host context is recorded.
-    constellation->xrDevice->updateViewFramebuffer(glHostContext->GetFramebuffer(),
-                                                   glHostContext->GetViewport(),
+    constellation->xrDevice->updateViewFramebuffer(glHostContext->framebuffer(),
+                                                   glHostContext->viewport(),
                                                    useDoubleWideFramebuffer);
     if (isHostContextSummaryEnabled)
-      glHostContext->Print();
+      glHostContext->print();
     perfCounter.record("  renderer.finishedHostContextRecord");
 
     size_t totalDrawCalls = 0, totalDrawCallsCount = 0;
@@ -91,7 +91,7 @@ namespace renderer
       perfFs->setDrawCallsCountPerFrame(totalDrawCallsCount);
       perfCounter.record("  renderer.finishedContentRendererFrame");
     }
-    glHostContext->Restore();
+    glHostContext->restore();
     perfCounter.record("  renderer.finishedHostContextRestore");
   }
 
@@ -249,6 +249,16 @@ namespace renderer
   size_t TrRenderer::removeContentRenderers(TrContentRuntime &content)
   {
     return removeContentRenderers(content.id);
+  }
+
+  void TrRenderer::iterateContentRenderers(function<void(const TrContentRenderer &)> callback) const
+  {
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    for (auto contentRenderer : contentRenderers)
+    {
+      if (contentRenderer != nullptr)
+        callback(*contentRenderer);
+    }
   }
 
   void TrRenderer::setDrawingViewport(TrViewport viewport)

@@ -12,7 +12,9 @@
 #elif UNITY_ANDROID || UNITY_WEBGL
 // On Android and WebGL, use GLES 3.1
 // See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
-#include <GLES3/gl31.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <GLES3/gl32.h>
 #include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
 #elif UNITY_OSX
@@ -103,6 +105,7 @@ namespace gles
   std::string glBlendFuncToString(GLenum func);
   std::string glDrawBufferTargetToString(GLenum target);
   std::string glFramebufferAttachmentToString(GLenum attachment);
+  std::string glTextureTargetToString(GLenum target);
   std::string glTextureInternalFormatToString(GLenum format);
   std::string glTextureFormatToString(GLenum format);
   /**

@@ -9,12 +9,12 @@ namespace renderer
 {
   using namespace std;
 
-  inline std::string GetContentRendererId(shared_ptr<TrContentRuntime> content,
-                                          uint8_t contextId,
-                                          std::optional<std::string> suffix = std::nullopt)
+  inline string GetContentRendererId(shared_ptr<TrContentRuntime> content,
+                                     uint8_t contextId,
+                                     optional<string> suffix = nullopt)
   {
     auto id = "content_renderer#" +
-              std::to_string(content->id) + "." + std::to_string(contextId) +
+              to_string(content->id) + "." + to_string(contextId) +
               (suffix.has_value() ? suffix.value() : "");
     return id;
   }
@@ -23,9 +23,9 @@ namespace renderer
       : contentRenderer(contentRenderer)
   {
     assert(contentRenderer != nullptr && contentRenderer->glContext != nullptr);
-    string contextName = contentRenderer->glContext->GetName();
-    contentRenderer->glContextForBackup = std::make_unique<OpenGLAppContextStorage>(contextName + "~backup",
-                                                                                    contentRenderer->glContext.get());
+    string contextName = contentRenderer->glContext->name();
+    contentRenderer->glContextForBackup = make_unique<ContextGLApp>(contextName + "~backup",
+                                                                    contentRenderer->glContext.get());
     contentRenderer->usingBackupContext = true;
   }
 
@@ -103,7 +103,7 @@ namespace renderer
     return contentRef->sendCommandBufferResponse(res);
   }
 
-  OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
+  ContextGLApp *TrContentRenderer::getOpenGLContext()
   {
     return usingBackupContext ? glContextForBackup.get() : glContext.get();
   }
@@ -124,86 +124,92 @@ namespace renderer
     {
       unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
       defaultCommandBufferRequests.push_back(req);
+
+      // We need to pending the execution of all command buffers util the default command queue is finished.
+      isDefaultCommandQueuePending = true;
+      defaultCommandQueueSkipTimes = 3;
+      return;
+    }
+
+    // Release the default command queue pending state once incoming request is not a default command.
+    isDefaultCommandQueuePending = false;
+
+    int stereoId;
+    int viewIndex;
+    if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
+    {
+      auto xrFrameStartReq = dynamic_cast<XRFrameStartCommandBufferRequest *>(req);
+      stereoId = xrFrameStartReq->stereoId;
+      viewIndex = xrFrameStartReq->viewIndex;
+    }
+    else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
+    {
+      auto xrFrameFlushReq = dynamic_cast<XRFrameFlushCommandBufferRequest *>(req);
+      stereoId = xrFrameFlushReq->stereoId;
+      viewIndex = xrFrameFlushReq->viewIndex;
+    }
+    else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
+    {
+      auto xrFrameEndReq = dynamic_cast<XRFrameEndCommandBufferRequest *>(req);
+      stereoId = xrFrameEndReq->stereoId;
+      viewIndex = xrFrameEndReq->viewIndex;
     }
     else
     {
-      int stereoId;
-      int viewIndex;
-      if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
-      {
-        auto xrFrameStartReq = dynamic_cast<XRFrameStartCommandBufferRequest *>(req);
-        stereoId = xrFrameStartReq->stereoId;
-        viewIndex = xrFrameStartReq->viewIndex;
-      }
-      else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
-      {
-        auto xrFrameFlushReq = dynamic_cast<XRFrameFlushCommandBufferRequest *>(req);
-        stereoId = xrFrameFlushReq->stereoId;
-        viewIndex = xrFrameFlushReq->viewIndex;
-      }
-      else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
-      {
-        auto xrFrameEndReq = dynamic_cast<XRFrameEndCommandBufferRequest *>(req);
-        stereoId = xrFrameEndReq->stereoId;
-        viewIndex = xrFrameEndReq->viewIndex;
-      }
-      else
-      {
-        stereoId = req->renderingInfo.stereoId;
-        viewIndex = req->renderingInfo.viewIndex;
-      }
+      stereoId = req->renderingInfo.stereoId;
+      viewIndex = req->renderingInfo.viewIndex;
+    }
 
-      xr::StereoRenderingFrame *frame = nullptr;
-      if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ && viewIndex == 0)
-      {
-        frame = xrDevice->createStereoRenderingFrame(stereoId);
-        {
-          unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-          frame->available(true);
-          stereoFramesList.push_back(frame);
-        }
-      }
-      else
-      {
-        shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        for (auto stereoFrame : stereoFramesList)
-        {
-          if (stereoFrame->getId() == stereoId)
-          {
-            frame = stereoFrame;
-            break;
-          }
-        }
-        if (frame == nullptr)
-        {
-          DEBUG(LOG_TAG_ERROR, "The stereo frame(%d) is not found for the viewIndex(%d)", stereoId, viewIndex);
-          delete req;
-          return;
-        }
-      }
-
+    xr::StereoRenderingFrame *frame = nullptr;
+    if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ && viewIndex == 0)
+    {
+      frame = xrDevice->createStereoRenderingFrame(stereoId);
       {
         unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
-          frame->startFrame(viewIndex), delete req;
-        else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
-          frame->flushFrame(viewIndex), delete req;
-        else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
-          frame->endFrame(viewIndex), delete req;
+        frame->available(true);
+        stereoFramesList.push_back(frame);
+      }
+    }
+    else
+    {
+      shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
+      for (auto stereoFrame : stereoFramesList)
+      {
+        if (stereoFrame->getId() == stereoId)
+        {
+          frame = stereoFrame;
+          break;
+        }
+      }
+      if (frame == nullptr)
+      {
+        DEBUG(LOG_TAG_ERROR, "The stereo frame(%d) is not found for the viewIndex(%d)", stereoId, viewIndex);
+        delete req;
+        return;
+      }
+    }
+
+    {
+      unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+      if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
+        frame->startFrame(viewIndex), delete req;
+      else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
+        frame->flushFrame(viewIndex), delete req;
+      else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
+        frame->endFrame(viewIndex), delete req;
+      else
+      {
+        if (frame->ended(viewIndex))
+        {
+          DEBUG(LOG_TAG_ERROR,
+                "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
+                req->type,
+                stereoId);
+          delete req;
+        }
         else
         {
-          if (frame->ended(viewIndex))
-          {
-            DEBUG(LOG_TAG_ERROR,
-                  "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
-                  req->type,
-                  stereoId);
-            delete req;
-          }
-          else
-          {
-            frame->addCommandBuffer(req, viewIndex);
-          }
+          frame->addCommandBuffer(req, viewIndex);
         }
       }
     }
@@ -229,12 +235,49 @@ namespace renderer
      */
     onStartFrame();
     {
+      // Execute the default command buffers first.
       executeCommandBuffers(false);
-      if (getContent()->used && xrDevice->enabled())
-      {
-        // FIXME: This make sure the XR frame will be rendered in the host context.
-        constellation->renderer->glHostContext->ConfigureFramebuffer();
 
+      // Skip the XR frame in the following conditions:
+      bool shouldSkipXRFrame = false;
+
+      // If the default command queue is pending, we consider this time of XR frame might be skipped.
+      if (isDefaultCommandQueuePending == true)
+      {
+        // `defaultCommandQueueSkipTimes` is updated to a positive value such as +2 when there is a default command
+        // received.
+        //
+        // If the skip times is greater than 0, this time of XR frame must be skipped to wait for the default command
+        // queue to be executed, this is a method to ensure the default command queue should be executed completely.
+        if (defaultCommandQueueSkipTimes > 0)
+        {
+          shouldSkipXRFrame = true;
+          // Decrement the skip times, if it reaches 0, we will not skip the XR frame anymore.
+          defaultCommandQueueSkipTimes--;
+        }
+        // If the skip times is 0, we will reset the pending state and skip times, this is used to ensure the XR frame
+        // will not be suspended if there is default commands is received in multiple frames.
+        //
+        // In client-side, the XR frame updater will check the pending stere frames length, if there is too much (>=2)
+        // pending frames, it won't dispatch frame callback to wait for the pending frames to be executed. To resolve
+        // the deadlock, the skip times is introduced to make sure the pending stereo frames must be executed even
+        // though the default command queue is pending.
+        else
+        {
+          isDefaultCommandQueuePending = false;
+          shouldSkipXRFrame = false;
+        }
+      }
+      // If the default command queue is not pending, we will not skip the XR frame.
+      else
+      {
+        shouldSkipXRFrame = false;
+      }
+
+      if (!shouldSkipXRFrame &&
+          getContent()->used &&
+          xrDevice->enabled())
+      {
         // Execute the XR frame
         switch (xrDevice->getStereoRenderingMode())
         {
@@ -254,9 +297,6 @@ namespace renderer
         default:
           break;
         }
-
-        // Restore the framebuffer configuration
-        constellation->renderer->glHostContext->RestoreFramebuffer();
       }
     }
     onEndFrame();
@@ -264,9 +304,11 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
-    glContext->Restore();
+    frameStartTime = chrono::system_clock::now();
+
+    glContext->onFrameWillStart(constellation->renderer->glHostContext);
     if (constellation->renderer->isAppContextSummaryEnabled)
-      glContext->Print();
+      glContext->print();
 
     // Reset frame states
     drawCallsPerFrame = 0;
@@ -275,6 +317,11 @@ namespace renderer
 
   void TrContentRenderer::onEndFrame()
   {
+    glContext->onFrameEnded(constellation->renderer->glHostContext);
+
+    frameEndTime = chrono::system_clock::now();
+    frameDuration = chrono::duration_cast<chrono::milliseconds>(frameEndTime - frameStartTime);
+    maxFrameDuration = max(maxFrameDuration, frameDuration);
   }
 
   void TrContentRenderer::initializeGraphicsContextsOnce()
@@ -283,8 +330,10 @@ namespace renderer
       return;
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
-    glContext = std::make_unique<OpenGLAppContextStorage>(idStrBase);
-    glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup");
+    glContext = make_unique<ContextGLApp>(idStrBase);
+    glContext->initializeContext(constellation->renderer->glHostContext);
+    glContextForBackup = make_unique<ContextGLApp>(idStrBase + "~backup");
+
     isGraphicsContextsInitialized = true;
   }
 
@@ -313,7 +362,7 @@ namespace renderer
     }
   }
 
-  bool TrContentRenderer::executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+  bool TrContentRenderer::executeStereoFrame(int viewIndex, function<bool(int, vector<TrCommandBufferBase *> &)> exec)
   {
     bool called = false;
     for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
@@ -432,7 +481,7 @@ namespace renderer
   }
 
   void TrContentRenderer::executeBackupFrame(int viewIndex,
-                                             std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+                                             function<bool(int, vector<TrCommandBufferBase *> &)> exec)
   {
     auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
     if (commandBufferInLastFrame.size() > 0)

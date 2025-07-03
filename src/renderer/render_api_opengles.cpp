@@ -77,13 +77,13 @@ private:
   /**
 	 * Check if the current context has binding vao, if not create a new and bind it.
 	 */
-  void EnsureVertexArrayObject(OpenGLAppContextStorage *glContext)
+  void EnsureVertexArrayObject(ContextGLApp *glContext)
   {
-    if (glContext->GetVertexArrayObject() != 0)
+    if (glContext->vertexArrayObject() != 0)
       return;
     GLuint vao = glContext->ObjectManagerRef().CreateVertexArray();
     glBindVertexArray(vao);
-    glContext->RecordVertexArrayObject(vao);
+    glContext->onVertexArrayObjectChanged(vao);
   }
 
 private:
@@ -150,7 +150,7 @@ private:
       DEBUG(logTag,
             "    Framebuffer: %d (%s)",
             framebuffer,
-            glCheckFramebufferStatus(GL_FRAMEBUFFER) ? "Complete" : "Incomplete");
+            glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "Complete" : "Incomplete");
     }
 
     // Print LINK_STATUS, VALIDATE_STATUS
@@ -158,8 +158,15 @@ private:
       GLint linkStatus, validateStatus;
       glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
       glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
-      DEBUG(logTag, "    Program: LINK_STATUS=%d", linkStatus);
-      DEBUG(logTag, "    Program: VALIDATE_STATUS=%d", validateStatus);
+      DEBUG(logTag, "    Program: LINK_STATUS=%s", linkStatus == GL_TRUE ? "Ok" : "Failed");
+      DEBUG(logTag, "    Program: VALIDATE_STATUS=%s", validateStatus == GL_TRUE ? "Ok" : "Failed");
+
+      if (linkStatus != GL_TRUE || validateStatus != GL_TRUE)
+      {
+        GLchar infoLog[512];
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+        DEBUG(logTag, "    Program: INFO_LOG(%s)", infoLog);
+      }
     }
 
     // Print Element Array
@@ -265,7 +272,6 @@ private:
     {
       GLboolean depthEnabled;
       glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
-      if (depthEnabled)
       {
         DEBUG(logTag, "    Depth State:");
         DEBUG(logTag, "      Enabled=%s", depthEnabled ? "Yes" : "No");
@@ -281,6 +287,20 @@ private:
         GLfloat depthRange[2];
         glGetFloatv(GL_DEPTH_RANGE, depthRange);
         DEBUG(logTag, "      Range=(%f, %f)", depthRange[0], depthRange[1]);
+      }
+    }
+
+    // Print Stencil State
+    {
+      GLboolean stencilEnabled;
+      glGetBooleanv(GL_STENCIL_TEST, &stencilEnabled);
+      {
+        DEBUG(logTag, "    Stencil State:");
+        DEBUG(logTag, "      Enabled=%s", stencilEnabled ? "Yes" : "No");
+
+        GLint stencilMask;
+        glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
+        DEBUG(logTag, "      Mask=%d", stencilMask);
       }
     }
   }
@@ -404,7 +424,7 @@ private:
 		 * context using the deleted program.
 		 */
     auto appGlContext = reqContentRenderer->getOpenGLContext();
-    appGlContext->ResetProgram(program);
+    appGlContext->resetProgram(program);
     appGlContext->RecordProgramOnDeleted(program);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, program);
@@ -527,7 +547,7 @@ private:
     auto glContext = reqContentRenderer->getOpenGLContext();
     auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
     glUseProgram(program);
-    reqContentRenderer->getOpenGLContext()->RecordProgram(program);
+    reqContentRenderer->getOpenGLContext()->onProgramChanged(program);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
@@ -837,9 +857,9 @@ private:
 
     /** Update the app states for next restore. */
     if (target == GL_ARRAY_BUFFER)
-      reqContentRenderer->getOpenGLContext()->RecordArrayBuffer(buffer);
+      reqContentRenderer->getOpenGLContext()->onArrayBufferChanged(buffer);
     else if (target == GL_ELEMENT_ARRAY_BUFFER)
-      reqContentRenderer->getOpenGLContext()->RecordElementArrayBuffer(buffer);
+      reqContentRenderer->getOpenGLContext()->onElementBufferChanged(buffer);
     // TODO: support other targets?
 
     glBindBuffer(target, buffer);
@@ -919,15 +939,15 @@ private:
     GLuint framebuffer;
 
     /**
-		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
-		 */
-    if (req->framebuffer == -1)
-      framebuffer = GetRenderer()->getOpenGLContext()->GetFramebuffer();
+     * TODO(yorkie): Now we use 0 or -1 to indicate the default render target, should we use enum instead?
+     */
+    if (req->framebuffer == 0 || req->framebuffer == -1)
+      framebuffer = reqContentRenderer->getOpenGLContext()->currentDefaultRenderTarget();
     else
       framebuffer = glObjectManager.FindFramebuffer(req->framebuffer);
 
     glBindFramebuffer(target, framebuffer);
-    reqContentRenderer->getOpenGLContext()->RecordFramebuffer(framebuffer);
+    reqContentRenderer->getOpenGLContext()->onFramebufferChanged(framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, framebuffer);
   }
@@ -1015,16 +1035,23 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer(%d)", options.isDefaultQueue, renderbuffer);
   }
-  TR_OPENGL_FUNC void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  TR_OPENGL_FUNC void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req,
+                                         renderer::TrContentRenderer *reqContentRenderer,
+                                         ApiCallOptions &options)
   {
     auto &glObjectManager = reqContentRenderer->getOpenGLContext()->ObjectManagerRef();
     auto &target = req->target;
     auto renderbuffer = glObjectManager.FindRenderbuffer(req->renderbuffer);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    reqContentRenderer->getOpenGLContext()->RecordRenderbuffer(renderbuffer);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es3/glBindRenderbuffer") != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer(%s, renderbuffer(%d))", options.isDefaultQueue, gles::glEnumToString(target).c_str(), renderbuffer);
+    reqContentRenderer->getOpenGLContext()->onRenderbufferChanged(renderbuffer);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es3/glBindRenderbuffer") != GL_NO_ERROR ||
+                    options.printsCall))
+      DEBUG(DEBUG_TAG,
+            "[%d] GL::BindRenderbuffer(%s, renderbuffer(%d))",
+            options.isDefaultQueue,
+            gles::glEnumToString(target).c_str(),
+            renderbuffer);
   }
   TR_OPENGL_FUNC void OnRenderbufferStorage(RenderbufferStorageCommandBufferRequest *req,
                                             renderer::TrContentRenderer *reqContentRenderer,
@@ -1123,7 +1150,7 @@ private:
       return;
     }
     glBindVertexArray(vao);
-    reqContentRenderer->getOpenGLContext()->RecordVertexArrayObject(vao);
+    reqContentRenderer->getOpenGLContext()->onVertexArrayObjectChanged(vao);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", options.isDefaultQueue, vao);
   }
@@ -1150,24 +1177,34 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture(%d)", options.isDefaultQueue, texture);
   }
-  TR_OPENGL_FUNC void OnBindTexture(BindTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  TR_OPENGL_FUNC void OnBindTexture(BindTextureCommandBufferRequest *req,
+                                    renderer::TrContentRenderer *reqContentRenderer,
+                                    ApiCallOptions &options)
   {
     auto &glObjectManager = reqContentRenderer->getOpenGLContext()->ObjectManagerRef();
     auto target = req->target;
     auto texture = glObjectManager.FindTexture(req->texture);
-    GetRenderer()->getOpenGLContext()->RecordTextureBindingFromHost();
+    GetRenderer()->getOpenGLContext()->recordTextureBindingFromHost();
     glBindTexture(target, texture);
 
     auto contentGlContext = reqContentRenderer->getOpenGLContext();
-    contentGlContext->RecordTextureBindingWithUnit(target, texture);
+    contentGlContext->onTextureBindingChanged(target, texture);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       GLint activeUnit;
       glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-      DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%s, texture(%d)) for active(%d) program(%d)", options.isDefaultQueue, gles::glEnumToString(target).c_str(), texture, activeUnit, contentGlContext->GetProgram());
+      DEBUG(DEBUG_TAG,
+            "[%d] GL::BindTexture(%s, texture(%d)) for active(%d) program(%d)",
+            options.isDefaultQueue,
+            gles::glEnumToString(target).c_str(),
+            texture,
+            activeUnit,
+            contentGlContext->program());
     }
   }
-  TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req,
+                                   renderer::TrContentRenderer *reqContentRenderer,
+                                   ApiCallOptions &options)
   {
     GLenum target = req->target;
     GLint level = req->level;
@@ -1289,7 +1326,7 @@ private:
   {
     auto textureUnit = req->activeUnit;
     glActiveTexture(textureUnit);
-    reqContentRenderer->getOpenGLContext()->RecordActiveTextureUnit(textureUnit);
+    reqContentRenderer->getOpenGLContext()->onActiveTextureUnitChanged(textureUnit);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       GLint currentProgram;
@@ -1303,7 +1340,13 @@ private:
   {
     glGenerateMipmap(req->target);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
       DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", options.isDefaultQueue, req->target);
+
+      GLuint currentTextureBinding;
+      glGetIntegerv(req->target == GL_TEXTURE_2D ? GL_TEXTURE_BINDING_2D : GL_TEXTURE_BINDING_3D, (GLint *)&currentTextureBinding);
+      DEBUG(DEBUG_TAG, "    current texture binding: %d", currentTextureBinding);
+    }
   }
   TR_OPENGL_FUNC void OnTexImage3D(TextureImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1463,7 +1506,7 @@ private:
     {
       auto glContext = reqContentRenderer->getOpenGLContext();
       DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", options.isDefaultQueue, req->location, req->v0);
-      DEBUG(DEBUG_TAG, "    Program: %d", glContext->GetProgram());
+      DEBUG(DEBUG_TAG, "    Program: %d", glContext->program());
     }
   }
   TR_OPENGL_FUNC void OnUniform1fv(Uniform1fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1486,7 +1529,7 @@ private:
       }
       DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d, count=%d, values=[%s])", options.isDefaultQueue, location, count, valuesStr.c_str());
       DEBUG(DEBUG_TAG, "    Content: %d", contentId);
-      DEBUG(DEBUG_TAG, "    Program: %d", glContext->GetProgram());
+      DEBUG(DEBUG_TAG, "    Program: %d", glContext->program());
     }
   }
   TR_OPENGL_FUNC void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1860,7 +1903,7 @@ private:
     auto x = req->x;
     auto y = req->y;
     glViewport(x, y, width, height);
-    reqContentRenderer->getOpenGLContext()->RecordViewport(x, y, width, height);
+    reqContentRenderer->getOpenGLContext()->onViewportChanged(x, y, width, height);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::SetViewport(x=%d, y=%d, w=%d, h=%d)", options.isDefaultQueue, x, y, width, height);
   }
@@ -1893,7 +1936,7 @@ private:
   TR_OPENGL_FUNC void OnDepthMask(DepthMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
     glDepthMask(req->flag);
-    reqContentRenderer->getOpenGLContext()->RecordDepthMask(req->flag);
+    reqContentRenderer->getOpenGLContext()->onSetDepthMask(req->flag);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::DepthMask(%d)", options.isDefaultQueue, req->flag);
   }
@@ -1916,7 +1959,7 @@ private:
     GLuint mask = req->mask;
 
     glStencilFunc(func, ref, mask);
-    reqContentRenderer->getOpenGLContext()->RecordStencilFunc(GL_FRONT_AND_BACK, func, ref, mask);
+    reqContentRenderer->getOpenGLContext()->onSetStencilFunc(GL_FRONT_AND_BACK, func, ref, mask);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc(%d, %d, %d)", options.isDefaultQueue, func, ref, mask);
@@ -1931,7 +1974,7 @@ private:
     GLuint mask = req->mask;
 
     glStencilFuncSeparate(face, func, ref, mask);
-    reqContentRenderer->getOpenGLContext()->RecordStencilFunc(face, func, ref, mask);
+    reqContentRenderer->getOpenGLContext()->onSetStencilFunc(face, func, ref, mask);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", options.isDefaultQueue, func);
@@ -1940,7 +1983,7 @@ private:
   {
     GLuint mask = req->mask;
     glStencilMask(mask);
-    reqContentRenderer->getOpenGLContext()->RecordStencilMask(GL_FRONT_AND_BACK, mask);
+    reqContentRenderer->getOpenGLContext()->onSetStencilMask(GL_FRONT_AND_BACK, mask);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilMask(%d)", options.isDefaultQueue, mask);
@@ -1952,7 +1995,7 @@ private:
     GLenum face = req->face;
     GLuint mask = req->mask;
     glStencilMaskSeparate(face, mask);
-    reqContentRenderer->getOpenGLContext()->RecordStencilMask(face, mask);
+    reqContentRenderer->getOpenGLContext()->onSetStencilMask(face, mask);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate(%d)", options.isDefaultQueue, mask);
@@ -1964,7 +2007,7 @@ private:
     GLenum zpass = req->zpass;
 
     glStencilOp(fail, zfail, zpass);
-    reqContentRenderer->getOpenGLContext()->RecordStencilOp(GL_FRONT_AND_BACK, fail, zfail, zpass);
+    reqContentRenderer->getOpenGLContext()->onSetStencilOp(GL_FRONT_AND_BACK, fail, zfail, zpass);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilOp(%d, %d, %d)", options.isDefaultQueue, fail, zfail, zpass);
@@ -1979,7 +2022,7 @@ private:
     GLenum zpass = req->zpass;
 
     glStencilOpSeparate(face, fail, zfail, zpass);
-    reqContentRenderer->getOpenGLContext()->RecordStencilOp(face, fail, zfail, zpass);
+    reqContentRenderer->getOpenGLContext()->onSetStencilOp(face, fail, zfail, zpass);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate(%d)", options.isDefaultQueue, fail);
@@ -2007,7 +2050,7 @@ private:
   TR_OPENGL_FUNC void OnBlendFunc(BlendFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
     glBlendFunc(req->sfactor, req->dfactor);
-    reqContentRenderer->getOpenGLContext()->RecordBlendFunc(req->sfactor, req->dfactor);
+    reqContentRenderer->getOpenGLContext()->onSetBlendFunc(req->sfactor, req->dfactor);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc(%d)", options.isDefaultQueue, req->sfactor);
   }
@@ -2020,10 +2063,16 @@ private:
     auto srcAlpha = req->srcAlpha;
     auto dstAlpha = req->dstAlpha;
     glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
-    reqContentRenderer->getOpenGLContext()->RecordBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    reqContentRenderer->getOpenGLContext()->onSetBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate(%s, %s, %s, %s)", options.isDefaultQueue, gles::glBlendFuncToString(srcRGB).c_str(), gles::glBlendFuncToString(dstRGB).c_str(), gles::glBlendFuncToString(srcAlpha).c_str(), gles::glBlendFuncToString(dstAlpha).c_str());
+      DEBUG(DEBUG_TAG,
+            "[%d] GL::BlendFuncSeparate(%s, %s, %s, %s)",
+            options.isDefaultQueue,
+            gles::glBlendFuncToString(srcRGB).c_str(),
+            gles::glBlendFuncToString(dstRGB).c_str(),
+            gles::glBlendFuncToString(srcAlpha).c_str(),
+            gles::glBlendFuncToString(dstAlpha).c_str());
   }
   TR_OPENGL_FUNC void OnColorMask(ColorMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -2033,7 +2082,7 @@ private:
     GLboolean a = req->alpha;
 
     glColorMask(r, g, b, a);
-    reqContentRenderer->getOpenGLContext()->RecordColorMask(r, g, b, a);
+    reqContentRenderer->getOpenGLContext()->onSetColorMask(r, g, b, a);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::ColorMask(%d, %d, %d, %d)", options.isDefaultQueue, r, g, b, a);
@@ -2042,7 +2091,7 @@ private:
   {
     auto mode = req->mode;
     glCullFace(mode);
-    reqContentRenderer->getOpenGLContext()->RecordCullFace(mode);
+    reqContentRenderer->getOpenGLContext()->onSetCullFace(mode);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::CullFace(%s)", options.isDefaultQueue, gles::glEnumToString(mode).c_str());
   }
@@ -2050,7 +2099,7 @@ private:
   {
     auto mode = req->mode;
     glFrontFace(mode);
-    reqContentRenderer->getOpenGLContext()->RecordFrontFace(mode);
+    reqContentRenderer->getOpenGLContext()->onSetFrontFace(mode);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::FrontFace(%s)", options.isDefaultQueue, gles::glEnumToString(mode).c_str());
   }
@@ -2058,7 +2107,7 @@ private:
   {
     auto cap = req->cap;
     glEnable(cap);
-    reqContentRenderer->getOpenGLContext()->RecordCapability(cap, true);
+    reqContentRenderer->getOpenGLContext()->onCapabilityEnabled(cap, true);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       if (cap == GL_BLEND ||
@@ -2080,7 +2129,7 @@ private:
   {
     auto cap = req->cap;
     glDisable(cap);
-    reqContentRenderer->getOpenGLContext()->RecordCapability(cap, false);
+    reqContentRenderer->getOpenGLContext()->onCapabilityEnabled(cap, false);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       if (cap == GL_BLEND ||
@@ -2194,51 +2243,36 @@ bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-  return GetRenderer()->getOpenGLContext()->GetViewport().width();
+  return GetRenderer()->getOpenGLContext()->viewport().width();
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-  return GetRenderer()->getOpenGLContext()->GetViewport().height();
+  return GetRenderer()->getOpenGLContext()->viewport().height();
 }
 
 #ifdef ANDROID
 /**
  * Custom debug callback for KHR_debug extension.
+ * 
+ * @see https://registry.khronos.org/OpenGL/extensions/KHR/KHR_debug.txt
  */
 static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
-  if (
-    source == GL_DEBUG_SOURCE_WINDOW_SYSTEM ||
-    source == GL_DEBUG_SOURCE_THIRD_PARTY ||
-    source == GL_DEBUG_SOURCE_OTHER ||
-    type == GL_DEBUG_TYPE_PERFORMANCE ||
-    type == GL_DEBUG_TYPE_MARKER)
-    return;
-
+  bool skip = false;
   string sourceStr;
+
   switch (source)
   {
   case GL_DEBUG_SOURCE_API:
     sourceStr = "API";
     break;
-  case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-    sourceStr = "Window System";
-    break;
-  case GL_DEBUG_SOURCE_SHADER_COMPILER:
-    sourceStr = "Shader Compiler";
-    break;
-  case GL_DEBUG_SOURCE_THIRD_PARTY:
-    sourceStr = "Third Party";
-    break;
   case GL_DEBUG_SOURCE_APPLICATION:
     sourceStr = "Application";
     break;
-  case GL_DEBUG_SOURCE_OTHER:
-    sourceStr = "Other";
-    break;
   default:
     sourceStr = "Unknown";
+    skip = true;
     break;
   }
 
@@ -2257,20 +2291,23 @@ static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenu
   case GL_DEBUG_TYPE_PORTABILITY:
     typeStr = "Portability";
     break;
-  case GL_DEBUG_TYPE_PERFORMANCE:
-    typeStr = "Performance";
-    break;
   case GL_DEBUG_TYPE_OTHER:
     typeStr = "Other";
+    break;
+  case GL_DEBUG_TYPE_PERFORMANCE:
+    typeStr = "Performance";
     break;
   case GL_DEBUG_TYPE_MARKER:
     typeStr = "Marker";
     break;
   default:
     typeStr = "Unknown";
+    skip = true;
     break;
   }
-  DEBUG(LOG_TAG_ERROR, "[KHR_debug] source=(%s) type=(%s): %s", sourceStr.c_str(), typeStr.c_str(), message);
+
+  if (!skip)
+    DEBUG(LOG_TAG_ERROR, "[KHR_debug] source=(%s) type=(%s): %s", sourceStr.c_str(), typeStr.c_str(), message);
 }
 #endif
 
@@ -2314,7 +2351,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
   // Execute all the command buffers
   contentRenderer->onCommandBuffersExecuting();
   auto contentGlContext = contentRenderer->getOpenGLContext();
-  auto contextBaseState = OpenGLAppContextStorage("tmp", contentGlContext);
+  auto contextBaseState = ContextGLApp("tmp", contentGlContext);
 
   ApiCallOptions callOptions;
   callOptions.printsCall = GetRenderer()->isTracingEnabled;

@@ -140,7 +140,7 @@ namespace renderer
     /**
      * @returns The host graphics context.
      */
-    OpenGLHostContextStorage *getOpenGLContext()
+    ContextGLHost *getOpenGLContext()
     {
       return glHostContext;
     }
@@ -205,6 +205,12 @@ namespace renderer
      * @returns The count of the removed content renderers.
      */
     size_t removeContentRenderers(TrContentRuntime &content);
+    /**
+     * Iterate all the content renderers and call the callback function for each renderer.
+     * 
+     * @param callback The callback function to be called for each content renderer.
+     */
+    void iterateContentRenderers(std::function<void(const TrContentRenderer &)> callback) const;
 
   public: // API for host update
     void setDrawingViewport(TrViewport viewport);
@@ -227,7 +233,7 @@ namespace renderer
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
-    OpenGLHostContextStorage *glHostContext = nullptr;
+    ContextGLHost *glHostContext = nullptr;
     ContentRenderersList contentRenderers;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
@@ -240,7 +246,7 @@ namespace renderer
     bool enableFpsCalc = true;
 
   private: // fields for senders management
-    std::shared_mutex contentRendererMutex;
+    mutable std::shared_mutex contentRendererMutex;
 
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;

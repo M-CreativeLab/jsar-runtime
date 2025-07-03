@@ -42,16 +42,12 @@ namespace builtin_scene
       }
 
       // Initialize the texture atlas with the default values.
-      glContext->texImage3D(WebGLTexture3DTarget::kTexture2DArray,
-                            0,
-                            WEBGL2_RGBA8,
-                            width,
-                            height,
-                            kMaxLayerCount,
-                            0,
-                            WebGLTextureFormat::kRGBA,
-                            WebGLPixelType::kUnsignedByte,
-                            nullptr);
+      glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray,
+                              1,
+                              WEBGL2_RGBA8,
+                              width,
+                              height,
+                              kMaxLayerCount);
       glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);
     }
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, nullptr);

@@ -32,6 +32,7 @@ private:
   bool getVersion(rapidjson::Document &);
   bool getContents(rapidjson::Document &);
   bool getProtocol(rapidjson::Document &);
+  bool getStatistics(rapidjson::Document &);
 
 public:
   TrConstellation *constellation = nullptr;
