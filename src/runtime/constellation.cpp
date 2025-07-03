@@ -90,30 +90,48 @@ void TrConstellation::shutdown()
   initialized = false;
 }
 
-void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
+void TrConstellation::onBeforeRendering(analytics::PerformanceCounter &perfCounter)
 {
-  if (TR_UNLIKELY(initialized == false || disableTicking))
+  if (initialized == false || disableTicking) [[unlikely]]
     return;
 
   contentManager->tickOnFrame();
   perfCounter.record("finishContentManager");
-  renderer->tick(perfCounter);
+}
+
+void TrConstellation::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
+{
+  if (initialized == false || disableTicking) [[unlikely]]
+    return;
+
+  renderer->onOpaquesRenderPass(perfCounter);
   perfCounter.record("finishRenderer");
 
-  if (xrDevice->enabled())
+  // TODO(yorkie): move the input sources sync to the metrices update?
+  if (xrDevice->enabled()) [[likely]]
   {
     xrDevice->tick();
     perfCounter.record("finishInputSourcesSync");
   }
+}
+
+void TrConstellation::onTransparentsRenderPass(analytics::PerformanceCounter &perfCounter)
+{
+  if (initialized == false || disableTicking) [[unlikely]]
+    return;
+
+  renderer->onTransparentsRenderPass(perfCounter);
+  perfCounter.record("finishRenderer");
+}
+
+void TrConstellation::onAfterRendering()
+{
+  if (initialized == false || disableTicking) [[unlikely]]
+    return;
 
 #ifdef TR_ENABLE_INSPECTOR
   inspector->tick();
 #endif
-}
-
-TrEmbedder *TrConstellation::getEmbedder()
-{
-  return embedder;
 }
 
 uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)

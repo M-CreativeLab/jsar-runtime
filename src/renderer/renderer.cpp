@@ -47,9 +47,9 @@ namespace renderer
     startWatchers();
   }
 
-  void TrRenderer::tick(analytics::PerformanceCounter &perfCounter)
+  void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
   {
-    if (TR_UNLIKELY(api == nullptr))
+    if (api == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
     tickingTimepoint = std::chrono::high_resolution_clock::now();
@@ -93,6 +93,12 @@ namespace renderer
     }
     glHostContext->restore();
     perfCounter.record("  renderer.finishedHostContextRestore");
+  }
+
+  void TrRenderer::onTransparentsRenderPass(analytics::PerformanceCounter &perfCounter)
+  {
+    if (api == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
   }
 
   void TrRenderer::shutdown()

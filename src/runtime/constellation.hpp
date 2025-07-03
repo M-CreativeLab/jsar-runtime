@@ -215,32 +215,20 @@ public:
    * @returns If the constellation is initialized successfully.
    */
   bool initialize();
-  /**
-   * Shutdown the constellation.
-   */
   void shutdown();
-  /**
-   * This method `tick()` should be called in the main loop of the runtime, it will update the sub-systems.
-   *
-   * @param perfCounter The performance counter to record the time.
-   */
-  void tick(analytics::PerformanceCounter &perfCounter);
-  /**
-   * @returns The reference to the constellation options.
-   */
+
+  void onBeforeRendering(analytics::PerformanceCounter &);
+  void onOpaquesRenderPass(analytics::PerformanceCounter &);
+  void onTransparentsRenderPass(analytics::PerformanceCounter &);
+  void onAfterRendering();
+
   TrConstellationInit &getOptions();
-  /**
-   * @returns If the constellation is initialized.
-   */
   bool isInitialized();
-  /**
-   * @returns If the runtime is ready.
-   */
   bool isRuntimeReady();
-  /**
-   * @returns The embedder pointer.
-   */
-  TrEmbedder *getEmbedder();
+  inline TrEmbedder *getEmbedder()
+  {
+    return embedder;
+  }
 
 public:
   /**

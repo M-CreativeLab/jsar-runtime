@@ -67,7 +67,8 @@ namespace renderer
 
   public:
     void initialize();
-    void tick(analytics::PerformanceCounter &perfCounter);
+    void onOpaquesRenderPass(analytics::PerformanceCounter &);
+    void onTransparentsRenderPass(analytics::PerformanceCounter &);
     void shutdown();
     void setLogFilter(string filterExpr);
     /**
