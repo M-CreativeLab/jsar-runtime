@@ -9,12 +9,12 @@ namespace renderer
 {
   using namespace std;
 
-  inline std::string GetContentRendererId(shared_ptr<TrContentRuntime> content,
+  inline string GetContentRendererId(shared_ptr<TrContentRuntime> content,
                                           uint8_t contextId,
-                                          std::optional<std::string> suffix = std::nullopt)
+                                          optional<string> suffix = nullopt)
   {
     auto id = "content_renderer#" +
-              std::to_string(content->id) + "." + std::to_string(contextId) +
+              to_string(content->id) + "." + to_string(contextId) +
               (suffix.has_value() ? suffix.value() : "");
     return id;
   }
@@ -24,8 +24,8 @@ namespace renderer
   {
     assert(contentRenderer != nullptr && contentRenderer->glContext != nullptr);
     string contextName = contentRenderer->glContext->name();
-    contentRenderer->glContextForBackup = std::make_unique<ContextGLApp>(contextName + "~backup",
-                                                                         contentRenderer->glContext.get());
+    contentRenderer->glContextForBackup = make_unique<ContextGLApp>(contextName + "~backup",
+                                                                    contentRenderer->glContext.get());
     contentRenderer->usingBackupContext = true;
   }
 
@@ -337,9 +337,9 @@ namespace renderer
       return;
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
-    glContext = std::make_unique<ContextGLApp>(idStrBase);
+    glContext = make_unique<ContextGLApp>(idStrBase);
     glContext->initializeContext(constellation->renderer->glHostContext);
-    glContextForBackup = std::make_unique<ContextGLApp>(idStrBase + "~backup");
+    glContextForBackup = make_unique<ContextGLApp>(idStrBase + "~backup");
 
     isGraphicsContextsInitialized = true;
   }
@@ -369,7 +369,7 @@ namespace renderer
     }
   }
 
-  bool TrContentRenderer::executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+  bool TrContentRenderer::executeStereoFrame(int viewIndex, function<bool(int, vector<TrCommandBufferBase *> &)> exec)
   {
     bool called = false;
     for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
@@ -488,7 +488,7 @@ namespace renderer
   }
 
   void TrContentRenderer::executeBackupFrame(int viewIndex,
-                                             std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+                                             function<bool(int, vector<TrCommandBufferBase *> &)> exec)
   {
     auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
     if (commandBufferInLastFrame.size() > 0)
