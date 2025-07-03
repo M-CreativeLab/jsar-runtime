@@ -285,10 +285,7 @@ void ContextGLStorage::restore()
   // Check for OpenGL errors
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
-    DEBUG(LOG_TAG_ERROR,
-          "Occurs an OpenGL error in restoring %s context: 0x%04X",
-          error,
-          name());
+    DEBUG(LOG_TAG_ERROR, "Occurs an OpenGL error in restoring %s context: 0x%04X", name(), error);
 }
 
 void ContextGLStorage::print()
