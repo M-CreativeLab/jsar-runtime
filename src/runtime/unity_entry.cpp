@@ -323,19 +323,15 @@ extern "C"
       switch ((UnityRenderPassEvent)eventID)
       {
       case kBeforeRenderingPass:
-        DEBUG(LOG_TAG_ERROR, "Unity render event: BeforeRenderingPass");
         embedder->onBeforeRendering();
         break;
       case kOpaquesRenderPass:
-        DEBUG(LOG_TAG_ERROR, "Unity render event: OpaquesRenderPass");
         embedder->onOpaquesRenderPass();
         break;
       case kTransparentsRenderPass:
-        DEBUG(LOG_TAG_ERROR, "Unity render event: TransparentsRenderPass");
         embedder->onTransparentsRenderPass();
         break;
       case kAfterRenderingPass:
-        DEBUG(LOG_TAG_ERROR, "Unity render event: AfterRenderingPass");
         embedder->onAfterRendering();
         break;
       default:

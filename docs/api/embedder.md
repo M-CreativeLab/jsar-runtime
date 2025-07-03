@@ -102,11 +102,26 @@ The above fields are used to configure the runtime:
 
 Internally, this method will start the internal components: renderer, content manager, media service and other services.
 
-#### `void onFrame()`
+#### `void onBeforeRendering()`
 
-This method should be called in every frame to update the runtime, such as `Update()` in Unity or `Tick()` in Unreal.
+Call this method before rendering in each frame, it will prepare the runtime for rendering, such as updating the renderer
+and content manager.
 
-Note: This frame in the method name doesn't mean the actual frame especially in the case of XR, it represents an update cycle by the host engine, the frame in OpenXR or WebXR should be configured by the `configureXrDevice(bool enabled, xr::TrDeviceInit &init)` method which will be explained later.
+#### `void onOpaquesRenderPass()`
+
+Call this method to render the opaque objects.
+
+This pass is the mainly render pass which renders all the opaque objects of the JSAR applications, and also schedules  the draw calls which should be rendered in the next passes, such as transparents, post-processing, and other render-texture rendering.
+
+#### `void onTransparentsRenderPass()`
+
+Call this method to render the transparent objects.
+
+This pass executes the draw calls which enabled the blending, and uses the Weighted Blended OIT algorithm to render all the transparents elements (e.g. glass, water and GUIs) without depth sorting.
+
+#### `void onAfterRendering()`
+
+In this pass, it uses to achieve some post-processing effects or asynchronous rendering tasks.
 
 #### `bool configureXrDevice(bool enabled, xr::TrDeviceInit &init)`
 
