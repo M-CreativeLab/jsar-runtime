@@ -48,14 +48,14 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
   }
 }
 
-class RenderAPI_OpenGLCoreES : public RenderAPI
+class RenderAPI_OpenGL : public RenderAPI
 {
 private:
   bool m_DebugEnabled = true;
 
 public:
-  RenderAPI_OpenGLCoreES(RHIBackendType backendType);
-  ~RenderAPI_OpenGLCoreES()
+  RenderAPI_OpenGL(RHIBackendType backendType);
+  ~RenderAPI_OpenGL()
   {
   }
   void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) override;
@@ -67,11 +67,10 @@ public:
 
 public: // Execute command buffer
   bool ExecuteCommandBuffer();
-  bool ExecuteCommandBuffer(
-    vector<TrCommandBufferBase *> &commandBuffers,
-    renderer::TrContentRenderer *content,
-    xr::DeviceFrame *deviceFrame,
-    bool isDefaultQueue) override;
+  bool ExecuteCommandBuffer(vector<TrCommandBufferBase *> &commandBuffers,
+                            renderer::TrContentRenderer *content,
+                            xr::DeviceFrame *deviceFrame,
+                            bool isDefaultQueue) override;
 
 private:
   /**
@@ -405,9 +404,7 @@ private:
                                       renderer::TrContentRenderer *reqContentRenderer,
                                       ApiCallOptions &options)
   {
-    auto glContext = reqContentRenderer->getOpenGLContext();
-    GLuint program = glContext->ObjectManagerRef().CreateProgram(req->clientId);
-    reqContentRenderer->getOpenGLContext()->RecordProgramOnCreated(program);
+    GLuint program = reqContentRenderer->getOpenGLContext()->createProgram(req->clientId);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue, req->clientId, program);
   }
@@ -415,17 +412,8 @@ private:
                                       renderer::TrContentRenderer *reqContentRenderer,
                                       ApiCallOptions &options)
   {
-    auto glContext = reqContentRenderer->getOpenGLContext();
-    auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
-    glContext->ObjectManagerRef().DeleteProgram(req->clientId);
-
-    /**
-		 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
-		 * context using the deleted program.
-		 */
-    auto appGlContext = reqContentRenderer->getOpenGLContext();
-    appGlContext->resetProgram(program);
-    appGlContext->RecordProgramOnDeleted(program);
+    GLuint program;
+    reqContentRenderer->getOpenGLContext()->deleteProgram(req->clientId, program);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, program);
   }
@@ -544,11 +532,8 @@ private:
                                    renderer::TrContentRenderer *reqContentRenderer,
                                    ApiCallOptions &options)
   {
-    auto glContext = reqContentRenderer->getOpenGLContext();
-    auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
-    glUseProgram(program);
-    reqContentRenderer->getOpenGLContext()->onProgramChanged(program);
-
+    GLuint program;
+    reqContentRenderer->getOpenGLContext()->useProgram(req->clientId, program);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
   }
@@ -1778,9 +1763,7 @@ private:
     auto first = req->first;
     auto count = req->count;
 
-    assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-    glDrawArrays(mode, first, count);
-    reqContentRenderer->increaseDrawCallsCount(count);
+    reqContentRenderer->getOpenGLContext()->drawArrays(mode, first, count);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DumpDrawCallInfo(DEBUG_TAG, "DrawArrays", options.isDefaultQueue, mode, count, 0, nullptr);
   }
@@ -1791,16 +1774,7 @@ private:
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
-    assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-      DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the framebuffer is not complete.");
-      return;
-    }
-    glDrawElements(mode, count, type, indices);
-    reqContentRenderer->increaseDrawCallsCount(count);
-
+    reqContentRenderer->getOpenGLContext()->drawElements(mode, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue, mode, count, type, indices);
   }
@@ -1809,7 +1783,6 @@ private:
     auto n = req->n;
     auto buffers = req->bufs;
     glDrawBuffers(n, (const GLenum *)buffers);
-    reqContentRenderer->increaseDrawCallsCount(n);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es2/glDrawBuffers") != GL_NO_ERROR || options.printsCall))
     {
       DEBUG(DEBUG_TAG, "[%d] GL::DrawBuffers()", options.isDefaultQueue);
@@ -2211,18 +2184,18 @@ private:
   }
 };
 
-RenderAPI *CreateRenderAPI_OpenGLCoreES(RHIBackendType apiType)
+RenderAPI *CreateRenderAPI_OpenGL(RHIBackendType apiType)
 {
-  return new RenderAPI_OpenGLCoreES(apiType);
+  return new RenderAPI_OpenGL(apiType);
 }
 
-RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(RHIBackendType type)
+RenderAPI_OpenGL::RenderAPI_OpenGL(RHIBackendType type)
 {
   backendType = type;
   OnCreated();
 }
 
-void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
+void RenderAPI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
 {
   switch (type)
   {
@@ -2236,17 +2209,17 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
   }
 }
 
-bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
+bool RenderAPI_OpenGL::SupportsWebGL2()
 {
   return backendType == RHIBackendType::OpenGLESv3;
 }
 
-int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
+int RenderAPI_OpenGL::GetDrawingBufferWidth()
 {
   return GetRenderer()->getOpenGLContext()->viewport().width();
 }
 
-int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
+int RenderAPI_OpenGL::GetDrawingBufferHeight()
 {
   return GetRenderer()->getOpenGLContext()->viewport().height();
 }
@@ -2311,7 +2284,7 @@ static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenu
 }
 #endif
 
-void RenderAPI_OpenGLCoreES::EnableGraphicsDebugLog(bool _apiOnly)
+void RenderAPI_OpenGL::EnableGraphicsDebugLog(bool _apiOnly)
 {
 #ifdef ANDROID
   // Open KHR_debug extension
@@ -2323,7 +2296,7 @@ void RenderAPI_OpenGLCoreES::EnableGraphicsDebugLog(bool _apiOnly)
 #endif
 }
 
-void RenderAPI_OpenGLCoreES::DisableGraphicsDebugLog()
+void RenderAPI_OpenGL::DisableGraphicsDebugLog()
 {
 #ifdef ANDROID
   if (backendType == RHIBackendType::OpenGLESv3)
@@ -2334,7 +2307,7 @@ void RenderAPI_OpenGLCoreES::DisableGraphicsDebugLog()
 #endif
 }
 
-bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
+bool RenderAPI_OpenGL::ExecuteCommandBuffer(
   vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
   renderer::TrContentRenderer *contentRenderer,
   xr::DeviceFrame *deviceFrame,

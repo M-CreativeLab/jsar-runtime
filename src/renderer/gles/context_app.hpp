@@ -3,17 +3,16 @@
 #include <optional>
 #include <memory>
 #include <unordered_map>
+#include <common/classes.hpp>
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
-
-typedef GLuint HostFramebufferIdentifier;
 
 class ContextGLHost;
 class ContextGLApp : public ContextGLStorage
 {
 public:
-  ContextGLApp(std::string name);
+  ContextGLApp(std::string name, std::shared_ptr<renderer::TrContentRenderer>);
   ContextGLApp(std::string name, ContextGLApp *from);
 
 public:
@@ -51,19 +50,33 @@ public:
   void RecordSamplerOnCreated(GLuint sampler);
   void RecordSamplerOnDeleted(GLuint sampler);
 
+public: // GLES Implementations
+  GLuint createProgram(uint32_t id);
+  void deleteProgram(uint32_t id, GLuint &program);
+  void useProgram(uint32_t id, GLuint &program);
+
+  void drawArrays(GLenum mode, GLint first, GLsizei count);
+  void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
+
 public:
   void MarkAsDirty();
   bool IsDirty();
   bool IsChanged(ContextGLApp *other);
 
 public:
+  renderer::TrContentRenderer &contentRendererChecked() const;
   gles::GLObjectManager &ObjectManagerRef()
   {
     return *m_GLObjectManager;
   }
 
 private:
+  [[nodiscard]] bool shouleExecuteDrawOnCurrent(GLsizei count);
+  void onAfterDraw(int drawCount);
+
+private:
   bool m_Dirty = false;
+  std::weak_ptr<renderer::TrContentRenderer> m_ContentRenderer;
   GLuint m_CurrentDefaultRenderTarget;
 
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;

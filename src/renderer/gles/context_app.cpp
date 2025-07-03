@@ -1,8 +1,14 @@
+#include <common/command_buffers/webgl_constants.hpp>
+#include <renderer/content_renderer.hpp>
+
 #include "./context_app.hpp"
 #include "./context_host.hpp"
 
-ContextGLApp::ContextGLApp(string name)
+using namespace std;
+
+ContextGLApp::ContextGLApp(string name, shared_ptr<renderer::TrContentRenderer> content_renderer)
     : ContextGLStorage(name)
+    , m_ContentRenderer(content_renderer)
     , m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
 {
   /**
@@ -55,6 +61,7 @@ ContextGLApp::ContextGLApp(string name)
 
 ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
     : ContextGLStorage(name, from)
+    , m_ContentRenderer(from->m_ContentRenderer)
     , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
     , m_GLObjectManager(from->m_GLObjectManager)
 {
@@ -283,6 +290,51 @@ void ContextGLApp::RecordSamplerOnDeleted(GLuint sampler)
   m_Samplers.erase(sampler);
 }
 
+GLuint ContextGLApp::createProgram(uint32_t id)
+{
+  GLuint program = ObjectManagerRef().CreateProgram(id);
+  RecordProgramOnCreated(program);
+  return program;
+}
+
+void ContextGLApp::deleteProgram(uint32_t id, GLuint &program)
+{
+  program = ObjectManagerRef().FindProgram(id);
+  ObjectManagerRef().DeleteProgram(id);
+
+  /**
+   * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
+   * context using the deleted program.
+   */
+  resetProgram(program);
+  RecordProgramOnDeleted(program);
+}
+
+void ContextGLApp::useProgram(uint32_t id, GLuint &program)
+{
+  program = ObjectManagerRef().FindProgram(id);
+  glUseProgram(program);
+  onProgramChanged(program);
+}
+
+void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
+{
+  if (shouleExecuteDrawOnCurrent(count))
+  {
+    glDrawArrays(mode, first, count);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
+{
+  if (shouleExecuteDrawOnCurrent(count))
+  {
+    glDrawElements(mode, count, type, indices);
+    onAfterDraw(count);
+  }
+}
+
 void ContextGLApp::MarkAsDirty()
 {
   m_Dirty = true;
@@ -356,4 +408,37 @@ bool ContextGLApp::IsChanged(ContextGLApp *other)
 
   // No changes
   return false;
+}
+
+renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
+{
+  auto contentRenderer = m_ContentRenderer.lock();
+  assert(contentRenderer != nullptr && "Content renderer must not be null");
+  return *contentRenderer;
+}
+
+bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
+{
+  assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
+  if (!m_FramebufferId.has_value() || m_FramebufferId.value() == 0) [[unlikely]]
+  {
+    DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not set.");
+    return false;
+  }
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) [[unlikely]]
+  {
+    DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not complete.");
+    return false;
+  }
+  if (m_FramebufferId.value() != m_CurrentDefaultRenderTarget)
+  {
+    // TODO(yorkie): should record the GPU command buffer and draw parameters
+    return false;
+  }
+  return true;
+}
+
+void ContextGLApp::onAfterDraw(int drawCount)
+{
+  contentRendererChecked().increaseDrawCallsCount(drawCount);
 }

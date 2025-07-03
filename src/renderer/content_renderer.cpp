@@ -330,9 +330,9 @@ namespace renderer
       return;
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
-    glContext = make_unique<ContextGLApp>(idStrBase);
+    glContext = make_unique<ContextGLApp>(idStrBase, shared_from_this());
     glContext->initializeContext(constellation->renderer->glHostContext);
-    glContextForBackup = make_unique<ContextGLApp>(idStrBase + "~backup");
+    glContextForBackup = make_unique<ContextGLApp>(idStrBase + "~backup", shared_from_this());
 
     isGraphicsContextsInitialized = true;
   }

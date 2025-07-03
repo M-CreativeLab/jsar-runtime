@@ -41,7 +41,7 @@ namespace renderer
     TrContentRenderer *contentRenderer;
   };
 
-  class TrContentRenderer final
+  class TrContentRenderer final : public std::enable_shared_from_this<TrContentRenderer>
   {
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;

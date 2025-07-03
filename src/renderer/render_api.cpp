@@ -105,13 +105,13 @@ RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 #if SUPPORT_OPENGL_UNIFIED
   if (apiType == kUnityGfxRendererOpenGLCore || apiType == kUnityGfxRendererOpenGLES20 || apiType == kUnityGfxRendererOpenGLES30)
   {
-    extern RenderAPI *CreateRenderAPI_OpenGLCoreES(RHIBackendType type);
+    extern RenderAPI *CreateRenderAPI_OpenGL(RHIBackendType type);
     if (apiType == kUnityGfxRendererOpenGLCore)
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLCore);
+      return CreateRenderAPI_OpenGL(RHIBackendType::OpenGLCore);
     else if (apiType == kUnityGfxRendererOpenGLES20)
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv2);
+      return CreateRenderAPI_OpenGL(RHIBackendType::OpenGLESv2);
     else
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv3);
+      return CreateRenderAPI_OpenGL(RHIBackendType::OpenGLESv3);
   }
 #endif // if SUPPORT_OPENGL_UNIFIED
 
