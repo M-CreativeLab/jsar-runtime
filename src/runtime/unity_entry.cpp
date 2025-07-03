@@ -305,12 +305,44 @@ extern "C"
     TR_ENSURE_EMBEDDER(/** void */, { embedder->unload(); });
   }
 
+  enum UnityRenderPassEvent
+  {
+    kBeforeRenderingPass = 0,
+    kOpaquesRenderPass = 1,
+    kTransparentsRenderPass = 2,
+    kPostProcessingRenderPass = 3,
+    kAfterRenderingPass = 4,
+  };
+
   /**
    * The render event hook for the plugin, it will be called when the plugin is rendering.
    */
   static void OnUnityRenderEvent(int eventID)
   {
-    TR_ENSURE_EMBEDDER(/** void */, { embedder->onFrame(); });
+    TR_ENSURE_EMBEDDER(/** void */, {
+      switch ((UnityRenderPassEvent)eventID)
+      {
+      case kBeforeRenderingPass:
+        DEBUG(LOG_TAG_ERROR, "Unity render event: BeforeRenderingPass");
+        embedder->onBeforeRendering();
+        break;
+      case kOpaquesRenderPass:
+        DEBUG(LOG_TAG_ERROR, "Unity render event: OpaquesRenderPass");
+        embedder->onOpaquesRenderPass();
+        break;
+      case kTransparentsRenderPass:
+        DEBUG(LOG_TAG_ERROR, "Unity render event: TransparentsRenderPass");
+        embedder->onTransparentsRenderPass();
+        break;
+      case kAfterRenderingPass:
+        DEBUG(LOG_TAG_ERROR, "Unity render event: AfterRenderingPass");
+        embedder->onAfterRendering();
+        break;
+      default:
+        // TODO(yorkie): ignore the event.
+        break;
+      }
+    });
   }
 
   /**

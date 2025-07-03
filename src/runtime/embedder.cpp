@@ -47,17 +47,39 @@ void TrEmbedder::setRequestAuthorizationHeaders(std::string rawHeaders, std::vec
   constellation->contentManager->setRequestAuthorizationHeaders(rawHeaders, allowedOrigins);
 }
 
-bool TrEmbedder::onFrame()
+void TrEmbedder::onBeforeRendering()
 {
-  analytics::PerformanceCounter perfCounter("HostTick");
-  constellation->tick(perfCounter);
+  analytics::PerformanceCounter perfCounter("RenderingPreparation");
+  constellation->onBeforeRendering(perfCounter);
+  perfCounter.end();
+}
+
+void TrEmbedder::onOpaquesRenderPass()
+{
+  analytics::PerformanceCounter perfCounter("OpaquesRenderPass");
+  constellation->onOpaquesRenderPass(perfCounter);
   perfCounter.end();
 
 #ifdef TR_ENABLE_PERF_COUNTER
   auto frameDuration = perfCounter.duration();
   if (frameDuration > 2.0)
-    DEBUG(LOG_TAG_ERROR, "Detected a long tick(>=2ms) in host frame: \n%s", perfCounter.toString().c_str());
+  {
+    DEBUG(LOG_TAG_ERROR,
+          "Detected a long tick(>=2ms) in opaques renderpass: \n%s",
+          perfCounter.toString().c_str());
+  }
   constellation->perfFs->setFrameDuration(frameDuration);
 #endif
-  return true;
+}
+
+void TrEmbedder::onTransparentsRenderPass()
+{
+  analytics::PerformanceCounter perfCounter("TransparentsRenderPass");
+  constellation->onTransparentsRenderPass(perfCounter);
+  perfCounter.end();
+}
+
+void TrEmbedder::onAfterRendering()
+{
+  constellation->onAfterRendering();
 }

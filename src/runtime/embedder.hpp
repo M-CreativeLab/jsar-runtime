@@ -104,11 +104,40 @@ public: // API for configuration and operations
 
 public: // API for lifecycle
   /**
-   * The lifecycle `onFrame` should be called when your application is to render a frame.
-   *
-   * @returns `true` if the frame is rendered, `false` otherwise.
+   * The lifecycle `onBeforeRendering`.
+   * 
+   * In this pass, JSAR internally prepares the rendering pass, such as collecting viewports, cameras, and other 
+   * rendering-related data.
    */
-  bool onFrame();
+  void onBeforeRendering();
+  /**
+   * The lifecycle `onOpaqueRenderPass`.
+   * 
+   * The main render pass which renders all the opaque objects of the JSAR applications, and also schedules the draw 
+   * calls which should be rendered in the next passes, such as transparents, post-processing, and other render-texture
+   * rendering.
+   * 
+   * NOTE(yorkie): In tile-based architectural GPU, the multisampled framebuffer's buffers are bound to the on-tile
+   * memory, so the multisampled framebuffer can't be switched in the middle of the rendering pass, for example, if you
+   * render to a new framebuffer and then switch back the multisampled framebuffer, it will cause the buffers in the
+   * multisampled framebuffer to be corrupted. To resolve this issue, JSAR will find the draw calls which render target
+   * is not the current framebuffer, and schedule them to the `onAfterRenderPass` lifecycle, at which all the render
+   * passes has been achieved and the multisampled framebuffer is also free to resolved.
+   */
+  void onOpaquesRenderPass();
+  /**
+   * The lifecycle `onTransparentsRenderPass`.
+   * 
+   * This pass executes the draw calls which enabled the blending, and uses the Weighted Blended OIT algorithm to
+   * render all the transparents elements (e.g. glass, water and GUIs) without depth sorting.
+   */
+  void onTransparentsRenderPass();
+  /**
+   * The lifecycle `onAfterRendering`.
+   * 
+   * In this pass, it uses to achieve some post-processing effects or asynchronous rendering tasks.
+   */
+  void onAfterRendering();
   /**
    * The lifecycle `onEvent` should be called once an event is received from a specfic (content) source.
    *

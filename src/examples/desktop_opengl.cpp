@@ -358,6 +358,8 @@ namespace jsar::example
         if (embedder_ == nullptr)
           continue; // Skip the rendering if the embedder is not ready.
 
+        embedder_->onBeforeRendering();
+
         if (xrEnabled)
         {
           auto xrRenderer = windowCtx_->xrRenderer;
@@ -393,7 +395,10 @@ namespace jsar::example
 
                 auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
                 xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
-                embedder_->onFrame();
+
+                // Enqueue passes
+                embedder_->onOpaquesRenderPass();
+                embedder_->onTransparentsRenderPass();
               }
             }
           }
@@ -420,15 +425,21 @@ namespace jsar::example
               xrDevice->updateViewMatrix(viewIndex, viewMatrix);
               xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
             }
-            embedder_->onFrame();
+
+            embedder_->onOpaquesRenderPass();
+            embedder_->onTransparentsRenderPass();
           }
         }
         else // Non-XR rendering
         {
           glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
           glGetError(); // Clear the error
-          embedder_->onFrame();
+
+          embedder_->onOpaquesRenderPass();
+          embedder_->onTransparentsRenderPass();
         }
+
+        embedder_->onAfterRendering();
 
         // render screen-space panel
         panel->render();
