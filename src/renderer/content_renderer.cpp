@@ -10,8 +10,8 @@ namespace renderer
   using namespace std;
 
   inline string GetContentRendererId(shared_ptr<TrContentRuntime> content,
-                                          uint8_t contextId,
-                                          optional<string> suffix = nullopt)
+                                     uint8_t contextId,
+                                     optional<string> suffix = nullopt)
   {
     auto id = "content_renderer#" +
               to_string(content->id) + "." + to_string(contextId) +
