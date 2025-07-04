@@ -10,6 +10,7 @@
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
 #include "gles/object_manager.hpp"
+#include "gles/gpu_device_impl.hpp"
 
 #include "math/matrix.hpp"
 #include "runtime/content.hpp"
@@ -2188,6 +2189,8 @@ private:
 RHI_OpenGL::RHI_OpenGL(RHIBackendType type)
 {
   backendType = type;
+  gpuDevice = unique_ptr<commandbuffers::GPUDevice>(new gles::GPUDeviceImpl());
+
   OnCreated();
 }
 

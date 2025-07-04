@@ -8,6 +8,8 @@ namespace commandbuffers
 {
   class GPUCommandEncoder : public GPUHandle
   {
+    using GPUHandle::GPUHandle;
+
   public:
     virtual ~GPUCommandEncoder() = default;
 

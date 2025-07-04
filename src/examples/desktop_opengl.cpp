@@ -204,6 +204,19 @@ namespace jsar::example
       if (windowCtx_->isTerminated())
         return false;
 
+      // Make the context available before starting the embedder
+      glfwMakeContextCurrent(windowCtx_->window);
+      glfwSwapInterval(1);
+      {
+        // Get environment variables for OpenGL context
+        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
+        if (str != NULL && strcmp(str, "1") == 0)
+          multisampleEnabled = false;
+
+        // Initialize OpenGL context
+        prepareRenderTarget(samples);
+      }
+
       embedder_ = std::make_unique<DesktopEmbedder>();
       assert(embedder_ != nullptr);
 
@@ -227,22 +240,6 @@ namespace jsar::example
           embedder_->configureXrDevice(init);
           windowCtx_->createXrRenderer();
         }
-      }
-
-      // Make the context available before starting the embedder
-      glfwMakeContextCurrent(windowCtx_->window);
-      glfwSwapInterval(1);
-      {
-        auto version = glGetString(GL_VERSION);
-        fprintf(stdout, "OpenGL version: %s\n", version);
-
-        // Get environment variables for OpenGL context
-        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
-        if (str != NULL && strcmp(str, "1") == 0)
-          multisampleEnabled = false;
-
-        // Initialize OpenGL context
-        prepareRenderTarget(samples);
       }
 
       if (!embedder_->start())

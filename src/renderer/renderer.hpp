@@ -67,8 +67,6 @@ namespace renderer
 
   public:
     void initialize();
-    void onOpaquesRenderPass(analytics::PerformanceCounter &);
-    void onTransparentsRenderPass(analytics::PerformanceCounter &);
     void shutdown();
     void setLogFilter(string filterExpr);
     /**
@@ -145,6 +143,11 @@ namespace renderer
     {
       return glHostContext;
     }
+
+    void onOpaquesRenderPass(analytics::PerformanceCounter &);
+    void onTransparentsRenderPass(analytics::PerformanceCounter &);
+    void onBeforeRendering();
+    void onAfterRendering();
 
   public: // API for content renderer
     /**

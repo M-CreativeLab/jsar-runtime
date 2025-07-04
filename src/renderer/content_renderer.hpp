@@ -8,6 +8,7 @@
 #include <common/scoped_thread.hpp>
 #include <common/command_buffers/shared.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/frame_request/types.hpp>
 #include <common/frame_request/sender.hpp>
 #include <common/xr/types.hpp>
@@ -21,7 +22,9 @@ using namespace commandbuffers;
 
 namespace renderer
 {
+  class TrRenderer;
   class TrContentRenderer;
+
   /**
    * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
    *
@@ -78,12 +81,13 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    ContextGLApp *getOpenGLContext();
-    inline shared_ptr<TrContentRuntime> getContent()
+    ContextGLApp *getOpenGLContext() const;
+    inline shared_ptr<TrContentRuntime> getContent() const
     {
       return content.lock();
     }
-    pid_t getContentPid();
+    pid_t getContentPid() const;
+    TrRenderer &getRendererRef() const;
 
   public:
     /**
@@ -127,7 +131,10 @@ namespace renderer
      * @param req The command buffer request to be handled.
      */
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
-    void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
+    void onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
+    void onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
+    void onRenderTexturesRenderPass();
+
     void onStartFrame();
     void onEndFrame();
 
@@ -167,9 +174,13 @@ namespace renderer
 
   private: // command buffers & rendering frames
     std::shared_mutex commandBufferRequestsMutex;
+    // TODO(yorkie): use `GPUCommandBuffer` later.
     std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     std::atomic<bool> isDefaultCommandQueuePending = false;
     std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
+
+    // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
+    std::vector<GPUCommandBuffer> commandBuffersOnRenderTexture;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;

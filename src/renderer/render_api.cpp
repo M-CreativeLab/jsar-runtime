@@ -9,6 +9,16 @@
 
 using namespace std;
 
+void TrRenderHardwareInterface::SubmitGPUCommandBuffer(std::vector<commandbuffers::GPUCommandBuffer> &commandBuffers)
+{
+  gpuDevice->queueRef().submit(commandBuffers);
+}
+
+unique_ptr<commandbuffers::GPUCommandEncoder> TrRenderHardwareInterface::CreateCommandEncoder()
+{
+  return gpuDevice->createCommandEncoder("");
+}
+
 void TrRenderHardwareInterface::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
 {
   unique_lock<mutex> lock(m_CommandBuffersMutex);

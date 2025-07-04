@@ -47,6 +47,31 @@ namespace renderer
     startWatchers();
   }
 
+  void TrRenderer::shutdown()
+  {
+    stopWatchers();
+  }
+
+  void TrRenderer::setLogFilter(string filterExpr)
+  {
+    // TODO
+  }
+
+  void TrRenderer::setRHI(TrRenderHardwareInterface *rhi)
+  {
+    if (rhi != nullptr)
+    {
+      rhi->EnableAppGlobalLog();
+      rhi->EnableXRFrameLog();
+      this->rhi = rhi;
+    }
+  }
+
+  TrRenderHardwareInterface *TrRenderer::getRHI()
+  {
+    return rhi;
+  }
+
   void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
   {
     if (rhi == nullptr) [[unlikely]]
@@ -82,7 +107,7 @@ namespace renderer
            */
           continue;
         }
-        contentRenderer->onHostFrame(tickingTimepoint);
+        contentRenderer->onOpaquesRenderPass(tickingTimepoint);
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
         totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
       }
@@ -101,29 +126,28 @@ namespace renderer
       return; // Skip if api is not ready.
   }
 
-  void TrRenderer::shutdown()
+  void TrRenderer::onBeforeRendering()
   {
-    stopWatchers();
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
   }
 
-  void TrRenderer::setLogFilter(string filterExpr)
+  void TrRenderer::onAfterRendering()
   {
-    // TODO
-  }
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
 
-  void TrRenderer::setRHI(TrRenderHardwareInterface *rhi)
-  {
-    if (rhi != nullptr)
+    glHostContext->recordFromHost();
     {
-      rhi->EnableAppGlobalLog();
-      rhi->EnableXRFrameLog();
-      this->rhi = rhi;
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
+        contentRenderer->onRenderTexturesRenderPass();
+      }
     }
-  }
-
-  TrRenderHardwareInterface *TrRenderer::getRHI()
-  {
-    return rhi;
+    glHostContext->restore();
   }
 
   bool TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId)

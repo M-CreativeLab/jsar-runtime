@@ -7,6 +7,7 @@
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
+#include "./gpu_command_encoder_impl.hpp"
 
 class ContextGLHost;
 class ContextGLApp : public ContextGLStorage
@@ -78,6 +79,7 @@ private:
   bool m_Dirty = false;
   std::weak_ptr<renderer::TrContentRenderer> m_ContentRenderer;
   GLuint m_CurrentDefaultRenderTarget;
+  std::unique_ptr<gles::GPUCommandEncoderImpl> m_CurrentCommandEncoder = nullptr;
 
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
   OpenGLNamesStorage m_Programs;

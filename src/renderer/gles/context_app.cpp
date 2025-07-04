@@ -1,5 +1,7 @@
 #include <common/command_buffers/webgl_constants.hpp>
 #include <renderer/content_renderer.hpp>
+#include <renderer/renderer.hpp>
+#include <renderer/render_api.hpp>
 
 #include "./context_app.hpp"
 #include "./context_host.hpp"
@@ -103,7 +105,17 @@ void ContextGLApp::onFrameEnded(ContextGLHost *host_context)
 
 void ContextGLApp::onProgramChanged(int program)
 {
+  auto rhi = contentRendererChecked().getRendererRef().getRHI();
+  assert(rhi != nullptr && "RHI must not be null");
+
   m_ProgramId = program;
+
+  auto command_encoder = rhi->CreateCommandEncoder();
+  if (gles::GPUCommandEncoderImpl *impl = dynamic_cast<gles::GPUCommandEncoderImpl *>(command_encoder.get()))
+  {
+    command_encoder.release();
+    m_CurrentCommandEncoder = unique_ptr<gles::GPUCommandEncoderImpl>(impl);
+  }
 }
 
 void ContextGLApp::onArrayBufferChanged(int vao)
@@ -322,6 +334,7 @@ void ContextGLApp::useProgram(uint32_t id, GLuint &program)
 
 void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
+  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().draw(count, 1, first, 0);
   if (shouleExecuteDrawOnCurrent(count))
   {
     glDrawArrays(mode, first, count);
@@ -331,6 +344,7 @@ void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 
 void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
+  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().drawIndexed(count, 1, 0, 0, 0);
   if (shouleExecuteDrawOnCurrent(count))
   {
     glDrawElements(mode, count, type, indices);

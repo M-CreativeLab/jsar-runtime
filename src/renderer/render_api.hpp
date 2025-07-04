@@ -138,6 +138,12 @@ public:
   virtual void DisableGraphicsDebugLog() = 0;
 
   /**
+   * Submit a GPUCommandBuffer list to the GPU device for execution.
+   */
+  void SubmitGPUCommandBuffer(std::vector<commandbuffers::GPUCommandBuffer> &);
+  std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
+
+  /**
    * Adds a command buffer to the command buffer queue.
    *
    * @param commandBuffer the command buffer to be added.

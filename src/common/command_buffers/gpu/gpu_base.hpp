@@ -35,6 +35,12 @@ namespace commandbuffers
   class GPUHandle
   {
   public:
-    std::string label = "";
+    GPUHandle(std::string label = "")
+        : label(std::move(label))
+    {
+    }
+
+  public:
+    const std::string label = "";
   };
 }

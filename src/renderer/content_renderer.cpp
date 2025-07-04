@@ -3,7 +3,9 @@
 #include <runtime/constellation.hpp>
 #include <xr/device.hpp>
 #include <xr/session.hpp>
+
 #include "./content_renderer.hpp"
+#include "./render_api.hpp"
 
 namespace renderer
 {
@@ -103,17 +105,24 @@ namespace renderer
     return contentRef->sendCommandBufferResponse(res);
   }
 
-  ContextGLApp *TrContentRenderer::getOpenGLContext()
+  ContextGLApp *TrContentRenderer::getOpenGLContext() const
   {
     return usingBackupContext ? glContextForBackup.get() : glContext.get();
   }
 
-  pid_t TrContentRenderer::getContentPid()
+  pid_t TrContentRenderer::getContentPid() const
   {
     auto contentRef = getContent();
     return contentRef == nullptr
              ? INVALID_PID
              : contentRef->pid.load();
+  }
+
+  TrRenderer &TrContentRenderer::getRendererRef() const
+  {
+    assert(constellation != nullptr && constellation->renderer != nullptr &&
+           "The constellation or renderer is not initialized.");
+    return *constellation->renderer;
   }
 
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
@@ -215,7 +224,7 @@ namespace renderer
     }
   }
 
-  void TrContentRenderer::onHostFrame(chrono::time_point<chrono::high_resolution_clock> time)
+  void TrContentRenderer::onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
   {
     // Check and initialize the graphics contexts on host frame.
     initializeGraphicsContextsOnce();
@@ -300,6 +309,21 @@ namespace renderer
       }
     }
     onEndFrame();
+  }
+
+  void TrContentRenderer::onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time)
+  {
+    // TODO(yorkie): implement the transparents render pass.
+  }
+
+  void TrContentRenderer::onRenderTexturesRenderPass()
+  {
+    if (commandBuffersOnRenderTexture.size() > 0)
+    {
+      std::vector<commandbuffers::GPUCommandBuffer> commandbuffers = commandBuffersOnRenderTexture;
+      commandBuffersOnRenderTexture.clear();
+      constellation->renderer->getRHI()->SubmitGPUCommandBuffer(commandbuffers);
+    }
   }
 
   void TrContentRenderer::onStartFrame()

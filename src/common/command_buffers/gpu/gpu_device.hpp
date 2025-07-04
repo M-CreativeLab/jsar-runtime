@@ -7,6 +7,7 @@
 #include "./gpu_base.hpp"
 #include "./gpu_adapter.hpp"
 #include "./gpu_command_buffer.hpp"
+#include "./gpu_command_encoder.hpp"
 
 namespace commandbuffers
 {
@@ -49,6 +50,8 @@ namespace commandbuffers
       assert(queue_ != nullptr);
       return *queue_;
     }
+
+    virtual std::unique_ptr<GPUCommandEncoder> createCommandEncoder(std::optional<std::string> label) = 0;
 
   protected:
     GPUAdapterInfo adapter_info_;

@@ -97,6 +97,9 @@ void TrConstellation::onBeforeRendering(analytics::PerformanceCounter &perfCount
 
   contentManager->tickOnFrame();
   perfCounter.record("finishContentManager");
+
+  renderer->onBeforeRendering();
+  perfCounter.record("finishRenderer");
 }
 
 void TrConstellation::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
@@ -129,6 +132,7 @@ void TrConstellation::onAfterRendering()
   if (initialized == false || disableTicking) [[unlikely]]
     return;
 
+  renderer->onAfterRendering();
 #ifdef TR_ENABLE_INSPECTOR
   inspector->tick();
 #endif

@@ -2,6 +2,8 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <iostream>
+#include <sstream>
 
 #include "./gpu_base.hpp"
 
@@ -16,6 +18,26 @@ namespace commandbuffers
     std::string vendor = "";
     uint32_t subgroupMaxSize;
     uint32_t subgroupMinSize;
+
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const GPUAdapterInfo &info)
+    {
+      os << "GPUAdapterInfo {" << std::endl
+         << "  architecture: " << info.architecture << std::endl
+         << "  description: " << info.description << std::endl
+         << "  device: " << info.device << std::endl
+         << "  vendor: " << info.vendor << std::endl
+         << "  subgroupMaxSize: " << info.subgroupMaxSize << std::endl
+         << "  subgroupMinSize: " << info.subgroupMinSize << std::endl
+         << "}";
+      return os;
+    }
+    std::string toString() const
+    {
+      std::stringstream ss;
+      ss << *this;
+      return ss.str();
+    }
   };
 
   class GPUSupportedFeatures : public std::unordered_set<std::string>
