@@ -48,16 +48,17 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
   }
 }
 
-class RenderAPI_OpenGL : public RenderAPI
+class RHI_OpenGL : public TrRenderHardwareInterface
 {
 private:
   bool m_DebugEnabled = true;
 
 public:
-  RenderAPI_OpenGL(RHIBackendType backendType);
-  ~RenderAPI_OpenGL()
+  RHI_OpenGL(RHIBackendType backendType);
+  ~RHI_OpenGL()
   {
   }
+
   void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) override;
   bool SupportsWebGL2() override;
   int GetDrawingBufferWidth() override;
@@ -2184,18 +2185,13 @@ private:
   }
 };
 
-RenderAPI *CreateRenderAPI_OpenGL(RHIBackendType apiType)
-{
-  return new RenderAPI_OpenGL(apiType);
-}
-
-RenderAPI_OpenGL::RenderAPI_OpenGL(RHIBackendType type)
+RHI_OpenGL::RHI_OpenGL(RHIBackendType type)
 {
   backendType = type;
   OnCreated();
 }
 
-void RenderAPI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
+void RHI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
 {
   switch (type)
   {
@@ -2209,17 +2205,17 @@ void RenderAPI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityIn
   }
 }
 
-bool RenderAPI_OpenGL::SupportsWebGL2()
+bool RHI_OpenGL::SupportsWebGL2()
 {
   return backendType == RHIBackendType::OpenGLESv3;
 }
 
-int RenderAPI_OpenGL::GetDrawingBufferWidth()
+int RHI_OpenGL::GetDrawingBufferWidth()
 {
   return GetRenderer()->getOpenGLContext()->viewport().width();
 }
 
-int RenderAPI_OpenGL::GetDrawingBufferHeight()
+int RHI_OpenGL::GetDrawingBufferHeight()
 {
   return GetRenderer()->getOpenGLContext()->viewport().height();
 }
@@ -2284,7 +2280,7 @@ static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenu
 }
 #endif
 
-void RenderAPI_OpenGL::EnableGraphicsDebugLog(bool _apiOnly)
+void RHI_OpenGL::EnableGraphicsDebugLog(bool _apiOnly)
 {
 #ifdef ANDROID
   // Open KHR_debug extension
@@ -2296,7 +2292,7 @@ void RenderAPI_OpenGL::EnableGraphicsDebugLog(bool _apiOnly)
 #endif
 }
 
-void RenderAPI_OpenGL::DisableGraphicsDebugLog()
+void RHI_OpenGL::DisableGraphicsDebugLog()
 {
 #ifdef ANDROID
   if (backendType == RHIBackendType::OpenGLESv3)
@@ -2307,7 +2303,7 @@ void RenderAPI_OpenGL::DisableGraphicsDebugLog()
 #endif
 }
 
-bool RenderAPI_OpenGL::ExecuteCommandBuffer(
+bool RHI_OpenGL::ExecuteCommandBuffer(
   vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
   renderer::TrContentRenderer *contentRenderer,
   xr::DeviceFrame *deviceFrame,
@@ -2520,6 +2516,11 @@ bool RenderAPI_OpenGL::ExecuteCommandBuffer(
   if (contentGlContext->IsDirty())
     return false;
   return contentGlContext->IsChanged(&contextBaseState);
+}
+
+TrRenderHardwareInterface *CreateRHI_OpenGL(RHIBackendType apiType)
+{
+  return new RHI_OpenGL(apiType);
 }
 
 #endif // #if SUPPORT_OPENGL_UNIFIED

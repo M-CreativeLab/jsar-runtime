@@ -7,6 +7,7 @@
 #include <common/ipc.hpp>
 #include <common/scoped_thread.hpp>
 #include <common/command_buffers/shared.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
 #include <common/frame_request/types.hpp>
 #include <common/frame_request/sender.hpp>
 #include <common/xr/types.hpp>
@@ -157,6 +158,7 @@ namespace renderer
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
+    // TODO(yorkie): Remove this when gpu device is ready, because WebGPU is context-less.
     std::unique_ptr<ContextGLApp> glContext;
     std::unique_ptr<ContextGLApp> glContextForBackup;
     bool isGraphicsContextsInitialized = false;

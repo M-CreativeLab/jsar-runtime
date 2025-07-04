@@ -4,15 +4,16 @@
 #include <mutex>
 #include <chrono>
 #include <ctime>
-#include <Unity/IUnityGraphics.h>
 
-#include "analytics/analytics.hpp"
-#include "common/debug.hpp"
+#include <Unity/IUnityGraphics.h>
+#include <analytics/analytics.hpp>
+#include <common/debug.hpp>
 #include "common/classes.hpp"
-#include "common/command_buffers/base.hpp"
-#include "common/command_buffers/command_buffers.hpp"
-#include "common/command_buffers/webgl_constants.hpp"
-#include "xr/device.hpp"
+#include <common/command_buffers/base.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
+#include <xr/device.hpp>
 
 #define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
 
@@ -54,14 +55,15 @@ enum class RHIBackendType
   OpenGLESv3,
   VULKAN,
   Metal,
-  // Direct3D 11
+  // Direct3D
   D3D11,
-  // Direct3D 12
   D3D12,
 };
 
+class RHIFactory;
+
 /**
- * Rendering Hardware Interface.
+ * Transmute Rendering Hardware Interface.
  *
  * This virtual class is used to define the platform-independent high-level graphics APIs. It is used to abstract the
  * platform-specific graphics APIs, such as OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
@@ -72,38 +74,17 @@ enum class RHIBackendType
  * |-------------------|-----------|
  * | OpenGL            | Yes       |
  * | OpenGL ES         | Yes       |
+ * | Vulkan            | No        |
  * | Metal             | No        |
  * | D3D11             | No        |
  * | D3D12             | No        |
  */
-class RenderAPI
+class TrRenderHardwareInterface
 {
-private:
-  static RenderAPI *s_instance;
+  friend class RHIFactory;
 
 public:
-  /**
-   * @returns the singleton instance of the current RHI.
-   */
-  static inline RenderAPI *Get()
-  {
-    return s_instance;
-  }
-
-  /**
-   * Creates the RHI instance.
-   *
-   * @param apiType the type of the RHI, such as: OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
-   * @param constellation the constellation instance.
-   * @returns the created RHI instance.
-   */
-  static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
-
-public:
-  virtual ~RenderAPI()
-  {
-    s_instance = nullptr;
-  }
+  virtual ~TrRenderHardwareInterface() = default;
 
   /**
    * Process general event like initialization, shutdown, device loss/reset etc.
@@ -321,6 +302,11 @@ protected:
   bool m_PrintsContext = false;
 
   /**
+   * The GPU device instance.
+   */
+  std::unique_ptr<commandbuffers::GPUDevice> gpuDevice = nullptr;
+
+  /**
    * The default command buffer queue.
    */
   std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffers;
@@ -357,5 +343,17 @@ protected:
   std::weak_ptr<renderer::TrRenderer> renderer;
 };
 
-// Create a graphics API implementation instance for the given API type.
-RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType);
+// Alias for the RHI type.
+using RHI = TrRenderHardwareInterface;
+
+class RHIFactory
+{
+private:
+  static inline RHI *Instance_ = nullptr;
+
+public:
+  static RHI *CreateRHI(UnityGfxRenderer, TrConstellation *);
+  static RHI *Get();
+  static RHI *GetChecked();
+  static RHI &GetRef();
+};

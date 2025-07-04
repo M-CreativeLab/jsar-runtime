@@ -53,8 +53,8 @@ namespace jsar::example
         : TrEmbedder()
     {
       auto renderer = constellation->renderer;
-      auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation.get());
-      renderer->setApi(api);
+      auto rhi = RHIFactory::CreateRHI(kUnityGfxRendererOpenGLCore, constellation.get());
+      renderer->setRHI(rhi);
       renderer->useDoubleWideFramebuffer = true;
 
       // Check the environment variable to enable tracing

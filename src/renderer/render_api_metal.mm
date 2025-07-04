@@ -75,10 +75,10 @@ typedef struct {
 }
 @end
 
-class RenderAPI_Metal : public RenderAPI {
+class RHI_Metal : public TrRenderHardwareInterface {
 public:
-  RenderAPI_Metal();
-  ~RenderAPI_Metal() {}
+  RHI_Metal();
+  ~RHI_Metal() {}
 
   void ProcessDeviceEvent(UnityGfxDeviceEventType type,
                           IUnityInterfaces *interfaces);
@@ -129,18 +129,16 @@ private:
   id<MTLRenderPipelineState> m_Pipeline;
 };
 
-RenderAPI *CreateRenderAPI_Metal() { return new RenderAPI_Metal(); }
-
 static Class MTLVertexDescriptorClass;
 static Class MTLRenderPipelineDescriptorClass;
 static Class MTLDepthStencilDescriptorClass;
 // const int kVertexSize = 12 + 4;
 
-RenderAPI_Metal::RenderAPI_Metal() {
+RHI_Metal::RHI_Metal() {
   m_VertexDescriptor = [MTLVertexDescriptorClass vertexDescriptor];
 }
 
-id<MTLRenderCommandEncoder> RenderAPI_Metal::CreateCommandEncoder() {
+id<MTLRenderCommandEncoder> RHI_Metal::CreateCommandEncoder() {
   if (m_CurrentCommandEncoder != nil) {
     return m_CurrentCommandEncoder;
   }
@@ -160,7 +158,7 @@ id<MTLRenderCommandEncoder> RenderAPI_Metal::CreateCommandEncoder() {
   return m_CurrentCommandEncoder;
 }
 
-void RenderAPI_Metal::ProcessDeviceEvent(UnityGfxDeviceEventType type,
+void RHI_Metal::ProcessDeviceEvent(UnityGfxDeviceEventType type,
                                          IUnityInterfaces *interfaces) {
   if (type == kUnityGfxDeviceEventInitialize) {
     m_UnityLog = interfaces->Get<IUnityLog>();
@@ -173,6 +171,11 @@ void RenderAPI_Metal::ProcessDeviceEvent(UnityGfxDeviceEventType type,
   } else if (type == kUnityGfxDeviceEventShutdown) {
     //@TODO: release resources
   }
+}
+
+TrRenderHardwareInterface *CreateRHI_Metal() 
+{
+  return new RHI_Metal();
 }
 
 #endif // #if SUPPORT_METAL

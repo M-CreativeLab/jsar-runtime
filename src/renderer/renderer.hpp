@@ -24,7 +24,7 @@ using namespace commandbuffers;
 using namespace frame_request;
 using namespace collision;
 
-class RenderAPI;
+class TrRenderHardwareInterface;
 
 namespace renderer
 {
@@ -136,8 +136,8 @@ namespace renderer
     {
       commandBufferChanServer->removeClient(client);
     }
-    void setApi(RenderAPI *api);
-    RenderAPI *getApi();
+    void setRHI(TrRenderHardwareInterface *);
+    TrRenderHardwareInterface *getRHI();
     /**
      * @returns The host graphics context.
      */
@@ -232,7 +232,7 @@ namespace renderer
     uint32_t clientDefaultFrameRate = 45;
 
   private:
-    RenderAPI *api = nullptr;
+    TrRenderHardwareInterface *rhi = nullptr;
     TrConstellation *constellation = nullptr;
     ContextGLHost *glHostContext = nullptr;
     ContentRenderersList contentRenderers;

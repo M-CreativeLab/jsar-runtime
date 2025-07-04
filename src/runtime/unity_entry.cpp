@@ -62,7 +62,8 @@ public:
 
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
-    auto api = RenderAPI::Create(deviceType, constellation.get());
+    RHI* rhi = RHIFactory::CreateRHI(deviceType, constellation.get());
+    assert(rhi != nullptr && "Failed to create RHI for Unity embedder.");
 
     /**
      * Check if the graphics debug log should be enabled by the property `jsar.renderer.graphics.debug`.
@@ -72,10 +73,10 @@ public:
     if (__system_property_get("jsar.renderer.graphics.debug", enableGraphicsDebugLogStr) >= 0)
     {
       if (strcmp(enableGraphicsDebugLogStr, "yes") == 0)
-        api->EnableGraphicsDebugLog(true);
+        rhi->EnableGraphicsDebugLog(true);
     }
 #endif
-    constellation->renderer->setApi(api);
+    constellation->renderer->setRHI(rhi);
   }
 
   void unload()

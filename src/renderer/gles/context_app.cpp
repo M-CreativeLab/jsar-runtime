@@ -88,6 +88,9 @@ GLuint ContextGLApp::currentDefaultRenderTarget() const
 void ContextGLApp::onFrameWillStart(ContextGLHost *host_context)
 {
   m_CurrentDefaultRenderTarget = host_context->currentFramebufferId();
+  if (!m_FramebufferId.has_value())
+    m_FramebufferId = m_CurrentDefaultRenderTarget;
+
   glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentDefaultRenderTarget);
   glClear(GL_STENCIL_BUFFER_BIT);
 
