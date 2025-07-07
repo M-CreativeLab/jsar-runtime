@@ -10,24 +10,45 @@ namespace gles
 
   GPURenderPassEncoder GPUCommandEncoderImpl::beginRenderPass(GPURenderPassDescriptor &)
   {
-    throw runtime_error("beginRenderPass not implemented in gles::GPUCommandEncoderImpl");
+    assert(false && "beginRenderPass not implemented in gles::GPUCommandEncoderImpl");
   }
 
-  GPUCommandBuffer GPUCommandEncoderImpl::finish(optional<string> label)
+  std::unique_ptr<GPUCommandBuffer> GPUCommandEncoderImpl::finish(std::optional<std::string> label) const
   {
-    return GPUCommandBufferImpl();
+    if (current_pass_encoder_ == nullptr)
+      return nullptr;
+
+    if (current_pass_encoder_->isRenderPassEncoder())
+    {
+      const auto &renderpass_encoder = dynamic_cast<const GPURenderPassEncoderImpl &>(*current_pass_encoder_);
+      return unique_ptr<GPUCommandBuffer>(new GPUCommandBufferImpl(label, renderpass_encoder));
+    }
+    else
+    {
+      return nullptr;
+    }
   }
 
   GPURenderPassEncoder &GPUCommandEncoderImpl::getOrStartRecordingRenderPass()
   {
-    if (recording_renderpass_encoder_ != nullptr)
+    if (current_pass_encoder_ == nullptr || !current_pass_encoder_->isRenderPassEncoder())
     {
-      return *recording_renderpass_encoder_;
+      unique_ptr<GPURenderPassEncoderImpl> renderpass_encoder = make_unique<GPURenderPassEncoderImpl>();
+      renderpass_encoder->begin();
+      current_pass_encoder_ = move(renderpass_encoder);
     }
-    else
-    {
-      recording_renderpass_encoder_ = make_unique<GPURenderPassEncoderImpl>();
-      return *recording_renderpass_encoder_;
-    }
+
+    auto renderpass_encoder = dynamic_pointer_cast<GPURenderPassEncoderImpl>(current_pass_encoder_);
+    assert(renderpass_encoder != nullptr && "Current pass encoder must be a GPURenderPassEncoderImpl");
+    return *renderpass_encoder;
+  }
+
+  bool GPUCommandEncoderImpl::isRenderPassWith(GLuint target_framebuffer) const
+  {
+    if (current_pass_encoder_ == nullptr || !current_pass_encoder_->isRenderPassEncoder())
+      return false;
+
+    const auto &renderpass_encoder = dynamic_cast<const GPURenderPassEncoderImpl &>(*current_pass_encoder_);
+    return renderpass_encoder.targetFramebuffer() == target_framebuffer;
   }
 }

@@ -125,6 +125,12 @@ namespace renderer
     return *constellation->renderer;
   }
 
+  void TrContentRenderer::scheduleGPUCommandBufferOnRenderTexture(std::shared_ptr<GPUCommandBuffer> commandbuffer)
+  {
+    // TODO(yorkie): use a lock?
+    commandBuffersOnRenderTexture.push_back(commandbuffer);
+  }
+
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
   // such as `defaultCommandBufferRequests` or `stereoFramesList`, otherwise it will be deleted in this function.
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
@@ -320,7 +326,7 @@ namespace renderer
   {
     if (commandBuffersOnRenderTexture.size() > 0)
     {
-      std::vector<commandbuffers::GPUCommandBuffer> commandbuffers = commandBuffersOnRenderTexture;
+      vector<shared_ptr<commandbuffers::GPUCommandBuffer>> commandbuffers = commandBuffersOnRenderTexture;
       commandBuffersOnRenderTexture.clear();
       constellation->renderer->getRHI()->SubmitGPUCommandBuffer(commandbuffers);
     }

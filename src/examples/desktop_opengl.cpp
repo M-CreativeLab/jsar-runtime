@@ -455,17 +455,20 @@ namespace jsar::example
                           GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                           GL_NEAREST);
 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
-        glBlitFramebuffer(0,
-                          0,
-                          drawingViewport.width(),
-                          drawingViewport.height(),
-                          0,
-                          0,
-                          drawingViewport.width(),
-                          drawingViewport.height(),
-                          GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
-                          GL_NEAREST);
+        if (multisampleEnabled)
+        {
+          glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
+          glBlitFramebuffer(0,
+                            0,
+                            drawingViewport.width(),
+                            drawingViewport.height(),
+                            0,
+                            0,
+                            drawingViewport.width(),
+                            drawingViewport.height(),
+                            GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
+                            GL_NEAREST);
+        }
 
         // Unbind the framebuffers before swapping buffersAdd commentMore actions
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

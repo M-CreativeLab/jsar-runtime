@@ -17,7 +17,7 @@ namespace commandbuffers
     virtual ~GPUQueue() = default;
 
   public:
-    virtual void submit(const std::vector<GPUCommandBuffer> &) = 0;
+    virtual void submit(const std::vector<std::shared_ptr<GPUCommandBuffer>> &) = 0;
   };
 
   /**

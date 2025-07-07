@@ -921,20 +921,8 @@ private:
     renderer::TrContentRenderer *reqContentRenderer,
     ApiCallOptions &options)
   {
-    auto &glObjectManager = reqContentRenderer->getOpenGLContext()->ObjectManagerRef();
-    auto target = req->target;
     GLuint framebuffer;
-
-    /**
-     * TODO(yorkie): Now we use 0 or -1 to indicate the default render target, should we use enum instead?
-     */
-    if (req->framebuffer == 0 || req->framebuffer == -1)
-      framebuffer = reqContentRenderer->getOpenGLContext()->currentDefaultRenderTarget();
-    else
-      framebuffer = glObjectManager.FindFramebuffer(req->framebuffer);
-
-    glBindFramebuffer(target, framebuffer);
-    reqContentRenderer->getOpenGLContext()->onFramebufferChanged(framebuffer);
+    reqContentRenderer->getOpenGLContext()->bindFramebuffer(req->target, req->framebuffer, framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, framebuffer);
   }

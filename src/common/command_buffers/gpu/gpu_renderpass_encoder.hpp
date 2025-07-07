@@ -4,7 +4,9 @@
 #include <variant>
 
 #include "./gpu_base.hpp"
+#include "./gpu_pass_encoder_base.hpp"
 #include "./gpu_buffer.hpp"
+#include "./gpu_command_buffer.hpp"
 #include "./gpu_pipeline.hpp"
 #include "./gpu_texture_view.hpp"
 
@@ -55,38 +57,32 @@ namespace commandbuffers
     std::optional<DepthStencilAttachment> depthStencilAttachment;
   };
 
-  class GPURenderPassEncoder : public GPUHandle
+  class GPURenderPassEncoder : public GPUPassEncoderBase,
+                               public GPUHandle
   {
-    using GPUHandle::GPUHandle;
-
-    struct Draw
+  public:
+    GPURenderPassEncoder(std::string label)
+        : GPUPassEncoderBase()
+        , GPUHandle(label)
     {
-      uint32_t vertex_count;
-      uint32_t instance_count;
-      uint32_t first_vertex;
-      uint32_t first_instance;
-    };
-    struct IndexedDraw
-    {
-      uint32_t index_count;
-      uint32_t instance_count;
-      uint32_t first_index;
-      int32_t base_vertex;
-      uint32_t first_instance;
-    };
-    using DrawCommand = std::variant<Draw, IndexedDraw>;
+    }
 
   public:
-    virtual ~GPURenderPassEncoder() = default;
+    bool isRenderPassEncoder() const override
+    {
+      return true;
+    }
 
-  public:
     void draw(uint32_t vertex_count,
               uint32_t instance_count = 1,
               uint32_t first_vertex = 0,
               uint32_t first_instance = 0)
     {
       if (!ended_) [[likely]]
-        draw_commands_.emplace_back(Draw{vertex_count, instance_count, first_vertex, first_instance});
+        command_buffer_->addCommand<GPUDrawCommand>(vertex_count,
+                                                    instance_count,
+                                                    first_vertex,
+                                                    first_instance);
     }
     void drawIndexed(uint32_t index_count,
                      uint32_t instance_count = 1,
@@ -95,21 +91,46 @@ namespace commandbuffers
                      uint32_t first_instance = 0)
     {
       if (!ended_) [[likely]]
-        draw_commands_.emplace_back(IndexedDraw{index_count, instance_count, first_index, base_vertex, first_instance});
+        command_buffer_->addCommand<GPUDrawIndexedCommand>(index_count,
+                                                           instance_count,
+                                                           first_index,
+                                                           base_vertex,
+                                                           first_instance);
     }
-    void end()
+    void setViewport(float x, float y, float width, float height, float min_depth = 0.0f, float max_depth = 1.0f)
     {
-      ended_ = true;
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetViewportCommand>(x, y, width, height, min_depth, max_depth);
     }
-
-  protected:
-    bool ended_ = false;
-    float viewport_[4] = {0.0f, 0.0f, 1.0f, 1.0f};     // x, y, width, height
-    float scissor_rect_[4] = {0.0f, 0.0f, 1.0f, 1.0f}; // x, y, width, height
-    std::optional<GPUBuffer> index_buffer_;
-    std::optional<GPUBuffer> vertex_buffer_;
-    std::optional<GPURenderPipeline> render_pipeline_;
-    std::optional<float> stencil_reference_value_;
-    std::vector<DrawCommand> draw_commands_;
+    void setScissorRect(float x, float y, float width, float height)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetScissorCommand>(x, y, width, height);
+    }
+    void setPipeline(const GPURenderPipeline &pipeline)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetRenderPipelineCommand>(pipeline);
+    }
+    void setIndexBuffer(const GPUBuffer &buffer, GPUIndexFormat index_format, uint32_t offset, uint32_t size)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetIndexBufferCommand>(buffer, index_format, offset, size);
+    }
+    void setVertexBuffer(uint32_t slot, const GPUBuffer &buffer, uint32_t offset = 0, uint32_t size = 0)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetVertexBufferCommand>(slot, buffer, offset, size);
+    }
+    void setBlendConstant(float r, float g, float b, float a)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetBlendConstantCommand>(r, g, b, a);
+    }
+    void setStencilReference(uint32_t ref)
+    {
+      if (!ended_) [[likely]]
+        command_buffer_->addCommand<GPUSetStencilReferenceCommand>(ref);
+    }
   };
 }

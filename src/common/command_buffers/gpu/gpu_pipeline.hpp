@@ -23,6 +23,8 @@ namespace commandbuffers
 
   class GPURenderPipeline : public GPUHandle
   {
+    using GPUHandle::GPUHandle;
+
   public:
     GPUBindGroupLayout &getBindGroupLayout(size_t index)
     {

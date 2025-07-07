@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void TrRenderHardwareInterface::SubmitGPUCommandBuffer(std::vector<commandbuffers::GPUCommandBuffer> &commandBuffers)
+void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &commandBuffers)
 {
   gpuDevice->queueRef().submit(commandBuffers);
 }

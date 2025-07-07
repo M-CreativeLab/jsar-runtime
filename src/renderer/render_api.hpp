@@ -140,7 +140,7 @@ public:
   /**
    * Submit a GPUCommandBuffer list to the GPU device for execution.
    */
-  void SubmitGPUCommandBuffer(std::vector<commandbuffers::GPUCommandBuffer> &);
+  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &);
   std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
 
   /**

@@ -9,7 +9,7 @@ namespace gles
   {
   public:
     GPUQueueImpl();
-    void submit(const std::vector<commandbuffers::GPUCommandBuffer> &) override;
+    void submit(const std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &) override;
   };
 
   class GPUDeviceImpl : public commandbuffers::GPUDevice

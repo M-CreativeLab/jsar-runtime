@@ -5,6 +5,8 @@
 
 #include "./context_app.hpp"
 #include "./context_host.hpp"
+#include "./gpu_command_buffer_impl.hpp"
+#include "./gpu_pipeline_impl.hpp"
 
 using namespace std;
 
@@ -65,6 +67,7 @@ ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
     : ContextGLStorage(name, from)
     , m_ContentRenderer(from->m_ContentRenderer)
     , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
+    , m_CurrentCommandEncoder(from->m_CurrentCommandEncoder)
     , m_GLObjectManager(from->m_GLObjectManager)
 {
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
@@ -95,6 +98,7 @@ void ContextGLApp::onFrameWillStart(ContextGLHost *host_context)
 
   glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentDefaultRenderTarget);
   glClear(GL_STENCIL_BUFFER_BIT);
+  updateCurrentCommandEncoder();
 
   ContextGLStorage::restore();
 }
@@ -105,17 +109,8 @@ void ContextGLApp::onFrameEnded(ContextGLHost *host_context)
 
 void ContextGLApp::onProgramChanged(int program)
 {
-  auto rhi = contentRendererChecked().getRendererRef().getRHI();
-  assert(rhi != nullptr && "RHI must not be null");
-
   m_ProgramId = program;
-
-  auto command_encoder = rhi->CreateCommandEncoder();
-  if (gles::GPUCommandEncoderImpl *impl = dynamic_cast<gles::GPUCommandEncoderImpl *>(command_encoder.get()))
-  {
-    command_encoder.release();
-    m_CurrentCommandEncoder = unique_ptr<gles::GPUCommandEncoderImpl>(impl);
-  }
+  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().setPipeline(gles::GPURenderPipelineImpl(program));
 }
 
 void ContextGLApp::onArrayBufferChanged(int vao)
@@ -130,7 +125,19 @@ void ContextGLApp::onElementBufferChanged(int ebo)
 
 void ContextGLApp::onFramebufferChanged(int fbo)
 {
-  m_FramebufferId = fbo;
+  if (!m_FramebufferId.has_value() || m_FramebufferId != fbo)
+  {
+    // TODO(yorkie): support scheduling GPU command buffer to transparent objects.
+    if (m_CurrentCommandEncoder != nullptr &&
+        !m_CurrentCommandEncoder->isRenderPassWith(m_CurrentDefaultRenderTarget))
+    {
+      auto commandbuffer = m_CurrentCommandEncoder->finish();
+      if (commandbuffer != nullptr) [[likely]]
+        contentRendererChecked().scheduleGPUCommandBufferOnRenderTexture(move(commandbuffer));
+    }
+    m_FramebufferId = fbo;
+    updateCurrentCommandEncoder();
+  }
 }
 
 void ContextGLApp::onRenderbufferChanged(int rbo)
@@ -332,6 +339,20 @@ void ContextGLApp::useProgram(uint32_t id, GLuint &program)
   onProgramChanged(program);
 }
 
+void ContextGLApp::bindFramebuffer(GLenum target, uint32_t id, GLuint &framebuffer)
+{
+  /**
+   * TODO(yorkie): Now we use 0 or -1 to indicate the default render target, should we use enum instead?
+   */
+  if (id == 0 || id == -1)
+    framebuffer = currentDefaultRenderTarget();
+  else
+    framebuffer = ObjectManagerRef().FindFramebuffer(id);
+
+  glBindFramebuffer(target, framebuffer);
+  onFramebufferChanged(framebuffer);
+}
+
 void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
   m_CurrentCommandEncoder->getOrStartRecordingRenderPass().draw(count, 1, first, 0);
@@ -434,6 +455,20 @@ renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
   return *contentRenderer;
 }
 
+void ContextGLApp::updateCurrentCommandEncoder()
+{
+  auto rhi = contentRendererChecked().getRendererRef().getRHI();
+  assert(rhi != nullptr && "RHI must not be null");
+
+  auto command_encoder = rhi->CreateCommandEncoder();
+  if (gles::GPUCommandEncoderImpl *impl = dynamic_cast<gles::GPUCommandEncoderImpl *>(command_encoder.get()))
+  {
+    command_encoder.release();
+    m_CurrentCommandEncoder = unique_ptr<gles::GPUCommandEncoderImpl>(impl);
+  }
+  assert(m_CurrentCommandEncoder != nullptr && "Current command encoder must not be null");
+}
+
 bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
 {
   assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
@@ -455,7 +490,7 @@ bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
   return true;
 }
 
-void ContextGLApp::onAfterDraw(int drawCount)
+void ContextGLApp::onAfterDraw(int draw_count)
 {
-  contentRendererChecked().increaseDrawCallsCount(drawCount);
+  contentRendererChecked().increaseDrawCallsCount(draw_count);
 }

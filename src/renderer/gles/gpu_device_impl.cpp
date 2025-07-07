@@ -18,9 +18,10 @@ namespace gles
     // For GLES, this might not require any specific initialization.
   }
 
-  void GPUQueueImpl::submit(const std::vector<commandbuffers::GPUCommandBuffer> &command_buffers)
+  void GPUQueueImpl::submit(const vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &command_buffers)
   {
-    cout << "Submitting GPU command buffers to the queue: " << command_buffers.size() << endl;
+    for (const auto &command_buffer : command_buffers)
+      command_buffer->execute();
   }
 
   GPUDeviceImpl::GPUDeviceImpl()

@@ -4,6 +4,7 @@
 #include <optional>
 #include <memory>
 #include <common/command_buffers/gpu/gpu_command_encoder.hpp>
+#include "./gpu_command_buffer_impl.hpp"
 
 namespace gles
 {
@@ -14,12 +15,10 @@ namespace gles
 
   public:
     commandbuffers::GPURenderPassEncoder beginRenderPass(commandbuffers::GPURenderPassDescriptor &) override;
-    commandbuffers::GPUCommandBuffer finish(std::optional<std::string> label = std::nullopt) override;
+    std::unique_ptr<commandbuffers::GPUCommandBuffer> finish(std::optional<std::string> label = std::nullopt) const override;
 
   public:
     commandbuffers::GPURenderPassEncoder &getOrStartRecordingRenderPass();
-
-  private:
-    std::unique_ptr<commandbuffers::GPURenderPassEncoder> recording_renderpass_encoder_ = nullptr;
+    bool isRenderPassWith(GLuint target_framebuffer) const;
   };
 }

@@ -124,6 +124,9 @@ namespace renderer
       drawCallsCountPerFrame += count;
     }
 
+    // Schedule a GPU command buffer to be executed in the post stage for render textures.
+    void scheduleGPUCommandBufferOnRenderTexture(std::shared_ptr<GPUCommandBuffer>);
+
   private: // private lifecycle
     /**
      * The callback function to handle the command buffer request received.
@@ -180,7 +183,7 @@ namespace renderer
     std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
 
     // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
-    std::vector<GPUCommandBuffer> commandBuffersOnRenderTexture;
+    std::vector<std::shared_ptr<GPUCommandBuffer>> commandBuffersOnRenderTexture;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
