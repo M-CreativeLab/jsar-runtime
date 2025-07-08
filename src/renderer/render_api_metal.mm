@@ -91,9 +91,10 @@ public:
 
   bool ExecuteCommandBuffer() { return true; }
   bool ExecuteCommandBuffer(
-      vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-      renderer::TrContentRenderer *contentRenderer, xr::DeviceFrame *deviceFrame,
-      bool isDefaultQueue) {
+      vector<commandbuffers::TrCommandBufferBase *> &list,
+      renderer::TrContentRenderer *content_renderer,
+      xr::DeviceFrame *device_frame,
+      ExecutingPassType pass_type) {
     return true;
   }
 

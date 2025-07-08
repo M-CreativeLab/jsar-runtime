@@ -144,7 +144,7 @@ namespace renderer
         auto content = contentRenderer->getContent();
         if (content == nullptr || content->disableRendering) [[unlikely]]
           continue;
-        contentRenderer->onRenderTexturesRenderPass();
+        contentRenderer->onOffscreenRenderPass();
       }
     }
     glHostContext->restore();
@@ -339,27 +339,29 @@ namespace renderer
     DEBUG(LOG_TAG_RENDERER, "Renderer watchers has been stopped.");
   }
 
-  bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-                                         TrContentRenderer *contentRenderer)
+  bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &list,
+                                         TrContentRenderer *content_renderer,
+                                         ExecutingPassType pass_type)
   {
-    auto xrDevice = constellation->xrDevice.get();
-    assert(xrDevice != nullptr);
-    if (xrDevice->enabled())
+    auto xr_device = constellation->xrDevice.get();
+    assert(xr_device != nullptr);
+
+    if (xr_device->enabled()) [[likely]]
     {
-      if (xrDevice->isRenderedAsMultipass())
+      if (xr_device->isRenderedAsMultipass())
       {
-        xr::MultiPassFrame deviceFrame(xrDevice, 0);
-        return rhi->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+        xr::MultiPassFrame device_frame(xr_device, 0);
+        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
       else
       {
-        xr::SinglePassFrame deviceFrame(xrDevice, 0);
-        return rhi->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+        xr::SinglePassFrame device_frame(xr_device, 0);
+        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
     }
     else
     {
-      return rhi->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
+      return rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
   }
 

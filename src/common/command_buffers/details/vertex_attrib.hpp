@@ -16,6 +16,12 @@ namespace commandbuffers
         , index(index)
     {
     }
+    EnableVertexAttribArrayCommandBufferRequest(const EnableVertexAttribArrayCommandBufferRequest &that,
+                                                bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , index(that.index)
+    {
+    }
 
   public:
     uint32_t index;
@@ -30,6 +36,12 @@ namespace commandbuffers
     DisableVertexAttribArrayCommandBufferRequest(uint32_t index)
         : TrCommandBufferSimpleRequest()
         , index(index)
+    {
+    }
+    DisableVertexAttribArrayCommandBufferRequest(const DisableVertexAttribArrayCommandBufferRequest &that,
+                                                 bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , index(that.index)
     {
     }
 
@@ -50,6 +62,16 @@ namespace commandbuffers
         , normalized(normalized)
         , stride(stride)
         , offset(offset)
+    {
+    }
+    VertexAttribPointerCommandBufferRequest(const VertexAttribPointerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , index(that.index)
+        , conponentSize(that.conponentSize)
+        , componentType(that.componentType)
+        , normalized(that.normalized)
+        , stride(that.stride)
+        , offset(that.offset)
     {
     }
 
@@ -76,6 +98,15 @@ namespace commandbuffers
         , offset(offset)
     {
     }
+    VertexAttribIPointerCommandBufferRequest(const VertexAttribIPointerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , index(that.index)
+        , componentSize(that.componentSize)
+        , componentType(that.componentType)
+        , stride(that.stride)
+        , offset(that.offset)
+    {
+    }
 
   public:
     uint32_t index;
@@ -94,6 +125,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , index(index)
         , divisor(divisor)
+    {
+    }
+    VertexAttribDivisorCommandBufferRequest(const VertexAttribDivisorCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , index(that.index)
+        , divisor(that.divisor)
     {
     }
 

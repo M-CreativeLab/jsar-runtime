@@ -125,12 +125,6 @@ namespace renderer
     return *constellation->renderer;
   }
 
-  void TrContentRenderer::scheduleGPUCommandBufferOnRenderTexture(std::shared_ptr<GPUCommandBuffer> commandbuffer)
-  {
-    // TODO(yorkie): use a lock?
-    commandBuffersOnRenderTexture.push_back(commandbuffer);
-  }
-
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
   // such as `defaultCommandBufferRequests` or `stereoFramesList`, otherwise it will be deleted in this function.
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
@@ -251,7 +245,7 @@ namespace renderer
     onStartFrame();
     {
       // Execute the default command buffers first.
-      executeCommandBuffers(false);
+      executeCommandBuffersAtDefaultFrame();
 
       // Skip the XR frame in the following conditions:
       bool shouldSkipXRFrame = false;
@@ -289,24 +283,22 @@ namespace renderer
         shouldSkipXRFrame = false;
       }
 
-      if (!shouldSkipXRFrame &&
-          getContent()->used &&
-          xrDevice->enabled())
+      if (!shouldSkipXRFrame && getContent()->used && xrDevice->enabled())
       {
         // Execute the XR frame
         switch (xrDevice->getStereoRenderingMode())
         {
         case xr::TrStereoRenderingMode::MultiPass:
         {
-          executeCommandBuffers(true, xrDevice->getActiveEyeId());
+          executeCommandBuffersAtXRFrame(xrDevice->getActiveEyeId());
           break;
         }
         case xr::TrStereoRenderingMode::SinglePass:
         case xr::TrStereoRenderingMode::SinglePassInstanced:
         case xr::TrStereoRenderingMode::SinglePassMultiview:
         {
-          executeCommandBuffers(true, 0);
-          executeCommandBuffers(true, 1);
+          executeCommandBuffersAtXRFrame(0);
+          executeCommandBuffersAtXRFrame(1);
           break;
         }
         default:
@@ -322,13 +314,19 @@ namespace renderer
     // TODO(yorkie): implement the transparents render pass.
   }
 
-  void TrContentRenderer::onRenderTexturesRenderPass()
+  void TrContentRenderer::onOffscreenRenderPass()
   {
-    if (commandBuffersOnRenderTexture.size() > 0)
+    if (commandBuffersOnOffscreenPass.size() > 0)
     {
-      vector<shared_ptr<commandbuffers::GPUCommandBuffer>> commandbuffers = commandBuffersOnRenderTexture;
-      commandBuffersOnRenderTexture.clear();
-      constellation->renderer->getRHI()->SubmitGPUCommandBuffer(commandbuffers);
+      constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
+                                                     this,
+                                                     ExecutingPassType::kOffscreenPass);
+      for (auto commandbuffer : commandBuffersOnOffscreenPass)
+      {
+        if (commandbuffer != nullptr) [[likely]]
+          delete commandbuffer;
+      }
+      commandBuffersOnOffscreenPass.clear();
     }
   }
 
@@ -367,29 +365,40 @@ namespace renderer
     isGraphicsContextsInitialized = true;
   }
 
-  void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
+  void TrContentRenderer::executeCommandBuffersAtDefaultFrame()
   {
-    if (getContent() == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
+    if (getContent() == nullptr) [[unlikely]]
       return;
 
-    if (!asXRFrame)
-    {
-      vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
-      {
-        unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        commandBufferRequests = defaultCommandBufferRequests;
-        defaultCommandBufferRequests.clear();
-      }
-      constellation->renderer->executeCommandBuffers(commandBufferRequests, this);
-      for (auto req : commandBufferRequests)
-        delete req;
-    }
-    else
+    vector<commandbuffers::TrCommandBufferBase *> list;
     {
       unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-      executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
-                         { return constellation->renderer->executeCommandBuffers(commandBufferRequests, this); });
+      if (defaultCommandBufferRequests.size() > 0)
+      {
+        list = defaultCommandBufferRequests;
+        defaultCommandBufferRequests.clear();
+      }
     }
+
+    if (list.size() > 0)
+    {
+      constellation->renderer->executeCommandBuffers(list, this, ExecutingPassType::kDefaultFrame);
+      for (auto req : list)
+        delete req;
+    }
+  }
+
+  void TrContentRenderer::executeCommandBuffersAtXRFrame(int viewIndex)
+  {
+    if (getContent() == nullptr) [[unlikely]]
+      return;
+
+    unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+    auto exec_commandbuffers = [this](int _, vector<TrCommandBufferBase *> &list)
+    {
+      return constellation->renderer->executeCommandBuffers(list, this, ExecutingPassType::kXRFrame);
+    };
+    executeStereoFrame(viewIndex, exec_commandbuffers);
   }
 
   bool TrContentRenderer::executeStereoFrame(int viewIndex, function<bool(int, vector<TrCommandBufferBase *> &)> exec)

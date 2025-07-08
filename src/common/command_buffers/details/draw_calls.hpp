@@ -17,6 +17,13 @@ namespace commandbuffers
         , count(count)
     {
     }
+    DrawArraysCommandBufferRequest(const DrawArraysCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , first(that.first)
+        , count(that.count)
+    {
+    }
 
   public:
     int mode;
@@ -36,6 +43,14 @@ namespace commandbuffers
         , first(first)
         , count(count)
         , instanceCount(instanceCount)
+    {
+    }
+    DrawArraysInstancedCommandBufferRequest(const DrawArraysInstancedCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , first(that.first)
+        , count(that.count)
+        , instanceCount(that.instanceCount)
     {
     }
 
@@ -58,6 +73,14 @@ namespace commandbuffers
         , count(count)
         , indicesType(type)
         , indicesOffset(offset)
+    {
+    }
+    DrawElementsCommandBufferRequest(const DrawElementsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
     {
     }
 
@@ -83,6 +106,15 @@ namespace commandbuffers
         , instanceCount(instanceCount)
     {
     }
+    DrawElementsInstancedCommandBufferRequest(const DrawElementsInstancedCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
+        , instanceCount(that.instanceCount)
+    {
+    }
 
   public:
     int mode;
@@ -95,6 +127,8 @@ namespace commandbuffers
   class DrawBuffersCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<DrawBuffersCommandBufferRequest, COMMAND_BUFFER_DRAW_BUFFERS_REQ>
   {
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
+
   public:
     DrawBuffersCommandBufferRequest() = delete;
     DrawBuffersCommandBufferRequest(size_t n, const uint32_t *bufs)
@@ -103,6 +137,14 @@ namespace commandbuffers
     {
       for (size_t i = 0; i < n; i++)
         this->bufs[i] = bufs[i];
+    }
+    DrawBuffersCommandBufferRequest(const DrawBuffersCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , n(that.n)
+        , bufs()
+    {
+      for (size_t i = 0; i < that.n; i++)
+        this->bufs[i] = that.bufs[i];
     }
 
   public:
@@ -114,7 +156,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<DrawRangeElementsCommandBufferRequest,
                                             COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ>
   {
-
   public:
     DrawRangeElementsCommandBufferRequest() = delete;
     DrawRangeElementsCommandBufferRequest(int mode, int start, int end, int count, int type, int offset)
@@ -125,6 +166,16 @@ namespace commandbuffers
         , count(count)
         , indicesType(type)
         , indicesOffset(offset)
+    {
+    }
+    DrawRangeElementsCommandBufferRequest(const DrawRangeElementsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , start(that.start)
+        , end(that.end)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
     {
     }
 

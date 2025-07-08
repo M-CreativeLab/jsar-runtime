@@ -19,6 +19,14 @@ namespace commandbuffers
         , height(height)
     {
     }
+    SetViewportCommandBufferRequest(const SetViewportCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , x(that.x)
+        , y(that.y)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
 
   public:
     int x;
@@ -41,6 +49,14 @@ namespace commandbuffers
         , height(height)
     {
     }
+    SetScissorCommandBufferRequest(const SetScissorCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , x(that.x)
+        , y(that.y)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
 
   public:
     int x;
@@ -60,6 +76,12 @@ namespace commandbuffers
         , mode(mode)
     {
     }
+    HintCommandBufferRequest(const HintCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , mode(that.mode)
+    {
+    }
 
   public:
     int target;
@@ -76,6 +98,11 @@ namespace commandbuffers
         , width(width)
     {
     }
+    LineWidthCommandBufferRequest(const LineWidthCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , width(that.width)
+    {
+    }
 
   public:
     float width;
@@ -90,6 +117,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , pname(pname)
         , param(param)
+    {
+    }
+    PixelStoreiCommandBufferRequest(const PixelStoreiCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , pname(that.pname)
+        , param(that.param)
     {
     }
 
@@ -109,6 +142,12 @@ namespace commandbuffers
         , units(units)
     {
     }
+    PolygonOffsetCommandBufferRequest(const PolygonOffsetCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , factor(that.factor)
+        , units(that.units)
+    {
+    }
 
   public:
     float factor;
@@ -125,6 +164,11 @@ namespace commandbuffers
         , flag(flag)
     {
     }
+    DepthMaskCommandBufferRequest(const DepthMaskCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , flag(that.flag)
+    {
+    }
 
   public:
     bool flag;
@@ -138,6 +182,11 @@ namespace commandbuffers
     DepthFuncCommandBufferRequest(int func)
         : TrCommandBufferSimpleRequest()
         , func(func)
+    {
+    }
+    DepthFuncCommandBufferRequest(const DepthFuncCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , func(that.func)
     {
     }
 
@@ -156,6 +205,12 @@ namespace commandbuffers
         , f(f)
     {
     }
+    DepthRangeCommandBufferRequest(const DepthRangeCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , n(that.n)
+        , f(that.f)
+    {
+    }
 
   public:
     float n;
@@ -172,6 +227,13 @@ namespace commandbuffers
         , func(func)
         , ref(ref)
         , mask(mask)
+    {
+    }
+    StencilFuncCommandBufferRequest(const StencilFuncCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , func(that.func)
+        , ref(that.ref)
+        , mask(that.mask)
     {
     }
 
@@ -195,6 +257,14 @@ namespace commandbuffers
         , mask(mask)
     {
     }
+    StencilFuncSeparateCommandBufferRequest(const StencilFuncSeparateCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , face(that.face)
+        , func(that.func)
+        , ref(that.ref)
+        , mask(that.mask)
+    {
+    }
 
   public:
     int face;
@@ -214,6 +284,11 @@ namespace commandbuffers
         , mask(mask)
     {
     }
+    StencilMaskCommandBufferRequest(const StencilMaskCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mask(that.mask)
+    {
+    }
 
   public:
     int mask;
@@ -229,6 +304,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , face(face)
         , mask(mask)
+    {
+    }
+    StencilMaskSeparateCommandBufferRequest(const StencilMaskSeparateCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , face(that.face)
+        , mask(that.mask)
     {
     }
 
@@ -247,6 +328,13 @@ namespace commandbuffers
         , fail(fail)
         , zfail(zfail)
         , zpass(zpass)
+    {
+    }
+    StencilOpCommandBufferRequest(const StencilOpCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , fail(that.fail)
+        , zfail(that.zfail)
+        , zpass(that.zpass)
     {
     }
 
@@ -270,6 +358,14 @@ namespace commandbuffers
         , zpass(zpass)
     {
     }
+    StencilOpSeparateCommandBufferRequest(const StencilOpSeparateCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , face(that.face)
+        , fail(that.fail)
+        , zfail(that.zfail)
+        , zpass(that.zpass)
+    {
+    }
 
   public:
     int face;
@@ -291,6 +387,14 @@ namespace commandbuffers
         , alpha(alpha)
     {
     }
+    BlendColorCommandBufferRequest(const BlendColorCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , red(that.red)
+        , green(that.green)
+        , blue(that.blue)
+        , alpha(that.alpha)
+    {
+    }
 
   public:
     float red;
@@ -307,6 +411,11 @@ namespace commandbuffers
     BlendEquationCommandBufferRequest(int mode)
         : TrCommandBufferSimpleRequest()
         , mode(mode)
+    {
+    }
+    BlendEquationCommandBufferRequest(const BlendEquationCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
     {
     }
 
@@ -326,6 +435,12 @@ namespace commandbuffers
         , modeAlpha(modeAlpha)
     {
     }
+    BlendEquationSeparateCommandBufferRequest(const BlendEquationSeparateCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , modeRGB(that.modeRGB)
+        , modeAlpha(that.modeAlpha)
+    {
+    }
 
   public:
     int modeRGB;
@@ -341,6 +456,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , sfactor(sfactor)
         , dfactor(dfactor)
+    {
+    }
+    BlendFuncCommandBufferRequest(const BlendFuncCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sfactor(that.sfactor)
+        , dfactor(that.dfactor)
     {
     }
 
@@ -361,6 +482,14 @@ namespace commandbuffers
         , dstRGB(dstRGB)
         , srcAlpha(srcAlpha)
         , dstAlpha(dstAlpha)
+    {
+    }
+    BlendFuncSeparateCommandBufferRequest(const BlendFuncSeparateCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , srcRGB(that.srcRGB)
+        , dstRGB(that.dstRGB)
+        , srcAlpha(that.srcAlpha)
+        , dstAlpha(that.dstAlpha)
     {
     }
 
@@ -385,6 +514,14 @@ namespace commandbuffers
         , alpha(alpha)
     {
     }
+    ColorMaskCommandBufferRequest(const ColorMaskCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , red(that.red)
+        , green(that.green)
+        , blue(that.blue)
+        , alpha(that.alpha)
+    {
+    }
 
   public:
     bool red;
@@ -403,6 +540,11 @@ namespace commandbuffers
         , mode(mode)
     {
     }
+    CullFaceCommandBufferRequest(const CullFaceCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+    {
+    }
 
   public:
     int mode;
@@ -416,6 +558,11 @@ namespace commandbuffers
     FrontFaceCommandBufferRequest(int mode)
         : TrCommandBufferSimpleRequest()
         , mode(mode)
+    {
+    }
+    FrontFaceCommandBufferRequest(const FrontFaceCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
     {
     }
 
@@ -434,6 +581,11 @@ namespace commandbuffers
         , cap(cap)
     {
     }
+    CapabilityCommandBufferRequest(const CapabilityCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
+        , cap(that.cap)
+    {
+    }
 
   public:
     int cap;
@@ -442,14 +594,12 @@ namespace commandbuffers
   class EnableCommandBufferRequest final
       : public CapabilityCommandBufferRequest<EnableCommandBufferRequest, COMMAND_BUFFER_ENABLE_REQ>
   {
-  public:
     using CapabilityCommandBufferRequest::CapabilityCommandBufferRequest;
   };
 
   class DisableCommandBufferRequest final
       : public CapabilityCommandBufferRequest<DisableCommandBufferRequest, COMMAND_BUFFER_DISABLE_REQ>
   {
-  public:
     using CapabilityCommandBufferRequest::CapabilityCommandBufferRequest;
   };
 }

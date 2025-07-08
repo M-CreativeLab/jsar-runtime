@@ -55,6 +55,13 @@ namespace commandbuffers
         : TrIpcSerializableBase(type, size)
     {
     }
+    TrCommandBufferBase(const TrCommandBufferBase& that)
+        : TrIpcSerializableBase(that.type, that.size)
+        , id(that.id)
+        , contextId(that.contextId)
+        , renderingInfo(that.renderingInfo)
+    {
+    }
 
   public:
     /**
@@ -87,11 +94,9 @@ namespace commandbuffers
         : TrCommandBufferBase(type, size)
     {
     }
-    TrCommandBufferRequest(TrCommandBufferRequest &that)
-        : TrCommandBufferBase(that.type, that.size)
+    TrCommandBufferRequest(const TrCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferBase(that)
     {
-      contextId = that.contextId;
-      renderingInfo = that.renderingInfo;
     }
   };
 
@@ -104,11 +109,10 @@ namespace commandbuffers
     {
       contextId = req->contextId;
     }
-    TrCommandBufferResponse(TrCommandBufferResponse &that)
-        : TrCommandBufferBase(that.type, that.size)
+    TrCommandBufferResponse(const TrCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferBase(that)
         , requestId(that.requestId)
     {
-      contextId = that.contextId;
     }
 
   public:
@@ -130,8 +134,8 @@ namespace commandbuffers
         : TrCommandBufferRequest(Type, sizeof(Derived))
     {
     }
-    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that)
-        : TrCommandBufferRequest(that)
+    TrCommandBufferSimpleRequest(const TrCommandBufferSimpleRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
     {
     }
     ~TrCommandBufferSimpleRequest() = default;
@@ -153,12 +157,12 @@ namespace commandbuffers
   class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
   {
   public:
-    TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that)
-        : TrCommandBufferResponse(that)
-    {
-    }
     TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
         : TrCommandBufferResponse(type, sizeof(Derived), req)
+    {
+    }
+    TrCommandBufferSimpleResponse(const TrCommandBufferSimpleResponse &that, bool clone = false)
+        : TrCommandBufferResponse(that, clone)
     {
     }
   };

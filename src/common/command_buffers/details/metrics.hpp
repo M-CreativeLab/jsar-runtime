@@ -22,6 +22,11 @@ namespace commandbuffers
         , category(category)
     {
     }
+    PaintingMetricsCommandBufferRequest(const PaintingMetricsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , category(that.category)
+    {
+    }
 
   public:
     inline std::string toString()

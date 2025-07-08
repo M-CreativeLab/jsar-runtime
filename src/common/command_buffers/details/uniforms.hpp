@@ -53,6 +53,13 @@ namespace commandbuffers
         , uniformBlockBinding(uniformBlockBinding)
     {
     }
+    UniformBlockBindingCommandBufferRequest(const UniformBlockBindingCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , program(that.program)
+        , uniformBlockIndex(that.uniformBlockIndex)
+        , uniformBlockBinding(that.uniformBlockBinding)
+    {
+    }
 
   public:
     uint32_t program;
@@ -68,6 +75,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , location(location)
         , v0(v0)
+    {
+    }
+    Uniform1fCommandBufferRequest(const Uniform1fCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
     {
     }
 
@@ -87,10 +100,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform1fvCommandBufferRequest(Uniform1fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    Uniform1fvCommandBufferRequest(const Uniform1fvCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -124,6 +140,12 @@ namespace commandbuffers
         , v0(v0)
     {
     }
+    Uniform1iCommandBufferRequest(const Uniform1iCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+    {
+    }
 
   public:
     uint32_t location;
@@ -141,10 +163,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform1ivCommandBufferRequest(Uniform1ivCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    Uniform1ivCommandBufferRequest(const Uniform1ivCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -179,6 +204,13 @@ namespace commandbuffers
         , v1(v1)
     {
     }
+    Uniform2fCommandBufferRequest(const Uniform2fCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+        , v1(that.v1)
+    {
+    }
 
   public:
     uint32_t location;
@@ -197,10 +229,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform2fvCommandBufferRequest(Uniform2fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    Uniform2fvCommandBufferRequest(const Uniform2fvCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -235,6 +270,13 @@ namespace commandbuffers
         , v1(v1)
     {
     }
+    Uniform2iCommandBufferRequest(const Uniform2iCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+        , v1(that.v1)
+    {
+    }
 
   public:
     uint32_t location;
@@ -253,10 +295,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform2ivCommandBufferRequest(Uniform2ivCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    Uniform2ivCommandBufferRequest(const Uniform2ivCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -292,6 +337,14 @@ namespace commandbuffers
         , v2(v2)
     {
     }
+    Uniform3fCommandBufferRequest(const Uniform3fCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+        , v1(that.v1)
+        , v2(that.v2)
+    {
+    }
 
   public:
     uint32_t location;
@@ -311,10 +364,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform3fvCommandBufferRequest(Uniform3fvCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    Uniform3fvCommandBufferRequest(const Uniform3fvCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -350,6 +406,14 @@ namespace commandbuffers
         , v2(v2)
     {
     }
+    Uniform3iCommandBufferRequest(const Uniform3iCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+        , v1(that.v1)
+        , v2(that.v2)
+    {
+    }
 
   public:
     uint32_t location;
@@ -369,10 +433,13 @@ namespace commandbuffers
         , values(values)
     {
     }
-    Uniform3ivCommandBufferRequest(Uniform3ivCommandBufferRequest &that)
+    Uniform3ivCommandBufferRequest(const Uniform3ivCommandBufferRequest &that, bool clone = false)
         : TrCommandBufferSimpleRequest(that)
         , location(that.location)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -408,6 +475,15 @@ namespace commandbuffers
         , v3(v3)
     {
     }
+    Uniform4xCommandBufferRequest(const Uniform4xCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
+        , location(that.location)
+        , v0(that.v0)
+        , v1(that.v1)
+        , v2(that.v2)
+        , v3(that.v3)
+    {
+    }
 
   public:
     TrCommandBufferMessage *serialize() override final
@@ -431,16 +507,19 @@ namespace commandbuffers
   class Uniform4xvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
-    Uniform4xvCommandBufferRequest(Uniform4xvCommandBufferRequest &that)
-        : TrCommandBufferRequest(that)
-        , location(that.location)
-    {
-    }
     Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t location, const std::vector<Tv> &values)
         : TrCommandBufferRequest(type, sizeof(Tb))
         , location(location)
         , values(values)
     {
+    }
+    Uniform4xvCommandBufferRequest(const Uniform4xvCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
+        , location(that.location)
+        , values()
+    {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -466,6 +545,8 @@ namespace commandbuffers
   class Uniform4fCommandBufferRequest final
       : public Uniform4xCommandBufferRequest<Uniform4fCommandBufferRequest, float>
   {
+    using Uniform4xCommandBufferRequest::Uniform4xCommandBufferRequest;
+
   public:
     Uniform4fCommandBufferRequest(uint32_t location, float v0, float v1, float v2, float v3)
         : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4F_REQ, location, v0, v1, v2, v3)
@@ -476,8 +557,9 @@ namespace commandbuffers
   class Uniform4fvCommandBufferRequest final
       : public Uniform4xvCommandBufferRequest<Uniform4fvCommandBufferRequest, float>
   {
-  public:
     using Uniform4xvCommandBufferRequest::Uniform4xvCommandBufferRequest;
+
+  public:
     Uniform4fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4FV_REQ, location, values)
     {
@@ -487,6 +569,8 @@ namespace commandbuffers
   class Uniform4iCommandBufferRequest final
       : public Uniform4xCommandBufferRequest<Uniform4iCommandBufferRequest, int>
   {
+    using Uniform4xCommandBufferRequest::Uniform4xCommandBufferRequest;
+
   public:
     Uniform4iCommandBufferRequest(uint32_t location, int v0, int v1, int v2, int v3)
         : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4I_REQ, location, v0, v1, v2, v3)
@@ -497,7 +581,6 @@ namespace commandbuffers
   class Uniform4ivCommandBufferRequest final
       : public Uniform4xvCommandBufferRequest<Uniform4ivCommandBufferRequest, int>
   {
-  public:
     using Uniform4xvCommandBufferRequest::Uniform4xvCommandBufferRequest;
 
   public:
@@ -511,18 +594,21 @@ namespace commandbuffers
   class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
-    UniformMatrixNfvCommandBufferRequest(UniformMatrixNfvCommandBufferRequest &that)
-        : TrCommandBufferRequest(that)
-        , location(that.location)
-        , transpose(that.transpose)
-        , computationGraph4values(that.computationGraph4values)
-    {
-    }
     UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t location, bool transpose)
         : TrCommandBufferRequest(type, sizeof(T))
         , location(location)
         , transpose(transpose)
     {
+    }
+    UniformMatrixNfvCommandBufferRequest(const UniformMatrixNfvCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
+        , location(that.location)
+        , transpose(that.transpose)
+        , values()
+        , computationGraph4values(that.computationGraph4values)
+    {
+      if (clone)
+        values = that.values;
     }
 
   public:
@@ -563,11 +649,9 @@ namespace commandbuffers
   class UniformMatrix2fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest, 2 * 2>
   {
+    using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
+
   public:
-    UniformMatrix2fvCommandBufferRequest(UniformMatrix2fvCommandBufferRequest &that)
-        : UniformMatrixNfvCommandBufferRequest(that)
-    {
-    }
     UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, location, transpose)
     {
@@ -578,11 +662,9 @@ namespace commandbuffers
   class UniformMatrix3fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest, 3 * 3>
   {
+    using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
+
   public:
-    UniformMatrix3fvCommandBufferRequest(UniformMatrix3fvCommandBufferRequest &that)
-        : UniformMatrixNfvCommandBufferRequest(that)
-    {
-    }
     UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, location, transpose)
     {
@@ -593,11 +675,9 @@ namespace commandbuffers
   class UniformMatrix4fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest, 4 * 4>
   {
+    using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
+
   public:
-    UniformMatrix4fvCommandBufferRequest(UniformMatrix4fvCommandBufferRequest &that)
-        : UniformMatrixNfvCommandBufferRequest(that)
-    {
-    }
     UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
     {

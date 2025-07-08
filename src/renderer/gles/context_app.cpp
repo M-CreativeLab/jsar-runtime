@@ -67,7 +67,6 @@ ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
     : ContextGLStorage(name, from)
     , m_ContentRenderer(from->m_ContentRenderer)
     , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
-    , m_CurrentCommandEncoder(from->m_CurrentCommandEncoder)
     , m_GLObjectManager(from->m_GLObjectManager)
 {
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
@@ -98,7 +97,6 @@ void ContextGLApp::onFrameWillStart(ContextGLHost *host_context)
 
   glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentDefaultRenderTarget);
   glClear(GL_STENCIL_BUFFER_BIT);
-  updateCurrentCommandEncoder();
 
   ContextGLStorage::restore();
 }
@@ -110,7 +108,6 @@ void ContextGLApp::onFrameEnded(ContextGLHost *host_context)
 void ContextGLApp::onProgramChanged(int program)
 {
   m_ProgramId = program;
-  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().setPipeline(gles::GPURenderPipelineImpl(program));
 }
 
 void ContextGLApp::onArrayBufferChanged(int vao)
@@ -126,18 +123,7 @@ void ContextGLApp::onElementBufferChanged(int ebo)
 void ContextGLApp::onFramebufferChanged(int fbo)
 {
   if (!m_FramebufferId.has_value() || m_FramebufferId != fbo)
-  {
-    // TODO(yorkie): support scheduling GPU command buffer to transparent objects.
-    if (m_CurrentCommandEncoder != nullptr &&
-        !m_CurrentCommandEncoder->isRenderPassWith(m_CurrentDefaultRenderTarget))
-    {
-      auto commandbuffer = m_CurrentCommandEncoder->finish();
-      if (commandbuffer != nullptr) [[likely]]
-        contentRendererChecked().scheduleGPUCommandBufferOnRenderTexture(move(commandbuffer));
-    }
     m_FramebufferId = fbo;
-    updateCurrentCommandEncoder();
-  }
 }
 
 void ContextGLApp::onRenderbufferChanged(int rbo)
@@ -312,6 +298,17 @@ void ContextGLApp::RecordSamplerOnDeleted(GLuint sampler)
   m_Samplers.erase(sampler);
 }
 
+void ContextGLApp::setViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  glViewport(x, y, width, height);
+  onViewportChanged(x, y, width, height);
+}
+
+void ContextGLApp::setScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  glScissor(x, y, width, height);
+}
+
 GLuint ContextGLApp::createProgram(uint32_t id)
 {
   GLuint program = ObjectManagerRef().CreateProgram(id);
@@ -355,7 +352,6 @@ void ContextGLApp::bindFramebuffer(GLenum target, uint32_t id, GLuint &framebuff
 
 void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
-  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().draw(count, 1, first, 0);
   if (shouleExecuteDrawOnCurrent(count))
   {
     glDrawArrays(mode, first, count);
@@ -365,7 +361,6 @@ void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 
 void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
-  m_CurrentCommandEncoder->getOrStartRecordingRenderPass().drawIndexed(count, 1, 0, 0, 0);
   if (shouleExecuteDrawOnCurrent(count))
   {
     glDrawElements(mode, count, type, indices);
@@ -448,25 +443,17 @@ bool ContextGLApp::IsChanged(ContextGLApp *other)
   return false;
 }
 
+bool ContextGLApp::IsDefaultRenderTargetBinding() const
+{
+  return !m_FramebufferId.has_value() ||
+         m_FramebufferId == m_CurrentDefaultRenderTarget;
+}
+
 renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
 {
   auto contentRenderer = m_ContentRenderer.lock();
   assert(contentRenderer != nullptr && "Content renderer must not be null");
   return *contentRenderer;
-}
-
-void ContextGLApp::updateCurrentCommandEncoder()
-{
-  auto rhi = contentRendererChecked().getRendererRef().getRHI();
-  assert(rhi != nullptr && "RHI must not be null");
-
-  auto command_encoder = rhi->CreateCommandEncoder();
-  if (gles::GPUCommandEncoderImpl *impl = dynamic_cast<gles::GPUCommandEncoderImpl *>(command_encoder.get()))
-  {
-    command_encoder.release();
-    m_CurrentCommandEncoder = unique_ptr<gles::GPUCommandEncoderImpl>(impl);
-  }
-  assert(m_CurrentCommandEncoder != nullptr && "Current command encoder must not be null");
 }
 
 bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
@@ -480,11 +467,6 @@ bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) [[unlikely]]
   {
     DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not complete.");
-    return false;
-  }
-  if (m_FramebufferId.value() != m_CurrentDefaultRenderTarget)
-  {
-    // TODO(yorkie): should record the GPU command buffer and draw parameters
     return false;
   }
   return true;

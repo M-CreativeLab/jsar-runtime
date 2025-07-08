@@ -7,17 +7,18 @@
 #include <atomic>
 #include <memory>
 
-#include "common/classes.hpp"
-#include "common/viewport.hpp"
-#include "common/ipc.hpp"
-#include "common/command_buffers/command_buffers.hpp"
-#include "common/frame_request/types.hpp"
-#include "common/analytics/perf_counter.hpp"
-#include "common/collision/ray.hpp"
-#include "xr/device.hpp"
+#include <common/classes.hpp>
+#include <common/viewport.hpp>
+#include <common/ipc.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <common/frame_request/types.hpp>
+#include <common/analytics/perf_counter.hpp>
+#include <common/collision/ray.hpp>
+#include <xr/device.hpp>
 
 #include "./gles/context_storage.hpp"
 #include "./content_renderer.hpp"
+#include "./render_api.hpp"
 
 using namespace std;
 using namespace commandbuffers;
@@ -224,7 +225,9 @@ namespace renderer
   private:
     void startWatchers();
     void stopWatchers();
-    bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
+    bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &list,
+                               TrContentRenderer *,
+                               ExecutingPassType);
     void calcFps();
 
   public:

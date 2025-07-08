@@ -62,7 +62,7 @@ public:
 
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
-    RHI* rhi = RHIFactory::CreateRHI(deviceType, constellation.get());
+    RHI *rhi = RHIFactory::CreateRHI(deviceType, constellation.get());
     assert(rhi != nullptr && "Failed to create RHI for Unity embedder.");
 
     /**

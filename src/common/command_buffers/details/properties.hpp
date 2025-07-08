@@ -15,6 +15,11 @@ namespace commandbuffers
         , pname(pname)
     {
     }
+    GetParameterCommandBufferRequest(const Derived &that, bool clone = false)
+        : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
+        , pname(that.pname)
+    {
+    }
 
   public:
     int pname;
@@ -30,6 +35,11 @@ namespace commandbuffers
         , value(value)
     {
     }
+    GetParameterCommandBufferResponse(const Derived &that, bool clone = false)
+        : TrCommandBufferSimpleResponse<Derived>(that, clone)
+        , value(that.value)
+    {
+    }
 
   public:
     ValueType value;
@@ -39,7 +49,6 @@ namespace commandbuffers
       : public GetParameterCommandBufferRequest<GetBooleanvCommandBufferRequest,
                                                 COMMAND_BUFFER_GET_BOOLEANV_REQ>
   {
-  public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
@@ -49,7 +58,6 @@ namespace commandbuffers
                                                  bool,
                                                  COMMAND_BUFFER_GET_BOOLEANV_RES>
   {
-  public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
@@ -57,7 +65,6 @@ namespace commandbuffers
       : public GetParameterCommandBufferRequest<GetIntegervCommandBufferRequest,
                                                 COMMAND_BUFFER_GET_INTEGERV_REQ>
   {
-  public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
@@ -67,7 +74,6 @@ namespace commandbuffers
                                                  int,
                                                  COMMAND_BUFFER_GET_INTEGERV_RES>
   {
-  public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
@@ -75,7 +81,6 @@ namespace commandbuffers
       : public GetParameterCommandBufferRequest<GetFloatvCommandBufferRequest,
                                                 COMMAND_BUFFER_GET_FLOATV_REQ>
   {
-  public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
@@ -85,7 +90,6 @@ namespace commandbuffers
                                                  float,
                                                  COMMAND_BUFFER_GET_FLOATV_RES>
   {
-  public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
@@ -93,7 +97,6 @@ namespace commandbuffers
       : public GetParameterCommandBufferRequest<GetStringCommandBufferRequest,
                                                 COMMAND_BUFFER_GET_STRING_REQ>
   {
-  public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
@@ -103,7 +106,6 @@ namespace commandbuffers
                                                  std::string,
                                                  COMMAND_BUFFER_GET_STRING_RES>
   {
-  public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
 
   public:
@@ -137,6 +139,13 @@ namespace commandbuffers
         , precisiontype(precisiontype)
     {
     }
+    GetShaderPrecisionFormatCommandBufferRequest(const GetShaderPrecisionFormatCommandBufferRequest &that,
+                                                 bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shadertype(that.shadertype)
+        , precisiontype(that.precisiontype)
+    {
+    }
 
   public:
     int shadertype;
@@ -158,6 +167,14 @@ namespace commandbuffers
         , precision(precision)
     {
     }
+    GetShaderPrecisionFormatCommandBufferResponse(const GetShaderPrecisionFormatCommandBufferResponse &that,
+                                                  bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , rangeMin(that.rangeMin)
+        , rangeMax(that.rangeMax)
+        , precision(that.precision)
+    {
+    }
 
   public:
     int rangeMin;
@@ -168,7 +185,6 @@ namespace commandbuffers
   class GetErrorCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<GetErrorCommandBufferRequest, COMMAND_BUFFER_GET_ERROR_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
@@ -180,6 +196,11 @@ namespace commandbuffers
     GetErrorCommandBufferResponse(GetErrorCommandBufferRequest *req, int error)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_ERROR_RES, req)
         , error(error)
+    {
+    }
+    GetErrorCommandBufferResponse(const GetErrorCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , error(that.error)
     {
     }
 

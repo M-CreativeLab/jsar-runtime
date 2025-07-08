@@ -15,6 +15,11 @@ namespace commandbuffers
         , mask(mask)
     {
     }
+    ClearCommandBufferRequest(const ClearCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mask(that.mask)
+    {
+    }
 
   public:
     int mask;
@@ -32,6 +37,14 @@ namespace commandbuffers
         , g(g)
         , b(b)
         , a(a)
+    {
+    }
+    ClearColorCommandBufferRequest(const ClearColorCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , r(that.r)
+        , g(that.g)
+        , b(that.b)
+        , a(that.a)
     {
     }
 
@@ -53,6 +66,11 @@ namespace commandbuffers
         , depth(depth)
     {
     }
+    ClearDepthCommandBufferRequest(const ClearDepthCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , depth(that.depth)
+    {
+    }
 
   public:
     float depth;
@@ -67,6 +85,11 @@ namespace commandbuffers
     ClearStencilCommandBufferRequest(int stencil)
         : TrCommandBufferSimpleRequest()
         , stencil(stencil)
+    {
+    }
+    ClearStencilCommandBufferRequest(const ClearStencilCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , stencil(that.stencil)
     {
     }
 

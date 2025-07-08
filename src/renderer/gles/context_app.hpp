@@ -52,6 +52,11 @@ public:
   void RecordSamplerOnDeleted(GLuint sampler);
 
 public: // GLES Implementations
+  // State
+  void setViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+  void setScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+
+  // Program functions
   GLuint createProgram(uint32_t id);
   void deleteProgram(uint32_t id, GLuint &program);
   void useProgram(uint32_t id, GLuint &program);
@@ -67,6 +72,8 @@ public:
   void MarkAsDirty();
   bool IsDirty();
   bool IsChanged(ContextGLApp *other);
+  // Returns if the GL_FRAMEBUFFER binding is the default render target.
+  bool IsDefaultRenderTargetBinding() const;
 
 public:
   renderer::TrContentRenderer &contentRendererChecked() const;
@@ -76,18 +83,13 @@ public:
   }
 
 private:
-  // This updates the current `GPUCommandEncoder` to be used for recording commands.
-  void updateCurrentCommandEncoder();
-
   [[nodiscard]] bool shouleExecuteDrawOnCurrent(GLsizei count);
   void onAfterDraw(int drawCount);
 
 private:
   bool m_Dirty = false;
   std::weak_ptr<renderer::TrContentRenderer> m_ContentRenderer;
-
   GLuint m_CurrentDefaultRenderTarget;
-  std::shared_ptr<gles::GPUCommandEncoderImpl> m_CurrentCommandEncoder = nullptr;
 
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
   OpenGLNamesStorage m_Programs;

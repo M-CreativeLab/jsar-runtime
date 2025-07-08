@@ -9,7 +9,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest,
                                             COMMAND_BUFFER_GET_EXTENSIONS_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
@@ -17,13 +16,15 @@ namespace commandbuffers
       : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>
   {
   public:
-    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that)
-    {
-    }
     GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, req)
     {
+    }
+    GetExtensionsCommandBufferResponse(const GetExtensionsCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+    {
+      if (clone)
+        extensions = that.extensions;
     }
 
   public:

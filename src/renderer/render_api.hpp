@@ -8,7 +8,7 @@
 #include <Unity/IUnityGraphics.h>
 #include <analytics/analytics.hpp>
 #include <common/debug.hpp>
-#include "common/classes.hpp"
+#include <common/classes.hpp>
 #include <common/command_buffers/base.hpp>
 #include <common/command_buffers/command_buffers.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
@@ -26,20 +26,29 @@ enum FrameExecutionCode
   kFrameExecutionSkipped = 4,
 };
 
+enum class ExecutingPassType
+{
+  // Default frame's command buffers are scheduled from the main scripting thread which are used to initialize some
+  // graphic resources such as: program, textures, and etc.
+  kDefaultFrame,
+  // The command buffers in XRFrame is commonly used to dispatch draw calls in each rendering frame.
+  kXRFrame,
+  kOffscreenPass,
+};
+
 /**
  * The options to be used when making a RHI API call.
  */
 class ApiCallOptions final
 {
 public:
-  /**
-   * Executes this call in the default queue.
-   */
-  bool isDefaultQueue;
-  /**
-   * Should print the information of this call.
-   */
   bool printsCall;
+  ExecutingPassType executingPassType;
+
+  bool isDefaultQueue() const
+  {
+    return executingPassType == ExecutingPassType::kDefaultFrame;
+  }
 };
 
 /**
@@ -112,18 +121,11 @@ public:
   /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
    * there are any commands to execute.
-   *
-   * @param commandBuffers the command buffer queue.
-   * @param content the content renderer.
-   * @param deviceFrame the XR device frame that stores the frame context: views, projection matrices, etc.
-   * @param isDefaultQueue a boolean value indicating if the command queue is the default queue or XR frame queue.
-   * @returns a boolean value indicating if there are any commands to execute.
    */
-  virtual bool ExecuteCommandBuffer(
-    vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-    renderer::TrContentRenderer *content,
-    xr::DeviceFrame *deviceFrame,
-    bool isDefaultQueue) = 0;
+  virtual bool ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                                    renderer::TrContentRenderer *,
+                                    xr::DeviceFrame *,
+                                    ExecutingPassType) = 0;
 
   /**
    * Enables the graphics debug log, which is useful when you want to debug the backend graphics api.

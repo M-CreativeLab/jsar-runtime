@@ -327,8 +327,8 @@ namespace ipc
     T *createInstanceFromBase()
     {
       assert(base != nullptr);
-      T *baseRef = reinterpret_cast<T *>(base);
-      return new T(*baseRef);
+      const T *baseRef = reinterpret_cast<const T *>(base);
+      return new T(*baseRef, false /** clone: false */);
     }
 
     /**

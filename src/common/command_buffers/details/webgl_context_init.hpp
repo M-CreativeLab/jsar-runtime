@@ -9,14 +9,12 @@ namespace commandbuffers
   class CreateWebGLContextRequest final
       : public TrCommandBufferSimpleRequest<CreateWebGLContextRequest, COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
   class RemoveWebGLContextRequest final
       : public TrCommandBufferSimpleRequest<RemoveWebGLContextRequest, COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
@@ -24,7 +22,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest,
                                             COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
@@ -36,8 +33,8 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
     {
     }
-    WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that)
+    WebGL1ContextInitCommandBufferResponse(const WebGL1ContextInitCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
         , drawingViewport(that.drawingViewport)
         , maxCombinedTextureImageUnits(that.maxCombinedTextureImageUnits)
         , maxCubeMapTextureSize(that.maxCubeMapTextureSize)
@@ -50,6 +47,12 @@ namespace commandbuffers
         , maxVertexTextureImageUnits(that.maxVertexTextureImageUnits)
         , maxVertexUniformVectors(that.maxVertexUniformVectors)
     {
+      if (clone)
+      {
+        vendor = that.vendor;
+        version = that.version;
+        renderer = that.renderer;
+      }
     }
     ~WebGL1ContextInitCommandBufferResponse()
     {
@@ -92,7 +95,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest,
                                             COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ>
   {
-  public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
@@ -102,6 +104,41 @@ namespace commandbuffers
   public:
     WebGL2ContextInitCommandBufferResponse(WebGL2ContextInitCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES, req)
+    {
+    }
+    WebGL2ContextInitCommandBufferResponse(const WebGL2ContextInitCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , max3DTextureSize(that.max3DTextureSize)
+        , maxArrayTextureLayers(that.maxArrayTextureLayers)
+        , maxColorAttachments(that.maxColorAttachments)
+        , maxCombinedUniformBlocks(that.maxCombinedUniformBlocks)
+        , maxDrawBuffers(that.maxDrawBuffers)
+        , maxElementsIndices(that.maxElementsIndices)
+        , maxElementsVertices(that.maxElementsVertices)
+        , maxFragmentInputComponents(that.maxFragmentInputComponents)
+        , maxFragmentUniformBlocks(that.maxFragmentUniformBlocks)
+        , maxFragmentUniformComponents(that.maxFragmentUniformComponents)
+        , maxProgramTexelOffset(that.maxProgramTexelOffset)
+        , maxSamples(that.maxSamples)
+        , maxTransformFeedbackInterleavedComponents(that.maxTransformFeedbackInterleavedComponents)
+        , maxTransformFeedbackSeparateAttributes(that.maxTransformFeedbackSeparateAttributes)
+        , maxTransformFeedbackSeparateComponents(that.maxTransformFeedbackSeparateComponents)
+        , maxUniformBufferBindings(that.maxUniformBufferBindings)
+        , maxVaryingComponents(that.maxVaryingComponents)
+        , maxVertexOutputComponents(that.maxVertexOutputComponents)
+        , maxVertexUniformBlocks(that.maxVertexUniformBlocks)
+        , maxVertexUniformComponents(that.maxVertexUniformComponents)
+        , minProgramTexelOffset(that.minProgramTexelOffset)
+        , maxClientWaitTimeout(that.maxClientWaitTimeout)
+        , maxCombinedFragmentUniformComponents(that.maxCombinedFragmentUniformComponents)
+        , maxCombinedVertexUniformComponents(that.maxCombinedVertexUniformComponents)
+        , maxElementIndex(that.maxElementIndex)
+        , maxServerWaitTimeout(that.maxServerWaitTimeout)
+        , maxUniformBlockSize(that.maxUniformBlockSize)
+        , maxTextureLODBias(that.maxTextureLODBias)
+        // Extensions
+        , OVR_maxViews(that.OVR_maxViews)
+        , maxTextureMaxAnisotropy(that.maxTextureMaxAnisotropy)
     {
     }
     ~WebGL2ContextInitCommandBufferResponse()

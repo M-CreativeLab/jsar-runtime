@@ -99,6 +99,15 @@ namespace renderer
     {
       onCommandBufferRequestReceived(req);
     }
+
+    /**
+     * Schedule a command buffer to be executed at offscreen pass.
+     */
+    void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req)
+    {
+      commandBuffersOnOffscreenPass.push_back(req);
+    }
+
     /**
      * Mark the last frame has OOM error.
      */
@@ -124,9 +133,6 @@ namespace renderer
       drawCallsCountPerFrame += count;
     }
 
-    // Schedule a GPU command buffer to be executed in the post stage for render textures.
-    void scheduleGPUCommandBufferOnRenderTexture(std::shared_ptr<GPUCommandBuffer>);
-
   private: // private lifecycle
     /**
      * The callback function to handle the command buffer request received.
@@ -136,7 +142,7 @@ namespace renderer
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
     void onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
-    void onRenderTexturesRenderPass();
+    void onOffscreenRenderPass();
 
     void onStartFrame();
     void onEndFrame();
@@ -149,14 +155,13 @@ namespace renderer
      * is called in the render thread which is allowed to use the graphics APIs.
      */
     void initializeGraphicsContextsOnce();
-    /**
-     * Execute command buffers from content's list.
-     *
-     * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
-     *                  could be executed.
-     * @param viewIndex Used when `asXRFrame` is true, it specific the `viewIndex`.
-     */
-    void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
+    
+    // Executes the command buffers at the default frame
+    void executeCommandBuffersAtDefaultFrame();
+    void executeCommandBuffersAtOffscreenPass();
+    // Executes the command buffers at the XR frame with the view index.
+    void executeCommandBuffersAtXRFrame(int viewIndex);
+
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
     void executeBackupFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
     size_t getPendingStereoFramesCount();
@@ -183,7 +188,8 @@ namespace renderer
     std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
 
     // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
-    std::vector<std::shared_ptr<GPUCommandBuffer>> commandBuffersOnRenderTexture;
+    // TODO(yorkie): support multi-stage offscreen pass?
+    std::vector<TrCommandBufferBase *> commandBuffersOnOffscreenPass;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;

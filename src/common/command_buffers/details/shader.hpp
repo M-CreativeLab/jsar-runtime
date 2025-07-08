@@ -17,6 +17,12 @@ namespace commandbuffers
         , shader(shader)
     {
     }
+    AttachShaderCommandBufferRequest(const AttachShaderCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , program(that.program)
+        , shader(that.shader)
+    {
+    }
 
   public:
     uint32_t program;
@@ -33,6 +39,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , program(program)
         , shader(shader)
+    {
+    }
+    DetachShaderCommandBufferRequest(const DetachShaderCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , program(that.program)
+        , shader(that.shader)
     {
     }
 
@@ -53,6 +65,12 @@ namespace commandbuffers
         , shaderType(type)
     {
     }
+    CreateShaderCommandBufferRequest(const CreateShaderCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+        , shaderType(that.shaderType)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -70,6 +88,11 @@ namespace commandbuffers
         , shader(shader)
     {
     }
+    DeleteShaderCommandBufferRequest(const DeleteShaderCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shader(that.shader)
+    {
+    }
 
   public:
     uint32_t shader;
@@ -83,6 +106,11 @@ namespace commandbuffers
     CompileShaderCommandBufferRequest(uint32_t shader)
         : TrCommandBufferSimpleRequest()
         , shader(shader)
+    {
+    }
+    CompileShaderCommandBufferRequest(const CompileShaderCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shader(that.shader)
     {
     }
 
@@ -102,6 +130,19 @@ namespace commandbuffers
       sourceSize = source.size();
       sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
       memcpy(sourceStr, source.c_str(), sourceSize);
+    }
+    ShaderSourceCommandBufferRequest(const ShaderSourceCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , shader(that.shader)
+        , sourceStr(nullptr)
+        , sourceSize(0)
+    {
+      if (clone == true && that.sourceStr != nullptr)
+      {
+        sourceSize = that.sourceSize;
+        sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
+        memcpy(sourceStr, that.sourceStr, sourceSize);
+      }
     }
     ~ShaderSourceCommandBufferRequest()
     {
@@ -150,6 +191,11 @@ namespace commandbuffers
         , shader(shader)
     {
     }
+    GetShaderSourceCommandBufferRequest(const GetShaderSourceCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shader(that.shader)
+    {
+    }
 
   public:
     uint32_t shader;
@@ -163,6 +209,13 @@ namespace commandbuffers
     GetShaderSourceCommandBufferResponse(GetShaderSourceCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_SOURCE_RES, req)
     {
+    }
+    GetShaderSourceCommandBufferResponse(const GetShaderSourceCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , source("")
+    {
+      if (clone)
+        source = that.source;
     }
 
   public:
@@ -178,7 +231,7 @@ namespace commandbuffers
     }
 
   public:
-    string source;
+    std::string source;
   };
 
   class GetShaderParamCommandBufferRequest final
@@ -191,6 +244,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , shader(shader)
         , pname(pname)
+    {
+    }
+    GetShaderParamCommandBufferRequest(const GetShaderParamCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shader(that.shader)
+        , pname(that.pname)
     {
     }
 
@@ -206,6 +265,11 @@ namespace commandbuffers
     GetShaderParamCommandBufferResponse(GetShaderParamCommandBufferRequest *req, int32_t value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req)
         , value(value)
+    {
+    }
+    GetShaderParamCommandBufferResponse(const GetShaderParamCommandBufferResponse &that, bool clone)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
 
@@ -224,6 +288,11 @@ namespace commandbuffers
         , shader(shader)
     {
     }
+    GetShaderInfoLogCommandBufferRequest(const GetShaderInfoLogCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , shader(that.shader)
+    {
+    }
 
   public:
     uint32_t shader;
@@ -238,6 +307,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req)
         , infoLog(log)
     {
+    }
+    GetShaderInfoLogCommandBufferResponse(const GetShaderInfoLogCommandBufferResponse &that, bool clone)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , infoLog("")
+    {
+      if (clone)
+        infoLog = that.infoLog;
     }
 
   public:

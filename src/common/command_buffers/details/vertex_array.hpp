@@ -16,6 +16,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateVertexArrayCommandBufferRequest(const CreateVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -30,6 +35,11 @@ namespace commandbuffers
     DeleteVertexArrayCommandBufferRequest(uint32_t vertexArray)
         : TrCommandBufferSimpleRequest()
         , vertexArray(vertexArray)
+    {
+    }
+    DeleteVertexArrayCommandBufferRequest(const DeleteVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
     {
     }
 
@@ -48,6 +58,11 @@ namespace commandbuffers
         , vertexArray(vertexArray)
     {
     }
+    BindVertexArrayCommandBufferRequest(const BindVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
+    {
+    }
 
   public:
     uint32_t vertexArray;
@@ -64,6 +79,11 @@ namespace commandbuffers
         , vertexArray(vertexArray)
     {
     }
+    IsVertexArrayCommandBufferRequest(const IsVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
+    {
+    }
 
   public:
     uint32_t vertexArray;
@@ -75,6 +95,11 @@ namespace commandbuffers
     IsVertexArrayCommandBufferResponse(IsVertexArrayCommandBufferRequest *req, bool value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req)
         , value(value)
+    {
+    }
+    IsVertexArrayCommandBufferResponse(const IsVertexArrayCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
     ~IsVertexArrayCommandBufferResponse()

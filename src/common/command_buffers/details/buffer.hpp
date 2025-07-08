@@ -15,6 +15,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateBufferCommandBufferRequest(const CreateBufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -28,6 +33,11 @@ namespace commandbuffers
     DeleteBufferCommandBufferRequest(uint32_t buffer)
         : TrCommandBufferSimpleRequest()
         , buffer(buffer)
+    {
+    }
+    DeleteBufferCommandBufferRequest(const DeleteBufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , buffer(that.buffer)
     {
     }
 
@@ -44,6 +54,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , target(target)
         , buffer(buffer)
+    {
+    }
+    BindBufferCommandBufferRequest(const BindBufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , buffer(that.buffer)
     {
     }
 
@@ -72,6 +88,20 @@ namespace commandbuffers
         data = malloc(srcSize);
         if (data != nullptr)
           memcpy(data, srcData, srcSize);
+      }
+    }
+    BufferDataCommandBufferRequest(const BufferDataCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , dataSize(0)
+        , data(nullptr)
+        , usage(that.usage)
+    {
+      if (clone == true && that.data != nullptr)
+      {
+        dataSize = that.dataSize;
+        data = malloc(dataSize);
+        memcpy(data, that.data, dataSize);
       }
     }
     ~BufferDataCommandBufferRequest()
@@ -120,6 +150,20 @@ namespace commandbuffers
       if (data != nullptr)
         memcpy(data, srcData, srcSize);
     }
+    BufferSubDataCommandBufferRequest(const BufferSubDataCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , offset(that.offset)
+        , dataSize(0)
+        , data(nullptr)
+    {
+      if (clone == true && that.data != nullptr)
+      {
+        dataSize = that.dataSize;
+        data = malloc(dataSize);
+        memcpy(data, that.data, dataSize);
+      }
+    }
     ~BufferSubDataCommandBufferRequest()
     {
       if (data != nullptr)
@@ -162,6 +206,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateFramebufferCommandBufferRequest(const CreateFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -178,6 +227,11 @@ namespace commandbuffers
         , framebuffer(framebuffer)
     {
     }
+    DeleteFramebufferCommandBufferRequest(const DeleteFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , framebuffer(that.framebuffer)
+    {
+    }
 
   public:
     uint32_t framebuffer;
@@ -192,6 +246,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , target(target)
         , framebuffer(framebuffer)
+    {
+    }
+    BindFramebufferCommandBufferRequest(const BindFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , framebuffer(that.framebuffer)
     {
     }
 
@@ -212,6 +272,15 @@ namespace commandbuffers
         , attachment(attachment)
         , renderbufferTarget(renderbufferTarget)
         , renderbuffer(renderbuffer)
+    {
+    }
+    FramebufferRenderbufferCommandBufferRequest(const FramebufferRenderbufferCommandBufferRequest &that,
+                                                bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , attachment(that.attachment)
+        , renderbufferTarget(that.renderbufferTarget)
+        , renderbuffer(that.renderbuffer)
     {
     }
 
@@ -237,6 +306,15 @@ namespace commandbuffers
         , level(level)
     {
     }
+    FramebufferTexture2DCommandBufferRequest(const FramebufferTexture2DCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , attachment(that.attachment)
+        , textarget(that.textarget)
+        , texture(that.texture)
+        , level(that.level)
+    {
+    }
 
   public:
     uint32_t target;
@@ -257,6 +335,11 @@ namespace commandbuffers
         , target(target)
     {
     }
+    CheckFramebufferStatusCommandBufferRequest(const CheckFramebufferStatusCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+    {
+    }
 
   public:
     uint32_t target;
@@ -270,6 +353,11 @@ namespace commandbuffers
     CheckFramebufferStatusCommandBufferResponse(CheckFramebufferStatusCommandBufferRequest *req, uint32_t status)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES, req)
         , status(status)
+    {
+    }
+    CheckFramebufferStatusCommandBufferResponse(const CheckFramebufferStatusCommandBufferResponse &that, bool clone)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , status(that.status)
     {
     }
 
@@ -288,6 +376,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateRenderbufferCommandBufferRequest(const CreateRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -302,6 +395,11 @@ namespace commandbuffers
     DeleteRenderbufferCommandBufferRequest(uint32_t renderbuffer)
         : TrCommandBufferSimpleRequest()
         , renderbuffer(renderbuffer)
+    {
+    }
+    DeleteRenderbufferCommandBufferRequest(const DeleteRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , renderbuffer(that.renderbuffer)
     {
     }
 
@@ -319,6 +417,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , target(target)
         , renderbuffer(renderbuffer)
+    {
+    }
+    BindRenderbufferCommandBufferRequest(const BindRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , renderbuffer(that.renderbuffer)
     {
     }
 
@@ -341,6 +445,14 @@ namespace commandbuffers
         , height(height)
     {
     }
+    RenderbufferStorageCommandBufferRequest(const RenderbufferStorageCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
 
   public:
     uint32_t target;
@@ -360,6 +472,11 @@ namespace commandbuffers
         , mode(mode)
     {
     }
+    ReadBufferCommandBufferRequest(const ReadBufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+    {
+    }
 
   public:
     uint32_t mode;
@@ -376,6 +493,13 @@ namespace commandbuffers
         , target(target)
         , index(index)
         , buffer(buffer)
+    {
+    }
+    BindBufferBaseCommandBufferRequest(const BindBufferBaseCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , index(that.index)
+        , buffer(that.buffer)
     {
     }
 
@@ -398,6 +522,15 @@ namespace commandbuffers
         , buffer(buffer)
         , offset(offset)
         , bufferSize(size)
+    {
+    }
+    BindBufferRangeCommandBufferRequest(const BindBufferRangeCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , index(that.index)
+        , buffer(that.buffer)
+        , offset(that.offset)
+        , bufferSize(that.size)
     {
     }
 
@@ -438,6 +571,20 @@ namespace commandbuffers
         , filter(filter)
     {
     }
+    BlitFramebufferCommandBufferRequest(const BlitFramebufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , srcX0(that.srcX0)
+        , srcY0(that.srcY0)
+        , srcX1(that.srcX1)
+        , srcY1(that.srcY1)
+        , dstX0(that.dstX0)
+        , dstY0(that.dstY0)
+        , dstX1(that.dstX1)
+        , dstY1(that.dstY1)
+        , mask(that.mask)
+        , filter(that.filter)
+    {
+    }
 
   public:
     uint32_t srcX0;
@@ -469,6 +616,16 @@ namespace commandbuffers
         , internalformat(internalformat)
         , width(width)
         , height(height)
+    {
+    }
+    RenderbufferStorageMultisampleCommandBufferRequest(const RenderbufferStorageMultisampleCommandBufferRequest &that,
+                                                       bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , samples(that.samples)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
     {
     }
 
