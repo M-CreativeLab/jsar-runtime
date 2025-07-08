@@ -2,6 +2,67 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.8.0
+
+### New Features & Improvements
+
+#### Rendering Enhancements
+
+- Renderer Pipeline Overhaul
+  - Replaced single `onFrame` tick with discrete render passes for finer-grained control over each rendering stage
+  - Introduced `UnityRenderPassEvent` and dispatches per-pass events in `OnUnityRenderEvent`
+  - Added new lifecycle methods (`onBeforeRendering`, `onOpaquesRenderPass`, `onTransparentsRenderPass`, `onAfterRendering`) in `TrEmbedder` and `TrConstellation`
+  - Refactored renderer interfaces and updated OpenGL example to utilize new pass methods
+- Context Management
+  - Introduced new `ContextGLHost`/`ContextGLApp` classes to replace legacy context storage
+  - Added `iterateContentRenderers` API for enhanced renderer iteration
+  - Implemented framebuffer attachment helpers with improved debug output including stencil state
+
+#### Inspector & Debugging
+
+- Monitoring Capabilities:
+  - Extended inspector with new `/json/statistics` endpoint for better runtime monitoring
+  - Enhanced debug output with stencil buffer state information
+
+#### DOM Updates
+
+- Content Manipulation
+  - Added support for setting `textContent` property
+  - Enhanced DOM element manipulation capabilities
+
+#### XML Processing
+
+- Parser Improvements
+  - Added support for parsing script/style tags as plain character data.
+  - Improved XML parsing reliability for web content
+
+#### Developer Experience
+
+- Tracing & Diagnostics:
+  - Added trace support for generate-document capability in threepio
+  - Enhanced debugging and development workflow
+
+#### HTML & CSS Features
+
+- HTML Element Enhancements:
+  - Added support for rendering `<canvas>` elements via Web Canvas API
+- CSS Features:
+  - Added support for `absolute` and `fixed` positioning.
+  - Added support for unit in `transform` property.
+
+### Fixes & Optimizations
+
+#### Bug Fixes
+
+- **Connection Management**: Fixed invalid connection handling from forked child processes in hived
+- **Build System**: Resolved lint errors in the build process
+- **Stencil Buffer**: Addressed stencil buffer issues through renderer refactoring (#92)
+
+#### Maintenance
+
+- **Dependencies**: Upgraded jsar-dom version for improved compatibility
+- **Animations**: Updated animation system components
+
 ## v0.7.2
 
 ### New Features & Improvements
