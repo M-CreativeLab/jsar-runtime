@@ -82,10 +82,22 @@ namespace commandbuffers
         , level(that.level)
         , format(that.format)
         , pixelType(that.pixelType)
+        , ownPixelsMemory(that.ownPixelsMemory)
     {
       if (clone)
       {
-        // TODO(yorkie): implement the clone
+        if (ownPixelsMemory)
+        {
+          this->pixelsByteLength = that.pixelsByteLength;
+          this->pixels = malloc(that.pixelsByteLength);
+          if (this->pixels != nullptr) [[likely]]
+            memcpy(this->pixels, that.pixels, this->pixelsByteLength);
+        }
+        else
+        {
+          this->pixelsByteLength = that.pixelsByteLength;
+          this->pixels = that.pixels;
+        }
       }
     }
     virtual ~TextureImageNDCommandBufferRequest()
@@ -183,7 +195,7 @@ namespace commandbuffers
       {
         pixelsByteLength = pixelsSegment->getSize();
         pixels = malloc(pixelsByteLength);
-        if (pixels != nullptr)
+        if (pixels != nullptr) [[likely]]
         {
           ownPixelsMemory = true;
           memcpy(pixels, pixelsSegment->getData(), pixelsByteLength);
@@ -205,7 +217,7 @@ namespace commandbuffers
     int level;
     int format;
     int pixelType;
-    bool ownPixelsMemory = false; // if true the pixels memory will be managed by this object.
+    bool ownPixelsMemory = false; // if `true` the pixels memory will be managed by this object.
     void *pixels = nullptr;
     size_t pixelsByteLength = 0;
   };
@@ -224,6 +236,9 @@ namespace commandbuffers
     TextureImage2DCommandBufferRequest(const TextureImage2DCommandBufferRequest &that, bool clone = false)
         : TextureImageNDCommandBufferRequest(that, clone)
         , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+        , border(that.border)
     {
     }
 

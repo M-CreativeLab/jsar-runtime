@@ -29,7 +29,7 @@ namespace commandbuffers
     }
 
   public:
-    inline std::string toString()
+    inline std::string toString(const char* line_prefix) const override
     {
       if (category == MetricsCategory::FirstContentfulPaint)
         return "FCP";

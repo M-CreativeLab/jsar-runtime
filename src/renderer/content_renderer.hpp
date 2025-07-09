@@ -105,6 +105,14 @@ namespace renderer
      */
     void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req)
     {
+      if (req == nullptr) [[unlikely]]
+        return;
+
+      if (commandBuffersOnOffscreenPass.size() == 0)
+      {
+        usingProgramOnOffscreenPassStarted = glContext->program();
+        bindingVaoOnOffscreenPassStarted = glContext->vertexArrayObject();
+      }
       commandBuffersOnOffscreenPass.push_back(req);
     }
 
@@ -155,15 +163,15 @@ namespace renderer
      * is called in the render thread which is allowed to use the graphics APIs.
      */
     void initializeGraphicsContextsOnce();
-    
+
     // Executes the command buffers at the default frame
     void executeCommandBuffersAtDefaultFrame();
     void executeCommandBuffersAtOffscreenPass();
     // Executes the command buffers at the XR frame with the view index.
     void executeCommandBuffersAtXRFrame(int viewIndex);
 
-    bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
-    void executeBackupFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
+    bool executeStereoFrame(int viewIndex);
+    void executeBackupFrame(int viewIndex);
     size_t getPendingStereoFramesCount();
 
   public:
@@ -190,6 +198,8 @@ namespace renderer
     // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
     // TODO(yorkie): support multi-stage offscreen pass?
     std::vector<TrCommandBufferBase *> commandBuffersOnOffscreenPass;
+    std::optional<GLuint> usingProgramOnOffscreenPassStarted;
+    std::optional<GLuint> bindingVaoOnOffscreenPassStarted;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;

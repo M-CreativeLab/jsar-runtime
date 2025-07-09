@@ -9,6 +9,7 @@
 
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
+#include "gles/framebuffer.hpp"
 #include "gles/object_manager.hpp"
 #include "gles/gpu_device_impl.hpp"
 
@@ -53,9 +54,20 @@ class RHI_OpenGL : public TrRenderHardwareInterface
 {
 private:
   bool m_DebugEnabled = true;
+  float m_TmpMatrixL[16];
+  float m_TmpMatrixR[16];
+  float m_TmpMatrices[32];
 
 public:
-  RHI_OpenGL(RHIBackendType backendType);
+  RHI_OpenGL(RHIBackendType backend_type)
+      : TrRenderHardwareInterface(backend_type, make_unique<gles::GPUDeviceImpl>())
+  {
+    memset(m_TmpMatrixL, 0, 16);
+    memset(m_TmpMatrixR, 0, 16);
+    memset(m_TmpMatrices, 0, 32);
+
+    OnCreated();
+  }
   ~RHI_OpenGL()
   {
   }
@@ -123,6 +135,33 @@ private:
     }
     return error;
   }
+  void PrintDebugInfo(const TrCommandBufferRequest *request,
+                      const char *result,
+                      const TrCommandBufferResponse *response,
+                      const ApiCallOptions &options)
+  {
+    assert(request != nullptr);
+
+    string pass_type = "";
+    if (options.executingPassType == ExecutingPassType::kXRFrame)
+      pass_type = "XR";
+    else if (options.executingPassType == ExecutingPassType::kCachedXRFrame)
+      pass_type = "XR(Cached)";
+    else if (options.executingPassType == ExecutingPassType::kOffscreenPass)
+      pass_type = "OFFSCREEN";
+    else
+      pass_type = "INIT";
+
+    // Print request line
+    if (result == nullptr)
+      DEBUG(DEBUG_TAG, "[%s] %s", pass_type.c_str(), request->toString().c_str());
+    else
+      DEBUG(DEBUG_TAG, "[%s] %s => %s", pass_type.c_str(), request->toString().c_str(), result);
+
+    // Print response lines
+    if (response != nullptr)
+      DEBUG(DEBUG_TAG, "%s", response->toString("    " /* use 4 spaces as prefix in response */).c_str());
+  }
   void DumpDrawCallInfo(const char *logTag,
                         string funcName,
                         bool isDefaultQueue,
@@ -132,11 +171,8 @@ private:
                         const GLvoid *indices)
   {
     DEBUG(logTag,
-          "[%d] GL::%s(mode=%s, count=%d, type=%s, indices=%p)",
-          isDefaultQueue,
-          funcName.c_str(),
+          "    mode=%s, type=%s, indices=%p)",
           gles::glEnumToString(mode).c_str(),
-          count,
           gles::glEnumToString(type).c_str(),
           indices);
 
@@ -147,12 +183,19 @@ private:
 
     // Print bond framebuffer
     {
-      GLint framebuffer;
-      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
+      GLint binding_fbo;
+      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &binding_fbo);
       DEBUG(logTag,
             "    Framebuffer: %d (%s)",
-            framebuffer,
+            binding_fbo,
             glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "Complete" : "Incomplete");
+
+      auto color0 = GLFramebufferAttachment::FromCurrent(GL_COLOR_ATTACHMENT0);
+      auto depth = GLFramebufferAttachment::FromCurrent(GL_DEPTH_ATTACHMENT);
+      if (color0 != nullptr)
+        color0->print("       Color0");
+      if (depth != nullptr)
+        depth->print("        Depth");
     }
 
     // Print LINK_STATUS, VALIDATE_STATUS
@@ -328,22 +371,7 @@ private:
     res.version = string((const char *)glGetString(GL_VERSION));
     res.renderer = string((const char *)glGetString(GL_RENDERER));
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG, "[%d] GL::ContextInit()", options.isDefaultQueue());
-      DEBUG(DEBUG_TAG, "    MAX_COMBINED_TEXTURE_IMAGE_UNITS = %d", res.maxCombinedTextureImageUnits);
-      DEBUG(DEBUG_TAG, "    MAX_CUBE_MAP_TEXTURE_SIZE = %d", res.maxCubeMapTextureSize);
-      DEBUG(DEBUG_TAG, "    MAX_FRAGMENT_UNIFORM_VECTORS = %d", res.maxFragmentUniformVectors);
-      DEBUG(DEBUG_TAG, "    MAX_RENDERBUFFER_SIZE = %d", res.maxRenderbufferSize);
-      DEBUG(DEBUG_TAG, "    MAX_TEXTURE_IMAGE_UNITS = %d", res.maxTextureImageUnits);
-      DEBUG(DEBUG_TAG, "    MAX_TEXTURE_SIZE = %d", res.maxTextureSize);
-      DEBUG(DEBUG_TAG, "    MAX_VARYING_VECTORS = %d", res.maxVaryingVectors);
-      DEBUG(DEBUG_TAG, "    MAX_VERTEX_ATTRIBS = %d", res.maxVertexAttribs);
-      DEBUG(DEBUG_TAG, "    MAX_VERTEX_TEXTURE_IMAGE_UNITS = %d", res.maxVertexTextureImageUnits);
-      DEBUG(DEBUG_TAG, "    MAX_VERTEX_UNIFORM_VECTORS = %d", res.maxVertexUniformVectors);
-      DEBUG(DEBUG_TAG, "    VENDOR = %s", res.vendor.c_str());
-      DEBUG(DEBUG_TAG, "    VERSION = %s", res.version.c_str());
-      DEBUG(DEBUG_TAG, "    RENDERER = %s", res.renderer.c_str());
-    }
+      PrintDebugInfo(req, nullptr, &res, options);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnContext2Init(WebGL2ContextInitCommandBufferRequest *req,
@@ -384,23 +412,7 @@ private:
       glGetFloatv(WEBGL2_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &res.maxTextureMaxAnisotropy);
     }
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG, "[%d] GL::Context2Init()", options.isDefaultQueue());
-      DEBUG(DEBUG_TAG, "    GL_MAX_3D_TEXTURE_SIZE = %d", res.max3DTextureSize);
-      DEBUG(DEBUG_TAG, "    GL_MAX_ARRAY_TEXTURE_LAYERS = %d", res.maxArrayTextureLayers);
-      DEBUG(DEBUG_TAG, "    GL_MAX_COLOR_ATTACHMENTS = %d", res.maxColorAttachments);
-      DEBUG(DEBUG_TAG, "    GL_MAX_COMBINED_UNIFORM_BLOCKS = %d", res.maxCombinedUniformBlocks);
-      DEBUG(DEBUG_TAG, "    GL_MAX_DRAW_BUFFERS = %d", res.maxDrawBuffers);
-      DEBUG(DEBUG_TAG, "    GL_MAX_ELEMENTS_INDICES = %d", res.maxElementsIndices);
-      DEBUG(DEBUG_TAG, "    GL_MAX_ELEMENTS_VERTICES = %d", res.maxElementsVertices);
-      DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_INPUT_COMPONENTS = %d", res.maxFragmentInputComponents);
-      DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_BLOCKS = %d", res.maxFragmentUniformBlocks);
-      DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_COMPONENTS = %d", res.maxFragmentUniformComponents);
-      DEBUG(DEBUG_TAG, "    EXT_OVR_multiview.MAX_VIEWS_OVR = %d", res.OVR_maxViews);
-      DEBUG(DEBUG_TAG,
-            "    EXT_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT = %f",
-            res.maxTextureMaxAnisotropy);
-    }
+      PrintDebugInfo(req, nullptr, &res, options);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnCreateProgram(CreateProgramCommandBufferRequest *req,
@@ -409,7 +421,7 @@ private:
   {
     GLuint program = reqContentRenderer->getOpenGLContext()->createProgram(req->clientId);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue(), req->clientId, program);
+      PrintDebugInfo(req, to_string(program).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteProgram(DeleteProgramCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -418,7 +430,7 @@ private:
     GLuint program;
     reqContentRenderer->getOpenGLContext()->deleteProgram(req->clientId, program);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue(), program);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnLinkProgram(LinkProgramCommandBufferRequest *req,
                                     renderer::TrContentRenderer *reqContentRenderer,
@@ -538,7 +550,7 @@ private:
     GLuint program;
     reqContentRenderer->getOpenGLContext()->useProgram(req->clientId, program);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue(), program);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindAttribLocation(BindAttribLocationCommandBufferRequest *req,
                                            renderer::TrContentRenderer *reqContentRenderer,
@@ -605,7 +617,7 @@ private:
     glAttachShader(program, shader);
     reqContentRenderer->getOpenGLContext()->MarkAsDirty();
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::AttachShader(program=%d, shader=%d)", options.isDefaultQueue(), program, shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnDetachShader(DetachShaderCommandBufferRequest *req,
                                      renderer::TrContentRenderer *reqContentRenderer,
@@ -617,7 +629,7 @@ private:
     glDetachShader(program, shader);
     reqContentRenderer->getOpenGLContext()->MarkAsDirty();
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DetachShader(program=%d, shader=%d)", options.isDefaultQueue(), program, shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCreateShader(CreateShaderCommandBufferRequest *req,
                                      renderer::TrContentRenderer *reqContentRenderer,
@@ -627,12 +639,7 @@ private:
     GLuint shader = glObjectManager.CreateShader(req->clientId, req->shaderType);
     reqContentRenderer->getOpenGLContext()->RecordShaderOnCreated(shader);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::CreateShader(%d, type=%s) => %d",
-            options.isDefaultQueue(),
-            req->clientId,
-            gles::glEnumToString(req->shaderType).c_str(),
-            shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteShader(DeleteShaderCommandBufferRequest *req,
                                      renderer::TrContentRenderer *reqContentRenderer,
@@ -644,7 +651,7 @@ private:
     reqContentRenderer->getOpenGLContext()->RecordShaderOnDeleted(shader);
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", options.isDefaultQueue(), shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnShaderSource(ShaderSourceCommandBufferRequest *req,
                                      renderer::TrContentRenderer *reqContentRenderer,
@@ -681,7 +688,7 @@ private:
     reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource(%d)", options.isDefaultQueue(), shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCompileShader(CompileShaderCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -744,7 +751,7 @@ private:
     }
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CompileShader(%d)", options.isDefaultQueue(), shader);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnGetShaderSource(GetShaderSourceCommandBufferRequest *req,
                                         renderer::TrContentRenderer *reqContentRenderer,
@@ -934,12 +941,11 @@ private:
     auto app_context = reqContentRenderer->getOpenGLContext();
 
     GLuint framebuffer;
-    app_context->bindFramebuffer(req->target, req->framebuffer, framebuffer);
-    if (!app_context->IsDefaultRenderTargetBinding())
-      reqContentRenderer->scheduleCommandBufferAtOffscreenPass(new BindFramebufferCommandBufferRequest(*req));
-
+    app_context->bindFramebuffer(req->target,
+                                 req->isBindToDefault() ? nullopt : make_optional<uint32_t>(req->framebuffer),
+                                 framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue(), framebuffer);
+      PrintDebugInfo(req, to_string(framebuffer).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnFramebufferRenderbuffer(FramebufferRenderbufferCommandBufferRequest *req,
                                                 renderer::TrContentRenderer *reqContentRenderer,
@@ -954,16 +960,11 @@ private:
     glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::FramebufferRenderbuffer(%s, attachment=%s, renderbuffertarget=%s, renderbuffer(%d))",
-            options.isDefaultQueue(),
-            gles::glEnumToString(target).c_str(),
-            gles::glFramebufferAttachmentToString(attachment).c_str(),
-            gles::glEnumToString(renderbuffertarget).c_str(),
-            renderbuffer);
-      GLint bindingFramebuffer;
-      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &bindingFramebuffer);
-      DEBUG(DEBUG_TAG, "    framebuffer: %d", bindingFramebuffer);
+      PrintDebugInfo(req, nullptr, nullptr, options);
+
+      GLint binding_framebuffer;
+      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &binding_framebuffer);
+      DEBUG(DEBUG_TAG, "    framebuffer: %d", binding_framebuffer);
     }
   }
   TR_OPENGL_FUNC void OnFramebufferTexture2D(FramebufferTexture2DCommandBufferRequest *req,
@@ -976,18 +977,10 @@ private:
     auto textarget = req->textarget;
     auto texture = glObjectManager.FindTexture(req->texture);
     auto level = req->level;
+
     glFramebufferTexture2D(target, attachment, textarget, texture, level);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::FramebufferTexture2D(0x%x, 0x%x, 0x%x, %d, level=%d)",
-            options.isDefaultQueue(),
-            target,
-            attachment,
-            textarget,
-            texture,
-            level);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCheckFramebufferStatus(CheckFramebufferStatusCommandBufferRequest *req,
                                                renderer::TrContentRenderer *reqContentRenderer,
@@ -1007,11 +1000,7 @@ private:
     GLuint renderbuffer = glObjectManager.CreateRenderbuffer(req->clientId);
     reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(renderbuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::CreateRenderbuffer(#%d) => renderbuffer(%d)",
-            options.isDefaultQueue(),
-            req->clientId,
-            renderbuffer);
+      PrintDebugInfo(req, to_string(renderbuffer).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteRenderbuffer(
     DeleteRenderbufferCommandBufferRequest *req,
@@ -1053,15 +1042,7 @@ private:
     auto height = req->height;
     glRenderbufferStorage(target, internalformat, width, height);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es3/glRenderbufferStorage") != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::RenderbufferStorage(%s, internal_format=%d, width=%d, height=%d)",
-            options.isDefaultQueue(),
-            gles::glEnumToString(target).c_str(),
-            internalformat,
-            width,
-            height);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnReadBuffer(ReadBufferCommandBufferRequest *req,
                                    renderer::TrContentRenderer *reqContentRenderer,
@@ -1595,7 +1576,7 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       auto glContext = reqContentRenderer->getOpenGLContext();
-      DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", options.isDefaultQueue(), req->location, req->v0);
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DEBUG(DEBUG_TAG, "    Program: %d", glContext->program());
     }
   }
@@ -1792,8 +1773,7 @@ private:
       return;
     }
 
-    float *matrixToUse = nullptr;
-    bool needToFreeMatrix = false; // Set `true` if the matrix allocation is operated.
+    GLfloat *matrixToUse = nullptr;
     bool usePlaceholder = false;
     size_t matrixValuesSize = req->values.size();
 
@@ -1811,21 +1791,19 @@ private:
       {
         auto matrixL = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 0);
         auto matrixR = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 1);
-        matrixToUse = new float[32];
-        needToFreeMatrix = true;
         matrixValuesSize = 32;
         count = 2;
-        memcpy(matrixToUse, glm::value_ptr(matrixL), 16 * sizeof(float));
-        memcpy(matrixToUse + 16, glm::value_ptr(matrixR), 16 * sizeof(float));
+        memcpy(m_TmpMatrices, glm::value_ptr(matrixL), 16 * sizeof(float));
+        memcpy(m_TmpMatrices + 16, glm::value_ptr(matrixR), 16 * sizeof(float));
+        matrixToUse = m_TmpMatrices;
       }
       else
       {
         auto matrix = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 0);
-        matrixToUse = new float[16];
-        needToFreeMatrix = true;
         matrixValuesSize = 16;
         count = 1;
-        memcpy(matrixToUse, glm::value_ptr(matrix), 16 * sizeof(float));
+        memcpy(m_TmpMatrices, glm::value_ptr(matrix), 16 * sizeof(float));
+        matrixToUse = m_TmpMatrices;
       }
       usePlaceholder = true;
     }
@@ -1845,17 +1823,11 @@ private:
     glUniformMatrix4fv(location, count, transpose, matrixToUse);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
-      GLint currentProgram;
-      glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::UniformMatrix4fv(%d, values=[%d, use_placeholder=%s], count=%d, transpose=%s)",
-            options.isDefaultQueue(),
-            location,
-            matrixValuesSize,
-            usePlaceholder ? "true" : "false",
-            count,
-            transpose ? "true" : "false");
-      DEBUG(DEBUG_TAG, "    Program: %d", currentProgram);
+      PrintDebugInfo(req, nullptr, nullptr, options);
+
+      GLint using_program;
+      glGetIntegerv(GL_CURRENT_PROGRAM, &using_program);
+      DEBUG(DEBUG_TAG, "    Program: %d", using_program);
       for (int i = 0; i < count; i++)
       {
         float *m = matrixToUse + i * 16;
@@ -1866,10 +1838,6 @@ private:
         DEBUG(DEBUG_TAG, "      %+.3f %+.3f %+.3f %+.3f", m[12], m[13], m[14], m[15]);
       }
     }
-
-    // Free the matrix if it is allocated.
-    if (needToFreeMatrix)
-      delete[] matrixToUse;
   }
   TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1879,7 +1847,10 @@ private:
 
     reqContentRenderer->getOpenGLContext()->drawArrays(mode, first, count);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DumpDrawCallInfo(DEBUG_TAG, "DrawArrays", options.isDefaultQueue(), mode, count, 0, nullptr);
+    }
   }
   TR_OPENGL_FUNC void OnDrawElements(DrawElementsCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1890,7 +1861,10 @@ private:
 
     reqContentRenderer->getOpenGLContext()->drawElements(mode, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue(), mode, count, type, indices);
+    }
   }
   TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1920,7 +1894,10 @@ private:
     glDrawArraysInstanced(mode, first, count, instanceCount);
     reqContentRenderer->increaseDrawCallsCount(count);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DumpDrawCallInfo(DEBUG_TAG, "DrawArraysInstanced", options.isDefaultQueue(), mode, count, 0, nullptr);
+    }
   }
   TR_OPENGL_FUNC void OnDrawElementsInstanced(DrawElementsInstancedCommandBufferRequest *req,
                                               renderer::TrContentRenderer *reqContentRenderer,
@@ -1936,7 +1913,10 @@ private:
     glDrawElementsInstanced(mode, count, type, indices, instanceCount);
     reqContentRenderer->increaseDrawCallsCount(count);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    {
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DumpDrawCallInfo(DEBUG_TAG, "DrawElementsInstanced", options.isDefaultQueue(), mode, count, type, indices);
+    }
   }
   TR_OPENGL_FUNC void OnDrawRangeElements(DrawRangeElementsCommandBufferRequest *req,
                                           renderer::TrContentRenderer *reqContentRenderer,
@@ -2312,14 +2292,6 @@ private:
   }
 };
 
-RHI_OpenGL::RHI_OpenGL(RHIBackendType type)
-{
-  backendType = type;
-  gpuDevice = unique_ptr<commandbuffers::GPUDevice>(new gles::GPUDeviceImpl());
-
-  OnCreated();
-}
-
 void RHI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
 {
   switch (type)
@@ -2441,24 +2413,38 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   callOptions.printsCall = GetRenderer()->isTracingEnabled;
   callOptions.executingPassType = pass_type;
 
-  bool isBufferEmpty = list.empty();
-  if (isBufferEmpty)
-  {
-    // Just skip logging if the queue is the default queue
-    if (callOptions.executingPassType == ExecutingPassType::kXRFrame)
-      DEBUG(DEBUG_TAG, "The command buffers in XRFrame is empty, discard this execution");
+  if (list.empty())
     return false;
-  }
 
   // Execute all the command buffers
   content_renderer->onCommandBuffersExecuting();
   ContextGLApp *contentGlContext = content_renderer->getOpenGLContext();
   ContextGLApp contextBaseState = ContextGLApp("tmp", contentGlContext);
 
+  bool should_copy_to_offscreen_pass = false;
   for (auto commandbuffer : list)
   {
     assert(commandbuffer != nullptr && "command buffer must not be nullptr");
     CommandBufferType commandType = commandbuffer->type;
+
+    if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
+    {
+      auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
+      assert(req != nullptr);
+
+      if (pass_type == ExecutingPassType::kXRFrame &&
+          (req->target == GL_FRAMEBUFFER ||
+           req->target == GL_DRAW_FRAMEBUFFER))
+      {
+        if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
+          should_copy_to_offscreen_pass = false;
+        else
+        {
+          GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
+          should_copy_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
+        }
+      }
+    }
 
 #define ADD_COMMAND_BUFFER_HANDLER(commandType, RequestType, handlerName)             \
   case COMMAND_BUFFER_##commandType##_REQ:                                            \
@@ -2467,7 +2453,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     if (cbRequest != nullptr)                                                         \
     {                                                                                 \
       if (pass_type == ExecutingPassType::kXRFrame &&                                 \
-          !contentGlContext->IsDefaultRenderTargetBinding())                          \
+          should_copy_to_offscreen_pass == true)                                      \
       {                                                                               \
         auto copied_commandbuffer = new RequestType(*cbRequest, true);                \
         content_renderer->scheduleCommandBufferAtOffscreenPass(copied_commandbuffer); \
@@ -2487,7 +2473,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     if (cbRequest != nullptr)                                                               \
     {                                                                                       \
       if (pass_type == ExecutingPassType::kXRFrame &&                                       \
-          !contentGlContext->IsDefaultRenderTargetBinding())                                \
+          should_copy_to_offscreen_pass == true)                                            \
       {                                                                                     \
         auto copied_commandbuffer = new RequestType(*cbRequest, true);                      \
         content_renderer->scheduleCommandBufferAtOffscreenPass(copied_commandbuffer);       \

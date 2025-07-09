@@ -25,6 +25,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawArrays(mode=" << mode << ", "
+         << first << ", "
+         << count << ")";
+      return ss.str();
+    }
+
   public:
     int mode;
     int first;
@@ -52,6 +61,16 @@ namespace commandbuffers
         , count(that.count)
         , instanceCount(that.instanceCount)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawArraysInstanced(mode=" << mode << ", "
+         << first << ", "
+         << count << ", "
+         << instanceCount << ")";
+      return ss.str();
     }
 
   public:
@@ -84,6 +103,16 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawElements(mode=" << mode << ", "
+         << count << ", "
+         << indicesType << ", "
+         << indicesOffset << ")";
+      return ss.str();
+    }
+
   public:
     int mode;
     int count;
@@ -114,6 +143,17 @@ namespace commandbuffers
         , indicesOffset(that.indicesOffset)
         , instanceCount(that.instanceCount)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawElementsInstanced(mode=" << mode << ", "
+         << count << ", "
+         << indicesType << ", "
+         << indicesOffset << ", "
+         << instanceCount << ")";
+      return ss.str();
     }
 
   public:

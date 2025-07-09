@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+
 /**
  * This is a list of constants that are used in the WebGLRenderingContext class.
  *
@@ -792,6 +795,21 @@ const int WEBGL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME = 0x8CD1;
 const int WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL = 0x8CD2;
 const int WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE = 0x8CD3;
 const int WEBGL_COLOR_ATTACHMENT0 = 0x8CE0;
+const int WEBGL_COLOR_ATTACHMENT1 = 0x8CE1;
+const int WEBGL_COLOR_ATTACHMENT2 = 0x8CE2;
+const int WEBGL_COLOR_ATTACHMENT3 = 0x8CE3;
+const int WEBGL_COLOR_ATTACHMENT4 = 0x8CE4;
+const int WEBGL_COLOR_ATTACHMENT5 = 0x8CE5;
+const int WEBGL_COLOR_ATTACHMENT6 = 0x8CE6;
+const int WEBGL_COLOR_ATTACHMENT7 = 0x8CE7;
+const int WEBGL_COLOR_ATTACHMENT8 = 0x8CE8;
+const int WEBGL_COLOR_ATTACHMENT9 = 0x8CE9;
+const int WEBGL_COLOR_ATTACHMENT10 = 0x8CEA;
+const int WEBGL_COLOR_ATTACHMENT11 = 0x8CEB;
+const int WEBGL_COLOR_ATTACHMENT12 = 0x8CEC;
+const int WEBGL_COLOR_ATTACHMENT13 = 0x8CED;
+const int WEBGL_COLOR_ATTACHMENT14 = 0x8CEE;
+const int WEBGL_COLOR_ATTACHMENT15 = 0x8CEF;
 const int WEBGL_DEPTH_ATTACHMENT = 0x8D00;
 const int WEBGL_STENCIL_ATTACHMENT = 0x8D20;
 const int WEBGL_DEPTH_STENCIL_ATTACHMENT = 0x821A;
@@ -1145,3 +1163,168 @@ const int WEBGL2_MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
  * Default value is 1000k.
  */
 const int WEBGL_MAX_COUNT_PER_DRAWCALL = 1000 * 1000;
+
+/**
+ * This class `WebGLHelper` provides the static helpers.
+ */
+class WebGLHelper
+{
+public:
+  // Convert a common WebGL enum to string label.
+  static std::string WebGLEnumToString(int e)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+
+    switch (e)
+    {
+      // States
+      CASE(WEBGL_FRONT);
+      CASE(WEBGL_BACK);
+      CASE(WEBGL_FRONT_AND_BACK);
+      CASE(WEBGL_CW);
+      CASE(WEBGL_CCW);
+      // Buffer Types
+      CASE(WEBGL_UNSIGNED_BYTE);
+      CASE(WEBGL_UNSIGNED_SHORT);
+      CASE(WEBGL_UNSIGNED_INT);
+      // Capabilities
+      CASE(WEBGL_BLEND);
+      CASE(WEBGL_CULL_FACE);
+      CASE(WEBGL_DEPTH_TEST);
+      CASE(WEBGL_DITHER);
+      CASE(WEBGL_POLYGON_OFFSET_FILL);
+      CASE(WEBGL2_RASTERIZER_DISCARD);
+      CASE(WEBGL_SAMPLE_ALPHA_TO_COVERAGE);
+      CASE(WEBGL_SAMPLE_COVERAGE);
+      CASE(WEBGL_SCISSOR_TEST);
+      CASE(WEBGL_STENCIL_TEST);
+      // Buffer Targets
+      CASE(WEBGL_ARRAY_BUFFER);
+      CASE(WEBGL_ELEMENT_ARRAY_BUFFER);
+      CASE(WEBGL2_PIXEL_PACK_BUFFER);
+      CASE(WEBGL2_PIXEL_UNPACK_BUFFER);
+      CASE(WEBGL2_COPY_READ_BUFFER);
+      CASE(WEBGL2_COPY_WRITE_BUFFER);
+      CASE(WEBGL2_TRANSFORM_FEEDBACK_BUFFER);
+      CASE(WEBGL2_UNIFORM_BUFFER);
+      // Buffer Usage
+      CASE(WEBGL_STREAM_DRAW);
+      CASE(WEBGL2_STREAM_READ);
+      CASE(WEBGL2_STREAM_COPY);
+      CASE(WEBGL_STATIC_DRAW);
+      CASE(WEBGL2_STATIC_READ);
+      CASE(WEBGL2_STATIC_COPY);
+      CASE(WEBGL_DYNAMIC_DRAW);
+      CASE(WEBGL2_DYNAMIC_READ);
+      CASE(WEBGL2_DYNAMIC_COPY);
+      // Framebuffer Targets
+      CASE(WEBGL2_DRAW_FRAMEBUFFER);
+      CASE(WEBGL2_READ_FRAMEBUFFER);
+      // Binding Targets
+      CASE(WEBGL_FRAMEBUFFER);
+      CASE(WEBGL_RENDERBUFFER);
+      // Draw Modes
+      CASE(WEBGL_POINTS);
+      CASE(WEBGL_LINES);
+      CASE(WEBGL_LINE_LOOP);
+      CASE(WEBGL_LINE_STRIP);
+      CASE(WEBGL_TRIANGLES);
+      CASE(WEBGL_TRIANGLE_STRIP);
+      CASE(WEBGL_TRIANGLE_FAN);
+      // Shader Types
+      CASE(WEBGL_VERTEX_SHADER);
+      CASE(WEBGL_FRAGMENT_SHADER);
+      // Texture Targets
+      CASE(WEBGL_TEXTURE_2D);
+      CASE(WEBGL2_TEXTURE_3D);
+      CASE(WEBGL_TEXTURE_CUBE_MAP);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+      CASE(WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+      CASE(WEBGL2_TEXTURE_2D_ARRAY);
+      // Texture Units
+      CASE(WEBGL_TEXTURE0);
+      CASE(WEBGL_TEXTURE1);
+      CASE(WEBGL_TEXTURE2);
+      CASE(WEBGL_TEXTURE3);
+      CASE(WEBGL_TEXTURE4);
+      CASE(WEBGL_TEXTURE5);
+      CASE(WEBGL_TEXTURE6);
+      CASE(WEBGL_TEXTURE7);
+      CASE(WEBGL_TEXTURE8);
+      CASE(WEBGL_TEXTURE9);
+      CASE(WEBGL_TEXTURE10);
+      CASE(WEBGL_TEXTURE11);
+      CASE(WEBGL_TEXTURE12);
+      CASE(WEBGL_TEXTURE13);
+      CASE(WEBGL_TEXTURE14);
+      CASE(WEBGL_TEXTURE15);
+      CASE(WEBGL_TEXTURE16);
+      CASE(WEBGL_TEXTURE17);
+      CASE(WEBGL_TEXTURE18);
+      CASE(WEBGL_TEXTURE19);
+      CASE(WEBGL_TEXTURE20);
+      CASE(WEBGL_TEXTURE21);
+      CASE(WEBGL_TEXTURE22);
+      CASE(WEBGL_TEXTURE23);
+      CASE(WEBGL_TEXTURE24);
+      CASE(WEBGL_TEXTURE25);
+      CASE(WEBGL_TEXTURE26);
+      CASE(WEBGL_TEXTURE27);
+      CASE(WEBGL_TEXTURE28);
+      CASE(WEBGL_TEXTURE29);
+      CASE(WEBGL_TEXTURE30);
+      CASE(WEBGL_TEXTURE31);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << e;
+      return ss.str();
+    }
+#undef CASE
+  }
+
+  // Convert a WebGL framebuffer attachment to string label.
+  static std::string WebGLFramebufferAttachmentToString(int attachment)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (attachment)
+    {
+      // Framebuffer Attachments
+      CASE(WEBGL_COLOR_ATTACHMENT0);
+      CASE(WEBGL_COLOR_ATTACHMENT1);
+      CASE(WEBGL_COLOR_ATTACHMENT2);
+      CASE(WEBGL_COLOR_ATTACHMENT3);
+      CASE(WEBGL_COLOR_ATTACHMENT4);
+      CASE(WEBGL_COLOR_ATTACHMENT5);
+      CASE(WEBGL_COLOR_ATTACHMENT6);
+      CASE(WEBGL_COLOR_ATTACHMENT7);
+      CASE(WEBGL_COLOR_ATTACHMENT8);
+      CASE(WEBGL_COLOR_ATTACHMENT9);
+      CASE(WEBGL_COLOR_ATTACHMENT10);
+      CASE(WEBGL_COLOR_ATTACHMENT11);
+      CASE(WEBGL_COLOR_ATTACHMENT12);
+      CASE(WEBGL_COLOR_ATTACHMENT13);
+      CASE(WEBGL_COLOR_ATTACHMENT14);
+      CASE(WEBGL_COLOR_ATTACHMENT15);
+      CASE(WEBGL_DEPTH_ATTACHMENT);
+      CASE(WEBGL_STENCIL_ATTACHMENT);
+      CASE(WEBGL_DEPTH_STENCIL_ATTACHMENT);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << attachment;
+      return ss.str();
+    }
+#undef CASE
+  }
+};

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <iostream>
+#include <string>
+
 #include "./shared.hpp"
 #include "../xr/types.hpp"
 
@@ -55,12 +58,18 @@ namespace commandbuffers
         : TrIpcSerializableBase(type, size)
     {
     }
-    TrCommandBufferBase(const TrCommandBufferBase& that)
+    TrCommandBufferBase(const TrCommandBufferBase &that)
         : TrIpcSerializableBase(that.type, that.size)
         , id(that.id)
         , contextId(that.contextId)
         , renderingInfo(that.renderingInfo)
     {
+    }
+
+  public:
+    virtual std::string toString(const char *prefix = "") const
+    {
+      return "";
     }
 
   public:
@@ -98,6 +107,14 @@ namespace commandbuffers
         : TrCommandBufferBase(that)
     {
     }
+
+  public:
+    virtual std::string toString(const char *_ /* ignore prefix in request */ = nullptr) const override
+    {
+      std::stringstream ss;
+      ss << "GL::" << commandTypeToStr(this->type);
+      return ss.str();
+    }
   };
 
   class TrCommandBufferResponse : public TrCommandBufferBase
@@ -113,6 +130,14 @@ namespace commandbuffers
         : TrCommandBufferBase(that)
         , requestId(that.requestId)
     {
+    }
+
+  public:
+    virtual std::string toString(const char *prefix = "") const override
+    {
+      std::stringstream ss;
+      ss << prefix << commandTypeToStr(this->type);
+      return ss.str();
     }
 
   public:
@@ -139,12 +164,6 @@ namespace commandbuffers
     {
     }
     ~TrCommandBufferSimpleRequest() = default;
-
-  public:
-    inline void print()
-    {
-      DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(Type).c_str());
-    }
   };
 
   /**

@@ -4,6 +4,7 @@
 #include <chrono>
 #include <string>
 #include <memory>
+#include <vector>
 #include <regex>
 #include "debug.hpp"
 
@@ -25,6 +26,7 @@
 #endif
 #endif
 
+
 #ifndef TRANSMUTE_STANDALONE
 void SET_UNITY_LOG_HANDLE(IUnityLog *log)
 {
@@ -36,17 +38,17 @@ IUnityLog *GET_UNITY_LOG_HANDLE()
 }
 #endif
 
+using namespace std;
 using system_clock = std::chrono::system_clock;
 using milliseconds = std::chrono::milliseconds;
 
-inline std::string
-fetchTimestamp()
+inline string fetchTimestamp()
 {
   using namespace std::chrono;
 
   auto now = system_clock::now();
   auto now_c = system_clock::to_time_t(now);
-  auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+  auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
   struct tm tm_info;
   localtime_r(&now_c, &tm_info);
@@ -54,7 +56,7 @@ fetchTimestamp()
   char timestamp[32];
   strftime(timestamp, sizeof(timestamp), "%m-%d %H:%M:%S", &tm_info);
   snprintf(timestamp + 14, sizeof(timestamp) - 14, ".%03d", static_cast<int>(ms.count()));
-  return std::string(timestamp);
+  return string(timestamp);
 }
 
 namespace stylized_shell
@@ -107,10 +109,24 @@ namespace stylized_shell
 void DEBUG(const char *tag, const char *format, ...)
 {
   va_list args;
-  va_start(args, format);
+
 #ifdef __ANDROID__
+  va_start(args, format);
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
+  va_end(args);
 #else
+  va_start(args, format);
+  int out_len = vsnprintf(nullptr, 0, format, args);
+  va_end(args);
+
+  if (out_len < 0) [[unlikely]]
+    return;
+
+  vector<char> out_buf(out_len + 1);
+  va_start(args, format);
+  vsnprintf(out_buf.data(), out_buf.size(), format, args);
+  va_end(args);
+
   FILE *stream = stdout;
   bool stylized = false;
   if (strcmp(tag, LOG_TAG_ERROR) == 0)
@@ -119,13 +135,40 @@ void DEBUG(const char *tag, const char *format, ...)
     stylized = true;
   }
 
-  stylized_shell::start(stream, stylized, stylized_shell::Style::kDefault, stylized_shell::TextColor::kRed);
-  fprintf(stream, "%s ", fetchTimestamp().c_str());
-  vfprintf(stream, format, args);
-  fprintf(stream, "\n");
+  stylized_shell::start(stream,
+                        stylized,
+                        stylized_shell::Style::kDefault,
+                        stylized_shell::TextColor::kRed);
+  {
+    string timestamp = fetchTimestamp();
+    const char *p = out_buf.data();
+    bool is_new_line = true;
+
+    while (*p != '\0')
+    {
+      if (is_new_line)
+      {
+        fprintf(stream, "%s ", timestamp.c_str());
+        is_new_line = false;
+      }
+
+      if (*p == '\n')
+      {
+        fputc('\n', stream);
+        is_new_line = true;
+      }
+      else
+      {
+        fputc(*p, stream);
+      }
+      p++;
+    }
+
+    if (!is_new_line)
+      fputc('\n', stream);
+  }
   stylized_shell::end(stream, stylized);
 #endif
-  va_end(args);
 }
 
 void SET_THREAD_NAME(const std::string &name)

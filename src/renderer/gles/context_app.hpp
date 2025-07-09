@@ -62,7 +62,7 @@ public: // GLES Implementations
   void useProgram(uint32_t id, GLuint &program);
 
   // Framebuffer functions
-  void bindFramebuffer(GLenum target, uint32_t id, GLuint &framebuffer);
+  void bindFramebuffer(GLenum target, std::optional<uint32_t> id, GLuint &framebuffer);
 
   // Draw functions
   void drawArrays(GLenum mode, GLint first, GLsizei count);

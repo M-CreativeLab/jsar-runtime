@@ -336,15 +336,16 @@ void ContextGLApp::useProgram(uint32_t id, GLuint &program)
   onProgramChanged(program);
 }
 
-void ContextGLApp::bindFramebuffer(GLenum target, uint32_t id, GLuint &framebuffer)
+void ContextGLApp::bindFramebuffer(GLenum target, optional<uint32_t> id, GLuint &framebuffer)
 {
-  /**
-   * TODO(yorkie): Now we use 0 or -1 to indicate the default render target, should we use enum instead?
-   */
-  if (id == 0 || id == -1)
+  if (!id.has_value())
+  {
     framebuffer = currentDefaultRenderTarget();
+  }
   else
-    framebuffer = ObjectManagerRef().FindFramebuffer(id);
+  {
+    framebuffer = ObjectManagerRef().FindFramebuffer(id.value());
+  }
 
   glBindFramebuffer(target, framebuffer);
   onFramebufferChanged(framebuffer);
@@ -447,6 +448,7 @@ bool ContextGLApp::IsDefaultRenderTargetBinding() const
 {
   return !m_FramebufferId.has_value() ||
          m_FramebufferId == m_CurrentDefaultRenderTarget;
+  return true;
 }
 
 renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const

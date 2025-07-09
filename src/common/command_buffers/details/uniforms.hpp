@@ -84,6 +84,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << location << ","
+         << v0 << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t location;
     float v0;
@@ -637,6 +646,27 @@ namespace commandbuffers
       auto valuesSegment = message.getSegment(0);
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream values_ss;
+      if (isComputationGraph())
+      {
+        values_ss << "Placeholder()";
+      }
+      else
+      {
+        values_ss << "float[" << values.size() << "]";
+      }
+
+      std::stringstream ss;
+      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+         << location << ", "
+         << "values={" << values_ss.str() << ", "
+         << "count=" << count() << ", "
+         << "transpose=" << (transpose ? "Yes" : "No")
+         << ")";
+      return ss.str();
     }
 
   public:

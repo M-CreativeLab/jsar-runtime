@@ -89,12 +89,16 @@ namespace renderer
 
   void TrContentRenderer::onCommandBuffersExecuted()
   {
-    auto contentRef = getContent();
-    contentRef->onCommandBuffersExecuted();
-    if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20)
+    getContent()->onCommandBuffersExecuted();
+
+    // FIXME(yorkie): dispose this content once there is OOM or too many(>=20) graphic errors in a frame.
+    if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20) [[unlikely]]
     {
-      DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10", contentRef->id, lastFrameErrorsCount);
-      contentRef->dispose();
+      DEBUG(LOG_TAG_ERROR,
+            "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
+            getContent()->id,
+            lastFrameErrorsCount);
+      getContent()->dispose();
     }
   }
 
@@ -230,16 +234,6 @@ namespace renderer
     initializeGraphicsContextsOnce();
 
     /**
-     * Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
-     */
-    if (xrDevice->enabled())
-    {
-      auto pendingStereoFramesCount = getPendingStereoFramesCount();
-      for (auto session : getContent()->getXRSessions())
-        session->setPendingStereoFramesCount(pendingStereoFramesCount);
-    }
-
-    /**
      * Execute the content's command buffers.
      */
     onStartFrame();
@@ -318,6 +312,11 @@ namespace renderer
   {
     if (commandBuffersOnOffscreenPass.size() > 0)
     {
+      if (usingProgramOnOffscreenPassStarted.has_value())
+        glUseProgram(usingProgramOnOffscreenPassStarted.value());
+      if (bindingVaoOnOffscreenPassStarted.has_value())
+        glBindVertexArray(bindingVaoOnOffscreenPassStarted.value());
+
       constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
                                                      this,
                                                      ExecutingPassType::kOffscreenPass);
@@ -326,7 +325,10 @@ namespace renderer
         if (commandbuffer != nullptr) [[likely]]
           delete commandbuffer;
       }
+
       commandBuffersOnOffscreenPass.clear();
+      usingProgramOnOffscreenPassStarted = nullopt;
+      bindingVaoOnOffscreenPassStarted = nullopt;
     }
   }
 
@@ -334,6 +336,15 @@ namespace renderer
   {
     frameStartTime = chrono::system_clock::now();
 
+    // Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
+    if (xrDevice->enabled()) [[likely]]
+    {
+      size_t pendings = getPendingStereoFramesCount();
+      for (auto session : getContent()->getXRSessions())
+        session->setPendingStereoFramesCount(pendings);
+    }
+
+    // ContextApp: onStart
     glContext->onFrameWillStart(constellation->renderer->glHostContext);
     if (constellation->renderer->isAppContextSummaryEnabled)
       glContext->print();
@@ -354,7 +365,7 @@ namespace renderer
 
   void TrContentRenderer::initializeGraphicsContextsOnce()
   {
-    if (TR_LIKELY(isGraphicsContextsInitialized))
+    if (isGraphicsContextsInitialized) [[likely]]
       return;
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
@@ -394,15 +405,12 @@ namespace renderer
       return;
 
     unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-    auto exec_commandbuffers = [this](int _, vector<TrCommandBufferBase *> &list)
-    {
-      return constellation->renderer->executeCommandBuffers(list, this, ExecutingPassType::kXRFrame);
-    };
-    executeStereoFrame(viewIndex, exec_commandbuffers);
+    executeStereoFrame(viewIndex);
   }
 
-  bool TrContentRenderer::executeStereoFrame(int viewIndex, function<bool(int, vector<TrCommandBufferBase *> &)> exec)
+  bool TrContentRenderer::executeStereoFrame(int viewIndex)
   {
+    auto renderer = constellation->renderer;
     bool called = false;
     for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
     {
@@ -428,8 +436,8 @@ namespace renderer
             viewIndex == 0 ||
             (viewIndex == 1 && frame->ended(0)))
           {
-            auto &commandBuffers = frame->getCommandBuffers(viewIndex);
-            exec(frame->getId(), commandBuffers);
+            auto &list = frame->getCommandBuffers(viewIndex);
+            renderer->executeCommandBuffers(list, this, ExecutingPassType::kXRFrame);
             frame->clearCommandBuffers(viewIndex);
             frame->resetFlush(viewIndex);
           }
@@ -467,9 +475,8 @@ namespace renderer
         continue;
       }
 
-      auto id = frame->getId();
-      auto commandBuffers = frame->getCommandBuffers(viewIndex);
-      auto isStateChanged = exec(id, commandBuffers);
+      auto &list = frame->getCommandBuffers(viewIndex);
+      bool isStateChanged = renderer->executeCommandBuffers(list, this, ExecutingPassType::kXRFrame);
       frame->idempotent(viewIndex, !isStateChanged);
       frame->finishPass(viewIndex);
 
@@ -515,18 +522,17 @@ namespace renderer
 
     // When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
     if (called == false)
-      executeBackupFrame(viewIndex, exec);
+      executeBackupFrame(viewIndex);
     return called;
   }
 
-  void TrContentRenderer::executeBackupFrame(int viewIndex,
-                                             function<bool(int, vector<TrCommandBufferBase *> &)> exec)
+  void TrContentRenderer::executeBackupFrame(int viewIndex)
   {
-    auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
-    if (commandBufferInLastFrame.size() > 0)
+    auto &list = stereoFrameForBackup->getCommandBuffers(viewIndex);
+    if (list.size() > 0)
     {
       TrBackupGLContextScope contextScopeForBackup(this);
-      exec(stereoFrameForBackup->getId(), commandBufferInLastFrame);
+      constellation->renderer->executeCommandBuffers(list, this, ExecutingPassType::kCachedXRFrame);
     }
   }
 

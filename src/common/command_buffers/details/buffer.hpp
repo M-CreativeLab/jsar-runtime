@@ -2,6 +2,7 @@
 
 #include "../shared.hpp"
 #include "../base.hpp"
+#include "../webgl_constants.hpp"
 
 namespace commandbuffers
 {
@@ -257,9 +258,26 @@ namespace commandbuffers
     {
     }
 
+    // Returns if this bind operation is to switch the framebuffer to default.
+    bool isBindToDefault() const
+    {
+      // TODO(yorkie): We use 0, -1 to indicate the client want's to bind to the app's default render target.
+      return framebuffer <= 0;
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "bindFramebuffer(";
+      isBindToDefault()
+        ? ss << "default"
+        : ss << framebuffer;
+      ss << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t target;
-    uint32_t framebuffer;
+    int32_t framebuffer;
   };
 
   class FramebufferRenderbufferCommandBufferRequest final
@@ -284,6 +302,18 @@ namespace commandbuffers
         , renderbufferTarget(that.renderbufferTarget)
         , renderbuffer(that.renderbuffer)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "attachment=" << WebGLHelper::WebGLFramebufferAttachmentToString(attachment) << ", "
+         << "renderbuffertarget=" << WebGLHelper::WebGLEnumToString(renderbufferTarget) << ", "
+         << "renderbuffer=" << renderbuffer
+         << ")";
+      return ss.str();
     }
 
   public:
@@ -316,6 +346,19 @@ namespace commandbuffers
         , texture(that.texture)
         , level(that.level)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "attachment=" << WebGLHelper::WebGLFramebufferAttachmentToString(attachment) << ", "
+         << "textarget=" << WebGLHelper::WebGLEnumToString(textarget) << ", "
+         << "texture=" << texture << ", "
+         << "level=" << level
+         << ")";
+      return ss.str();
     }
 
   public:
@@ -382,6 +425,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , clientId(that.clientId)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
     }
 
   public:
@@ -454,6 +504,16 @@ namespace commandbuffers
         , width(that.width)
         , height(that.height)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << internalformat << ", "
+         << "[" << width << "x" << height << "])";
+      return ss.str();
     }
 
   public:

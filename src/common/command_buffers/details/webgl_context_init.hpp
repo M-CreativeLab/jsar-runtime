@@ -73,6 +73,22 @@ namespace commandbuffers
       version = message.getSegment(1)->toString();
       renderer = message.getSegment(2)->toString();
     }
+    std::string toString(const char* line_prefix = "  ") const override
+    {
+      std::stringstream ss;
+      ss << line_prefix << "MAX_COMBINED_TEXTURE_IMAGE_UNITS = " << maxCombinedTextureImageUnits << std::endl
+         << line_prefix << "MAX_CUBE_MAP_TEXTURE_SIZE = " << maxCubeMapTextureSize << std::endl
+         << line_prefix << "MAX_FRAGMENT_UNIFORM_VECTORS = " << maxFragmentUniformVectors << std::endl
+         << line_prefix << "MAX_RENDERBUFFER_SIZE = " << maxRenderbufferSize << std::endl
+         << line_prefix << "MAX_TEXTURE_IMAGE_UNITS = " << maxTextureImageUnits << std::endl;
+      if (!vendor.empty())
+        ss << line_prefix << "VENDOR = \"" << vendor << "\"" << std::endl;
+      if (!version.empty())
+        ss << line_prefix << "VERSION = \"" << version << "\"" << std::endl;
+      if (!renderer.empty())
+        ss << line_prefix << "RENDERER = \"" << renderer << "\"";
+      return ss.str();
+    }
 
   public:
     TrViewport drawingViewport;
@@ -143,6 +159,22 @@ namespace commandbuffers
     }
     ~WebGL2ContextInitCommandBufferResponse()
     {
+    }
+
+  public:
+    std::string toString(const char* line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << line_prefix << "GL_MAX_3D_TEXTURE_SIZE = " << max3DTextureSize << std::endl
+         << line_prefix << "GL_MAX_ARRAY_TEXTURE_LAYERS = " << maxArrayTextureLayers << std::endl
+         << line_prefix << "GL_MAX_COLOR_ATTACHMENTS = " << maxColorAttachments << std::endl
+         << line_prefix << "GL_MAX_COMBINED_UNIFORM_BLOCKS = " << maxCombinedUniformBlocks << std::endl
+         << line_prefix << "GL_MAX_DRAW_BUFFERS = " << maxDrawBuffers << std::endl
+         << line_prefix << "GL_MAX_ELEMENTS_INDICES = " << maxElementsIndices << std::endl
+         << line_prefix << "GL_MAX_ELEMENTS_VERTICES = " << maxElementsVertices << std::endl
+         << line_prefix << "EXT_OVR_multiview.MAX_VIEWS_OVR = " << OVR_maxViews << std::endl
+         << line_prefix << "EXT_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT" << maxTextureMaxAnisotropy;
+      return ss.str();
     }
 
   public:

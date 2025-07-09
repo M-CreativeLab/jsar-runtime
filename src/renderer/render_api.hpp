@@ -33,6 +33,7 @@ enum class ExecutingPassType
   kDefaultFrame,
   // The command buffers in XRFrame is commonly used to dispatch draw calls in each rendering frame.
   kXRFrame,
+  kCachedXRFrame,
   kOffscreenPass,
 };
 
@@ -93,6 +94,11 @@ class TrRenderHardwareInterface
   friend class RHIFactory;
 
 public:
+  TrRenderHardwareInterface(RHIBackendType backend_type, std::unique_ptr<commandbuffers::GPUDevice> gpu_device = nullptr)
+      : backendType(backend_type)
+      , gpuDevice(std::move(gpu_device))
+  {
+  }
   virtual ~TrRenderHardwareInterface() = default;
 
   /**

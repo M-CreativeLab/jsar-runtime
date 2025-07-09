@@ -2,6 +2,7 @@
 
 #include "../shared.hpp"
 #include "../base.hpp"
+#include "../webgl_constants.hpp"
 
 namespace commandbuffers
 {
@@ -22,6 +23,15 @@ namespace commandbuffers
         , program(that.program)
         , shader(that.shader)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << program << ", "
+         << shader << ")";
+      return ss.str();
     }
 
   public:
@@ -48,6 +58,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << program << ", "
+         << shader << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t program;
     uint32_t shader;
@@ -72,6 +91,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << clientId << ", "
+         << WebGLHelper::WebGLEnumToString(shaderType) << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t clientId;
     uint32_t shaderType;
@@ -94,6 +122,14 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << shader << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t shader;
   };
@@ -112,6 +148,14 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , shader(that.shader)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << shader << ")";
+      return ss.str();
     }
 
   public:
@@ -157,6 +201,14 @@ namespace commandbuffers
     inline string source()
     {
       return string(sourceStr, sourceSize);
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << shader << ", "
+         << "TEXT(" << sourceSize << "))";
+      return ss.str();
     }
 
   public:

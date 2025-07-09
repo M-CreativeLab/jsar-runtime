@@ -23,6 +23,10 @@
 #include "./webgl_sampler.hpp"
 #include "./webgl_vertex_array.hpp"
 
+#define WEBGL_DEBUG 1
+// Uncomment to enable WebGL debugging mode.
+// #undef WEBGL_DEBUG
+
 namespace client_graphics
 {
   enum class WebGLError

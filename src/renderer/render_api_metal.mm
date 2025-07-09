@@ -135,7 +135,7 @@ static Class MTLRenderPipelineDescriptorClass;
 static Class MTLDepthStencilDescriptorClass;
 // const int kVertexSize = 12 + 4;
 
-RHI_Metal::RHI_Metal() {
+RHI_Metal::RHI_Metal() : TrRenderHardwareInterface(RHIBackendType::Metal) {
   m_VertexDescriptor = [MTLVertexDescriptorClass vertexDescriptor];
 }
 

@@ -54,20 +54,22 @@ namespace client_graphics
     static TrIdGeneratorBase<uint8_t> idGen(commandbuffers::MinimumContextId);
     id = idGen.get();
     if (id >= commandbuffers::MinimumContextId + commandbuffers::MaxinumContextsCountPerContent)
-      throw std::runtime_error("Too many contexts created in the content process.");
+      throw runtime_error("Too many contexts created in the content process.");
 
     auto createReq = CreateWebGLContextRequest();
     sendCommandBufferRequestDirectly(createReq, true);
 
-    auto sentAt = std::chrono::system_clock::now();
+    auto sentAt = chrono::system_clock::now();
     auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
     sendCommandBufferRequest(initCommandBuffer, true);
 
     auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, 3000);
-    auto respondAt = std::chrono::system_clock::now();
-    std::cout << "Received WebGL context response in " << std::chrono::duration_cast<std::chrono::milliseconds>(respondAt - sentAt).count() << "ms" << std::endl;
-    if (resp == nullptr)
+    if (resp == nullptr) [[unlikely]]
       throw std::runtime_error("Failed to initialize WebGL context");
+
+    auto respondAt = chrono::system_clock::now();
+    cout << "Received `WebGL1Context` response in " << chrono::duration_cast<chrono::milliseconds>(respondAt - sentAt).count() << "ms" << endl;
+    cout << resp->toString("  ") << endl;
 
     viewport_ = resp->drawingViewport;
     maxCombinedTextureImageUnits = resp->maxCombinedTextureImageUnits;
@@ -491,7 +493,7 @@ namespace client_graphics
     auto req = FramebufferTexture2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                         static_cast<uint32_t>(attachment),
                                                         static_cast<uint32_t>(textarget),
-                                                        texture->id,
+                                                        texture != nullptr ? texture->id : 0,
                                                         level);
     sendCommandBufferRequest(req);
   }
