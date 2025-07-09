@@ -124,8 +124,9 @@ namespace commandbuffers
     {
       auto dataSegment = message.getSegment(0);
       auto dataSize = dataSegment->getSize();
-      data = malloc(dataSize);
-      memcpy(data, dataSegment->getData(), dataSize);
+      this->dataSize = dataSize;
+      this->data = malloc(dataSize);
+      memcpy(this->data, dataSegment->getData(), dataSize);
     }
 
   public:
@@ -184,8 +185,9 @@ namespace commandbuffers
     {
       auto dataSegment = message.getSegment(0);
       auto dataSize = dataSegment->getSize();
-      data = malloc(dataSize);
-      memcpy(data, dataSegment->getData(), dataSize);
+      this->dataSize = dataSize;
+      this->data = malloc(dataSize);
+      memcpy(this->data, dataSegment->getData(), dataSize);
     }
 
   public:
