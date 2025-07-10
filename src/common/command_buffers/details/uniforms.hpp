@@ -156,6 +156,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t location;
     int v0;
@@ -195,6 +204,22 @@ namespace commandbuffers
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<int>();
     }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
+    }
 
   public:
     uint32_t location;
@@ -219,6 +244,16 @@ namespace commandbuffers
         , v0(that.v0)
         , v1(that.v1)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ","
+         << v1 << ")";
+      return ss.str();
     }
 
   public:
@@ -262,6 +297,23 @@ namespace commandbuffers
         values = valuesSegment->toVec<float>();
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
+    }
+
   public:
     uint32_t location;
     std::vector<float> values;
@@ -285,6 +337,16 @@ namespace commandbuffers
         , v0(that.v0)
         , v1(that.v1)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ","
+         << v1 << ")";
+      return ss.str();
     }
 
   public:
@@ -327,6 +389,22 @@ namespace commandbuffers
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<int>();
     }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
+    }
 
   public:
     uint32_t location;
@@ -353,6 +431,17 @@ namespace commandbuffers
         , v1(that.v1)
         , v2(that.v2)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ","
+         << v1 << ","
+         << v2 << ")";
+      return ss.str();
     }
 
   public:
@@ -396,6 +485,22 @@ namespace commandbuffers
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
     }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
+    }
 
   public:
     uint32_t location;
@@ -422,6 +527,17 @@ namespace commandbuffers
         , v1(that.v1)
         , v2(that.v2)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ","
+         << v1 << ","
+         << v2 << ")";
+      return ss.str();
     }
 
   public:
@@ -465,6 +581,22 @@ namespace commandbuffers
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<int>();
     }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
+    }
 
   public:
     uint32_t location;
@@ -502,6 +634,17 @@ namespace commandbuffers
     }
     void deserialize(TrCommandBufferMessage &message) override final
     {
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),"
+         << v0 << ","
+         << v1 << ","
+         << v2 << ","
+         << v3 << ")";
+      return ss.str();
     }
 
   public:
@@ -544,6 +687,22 @@ namespace commandbuffers
       auto valuesSegment = message.getSegment(0);
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<Tv>();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+         << "Loc(" << location << "),";
+
+      ss << "[";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        ss << values[i];
+        if (i < values.size() - 1)
+          ss << ", ";
+      }
+      ss << "])";
+      return ss.str();
     }
 
   public:
@@ -650,14 +809,8 @@ namespace commandbuffers
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream values_ss;
-      if (isComputationGraph())
-      {
-        values_ss << "Placeholder()";
-      }
-      else
-      {
-        values_ss << "float[" << values.size() << "]";
-      }
+      values_ss << "float[" << values.size() << "], "
+                << "ComputationGraph=" << (isComputationGraph() ? "Placeholder()" : "None");
 
       std::stringstream ss;
       ss << TrCommandBufferRequest::toString(line_prefix) << "("

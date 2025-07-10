@@ -146,6 +146,17 @@ void ContextGLStorage::restore()
   m_StencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
   m_ScissorTestEnabled ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
 
+  // Restore the clear values
+  if (m_ClearColor.has_value())
+  {
+    const auto &color = m_ClearColor.value();
+    glClearColor(color[0], color[1], color[2], color[3]);
+  }
+  if (m_ClearDepth.has_value())
+    glClearDepthf(m_ClearDepth.value());
+  if (m_ClearStencil.has_value())
+    glClearStencil(m_ClearStencil.value());
+
   // Blend state restore
   /**
    * NOTE: The blend function state should not depend on the blend state, it causes the host blend state would be passed to
@@ -219,10 +230,10 @@ void ContextGLStorage::restore()
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
   }
 
-  if (m_FramebufferId.has_value())
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
   if (m_RenderbufferId >= 0)
     glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId.value());
+  if (m_FramebufferId.has_value())
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
   bindBuffersError = glGetError();
 
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)

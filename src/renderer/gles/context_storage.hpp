@@ -315,22 +315,32 @@ protected:
   bool is_force_changed_ = false;
 
 protected: /** Global States */
+  // Clear values
+  std::optional<std::array<GLfloat, 4>> m_ClearColor; // [red, green, blue, alpha]
+  std::optional<GLfloat> m_ClearDepth;
+  std::optional<GLint> m_ClearStencil;
+
   // Culling & face
   GLboolean m_CullFaceEnabled;
   GLenum m_CullFace;
   GLenum m_FrontFace;
+
   // Color
   GLboolean m_ColorMask[4]; // [reg, green, blue, alpha]
+
   // Depth
   GLboolean m_DepthTestEnabled;
   GLboolean m_DepthMask; // If depth buffer writing is enabled
   GLenum m_DepthFunc = GL_LEQUAL;
   GLfloat m_DepthRange[2] = {0.0f, 1.0f};
+
   // Dither
   GLboolean m_DitherEnabled;
+
   // Blending
   GLboolean m_BlendEnabled;
   OpenGLBlendingFunc m_BlendFunc;
+
   // Stencil
   GLboolean m_StencilTestEnabled;
   GLuint m_StencilMask;
@@ -339,9 +349,11 @@ protected: /** Global States */
   StencilFuncParameters m_StencilFuncBack;
   StencilOpParameters m_StencilOp;
   StencilOpParameters m_StencilOpBack;
+
   // Scissor
   GLboolean m_ScissorTestEnabled;
   Rect m_ScissorBox;
+
   // Others
   GLfloat m_LineWidth = 1.0f;
   PolygonOffsetParameters m_PolygonOffset;

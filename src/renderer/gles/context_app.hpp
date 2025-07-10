@@ -13,8 +13,11 @@ class ContextGLHost;
 class ContextGLApp : public ContextGLStorage
 {
 public:
+  // Create a new context for the content renderer.
   ContextGLApp(std::string name, std::shared_ptr<renderer::TrContentRenderer>);
-  ContextGLApp(std::string name, ContextGLApp *from);
+  // Create a new context which inherits from another context. And `defaultRenderTarget` is the default framebuffer to 
+  // be used in this context.
+  ContextGLApp(std::string name, ContextGLApp *from, std::optional<GLuint> defaultRenderTarget = std::nullopt);
 
 public:
   // Initialize the render target(framebuffer) for this context.
@@ -55,6 +58,9 @@ public: // GLES Implementations
   // State
   void setViewport(GLint x, GLint y, GLsizei width, GLsizei height);
   void setScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+  void setClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+  void setClearDepth(GLfloat depth);
+  void setClearStencil(GLint s);
 
   // Program functions
   GLuint createProgram(uint32_t id);

@@ -63,12 +63,15 @@ ContextGLApp::ContextGLApp(string name, shared_ptr<renderer::TrContentRenderer> 
   }
 }
 
-ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
+ContextGLApp::ContextGLApp(string name, ContextGLApp *from, optional<GLuint> defaultRenderTarget)
     : ContextGLStorage(name, from)
     , m_ContentRenderer(from->m_ContentRenderer)
-    , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
+    , m_CurrentDefaultRenderTarget(defaultRenderTarget.value_or(from->m_CurrentDefaultRenderTarget))
     , m_GLObjectManager(from->m_GLObjectManager)
 {
+  m_FramebufferId = m_CurrentDefaultRenderTarget;
+  m_ProgramId = from->m_ProgramId;
+
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
   m_Shaders = OpenGLNamesStorage(&from->m_Shaders);
   m_Buffers = OpenGLNamesStorage(&from->m_Buffers);
@@ -307,6 +310,24 @@ void ContextGLApp::setViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 void ContextGLApp::setScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
   glScissor(x, y, width, height);
+}
+
+void ContextGLApp::setClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+  glClearColor(red, green, blue, alpha);
+  m_ClearColor = {red, green, blue, alpha};
+}
+
+void ContextGLApp::setClearDepth(GLfloat depth)
+{
+  glClearDepthf(depth);
+  m_ClearDepth = depth;
+}
+
+void ContextGLApp::setClearStencil(GLint s)
+{
+  glClearStencil(s);
+  m_ClearStencil = s;
 }
 
 GLuint ContextGLApp::createProgram(uint32_t id)

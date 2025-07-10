@@ -16,6 +16,7 @@
 #include <xr/device.hpp>
 
 #include "./gles/context_storage.hpp"
+#include "./render_api.hpp"
 
 using namespace std;
 using namespace commandbuffers;
@@ -43,15 +44,16 @@ namespace renderer
 
   private:
     TrContentRenderer *contentRenderer;
+    ExecutingPassType previousPass = ExecutingPassType::kDefaultFrame;
   };
 
   class TrContentRenderer final : public std::enable_shared_from_this<TrContentRenderer>
   {
+    friend class ::TrInspector;
+    friend class xr::TrXRSession;
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
-    friend class ::TrInspector;
-    friend class xr::TrXRSession;
 
   public:
     /**
@@ -81,7 +83,8 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    ContextGLApp *getOpenGLContext() const;
+    // Returns the current using GL context.
+    ContextGLApp *getContextGL() const;
     inline shared_ptr<TrContentRuntime> getContent() const
     {
       return content.lock();
@@ -100,46 +103,24 @@ namespace renderer
       onCommandBufferRequestReceived(req);
     }
 
-    /**
-     * Schedule a command buffer to be executed at offscreen pass.
-     */
-    void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req)
-    {
-      if (req == nullptr) [[unlikely]]
-        return;
-
-      if (commandBuffersOnOffscreenPass.size() == 0)
-      {
-        usingProgramOnOffscreenPassStarted = glContext->program();
-        bindingVaoOnOffscreenPassStarted = glContext->vertexArrayObject();
-      }
-      commandBuffersOnOffscreenPass.push_back(req);
-    }
-
-    /**
-     * Mark the last frame has OOM error.
-     */
+    // State updates
     inline void markOccurOutOfMemoryError()
     {
       lastFrameHasOutOfMemoryError = true;
     }
-    /**
-     * Increase the frame errors count.
-     */
     inline void increaseFrameErrorsCount()
     {
       lastFrameErrorsCount++;
     }
-    /**
-     * Increase the draw calls count.
-     * 
-     * @param count The count to be increased.
-     */
     inline void increaseDrawCallsCount(int count = 1)
     {
       drawCallsPerFrame += 1;
       drawCallsCountPerFrame += count;
     }
+
+    // Offscreen pass controls
+    void resetOffscreenPassGLContext(std::optional<GLuint> framebuffer);
+    void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req);
 
   private: // private lifecycle
     /**
@@ -181,12 +162,13 @@ namespace renderer
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
+    xr::Device *xrDevice = nullptr;
+
+    bool isGraphicsContextsInitialized = false;
+    ExecutingPassType currentPass = ExecutingPassType::kDefaultFrame;
     // TODO(yorkie): Remove this when gpu device is ready, because WebGPU is context-less.
     std::unique_ptr<ContextGLApp> glContext;
     std::unique_ptr<ContextGLApp> glContextForBackup;
-    bool isGraphicsContextsInitialized = false;
-    bool usingBackupContext = false;
-    xr::Device *xrDevice = nullptr;
 
   private: // command buffers & rendering frames
     std::shared_mutex commandBufferRequestsMutex;
@@ -198,8 +180,7 @@ namespace renderer
     // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
     // TODO(yorkie): support multi-stage offscreen pass?
     std::vector<TrCommandBufferBase *> commandBuffersOnOffscreenPass;
-    std::optional<GLuint> usingProgramOnOffscreenPassStarted;
-    std::optional<GLuint> bindingVaoOnOffscreenPassStarted;
+    std::optional<ContextGLApp> glContextOnOffscreenPass;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;

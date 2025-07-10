@@ -28,12 +28,14 @@ namespace renderer
     string contextName = contentRenderer->glContext->name();
     contentRenderer->glContextForBackup = make_unique<ContextGLApp>(contextName + "~backup",
                                                                     contentRenderer->glContext.get());
-    contentRenderer->usingBackupContext = true;
+    // Switch the current pass to cached XR frame pass.
+    previousPass = contentRenderer->currentPass;
+    contentRenderer->currentPass = ExecutingPassType::kCachedXRFrame;
   }
 
   TrBackupGLContextScope::~TrBackupGLContextScope()
   {
-    contentRenderer->usingBackupContext = false;
+    contentRenderer->currentPass = previousPass;
   }
 
   TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation)
@@ -45,7 +47,6 @@ namespace renderer
       , targetFrameRate(constellation->renderer->clientDefaultFrameRate)
       , glContext(nullptr)
       , glContextForBackup(nullptr)
-      , usingBackupContext(false)
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
@@ -109,9 +110,21 @@ namespace renderer
     return contentRef->sendCommandBufferResponse(res);
   }
 
-  ContextGLApp *TrContentRenderer::getOpenGLContext() const
+  ContextGLApp *TrContentRenderer::getContextGL() const
   {
-    return usingBackupContext ? glContextForBackup.get() : glContext.get();
+    if (currentPass == ExecutingPassType::kCachedXRFrame)
+      return glContextForBackup.get();
+    else if (currentPass == ExecutingPassType::kOffscreenPass)
+    {
+      if (glContextOnOffscreenPass.has_value())
+        return const_cast<ContextGLApp *>(&glContextOnOffscreenPass.value());
+      else
+        return nullptr;
+    }
+    else
+    {
+      return glContext.get();
+    }
   }
 
   pid_t TrContentRenderer::getContentPid() const
@@ -127,6 +140,26 @@ namespace renderer
     assert(constellation != nullptr && constellation->renderer != nullptr &&
            "The constellation or renderer is not initialized.");
     return *constellation->renderer;
+  }
+
+  void TrContentRenderer::resetOffscreenPassGLContext(std::optional<GLuint> framebuffer)
+  {
+    if (framebuffer == std::nullopt)
+    {
+      glContextOnOffscreenPass = std::nullopt;
+    }
+    else
+    {
+      std::string contextName = GetContentRendererId(getContent(), contextId) + "~offscreen";
+      glContextOnOffscreenPass = ContextGLApp(contextName, getContextGL(), framebuffer);
+    }
+  }
+
+  void TrContentRenderer::scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req)
+  {
+    if (req == nullptr) [[unlikely]]
+      return;
+    commandBuffersOnOffscreenPass.push_back(req);
   }
 
   // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
@@ -279,6 +312,8 @@ namespace renderer
 
       if (!shouldSkipXRFrame && getContent()->used && xrDevice->enabled())
       {
+        currentPass = ExecutingPassType::kXRFrame;
+
         // Execute the XR frame
         switch (xrDevice->getStereoRenderingMode())
         {
@@ -310,13 +345,13 @@ namespace renderer
 
   void TrContentRenderer::onOffscreenRenderPass()
   {
+    currentPass = ExecutingPassType::kOffscreenPass;
     if (commandBuffersOnOffscreenPass.size() > 0)
     {
-      if (usingProgramOnOffscreenPassStarted.has_value())
-        glUseProgram(usingProgramOnOffscreenPassStarted.value());
-      if (bindingVaoOnOffscreenPassStarted.has_value())
-        glBindVertexArray(bindingVaoOnOffscreenPassStarted.value());
+      assert(glContextOnOffscreenPass.has_value() &&
+             "The offscreen pass context is not initialized, please call `initializeGraphicsContextsOnce()` first.");
 
+      glContextOnOffscreenPass->restore();
       constellation->renderer->executeCommandBuffers(commandBuffersOnOffscreenPass,
                                                      this,
                                                      ExecutingPassType::kOffscreenPass);
@@ -327,14 +362,15 @@ namespace renderer
       }
 
       commandBuffersOnOffscreenPass.clear();
-      usingProgramOnOffscreenPassStarted = nullopt;
-      bindingVaoOnOffscreenPassStarted = nullopt;
+      glContextOnOffscreenPass = nullopt;
     }
+    currentPass = ExecutingPassType::kDefaultFrame;
   }
 
   void TrContentRenderer::onStartFrame()
   {
     frameStartTime = chrono::system_clock::now();
+    currentPass = ExecutingPassType::kDefaultFrame;
 
     // Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
     if (xrDevice->enabled()) [[likely]]
@@ -361,6 +397,7 @@ namespace renderer
     frameEndTime = chrono::system_clock::now();
     frameDuration = chrono::duration_cast<chrono::milliseconds>(frameEndTime - frameStartTime);
     maxFrameDuration = max(maxFrameDuration, frameDuration);
+    currentPass = ExecutingPassType::kDefaultFrame;
   }
 
   void TrContentRenderer::initializeGraphicsContextsOnce()

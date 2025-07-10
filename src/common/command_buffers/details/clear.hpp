@@ -21,6 +21,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mask << ")";
+      return ss.str();
+    }
+
   public:
     int mask;
   };
@@ -48,6 +55,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << r << ", "
+         << g << ", "
+         << b << ", "
+         << a << ")";
+      return ss.str();
+    }
+
   public:
     float r;
     float g;
@@ -72,6 +90,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << depth << ")";
+      return ss.str();
+    }
+
   public:
     float depth;
   };
@@ -91,6 +116,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , stencil(that.stencil)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << stencil << ")";
+      return ss.str();
     }
 
   public:

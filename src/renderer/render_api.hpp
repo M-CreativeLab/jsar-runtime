@@ -46,9 +46,19 @@ public:
   bool printsCall;
   ExecutingPassType executingPassType;
 
-  bool isDefaultQueue() const
+  inline bool isDefaultQueue() const
   {
     return executingPassType == ExecutingPassType::kDefaultFrame;
+  }
+  // Returns `true` if the current executing the XR or cached XR pass.
+  inline bool isXRFramePass() const
+  {
+    return executingPassType == ExecutingPassType::kXRFrame ||
+           executingPassType == ExecutingPassType::kCachedXRFrame;
+  }
+  inline bool isOffscreenPass() const
+  {
+    return executingPassType == ExecutingPassType::kOffscreenPass;
   }
 };
 

@@ -2,15 +2,15 @@ import * as THREE from 'three';
 import * as CameraUtils from 'three/addons/utils/CameraUtils.js';
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(60, 1.6, 0.1, 100);
 
 // Create lights
 const light = new THREE.DirectionalLight(0xffffff, 0.5);
 light.position.set(0, 1, 1);
 scene.add(light);
 
+let scale;
 let renderer;
-let cameraControls;
 let smallSphereOne, smallSphereTwo;
 let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
   rightPortalTexture, bottomLeftCorner, bottomRightCorner, topLeftCorner;
@@ -33,7 +33,7 @@ let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
     scene.add(smallSphereTwo);
 
     // portals
-    portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
+    portalCamera = new THREE.PerspectiveCamera(45, 1.0, 0.01, 100.0);
     scene.add(portalCamera);
     //frustumHelper = new THREE.CameraHelper( portalCamera );
     //scene.add( frustumHelper );
@@ -114,7 +114,7 @@ let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
       }
     });
     const size = box.getSize(new THREE.Vector3());
-    const scale = 0.3 / Math.max(size.x, size.y, size.z);
+    scale = 0.3 / Math.max(size.x, size.y, size.z);
     console.info('Scaling scene by', scale);
     scene.scale.set(scale, scale, scale);
   })();
@@ -123,17 +123,19 @@ let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
 function renderPortal(thisPortalMesh, otherPortalMesh, thisPortalTexture) {
   // set the portal camera position to be reflected about the portal plane
   thisPortalMesh.worldToLocal(reflectedPosition.copy(camera.position));
-  reflectedPosition.x *= - 1.0; reflectedPosition.z *= - 1.0;
+  // reflectedPosition.x *= - 1.0;
+  // reflectedPosition.z *= - 1.0;
   otherPortalMesh.localToWorld(reflectedPosition);
   portalCamera.position.copy(reflectedPosition);
 
+  let unit = 50.05;
   // grab the corners of the other portal
   // - note: the portal is viewed backwards; flip the left/right coordinates
-  otherPortalMesh.localToWorld(bottomLeftCorner.set(50.05, - 50.05, 0.0));
-  otherPortalMesh.localToWorld(bottomRightCorner.set(- 50.05, - 50.05, 0.0));
-  otherPortalMesh.localToWorld(topLeftCorner.set(50.05, 50.05, 0.0));
+  otherPortalMesh.localToWorld(bottomLeftCorner.set(unit, - unit, 0.0));
+  otherPortalMesh.localToWorld(bottomRightCorner.set(- unit, - unit, 0.0));
+  otherPortalMesh.localToWorld(topLeftCorner.set(unit, unit, 0.0));
   // set the projection matrix to encompass the portal's frame
-  CameraUtils.frameCorners(portalCamera, bottomLeftCorner, bottomRightCorner, topLeftCorner, false);
+  // CameraUtils.frameCorners(portalCamera, bottomLeftCorner, bottomRightCorner, topLeftCorner, false);
 
   // render the portal
   thisPortalTexture.texture.colorSpace = renderer.outputColorSpace;

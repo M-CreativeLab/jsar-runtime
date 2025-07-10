@@ -323,7 +323,7 @@ namespace commandbuffers
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
-      ss << "bindFramebuffer(";
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(";
       isBindToDefault()
         ? ss << "default"
         : ss << framebuffer;

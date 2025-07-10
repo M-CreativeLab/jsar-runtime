@@ -26,6 +26,21 @@ void ContextGLHost::recordFromHost()
     is_framebuffer_changed = true;
   }
 
+  // Record clear values
+  {
+    GLfloat clear_color[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
+    m_ClearColor = {clear_color[0], clear_color[1], clear_color[2], clear_color[3]};
+
+    GLfloat clear_depth;
+    glGetFloatv(GL_DEPTH_CLEAR_VALUE, &clear_depth);
+    m_ClearDepth = clear_depth;
+
+    GLint clear_stencil;
+    glGetIntegerv(GL_STENCIL_CLEAR_VALUE, &clear_stencil);
+    m_ClearStencil = clear_stencil;
+  }
+
   // Record objects
   glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
   glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);

@@ -982,8 +982,8 @@ namespace client_graphics
     if (runsInXRFrame &&
         (
           /**
-             * Match for three.js matrix uniforms
-             */
+           * Match for three.js matrix uniforms
+           */
           locationName == "projectionMatrix" ||
           locationName == "projectionMatrices" ||
           locationName == "projectionMatrices[0]" ||
@@ -991,15 +991,15 @@ namespace client_graphics
           locationName == "viewMatrices" ||
           locationName == "viewMatrices[0]" ||
           /**
-             * Match for Babylon.js matrix uniforms
-             */
+           * Match for Babylon.js matrix uniforms
+           */
           locationName == "projection" ||
           locationName == "view" ||
           locationName == "viewProjection" ||
           locationName == "viewProjectionR"
           /**
-             * TODO: Compatibility with other libraries: Babylon.js, etc.
-             */
+           * TODO: Compatibility with other libraries: Babylon.js, etc.
+           */
           ))
     {
       bool forMultiview = false;
@@ -1036,11 +1036,13 @@ namespace client_graphics
       computationGraph.multiview = forMultiview;
       req.computationGraph4values = computationGraph;
     }
-    else
+
+    // Also copy the input values to the request for non-XR cases
+    // TODO(yorkie): skip copying values if the current binding fbo is default?
     {
       size_t length = values.size();
-      if (length % 16 != 0)
-        throw std::runtime_error("uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".");
+      if (length % 16 != 0) [[unlikely]]
+        throw runtime_error("uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".");
 
       req.values.resize(length);
       auto valuesSrc = values.data();
@@ -1131,29 +1133,29 @@ namespace client_graphics
 
   void WebGLContext::clearColor(float red, float green, float blue, float alpha)
   {
-    // auto req = ClearColorCommandBufferRequest(red, green, blue, alpha);
-    // sendCommandBufferRequest(req);
+    auto req = ClearColorCommandBufferRequest(red, green, blue, alpha);
+    sendCommandBufferRequest(req);
     clearColor_ = glm::vec4(red, green, blue, alpha);
   }
 
   void WebGLContext::clearDepth(float depth)
   {
-    // auto req = ClearDepthCommandBufferRequest(depth);
-    // sendCommandBufferRequest(req);
+    auto req = ClearDepthCommandBufferRequest(depth);
+    sendCommandBufferRequest(req);
     clearDepth_ = depth;
   }
 
   void WebGLContext::clearStencil(int s)
   {
-    // auto req = ClearStencilCommandBufferRequest(s);
-    // sendCommandBufferRequest(req);
+    auto req = ClearStencilCommandBufferRequest(s);
+    sendCommandBufferRequest(req);
     clearStencil_ = s;
   }
 
   void WebGLContext::clear(int mask)
   {
-    // auto req = ClearCommandBufferRequest(mask);
-    // sendCommandBufferRequest(req);
+    auto req = ClearCommandBufferRequest(mask);
+    sendCommandBufferRequest(req);
   }
 
   void WebGLContext::depthMask(bool flag)

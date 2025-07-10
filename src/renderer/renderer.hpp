@@ -140,7 +140,7 @@ namespace renderer
     /**
      * @returns The host graphics context.
      */
-    ContextGLHost *getOpenGLContext()
+    ContextGLHost *getContextGL()
     {
       return glHostContext;
     }
