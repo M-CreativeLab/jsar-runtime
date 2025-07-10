@@ -85,6 +85,7 @@ unique_ptr<GLFramebufferAttachment> GLFramebufferAttachment::FromCurrent(GLenum 
     GLint is_texture_array = 0;
     glBindTexture(GL_TEXTURE_2D_ARRAY, attachment_texture);
     glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_DEPTH, &is_texture_array);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, current_texture_binding);
 
     if (is_texture_array > 0)
     {
@@ -98,12 +99,17 @@ unique_ptr<GLFramebufferAttachment> GLFramebufferAttachment::FromCurrent(GLenum 
     }
 
     GLenum textarget = attachment_object->texture_target_;
-    glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_WIDTH, &attachment_object->width_);
-    glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_HEIGHT, &attachment_object->height_);
-    glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_INTERNAL_FORMAT, &attachment_object->texture_internal_format_);
+    glGetIntegerv(textarget, &current_texture_binding);
+    {
+      glBindTexture(textarget, attachment_texture);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_WIDTH, &attachment_object->width_);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_HEIGHT, &attachment_object->height_);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_INTERNAL_FORMAT, &attachment_object->texture_internal_format_);
+      glBindTexture(textarget, current_texture_binding);
+    }
 
-    glBindTexture(GL_TEXTURE_2D_ARRAY, current_texture_binding);
-    glGetError(); // Clear any errors from the previous call
+    // Clear any errors from the previous call
+    glGetError();
   }
   else if (attachment_type == GL_NONE)
   {

@@ -190,6 +190,16 @@ private:
             binding_fbo,
             glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "Complete" : "Incomplete");
 
+      // Print viewport & scissor
+      {
+        GLint viewport[4];
+        GLint scissor[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glGetIntegerv(GL_SCISSOR_BOX, scissor);
+        DEBUG(logTag, "     Viewport: (%d, %d, %d, %d)", viewport[0], viewport[1], viewport[2], viewport[3]);
+        DEBUG(logTag, "      Scissor: (%d, %d, %d, %d)", scissor[0], scissor[1], scissor[2], scissor[3]);
+      }
+
       auto color0 = GLFramebufferAttachment::FromCurrent(GL_COLOR_ATTACHMENT0);
       auto depth = GLFramebufferAttachment::FromCurrent(GL_DEPTH_ATTACHMENT);
       if (color0 != nullptr)
@@ -198,15 +208,13 @@ private:
         depth->print("        Depth");
     }
 
-    // Print LINK_STATUS, VALIDATE_STATUS
+    // Print LINK_STATUS
     {
-      GLint linkStatus, validateStatus;
+      GLint linkStatus;
       glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-      glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
       DEBUG(logTag, "    Program: LINK_STATUS=%s", linkStatus == GL_TRUE ? "Ok" : "Failed");
-      DEBUG(logTag, "    Program: VALIDATE_STATUS=%s", validateStatus == GL_TRUE ? "Ok" : "Failed");
 
-      if (linkStatus != GL_TRUE || validateStatus != GL_TRUE)
+      if (linkStatus != GL_TRUE)
       {
         GLchar infoLog[512];
         glGetProgramInfoLog(program, 512, nullptr, infoLog);
@@ -849,12 +857,12 @@ private:
                                    ApiCallOptions &options)
   {
     auto &glObjectManager = reqContentRenderer->getOpenGLContext()->ObjectManagerRef();
-    auto target = req->target;
-    auto buffer = glObjectManager.FindBuffer(req->buffer);
-    if (req->buffer != 0 && buffer == 0)
+    uint32_t target = req->target;
+    GLuint buffer = glObjectManager.FindBuffer(req->buffer);
+    if (req->buffer != 0 && buffer == 0) [[unlikely]]
     {
       reqContentRenderer->increaseFrameErrorsCount();
-      DEBUG(DEBUG_TAG, "Could not find buffer(cid=%d) to bind", req->buffer);
+      DEBUG(LOG_TAG_ERROR, "Could not find buffer(cid=%d) to bind", req->buffer);
       glObjectManager.PrintBuffers();
       return;
     }
@@ -868,13 +876,7 @@ private:
 
     glBindBuffer(target, buffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::BindBuffer(%s, buffer=%d)",
-            options.isDefaultQueue(),
-            gles::glEnumToString(target).c_str(),
-            buffer);
-    }
+      PrintDebugInfo(req, to_string(buffer).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnBufferData(BufferDataCommandBufferRequest *req,
                                    renderer::TrContentRenderer *reqContentRenderer,
@@ -919,7 +921,7 @@ private:
     GLuint framebuffer = glObjectManager.CreateFramebuffer(req->clientId);
     reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer(#%d) => %d", options.isDefaultQueue(), req->clientId, framebuffer);
+      PrintDebugInfo(req, to_string(framebuffer).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteFramebuffer(
     DeleteFramebufferCommandBufferRequest *req,
@@ -931,7 +933,7 @@ private:
     glObjectManager.DeleteFramebuffer(req->framebuffer);
     reqContentRenderer->getOpenGLContext()->RecordFramebufferOnDeleted(framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d", options.isDefaultQueue(), req->framebuffer);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindFramebuffer(
     BindFramebufferCommandBufferRequest *req,
@@ -989,7 +991,7 @@ private:
     GLenum ret = glCheckFramebufferStatus(req->target);
     CheckFramebufferStatusCommandBufferResponse res(req, ret);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CheckFramebufferStatus() => %d", options.isDefaultQueue(), res.status);
+      PrintDebugInfo(req, nullptr, &res, options);
   }
   TR_OPENGL_FUNC void OnCreateRenderbuffer(
     CreateRenderbufferCommandBufferRequest *req,
@@ -1012,7 +1014,7 @@ private:
     glObjectManager.DeleteRenderbuffer(req->renderbuffer);
     reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnDeleted(renderbuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer(%d)", options.isDefaultQueue(), renderbuffer);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req,
                                          renderer::TrContentRenderer *reqContentRenderer,
@@ -1026,11 +1028,9 @@ private:
     reqContentRenderer->getOpenGLContext()->onRenderbufferChanged(renderbuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es3/glBindRenderbuffer") != GL_NO_ERROR ||
                     options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::BindRenderbuffer(%s, renderbuffer(%d))",
-            options.isDefaultQueue(),
-            gles::glEnumToString(target).c_str(),
-            renderbuffer);
+    {
+      PrintDebugInfo(req, to_string(renderbuffer).c_str(), nullptr, options);
+    }
   }
   TR_OPENGL_FUNC void OnRenderbufferStorage(RenderbufferStorageCommandBufferRequest *req,
                                             renderer::TrContentRenderer *reqContentRenderer,
@@ -1050,7 +1050,7 @@ private:
   {
     glReadBuffer(req->mode);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::ReadBuffer(%d)", options.isDefaultQueue(), req->mode);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindBufferBase(BindBufferBaseCommandBufferRequest *req,
                                        renderer::TrContentRenderer *reqContentRenderer,
@@ -1062,7 +1062,7 @@ private:
     auto buffer = glObjectManager.FindBuffer(req->buffer);
     glBindBufferBase(target, index, buffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::BindBufferBase(%d, index=%d, target=%d)", options.isDefaultQueue(), buffer, index, target);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindBufferRange(BindBufferRangeCommandBufferRequest *req,
                                         renderer::TrContentRenderer *reqContentRenderer,
@@ -1075,7 +1075,7 @@ private:
     auto size = req->bufferSize;
     glBindBufferRange(target, index, buffer, offset, size);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::BindBufferRange(%d)", options.isDefaultQueue(), buffer);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBlitFramebuffer(BlitFramebufferCommandBufferRequest *req,
                                         renderer::TrContentRenderer *reqContentRenderer,
@@ -1093,12 +1093,7 @@ private:
       req->mask,
       req->filter);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::BlitFramebuffer(%d, %d, filter=%d)",
-            options.isDefaultQueue(),
-            req->srcX0,
-            req->srcY0,
-            req->filter);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnRenderbufferStorageMultisample(RenderbufferStorageMultisampleCommandBufferRequest *req,
                                                        renderer::TrContentRenderer *reqContentRenderer,
@@ -1111,14 +1106,7 @@ private:
     auto height = req->height;
     glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::RenderbufferStorageMultisample(0x%x, samples=%d, internalformat=0x%x, size=[%d,%d])",
-            options.isDefaultQueue(),
-            target,
-            samples,
-            internalformat,
-            width,
-            height);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req,
                                           renderer::TrContentRenderer *reqContentRenderer,
@@ -2175,21 +2163,7 @@ private:
     glEnable(cap);
     reqContentRenderer->getOpenGLContext()->onCapabilityEnabled(cap, true);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      if (cap == GL_BLEND ||
-          cap == GL_CULL_FACE ||
-          cap == GL_DEPTH_TEST ||
-          cap == GL_DITHER ||
-          cap == GL_POLYGON_OFFSET_FILL ||
-          cap == GL_RASTERIZER_DISCARD ||
-          cap == GL_SAMPLE_ALPHA_TO_COVERAGE ||
-          cap == GL_SAMPLE_COVERAGE ||
-          cap == GL_SCISSOR_TEST ||
-          cap == GL_STENCIL_TEST)
-        DEBUG(DEBUG_TAG, "[%d] GL::Enable(%s)", options.isDefaultQueue(), gles::glEnumToString(cap).c_str());
-      else
-        DEBUG(DEBUG_TAG, "[%d] GL::Enable(0x%x)", options.isDefaultQueue(), cap);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnDisable(DisableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -2197,21 +2171,7 @@ private:
     glDisable(cap);
     reqContentRenderer->getOpenGLContext()->onCapabilityEnabled(cap, false);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      if (cap == GL_BLEND ||
-          cap == GL_CULL_FACE ||
-          cap == GL_DEPTH_TEST ||
-          cap == GL_DITHER ||
-          cap == GL_POLYGON_OFFSET_FILL ||
-          cap == GL_RASTERIZER_DISCARD ||
-          cap == GL_SAMPLE_ALPHA_TO_COVERAGE ||
-          cap == GL_SAMPLE_COVERAGE ||
-          cap == GL_SCISSOR_TEST ||
-          cap == GL_STENCIL_TEST)
-        DEBUG(DEBUG_TAG, "[%d] GL::Disable(%s)", options.isDefaultQueue(), gles::glEnumToString(cap).c_str());
-      else
-        DEBUG(DEBUG_TAG, "[%d] GL::Disable(0x%x)", options.isDefaultQueue(), cap);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnGetBooleanv(GetBooleanvCommandBufferRequest *req,
                                     renderer::TrContentRenderer *reqContentRenderer,

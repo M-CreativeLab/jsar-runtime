@@ -13,7 +13,7 @@ namespace commandbuffers
     TrCommandBufferBase *req = nullptr;
     switch (message.type)
     {
-#define XX(commandType, requestType)                                    \
+#define XX(commandType, requestType, _)                                 \
   case COMMAND_BUFFER_##commandType##_REQ:                              \
   {                                                                     \
     req = TrCommandBufferBase::CreateFromMessage<requestType>(message); \
@@ -37,7 +37,7 @@ namespace commandbuffers
     TrCommandBufferResponse *resp = nullptr;
     switch (message.type)
     {
-#define XX(commandType, responseType)                                     \
+#define XX(commandType, responseType, _)                                  \
   case COMMAND_BUFFER_##commandType##_RES:                                \
   {                                                                       \
     resp = TrCommandBufferBase::CreateFromMessage<responseType>(message); \

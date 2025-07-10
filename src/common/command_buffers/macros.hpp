@@ -1,161 +1,161 @@
 #pragma once
 
-#define TR_COMMAND_BUFFER_REQUESTS_MAP(XX)                                                 \
-  XX(CREATE_WEBGL_CONTEXT, CreateWebGLContextRequest)                                      \
-  XX(REMOVE_WEBGL_CONTEXT, RemoveWebGLContextRequest)                                      \
-  XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferRequest)                            \
-  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferRequest)                           \
-  XX(CREATE_PROGRAM, CreateProgramCommandBufferRequest)                                    \
-  XX(DELETE_PROGRAM, DeleteProgramCommandBufferRequest)                                    \
-  XX(LINK_PROGRAM, LinkProgramCommandBufferRequest)                                        \
-  XX(USE_PROGRAM, UseProgramCommandBufferRequest)                                          \
-  XX(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest)                         \
-  XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest)                               \
-  XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest)                          \
-  XX(ATTACH_SHADER, AttachShaderCommandBufferRequest)                                      \
-  XX(DETACH_SHADER, DetachShaderCommandBufferRequest)                                      \
-  XX(CREATE_SHADER, CreateShaderCommandBufferRequest)                                      \
-  XX(DELETE_SHADER, DeleteShaderCommandBufferRequest)                                      \
-  XX(SHADER_SOURCE, ShaderSourceCommandBufferRequest)                                      \
-  XX(COMPILE_SHADER, CompileShaderCommandBufferRequest)                                    \
-  XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferRequest)                               \
-  XX(GET_SHADER_PARAM, GetShaderParamCommandBufferRequest)                                 \
-  XX(GET_SHADER_INFO_LOG, GetShaderInfoLogCommandBufferRequest)                            \
-  XX(CREATE_BUFFER, CreateBufferCommandBufferRequest)                                      \
-  XX(DELETE_BUFFER, DeleteBufferCommandBufferRequest)                                      \
-  XX(BIND_BUFFER, BindBufferCommandBufferRequest)                                          \
-  XX(BUFFER_DATA, BufferDataCommandBufferRequest)                                          \
-  XX(BUFFER_SUB_DATA, BufferSubDataCommandBufferRequest)                                   \
-  XX(CREATE_FRAMEBUFFER, CreateFramebufferCommandBufferRequest)                            \
-  XX(DELETE_FRAMEBUFFER, DeleteFramebufferCommandBufferRequest)                            \
-  XX(BIND_FRAMEBUFFER, BindFramebufferCommandBufferRequest)                                \
-  XX(FRAMEBUFFER_RENDERBUFFER, FramebufferRenderbufferCommandBufferRequest)                \
-  XX(FRAMEBUFFER_TEXTURE2D, FramebufferTexture2DCommandBufferRequest)                      \
-  XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferRequest)                 \
-  XX(CREATE_RENDERBUFFER, CreateRenderbufferCommandBufferRequest)                          \
-  XX(DELETE_RENDERBUFFER, DeleteRenderbufferCommandBufferRequest)                          \
-  XX(BIND_RENDERBUFFER, BindRenderbufferCommandBufferRequest)                              \
-  XX(RENDERBUFFER_STORAGE, RenderbufferStorageCommandBufferRequest)                        \
-  XX(READ_BUFFER, ReadBufferCommandBufferRequest)                                          \
-  XX(BIND_BUFFER_BASE, BindBufferBaseCommandBufferRequest)                                 \
-  XX(BIND_BUFFER_RANGE, BindBufferRangeCommandBufferRequest)                               \
-  XX(BLIT_FRAMEBUFFER, BlitFramebufferCommandBufferRequest)                                \
-  XX(RENDERBUFFER_STORAGE_MULTISAMPLE, RenderbufferStorageMultisampleCommandBufferRequest) \
-  XX(CREATE_VERTEX_ARRAY, CreateVertexArrayCommandBufferRequest)                           \
-  XX(DELETE_VERTEX_ARRAY, DeleteVertexArrayCommandBufferRequest)                           \
-  XX(BIND_VERTEX_ARRAY, BindVertexArrayCommandBufferRequest)                               \
-  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferRequest)                                   \
-  XX(CREATE_TEXTURE, CreateTextureCommandBufferRequest)                                    \
-  XX(DELETE_TEXTURE, DeleteTextureCommandBufferRequest)                                    \
-  XX(BIND_TEXTURE, BindTextureCommandBufferRequest)                                        \
-  XX(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest)                                 \
-  XX(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest)                          \
-  XX(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest)                        \
-  XX(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest)                 \
-  XX(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest)                            \
-  XX(TEXTURE_PARAMETERF, TextureParameterfCommandBufferRequest)                            \
-  XX(ACTIVE_TEXTURE, ActiveTextureCommandBufferRequest)                                    \
-  XX(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest)                                  \
-  XX(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest)                                 \
-  XX(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest)                          \
-  XX(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest)                             \
-  XX(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest)                             \
-  XX(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest)              \
-  XX(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest)            \
-  XX(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest)                       \
-  XX(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest)                     \
-  XX(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest)                       \
-  XX(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest)                       \
-  XX(UNIFORM1F, Uniform1fCommandBufferRequest)                                             \
-  XX(UNIFORM1FV, Uniform1fvCommandBufferRequest)                                           \
-  XX(UNIFORM1I, Uniform1iCommandBufferRequest)                                             \
-  XX(UNIFORM1IV, Uniform1ivCommandBufferRequest)                                           \
-  XX(UNIFORM2F, Uniform2fCommandBufferRequest)                                             \
-  XX(UNIFORM2FV, Uniform2fvCommandBufferRequest)                                           \
-  XX(UNIFORM2I, Uniform2iCommandBufferRequest)                                             \
-  XX(UNIFORM2IV, Uniform2ivCommandBufferRequest)                                           \
-  XX(UNIFORM3F, Uniform3fCommandBufferRequest)                                             \
-  XX(UNIFORM3FV, Uniform3fvCommandBufferRequest)                                           \
-  XX(UNIFORM3I, Uniform3iCommandBufferRequest)                                             \
-  XX(UNIFORM3IV, Uniform3ivCommandBufferRequest)                                           \
-  XX(UNIFORM4F, Uniform4fCommandBufferRequest)                                             \
-  XX(UNIFORM4FV, Uniform4fvCommandBufferRequest)                                           \
-  XX(UNIFORM4I, Uniform4iCommandBufferRequest)                                             \
-  XX(UNIFORM4IV, Uniform4ivCommandBufferRequest)                                           \
-  XX(UNIFORM_MATRIX2FV, UniformMatrix2fvCommandBufferRequest)                              \
-  XX(UNIFORM_MATRIX3FV, UniformMatrix3fvCommandBufferRequest)                              \
-  XX(UNIFORM_MATRIX4FV, UniformMatrix4fvCommandBufferRequest)                              \
-  XX(DRAW_ARRAYS, DrawArraysCommandBufferRequest)                                          \
-  XX(DRAW_ELEMENTS, DrawElementsCommandBufferRequest)                                      \
-  XX(DRAW_ARRAYS_INSTANCED, DrawArraysInstancedCommandBufferRequest)                       \
-  XX(DRAW_ELEMENTS_INSTANCED, DrawElementsInstancedCommandBufferRequest)                   \
-  XX(DRAW_RANGE_ELEMENTS, DrawRangeElementsCommandBufferRequest)                           \
-  XX(DRAW_BUFFERS, DrawBuffersCommandBufferRequest)                                        \
-  XX(HINT, HintCommandBufferRequest)                                                       \
-  XX(LINE_WIDTH, LineWidthCommandBufferRequest)                                            \
-  XX(PIXEL_STOREI, PixelStoreiCommandBufferRequest)                                        \
-  XX(POLYGON_OFFSET, PolygonOffsetCommandBufferRequest)                                    \
-  XX(SET_VIEWPORT, SetViewportCommandBufferRequest)                                        \
-  XX(SET_SCISSOR, SetScissorCommandBufferRequest)                                          \
-  XX(GET_EXTENSIONS, GetExtensionsCommandBufferRequest)                                    \
-  XX(CLEAR, ClearCommandBufferRequest)                                                     \
-  XX(CLEAR_COLOR, ClearColorCommandBufferRequest)                                          \
-  XX(CLEAR_DEPTH, ClearDepthCommandBufferRequest)                                          \
-  XX(CLEAR_STENCIL, ClearStencilCommandBufferRequest)                                      \
-  XX(DEPTH_MASK, DepthMaskCommandBufferRequest)                                            \
-  XX(DEPTH_FUNC, DepthFuncCommandBufferRequest)                                            \
-  XX(DEPTH_RANGE, DepthRangeCommandBufferRequest)                                          \
-  XX(STENCIL_FUNC, StencilFuncCommandBufferRequest)                                        \
-  XX(STENCIL_FUNC_SEPARATE, StencilFuncSeparateCommandBufferRequest)                       \
-  XX(STENCIL_MASK, StencilMaskCommandBufferRequest)                                        \
-  XX(STENCIL_MASK_SEPARATE, StencilMaskSeparateCommandBufferRequest)                       \
-  XX(STENCIL_OP, StencilOpCommandBufferRequest)                                            \
-  XX(STENCIL_OP_SEPARATE, StencilOpSeparateCommandBufferRequest)                           \
-  XX(BLEND_COLOR, BlendColorCommandBufferRequest)                                          \
-  XX(BLEND_EQUATION, BlendEquationCommandBufferRequest)                                    \
-  XX(BLEND_EQUATION_SEPARATE, BlendEquationSeparateCommandBufferRequest)                   \
-  XX(BLEND_FUNC, BlendFuncCommandBufferRequest)                                            \
-  XX(BLEND_FUNC_SEPARATE, BlendFuncSeparateCommandBufferRequest)                           \
-  XX(COLOR_MASK, ColorMaskCommandBufferRequest)                                            \
-  XX(CULL_FACE, CullFaceCommandBufferRequest)                                              \
-  XX(FRONT_FACE, FrontFaceCommandBufferRequest)                                            \
-  XX(ENABLE, EnableCommandBufferRequest)                                                   \
-  XX(DISABLE, DisableCommandBufferRequest)                                                 \
-  XX(GET_BOOLEANV, GetBooleanvCommandBufferRequest)                                        \
-  XX(GET_INTEGERV, GetIntegervCommandBufferRequest)                                        \
-  XX(GET_FLOATV, GetFloatvCommandBufferRequest)                                            \
-  XX(GET_STRING, GetStringCommandBufferRequest)                                            \
-  XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferRequest)            \
-  XX(GET_ERROR, GetErrorCommandBufferRequest)                                              \
-  XX(CREATE_SAMPLER, CreateSamplerCommandBufferRequest)                                    \
-  XX(DELETE_SAMPLER, DeleteSamplerCommandBufferRequest)                                    \
-  XX(BIND_SAMPLER, BindSamplerCommandBufferRequest)                                        \
-  XX(SAMPLER_PARAMETERI, SamplerParameteriCommandBufferRequest)                            \
-  XX(SAMPLER_PARAMETERF, SamplerParameterfCommandBufferRequest)                            \
-  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferRequest)                       \
-  XX(IS_SAMPLER, IsSamplerCommandBufferRequest)                                            \
-  XX(XRFRAME_START, XRFrameStartCommandBufferRequest)                                      \
-  XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest)                                      \
-  XX(XRFRAME_END, XRFrameEndCommandBufferRequest)                                          \
-  XX(METRICS_PAINTING, PaintingMetricsCommandBufferRequest)
+#define TR_COMMAND_BUFFER_REQUESTS_MAP(XX)                                                                                       \
+  XX(CREATE_WEBGL_CONTEXT, CreateWebGLContextRequest, "GL::CreateContext")                                                       \
+  XX(REMOVE_WEBGL_CONTEXT, RemoveWebGLContextRequest, "GL::RemoveContext")                                                       \
+  XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferRequest, "GL::ContextInit")                                               \
+  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferRequest, "GL::ContextInit")                                              \
+  XX(CREATE_PROGRAM, CreateProgramCommandBufferRequest, "GL::CreateProgram")                                                     \
+  XX(DELETE_PROGRAM, DeleteProgramCommandBufferRequest, "GL::DeleteProgram")                                                     \
+  XX(LINK_PROGRAM, LinkProgramCommandBufferRequest, "GL::LinkProgram")                                                           \
+  XX(USE_PROGRAM, UseProgramCommandBufferRequest, "GL::UseProgram")                                                              \
+  XX(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest, "GL::BindAttribLocation")                                     \
+  XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest, "GL::GetProgramParam")                                              \
+  XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest, "GL::GetProgramInfoLog")                                       \
+  XX(ATTACH_SHADER, AttachShaderCommandBufferRequest, "GL::AttachShader")                                                        \
+  XX(DETACH_SHADER, DetachShaderCommandBufferRequest, "GL::DetachShader")                                                        \
+  XX(CREATE_SHADER, CreateShaderCommandBufferRequest, "GL::CreateShader")                                                        \
+  XX(DELETE_SHADER, DeleteShaderCommandBufferRequest, "GL::DeleteShader")                                                        \
+  XX(SHADER_SOURCE, ShaderSourceCommandBufferRequest, "GL::ShaderSource")                                                        \
+  XX(COMPILE_SHADER, CompileShaderCommandBufferRequest, "GL::CompileShader")                                                     \
+  XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferRequest, "GL::GetShaderSource")                                              \
+  XX(GET_SHADER_PARAM, GetShaderParamCommandBufferRequest, "GL::GetShaderParam")                                                 \
+  XX(GET_SHADER_INFO_LOG, GetShaderInfoLogCommandBufferRequest, "GL::GetShaderInfoLog")                                          \
+  XX(CREATE_BUFFER, CreateBufferCommandBufferRequest, "GL::CreateBuffer")                                                        \
+  XX(DELETE_BUFFER, DeleteBufferCommandBufferRequest, "GL::DeleteBuffer")                                                        \
+  XX(BIND_BUFFER, BindBufferCommandBufferRequest, "GL::BindBuffer")                                                              \
+  XX(BUFFER_DATA, BufferDataCommandBufferRequest, "GL::BufferData")                                                              \
+  XX(BUFFER_SUB_DATA, BufferSubDataCommandBufferRequest, "GL::BufferSubData")                                                    \
+  XX(CREATE_FRAMEBUFFER, CreateFramebufferCommandBufferRequest, "GL::CreateFramebuffer")                                         \
+  XX(DELETE_FRAMEBUFFER, DeleteFramebufferCommandBufferRequest, "GL::DeleteFramebuffer")                                         \
+  XX(BIND_FRAMEBUFFER, BindFramebufferCommandBufferRequest, "GL::BindFramebuffer")                                               \
+  XX(FRAMEBUFFER_RENDERBUFFER, FramebufferRenderbufferCommandBufferRequest, "GL::FramebufferRenderbuffer")                       \
+  XX(FRAMEBUFFER_TEXTURE2D, FramebufferTexture2DCommandBufferRequest, "GL::FramebufferTexture2D")                                \
+  XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferRequest, "GL::CheckFramebufferStatus")                         \
+  XX(CREATE_RENDERBUFFER, CreateRenderbufferCommandBufferRequest, "GL::CreateRenderbuffer")                                      \
+  XX(DELETE_RENDERBUFFER, DeleteRenderbufferCommandBufferRequest, "GL::DeleteRenderbuffer")                                      \
+  XX(BIND_RENDERBUFFER, BindRenderbufferCommandBufferRequest, "GL::BindRenderbuffer")                                            \
+  XX(RENDERBUFFER_STORAGE, RenderbufferStorageCommandBufferRequest, "GL::RenderbufferStorage")                                   \
+  XX(READ_BUFFER, ReadBufferCommandBufferRequest, "GL::ReadBuffer")                                                              \
+  XX(BIND_BUFFER_BASE, BindBufferBaseCommandBufferRequest, "GL::BindBufferBase")                                                 \
+  XX(BIND_BUFFER_RANGE, BindBufferRangeCommandBufferRequest, "GL::BindBufferRange")                                              \
+  XX(BLIT_FRAMEBUFFER, BlitFramebufferCommandBufferRequest, "GL::BlitFramebuffer")                                               \
+  XX(RENDERBUFFER_STORAGE_MULTISAMPLE, RenderbufferStorageMultisampleCommandBufferRequest, "GL::RenderbufferStorageMultisample") \
+  XX(CREATE_VERTEX_ARRAY, CreateVertexArrayCommandBufferRequest, "GL::CreateVertexArray")                                        \
+  XX(DELETE_VERTEX_ARRAY, DeleteVertexArrayCommandBufferRequest, "GL::DeleteVertexArray")                                        \
+  XX(BIND_VERTEX_ARRAY, BindVertexArrayCommandBufferRequest, "GL::BindVertexArray")                                              \
+  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferRequest, "GL::IsVertexArray")                                                    \
+  XX(CREATE_TEXTURE, CreateTextureCommandBufferRequest, "GL::CreateTexture")                                                     \
+  XX(DELETE_TEXTURE, DeleteTextureCommandBufferRequest, "GL::DeleteTexture")                                                     \
+  XX(BIND_TEXTURE, BindTextureCommandBufferRequest, "GL::BindTexture")                                                           \
+  XX(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest, "GL::TextureImage2D")                                                 \
+  XX(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest, "GL::TextureSubImage2D")                                       \
+  XX(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest, "GL::CopyTextureImage2D")                                    \
+  XX(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest, "GL::CopyTextureSubImage2D")                          \
+  XX(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest, "GL::TextureParameteri")                                         \
+  XX(TEXTURE_PARAMETERF, TextureParameterfCommandBufferRequest, "GL::TextureParameterf")                                         \
+  XX(ACTIVE_TEXTURE, ActiveTextureCommandBufferRequest, "GL::ActiveTexture")                                                     \
+  XX(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest, "GL::GenerateMipmap")                                                  \
+  XX(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest, "GL::TextureImage3D")                                                 \
+  XX(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest, "GL::TextureSubImage3D")                                       \
+  XX(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest, "GL::TextureStorage2D")                                           \
+  XX(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest, "GL::TextureStorage3D")                                           \
+  XX(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, "GL::EnableVertexAttribArray")                     \
+  XX(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, "GL::DisableVertexAttribArray")                  \
+  XX(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, "GL::VertexAttribPointer")                                  \
+  XX(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, "GL::VertexAttribIPointer")                               \
+  XX(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, "GL::VertexAttribDivisor")                                  \
+  XX(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, "GL::UniformBlockBinding")                                  \
+  XX(UNIFORM1F, Uniform1fCommandBufferRequest, "GL::Uniform1f")                                                                  \
+  XX(UNIFORM1FV, Uniform1fvCommandBufferRequest, "GL::Uniform1fv")                                                               \
+  XX(UNIFORM1I, Uniform1iCommandBufferRequest, "GL::Uniform1i")                                                                  \
+  XX(UNIFORM1IV, Uniform1ivCommandBufferRequest, "GL::Uniform1iv")                                                               \
+  XX(UNIFORM2F, Uniform2fCommandBufferRequest, "GL::Uniform2f")                                                                  \
+  XX(UNIFORM2FV, Uniform2fvCommandBufferRequest, "GL::Uniform2fv")                                                               \
+  XX(UNIFORM2I, Uniform2iCommandBufferRequest, "GL::Uniform2i")                                                                  \
+  XX(UNIFORM2IV, Uniform2ivCommandBufferRequest, "GL::Uniform2iv")                                                               \
+  XX(UNIFORM3F, Uniform3fCommandBufferRequest, "GL::Uniform3f")                                                                  \
+  XX(UNIFORM3FV, Uniform3fvCommandBufferRequest, "GL::Uniform3fv")                                                               \
+  XX(UNIFORM3I, Uniform3iCommandBufferRequest, "GL::Uniform3i")                                                                  \
+  XX(UNIFORM3IV, Uniform3ivCommandBufferRequest, "GL::Uniform3iv")                                                               \
+  XX(UNIFORM4F, Uniform4fCommandBufferRequest, "GL::Uniform4f")                                                                  \
+  XX(UNIFORM4FV, Uniform4fvCommandBufferRequest, "GL::Uniform4fv")                                                               \
+  XX(UNIFORM4I, Uniform4iCommandBufferRequest, "GL::Uniform4i")                                                                  \
+  XX(UNIFORM4IV, Uniform4ivCommandBufferRequest, "GL::Uniform4iv")                                                               \
+  XX(UNIFORM_MATRIX2FV, UniformMatrix2fvCommandBufferRequest, "GL::UniformMatrix2fv")                                            \
+  XX(UNIFORM_MATRIX3FV, UniformMatrix3fvCommandBufferRequest, "GL::UniformMatrix3fv")                                            \
+  XX(UNIFORM_MATRIX4FV, UniformMatrix4fvCommandBufferRequest, "GL::UniformMatrix4fv")                                            \
+  XX(DRAW_ARRAYS, DrawArraysCommandBufferRequest, "GL::DrawArrays")                                                              \
+  XX(DRAW_ELEMENTS, DrawElementsCommandBufferRequest, "GL::DrawElements")                                                        \
+  XX(DRAW_ARRAYS_INSTANCED, DrawArraysInstancedCommandBufferRequest, "GL::DrawArraysInstanced")                                  \
+  XX(DRAW_ELEMENTS_INSTANCED, DrawElementsInstancedCommandBufferRequest, "GL::DrawElementsInstanced")                            \
+  XX(DRAW_RANGE_ELEMENTS, DrawRangeElementsCommandBufferRequest, "GL::DrawRangeElements")                                        \
+  XX(DRAW_BUFFERS, DrawBuffersCommandBufferRequest, "GL::DrawBuffers")                                                           \
+  XX(HINT, HintCommandBufferRequest, "GL::Hint")                                                                                 \
+  XX(LINE_WIDTH, LineWidthCommandBufferRequest, "GL::LineWidth")                                                                 \
+  XX(PIXEL_STOREI, PixelStoreiCommandBufferRequest, "GL::PixelStorei")                                                           \
+  XX(POLYGON_OFFSET, PolygonOffsetCommandBufferRequest, "GL::PolygonOffset")                                                     \
+  XX(SET_VIEWPORT, SetViewportCommandBufferRequest, "GL::SetViewport")                                                           \
+  XX(SET_SCISSOR, SetScissorCommandBufferRequest, "GL::SetScissor")                                                              \
+  XX(GET_EXTENSIONS, GetExtensionsCommandBufferRequest, "GL::GetExtensions")                                                     \
+  XX(CLEAR, ClearCommandBufferRequest, "GL::Clear")                                                                              \
+  XX(CLEAR_COLOR, ClearColorCommandBufferRequest, "GL::ClearColor")                                                              \
+  XX(CLEAR_DEPTH, ClearDepthCommandBufferRequest, "GL::ClearDepth")                                                              \
+  XX(CLEAR_STENCIL, ClearStencilCommandBufferRequest, "GL::ClearStencil")                                                        \
+  XX(DEPTH_MASK, DepthMaskCommandBufferRequest, "GL::DepthMask")                                                                 \
+  XX(DEPTH_FUNC, DepthFuncCommandBufferRequest, "GL::DepthFunc")                                                                 \
+  XX(DEPTH_RANGE, DepthRangeCommandBufferRequest, "GL::DepthRange")                                                              \
+  XX(STENCIL_FUNC, StencilFuncCommandBufferRequest, "GL::StencilFunc")                                                           \
+  XX(STENCIL_FUNC_SEPARATE, StencilFuncSeparateCommandBufferRequest, "GL::StencilFuncSeparate")                                  \
+  XX(STENCIL_MASK, StencilMaskCommandBufferRequest, "GL::StencilMask")                                                           \
+  XX(STENCIL_MASK_SEPARATE, StencilMaskSeparateCommandBufferRequest, "GL::StencilMaskSeparate")                                  \
+  XX(STENCIL_OP, StencilOpCommandBufferRequest, "GL::StencilOp")                                                                 \
+  XX(STENCIL_OP_SEPARATE, StencilOpSeparateCommandBufferRequest, "GL::StencilOpSeparate")                                        \
+  XX(BLEND_COLOR, BlendColorCommandBufferRequest, "GL::BlendColor")                                                              \
+  XX(BLEND_EQUATION, BlendEquationCommandBufferRequest, "GL::BlendEquation")                                                     \
+  XX(BLEND_EQUATION_SEPARATE, BlendEquationSeparateCommandBufferRequest, "GL::BlendEquationSeparate")                            \
+  XX(BLEND_FUNC, BlendFuncCommandBufferRequest, "GL::BlendFunc")                                                                 \
+  XX(BLEND_FUNC_SEPARATE, BlendFuncSeparateCommandBufferRequest, "GL::BlendFuncSeparate")                                        \
+  XX(COLOR_MASK, ColorMaskCommandBufferRequest, "GL::ColorMask")                                                                 \
+  XX(CULL_FACE, CullFaceCommandBufferRequest, "GL::CullFace")                                                                    \
+  XX(FRONT_FACE, FrontFaceCommandBufferRequest, "GL::FrontFace")                                                                 \
+  XX(ENABLE, EnableCommandBufferRequest, "GL::Enable")                                                                           \
+  XX(DISABLE, DisableCommandBufferRequest, "GL::Disable")                                                                        \
+  XX(GET_BOOLEANV, GetBooleanvCommandBufferRequest, "GL::GetBooleanv")                                                           \
+  XX(GET_INTEGERV, GetIntegervCommandBufferRequest, "GL::GetIntegerv")                                                           \
+  XX(GET_FLOATV, GetFloatvCommandBufferRequest, "GL::GetFloatv")                                                                 \
+  XX(GET_STRING, GetStringCommandBufferRequest, "GL::GetString")                                                                 \
+  XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferRequest, "GL::GetShaderPrecisionFormat")                  \
+  XX(GET_ERROR, GetErrorCommandBufferRequest, "GL::GetError")                                                                    \
+  XX(CREATE_SAMPLER, CreateSamplerCommandBufferRequest, "GL::CreateSampler")                                                     \
+  XX(DELETE_SAMPLER, DeleteSamplerCommandBufferRequest, "GL::DeleteSampler")                                                     \
+  XX(BIND_SAMPLER, BindSamplerCommandBufferRequest, "GL::BindSampler")                                                           \
+  XX(SAMPLER_PARAMETERI, SamplerParameteriCommandBufferRequest, "GL::SamplerParameteri")                                         \
+  XX(SAMPLER_PARAMETERF, SamplerParameterfCommandBufferRequest, "GL::SamplerParameterf")                                         \
+  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferRequest, "GL::GetSamplerParameter")                                  \
+  XX(IS_SAMPLER, IsSamplerCommandBufferRequest, "GL::IsSampler")                                                                 \
+  XX(XRFRAME_START, XRFrameStartCommandBufferRequest, "XR::FrameStart")                                                          \
+  XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest, "XR::FrameFlush")                                                          \
+  XX(XRFRAME_END, XRFrameEndCommandBufferRequest, "XR::FrameEnd")                                                                \
+  XX(METRICS_PAINTING, PaintingMetricsCommandBufferRequest, "Metrics::Painting")
 
-#define TR_COMMAND_BUFFER_RESPONSES_MAP(XX)                                      \
-  XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferResponse)                 \
-  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse)                \
-  XX(GET_EXTENSIONS, GetExtensionsCommandBufferResponse)                         \
-  XX(LINK_PROGRAM, LinkProgramCommandBufferResponse)                             \
-  XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferResponse)                    \
-  XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferResponse)               \
-  XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferResponse)                    \
-  XX(GET_SHADER_PARAM, GetShaderParamCommandBufferResponse)                      \
-  XX(GET_SHADER_INFO_LOG, GetShaderInfoLogCommandBufferResponse)                 \
-  XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferResponse)      \
-  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferResponse)                        \
-  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferResponse)            \
-  XX(IS_SAMPLER, IsSamplerCommandBufferResponse)                                 \
-  XX(GET_BOOLEANV, GetBooleanvCommandBufferResponse)                             \
-  XX(GET_INTEGERV, GetIntegervCommandBufferResponse)                             \
-  XX(GET_FLOATV, GetFloatvCommandBufferResponse)                                 \
-  XX(GET_STRING, GetStringCommandBufferResponse)                                 \
-  XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse) \
-  XX(GET_ERROR, GetErrorCommandBufferResponse)
+#define TR_COMMAND_BUFFER_RESPONSES_MAP(XX)                                                                      \
+  XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferResponse, "GL::ContextInit")                              \
+  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse, "GL::ContextInit")                             \
+  XX(GET_EXTENSIONS, GetExtensionsCommandBufferResponse, "GL::GetExtensions")                                    \
+  XX(LINK_PROGRAM, LinkProgramCommandBufferResponse, "GL::LinkProgram")                                          \
+  XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferResponse, "GL::GetProgramParam")                             \
+  XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferResponse, "GL::GetProgramInfoLog")                      \
+  XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferResponse, "GL::GetShaderSource")                             \
+  XX(GET_SHADER_PARAM, GetShaderParamCommandBufferResponse, "GL::GetShaderParam")                                \
+  XX(GET_SHADER_INFO_LOG, GetShaderInfoLogCommandBufferResponse, "GL::GetShaderInfoLog")                         \
+  XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferResponse, "GL::CheckFramebufferStatus")        \
+  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferResponse, "GL::IsVertexArray")                                   \
+  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferResponse, "GL::GetSamplerParameter")                 \
+  XX(IS_SAMPLER, IsSamplerCommandBufferResponse, "GL::IsSampler")                                                \
+  XX(GET_BOOLEANV, GetBooleanvCommandBufferResponse, "GL::GetBooleanv")                                          \
+  XX(GET_INTEGERV, GetIntegervCommandBufferResponse, "GL::GetIntegerv")                                          \
+  XX(GET_FLOATV, GetFloatvCommandBufferResponse, "GL::GetFloatv")                                                \
+  XX(GET_STRING, GetStringCommandBufferResponse, "GL::GetString")                                                \
+  XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse, "GL::GetShaderPrecisionFormat") \
+  XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")

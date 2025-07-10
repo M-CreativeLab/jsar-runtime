@@ -9,7 +9,7 @@ namespace commandbuffers
     TrCommandBufferMessage *message = nullptr;
     switch (req.type)
     {
-#define XX(commandType, requestType)                          \
+#define XX(commandType, requestType, _)                       \
   case COMMAND_BUFFER_##commandType##_REQ:                    \
   {                                                           \
     message = dynamic_cast<requestType *>(&req)->serialize(); \
@@ -49,7 +49,7 @@ namespace commandbuffers
     TrCommandBufferMessage *message = nullptr;
     switch (res.type)
     {
-#define XX(commandType, responseType)                          \
+#define XX(commandType, responseType, _)                       \
   case COMMAND_BUFFER_##commandType##_RES:                     \
   {                                                            \
     message = dynamic_cast<responseType *>(&res)->serialize(); \

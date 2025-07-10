@@ -9,19 +9,19 @@ namespace commandbuffers
     {
 
 // Request
-#define XX(COMMAND_TYPE, STR)               \
+#define XX(COMMAND_TYPE, _, STR)            \
   case COMMAND_BUFFER_##COMMAND_TYPE##_REQ: \
   {                                         \
-    return #STR;                            \
+    return STR;                             \
   }
       TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
 #undef XX
 
 // Response
-#define XX(COMMAND_TYPE, STR)               \
+#define XX(COMMAND_TYPE, _, STR)            \
   case COMMAND_BUFFER_##COMMAND_TYPE##_RES: \
   {                                         \
-    return #STR;                            \
+    return STR;                             \
   }
       TR_COMMAND_BUFFER_RESPONSES_MAP(XX)
 #undef XX

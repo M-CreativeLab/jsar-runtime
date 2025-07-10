@@ -28,6 +28,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << x << ", "
+         << y << ", "
+         << width << ", "
+         << height << ")";
+      return ss.str();
+    }
+
   public:
     int x;
     int y;
@@ -58,6 +69,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << x << ", "
+         << y << ", "
+         << width << ", "
+         << height << ")";
+      return ss.str();
+    }
+
   public:
     int x;
     int y;
@@ -83,6 +105,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << target << ", "
+         << mode << ")";
+      return ss.str();
+    }
+
   public:
     int target;
     int mode;
@@ -102,6 +133,14 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , width(that.width)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << width << ")";
+      return ss.str();
     }
 
   public:
@@ -124,6 +163,15 @@ namespace commandbuffers
         , pname(that.pname)
         , param(that.param)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << pname << ", "
+         << param << ")";
+      return ss.str();
     }
 
   public:
@@ -149,6 +197,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << factor << ", "
+         << units << ")";
+      return ss.str();
+    }
+
   public:
     float factor;
     float units;
@@ -168,6 +225,14 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , flag(that.flag)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << (flag ? "true" : "false") << ")";
+      return ss.str();
     }
 
   public:
@@ -190,6 +255,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << func << ")";
+      return ss.str();
+    }
+
   public:
     int func;
   };
@@ -210,6 +282,15 @@ namespace commandbuffers
         , n(that.n)
         , f(that.f)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << n << ", "
+         << f << ")";
+      return ss.str();
     }
 
   public:
@@ -235,6 +316,16 @@ namespace commandbuffers
         , ref(that.ref)
         , mask(that.mask)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << func << ", "
+         << ref << ", "
+         << mask << ")";
+      return ss.str();
     }
 
   public:
@@ -266,6 +357,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << face << ", "
+         << func << ", "
+         << ref << ", "
+         << mask << ")";
+      return ss.str();
+    }
+
   public:
     int face;
     int func;
@@ -288,6 +390,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , mask(that.mask)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mask << ")";
+      return ss.str();
     }
 
   public:
@@ -313,6 +422,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << face << ", "
+         << mask << ")";
+      return ss.str();
+    }
+
   public:
     int face;
     int mask;
@@ -336,6 +454,16 @@ namespace commandbuffers
         , zfail(that.zfail)
         , zpass(that.zpass)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << fail << ", "
+         << zfail << ", "
+         << zpass << ")";
+      return ss.str();
     }
 
   public:
@@ -367,6 +495,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << face << ", "
+         << fail << ", "
+         << zfail << ", "
+         << zpass << ")";
+      return ss.str();
+    }
+
   public:
     int face;
     int fail;
@@ -396,6 +535,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << red << ", "
+         << green << ", "
+         << blue << ", "
+         << alpha << ")";
+      return ss.str();
+    }
+
   public:
     float red;
     float green;
@@ -417,6 +567,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , mode(that.mode)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mode << ")";
+      return ss.str();
     }
 
   public:
@@ -442,6 +599,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << modeRGB << ", "
+         << modeAlpha << ")";
+      return ss.str();
+    }
+
   public:
     int modeRGB;
     int modeAlpha;
@@ -463,6 +629,15 @@ namespace commandbuffers
         , sfactor(that.sfactor)
         , dfactor(that.dfactor)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << sfactor << ", "
+         << dfactor << ")";
+      return ss.str();
     }
 
   public:
@@ -491,6 +666,17 @@ namespace commandbuffers
         , srcAlpha(that.srcAlpha)
         , dstAlpha(that.dstAlpha)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << srcRGB << ", "
+         << dstRGB << ", "
+         << srcAlpha << ", "
+         << dstAlpha << ")";
+      return ss.str();
     }
 
   public:
@@ -523,6 +709,17 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << (red ? "true" : "false") << ", "
+         << (green ? "true" : "false") << ", "
+         << (blue ? "true" : "false") << ", "
+         << (alpha ? "true" : "false") << ")";
+      return ss.str();
+    }
+
   public:
     bool red;
     bool green;
@@ -546,6 +743,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mode << ")";
+      return ss.str();
+    }
+
   public:
     int mode;
   };
@@ -564,6 +768,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , mode(that.mode)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mode << ")";
+      return ss.str();
     }
 
   public:
@@ -585,6 +796,15 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
         , cap(that.cap)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest<Derived, Type>::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(cap)
+         << ")";
+      return ss.str();
     }
 
   public:

@@ -111,9 +111,7 @@ namespace commandbuffers
   public:
     virtual std::string toString(const char *_ /* ignore prefix in request */ = nullptr) const override
     {
-      std::stringstream ss;
-      ss << "GL::" << commandTypeToStr(this->type);
-      return ss.str();
+      return commandTypeToStr(this->type);
     }
   };
 
