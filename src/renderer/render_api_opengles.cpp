@@ -835,11 +835,7 @@ private:
     GLuint buffer = glObjectManager.CreateBuffer(req->clientId);
     reqContentRenderer->getContextGL()->RecordBufferOnCreated(buffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::CreateBuffer(%d) => buffer(%d)",
-            options.isDefaultQueue(),
-            req->clientId,
-            buffer);
+      PrintDebugInfo(req, to_string(buffer).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteBuffer(DeleteBufferCommandBufferRequest *req,
                                      renderer::TrContentRenderer *reqContentRenderer,
@@ -850,7 +846,7 @@ private:
     glObjectManager.DeleteBuffer(req->buffer);
     reqContentRenderer->getContextGL()->RecordBufferOnDeleted(buffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", options.isDefaultQueue(), buffer);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindBuffer(BindBufferCommandBufferRequest *req,
                                    renderer::TrContentRenderer *reqContentRenderer,
@@ -947,10 +943,7 @@ private:
                                  req->isBindToDefault() ? nullopt : make_optional<uint32_t>(req->framebuffer),
                                  framebuffer);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(LOG_TAG_ERROR, "context name=> %s", app_context->name());
       PrintDebugInfo(req, to_string(framebuffer).c_str(), nullptr, options);
-    }
   }
   TR_OPENGL_FUNC void OnFramebufferRenderbuffer(FramebufferRenderbufferCommandBufferRequest *req,
                                                 renderer::TrContentRenderer *reqContentRenderer,
@@ -1155,7 +1148,7 @@ private:
     GLuint texture = glObjectManager.CreateTexture(req->clientId);
     reqContentRenderer->getContextGL()->RecordTextureOnCreated(texture);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture(#%d) => texture(%d)", options.isDefaultQueue(), req->clientId, texture);
+      PrintDebugInfo(req, to_string(texture).c_str(), nullptr, options);
   }
   TR_OPENGL_FUNC void OnDeleteTexture(
     DeleteTextureCommandBufferRequest *req,
@@ -1167,7 +1160,7 @@ private:
     glObjectManager.DeleteTexture(req->texture);
     reqContentRenderer->getContextGL()->RecordTextureOnDeleted(texture);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture(%d)", options.isDefaultQueue(), texture);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnBindTexture(BindTextureCommandBufferRequest *req,
                                     renderer::TrContentRenderer *reqContentRenderer,
@@ -1183,15 +1176,11 @@ private:
     contentGlContext->onTextureBindingChanged(target, texture);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
+      PrintDebugInfo(req, to_string(texture).c_str(), nullptr, options);
+
       GLint activeUnit;
       glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::BindTexture(%s, texture(%d)) for active(%d) program(%d)",
-            options.isDefaultQueue(),
-            gles::glEnumToString(target).c_str(),
-            texture,
-            activeUnit,
-            contentGlContext->program());
+      DEBUG(DEBUG_TAG, "  active: %d", activeUnit);
     }
   }
   TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req,
@@ -1200,7 +1189,7 @@ private:
   {
     GLenum target = req->target;
     GLint level = req->level;
-    GLint internalformat = GL_RGBA; // req->internalformat;
+    GLint internalformat = req->internalformat;
 
     GLsizei width = req->width;
     GLsizei height = req->height;
@@ -2436,10 +2425,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
           GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
           should_copy_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
           if (should_copy_to_offscreen_pass == true)
-          {
             content_renderer->resetOffscreenPassGLContext(framebuffer);
-            DEBUG(DEBUG_TAG, "... enter offscreen pass, framebuffer: %d", framebuffer);
-          }
         }
       }
     }

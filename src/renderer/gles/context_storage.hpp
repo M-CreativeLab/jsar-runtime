@@ -5,9 +5,33 @@
 #include <memory>
 #include <optional>
 #include <common/viewport.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
 
 #include "./common.hpp"
 #include "./object_manager.hpp"
+
+class GLErrorGuard
+{
+public:
+  GLErrorGuard(std::string name, bool clearError = true)
+      : name_(std::move(name))
+  {
+    if (clearError)
+      glGetError();
+  }
+  ~GLErrorGuard()
+  {
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+      DEBUG(LOG_TAG_ERROR,
+            "Occurs error in %s: %s",
+            name_.c_str(),
+            WebGLHelper::WebGLErrorToString(err).c_str());
+  }
+
+private:
+  std::string name_;
+};
 
 class OpenGLTextureBinding
 {
@@ -200,11 +224,14 @@ public:
   ContextGLStorage(std::string name)
       : name_(name)
   {
-    glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
-    glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
   }
   ContextGLStorage(std::string name, ContextGLStorage *from)
       : name_(name)
+      , m_ClearColor(from->m_ClearColor)
+      , m_ClearDepth(from->m_ClearDepth)
+      , m_ClearStencil(from->m_ClearStencil)
+      , m_CullFace(from->m_CullFace)
+      , m_FrontFace(from->m_FrontFace)
   {
     // Viewport
     viewport_[0] = from->viewport_[0];
@@ -322,8 +349,8 @@ protected: /** Global States */
 
   // Culling & face
   GLboolean m_CullFaceEnabled;
-  GLenum m_CullFace;
-  GLenum m_FrontFace;
+  std::optional<GLenum> m_CullFace;
+  std::optional<GLenum> m_FrontFace;
 
   // Color
   GLboolean m_ColorMask[4]; // [reg, green, blue, alpha]

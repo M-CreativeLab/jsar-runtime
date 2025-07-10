@@ -123,6 +123,8 @@ void ContextGLStorage::resetProgram(int programToReset)
 
 void ContextGLStorage::restore()
 {
+  glGetError(); // Clear the error state before restoring
+
   GLenum setViewportError;
   GLenum useProgramError;
   GLenum bindBuffersError;
@@ -138,66 +140,81 @@ void ContextGLStorage::restore()
   }
   setViewportError = glGetError();
 
-  // Restore the capabilities
-  m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
-  m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-  m_DitherEnabled ? glEnable(GL_DITHER) : glDisable(GL_DITHER);
-  m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
-  m_StencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
-  m_ScissorTestEnabled ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
-
-  // Restore the clear values
-  if (m_ClearColor.has_value())
   {
-    const auto &color = m_ClearColor.value();
-    glClearColor(color[0], color[1], color[2], color[3]);
+    GLErrorGuard guard("restoreCapabilities");
+    m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+    m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+    m_DitherEnabled ? glEnable(GL_DITHER) : glDisable(GL_DITHER);
+    m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+    m_StencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
+    m_ScissorTestEnabled ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
   }
-  if (m_ClearDepth.has_value())
-    glClearDepthf(m_ClearDepth.value());
-  if (m_ClearStencil.has_value())
-    glClearStencil(m_ClearStencil.value());
 
-  // Blend state restore
+  {
+    GLErrorGuard guard("restoreClearValues");
+    if (m_ClearColor.has_value())
+    {
+      const auto &color = m_ClearColor.value();
+      glClearColor(color[0], color[1], color[2], color[3]);
+    }
+    if (m_ClearDepth.has_value())
+      glClearDepthf(m_ClearDepth.value());
+    if (m_ClearStencil.has_value())
+      glClearStencil(m_ClearStencil.value());
+  }
+
   /**
    * NOTE: The blend function state should not depend on the blend state, it causes the host blend state would be passed to
    * the app context when the blend state is disabled.
    */
-  if (!m_BlendFunc.isSeparate())
-    glBlendFunc(m_BlendFunc.src(), m_BlendFunc.dst());
-  else
-    glBlendFuncSeparate(m_BlendFunc.srcRGB(), m_BlendFunc.dstRGB(), m_BlendFunc.srcAlpha(), m_BlendFunc.dstAlpha());
-
-  // Cull state restore
-  glCullFace(m_CullFace);
-  if (m_FrontFace == GL_CW || m_FrontFace == GL_CCW)
-    glFrontFace(m_FrontFace);
-
-  // Color state restore
-  glColorMask(m_ColorMask[0], m_ColorMask[1], m_ColorMask[2], m_ColorMask[3]);
-
-  // Depth state restore
-  glDepthMask(m_DepthMask);
-  glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
-  glDepthRangef(m_DepthRange[0], m_DepthRange[1]);
-
-  // Stencil state restore
   {
-    glStencilMask(m_StencilMask);
-    if (m_StencilMask != m_StencilMaskBack)
-      glStencilMaskSeparate(GL_BACK, m_StencilMaskBack);
-    glStencilFunc(m_StencilFunc.func, m_StencilFunc.ref, m_StencilFunc.mask);
-    if (m_StencilFunc != m_StencilFuncBack)
-      glStencilFuncSeparate(GL_BACK, m_StencilFuncBack.func, m_StencilFuncBack.ref, m_StencilFuncBack.mask);
-    glStencilOp(m_StencilOp.sfail, m_StencilOp.dpfail, m_StencilOp.dppass);
-    if (m_StencilOp != m_StencilOpBack)
-      glStencilOpSeparate(GL_BACK, m_StencilOpBack.sfail, m_StencilOpBack.dpfail, m_StencilOpBack.dppass);
+    GLErrorGuard guard("restoreBlendStates");
+    if (!m_BlendFunc.isSeparate())
+      glBlendFunc(m_BlendFunc.src(), m_BlendFunc.dst());
+    else
+      glBlendFuncSeparate(m_BlendFunc.srcRGB(), m_BlendFunc.dstRGB(), m_BlendFunc.srcAlpha(), m_BlendFunc.dstAlpha());
+  }
+
+  {
+    GLErrorGuard guard("restoreCullState");
+    if (m_CullFace.has_value())
+      glCullFace(m_CullFace.value());
+    if (m_FrontFace.has_value())
+      glFrontFace(m_FrontFace.value());
+  }
+
+  {
+    GLErrorGuard guard("restoreColorDepthStencilState");
+    glColorMask(m_ColorMask[0], m_ColorMask[1], m_ColorMask[2], m_ColorMask[3]);
+
+    // Depth state restore
+    glDepthMask(m_DepthMask);
+    glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
+    glDepthRangef(m_DepthRange[0], m_DepthRange[1]);
+
+    // Stencil state restore
+    {
+      glStencilMask(m_StencilMask);
+      if (m_StencilMask != m_StencilMaskBack)
+        glStencilMaskSeparate(GL_BACK, m_StencilMaskBack);
+      glStencilFunc(m_StencilFunc.func, m_StencilFunc.ref, m_StencilFunc.mask);
+      if (m_StencilFunc != m_StencilFuncBack)
+        glStencilFuncSeparate(GL_BACK, m_StencilFuncBack.func, m_StencilFuncBack.ref, m_StencilFuncBack.mask);
+      glStencilOp(m_StencilOp.sfail, m_StencilOp.dpfail, m_StencilOp.dppass);
+      if (m_StencilOp != m_StencilOpBack)
+        glStencilOpSeparate(GL_BACK, m_StencilOpBack.sfail, m_StencilOpBack.dpfail, m_StencilOpBack.dppass);
+    }
   }
 
   // Scissor state restore
-  glScissor(m_ScissorBox.x, m_ScissorBox.y, m_ScissorBox.width, m_ScissorBox.height);
+  {
+    GLErrorGuard guard("restoreScissorState");
+    glScissor(m_ScissorBox.x, m_ScissorBox.y, m_ScissorBox.width, m_ScissorBox.height);
+  }
 
   // Restoring other states
   {
+    GLErrorGuard guard("restoreOtherStates");
     glLineWidth(m_LineWidth);
     glPolygonOffset(m_PolygonOffset.factor, m_PolygonOffset.units);
   }

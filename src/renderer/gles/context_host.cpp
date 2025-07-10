@@ -75,8 +75,15 @@ void ContextGLHost::recordFromHost()
   m_ScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
   // Global States
-  glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
-  glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+  {
+    GLenum cullface, frontface;
+    glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&cullface);
+    glGetIntegerv(GL_FRONT_FACE, (GLint *)&frontface);
+    m_CullFace = cullface;
+    m_FrontFace = frontface;
+  }
+
+  // Color mask
   glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean *)&m_ColorMask);
   /**
    * Recording the depth parameters.

@@ -1170,6 +1170,31 @@ const int WEBGL_MAX_COUNT_PER_DRAWCALL = 1000 * 1000;
 class WebGLHelper
 {
 public:
+  // Convert a WebGL error code to string label.
+  static std::string WebGLErrorToString(int error)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+
+    switch (error)
+    {
+      CASE(WEBGL_NO_ERROR);
+      CASE(WEBGL_INVALID_ENUM);
+      CASE(WEBGL_INVALID_VALUE);
+      CASE(WEBGL_INVALID_OPERATION);
+      CASE(WEBGL_OUT_OF_MEMORY);
+      CASE(WEBGL_CONTEXT_LOST_WEBGL);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << error;
+      return ss.str();
+    }
+#undef CASE
+  }
+
   // Convert a common WebGL enum to string label.
   static std::string WebGLEnumToString(int e)
   {

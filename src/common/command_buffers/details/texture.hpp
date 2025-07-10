@@ -63,6 +63,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << texture << ")";
+      return ss.str();
+    }
+
   public:
     int target;
     int texture;
