@@ -590,23 +590,34 @@ namespace client_graphics
      */
     bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush = false);
 
-    /**
-     * It receives a command buffer response from the client context.
-     */
     template <typename R>
     R *recvCommandBufferResponse(commandbuffers::CommandBufferType responseType, int timeout = 1000)
     {
       auto response = clientContext_->recvCommandBufferResponse(timeout);
-      if (response == nullptr)
+      if (response == nullptr) [[unlikely]]
         return nullptr;
       assert(response->type == responseType);
       return dynamic_cast<R *>(response);
     }
 
+    template <typename R>
+    void recvResponseAsync(commandbuffers::CommandBufferType responseType, std::function<void(const R &)> callback)
+    {
+      auto onResponse = [responseType, callback](const commandbuffers::TrCommandBufferBase &response)
+      {
+        if (response.type != responseType) [[unlikely]]
+        {
+          std::cerr << "recvCommandBufferAsync(): "
+                    << "Unexpected response type(" << response.type << "), expected(" << responseType << ")"
+                    << std::endl;
+          assert(false && "Unexpected response type");
+        }
+        callback(dynamic_cast<const R &>(response));
+      };
+      clientContext_->recvCommandBufferResponseAsync(onResponse);
+    }
+
     bool sendFlushCommand(std::shared_ptr<client_xr::XRSession> session);
-    /**
-     * It sends a fcp metrics command buffer request to print the real fcp value.
-     */
     void sendFirstContentfulPaintMetrics();
 
     /**

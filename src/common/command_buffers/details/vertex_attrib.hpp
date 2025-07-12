@@ -23,6 +23,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << index << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t index;
   };
@@ -43,6 +50,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , index(that.index)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << index << ")";
+      return ss.str();
     }
 
   public:
@@ -73,6 +87,14 @@ namespace commandbuffers
         , stride(that.stride)
         , offset(that.offset)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << index << ", " << conponentSize << ", "
+         << componentType << ", " << normalized << ", " << stride << ", " << offset << ")";
+      return ss.str();
     }
 
   public:
@@ -108,6 +130,14 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << index << ", " << componentSize << ", "
+         << componentType << ", " << stride << ", " << offset << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t index;
     uint32_t componentSize;
@@ -132,6 +162,13 @@ namespace commandbuffers
         , index(that.index)
         , divisor(that.divisor)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << index << ", " << divisor << ")";
+      return ss.str();
     }
 
   public:

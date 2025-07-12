@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 
 namespace client_graphics
 {
@@ -8,18 +9,28 @@ namespace client_graphics
   {
   public:
     WebGLUniformLocation()
-        : index(0)
+        : programId(0)
+        , index(std::nullopt)
         , name("")
     {
     }
-    WebGLUniformLocation(uint32_t index, const std::string &name)
-        : index(index)
+    WebGLUniformLocation(int programId, const std::string &name)
+        : programId(programId)
+        , index(std::nullopt)
+        , name(name)
+    {
+    }
+    WebGLUniformLocation(int programId, uint32_t index, const std::string &name)
+        : programId(programId)
+        , index(index)
         , name(name)
     {
     }
 
   public:
-    uint32_t index;
+    // The id of the program this uniform belongs to.
+    int programId;
+    std::optional<uint32_t> index;
     std::string name;
   };
 }

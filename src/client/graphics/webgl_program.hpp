@@ -1,7 +1,9 @@
 #pragma once
 
 #include <map>
-#include "common/command_buffers/details/program.hpp"
+#include <atomic>
+#include <common/command_buffers/details/program.hpp>
+
 #include "./webgl_object.hpp"
 #include "./webgl_active_info.hpp"
 #include "./webgl_uniform_location.hpp"
@@ -17,6 +19,17 @@ namespace client_graphics
     }
 
   public:
+    // Returns if this program is incomplete, it means the program response has not been received from channel peer.
+    bool isIncomplete() const
+    {
+      return incomplete_;
+    }
+    // Calls setCompleted() when the program response is received from channel peer and updates the link status.
+    void setCompleted(bool linkStatus)
+    {
+      linkStatus_ = linkStatus;
+      incomplete_ = false;
+    }
     /**
      * It sets the link status of the program.
      *
@@ -71,7 +84,7 @@ namespace client_graphics
      * @param index The index of the active uniform.
      * @param activeInfo The active uniform information.
      */
-    void setActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo)
+    void setActiveUniform(int index, const commandbuffers::ActiveInfo &activeInfo)
     {
       activeUniforms_[index] = activeInfo;
     }
@@ -117,7 +130,7 @@ namespace client_graphics
      */
     void setUniformLocation(const std::string &name, int location)
     {
-      uniformLocations_[name] = WebGLUniformLocation(location, name);
+      uniformLocations_[name] = WebGLUniformLocation(id, location, name);
     }
     /**
      * @param name The name of the uniform.
@@ -196,10 +209,11 @@ namespace client_graphics
 
       std::cout << "Uniform locations:" << std::endl;
       for (auto &pair : uniformLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second.index << std::endl;
+        std::cout << "  " << pair.first << ": " << pair.second.index.value_or(-1) << std::endl;
     }
 
   private:
+    std::atomic<bool> incomplete_ = true;
     bool linkStatus_ = false;
     std::map<int, WebGLActiveInfo> activeAttribs_;
     std::map<int, WebGLActiveInfo> activeUniforms_;

@@ -159,8 +159,7 @@ namespace commandbuffers
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
          << WebGLHelper::WebGLEnumToString(target) << ", "
          << "Buffer(" << dataSize << "), "
-         << usage
-         << ")";
+         << WebGLHelper::WebGLEnumToString(usage) << ")";
       return ss.str();
     }
 

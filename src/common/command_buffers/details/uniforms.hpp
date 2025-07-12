@@ -67,19 +67,93 @@ namespace commandbuffers
     uint32_t uniformBlockBinding;
   };
 
-  class Uniform1fCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform1fCommandBufferRequest, COMMAND_BUFFER_UNIFORM1F_REQ>
+  template <typename Derived, CommandBufferType Type>
+  class SetUniformCommandBufferRequest : public TrCommandBufferSimpleRequest<Derived, Type>
   {
   public:
-    Uniform1fCommandBufferRequest(uint32_t location, float v0)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    SetUniformCommandBufferRequest(uint32_t program, const std::string &location_name)
+        : TrCommandBufferSimpleRequest<Derived, Type>()
+        , program(program)
+        , location(0)
+        , locationAvailable(false)
+        , locationQueryName(location_name)
+    {
+    }
+    SetUniformCommandBufferRequest(const Derived &that, bool clone = false)
+        : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
+        , program(that.program)
+        , location(that.location)
+        , locationAvailable(that.locationAvailable)
+    {
+      if (clone)
+        locationQueryName = that.locationQueryName;
+    }
+
+  public:
+    virtual TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(this->type, this->size, this);
+      if (!locationQueryName.empty())
+        message->addStringSegment(locationQueryName);
+      return message;
+    }
+    virtual void deserialize(TrCommandBufferMessage &message) override
+    {
+      auto nameSegment = message.nextSegment();
+      if (nameSegment != nullptr)
+        locationQueryName = nameSegment->toString();
+    }
+    void setLocationIndex(std::optional<uint32_t> loc_index, bool clear_name = false)
+    {
+      if (loc_index.has_value())
+      {
+        location = loc_index.value_or(0);
+        locationAvailable = true;
+        if (clear_name)
+          locationQueryName.clear();
+      }
+    }
+
+    std::string locToString() const
+    {
+      std::stringstream loc_ss;
+      loc_ss << "Loc(";
+      {
+        if (locationAvailable)
+          loc_ss << location << ", ";
+        else
+          loc_ss << "?" << ", ";
+      }
+      loc_ss << locationQueryName
+             << ")";
+      return loc_ss.str();
+    }
+    virtual std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest<Derived, Type>::toString(line_prefix)
+         << "(" << locToString() << ")";
+      return ss.str();
+    }
+
+  public:
+    uint32_t program;
+    uint32_t location;
+    bool locationAvailable;
+    std::string locationQueryName;
+  };
+
+  class Uniform1fCommandBufferRequest final
+      : public SetUniformCommandBufferRequest<Uniform1fCommandBufferRequest, COMMAND_BUFFER_UNIFORM1F_REQ>
+  {
+  public:
+    Uniform1fCommandBufferRequest(uint32_t program, const std::string &location_name, float v0)
+        : SetUniformCommandBufferRequest(program, location_name)
         , v0(v0)
     {
     }
     Uniform1fCommandBufferRequest(const Uniform1fCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , v0(that.v0)
     {
     }
@@ -88,13 +162,12 @@ namespace commandbuffers
     {
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << location << ","
+         << this->locToString() << ","
          << v0 << ")";
       return ss.str();
     }
 
   public:
-    uint32_t location;
     float v0;
   };
 
@@ -139,19 +212,17 @@ namespace commandbuffers
   };
 
   class Uniform1iCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform1iCommandBufferRequest, COMMAND_BUFFER_UNIFORM1I_REQ>
+      : public SetUniformCommandBufferRequest<Uniform1iCommandBufferRequest, COMMAND_BUFFER_UNIFORM1I_REQ>
   {
   public:
     Uniform1iCommandBufferRequest() = delete;
-    Uniform1iCommandBufferRequest(uint32_t location, int v0)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform1iCommandBufferRequest(uint32_t program, const std::string &location_name, int v0)
+        : SetUniformCommandBufferRequest(program, location_name)
         , v0(v0)
     {
     }
     Uniform1iCommandBufferRequest(const Uniform1iCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , v0(that.v0)
     {
     }
@@ -160,13 +231,12 @@ namespace commandbuffers
     {
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << "Loc(" << location << "),"
+         << this->locToString() << ","
          << v0 << ")";
       return ss.str();
     }
 
   public:
-    uint32_t location;
     int v0;
   };
 
@@ -758,19 +828,21 @@ namespace commandbuffers
     }
   };
 
-  template <typename T, size_t matrixSize>
-  class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferRequest
+  template <typename Derived, CommandBufferType Type, size_t matrixSize>
+  class UniformMatrixNfvCommandBufferRequest : public SetUniformCommandBufferRequest<Derived, Type>
   {
   public:
-    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t location, bool transpose)
-        : TrCommandBufferRequest(type, sizeof(T))
-        , location(location)
+    UniformMatrixNfvCommandBufferRequest(uint32_t program,
+                                         const std::string &location_name,
+                                         bool transpose,
+                                         std::vector<float> values = {})
+        : SetUniformCommandBufferRequest<Derived, Type>(program, location_name)
         , transpose(transpose)
+        , values(values)
     {
     }
-    UniformMatrixNfvCommandBufferRequest(const UniformMatrixNfvCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferRequest(that, clone)
-        , location(that.location)
+    UniformMatrixNfvCommandBufferRequest(const Derived &that, bool clone = false)
+        : SetUniformCommandBufferRequest<Derived, Type>(that, clone)
         , transpose(that.transpose)
         , values()
         , computationGraph4values(that.computationGraph4values)
@@ -795,15 +867,17 @@ namespace commandbuffers
   public:
     TrCommandBufferMessage *serialize() override final
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      if (values.size() > matrixSize - 1 && values.size() % matrixSize == 0) // Check the value size is Nx
+      TrCommandBufferMessage *message = SetUniformCommandBufferRequest<Derived, Type>::serialize();
+      if (values.size() > matrixSize - 1 && values.size() % matrixSize == 0) [[likely]]
         message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override final
     {
-      auto valuesSegment = message.getSegment(0);
-      if (valuesSegment != nullptr)
+      SetUniformCommandBufferRequest<Derived, Type>::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
+      if (valuesSegment != nullptr) [[likely]]
         values = valuesSegment->toVec<float>();
     }
     std::string toString(const char *line_prefix) const override
@@ -814,7 +888,7 @@ namespace commandbuffers
 
       std::stringstream ss;
       ss << TrCommandBufferRequest::toString(line_prefix) << "("
-         << location << ", "
+         << this->locToString() << ", "
          << "values={" << values_ss.str() << ", "
          << "count=" << count() << ", "
          << "transpose=" << (transpose ? "Yes" : "No")
@@ -823,55 +897,40 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t location;
     bool transpose;
     std::vector<float> values;
     MatrixComputationGraph computationGraph4values;
   };
 
   class UniformMatrix2fvCommandBufferRequest final
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest, 2 * 2>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest,
+                                                    COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ,
+                                                    2 * 2>
   {
     using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
-
-  public:
-    UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, location, transpose)
-    {
-      this->values = values;
-    }
   };
 
   class UniformMatrix3fvCommandBufferRequest final
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest, 3 * 3>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest,
+                                                    COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ,
+                                                    3 * 3>
   {
     using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
-
-  public:
-    UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, location, transpose)
-    {
-      this->values = values;
-    }
   };
 
   class UniformMatrix4fvCommandBufferRequest final
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest, 4 * 4>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest,
+                                                    COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ,
+                                                    4 * 4>
   {
     using UniformMatrixNfvCommandBufferRequest::UniformMatrixNfvCommandBufferRequest;
 
   public:
-    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
-    {
-    }
-    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
-    {
-      this->values = values;
-    }
-    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, MatrixComputationGraph computationGraph4values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
+    UniformMatrix4fvCommandBufferRequest(uint32_t program,
+                                         const std::string &location_name,
+                                         bool transpose,
+                                         MatrixComputationGraph computationGraph4values)
+        : UniformMatrixNfvCommandBufferRequest(program, location_name, transpose)
     {
       this->computationGraph4values = computationGraph4values;
     }

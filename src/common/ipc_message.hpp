@@ -159,6 +159,13 @@ namespace ipc
     {
       return segments.size();
     }
+    // Returns the next segment by the inserted order.
+    inline TrIpcMessageSegment *nextSegment()
+    {
+      if (segmentReadIndex >= segments.size()) [[unlikely]]
+        return nullptr;
+      return segments[segmentReadIndex++];
+    }
 
     /**
      * It serializes this message, then allocates and copies the serialized buffer and its size into `outData` and `outSize`.
@@ -373,6 +380,7 @@ namespace ipc
     MessageEnum type;
     uint32_t id;
     vector<TrIpcMessageSegment *> segments;
+    int segmentReadIndex = 0;
 
   private:
     Usage usage = USAGE_NOTSET;

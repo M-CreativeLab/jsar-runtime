@@ -406,15 +406,17 @@ void TrClientContextPerProcess::preload()
 void TrClientContextPerProcess::start()
 {
   string pid = to_string(getpid());
-  perfFs = std::make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
+  perfFs = make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
 
   // Required channels
   eventChanClient = ipc::TrOneShotClient<TrNativeEventMessage>::MakeAndConnect(eventChanPort, false, id);
   assert(eventChanClient != nullptr);
   mediaChanClient = ipc::TrOneShotClient<TrMediaCommandMessage>::MakeAndConnect(mediaChanPort, false, id);
   assert(mediaChanClient != nullptr);
-  commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false, id);
-  assert(commandBufferChanClient != nullptr);
+  commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort,
+                                                                                         false,
+                                                                                         id);
+  assert(commandBufferChanClient != nullptr && commandBufferChanClient->isConnected());
 
   if (
     !eventChanClient->isConnected() ||
@@ -431,20 +433,47 @@ void TrClientContextPerProcess::start()
   }
   {
     // Create sender & receiver for media chan.
-    mediaChanSender = std::make_unique<TrMediaCommandSender>(mediaChanClient);
-    mediaChanReceiver = std::make_unique<TrMediaCommandReceiver>(mediaChanClient);
-    mediaEventsPollingWorker = std::make_unique<WorkerThread>("TrMediaEventsPolling", [this](WorkerThread &worker)
-                                                              {
-                                                                media_comm::TrMediaCommandMessage incomingEvent;
-                                                                if (mediaChanReceiver->recvCommand(incomingEvent, 100))
-                                                                {
-                                                                  onListenMediaEvent(incomingEvent);
-                                                                } });
+    mediaChanSender = make_unique<TrMediaCommandSender>(mediaChanClient);
+    mediaChanReceiver = make_unique<TrMediaCommandReceiver>(mediaChanClient);
+
+    auto onPollingMediaEventsWork = [this](WorkerThread &worker)
+    {
+      media_comm::TrMediaCommandMessage incomingEvent;
+      if (mediaChanReceiver->recvCommand(incomingEvent, 100))
+        onListenMediaEvent(incomingEvent);
+    };
+    mediaEventsPollingWorker = make_unique<WorkerThread>("TrMediaEventsPolling", onPollingMediaEventsWork);
   }
   {
     // Create sender & receiver for commandbuffer chan.
     commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
     commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
+
+    // This worker is used to process the asynchronous command buffer responses.
+    auto onAsyncCommandBufferResponseWork = [this](WorkerThread &worker)
+    {
+      unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
+      asyncCommandBufferResponseCv.wait(lock, [this]()
+                                        { return !asyncCommandBufferResponseCallbacks.empty(); });
+
+      while (!asyncCommandBufferResponseCallbacks.empty())
+      {
+        auto &responseCallback = asyncCommandBufferResponseCallbacks.front();
+        TrCommandBufferResponse *resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
+        if (resp != nullptr) [[likely]]
+        {
+          cerr << "Received async command buffer response: " << resp->type << endl;
+          responseCallback(*resp);
+          delete resp; // End
+        }
+        asyncCommandBufferResponseCallbacks.pop_front();
+      }
+
+      // Notify the main thread that the async command buffer response is processed.
+      asyncCommandBufferResponseCv.notify_one();
+    };
+    asyncCommandBufferResponseWorker = make_unique<WorkerThread>("TrAsyncCommandBufferResponseWorker",
+                                                                 onAsyncCommandBufferResponseWork);
   }
 
   // XR device initialization
@@ -629,7 +658,23 @@ bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &co
 
 TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(int timeout)
 {
+  // Wait for the async command buffer responses to be processed.
+  if (isAsyncCommandBufferResponseScheduled)
+  {
+    unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
+    asyncCommandBufferResponseCv.wait(lock, [this]()
+                                      { return asyncCommandBufferResponseCallbacks.empty(); });
+    isAsyncCommandBufferResponseScheduled = false;
+  }
   return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+}
+
+void TrClientContextPerProcess::recvCommandBufferResponseAsync(AsyncCommandBufferResponseCallback callback)
+{
+  unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
+  isAsyncCommandBufferResponseScheduled = true;
+  asyncCommandBufferResponseCallbacks.push_back(callback);
+  asyncCommandBufferResponseCv.notify_one();
 }
 
 void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)

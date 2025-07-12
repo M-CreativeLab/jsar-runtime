@@ -22,6 +22,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t clientId;
   };
@@ -41,6 +48,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , vertexArray(that.vertexArray)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
     }
 
   public:
@@ -64,6 +78,13 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t vertexArray;
   };
@@ -83,6 +104,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , vertexArray(that.vertexArray)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
     }
 
   public:

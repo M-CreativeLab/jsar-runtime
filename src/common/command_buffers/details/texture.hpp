@@ -212,6 +212,18 @@ namespace commandbuffers
       }
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << level << ", "
+         << WebGLHelper::WebGLEnumToString(format) << ", "
+         << WebGLHelper::WebGLEnumToString(pixelType) << ", "
+         << "pixels=" << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
+      return ss.str();
+    }
+
   protected:
     void resetPixels()
     {
@@ -478,6 +490,14 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(activeUnit) << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t activeUnit;
   };
@@ -497,6 +517,14 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , target(that.target)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ")";
+      return ss.str();
     }
 
   public:
@@ -525,6 +553,17 @@ namespace commandbuffers
     size_t computePixelsByteLength() override
     {
       return width * height * depth * getPixelSize();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureImageNDCommandBufferRequest::toString(line_prefix)
+         << line_prefix << "  internalformat=" << WebGLHelper::WebGLEnumToString(internalformat) << std::endl
+         << line_prefix << "           width=" << width << std::endl
+         << line_prefix << "          height=" << height << std::endl
+         << line_prefix << "           depth=" << depth << std::endl
+         << line_prefix << "          border=" << border;
+      return ss.str();
     }
 
   public:
@@ -558,6 +597,18 @@ namespace commandbuffers
     size_t computePixelsByteLength() override
     {
       return width * height * depth * getPixelSize();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureImageNDCommandBufferRequest::toString(line_prefix)
+         << "  xoffset=" << xoffset << std::endl
+         << "  yoffset=" << yoffset << std::endl
+         << "  zoffset=" << zoffset << std::endl
+         << "    width=" << width << std::endl
+         << "   height=" << height << std::endl
+         << "    depth=" << depth;
+      return ss.str();
     }
 
   public:

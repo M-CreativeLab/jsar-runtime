@@ -14,17 +14,17 @@ namespace client_graphics
   using namespace crates::webgl;
 
 #ifndef TR_WEBGL_STRICT
-#define NOT_IMPLEMENTED() throw std::runtime_error("Not implemented")
+#define NOT_IMPLEMENTED() throw runtime_error("Not implemented")
 #else
 #define NOT_IMPLEMENTED()
 #endif
 
-#define ASSERT_MAX_COUNT_PER_DRAWCALL(count, funcName)                                                      \
-  if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))                                                   \
-  {                                                                                                         \
-    string msg = "The " funcName " count(" + std::to_string(count) + ") exceeds" +                          \
-                 " the maximum count(" + std::to_string(WEBGL_MAX_COUNT_PER_DRAWCALL) + ") per draw call."; \
-    throw std::runtime_error(msg);                                                                          \
+#define ASSERT_MAX_COUNT_PER_DRAWCALL(COUNT, FUNC_SYMBOL)                                              \
+  if (TR_UNLIKELY(COUNT >= WEBGL_MAX_COUNT_PER_DRAWCALL))                                              \
+  {                                                                                                    \
+    string msg = "The " FUNC_SYMBOL " count(" + to_string(COUNT) + ") exceeds" +                       \
+                 " the maximum count(" + to_string(WEBGL_MAX_COUNT_PER_DRAWCALL) + ") per draw call."; \
+    throw runtime_error(msg);                                                                          \
   }
 
   void WebGLState::Restore(WebGLState &state, shared_ptr<WebGL2Context> context)
@@ -65,7 +65,7 @@ namespace client_graphics
 
     auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, 3000);
     if (resp == nullptr) [[unlikely]]
-      throw std::runtime_error("Failed to initialize WebGL context");
+      throw runtime_error("Failed to initialize WebGL context");
 
     auto respondAt = chrono::system_clock::now();
     cout << "Received `WebGL1Context` response in " << chrono::duration_cast<chrono::milliseconds>(respondAt - sentAt).count() << "ms" << endl;
@@ -94,15 +94,15 @@ namespace client_graphics
     sendCommandBufferRequestDirectly(req, true);
   }
 
-  std::shared_ptr<WebGLProgram> WebGLContext::createProgram()
+  shared_ptr<WebGLProgram> WebGLContext::createProgram()
   {
-    auto program = std::make_shared<WebGLProgram>();
+    auto program = make_shared<WebGLProgram>();
     auto req = CreateProgramCommandBufferRequest(program->id);
     sendCommandBufferRequest(req);
     return program;
   }
 
-  void WebGLContext::deleteProgram(std::shared_ptr<WebGLProgram> program)
+  void WebGLContext::deleteProgram(shared_ptr<WebGLProgram> program)
   {
     if (program == nullptr || program->isDeleted())
       return;
@@ -111,142 +111,138 @@ namespace client_graphics
     program->markDeleted();
   }
 
-  class LinkProgramException : public std::runtime_error
+  class LinkProgramException : public runtime_error
   {
   public:
-    LinkProgramException(WebGLProgram &program, const std::string &detail)
-        : std::runtime_error(getMessage(program, detail))
+    LinkProgramException(WebGLProgram &program, const string &detail)
+        : runtime_error(getMessage(program, detail))
     {
     }
 
   private:
-    std::string getMessage(WebGLProgram &program, const std::string &detail)
+    string getMessage(WebGLProgram &program, const string &detail)
     {
-      return "Failed to link program(" + std::to_string(program.id) + "): " + detail;
+      return "Failed to link program(" + to_string(program.id) + "): " + detail;
     }
   };
 
-  void WebGLContext::linkProgram(std::shared_ptr<WebGLProgram> program)
+  void WebGLContext::linkProgram(shared_ptr<WebGLProgram> program)
   {
-    if (program == nullptr || !program->isValid())
+    if (program == nullptr || !program->isValid()) [[unlikely]]
       return;
 
     auto req = LinkProgramCommandBufferRequest(program->id);
     if (!sendCommandBufferRequest(req, true))
       throw LinkProgramException(*program, "Failed to send the command buffer.");
 
-    auto resp = recvCommandBufferResponse<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES);
-    if (resp == nullptr)
+    auto onLinkProgramResponse = [this, program](const LinkProgramCommandBufferResponse &resp)
     {
-      string msg = "Failed to link program(" + to_string(program->id) + "): timeout.";
-      throw LinkProgramException(*program, "Timeout.");
-    }
-    if (!resp->success)
-    {
-      delete resp;
-      throw LinkProgramException(*program, "Not successful.");
-    }
+      // Set the program completed.
+      program->setCompleted(resp.success);
 
-    /**
-     * Mark the program as linked.
-     */
-    program->setLinkStatus(true);
-
-    /**
-     * Update the program's active attributes and uniforms.
-     */
-    {
-      int index = 0;
-      for (auto &activeInfo : resp->activeAttribs)
-        program->setActiveAttrib(index++, activeInfo);
-      index = 0;
-      for (auto &activeInfo : resp->activeUniforms)
-        program->setActiveUniform(index++, activeInfo);
-    }
-
-    /**
-     * Update the program's attribute locations.
-     */
-    for (auto &attribLocation : resp->attribLocations)
-      program->setAttribLocation(attribLocation.name, attribLocation.location);
-
-    /**
-     * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
-     *
-     * When uniforms declared as an array, the valid name might be like the followings:
-     *
-     * - foo
-     * - foo[0]
-     * - foo[1]
-     */
-    for (auto &uniformLocation : resp->uniformLocations)
-    {
-      auto name = uniformLocation.name;
-      auto location = uniformLocation.location;
-      auto size = uniformLocation.size;
+      // Directly return if the link failed.
+      if (!resp.success) [[unlikely]]
+        return;
 
       /**
-       * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
-       *
-       * 1. check if the name ends with "[0]"
-       * 2. grab the name without "[0]"
-       * 3. set the uniform location for the name without "[0]"
-       * 4. set the uniform location for the name with "[0]" and the index
-       * 5. repeat 4 for the rest of the indices
-       *
-       * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+       * Update the program's active attributes and uniforms.
        */
-      std::string arraySuffix = "[0]";
-      int endedAt = name.length() - arraySuffix.length();
-      bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != std::string::npos;
+      {
+        int index = 0;
+        for (auto &activeInfo : resp.activeAttribs)
+          program->setActiveAttrib(index++, activeInfo);
+        index = 0;
+        for (auto &activeInfo : resp.activeUniforms)
+          program->setActiveUniform(index++, activeInfo);
+      }
 
       /**
-       * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
+       * Update the program's attribute locations.
        */
-      if (size == 1 && !endsWithArray)
-      {
-        program->setUniformLocation(name, location);
-      }
-      else if (endsWithArray)
-      {
-        auto arrayName = name.substr(0, endedAt);
-        program->setUniformLocation(arrayName, location);
-        program->setUniformLocation(name, location);
-        for (int i = 1; i < size; i++)
-          program->setUniformLocation(arrayName + "[" + std::to_string(i) + "]", location + i);
-      }
-      else
-      {
-        // TODO: warning size is invalid?
-        continue;
-      }
-    }
+      for (auto &attribLocation : resp.attribLocations)
+        program->setAttribLocation(attribLocation.name, attribLocation.location);
 
-    if (isWebGL2_ == true)
-    {
       /**
+       * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
+       *
+       * When uniforms declared as an array, the valid name might be like the followings:
+       *
+       * - foo
+       * - foo[0]
+       * - foo[1]
+       */
+      for (auto &uniformLocation : resp.uniformLocations)
+      {
+        auto name = uniformLocation.name;
+        auto location = uniformLocation.location;
+        auto size = uniformLocation.size;
+
+        /**
+         * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+         *
+         * 1. check if the name ends with "[0]"
+         * 2. grab the name without "[0]"
+         * 3. set the uniform location for the name without "[0]"
+         * 4. set the uniform location for the name with "[0]" and the index
+         * 5. repeat 4 for the rest of the indices
+         *
+         * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+         */
+        string arraySuffix = "[0]";
+        int endedAt = name.length() - arraySuffix.length();
+        bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != string::npos;
+
+        /**
+         * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
+         */
+        if (size == 1 && !endsWithArray)
+        {
+          program->setUniformLocation(name, location);
+        }
+        else if (endsWithArray)
+        {
+          auto arrayName = name.substr(0, endedAt);
+          program->setUniformLocation(arrayName, location);
+          program->setUniformLocation(name, location);
+          for (int i = 1; i < size; i++)
+            program->setUniformLocation(arrayName + "[" + to_string(i) + "]", location + i);
+        }
+        else
+        {
+          // TODO: warning size is invalid?
+          continue;
+        }
+      }
+
+      if (isWebGL2_ == true)
+      {
+        /**
        * Save the uniform block indices to the program object
        */
-      for (auto &uniformBlock : resp->uniformBlocks)
-        program->setUniformBlockIndex(uniformBlock.name, uniformBlock.index);
-    }
-    delete resp;
+        for (auto &uniformBlock : resp.uniformBlocks)
+          program->setUniformBlockIndex(uniformBlock.name, uniformBlock.index);
+      }
+    };
+    recvResponseAsync<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES, onLinkProgramResponse);
+
+    // Mark the program linked successfully.
+    program->setLinkStatus(true);
   }
 
-  void WebGLContext::useProgram(std::shared_ptr<WebGLProgram> program)
+  void WebGLContext::useProgram(shared_ptr<WebGLProgram> program)
   {
     auto req = UseProgramCommandBufferRequest(program == nullptr ? 0 : program->id);
     sendCommandBufferRequest(req);
     clientState_.program = program;
   }
 
-  void WebGLContext::bindAttribLocation(std::shared_ptr<WebGLProgram> program, uint32_t index, const std::string &name)
+  void WebGLContext::bindAttribLocation(shared_ptr<WebGLProgram> program, uint32_t index, const string &name)
   {
     auto req = BindAttribLocationCommandBufferRequest(program->id, index, name);
     sendCommandBufferRequest(req);
   }
 
-  int WebGLContext::getProgramParameter(std::shared_ptr<WebGLProgram> program, int pname)
+  int WebGLContext::getProgramParameter(shared_ptr<WebGLProgram> program, int pname)
   {
     /**
      * The following parameters are carried when linkProgram() is responded, thus we could return them from the client-side
@@ -265,10 +261,10 @@ namespace client_graphics
     if (resp != nullptr)
       return resp->value;
     else
-      throw std::runtime_error("Failed to get program parameter: timeout.");
+      throw runtime_error("Failed to get program parameter: timeout.");
   }
 
-  std::string WebGLContext::getProgramInfoLog(std::shared_ptr<WebGLProgram> program)
+  string WebGLContext::getProgramInfoLog(shared_ptr<WebGLProgram> program)
   {
     auto req = GetProgramInfoLogCommandBufferRequest(program->id);
     sendCommandBufferRequest(req, true);
@@ -276,56 +272,56 @@ namespace client_graphics
     auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
     if (resp != nullptr)
     {
-      std::string log(resp->infoLog);
+      string log(resp->infoLog);
       delete resp;
       return log;
     }
     else
     {
-      throw std::runtime_error("Failed to get program info log: timeout.");
+      throw runtime_error("Failed to get program info log: timeout.");
     }
   }
 
-  std::shared_ptr<WebGLShader> WebGLContext::createShader(WebGLShaderType type)
+  shared_ptr<WebGLShader> WebGLContext::createShader(WebGLShaderType type)
   {
-    auto shader = std::make_shared<WebGLShader>(type);
+    auto shader = make_shared<WebGLShader>(type);
     auto req = CreateShaderCommandBufferRequest(shader->id, static_cast<uint32_t>(type));
     sendCommandBufferRequest(req);
     return shader;
   }
 
-  void WebGLContext::deleteShader(std::shared_ptr<WebGLShader> shader)
+  void WebGLContext::deleteShader(shared_ptr<WebGLShader> shader)
   {
     auto req = DeleteShaderCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req);
     shader->markDeleted();
   }
 
-  void WebGLContext::shaderSource(std::shared_ptr<WebGLShader> shader, const std::string &source)
+  void WebGLContext::shaderSource(shared_ptr<WebGLShader> shader, const string &source)
   {
     auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher2::GetPatchedSource(source));
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::compileShader(std::shared_ptr<WebGLShader> shader)
+  void WebGLContext::compileShader(shared_ptr<WebGLShader> shader)
   {
     auto req = CompileShaderCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::attachShader(std::shared_ptr<WebGLProgram> program, std::shared_ptr<WebGLShader> shader)
+  void WebGLContext::attachShader(shared_ptr<WebGLProgram> program, shared_ptr<WebGLShader> shader)
   {
     auto req = AttachShaderCommandBufferRequest(program->id, shader->id);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::detachShader(std::shared_ptr<WebGLProgram> program, std::shared_ptr<WebGLShader> shader)
+  void WebGLContext::detachShader(shared_ptr<WebGLProgram> program, shared_ptr<WebGLShader> shader)
   {
     auto req = DetachShaderCommandBufferRequest(program->id, shader->id);
     sendCommandBufferRequest(req);
   }
 
-  std::string WebGLContext::getShaderSource(std::shared_ptr<WebGLShader> shader)
+  string WebGLContext::getShaderSource(shared_ptr<WebGLShader> shader)
   {
     auto req = GetShaderSourceCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req, true);
@@ -333,17 +329,17 @@ namespace client_graphics
     auto resp = recvCommandBufferResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES);
     if (resp != nullptr)
     {
-      std::string source(resp->source);
+      string source(resp->source);
       delete resp;
       return source;
     }
     else
     {
-      throw std::runtime_error("Failed to get shader source: timeout.");
+      throw runtime_error("Failed to get shader source: timeout.");
     }
   }
 
-  int WebGLContext::getShaderParameter(std::shared_ptr<WebGLShader> shader, int pname)
+  int WebGLContext::getShaderParameter(shared_ptr<WebGLShader> shader, int pname)
   {
     auto req = GetShaderParamCommandBufferRequest(shader->id, pname);
     sendCommandBufferRequest(req, true);
@@ -357,11 +353,11 @@ namespace client_graphics
     }
     else
     {
-      throw std::runtime_error("Failed to get shader parameter: timeout.");
+      throw runtime_error("Failed to get shader parameter: timeout.");
     }
   }
 
-  std::string WebGLContext::getShaderInfoLog(std::shared_ptr<WebGLShader> shader)
+  string WebGLContext::getShaderInfoLog(shared_ptr<WebGLShader> shader)
   {
     auto req = GetShaderInfoLogCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req, true);
@@ -369,32 +365,32 @@ namespace client_graphics
     auto resp = recvCommandBufferResponse<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES);
     if (resp != nullptr)
     {
-      std::string log(resp->infoLog);
+      string log(resp->infoLog);
       delete resp;
       return log;
     }
     else
     {
-      throw std::runtime_error("Failed to get shader info log: timeout.");
+      throw runtime_error("Failed to get shader info log: timeout.");
     }
   }
 
-  std::shared_ptr<WebGLBuffer> WebGLContext::createBuffer()
+  shared_ptr<WebGLBuffer> WebGLContext::createBuffer()
   {
-    auto buffer = std::make_shared<WebGLBuffer>();
+    auto buffer = make_shared<WebGLBuffer>();
     auto req = CreateBufferCommandBufferRequest(buffer->id);
     sendCommandBufferRequest(req);
     return buffer;
   }
 
-  void WebGLContext::deleteBuffer(std::shared_ptr<WebGLBuffer> buffer)
+  void WebGLContext::deleteBuffer(shared_ptr<WebGLBuffer> buffer)
   {
     auto req = DeleteBufferCommandBufferRequest(buffer->id);
     sendCommandBufferRequest(req);
     buffer->markDeleted();
   }
 
-  void WebGLContext::bindBuffer(WebGLBufferBindingTarget target, std::shared_ptr<WebGLBuffer> buffer)
+  void WebGLContext::bindBuffer(WebGLBufferBindingTarget target, shared_ptr<WebGLBuffer> buffer)
   {
     uint32_t bufferId = 0;
     if (buffer != nullptr)
@@ -437,22 +433,22 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  std::shared_ptr<WebGLFramebuffer> WebGLContext::createFramebuffer()
+  shared_ptr<WebGLFramebuffer> WebGLContext::createFramebuffer()
   {
-    auto framebuffer = std::make_shared<WebGLFramebuffer>();
+    auto framebuffer = make_shared<WebGLFramebuffer>();
     auto req = CreateFramebufferCommandBufferRequest(framebuffer->id);
     sendCommandBufferRequest(req);
     return framebuffer;
   }
 
-  void WebGLContext::deleteFramebuffer(std::shared_ptr<WebGLFramebuffer> framebuffer)
+  void WebGLContext::deleteFramebuffer(shared_ptr<WebGLFramebuffer> framebuffer)
   {
     auto req = DeleteFramebufferCommandBufferRequest(framebuffer->id);
     sendCommandBufferRequest(req);
     framebuffer->markDeleted();
   }
 
-  void WebGLContext::bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer)
+  void WebGLContext::bindFramebuffer(WebGLFramebufferBindingTarget target, shared_ptr<WebGLFramebuffer> framebuffer)
   {
     uint32_t framebufferId = 0;
     if (framebuffer == nullptr)
@@ -474,7 +470,7 @@ namespace client_graphics
     WebGLFramebufferBindingTarget target,
     WebGLFramebufferAttachment attachment,
     WebGLRenderbufferBindingTarget renderbuffertarget,
-    std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+    shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
     auto req = FramebufferRenderbufferCommandBufferRequest(static_cast<uint32_t>(target),
                                                            static_cast<uint32_t>(attachment),
@@ -487,7 +483,7 @@ namespace client_graphics
     WebGLFramebufferBindingTarget target,
     WebGLFramebufferAttachment attachment,
     WebGLTexture2DTarget textarget,
-    std::shared_ptr<WebGLTexture> texture,
+    shared_ptr<WebGLTexture> texture,
     int level)
   {
     auto req = FramebufferTexture2DCommandBufferRequest(static_cast<uint32_t>(target),
@@ -512,19 +508,19 @@ namespace client_graphics
     }
     else
     {
-      throw std::runtime_error("Failed to check framebuffer status: timeout.");
+      throw runtime_error("Failed to check framebuffer status: timeout.");
     }
   }
 
-  std::shared_ptr<WebGLRenderbuffer> WebGLContext::createRenderbuffer()
+  shared_ptr<WebGLRenderbuffer> WebGLContext::createRenderbuffer()
   {
-    auto renderbuffer = std::make_shared<WebGLRenderbuffer>();
+    auto renderbuffer = make_shared<WebGLRenderbuffer>();
     auto req = CreateRenderbufferCommandBufferRequest(renderbuffer->id);
     sendCommandBufferRequest(req);
     return renderbuffer;
   }
 
-  void WebGLContext::deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  void WebGLContext::deleteRenderbuffer(shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
     if (renderbuffer == nullptr || renderbuffer->isDeleted())
       return;
@@ -533,7 +529,7 @@ namespace client_graphics
     renderbuffer->markDeleted();
   }
 
-  void WebGLContext::bindRenderbuffer(WebGLRenderbufferBindingTarget target, std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  void WebGLContext::bindRenderbuffer(WebGLRenderbufferBindingTarget target, shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
     uint32_t renderbufferId = 0;
     if (renderbuffer != nullptr)
@@ -553,15 +549,15 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  std::shared_ptr<WebGLTexture> WebGLContext::createTexture()
+  shared_ptr<WebGLTexture> WebGLContext::createTexture()
   {
-    auto texture = std::make_shared<WebGLTexture>();
+    auto texture = make_shared<WebGLTexture>();
     auto req = CreateTextureCommandBufferRequest(texture->id);
     sendCommandBufferRequest(req);
     return texture;
   }
 
-  void WebGLContext::deleteTexture(std::shared_ptr<WebGLTexture> texture)
+  void WebGLContext::deleteTexture(shared_ptr<WebGLTexture> texture)
   {
     if (texture == nullptr || texture->isDeleted())
       return;
@@ -570,7 +566,7 @@ namespace client_graphics
     texture->markDeleted();
   }
 
-  void WebGLContext::bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture)
+  void WebGLContext::bindTexture(WebGLTextureTarget target, shared_ptr<WebGLTexture> texture)
   {
     uint32_t textureId = 0;
     if (texture == nullptr)
@@ -614,7 +610,7 @@ namespace client_graphics
     else
     {
       unsigned char *pixelsToUse = nullptr;
-      int max_size = std::max(width, height);
+      int max_size = max(width, height);
       if (max_size > transmute::ImageProcessor::DEFAULT_MAX_TEXTURE_SIZE)
       {
         const auto &downsampled = transmute::ImageProcessor::GetDownsampledImage(pixels, width, height);
@@ -631,7 +627,7 @@ namespace client_graphics
       {
         unsigned char *unpacked = unpackPixels(type, format, req.width, req.height, pixelsToUse);
         if (TR_UNLIKELY(unpacked == nullptr))
-          throw std::runtime_error("Failed to unpack pixels, the source data is null.");
+          throw runtime_error("Failed to unpack pixels, the source data is null.");
         req.setPixels(unpacked, false);
       }
       else
@@ -673,7 +669,7 @@ namespace client_graphics
                               height,
                               pixels);
       if (TR_UNLIKELY(unpacked == nullptr))
-        throw std::runtime_error("Failed to unpack pixels, the source data is null.");
+        throw runtime_error("Failed to unpack pixels, the source data is null.");
       req.setPixels(unpacked, false);
     }
     else
@@ -741,12 +737,12 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<float> params)
+  void WebGLContext::texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const vector<float> params)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGLContext::texParameteriv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<int> params)
+  void WebGLContext::texParameteriv(WebGLTextureTarget target, WebGLTextureParameterName pname, const vector<int> params)
   {
     NOT_IMPLEMENTED();
   }
@@ -781,148 +777,161 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  std::optional<WebGLActiveInfo> WebGLContext::getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index)
+  optional<WebGLActiveInfo> WebGLContext::getActiveAttrib(shared_ptr<WebGLProgram> program, unsigned int index)
   {
     if (program->hasActiveAttrib(index))
       return program->getActiveAttrib(index);
     else
-      return std::nullopt;
+      return nullopt;
   }
 
-  std::optional<WebGLActiveInfo> WebGLContext::getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index)
+  optional<WebGLActiveInfo> WebGLContext::getActiveUniform(shared_ptr<WebGLProgram> program, unsigned int index)
   {
     if (program->hasActiveUniform(index))
       return program->getActiveUniform(index);
     else
-      return std::nullopt;
+      return nullopt;
   }
 
-  std::optional<int> WebGLContext::getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
+  optional<int> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
   {
     if (program->hasAttribLocation(name))
       return program->getAttribLocation(name);
     else
-      return std::nullopt;
+      return nullopt;
   }
 
-  std::optional<WebGLUniformLocation> WebGLContext::getUniformLocation(std::shared_ptr<WebGLProgram> program,
-                                                                       const std::string &name)
+  optional<WebGLUniformLocation> WebGLContext::getUniformLocation(shared_ptr<WebGLProgram> program,
+                                                                  const string &name)
   {
-    if (program->hasUniformLocation(name))
-      return program->getUniformLocation(name);
+    if (program->isIncomplete())
+    {
+      return WebGLUniformLocation(program->id, name);
+    }
     else
-      return std::nullopt;
+    {
+      if (program->hasUniformLocation(name))
+        return program->getUniformLocation(name);
+      else
+        return nullopt;
+    }
   }
 
   void WebGLContext::uniform1f(WebGLUniformLocation location, float v0)
   {
-    auto req = Uniform1fCommandBufferRequest(location.index, v0);
+    auto req = Uniform1fCommandBufferRequest(location.programId, location.name, v0);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform1fv(WebGLUniformLocation location, const std::vector<float> value)
+  void WebGLContext::uniform1fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform1fvCommandBufferRequest(location.index, value);
+    auto req = Uniform1fvCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform1i(WebGLUniformLocation location, int v0)
   {
-    auto req = Uniform1iCommandBufferRequest(location.index, v0);
+    auto req = Uniform1iCommandBufferRequest(location.programId, location.name, v0);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform1iv(WebGLUniformLocation location, const std::vector<int> value)
+  void WebGLContext::uniform1iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform1ivCommandBufferRequest(location.index, value);
+    auto req = Uniform1ivCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform2f(WebGLUniformLocation location, float v0, float v1)
   {
-    auto req = Uniform2fCommandBufferRequest(location.index, v0, v1);
+    auto req = Uniform2fCommandBufferRequest(location.index.value_or(0), v0, v1);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform2fv(WebGLUniformLocation location, const std::vector<float> value)
+  void WebGLContext::uniform2fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform2fvCommandBufferRequest(location.index, value);
+    auto req = Uniform2fvCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform2i(WebGLUniformLocation location, int v0, int v1)
   {
-    auto req = Uniform2iCommandBufferRequest(location.index, v0, v1);
+    auto req = Uniform2iCommandBufferRequest(location.index.value_or(0), v0, v1);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform2iv(WebGLUniformLocation location, const std::vector<int> value)
+  void WebGLContext::uniform2iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform2ivCommandBufferRequest(location.index, value);
+    auto req = Uniform2ivCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform3f(WebGLUniformLocation location, float v0, float v1, float v2)
   {
-    auto req = Uniform3fCommandBufferRequest(location.index, v0, v1, v2);
+    auto req = Uniform3fCommandBufferRequest(location.index.value_or(0), v0, v1, v2);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform3fv(WebGLUniformLocation location, const std::vector<float> value)
+  void WebGLContext::uniform3fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform3fvCommandBufferRequest(location.index, value);
+    auto req = Uniform3fvCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform3i(WebGLUniformLocation location, int v0, int v1, int v2)
   {
-    auto req = Uniform3iCommandBufferRequest(location.index, v0, v1, v2);
+    auto req = Uniform3iCommandBufferRequest(location.index.value_or(0), v0, v1, v2);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform3iv(WebGLUniformLocation location, const std::vector<int> value)
+  void WebGLContext::uniform3iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform3ivCommandBufferRequest(location.index, value);
+    auto req = Uniform3ivCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform4f(WebGLUniformLocation location, float v0, float v1, float v2, float v3)
   {
-    auto req = Uniform4fCommandBufferRequest(location.index, v0, v1, v2, v3);
+    auto req = Uniform4fCommandBufferRequest(location.index.value_or(0), v0, v1, v2, v3);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform4fv(WebGLUniformLocation location, const std::vector<float> value)
+  void WebGLContext::uniform4fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform4fvCommandBufferRequest(location.index, value);
+    auto req = Uniform4fvCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform4i(WebGLUniformLocation location, int v0, int v1, int v2, int v3)
   {
-    auto req = Uniform4iCommandBufferRequest(location.index, v0, v1, v2, v3);
+    auto req = Uniform4iCommandBufferRequest(location.index.value_or(0), v0, v1, v2, v3);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::uniform4iv(WebGLUniformLocation location, const std::vector<int> value)
+  void WebGLContext::uniform4iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform4ivCommandBufferRequest(location.index, value);
+    auto req = Uniform4ivCommandBufferRequest(location.index.value_or(0), value);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, glm::mat2 m)
   {
-    std::vector<float> values = {
+    vector<float> values = {
       m[0][0], m[0][1], m[1][0], m[1][1]};
     uniformMatrix2fv(location, transpose, values);
   }
 
-  void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
-    if (values.size() % 4 != 0)
-      throw std::runtime_error("Invalid matrix size, expected 4 but got " + std::to_string(values.size()));
+    if (values.size() % 4 != 0) [[unlikely]]
+      throw runtime_error("Invalid matrix size, expected 4 but got " + to_string(values.size()));
 
-    auto req = UniformMatrix2fvCommandBufferRequest(location.index, transpose, values);
+    auto req = UniformMatrix2fvCommandBufferRequest(location.programId, location.name, transpose, values);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -934,7 +943,7 @@ namespace client_graphics
   void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m)
   {
     // clang-format off
-    std::vector<float> values = {
+    vector<float> values = {
       m[0][0], m[0][1], m[0][2],
       m[1][0], m[1][1], m[1][2],
       m[2][0], m[2][1], m[2][2]};
@@ -942,12 +951,14 @@ namespace client_graphics
     uniformMatrix3fv(location, transpose, values);
   }
 
-  void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
-    if (values.size() % 9 != 0)
-      throw std::runtime_error("Invalid matrix size, expected 9 but got " + std::to_string(values.size()));
+    if (values.size() % 9 != 0) [[unlikely]]
+      throw runtime_error("Invalid matrix size, expected 9 but got " + to_string(values.size()));
 
-    auto req = UniformMatrix3fvCommandBufferRequest(location.index, transpose, values);
+    auto req = UniformMatrix3fvCommandBufferRequest(location.programId, location.name, transpose, values);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -959,7 +970,7 @@ namespace client_graphics
   void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m)
   {
     // clang-format off
-    std::vector<float> values = {
+    vector<float> values = {
       m[0][0], m[0][1], m[0][2], m[0][3],
       m[1][0], m[1][1], m[1][2], m[1][3],
       m[2][0], m[2][1], m[2][2], m[2][3],
@@ -968,9 +979,12 @@ namespace client_graphics
     uniformMatrix4fv(location, transpose, values);
   }
 
-  void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
-    UniformMatrix4fvCommandBufferRequest req(location.index, transpose);
+    UniformMatrix4fvCommandBufferRequest req(location.programId, location.name, transpose, values);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
+
     auto locationName = location.name;
     bool runsInXRFrame = false;
     {
@@ -1042,18 +1056,20 @@ namespace client_graphics
     {
       size_t length = values.size();
       if (length % 16 != 0) [[unlikely]]
-        throw runtime_error("uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".");
+        throw runtime_error("uniformMatrix4fv() must take 16x float elements array but accept " + to_string(length) + ".");
 
       req.values.resize(length);
       auto valuesSrc = values.data();
-      std::copy(valuesSrc, valuesSrc + length, req.values.begin());
+      copy(valuesSrc, valuesSrc + length, req.values.begin());
     }
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues)
   {
-    UniformMatrix4fvCommandBufferRequest req(location.index, transpose);
+    UniformMatrix4fvCommandBufferRequest req(location.programId, location.name, transpose);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     req.computationGraph4values = graphToValues;
     sendCommandBufferRequest(req);
   }
@@ -1113,9 +1129,9 @@ namespace client_graphics
   {
     if (x < 0 || y < 0 || width < 0 || height < 0)
     {
-      string msg = "viewport() arguments must be positive. x: " + std::to_string(x) + ", y: " + std::to_string(y) +
-                   ", width: " + std::to_string(width) + ", height: " + std::to_string(height);
-      throw std::runtime_error(msg);
+      string msg = "viewport() arguments must be positive. x: " + to_string(x) + ", y: " + to_string(y) +
+                   ", width: " + to_string(width) + ", height: " + to_string(height);
+      throw runtime_error(msg);
     }
     if (!viewport_.isEqual(width, height, x, y))
     {
@@ -1281,8 +1297,8 @@ namespace client_graphics
     auto resp = recvCommandBufferResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES);
     if (resp == nullptr)
     {
-      std::string msg = "Failed to get boolean parameter(" + std::to_string(static_cast<uint32_t>(pname)) + "): timeout.";
-      throw std::runtime_error(msg);
+      string msg = "Failed to get boolean parameter(" + to_string(static_cast<uint32_t>(pname)) + "): timeout.";
+      throw runtime_error(msg);
     }
     auto v = resp->value;
     delete resp;
@@ -1294,7 +1310,7 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  std::vector<float> WebGLContext::getParameter(WebGLFloatArrayParameterName pname)
+  vector<float> WebGLContext::getParameter(WebGLFloatArrayParameterName pname)
   {
     if (pname == WebGLFloatArrayParameterName::kViewport)
     {
@@ -1346,7 +1362,7 @@ namespace client_graphics
 
     auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
     if (resp == nullptr)
-      throw std::runtime_error("Failed to get integer parameter: timeout.");
+      throw runtime_error("Failed to get integer parameter: timeout.");
 
     int v = resp->value;
     delete resp;
@@ -1367,11 +1383,11 @@ namespace client_graphics
   {
     auto values = getParameter(pname);
     if (index < 0 || index >= values.size())
-      throw std::runtime_error("Index out of range: " + std::to_string(index));
+      throw runtime_error("Index out of range: " + to_string(index));
     return values[index];
   }
 
-  std::string WebGLContext::getParameter(WebGLStringParameterName pname)
+  string WebGLContext::getParameter(WebGLStringParameterName pname)
   {
     if (pname == WebGLStringParameterName::kVendor)
       return vendor;
@@ -1386,11 +1402,11 @@ namespace client_graphics
     auto resp = recvCommandBufferResponse<GetStringCommandBufferResponse>(COMMAND_BUFFER_GET_STRING_RES);
     if (resp == nullptr)
     {
-      std::string msg = "Failed to get string parameter(" + std::to_string(static_cast<uint32_t>(pname)) + "): timeout.";
-      throw std::runtime_error(msg);
+      string msg = "Failed to get string parameter(" + to_string(static_cast<uint32_t>(pname)) + "): timeout.";
+      throw runtime_error(msg);
     }
 
-    std::string v(resp->value);
+    string v(resp->value);
     delete resp;
     return v;
   }
@@ -1402,7 +1418,7 @@ namespace client_graphics
 
     auto resp = recvCommandBufferResponse<GetShaderPrecisionFormatCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES);
     if (resp == nullptr)
-      throw std::runtime_error("Failed to get shader precision format: timeout.");
+      throw runtime_error("Failed to get shader precision format: timeout.");
 
     WebGLShaderPrecisionFormat format(*resp);
     delete resp;
@@ -1416,7 +1432,7 @@ namespace client_graphics
     return res;
   }
 
-  std::vector<std::string> &WebGLContext::getSupportedExtensions()
+  vector<string> &WebGLContext::getSupportedExtensions()
   {
     if (supportedExtensions_.has_value())
       return supportedExtensions_.value();
@@ -1426,13 +1442,13 @@ namespace client_graphics
 
     auto resp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
     if (resp == nullptr)
-      throw std::runtime_error("Failed to get supported extensions: timeout.");
+      throw runtime_error("Failed to get supported extensions: timeout.");
 
-    std::vector<std::string> extensionsList;
+    vector<string> extensionsList;
     for (size_t i = 0; i < resp->extensions.size(); i++)
     {
       // remove GL_ prefix
-      std::string extension = resp->extensions[i];
+      string extension = resp->extensions[i];
       if (extension.find("GL_") == 0)
         extensionsList.push_back(extension.substr(3));
       else
@@ -1443,7 +1459,7 @@ namespace client_graphics
     return supportedExtensions_.value();
   }
 
-  bool WebGLContext::supportsExtension(const std::string &extension)
+  bool WebGLContext::supportsExtension(const string &extension)
   {
     const auto &extensions = getSupportedExtensions();
     for (const auto &ext : extensions)
@@ -1480,7 +1496,7 @@ namespace client_graphics
       return success ? sendFlushCommand(connectedSession) : false;
   }
 
-  bool WebGLContext::sendFlushCommand(std::shared_ptr<client_xr::XRSession> session)
+  bool WebGLContext::sendFlushCommand(shared_ptr<client_xr::XRSession> session)
   {
     assert(session != nullptr);
     auto flushReq = session->createFlushFrameCommand();
@@ -1512,7 +1528,7 @@ namespace client_graphics
     // Wait for the context init response
     auto resp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
     if (resp == nullptr)
-      throw std::runtime_error("Failed to initialize WebGL2 context: timeout.");
+      throw runtime_error("Failed to initialize WebGL2 context: timeout.");
 
     max3DTextureSize = resp->max3DTextureSize;
     maxArrayTextureLayers = resp->maxArrayTextureLayers;
@@ -1550,7 +1566,7 @@ namespace client_graphics
     delete resp;
   }
 
-  void WebGL2Context::beginQuery(WebGLQueryTarget target, std::shared_ptr<WebGLQuery> query)
+  void WebGL2Context::beginQuery(WebGLQueryTarget target, shared_ptr<WebGLQuery> query)
   {
     NOT_IMPLEMENTED();
   }
@@ -1560,7 +1576,7 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::bindBufferBase(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer)
+  void WebGL2Context::bindBufferBase(WebGLBufferBindingTarget target, uint32_t index, shared_ptr<WebGLBuffer> buffer)
   {
     uint32_t bufferId = 0;
     if (buffer != nullptr)
@@ -1575,7 +1591,7 @@ namespace client_graphics
 
   void WebGL2Context::bindBufferRange(WebGLBufferBindingTarget target,
                                       uint32_t index,
-                                      std::shared_ptr<WebGLBuffer> buffer,
+                                      shared_ptr<WebGLBuffer> buffer,
                                       int offset,
                                       size_t size)
   {
@@ -1590,12 +1606,12 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::bindSampler(uint32_t unit, std::shared_ptr<WebGLSampler> sampler)
+  void WebGL2Context::bindSampler(uint32_t unit, shared_ptr<WebGLSampler> sampler)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::bindVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  void WebGL2Context::bindVertexArray(shared_ptr<WebGLVertexArray> vertexArray)
   {
     uint32_t vaoId = 0;
     if (vertexArray != nullptr)
@@ -1639,8 +1655,8 @@ namespace client_graphics
                                  size_t srcSize,
                                  void *srcData,
                                  WebGLBufferUsage usage,
-                                 std::optional<int> srcOffset,
-                                 std::optional<int> length)
+                                 optional<int> srcOffset,
+                                 optional<int> length)
   {
     // TODO: implement the srcOffset and length
     auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target),
@@ -1654,25 +1670,25 @@ namespace client_graphics
                                     int dstByteOffset,
                                     size_t srcSize,
                                     void *srcData,
-                                    std::optional<int> srcOffset,
-                                    std::optional<int> length)
+                                    optional<int> srcOffset,
+                                    optional<int> length)
   {
     // TODO: implement the srcOffset and length
     auto req = BufferSubDataCommandBufferRequest(static_cast<uint32_t>(target), dstByteOffset, srcSize, srcData);
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<float> values)
+  void WebGL2Context::clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<int> values)
+  void WebGL2Context::clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<int> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<unsigned int> values)
+  void WebGL2Context::clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<unsigned int> values)
   {
     NOT_IMPLEMENTED();
   }
@@ -1736,37 +1752,37 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  std::shared_ptr<WebGLQuery> WebGL2Context::createQuery()
+  shared_ptr<WebGLQuery> WebGL2Context::createQuery()
   {
     NOT_IMPLEMENTED();
     return nullptr;
   }
 
-  std::shared_ptr<WebGLSampler> WebGL2Context::createSampler()
+  shared_ptr<WebGLSampler> WebGL2Context::createSampler()
   {
     NOT_IMPLEMENTED();
     return nullptr;
   }
 
-  std::shared_ptr<WebGLVertexArray> WebGL2Context::createVertexArray()
+  shared_ptr<WebGLVertexArray> WebGL2Context::createVertexArray()
   {
-    auto vao = std::make_shared<WebGLVertexArray>();
+    auto vao = make_shared<WebGLVertexArray>();
     auto req = CreateVertexArrayCommandBufferRequest(vao->id);
     sendCommandBufferRequest(req);
     return vao;
   }
 
-  void WebGL2Context::deleteQuery(std::shared_ptr<WebGLQuery> query)
+  void WebGL2Context::deleteQuery(shared_ptr<WebGLQuery> query)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::deleteSampler(std::shared_ptr<WebGLSampler> sampler)
+  void WebGL2Context::deleteSampler(shared_ptr<WebGLSampler> sampler)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::deleteVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  void WebGL2Context::deleteVertexArray(shared_ptr<WebGLVertexArray> vertexArray)
   {
     if (vertexArray == nullptr || vertexArray->isDeleted())
       return;
@@ -1786,7 +1802,7 @@ namespace client_graphics
     sendFirstContentfulPaintMetrics();
   }
 
-  void WebGL2Context::drawBuffers(const std::vector<uint32_t> buffers)
+  void WebGL2Context::drawBuffers(const vector<uint32_t> buffers)
   {
     auto commandBuffer = DrawBuffersCommandBufferRequest(buffers.size(), buffers.data());
     sendCommandBufferRequest(commandBuffer);
@@ -1825,14 +1841,14 @@ namespace client_graphics
   void WebGL2Context::framebufferTextureLayer(
     WebGLFramebufferBindingTarget target,
     WebGLFramebufferAttachment attachment,
-    std::shared_ptr<WebGLTexture> texture,
+    shared_ptr<WebGLTexture> texture,
     int level,
     int layer)
   {
     NOT_IMPLEMENTED();
   }
 
-  std::string WebGL2Context::getActiveUniformBlockName(std::shared_ptr<WebGLProgram> program, int uniformBlockIndex)
+  string WebGL2Context::getActiveUniformBlockName(shared_ptr<WebGLProgram> program, int uniformBlockIndex)
   {
     NOT_IMPLEMENTED();
     return "";
@@ -1843,13 +1859,13 @@ namespace client_graphics
     int srcByteOffset,
     size_t dstSize,
     void *dstData,
-    std::optional<int> dstOffset,
-    std::optional<int> length)
+    optional<int> dstOffset,
+    optional<int> length)
   {
     NOT_IMPLEMENTED();
   }
 
-  int WebGL2Context::getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
+  int WebGL2Context::getFragDataLocation(shared_ptr<WebGLProgram> program, const string &name)
   {
     NOT_IMPLEMENTED();
     return -1;
@@ -1924,20 +1940,20 @@ namespace client_graphics
 
     auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
     if (resp == nullptr)
-      throw std::runtime_error("Failed to get integer parameter: timeout.");
+      throw runtime_error("Failed to get integer parameter: timeout.");
 
     int v = resp->value;
     delete resp;
     return v;
   }
 
-  std::shared_ptr<WebGLQuery> WebGL2Context::getQuery(WebGLQueryTarget target, int pname)
+  shared_ptr<WebGLQuery> WebGL2Context::getQuery(WebGLQueryTarget target, int pname)
   {
     NOT_IMPLEMENTED();
     return nullptr;
   }
 
-  int WebGL2Context::getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName)
+  int WebGL2Context::getUniformBlockIndex(shared_ptr<WebGLProgram> program, const string &uniformBlockName)
   {
     if (program == nullptr || !program->isValid() || !program->hasUniformBlockIndex(uniformBlockName))
       return -1;
@@ -1945,14 +1961,14 @@ namespace client_graphics
       return program->getUniformBlockIndex(uniformBlockName);
   }
 
-  void WebGL2Context::invalidateFramebuffer(WebGLFramebufferBindingTarget target, const std::vector<int> attachments)
+  void WebGL2Context::invalidateFramebuffer(WebGLFramebufferBindingTarget target, const vector<int> attachments)
   {
     NOT_IMPLEMENTED();
   }
 
   void WebGL2Context::invalidateSubFramebuffer(
     WebGLFramebufferBindingTarget target,
-    const std::vector<int> attachments,
+    const vector<int> attachments,
     int x,
     int y,
     size_t width,
@@ -1961,17 +1977,17 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  bool WebGL2Context::isQuery(std::shared_ptr<WebGLQuery> query)
+  bool WebGL2Context::isQuery(shared_ptr<WebGLQuery> query)
   {
     return query->isValid();
   }
 
-  bool WebGL2Context::isSampler(std::shared_ptr<WebGLSampler> sampler)
+  bool WebGL2Context::isSampler(shared_ptr<WebGLSampler> sampler)
   {
     return sampler->isValid();
   }
 
-  bool WebGL2Context::isVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  bool WebGL2Context::isVertexArray(shared_ptr<WebGLVertexArray> vertexArray)
   {
     return vertexArray->isValid();
   }
@@ -2080,7 +2096,7 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::uniformBlockBinding(std::shared_ptr<WebGLProgram> program,
+  void WebGL2Context::uniformBlockBinding(shared_ptr<WebGLProgram> program,
                                           int uniformBlockIndex,
                                           uint32_t uniformBlockBinding)
   {
@@ -2093,36 +2109,36 @@ namespace client_graphics
     }
     else
     {
-      throw std::runtime_error("Uniform block index is out of range.");
+      throw runtime_error("Uniform block index is out of range.");
     }
   }
 
-  void WebGL2Context::uniformMatrix3x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix3x2fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::uniformMatrix4x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix4x2fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::uniformMatrix2x3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix2x3fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::uniformMatrix4x3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix4x3fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::uniformMatrix2x4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix2x4fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::uniformMatrix3x4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  void WebGL2Context::uniformMatrix3x4fv(WebGLUniformLocation location, bool transpose, vector<float> values)
   {
     NOT_IMPLEMENTED();
   }
@@ -2143,12 +2159,12 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribI4iv(uint32_t index, const std::vector<int> values)
+  void WebGL2Context::vertexAttribI4iv(uint32_t index, const vector<int> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribI4uiv(uint32_t index, const std::vector<uint> values)
+  void WebGL2Context::vertexAttribI4uiv(uint32_t index, const vector<uint> values)
   {
     NOT_IMPLEMENTED();
   }
