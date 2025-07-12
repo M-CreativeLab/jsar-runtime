@@ -1,0 +1,29 @@
+{
+  "css": {
+    "selectors": {
+      "enabled": {
+        "__compat": {
+          "description": "`:enabled`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:enabled",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-enabled",
+            "https://drafts.csswg.org/selectors/#enabled-pseudo"
+          ],
+          "tags": [
+            "web-features:input-selectors"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

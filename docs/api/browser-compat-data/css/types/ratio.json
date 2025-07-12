@@ -1,0 +1,83 @@
+{
+  "css": {
+    "types": {
+      "ratio": {
+        "__compat": {
+          "description": "`<ratio>`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/ratio",
+          "spec_url": "https://drafts.csswg.org/mediaqueries/#values",
+          "tags": [
+            "web-features:media-queries"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "3"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "3.5"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "9"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "9.5"
+            },
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "5"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "number_value": {
+          "__compat": {
+            "description": "Accepts a single &lt;number&gt; as a value.",
+            "tags": [
+              "web-features:media-queries"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "78"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "css": {
+    "properties": {
+      "speak": {
+        "__compat": {
+          "spec_url": "https://drafts.csswg.org/css-speech-1/#speaking-props-speak",
+          "tags": [
+            "web-features:speak"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "≤80",
+              "partial_implementation": true,
+              "notes": "The implementation is not compliant with the specification, see [bug 40813740](https://crbug.com/40813740)."
+            },
+            "chrome_android": "mirror",
+            "edge": "mirror",
+            "firefox": {
+              "version_added": false,
+              "impl_url": "https://bugzil.la/1748064"
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": false
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

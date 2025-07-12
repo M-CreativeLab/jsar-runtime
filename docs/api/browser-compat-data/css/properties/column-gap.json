@@ -1,0 +1,391 @@
+{
+  "css": {
+    "properties": {
+      "column-gap": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/column-gap",
+          "spec_url": [
+            "https://drafts.csswg.org/css-align/#column-row-gap",
+            "https://drafts.csswg.org/css-grid/#gutters",
+            "https://drafts.csswg.org/css-multicol/#column-gap"
+          ],
+          "tags": [
+            "web-features:multi-column"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "1.5"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "10"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "11.1"
+            },
+            "opera_android": {
+              "version_added": "11.1"
+            },
+            "safari": {
+              "version_added": "3"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "flex_context": {
+          "__compat": {
+            "description": "Supported in Flex Layout",
+            "spec_url": [
+              "https://drafts.csswg.org/css-align/#column-row-gap",
+              "https://drafts.csswg.org/css-grid/#gutters",
+              "https://drafts.csswg.org/css-multicol/#column-gap"
+            ],
+            "tags": [
+              "web-features:flexbox-gap"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "84"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "63"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "14.1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "grid_context": {
+          "__compat": {
+            "description": "Supported in Grid Layout",
+            "spec_url": [
+              "https://drafts.csswg.org/css-align/#column-row-gap",
+              "https://drafts.csswg.org/css-grid/#gutters",
+              "https://drafts.csswg.org/css-multicol/#column-gap"
+            ],
+            "tags": [
+              "web-features:grid"
+            ],
+            "support": {
+              "chrome": [
+                {
+                  "version_added": "66"
+                },
+                {
+                  "alternative_name": "grid-column-gap",
+                  "version_added": "57"
+                }
+              ],
+              "chrome_android": "mirror",
+              "edge": [
+                {
+                  "version_added": "16"
+                },
+                {
+                  "alternative_name": "grid-column-gap",
+                  "version_added": "16"
+                }
+              ],
+              "firefox": [
+                {
+                  "version_added": "61"
+                },
+                {
+                  "alternative_name": "grid-column-gap",
+                  "version_added": "52"
+                }
+              ],
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": [
+                {
+                  "version_added": "12"
+                },
+                {
+                  "alternative_name": "grid-column-gap",
+                  "version_added": "10.1"
+                }
+              ],
+              "safari_ios": "mirror",
+              "samsunginternet_android": [
+                {
+                  "version_added": "9.0"
+                },
+                {
+                  "alternative_name": "grid-column-gap",
+                  "version_added": "6.0"
+                }
+              ],
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "multicol_context": {
+          "__compat": {
+            "description": "Supported in Multi-column Layout",
+            "spec_url": [
+              "https://drafts.csswg.org/css-align/#column-row-gap",
+              "https://drafts.csswg.org/css-grid/#gutters",
+              "https://drafts.csswg.org/css-multicol/#column-gap"
+            ],
+            "tags": [
+              "web-features:multi-column"
+            ],
+            "support": {
+              "chrome": [
+                {
+                  "version_added": "50"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "1"
+                }
+              ],
+              "chrome_android": "mirror",
+              "edge": [
+                {
+                  "version_added": "12"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "12"
+                }
+              ],
+              "firefox": [
+                {
+                  "version_added": "52"
+                },
+                {
+                  "prefix": "-moz-",
+                  "version_added": "1.5",
+                  "version_removed": "74",
+                  "notes": "Before Firefox 3, the default value for the `normal` keyword was `0` and not `1em`."
+                }
+              ],
+              "firefox_android": [
+                {
+                  "version_added": "52"
+                },
+                {
+                  "prefix": "-moz-",
+                  "version_added": "4"
+                }
+              ],
+              "ie": {
+                "version_added": "10"
+              },
+              "oculus": "mirror",
+              "opera": [
+                {
+                  "version_added": "37"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "15"
+                },
+                {
+                  "version_added": "11.1",
+                  "version_removed": "15"
+                }
+              ],
+              "opera_android": [
+                {
+                  "version_added": "37"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "14"
+                },
+                {
+                  "version_added": "11.1",
+                  "version_removed": "14"
+                }
+              ],
+              "safari": [
+                {
+                  "version_added": "10"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "3"
+                }
+              ],
+              "safari_ios": [
+                {
+                  "version_added": "10"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "3"
+                }
+              ],
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          },
+          "calc_values": {
+            "__compat": {
+              "description": "`calc()` values",
+              "tags": [
+                "web-features:multi-column"
+              ],
+              "support": {
+                "chrome": {
+                  "version_added": "66"
+                },
+                "chrome_android": "mirror",
+                "edge": {
+                  "version_added": "16"
+                },
+                "firefox": {
+                  "version_added": "61"
+                },
+                "firefox_android": "mirror",
+                "oculus": "mirror",
+                "opera": "mirror",
+                "opera_android": "mirror",
+                "safari": {
+                  "version_added": "12.1"
+                },
+                "safari_ios": "mirror",
+                "samsunginternet_android": "mirror",
+                "webview_android": "mirror",
+                "webview_ios": "mirror"
+              },
+              "status": {
+                "experimental": false,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "percentage_values": {
+            "__compat": {
+              "description": "`<percentage>` values",
+              "tags": [
+                "web-features:multi-column"
+              ],
+              "support": {
+                "chrome": {
+                  "version_added": "66"
+                },
+                "chrome_android": "mirror",
+                "edge": {
+                  "version_added": "16"
+                },
+                "firefox": {
+                  "version_added": "61"
+                },
+                "firefox_android": "mirror",
+                "oculus": "mirror",
+                "opera": "mirror",
+                "opera_android": "mirror",
+                "safari": {
+                  "version_added": "12"
+                },
+                "safari_ios": "mirror",
+                "samsunginternet_android": "mirror",
+                "webview_android": "mirror",
+                "webview_ios": "mirror"
+              },
+              "status": {
+                "experimental": false,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          }
+        },
+        "normal": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-align/#valdef-row-gap-normal",
+            "tags": [
+              "web-features:multi-column"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1.5"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "10"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "11.1"
+              },
+              "opera_android": {
+                "version_added": "11.1"
+              },
+              "safari": {
+                "version_added": "3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

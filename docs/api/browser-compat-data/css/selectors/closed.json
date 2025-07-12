@@ -1,0 +1,25 @@
+{
+  "css": {
+    "selectors": {
+      "closed": {
+        "__compat": {
+          "description": "`:closed`",
+          "spec_url": "https://drafts.csswg.org/selectors-4/#open-state",
+          "tags": [
+            "web-features:open-closed"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "css": {
+    "properties": {
+      "mask-image": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/mask-image",
+          "spec_url": "https://drafts.fxtf.org/css-masking/#the-mask-image",
+          "tags": [
+            "web-features:masks"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "120"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "1",
+                "notes": "From version 8, Chrome added support for gradient values. Initially, Chrome supported only `-webkit-` prefixed values for gradients (such as `-webkit-linear-gradient()`). Later, support for unprefixed values was added."
+              }
+            ],
+            "chrome_android": "mirror",
+            "edge": [
+              {
+                "version_added": "120"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "79"
+              },
+              {
+                "version_added": "16",
+                "version_removed": "79"
+              }
+            ],
+            "firefox": {
+              "version_added": "53"
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": {
+              "prefix": "-webkit-",
+              "version_added": "15"
+            },
+            "opera_android": [
+              {
+                "version_added": "80"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "14"
+              }
+            ],
+            "safari": [
+              {
+                "version_added": "15.4"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "4",
+                "notes": "Initially, Safari supported only `-webkit-` prefixed values for gradients (such as `-webkit-linear-gradient()`). Later, support for unprefixed values was added."
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": [
+              {
+                "version_added": "120"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "2",
+                "notes": "Initially, Android supported only `-webkit-` prefixed values for gradients (such as `-webkit-linear-gradient()`). Later, support for unprefixed values was added."
+              }
+            ],
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "multiple_mask_images": {
+          "__compat": {
+            "description": "Multiple mask images",
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "18"
+              },
+              "firefox": {
+                "version_added": "53"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "svg_masks": {
+          "__compat": {
+            "description": "SVG masks",
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "8"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "18"
+              },
+              "firefox": {
+                "version_added": "53"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,413 @@
+{
+  "css": {
+    "at-rules": {
+      "page": {
+        "__compat": {
+          "description": "`@page`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@page",
+          "spec_url": [
+            "https://drafts.csswg.org/css-page/#at-page-rule",
+            "https://drafts.csswg.org/css-logical/#page"
+          ],
+          "tags": [
+            "web-features:page-setup"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "bottom-center": {
+          "__compat": {
+            "description": "`@bottom-center` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-bottom-center",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "bottom-left": {
+          "__compat": {
+            "description": "`@bottom-left` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-bottom-left",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "bottom-left-corner": {
+          "__compat": {
+            "description": "`@bottom-left-corner` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-bottom-left-corner",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "bottom-right": {
+          "__compat": {
+            "description": "`@bottom-right` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-bottom-right",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "bottom-right-corner": {
+          "__compat": {
+            "description": "`@bottom-right-corner` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-bottom-right-corner",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "left-bottom": {
+          "__compat": {
+            "description": "`@left-bottom` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-left-bottom",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "left-middle": {
+          "__compat": {
+            "description": "`@left-middle` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-left-middle",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "left-top": {
+          "__compat": {
+            "description": "`@left-top` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-left-top",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "page-orientation": {
+          "__compat": {
+            "description": "`page-orientation` descriptor",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@page/page-orientation",
+            "spec_url": "https://drafts.csswg.org/css-page/#page-orientation-prop",
+            "tags": [
+              "web-features:page-orientation"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "right-bottom": {
+          "__compat": {
+            "description": "`@right-bottom` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-right-bottom",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "right-middle": {
+          "__compat": {
+            "description": "`@right-middle` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-right-middle",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "right-top": {
+          "__compat": {
+            "description": "`@right-top` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-right-top",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "size": {
+          "__compat": {
+            "description": "`size` descriptor",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@page/size",
+            "spec_url": "https://drafts.csswg.org/css-page/#page-size-prop",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          },
+          "jis-b4": {
+            "__compat": {
+              "description": "`jis-b4` page size",
+              "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@page/size",
+              "spec_url": "https://drafts.csswg.org/css-page/#page-size-prop",
+              "tags": [
+                "web-features:page-setup"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": false,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "jis-b5": {
+            "__compat": {
+              "description": "`jis-b5` page size",
+              "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@page/size",
+              "spec_url": "https://drafts.csswg.org/css-page/#page-size-prop",
+              "tags": [
+                "web-features:page-setup"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": false,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          }
+        },
+        "top-center": {
+          "__compat": {
+            "description": "`@top-center` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-top-center",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "top-left": {
+          "__compat": {
+            "description": "`@top-left` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-top-left",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "top-left-corner": {
+          "__compat": {
+            "description": "`@top-left-corner` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-top-left-corner",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "top-right": {
+          "__compat": {
+            "description": "`@top-right` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-top-right",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "top-right-corner": {
+          "__compat": {
+            "description": "`@top-right-corner` page-margin box",
+            "spec_url": "https://drafts.csswg.org/css-page-3/#at-ruledef-top-right-corner",
+            "tags": [
+              "web-features:page-setup"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

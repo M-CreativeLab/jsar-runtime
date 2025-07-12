@@ -1,0 +1,44 @@
+{
+  "css": {
+    "selectors": {
+      "type": {
+        "__compat": {
+          "description": "Type selector (`elementName`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/Type_selectors",
+          "spec_url": "https://drafts.csswg.org/selectors/#type-selectors",
+          "tags": [
+            "web-features:selectors"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "namespaces": {
+          "__compat": {
+            "description": "Namespaces (`ns|elementName`)",
+            "tags": [
+              "web-features:selectors"
+            ],
+            "support": {
+              "json": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

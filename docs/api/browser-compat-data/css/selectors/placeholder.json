@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "placeholder": {
+        "__compat": {
+          "description": "`::placeholder`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/::placeholder",
+          "spec_url": "https://drafts.csswg.org/css-pseudo/#placeholder-pseudo",
+          "tags": [
+            "web-features:placeholder"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

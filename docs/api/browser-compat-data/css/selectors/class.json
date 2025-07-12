@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "class": {
+        "__compat": {
+          "description": "Class selector (`.className`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/Class_selectors",
+          "spec_url": "https://drafts.csswg.org/selectors/#class-html",
+          "tags": [
+            "web-features:selectors"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

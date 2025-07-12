@@ -1,0 +1,159 @@
+{
+  "css": {
+    "properties": {
+      "bottom": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/bottom",
+          "spec_url": "https://drafts.csswg.org/css-position/#insets",
+          "tags": [
+            "web-features:physical-properties"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "1"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "5",
+              "notes": "In Internet Explorer versions before 7, when both `top` and `bottom` are specified, the element position is overconstrained and the `top` property has precedence; the computed value of `bottom` is set to `-top`, while its specified value is ignored."
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "6"
+            },
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "anchor": {
+          "__compat": {
+            "description": "`anchor()`",
+            "spec_url": "https://drafts.csswg.org/css-anchor-position-1/#anchor-pos",
+            "tags": [
+              "web-features:anchor-positioning"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "125"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false,
+                "impl_url": "https://bugzil.la/1838746"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "26"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "anchor-size": {
+          "__compat": {
+            "description": "`anchor-size()`",
+            "spec_url": "https://drafts.csswg.org/css-anchor-position-1/#anchor-size-fn",
+            "tags": [
+              "web-features:anchor-positioning"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "132"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "26"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "auto": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-position-3/#valdef-top-auto",
+            "tags": [
+              "web-features:physical-properties"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

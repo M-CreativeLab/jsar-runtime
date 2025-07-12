@@ -1,0 +1,83 @@
+{
+  "css": {
+    "at-rules": {
+      "supports": {
+        "__compat": {
+          "description": "`@supports`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@supports",
+          "spec_url": [
+            "https://drafts.csswg.org/css-conditional-4/#at-supports-ext",
+            "https://drafts.csswg.org/css-conditional-3/#at-supports"
+          ],
+          "tags": [
+            "web-features:supports"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "font-format": {
+          "__compat": {
+            "description": "`font-format()`",
+            "tags": [
+              "web-features:supports"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "font-tech": {
+          "__compat": {
+            "description": "`font-tech()`",
+            "tags": [
+              "web-features:supports"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "selector": {
+          "__compat": {
+            "description": "`selector()`",
+            "tags": [
+              "web-features:supports"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

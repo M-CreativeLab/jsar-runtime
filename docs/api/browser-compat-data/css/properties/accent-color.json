@@ -1,0 +1,42 @@
+{
+  "css": {
+    "properties": {
+      "accent-color": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/accent-color",
+          "spec_url": "https://drafts.csswg.org/css-ui/#widget-accent",
+          "tags": [
+            "web-features:accent-color"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "auto": {
+          "__compat": {
+            "tags": [
+              "web-features:accent-color"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,385 @@
+{
+  "css": {
+    "properties": {
+      "background-image": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/background-image",
+          "spec_url": "https://drafts.csswg.org/css-backgrounds/#background-image",
+          "tags": [
+            "web-features:background-image"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "1",
+              "notes": "If the `browser.display.use_document_colors` user preference in `about:config` is set to `false`, background images will not be displayed."
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "4"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "3.5"
+            },
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "element": {
+          "__compat": {
+            "description": "`element()`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/element",
+            "spec_url": "https://drafts.csswg.org/css-images-4/#element-notation",
+            "tags": [
+              "web-features:element"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "prefix": "-moz-",
+                "version_added": "4"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "gradients": {
+          "__compat": {
+            "description": "Gradients",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/gradient",
+            "spec_url": "https://drafts.csswg.org/css-images-4/#gradients",
+            "tags": [
+              "web-features:gradients"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1",
+                "notes": "Some versions support only experimental gradients prefixed with `-webkit`."
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "3.6",
+                "notes": "Some versions support only experimental gradients prefixed with `-moz`."
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "10"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "11",
+                "notes": "Some versions support only experimental gradients prefixed with `-o`."
+              },
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4",
+                "notes": "Some versions support only experimental gradients prefixed with `-webkit`."
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "image-rect": {
+          "__compat": {
+            "description": "`image-rect()`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/-moz-image-rect",
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "prefix": "-moz-",
+                "version_added": "4",
+                "version_removed": "120"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": false,
+              "deprecated": true
+            }
+          }
+        },
+        "image-set": {
+          "__compat": {
+            "description": "`image-set()`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/image/image-set",
+            "spec_url": "https://drafts.csswg.org/css-images-4/#image-set-notation",
+            "tags": [
+              "web-features:image-set"
+            ],
+            "support": {
+              "chrome": [
+                {
+                  "version_added": "113"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "113"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "20",
+                  "version_removed": "113",
+                  "partial_implementation": true,
+                  "notes": "Support for `url` images only and `x` is the only supported resolution unit."
+                }
+              ],
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": [
+                {
+                  "version_added": "89"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "90"
+                },
+                {
+                  "version_added": "88",
+                  "version_removed": "89",
+                  "partial_implementation": true,
+                  "notes": "The `type()` function is not supported as an argument to `image-set()`."
+                }
+              ],
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": [
+                {
+                  "version_added": "17"
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "17"
+                },
+                {
+                  "version_added": "14",
+                  "version_removed": "17",
+                  "partial_implementation": true,
+                  "notes": "The `type()` function is not supported as an argument to `image-set()`."
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "14",
+                  "version_removed": "17",
+                  "partial_implementation": true,
+                  "notes": "The `type()` function is not supported as an argument to `image-set()`."
+                },
+                {
+                  "version_added": "10.1",
+                  "version_removed": "14",
+                  "partial_implementation": true,
+                  "notes": "Support for `url` images only and `x` is the only supported resolution unit."
+                },
+                {
+                  "prefix": "-webkit-",
+                  "version_added": "6",
+                  "version_removed": "14",
+                  "partial_implementation": true,
+                  "notes": "Support for `url` images only and `x` is the only supported resolution unit."
+                }
+              ],
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "multiple_backgrounds": {
+          "__compat": {
+            "description": "Multiple backgrounds",
+            "tags": [
+              "web-features:background-image"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "3.6"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "9"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "10.5"
+              },
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1.3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "none": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-backgrounds/#valdef-background-image-none",
+            "tags": [
+              "web-features:background-image"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "4"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "svg_images": {
+          "__compat": {
+            "description": "SVG images",
+            "tags": [
+              "web-features:svg"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "8"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "4"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "9"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "9.5"
+              },
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "5",
+                "notes": "Support of SVG in CSS background is incomplete."
+              },
+              "safari_ios": {
+                "version_added": "5",
+                "notes": "Support of SVG in CSS background is incomplete."
+              },
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

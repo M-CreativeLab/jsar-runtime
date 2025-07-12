@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "list": {
+        "__compat": {
+          "description": "Selector list (`,`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/Selector_list",
+          "spec_url": "https://drafts.csswg.org/selectors/#grouping",
+          "tags": [
+            "web-features:selectors"
+          ],
+          "support": {
+            "json": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

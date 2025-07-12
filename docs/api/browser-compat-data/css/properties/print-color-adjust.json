@@ -1,0 +1,132 @@
+{
+  "css": {
+    "properties": {
+      "print-color-adjust": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/print-color-adjust",
+          "spec_url": "https://drafts.csswg.org/css-color-adjust/#propdef-print-color-adjust",
+          "tags": [
+            "web-features:print-color-adjust"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "136"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "17",
+                "notes": [
+                  "Chrome does not print backgrounds of the [`<body>`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/body) element. If this property is set to `exact` for the `<body>` element, it will apply only to its descendants.",
+                  "Before version 26, if background images are clipped (for example, when using `background-image` sprites) and `-webkit-print-color-adjust` is set to `exact`, then backgrounds will appear distorted when printed. Solid backgrounds and background images that are not clipped (i.e., backgrounds that have narrower and shorter than the element to which they are applied) are printed correctly. See [bug 40219905](https://crbug.com/40219905)."
+                ]
+              }
+            ],
+            "chrome_android": "mirror",
+            "edge": "mirror",
+            "firefox": [
+              {
+                "version_added": "97"
+              },
+              {
+                "alternative_name": "color-adjust",
+                "version_added": "48"
+              }
+            ],
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "15.4"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "6",
+                "notes": "Safari does not print backgrounds of the [`<body>`](https://developer.mozilla.org/docs/Web/HTML/Reference/Elements/body) element. If this property is set to `exact` for the `<body>` element, it will apply only to its descendants."
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "economy": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-color-adjust/#valdef-print-color-adjust-economy",
+            "tags": [
+              "web-features:print-color-adjust"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "136"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "97"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "6"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "exact": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-color-adjust/#valdef-print-color-adjust-exact",
+            "tags": [
+              "web-features:print-color-adjust"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "136"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "97"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "6"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

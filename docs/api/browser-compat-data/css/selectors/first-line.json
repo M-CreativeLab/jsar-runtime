@@ -1,0 +1,44 @@
+{
+  "css": {
+    "selectors": {
+      "first-line": {
+        "__compat": {
+          "description": "`::first-line`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/::first-line",
+          "spec_url": "https://drafts.csswg.org/css-pseudo/#first-line-pseudo",
+          "tags": [
+            "web-features:first-line"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "svg_text_element": {
+          "__compat": {
+            "description": "Support on SVG `<text>` element",
+            "tags": [
+              "web-features:first-line"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

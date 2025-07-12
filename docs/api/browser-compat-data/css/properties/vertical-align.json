@@ -1,0 +1,360 @@
+{
+  "css": {
+    "properties": {
+      "vertical-align": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/vertical-align",
+          "spec_url": "https://drafts.csswg.org/css-inline/#propdef-vertical-align",
+          "tags": [
+            "web-features:vertical-align"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "1"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "4"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "4"
+            },
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "baseline": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-alignment-baseline-baseline",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "bottom": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-baseline-shift-bottom",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "middle": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-alignment-baseline-middle",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "sub": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-baseline-shift-sub",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "super": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-baseline-shift-super",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "text-bottom": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-alignment-baseline-text-bottom",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "text-top": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-alignment-baseline-text-top",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "top": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-inline/#valdef-baseline-shift-top",
+            "tags": [
+              "web-features:vertical-align"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

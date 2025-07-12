@@ -1,0 +1,139 @@
+{
+  "css": {
+    "properties": {
+      "text-combine-upright": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/text-combine-upright",
+          "spec_url": "https://drafts.csswg.org/css-writing-modes/#text-combine-upright",
+          "tags": [
+            "web-features:text-combine-upright"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "48"
+              },
+              {
+                "alternative_name": "-webkit-text-combine",
+                "version_added": "9",
+                "partial_implementation": true,
+                "notes": "This property was initially named `-webkit-text-combine` according to a [2011 version of the CSS3 Writing Modes specification](https://www.w3.org/TR/2011/WD-css3-writing-modes-20110531/#text-combine), supporting the values `none` and `horizontal` without `digits`."
+              }
+            ],
+            "chrome_android": "mirror",
+            "edge": [
+              {
+                "version_added": "79"
+              },
+              {
+                "alternative_name": "-ms-text-combine-horizontal",
+                "version_added": "12",
+                "version_removed": "79"
+              }
+            ],
+            "firefox": {
+              "version_added": "48",
+              "notes": "Before version 81, Firefox implemented the property as animatable. This was corrected to spec in 81."
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "alternative_name": "-ms-text-combine-horizontal",
+              "version_added": "11"
+            },
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "15.4"
+              },
+              {
+                "alternative_name": "-webkit-text-combine",
+                "version_added": "5.1",
+                "partial_implementation": true,
+                "notes": "This property was initially named `-webkit-text-combine` according to a [2011 version of the CSS3 Writing Modes specification](https://www.w3.org/TR/2011/WD-css3-writing-modes-20110531/#text-combine), supporting the values `none` and `horizontal` without `digits`."
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "all": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-writing-modes/#valdef-text-combine-upright-all",
+            "tags": [
+              "web-features:text-combine-upright"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "48"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "48"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "15.4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "none": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-writing-modes/#valdef-text-combine-upright-none",
+            "tags": [
+              "web-features:text-combine-upright"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "48"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "48"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "15.4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

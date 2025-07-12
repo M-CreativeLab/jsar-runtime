@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "past": {
+        "__compat": {
+          "description": "`:past`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:past",
+          "spec_url": "https://drafts.csswg.org/selectors/#the-past-pseudo",
+          "tags": [
+            "web-features:time-relative-selectors"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

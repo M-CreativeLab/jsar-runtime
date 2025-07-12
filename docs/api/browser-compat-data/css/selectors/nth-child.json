@@ -1,0 +1,94 @@
+{
+  "css": {
+    "selectors": {
+      "nth-child": {
+        "__compat": {
+          "description": "`:nth-child()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:nth-child",
+          "spec_url": "https://drafts.csswg.org/selectors/#nth-child-pseudo",
+          "tags": [
+            "web-features:nth-child"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "no_parent_required": {
+          "__compat": {
+            "description": "Matches elements with no parent",
+            "tags": [
+              "web-features:nth-child"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "57"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "52"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "of_syntax": {
+          "__compat": {
+            "description": "`of <selector>` syntax",
+            "tags": [
+              "web-features:nth-child-of"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "111"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "113"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "9"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

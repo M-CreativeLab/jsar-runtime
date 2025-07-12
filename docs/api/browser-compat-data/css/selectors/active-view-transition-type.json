@@ -1,0 +1,25 @@
+{
+  "css": {
+    "selectors": {
+      "active-view-transition-type": {
+        "__compat": {
+          "description": "`:active-view-transition-type()`",
+          "spec_url": "https://drafts.csswg.org/css-view-transitions-2/#the-active-view-transition-type-pseudo",
+          "tags": [
+            "web-features:active-view-transition"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

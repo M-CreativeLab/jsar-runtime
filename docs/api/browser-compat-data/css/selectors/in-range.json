@@ -1,0 +1,29 @@
+{
+  "css": {
+    "selectors": {
+      "in-range": {
+        "__compat": {
+          "description": "`:in-range`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:in-range",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-in-range",
+            "https://drafts.csswg.org/selectors/#in-range-pseudo"
+          ],
+          "tags": [
+            "web-features:form-validity-pseudos"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

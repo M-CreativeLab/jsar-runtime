@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "has": {
+        "__compat": {
+          "description": "`:has()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:has",
+          "spec_url": "https://drafts.csswg.org/selectors/#relational",
+          "tags": [
+            "web-features:has"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

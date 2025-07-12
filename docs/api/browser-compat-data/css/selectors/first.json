@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "first": {
+        "__compat": {
+          "description": "First page pseudo-class (`:first`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:first",
+          "spec_url": "https://drafts.csswg.org/css-page/#left-right-first",
+          "tags": [
+            "web-features:page-selectors"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

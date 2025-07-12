@@ -1,0 +1,29 @@
+{
+  "css": {
+    "selectors": {
+      "stalled": {
+        "__compat": {
+          "description": "`:stalled`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:stalled",
+          "spec_url": [
+            "https://drafts.csswg.org/selectors/#selectordef-stalled",
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-stalled"
+          ],
+          "tags": [
+            "web-features:media-pseudos"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

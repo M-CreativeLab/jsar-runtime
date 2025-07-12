@@ -1,0 +1,57 @@
+{
+  "css": {
+    "properties": {
+      "backdrop-filter": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/backdrop-filter",
+          "spec_url": "https://drafts.fxtf.org/filter-effects-2/#BackdropFilterProperty",
+          "tags": [
+            "web-features:backdrop-filter"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "76"
+            },
+            "chrome_android": "mirror",
+            "edge": [
+              {
+                "version_added": "79"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "17",
+                "version_removed": "79"
+              }
+            ],
+            "firefox": {
+              "version_added": "103",
+              "notes": "Before Firefox 123, the property was not supported on systems with unknown GPU vendor (see bug [1868737](https://bugzil.la/1868737#c12))."
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "18"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "9"
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

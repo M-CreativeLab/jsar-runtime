@@ -1,0 +1,156 @@
+{
+  "css": {
+    "properties": {
+      "inset-block": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/inset-block",
+          "spec_url": [
+            "https://drafts.csswg.org/css-logical/#propdef-inset-block",
+            "https://drafts.csswg.org/css-position/#propdef-inset-block"
+          ],
+          "tags": [
+            "web-features:logical-properties"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "87"
+            },
+            "chrome_android": "mirror",
+            "edge": "mirror",
+            "firefox": [
+              {
+                "version_added": "63"
+              },
+              {
+                "alternative_name": "offset-block",
+                "version_added": "41",
+                "version_removed": "63"
+              }
+            ],
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "14.1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "anchor": {
+          "__compat": {
+            "description": "`anchor()`",
+            "spec_url": "https://drafts.csswg.org/css-anchor-position-1/#anchor-pos",
+            "tags": [
+              "web-features:anchor-positioning"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "125"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false,
+                "impl_url": "https://bugzil.la/1838746"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "26"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "anchor-size": {
+          "__compat": {
+            "description": "`anchor-size()`",
+            "spec_url": "https://drafts.csswg.org/css-anchor-position-1/#anchor-size-fn",
+            "tags": [
+              "web-features:anchor-positioning"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "132"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "26"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "auto": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-position-3/#valdef-top-auto",
+            "tags": [
+              "web-features:logical-properties"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "87"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "41"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "14.1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

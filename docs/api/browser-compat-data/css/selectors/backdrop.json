@@ -1,0 +1,98 @@
+{
+  "css": {
+    "selectors": {
+      "backdrop": {
+        "__compat": {
+          "description": "`::backdrop`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/::backdrop",
+          "spec_url": "https://drafts.csswg.org/css-position-4/#backdrop",
+          "tags": [
+            "web-features:backdrop"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "dialog": {
+          "__compat": {
+            "description": "Support on `dialog` elements",
+            "tags": [
+              "web-features:backdrop"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "fullscreen": {
+          "__compat": {
+            "description": "Fullscreen support",
+            "tags": [
+              "web-features:fullscreen"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "inherit_from_originating_element": {
+          "__compat": {
+            "description": "Backdrop elements inherit their values from its originating element",
+            "tags": [
+              "web-features:backdrop"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "popover": {
+          "__compat": {
+            "description": "Support on popovers",
+            "tags": [
+              "web-features:popover"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

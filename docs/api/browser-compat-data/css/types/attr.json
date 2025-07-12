@@ -1,0 +1,224 @@
+{
+  "css": {
+    "types": {
+      "attr": {
+        "__compat": {
+          "description": "`attr()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/attr",
+          "spec_url": "https://drafts.csswg.org/css-values-5/#attr-notation",
+          "tags": [
+            "web-features:attr-contents"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "fallback": {
+          "__compat": {
+            "description": "&lt;fallback&gt;",
+            "tags": [
+              "web-features:attr"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "type-or-unit": {
+          "__compat": {
+            "description": "&lt;type-or-unit&gt;",
+            "tags": [
+              "web-features:attr"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          },
+          "angle": {
+            "__compat": {
+              "description": "&lt;angle&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "color": {
+            "__compat": {
+              "description": "&lt;color&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "frequency": {
+            "__compat": {
+              "description": "&lt;frequency&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "integer": {
+            "__compat": {
+              "description": "&lt;integer&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "length": {
+            "__compat": {
+              "description": "&lt;length&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "number": {
+            "__compat": {
+              "description": "&lt;number&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "percentage": {
+            "__compat": {
+              "description": "&lt;percentage&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "time": {
+            "__compat": {
+              "description": "&lt;time&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "url": {
+            "__compat": {
+              "description": "&lt;url&gt;",
+              "tags": [
+                "web-features:attr"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

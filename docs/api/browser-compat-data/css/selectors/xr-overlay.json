@@ -1,0 +1,25 @@
+{
+  "css": {
+    "selectors": {
+      "xr-overlay": {
+        "__compat": {
+          "description": "`:xr-overlay`",
+          "spec_url": "https://immersive-web.github.io/dom-overlays/#selectordef-xr-overlay",
+          "tags": [
+            "web-features:webxr-dom-overlays"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "css": {
+    "selectors": {
+      "before": {
+        "__compat": {
+          "description": "`::before`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/::before",
+          "spec_url": "https://drafts.csswg.org/css-pseudo/#generated-content",
+          "tags": [
+            "web-features:before-after"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "animation_and_transition_support": {
+          "__compat": {
+            "description": "Animation and transition support",
+            "tags": [
+              "web-features:before-after"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "nested_marker": {
+          "__compat": {
+            "description": "`::before::marker` nested pseudo-elements",
+            "spec_url": "https://www.w3.org/TR/css-pseudo-4/#:~:text=The%20::before::marker%20or%20::after::marker%20selectors",
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

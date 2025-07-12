@@ -1,0 +1,44 @@
+{
+  "css": {
+    "selectors": {
+      "last-child": {
+        "__compat": {
+          "description": "`:last-child`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:last-child",
+          "spec_url": "https://drafts.csswg.org/selectors/#the-last-child-pseudo",
+          "tags": [
+            "web-features:nth-child"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "no_parent_required": {
+          "__compat": {
+            "description": "Matches elements with no parent",
+            "tags": [
+              "web-features:nth-child"
+            ],
+            "support": {
+              "json": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

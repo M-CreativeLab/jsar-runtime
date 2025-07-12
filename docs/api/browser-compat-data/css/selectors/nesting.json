@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "nesting": {
+        "__compat": {
+          "description": "Nesting selector (`&amp;`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/Nesting_selector",
+          "spec_url": "https://drafts.csswg.org/css-nesting/#nest-selector",
+          "tags": [
+            "web-features:nesting"
+          ],
+          "support": {
+            "json": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

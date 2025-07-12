@@ -1,0 +1,44 @@
+{
+  "css": {
+    "types": {
+      "anchor-size": {
+        "__compat": {
+          "description": "`anchor-size()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/anchor-size",
+          "spec_url": "https://drafts.csswg.org/css-anchor-position-1/#anchor-size-fn",
+          "tags": [
+            "web-features:anchor-positioning"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "inset_margin": {
+          "__compat": {
+            "description": "Valid in inset and margin property values.",
+            "tags": [
+              "web-features:anchor-positioning"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

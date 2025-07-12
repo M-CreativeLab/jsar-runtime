@@ -1,0 +1,30 @@
+{
+  "css": {
+    "selectors": {
+      "dir": {
+        "__compat": {
+          "description": "`:dir()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:dir",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-ltr",
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-rtl",
+            "https://drafts.csswg.org/selectors/#dir-pseudo"
+          ],
+          "tags": [
+            "web-features:dir-pseudo"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

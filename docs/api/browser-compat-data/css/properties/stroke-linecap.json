@@ -1,0 +1,151 @@
+{
+  "css": {
+    "properties": {
+      "stroke-linecap": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/stroke-linecap",
+          "spec_url": "https://drafts.fxtf.org/fill-stroke-3/#stroke-linecap",
+          "tags": [
+            "web-features:svg"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "≤15"
+            },
+            "firefox": {
+              "version_added": "1.5"
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "4"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "butt": {
+          "__compat": {
+            "spec_url": "https://drafts.fxtf.org/fill-stroke-3/#valdef-stroke-linecap-butt",
+            "tags": [
+              "web-features:svg"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "≤15"
+              },
+              "firefox": {
+                "version_added": "1.5"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "round": {
+          "__compat": {
+            "spec_url": "https://drafts.fxtf.org/fill-stroke-3/#valdef-stroke-linecap-round",
+            "tags": [
+              "web-features:svg"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "≤15"
+              },
+              "firefox": {
+                "version_added": "1.5"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "square": {
+          "__compat": {
+            "spec_url": "https://drafts.fxtf.org/fill-stroke-3/#valdef-stroke-linecap-square",
+            "tags": [
+              "web-features:svg"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "≤15"
+              },
+              "firefox": {
+                "version_added": "1.5"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

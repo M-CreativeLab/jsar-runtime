@@ -1,0 +1,47 @@
+{
+  "css": {
+    "selectors": {
+      "active": {
+        "__compat": {
+          "description": "`:active`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:active",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-active",
+            "https://drafts.csswg.org/selectors/#active-pseudo"
+          ],
+          "tags": [
+            "web-features:user-action-pseudos"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "non_a_elements": {
+          "__compat": {
+            "description": "Non-`a` element support",
+            "tags": [
+              "web-features:user-action-pseudos"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

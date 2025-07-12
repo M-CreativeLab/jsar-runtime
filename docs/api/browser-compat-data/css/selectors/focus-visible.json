@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "focus-visible": {
+        "__compat": {
+          "description": "`:focus-visible`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:focus-visible",
+          "spec_url": "https://drafts.csswg.org/selectors/#the-focus-visible-pseudo",
+          "tags": [
+            "web-features:focus-visible"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

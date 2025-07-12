@@ -1,0 +1,245 @@
+{
+  "css": {
+    "properties": {
+      "word-break": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/word-break",
+          "spec_url": "https://drafts.csswg.org/css-text/#word-break-property",
+          "tags": [
+            "web-features:word-break"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "1"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "15"
+            },
+            "firefox_android": "mirror",
+            "ie": [
+              {
+                "version_added": "5.5",
+                "notes": "No version of Internet Explorer supports the `initial` value."
+              },
+              {
+                "prefix": "-ms-",
+                "version_added": "8",
+                "notes": "Don't use `-ms-word-break`, which is a synonym for `word-break`."
+              }
+            ],
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "3"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "auto-phrase": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text-4/#valdef-word-break-auto-phrase",
+            "tags": [
+              "web-features:word-break-auto-phrase"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "119",
+                "notes": "This value is only applicable if `lang=\"ja\"` is specified. This value has no effect on other locales."
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "break-all": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-word-break-break-all",
+            "tags": [
+              "web-features:word-break"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "15"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "break-word": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-word-break-break-word",
+            "tags": [
+              "web-features:word-break-break-word"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "67"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": true
+            }
+          }
+        },
+        "keep-all": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-word-break-keep-all",
+            "tags": [
+              "web-features:word-break"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "44"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "15"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "5.5"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "9"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "normal": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-word-break-normal",
+            "tags": [
+              "web-features:word-break"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "15"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

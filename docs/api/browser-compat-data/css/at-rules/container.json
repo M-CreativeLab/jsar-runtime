@@ -1,0 +1,118 @@
+{
+  "css": {
+    "at-rules": {
+      "container": {
+        "__compat": {
+          "description": "`@container`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@container",
+          "spec_url": "https://drafts.csswg.org/css-conditional-5/#container-rule",
+          "tags": [
+            "web-features:container-queries"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "scroll-state_queries": {
+          "__compat": {
+            "description": "Scroll-state queries",
+            "spec_url": "https://drafts.csswg.org/css-conditional-5/#scroll-state-container",
+            "tags": [
+              "web-features:container-scroll-state-queries"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          },
+          "scrollable": {
+            "__compat": {
+              "spec_url": "https://drafts.csswg.org/css-conditional-5/#scrollable",
+              "tags": [
+                "web-features:container-scroll-state-queries"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "snapped": {
+            "__compat": {
+              "spec_url": "https://drafts.csswg.org/css-conditional-5/#snapped",
+              "tags": [
+                "web-features:container-scroll-state-queries"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          },
+          "stuck": {
+            "__compat": {
+              "spec_url": "https://drafts.csswg.org/css-conditional-5/#stuck",
+              "tags": [
+                "web-features:container-scroll-state-queries"
+              ],
+              "support": {
+                "jsar": {
+                  "version_added": false
+                }
+              },
+              "status": {
+                "experimental": true,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          }
+        },
+        "style_queries_for_custom_properties": {
+          "__compat": {
+            "description": "Style queries for custom properties",
+            "spec_url": "https://drafts.csswg.org/css-conditional-5/#style-container",
+            "tags": [
+              "web-features:container-style-queries"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,213 @@
+{
+  "css": {
+    "properties": {
+      "text-justify": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/text-justify",
+          "spec_url": "https://drafts.csswg.org/css-text/#text-justify-property",
+          "tags": [
+            "web-features:text-justify"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "32",
+              "flags": [
+                {
+                  "type": "preference",
+                  "name": "#enable-experimental-web-platform-features",
+                  "value_to_set": "true"
+                }
+              ],
+              "notes": "`inter-word` and `distribute` (deprecated) values are supported, but `distribute` behavior is buggy."
+            },
+            "chrome_android": "mirror",
+            "edge": [
+              {
+                "version_added": "79",
+                "flags": [
+                  {
+                    "type": "preference",
+                    "name": "#enable-experimental-web-platform-features",
+                    "value_to_set": "true"
+                  }
+                ],
+                "notes": "`inter-word` and `distribute` (deprecated) values are supported, but `distribute` behavior is buggy."
+              },
+              {
+                "version_added": "12",
+                "version_removed": "79",
+                "notes": "Standard values `inter-character` and `none` are supported. The deprecated `distribute` value is also supported."
+              }
+            ],
+            "firefox": {
+              "version_added": "55"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "11",
+              "notes": "Standard values `inter-character` and `none` are supported. The deprecated `distribute` value is also supported."
+            },
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": false,
+              "impl_url": "https://webkit.org/b/99945"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "auto": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-text-justify-auto",
+            "tags": [
+              "web-features:text-justify"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "55"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "inter-character": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-text-justify-inter-character",
+            "tags": [
+              "web-features:text-justify"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": [
+                {
+                  "version_added": "55"
+                },
+                {
+                  "alternative_name": "distribute",
+                  "version_added": "55"
+                }
+              ],
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "inter-word": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-text-justify-inter-word",
+            "tags": [
+              "web-features:text-justify"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "55"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "none": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-text/#valdef-text-justify-none",
+            "tags": [
+              "web-features:text-justify"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": false
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "55"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": false
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

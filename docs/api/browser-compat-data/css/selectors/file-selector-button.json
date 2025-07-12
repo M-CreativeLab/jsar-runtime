@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "file-selector-button": {
+        "__compat": {
+          "description": "`::file-selector-button`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/::file-selector-button",
+          "spec_url": "https://drafts.csswg.org/css-pseudo/#file-selector-button-pseudo",
+          "tags": [
+            "web-features:file-selector-button"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

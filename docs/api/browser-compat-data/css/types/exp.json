@@ -1,0 +1,42 @@
+{
+  "css": {
+    "types": {
+      "exp": {
+        "__compat": {
+          "description": "`exp()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/exp",
+          "spec_url": "https://drafts.csswg.org/css-values/#exponent-funcs",
+          "tags": [
+            "web-features:exp-functions"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "120"
+            },
+            "chrome_android": "mirror",
+            "edge": "mirror",
+            "firefox": {
+              "version_added": "118"
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": {
+              "version_added": "15.4"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

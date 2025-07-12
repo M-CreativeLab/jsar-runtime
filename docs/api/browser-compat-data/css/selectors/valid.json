@@ -1,0 +1,47 @@
+{
+  "css": {
+    "selectors": {
+      "valid": {
+        "__compat": {
+          "description": "`:valid`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:valid",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-valid",
+            "https://drafts.csswg.org/selectors/#valid-pseudo"
+          ],
+          "tags": [
+            "web-features:form-validity-pseudos"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "form": {
+          "__compat": {
+            "description": "Applies to `<form>` elements",
+            "tags": [
+              "web-features:form-validity-pseudos"
+            ],
+            "support": {
+              "json": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "css": {
+    "properties": {
+      "column-count": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/column-count",
+          "spec_url": "https://drafts.csswg.org/css-multicol/#cc",
+          "tags": [
+            "web-features:multi-column"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "50"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "1"
+              }
+            ],
+            "chrome_android": "mirror",
+            "edge": [
+              {
+                "version_added": "12"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "12"
+              }
+            ],
+            "firefox": [
+              {
+                "version_added": "52"
+              },
+              {
+                "prefix": "-moz-",
+                "version_added": "1.5",
+                "version_removed": "74",
+                "notes": "Before version 37, multiple columns didn't work with `display: table-caption` elements."
+              }
+            ],
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "10"
+            },
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "9"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "3"
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "auto": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-multicol/#valdef-column-count-auto",
+            "tags": [
+              "web-features:multi-column"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "1.5"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "3"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

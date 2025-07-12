@@ -1,0 +1,98 @@
+{
+  "css": {
+    "types": {
+      "angle": {
+        "__compat": {
+          "description": "`<angle>`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/angle",
+          "spec_url": "https://drafts.csswg.org/css-values/#angles",
+          "tags": [
+            "web-features:transforms2d"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": "0.7"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "deg": {
+          "__compat": {
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/angle#deg",
+            "tags": [
+              "web-features:transforms2d"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "grad": {
+          "__compat": {
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/angle#grad",
+            "tags": [
+              "web-features:transforms2d"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "rad": {
+          "__compat": {
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/angle#rad",
+            "tags": [
+              "web-features:transforms2d"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "turn": {
+          "__compat": {
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/angle#turn",
+            "tags": [
+              "web-features:transforms2d"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "0.7"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

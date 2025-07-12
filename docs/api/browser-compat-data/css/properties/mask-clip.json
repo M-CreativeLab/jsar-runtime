@@ -1,0 +1,217 @@
+{
+  "css": {
+    "properties": {
+      "mask-clip": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/mask-clip",
+          "spec_url": "https://drafts.fxtf.org/css-masking/#the-mask-clip",
+          "tags": [
+            "web-features:masks"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "120"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "1"
+              }
+            ],
+            "chrome_android": "mirror",
+            "edge": "mirror",
+            "firefox": {
+              "version_added": "53"
+            },
+            "firefox_android": "mirror",
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "15.4"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "4"
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": [
+              {
+                "version_added": "120"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "2"
+              }
+            ],
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "border": {
+          "__compat": {
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1",
+                "partial_implementation": true,
+                "notes": "Only works when using `-webkit-mask-clip`."
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "2"
+              },
+              "webview_ios": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": false,
+              "deprecated": false
+            }
+          }
+        },
+        "content": {
+          "__compat": {
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1",
+                "partial_implementation": true,
+                "notes": "Only works when using `-webkit-mask-clip`."
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "2"
+              },
+              "webview_ios": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": false,
+              "deprecated": false
+            }
+          }
+        },
+        "padding": {
+          "__compat": {
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1",
+                "partial_implementation": true,
+                "notes": "Only works when using `-webkit-mask-clip`."
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "2"
+              },
+              "webview_ios": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": false,
+              "deprecated": false
+            }
+          }
+        },
+        "text": {
+          "__compat": {
+            "tags": [
+              "web-features:masks"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "1",
+                "partial_implementation": true,
+                "notes": "Only works when using `-webkit-mask-clip`."
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": false
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "2"
+              },
+              "webview_ios": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": false,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

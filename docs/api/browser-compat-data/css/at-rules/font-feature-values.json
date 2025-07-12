@@ -1,0 +1,158 @@
+{
+  "css": {
+    "at-rules": {
+      "font-feature-values": {
+        "__compat": {
+          "description": "`@font-feature-values`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values",
+          "spec_url": "https://drafts.csswg.org/css-fonts/#font-feature-values",
+          "tags": [
+            "web-features:font-variant-alternates"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "annotation": {
+          "__compat": {
+            "description": "`@annotation`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#annotation",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "character-variant": {
+          "__compat": {
+            "description": "`@character-variant`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#character-variant",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "historical-forms": {
+          "__compat": {
+            "description": "`@historical-forms`",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "ornaments": {
+          "__compat": {
+            "description": "`@ornaments`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#ornaments",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "styleset": {
+          "__compat": {
+            "description": "`@styleset`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#styleset",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "stylistic": {
+          "__compat": {
+            "description": "`@stylistic`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#stylistic",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "swash": {
+          "__compat": {
+            "description": "`@swash`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@font-feature-values#swash",
+            "tags": [
+              "web-features:font-variant-alternates"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

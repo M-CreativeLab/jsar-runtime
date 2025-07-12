@@ -1,0 +1,53 @@
+{
+  "css": {
+    "types": {
+      "flex": {
+        "__compat": {
+          "description": "`<flex>`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/flex_value",
+          "spec_url": "https://drafts.csswg.org/css-grid/#fr-unit",
+          "tags": [
+            "web-features:grid"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "29"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "40"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "10"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "28"
+            },
+            "opera_android": {
+              "version_added": "28"
+            },
+            "safari": {
+              "version_added": "10.1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": {
+              "version_added": "57"
+            },
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

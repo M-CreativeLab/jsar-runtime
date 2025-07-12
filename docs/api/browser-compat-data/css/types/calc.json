@@ -1,0 +1,229 @@
+{
+  "css": {
+    "types": {
+      "calc": {
+        "__compat": {
+          "description": "`calc()`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/calc",
+          "spec_url": "https://drafts.csswg.org/css-values/#calc-func",
+          "tags": [
+            "web-features:calc"
+          ],
+          "support": {
+            "chrome": [
+              {
+                "version_added": "26"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "19"
+              }
+            ],
+            "chrome_android": {
+              "version_added": "28"
+            },
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": [
+              {
+                "version_added": "16",
+                "notes": [
+                  "Before Firefox 59 `calc()` is not supported in `rgb()` and other color functions.",
+                  "Before Firefox 57 `calc(1*2*3)` is not parsed successfully.",
+                  "Firefox 57 increased the number of places `calc()` could substitute another value. See [bug 1350857](https://bugzil.la/1350857)."
+                ]
+              },
+              {
+                "prefix": "-moz-",
+                "version_added": "4",
+                "version_removed": "53"
+              }
+            ],
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "9"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "15"
+            },
+            "opera_android": {
+              "version_added": "14"
+            },
+            "safari": [
+              {
+                "version_added": "7"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "6"
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "color_component": {
+          "__compat": {
+            "description": "Color component support",
+            "tags": [
+              "web-features:relative-color"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "119"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "128"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "16.4"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "gradient_color_stops": {
+          "__compat": {
+            "description": "Gradient color stops support",
+            "tags": [
+              "web-features:calc"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "19"
+              },
+              "chrome_android": {
+                "version_added": "28"
+              },
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "19"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "9"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "6"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "37"
+              },
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "nested": {
+          "__compat": {
+            "description": "Nested `calc()` support",
+            "tags": [
+              "web-features:calc"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "51"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "16"
+              },
+              "firefox": {
+                "version_added": "48"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "11"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "number_values": {
+          "__compat": {
+            "description": "`<number>` value support",
+            "tags": [
+              "web-features:calc"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "31"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "48"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "9"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "6"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

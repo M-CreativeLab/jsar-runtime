@@ -1,0 +1,137 @@
+{
+  "css": {
+    "properties": {
+      "column-fill": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/column-fill",
+          "spec_url": "https://drafts.csswg.org/css-multicol/#cf",
+          "tags": [
+            "web-features:column-fill"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "50"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": [
+              {
+                "version_added": "52"
+              },
+              {
+                "prefix": "-moz-",
+                "version_added": "17",
+                "version_removed": "74"
+              }
+            ],
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "10"
+            },
+            "oculus": "mirror",
+            "opera": "mirror",
+            "opera_android": "mirror",
+            "safari": [
+              {
+                "version_added": "9"
+              },
+              {
+                "prefix": "-webkit-",
+                "version_added": "8"
+              }
+            ],
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": "mirror",
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "auto": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-multicol/#valdef-column-fill-auto",
+            "tags": [
+              "web-features:column-fill"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "50"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "17"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "8"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "balance": {
+          "__compat": {
+            "spec_url": "https://drafts.csswg.org/css-multicol/#valdef-column-fill-balance",
+            "tags": [
+              "web-features:column-fill"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "50"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "17"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "≤11"
+              },
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "8"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

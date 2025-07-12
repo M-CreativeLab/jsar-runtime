@@ -1,0 +1,29 @@
+{
+  "css": {
+    "selectors": {
+      "modal": {
+        "__compat": {
+          "description": "`:modal`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/:modal",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/semantics-other.html#selector-modal",
+            "https://drafts.csswg.org/selectors/#selectordef-modal"
+          ],
+          "tags": [
+            "web-features:modal"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

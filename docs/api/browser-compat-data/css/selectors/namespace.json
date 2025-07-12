@@ -1,0 +1,26 @@
+{
+  "css": {
+    "selectors": {
+      "namespace": {
+        "__compat": {
+          "description": "Namespace selector (`|`)",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/@namespace",
+          "spec_url": "https://drafts.csswg.org/css-namespaces/#declaration",
+          "tags": [
+            "web-features:namespace"
+          ],
+          "support": {
+            "json": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

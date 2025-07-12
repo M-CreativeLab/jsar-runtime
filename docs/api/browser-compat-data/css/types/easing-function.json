@@ -1,0 +1,211 @@
+{
+  "css": {
+    "types": {
+      "easing-function": {
+        "__compat": {
+          "description": "`<easing-function>`",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/easing-function",
+          "spec_url": "https://drafts.csswg.org/css-easing/#easing-functions",
+          "tags": [
+            "web-features:cubic-bezier-easing"
+          ],
+          "support": {
+            "chrome": {
+              "version_added": "4"
+            },
+            "chrome_android": "mirror",
+            "edge": {
+              "version_added": "12"
+            },
+            "firefox": {
+              "version_added": "4"
+            },
+            "firefox_android": "mirror",
+            "ie": {
+              "version_added": "10"
+            },
+            "oculus": "mirror",
+            "opera": {
+              "version_added": "10.5"
+            },
+            "opera_android": {
+              "version_added": "11"
+            },
+            "safari": {
+              "version_added": "3.1"
+            },
+            "safari_ios": "mirror",
+            "samsunginternet_android": "mirror",
+            "webview_android": {
+              "version_added": "4"
+            },
+            "webview_ios": "mirror"
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "cubic-bezier": {
+          "__compat": {
+            "description": "`cubic-bezier()`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/easing-function/cubic-bezier",
+            "spec_url": "https://drafts.csswg.org/css-easing/#cubic-bezier-easing-functions",
+            "tags": [
+              "web-features:cubic-bezier-easing"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "16"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "4"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "10"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "12.1"
+              },
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "6"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "linear-function": {
+          "__compat": {
+            "description": "`linear()`",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/easing-function/linear",
+            "spec_url": "https://drafts.csswg.org/css-easing/#the-linear-easing-function",
+            "tags": [
+              "web-features:linear-easing"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "113"
+              },
+              "chrome_android": "mirror",
+              "edge": "mirror",
+              "firefox": {
+                "version_added": "112"
+              },
+              "firefox_android": "mirror",
+              "oculus": "mirror",
+              "opera": "mirror",
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "17.2"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": "mirror",
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "steps": {
+          "__compat": {
+            "description": "`steps()` with `start`, `end` or no direction",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/easing-function/steps",
+            "spec_url": "https://drafts.csswg.org/css-easing/#step-easing-functions",
+            "tags": [
+              "web-features:steps-easing"
+            ],
+            "support": {
+              "chrome": {
+                "version_added": "8"
+              },
+              "chrome_android": "mirror",
+              "edge": {
+                "version_added": "12"
+              },
+              "firefox": {
+                "version_added": "4"
+              },
+              "firefox_android": "mirror",
+              "ie": {
+                "version_added": "10"
+              },
+              "oculus": "mirror",
+              "opera": {
+                "version_added": "12.1"
+              },
+              "opera_android": "mirror",
+              "safari": {
+                "version_added": "5.1"
+              },
+              "safari_ios": "mirror",
+              "samsunginternet_android": "mirror",
+              "webview_android": {
+                "version_added": "4"
+              },
+              "webview_ios": "mirror"
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          },
+          "jump": {
+            "__compat": {
+              "description": "`jump-` keywords for `steps()`",
+              "tags": [
+                "web-features:steps-easing"
+              ],
+              "support": {
+                "chrome": {
+                  "version_added": "77"
+                },
+                "chrome_android": "mirror",
+                "edge": "mirror",
+                "firefox": {
+                  "version_added": "65"
+                },
+                "firefox_android": "mirror",
+                "oculus": "mirror",
+                "opera": "mirror",
+                "opera_android": "mirror",
+                "safari": {
+                  "version_added": "14"
+                },
+                "safari_ios": "mirror",
+                "samsunginternet_android": "mirror",
+                "webview_android": "mirror",
+                "webview_ios": "mirror"
+              },
+              "status": {
+                "experimental": false,
+                "standard_track": true,
+                "deprecated": false
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
