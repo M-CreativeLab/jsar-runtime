@@ -657,6 +657,7 @@ bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &co
 
 TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(int timeout)
 {
+  auto before = chrono::steady_clock::now();
   // Wait for the async command buffer responses to be processed.
   if (isAsyncCommandBufferResponseScheduled)
   {
@@ -665,7 +666,13 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(in
                                       { return asyncCommandBufferResponseCallbacks.empty(); });
     isAsyncCommandBufferResponseScheduled = false;
   }
-  return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+
+  TrCommandBufferResponse* response = commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+  auto after = chrono::steady_clock::now();
+  auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
+  cerr << "Received command buffer response in " << duration << "ms which blocks the main thread." << endl
+       << "   command buffer: " << response->toString() << endl;
+  return response;
 }
 
 void TrClientContextPerProcess::recvCommandBufferResponseAsync(AsyncCommandBufferResponseCallback callback)
