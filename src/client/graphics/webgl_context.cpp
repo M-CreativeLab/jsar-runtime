@@ -879,10 +879,12 @@ namespace client_graphics
     assert(program != nullptr && "Program is not null");
     program->waitForCompleted();
 
-    if (program->hasAttribLocation(name))
-      return program->getAttribLocation(name);
-    else
+    // Returns `nullopt` if the program is incomplete or not linked.
+    if (!program->hasAttribLocation(name))
       return nullopt;
+
+    auto &location = program->getAttribLocation(name);
+    return location;
   }
 
   optional<WebGLUniformLocation> WebGLContext::getUniformLocation(shared_ptr<WebGLProgram> program,
