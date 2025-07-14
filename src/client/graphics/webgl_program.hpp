@@ -1,11 +1,15 @@
 #pragma once
 
 #include <map>
+#include <chrono>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <common/command_buffers/details/program.hpp>
 
 #include "./webgl_object.hpp"
 #include "./webgl_active_info.hpp"
+#include "./webgl_attrib_location.hpp"
 #include "./webgl_uniform_location.hpp"
 
 namespace client_graphics
@@ -24,11 +28,22 @@ namespace client_graphics
     {
       return incomplete_;
     }
+    // Waits for the program to be completed, it will block until the program response is received from channel peer.
+    void waitForCompleted(int timeout = 2000)
+    {
+      std::unique_lock<std::mutex> lock(setCompletedMutex_);
+      setCompletedCv_.wait_for(lock, std::chrono::milliseconds(timeout), [this]()
+                               { return !incomplete_; });
+    }
     // Calls setCompleted() when the program response is received from channel peer and updates the link status.
     void setCompleted(bool linkStatus)
     {
       linkStatus_ = linkStatus;
       incomplete_ = false;
+      {
+        std::unique_lock<std::mutex> lock(setCompletedMutex_);
+        setCompletedCv_.notify_all();
+      }
     }
     /**
      * It sets the link status of the program.
@@ -104,7 +119,7 @@ namespace client_graphics
      */
     void setAttribLocation(const std::string &name, int location)
     {
-      attribLocations_[name] = location;
+      attribLocations_[name] = WebGLAttribLocation(id, location, name);
     }
     /**
      * @param name The name of the attribute.
@@ -118,7 +133,7 @@ namespace client_graphics
      * @param name The name of the attribute.
      * @returns The attribute location for the given name.
      */
-    int getAttribLocation(const std::string &name)
+    const WebGLAttribLocation &getAttribLocation(const std::string &name)
     {
       return attribLocations_[name];
     }
@@ -144,7 +159,7 @@ namespace client_graphics
      * @param name The name of the uniform.
      * @returns The uniform location for the given name.
      */
-    WebGLUniformLocation getUniformLocation(const std::string &name)
+    const WebGLUniformLocation &getUniformLocation(const std::string &name)
     {
       return uniformLocations_[name];
     }
@@ -205,7 +220,7 @@ namespace client_graphics
 
       std::cout << "Attribute locations:" << std::endl;
       for (auto &pair : attribLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second << std::endl;
+        std::cout << "  " << pair.first << ": " << pair.second.index.value_or(-1) << std::endl;
 
       std::cout << "Uniform locations:" << std::endl;
       for (auto &pair : uniformLocations_)
@@ -214,11 +229,14 @@ namespace client_graphics
 
   private:
     std::atomic<bool> incomplete_ = true;
+    std::mutex setCompletedMutex_;
+    std::condition_variable setCompletedCv_;
+
     bool linkStatus_ = false;
     std::map<int, WebGLActiveInfo> activeAttribs_;
     std::map<int, WebGLActiveInfo> activeUniforms_;
-    std::map<std::string, int> attribLocations_;
-    std::map<std::string, WebGLUniformLocation> uniformLocations_;
+    std::unordered_map<std::string, WebGLAttribLocation> attribLocations_;
+    std::unordered_map<std::string, WebGLUniformLocation> uniformLocations_;
     std::map<std::string, int> uniformBlockIndices_;
   };
 }

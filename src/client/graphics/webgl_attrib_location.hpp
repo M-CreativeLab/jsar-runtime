@@ -5,22 +5,22 @@
 
 namespace client_graphics
 {
-  class WebGLUniformLocation
+  class WebGLAttribLocation
   {
   public:
-    WebGLUniformLocation()
+    WebGLAttribLocation()
         : programId(0)
         , index(std::nullopt)
         , name("")
     {
     }
-    WebGLUniformLocation(int programId, const std::string &name)
+    WebGLAttribLocation(int programId, const std::string &name)
         : programId(programId)
         , index(std::nullopt)
         , name(name)
     {
     }
-    WebGLUniformLocation(int programId, uint32_t index, const std::string &name)
+    WebGLAttribLocation(int programId, uint32_t index, const std::string &name)
         : programId(programId)
         , index(index)
         , name(name)

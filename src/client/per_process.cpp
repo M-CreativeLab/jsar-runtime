@@ -462,7 +462,6 @@ void TrClientContextPerProcess::start()
         TrCommandBufferResponse *resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
         if (resp != nullptr) [[likely]]
         {
-          cerr << "Received async command buffer response: " << resp->type << endl;
           responseCallback(*resp);
           delete resp; // End
         }

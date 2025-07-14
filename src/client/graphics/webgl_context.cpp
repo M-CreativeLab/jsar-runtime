@@ -137,12 +137,12 @@ namespace client_graphics
 
     auto onLinkProgramResponse = [this, program](const LinkProgramCommandBufferResponse &resp)
     {
-      // Set the program completed.
-      program->setCompleted(resp.success);
-
       // Directly return if the link failed.
       if (!resp.success) [[unlikely]]
+      {
+        program->setCompleted(false);
         return;
+      }
 
       /**
        * Update the program's active attributes and uniforms.
@@ -217,11 +217,14 @@ namespace client_graphics
       if (isWebGL2_ == true)
       {
         /**
-       * Save the uniform block indices to the program object
-       */
+         * Save the uniform block indices to the program object
+         */
         for (auto &uniformBlock : resp.uniformBlocks)
           program->setUniformBlockIndex(uniformBlock.name, uniformBlock.index);
       }
+
+      // Mark the program as completed.
+      program->setCompleted(true);
     };
     recvResponseAsync<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES, onLinkProgramResponse);
 
@@ -759,26 +762,69 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::enableVertexAttribArray(unsigned int index)
+  void WebGLContext::enableVertexAttribArray(const WebGLAttribLocation &index)
   {
-    auto req = EnableVertexAttribArrayCommandBufferRequest(index);
+    auto req = EnableVertexAttribArrayCommandBufferRequest(index.programId, index.name);
+    if (index.index.has_value())
+      req.setLoc(index.index);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::disableVertexAttribArray(unsigned int index)
+  void WebGLContext::enableVertexAttribArray(int index)
   {
-    auto req = DisableVertexAttribArrayCommandBufferRequest(index);
+    auto req = EnableVertexAttribArrayCommandBufferRequest(0, index);
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::vertexAttribPointer(unsigned int index, size_t size, int type, bool normalized, size_t stride, int offset)
+  void WebGLContext::disableVertexAttribArray(const WebGLAttribLocation &index)
   {
-    auto req = VertexAttribPointerCommandBufferRequest(index, size, type, normalized, stride, offset);
+    auto req = DisableVertexAttribArrayCommandBufferRequest(index.programId, index.name);
+    if (index.index.has_value())
+      req.setLoc(index.index);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::disableVertexAttribArray(int index)
+  {
+    auto req = DisableVertexAttribArrayCommandBufferRequest(0, index);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::vertexAttribPointer(const WebGLAttribLocation &index,
+                                         size_t size,
+                                         int type,
+                                         bool normalized,
+                                         size_t stride,
+                                         int offset)
+  {
+    auto req = VertexAttribPointerCommandBufferRequest(index.programId,
+                                                       index.name,
+                                                       size,
+                                                       type,
+                                                       normalized,
+                                                       stride,
+                                                       offset);
+    if (index.index.has_value())
+      req.setLoc(index.index);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::vertexAttribPointer(int index,
+                                         size_t size,
+                                         int type,
+                                         bool normalized,
+                                         size_t stride,
+                                         int offset)
+  {
+    auto req = VertexAttribPointerCommandBufferRequest(0, index, size, type, normalized, stride, offset);
     sendCommandBufferRequest(req);
   }
 
   optional<WebGLActiveInfo> WebGLContext::getActiveAttrib(shared_ptr<WebGLProgram> program, unsigned int index)
   {
+    assert(program != nullptr && "Program is not null");
+    program->waitForCompleted();
+
     if (program->hasActiveAttrib(index))
       return program->getActiveAttrib(index);
     else
@@ -787,18 +833,24 @@ namespace client_graphics
 
   optional<WebGLActiveInfo> WebGLContext::getActiveUniform(shared_ptr<WebGLProgram> program, unsigned int index)
   {
+    assert(program != nullptr && "Program is not null");
+    program->waitForCompleted();
+
     if (program->hasActiveUniform(index))
       return program->getActiveUniform(index);
     else
       return nullopt;
   }
 
-  optional<int> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
+  optional<WebGLAttribLocation> WebGLContext::getAttribLocation(shared_ptr<WebGLProgram> program, const string &name)
   {
+    assert(program != nullptr && "Program is not null");
+    program->waitForCompleted();
+
     if (program->hasAttribLocation(name))
-      return program->getAttribLocation(name);
-    else
-      return nullopt;
+        return program->getAttribLocation(name);
+      else
+        return nullopt;
   }
 
   optional<WebGLUniformLocation> WebGLContext::getUniformLocation(shared_ptr<WebGLProgram> program,
@@ -847,31 +899,41 @@ namespace client_graphics
 
   void WebGLContext::uniform2f(WebGLUniformLocation location, float v0, float v1)
   {
-    auto req = Uniform2fCommandBufferRequest(location.index.value_or(0), v0, v1);
+    auto req = Uniform2fCommandBufferRequest(location.programId, location.name, v0, v1);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform2fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform2fvCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform2fvCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform2i(WebGLUniformLocation location, int v0, int v1)
   {
-    auto req = Uniform2iCommandBufferRequest(location.index.value_or(0), v0, v1);
+    auto req = Uniform2iCommandBufferRequest(location.programId, location.name, v0, v1);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform2iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform2ivCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform2ivCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform3f(WebGLUniformLocation location, float v0, float v1, float v2)
   {
-    auto req = Uniform3fCommandBufferRequest(location.index.value_or(0), v0, v1, v2);
+    auto req = Uniform3fCommandBufferRequest(location.programId, location.name, v0, v1, v2);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -895,25 +957,33 @@ namespace client_graphics
 
   void WebGLContext::uniform4f(WebGLUniformLocation location, float v0, float v1, float v2, float v3)
   {
-    auto req = Uniform4fCommandBufferRequest(location.index.value_or(0), v0, v1, v2, v3);
+    auto req = Uniform4fCommandBufferRequest(location.programId, location.name, v0, v1, v2, v3);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform4fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform4fvCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform4fvCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform4i(WebGLUniformLocation location, int v0, int v1, int v2, int v3)
   {
-    auto req = Uniform4iCommandBufferRequest(location.index.value_or(0), v0, v1, v2, v3);
+    auto req = Uniform4iCommandBufferRequest(location.programId, location.name, v0, v1, v2, v3);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform4iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform4ivCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform4ivCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -1955,6 +2025,9 @@ namespace client_graphics
 
   int WebGL2Context::getUniformBlockIndex(shared_ptr<WebGLProgram> program, const string &uniformBlockName)
   {
+    assert(program != nullptr && "Program must not be null.");
+    program->waitForCompleted();
+
     if (program == nullptr || !program->isValid() || !program->hasUniformBlockIndex(uniformBlockName))
       return -1;
     else
@@ -2143,40 +2216,55 @@ namespace client_graphics
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribDivisor(uint32_t index, uint32_t divisor)
+  void WebGL2Context::vertexAttribDivisor(const WebGLAttribLocation &loc, uint32_t divisor)
   {
-    auto req = VertexAttribDivisorCommandBufferRequest(index, divisor);
+    auto req = VertexAttribDivisorCommandBufferRequest(loc.programId, loc.name, divisor);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
     sendCommandBufferRequest(req);
   }
 
-  void WebGL2Context::vertexAttribI4i(uint32_t index, int x, int y, int z, int w)
+  void WebGL2Context::vertexAttribDivisor(int index, uint32_t divisor)
+  {
+    auto req = VertexAttribDivisorCommandBufferRequest(0, index, divisor);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::vertexAttribI4i(const WebGLAttribLocation &, int x, int y, int z, int w)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribI4ui(uint32_t index, uint x, uint y, uint z, uint w)
+  void WebGL2Context::vertexAttribI4ui(const WebGLAttribLocation &, uint x, uint y, uint z, uint w)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribI4iv(uint32_t index, const vector<int> values)
+  void WebGL2Context::vertexAttribI4iv(const WebGLAttribLocation &, const vector<int> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribI4uiv(uint32_t index, const vector<uint> values)
+  void WebGL2Context::vertexAttribI4uiv(const WebGLAttribLocation &, const vector<uint> values)
   {
     NOT_IMPLEMENTED();
   }
 
-  void WebGL2Context::vertexAttribIPointer(
-    uint32_t index,
-    int size,
-    int type,
-    int stride,
-    int offset)
+  void WebGL2Context::vertexAttribIPointer(const WebGLAttribLocation &loc,
+                                           int size,
+                                           int type,
+                                           int stride,
+                                           int offset)
   {
-    auto commandBuffer = VertexAttribIPointerCommandBufferRequest(index, size, type, stride, offset);
-    sendCommandBufferRequest(commandBuffer);
+    auto req = VertexAttribIPointerCommandBufferRequest(loc.programId, loc.name, size, type, stride, offset);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::vertexAttribIPointer(int index, int size, int type, int stride, int offset)
+  {
+    auto req = VertexAttribIPointerCommandBufferRequest(0, index, size, type, stride, offset);
+    sendCommandBufferRequest(req);
   }
 }

@@ -14,8 +14,8 @@
 #include "./program.hpp"
 #include "./texture.hpp"
 #include "./shader.hpp"
-#include "./uniform_location.hpp"
 #include "./active_info.hpp"
+#include "./uniform_location.hpp"
 
 using namespace std;
 using namespace node;
@@ -324,15 +324,8 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
 
-    try
-    {
-      int v = glContext_->getProgramParameter(program->handle(), pname);
-      return Napi::Number::New(env, v);
-    }
-    catch (const std::exception &e)
-    {
-      return env.Undefined();
-    }
+    int v = glContext_->getProgramParameter(program->handle(), pname);
+    return Napi::Number::New(env, v);
   }
 
   template <typename ObjectType, typename ContextType>
@@ -1484,12 +1477,13 @@ namespace webgl
       Napi::TypeError::New(env, "vertexAttribPointer() takes 6 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto size = info[1].As<Napi::Number>().Uint32Value();
-    auto type = info[2].As<Napi::Number>().Uint32Value();
-    auto normalized = info[3].As<Napi::Boolean>().Value();
-    auto stride = info[4].As<Napi::Number>().Uint32Value();
-    auto offset = info[5].As<Napi::Number>().Uint32Value();
+
+    auto index = info[0].ToNumber().Uint32Value();
+    auto size = info[1].ToNumber().Uint32Value();
+    auto type = info[2].ToNumber().Uint32Value();
+    auto normalized = info[3].ToBoolean().Value();
+    auto stride = info[4].ToNumber().Uint32Value();
+    auto offset = info[5].ToNumber().Uint32Value();
 
     glContext_->vertexAttribPointer(index, size, type, normalized, stride, offset);
     return env.Undefined();
@@ -1574,10 +1568,10 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
     auto loc = glContext_->getAttribLocation(program->handle(), name);
-    if (loc.has_value())
-      return Napi::Number::New(env, loc.value());
-    else
+    if (!loc.has_value())
       return Napi::Number::New(env, -1);
+    else
+      return Napi::Number::New(env, loc.value().index.value_or(-1));
   }
 
   template <typename ObjectType, typename ContextType>

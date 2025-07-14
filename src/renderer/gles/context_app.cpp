@@ -390,6 +390,45 @@ void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const v
   }
 }
 
+
+std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *req) const
+{
+  optional<GLint> loc = nullopt;
+  if (req->locationAvailable)
+  {
+    loc = req->location;
+  }
+  else
+  {
+    GLuint program = ObjectManagerRef().FindProgram(req->program);
+    if (program != 0) [[likely]]
+    {
+      loc = glGetAttribLocation(program, req->locationQueryName.c_str());
+      if (loc == -1)
+        loc = nullopt; // If the location is not found, return nullopt
+    }
+  }
+  return loc;
+}
+
+optional<GLint> ContextGLApp::getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *req) const
+{
+  optional<GLint> loc = nullopt;
+  if (req->locationAvailable)
+  {
+    loc = req->location;
+  }
+  else
+  {
+    GLuint program = ObjectManagerRef().FindProgram(req->program);
+    if (program != 0) [[likely]]
+    {
+      loc = glGetUniformLocation(program, req->locationQueryName.c_str());
+    }
+  }
+  return loc;
+}
+
 void ContextGLApp::MarkAsDirty()
 {
   m_Dirty = true;

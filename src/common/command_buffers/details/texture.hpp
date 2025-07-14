@@ -558,11 +558,11 @@ namespace commandbuffers
     {
       std::stringstream ss;
       ss << TextureImageNDCommandBufferRequest::toString(line_prefix)
-         << line_prefix << "  internalformat=" << WebGLHelper::WebGLEnumToString(internalformat) << std::endl
-         << line_prefix << "           width=" << width << std::endl
-         << line_prefix << "          height=" << height << std::endl
-         << line_prefix << "           depth=" << depth << std::endl
-         << line_prefix << "          border=" << border;
+         << "  internalformat=" << WebGLHelper::WebGLEnumToString(internalformat) << std::endl
+         << "           width=" << width << std::endl
+         << "          height=" << height << std::endl
+         << "           depth=" << depth << std::endl
+         << "          border=" << border;
       return ss.str();
     }
 

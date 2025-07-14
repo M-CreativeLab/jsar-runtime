@@ -580,15 +580,13 @@ private:
   {
     auto glContext = reqContentRenderer->getContextGL();
     auto program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+
     GLint value;
     glGetProgramiv(program, req->pname, &value);
-    GetProgramParamCommandBufferResponse res(req, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::GetProgramParameter(%s) => %d",
-            options.isDefaultQueue(),
-            gles::glEnumToString(req->pname).c_str(),
-            res.value);
+      PrintDebugInfo(req, to_string(value).c_str(), nullptr, options);
+
+    GetProgramParamCommandBufferResponse res(req, value);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req,
@@ -1418,43 +1416,80 @@ private:
                                                 renderer::TrContentRenderer *reqContentRenderer,
                                                 ApiCallOptions &options)
   {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "enableVertexAttribArray(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
     /**
 		 * `enableVertexAttribArray` without VAO is not supported in core profile, thus we need to ensure the VAO before calling
 		 * `enableVertexAttribArray()`.
 		 */
     if (backendType == RHIBackendType::OpenGLCore)
       EnsureVertexArrayObject(reqContentRenderer->getContextGL());
-    glEnableVertexAttribArray(req->index);
+
+    glEnableVertexAttribArray(loc.value());
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, nullptr, nullptr, options);
+    {
+      PrintDebugInfo(req, to_string(loc.value()).c_str(), nullptr, options);
+      DEBUG(DEBUG_TAG, "    program: %d", reqContentRenderer->getContextGL()->program());
+    }
   }
   TR_OPENGL_FUNC void OnDisableVertexAttribArray(DisableVertexAttribArrayCommandBufferRequest *req,
                                                  renderer::TrContentRenderer *reqContentRenderer,
                                                  ApiCallOptions &options)
   {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "disableVertexAttribArray(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
     /**
 		 * `disableVertexAttribArray` without VAO is not supported in core profile, thus we need to ensure the VAO before calling
 		 * `disableVertexAttribArray()`.
 		 */
     if (backendType == RHIBackendType::OpenGLCore)
       EnsureVertexArrayObject(reqContentRenderer->getContextGL());
-    glDisableVertexAttribArray(req->index);
+
+    glDisableVertexAttribArray(loc.value());
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, nullptr, nullptr, options);
+    {
+      PrintDebugInfo(req, to_string(loc.value()).c_str(), nullptr, options);
+      DEBUG(DEBUG_TAG, "    program: %d", reqContentRenderer->getContextGL()->program());
+    }
   }
   TR_OPENGL_FUNC void OnVertexAttribPointer(VertexAttribPointerCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto index = req->index;
-    auto size = req->conponentSize;
-    auto type = req->componentType;
-    auto normalized = req->normalized;
-    auto stride = req->stride;
-    auto offset = req->offset;
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribPointer(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
 
-    glVertexAttribPointer(index, size, type, normalized, stride, (const char *)NULL + offset);
+    GLint size = req->conponentSize;
+    GLenum type = req->componentType;
+    GLboolean normalized = req->normalized;
+    GLsizei stride = req->stride;
+    uint32_t offset = req->offset;
+
+    glVertexAttribPointer(loc.value(), size, type, normalized, stride, (const char *)NULL + offset);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
-      PrintDebugInfo(req, nullptr, nullptr, options);
+      PrintDebugInfo(req, to_string(loc.value()).c_str(), nullptr, options);
       DEBUG(DEBUG_TAG, "    size=%d", size);
       DEBUG(DEBUG_TAG, "    type=%s", gles::glEnumToString(type).c_str());
       DEBUG(DEBUG_TAG, "    normalized=%s", normalized ? "Yes" : "No");
@@ -1471,13 +1506,22 @@ private:
                                              renderer::TrContentRenderer *reqContentRenderer,
                                              ApiCallOptions &options)
   {
-    auto index = req->index;
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribIPointer(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
     auto size = req->componentSize;
     auto type = req->componentType;
     auto stride = req->stride;
     auto offset = req->offset;
 
-    glVertexAttribIPointer(index, size, type, stride, (const char *)NULL + offset);
+    glVertexAttribIPointer(loc.value(), size, type, stride, (const char *)NULL + offset);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1485,9 +1529,17 @@ private:
                                             renderer::TrContentRenderer *reqContentRenderer,
                                             ApiCallOptions &options)
   {
-    auto index = req->index;
-    auto divisor = req->divisor;
-    glVertexAttribDivisor(index, divisor);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribDivisor(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttribDivisor(loc.value(), req->divisor);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1508,21 +1560,11 @@ private:
                                   renderer::TrContentRenderer *reqContentRenderer,
                                   ApiCallOptions &options)
   {
-    optional<GLint> loc = nullopt;
-    if (req->locationAvailable)
-    {
-      loc = req->location;
-    }
-    else
-    {
-      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
-      if (program != 0) [[likely]]
-        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
-
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
     if (loc == nullopt) [[unlikely]]
     {
-      DEBUG(LOG_TAG_ERROR, "uniform1f: Failed to get location for uniform '%s' in program %d",
+      DEBUG(LOG_TAG_ERROR,
+            "uniform1f(): Failed to get location for uniform '%s' in program %d",
             req->locationQueryName.c_str(),
             req->program);
       return;
@@ -1553,21 +1595,11 @@ private:
   }
   TR_OPENGL_FUNC void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    optional<GLint> loc = nullopt;
-    if (req->locationAvailable)
-    {
-      loc = req->location;
-    }
-    else
-    {
-      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
-      if (program != 0) [[likely]]
-        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
-
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
     if (loc == nullopt) [[unlikely]]
     {
-      DEBUG(LOG_TAG_ERROR, "uniform1f: Failed to get location for uniform '%s' in program %d",
+      DEBUG(LOG_TAG_ERROR,
+            "uniform1i(): Failed to get location for uniform '%s' in program %d",
             req->locationQueryName.c_str(),
             req->program);
       return;
@@ -1588,41 +1620,85 @@ private:
   }
   TR_OPENGL_FUNC void OnUniform2f(Uniform2fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    glUniform2f(req->location, req->v0, req->v1);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform2f(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glUniform2f(loc.value(), req->v0, req->v1);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform2fv(Uniform2fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 2;
-    auto value = req->values.data();
-    glUniform2fv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform2fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 2;
+    const GLfloat *value = req->values.data();
+    glUniform2fv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform2i(Uniform2iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    glUniform2i(req->location, req->v0, req->v1);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform2i(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glUniform2i(loc.value(), req->v0, req->v1);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform2iv(Uniform2ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 2;
-    auto value = req->values.data();
-    glUniform2iv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform2iv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 2;
+    const GLint *value = req->values.data();
+    glUniform2iv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform3f(Uniform3fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto v0 = req->v0;
-    auto v1 = req->v1;
-    auto v2 = req->v2;
-    glUniform3f(loc, v0, v1, v2);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform3f(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glUniform3f(loc.value(), req->v0, req->v1, req->v2);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1656,42 +1732,99 @@ private:
   }
   TR_OPENGL_FUNC void OnUniform4f(Uniform4fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto v0 = TR_OPENGL_GET_NUMBER(req->v0);
-    auto v1 = TR_OPENGL_GET_NUMBER(req->v1);
-    auto v2 = TR_OPENGL_GET_NUMBER(req->v2);
-    auto v3 = TR_OPENGL_GET_NUMBER(req->v3);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform4f(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
 
-    glUniform4f(loc, v0, v1, v2, v3);
+    glUniform4f(loc.value(),
+                TR_OPENGL_GET_NUMBER(req->v0),
+                TR_OPENGL_GET_NUMBER(req->v1),
+                TR_OPENGL_GET_NUMBER(req->v2),
+                TR_OPENGL_GET_NUMBER(req->v3));
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform4fv(Uniform4fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 4;
-    auto value = req->values.data();
-    glUniform4fv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform4fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 4;
+    const GLfloat *value = req->values.data();
+    glUniform4fv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
-  TR_OPENGL_FUNC void OnUniform4i(Uniform4iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  TR_OPENGL_FUNC void OnUniform4i(Uniform4iCommandBufferRequest *req,
+                                  renderer::TrContentRenderer *reqContentRenderer,
+                                  ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto v0 = req->v0;
-    auto v1 = req->v1;
-    auto v2 = req->v2;
-    auto v3 = req->v3;
-    glUniform4i(loc, v0, v1, v2, v3);
+    optional<GLint> loc = nullopt;
+    if (req->locationAvailable)
+    {
+      loc = req->location;
+    }
+    else
+    {
+      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
+      if (program != 0) [[likely]]
+        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
+    }
+
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform4i(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glUniform4i(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
-  TR_OPENGL_FUNC void OnUniform4iv(Uniform4ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  TR_OPENGL_FUNC void OnUniform4iv(Uniform4ivCommandBufferRequest *req,
+                                   renderer::TrContentRenderer *reqContentRenderer,
+                                   ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 4;
-    auto value = req->values.data();
-    glUniform4iv(loc, count, value);
+    optional<GLint> loc = nullopt;
+    if (req->locationAvailable)
+    {
+      loc = req->location;
+    }
+    else
+    {
+      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
+      if (program != 0) [[likely]]
+        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
+    }
+
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform4iv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 4;
+    const GLint *value = req->values.data();
+    glUniform4iv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1740,9 +1873,7 @@ private:
 
     if (loc == nullopt) [[unlikely]]
     {
-      DEBUG(LOG_TAG_ERROR, "uniformMatrix4fv(): Failed to get location for uniform '%s' in program %d",
-            req->locationQueryName.c_str(),
-            req->program);
+      DEBUG(LOG_TAG_ERROR, "uniformMatrix4fv(): Failed to get location for uniform '%s' in program %d", req->locationQueryName.c_str(), req->program);
       return;
     }
 

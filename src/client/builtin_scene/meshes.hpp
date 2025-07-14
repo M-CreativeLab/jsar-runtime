@@ -192,7 +192,10 @@ namespace builtin_scene
      * @returns The number of enabled attributes.
      */
     inline size_t iterateEnabledAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                           std::function<void(const IVertexAttribute &, int, size_t, size_t)> callback)
+                                           std::function<void(const IVertexAttribute &,
+                                                              int,
+                                                              size_t,
+                                                              size_t)> callback)
     {
       auto glContext = glContext_.lock();
       assert(glContext != nullptr);
@@ -203,7 +206,7 @@ namespace builtin_scene
       {
         auto loc = glContext->getAttribLocation(program, attrib.name());
         if (loc.has_value())
-          callback(attrib, loc.value(), stride, offset);
+          callback(attrib, loc.value().index.value_or(-1), stride, offset);
         offset += attrib.byteLength();
       };
       return handle_->iterateEnabledAttributes(configureAttrib);

@@ -193,7 +193,10 @@ namespace builtin_scene
      * @returns The number of instance attributes.
      */
     size_t iterateInstanceAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                     std::function<void(const IVertexAttribute &, int, size_t, size_t)> callback) const;
+                                     std::function<void(const IVertexAttribute &,
+                                                        int,
+                                                        size_t,
+                                                        size_t)> callback) const;
     /**
      * Get the instance count of this mesh.
      *

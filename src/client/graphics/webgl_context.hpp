@@ -18,6 +18,7 @@
 #include "./webgl_framebuffer.hpp"
 #include "./webgl_renderbuffer.hpp"
 #include "./webgl_texture.hpp"
+#include "./webgl_attrib_location.hpp"
 #include "./webgl_uniform_location.hpp"
 #include "./webgl_query.hpp"
 #include "./webgl_sampler.hpp"
@@ -399,12 +400,15 @@ namespace client_graphics
     void texParameteriv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<int> params);
     void activeTexture(WebGLTextureUnit texture);
     void generateMipmap(WebGLTextureTarget target);
-    void enableVertexAttribArray(unsigned int index);
-    void disableVertexAttribArray(unsigned int index);
-    void vertexAttribPointer(unsigned int index, size_t size, int type, bool normalized, size_t stride, int offset);
+    void enableVertexAttribArray(const WebGLAttribLocation &);
+    void enableVertexAttribArray(int index);
+    void disableVertexAttribArray(const WebGLAttribLocation &);
+    void disableVertexAttribArray(int index);
+    void vertexAttribPointer(const WebGLAttribLocation &, size_t size, int type, bool normalized, size_t stride, int offset);
+    void vertexAttribPointer(int index, size_t size, int type, bool normalized, size_t stride, int offset);
     std::optional<WebGLActiveInfo> getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index);
     std::optional<WebGLActiveInfo> getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index);
-    std::optional<int> getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
+    std::optional<WebGLAttribLocation> getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
     std::optional<WebGLUniformLocation> getUniformLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
     void uniform1f(WebGLUniformLocation location, float v0);
     void uniform1fv(WebGLUniformLocation location, const std::vector<float> value);
@@ -1147,7 +1151,8 @@ namespace client_graphics
      * @param index The index of the vertex attribute.
      * @param divisor The number of instances that will pass between updates of the generic attribute.
      */
-    void vertexAttribDivisor(uint32_t index, uint32_t divisor);
+    void vertexAttribDivisor(const WebGLAttribLocation &, uint32_t divisor);
+    void vertexAttribDivisor(int index, uint32_t divisor);
     /**
      * It specify integer values for generic vertex attributes.
      *
@@ -1157,7 +1162,7 @@ namespace client_graphics
      * @param z The z value to set.
      * @param w The w value to set.
      */
-    void vertexAttribI4i(uint32_t index, int x, int y, int z, int w);
+    void vertexAttribI4i(const WebGLAttribLocation &, int x, int y, int z, int w);
     /**
      * It specify unsigned integer values for generic vertex attributes.
      *
@@ -1167,21 +1172,21 @@ namespace client_graphics
      * @param z The z value to set.
      * @param w The w value to set.
      */
-    void vertexAttribI4ui(uint32_t index, uint x, uint y, uint z, uint w);
+    void vertexAttribI4ui(const WebGLAttribLocation &, uint x, uint y, uint z, uint w);
     /**
      * It specify integer values for generic vertex attributes from a vector.
      *
      * @param index The index of the vertex attribute.
      * @param values The values to set.
      */
-    void vertexAttribI4iv(uint32_t index, const std::vector<int> values);
+    void vertexAttribI4iv(const WebGLAttribLocation &, const std::vector<int> values);
     /**
      * It specify unsigned integer values for generic vertex attributes from a vector.
      *
      * @param index The index of the vertex attribute.
      * @param values The values to set.
      */
-    void vertexAttribI4uiv(uint32_t index, const std::vector<uint> values);
+    void vertexAttribI4uiv(const WebGLAttribLocation &, const std::vector<uint> values);
     /**
      * It specifies integer data formats and locations of vertex attributes in a vertex attributes array.
      *
@@ -1192,12 +1197,12 @@ namespace client_graphics
      * @param stride The offset in bytes between the beginning of consecutive vertex attributes.
      * @param offset An offset in bytes of the first component in the vertex attribute array. Must be a multiple of type.
      */
-    void vertexAttribIPointer(
-      uint32_t index,
-      int size,
-      int type,
-      int stride,
-      int offset);
+    void vertexAttribIPointer(const WebGLAttribLocation &,
+                              int size,
+                              int type,
+                              int stride,
+                              int offset);
+    void vertexAttribIPointer(int index, int size, int type, int stride, int offset);
 
   public: // WebGL2 properties
     int max3DTextureSize;

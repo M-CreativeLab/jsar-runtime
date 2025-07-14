@@ -223,7 +223,10 @@ namespace builtin_scene
   }
 
   size_t InstancedMeshBase::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,
-                                                      function<void(const IVertexAttribute &, int, size_t, size_t)> callback) const
+                                                      function<void(const IVertexAttribute &,
+                                                                    int,
+                                                                    size_t,
+                                                                    size_t)> callback) const
   {
     auto glContext = glContext_.lock();
     if (glContext == nullptr)
@@ -234,10 +237,10 @@ namespace builtin_scene
     for (size_t i = 0; i < INSTANCE_ATTRIBUTES.size(); i++)
     {
       auto &name = INSTANCE_ATTRIBUTES[i];
-      auto index = glContext->getAttribLocation(program, name);
-      if (index.has_value())
+      auto attribLocation = glContext->getAttribLocation(program, name);
+      if (attribLocation.has_value())
       {
-        auto instanceIndex = index.value();
+        auto instanceIndex = attribLocation.value().index.value_or(-1);
         if (name == "instanceTransform")
         {
           for (int i = 0; i < 4; i++)

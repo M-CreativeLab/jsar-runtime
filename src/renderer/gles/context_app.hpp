@@ -4,6 +4,8 @@
 #include <memory>
 #include <unordered_map>
 #include <common/classes.hpp>
+#include <common/command_buffers/details/uniforms.hpp>
+#include <common/command_buffers/details/vertex_attrib.hpp>
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
@@ -15,7 +17,7 @@ class ContextGLApp : public ContextGLStorage
 public:
   // Create a new context for the content renderer.
   ContextGLApp(std::string name, std::shared_ptr<renderer::TrContentRenderer>);
-  // Create a new context which inherits from another context. And `defaultRenderTarget` is the default framebuffer to 
+  // Create a new context which inherits from another context. And `defaultRenderTarget` is the default framebuffer to
   // be used in this context.
   ContextGLApp(std::string name, ContextGLApp *from, std::optional<GLuint> defaultRenderTarget = std::nullopt);
 
@@ -74,6 +76,10 @@ public: // GLES Implementations
   void drawArrays(GLenum mode, GLint first, GLsizei count);
   void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
 
+public: // GLES Helpers
+  std::optional<GLint> getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *) const;
+  std::optional<GLint> getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *) const;
+
 public:
   void MarkAsDirty();
   bool IsDirty();
@@ -83,7 +89,7 @@ public:
 
 public:
   renderer::TrContentRenderer &contentRendererChecked() const;
-  gles::GLObjectManager &ObjectManagerRef()
+  gles::GLObjectManager &ObjectManagerRef() const
   {
     return *m_GLObjectManager;
   }

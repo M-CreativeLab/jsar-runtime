@@ -438,6 +438,15 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << clientId << ", "
+         << WebGLHelper::WebGLEnumToString(pname) << ")";
+      return ss.str();
+    }
+
   public:
     uint32_t clientId;
     uint32_t pname;
