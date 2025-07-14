@@ -29,22 +29,9 @@ namespace client_graphics
       return incomplete_;
     }
     // Waits for the program to be completed, it will block until the program response is received from channel peer.
-    void waitForCompleted(int timeout = 2000)
-    {
-      std::unique_lock<std::mutex> lock(setCompletedMutex_);
-      setCompletedCv_.wait_for(lock, std::chrono::milliseconds(timeout), [this]()
-                               { return !incomplete_; });
-    }
+    void waitForCompleted(int timeout = 2000) const;
     // Calls setCompleted() when the program response is received from channel peer and updates the link status.
-    void setCompleted(bool linkStatus)
-    {
-      linkStatus_ = linkStatus;
-      incomplete_ = false;
-      {
-        std::unique_lock<std::mutex> lock(setCompletedMutex_);
-        setCompletedCv_.notify_all();
-      }
-    }
+    void setCompleted(bool linkStatus);
     /**
      * It sets the link status of the program.
      *
@@ -55,11 +42,19 @@ namespace client_graphics
       linkStatus_ = linkStatus;
     }
     /**
-     * @returns THe current link status of the program.
+     * This method gets the current link status of the program.
+     *
+     * @param sync If `true`, it will wait for the program to be completed before returning the link status.
+     * @returns The current link status of the program.
      */
-    bool getLinkStatus()
+    bool getLinkStatus(bool sync = false) const;
+    /**
+     * @returns The number of active attributes in the program.
+     */
+    size_t countActiveAttribs() const
     {
-      return linkStatus_;
+      waitForCompleted();
+      return activeAttribs_.size();
     }
     /**
      * @returns The active attribute information at the given index.
@@ -84,6 +79,14 @@ namespace client_graphics
     bool hasActiveAttrib(int index)
     {
       return activeAttribs_.find(index) != activeAttribs_.end();
+    }
+    /**
+     * @returns The number of active uniforms in the program.
+     */
+    size_t countActiveUniforms() const
+    {
+      waitForCompleted();
+      return activeUniforms_.size();
     }
     /**
      * @param index The index of the active uniform.
@@ -200,37 +203,12 @@ namespace client_graphics
      * - Attribute locations
      * - Uniform locations
      */
-    void printInfo()
-    {
-      std::cout << "Program " << id << " info:" << std::endl;
-      std::cout << "Link status: " << (linkStatus_ ? "true" : "false") << std::endl;
-      std::cout << "Active attributes:" << std::endl;
-      for (auto &pair : activeAttribs_)
-      {
-        auto activeInfo = pair.second;
-        std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-      }
-
-      std::cout << "Active uniforms:" << std::endl;
-      for (auto &pair : activeUniforms_)
-      {
-        auto activeInfo = pair.second;
-        std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-      }
-
-      std::cout << "Attribute locations:" << std::endl;
-      for (auto &pair : attribLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second.index.value_or(-1) << std::endl;
-
-      std::cout << "Uniform locations:" << std::endl;
-      for (auto &pair : uniformLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second.index.value_or(-1) << std::endl;
-    }
+    void printInfo() const;
 
   private:
     std::atomic<bool> incomplete_ = true;
-    std::mutex setCompletedMutex_;
-    std::condition_variable setCompletedCv_;
+    mutable std::mutex setCompletedMutex_;
+    mutable std::condition_variable setCompletedCv_;
 
     bool linkStatus_ = false;
     std::map<int, WebGLActiveInfo> activeAttribs_;

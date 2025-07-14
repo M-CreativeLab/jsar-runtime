@@ -272,7 +272,11 @@ namespace client_graphics
      * `WebGLProgram` object directly.
      */
     if (pname == WEBGL_LINK_STATUS)
-      return static_cast<int>(program->getLinkStatus());
+      return static_cast<int>(program->getLinkStatus(false));
+    if (pname == WEBGL_ACTIVE_ATTRIBUTES)
+      return static_cast<int>(program->countActiveAttribs());
+    if (pname == WEBGL_ACTIVE_UNIFORMS)
+      return static_cast<int>(program->countActiveUniforms());
 
     /**
      * Send a command buffer request and wait for the response if not hit the above conditions.
@@ -289,19 +293,27 @@ namespace client_graphics
 
   string WebGLContext::getProgramInfoLog(shared_ptr<WebGLProgram> program)
   {
-    auto req = GetProgramInfoLogCommandBufferRequest(program->id);
-    sendCommandBufferRequest(req, true);
-
-    auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
-    if (resp != nullptr)
+    assert(program != nullptr && "Program is not null");
+    if (program->isIncomplete())
     {
-      string log(resp->infoLog);
-      delete resp;
-      return log;
+      return "";
     }
     else
     {
-      throw runtime_error("Failed to get program info log: timeout.");
+      auto req = GetProgramInfoLogCommandBufferRequest(program->id);
+      sendCommandBufferRequest(req, true);
+
+      auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
+      if (resp != nullptr) [[likely]]
+      {
+        string log(resp->infoLog);
+        delete resp;
+        return log;
+      }
+      else
+      {
+        throw runtime_error("Failed to get program info log: timeout.");
+      }
     }
   }
 
@@ -385,17 +397,17 @@ namespace client_graphics
     auto req = GetShaderInfoLogCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES);
-    if (resp != nullptr)
+    auto onGetShaderInfoLogResponse = [shader](const GetShaderInfoLogCommandBufferResponse &resp)
     {
-      string log(resp->infoLog);
-      delete resp;
-      return log;
-    }
-    else
-    {
-      throw runtime_error("Failed to get shader info log: timeout.");
-    }
+      if (!resp.infoLog.empty())
+        cerr << "getShaderInfoLog(" << shader->id << "): " << resp.infoLog << endl;
+    };
+    recvResponseAsync<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES,
+                                                             onGetShaderInfoLogResponse);
+
+    // Return an empty string directly, and the response will be logged in the async callback.
+    // This is to avoid blocking the main thread.
+    return "";
   }
 
   shared_ptr<WebGLBuffer> WebGLContext::createBuffer()

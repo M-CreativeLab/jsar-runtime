@@ -482,8 +482,8 @@ private:
       return;
     }
 
+    // Create response object
     LinkProgramCommandBufferResponse res(req, true);
-    DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d) on content#%d", program, reqContentRenderer->getContent()->id);
 
     /**
 		 * Fetch the locations of the attributes when link successfully.

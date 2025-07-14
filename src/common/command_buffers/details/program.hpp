@@ -443,7 +443,7 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
          << clientId << ", "
-         << WebGLHelper::WebGLEnumToString(pname) << ")";
+         << WebGLHelper::WebGLProgramParameterToString(pname) << ")";
       return ss.str();
     }
 

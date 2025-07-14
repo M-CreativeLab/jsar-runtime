@@ -602,7 +602,13 @@ namespace client_graphics
       auto response = clientContext_->recvCommandBufferResponse(timeout);
       if (response == nullptr) [[unlikely]]
         return nullptr;
-      assert(response->type == responseType);
+      if (response->type != responseType) [[unlikely]]
+      {
+        std::cerr << "recvCommandBuffer(): "
+                  << "Unexpected response type(" << response->type << "), expected(" << responseType << ")"
+                  << std::endl;
+        assert(false && "Unexpected response type");
+      }
       return dynamic_cast<R *>(response);
     }
 

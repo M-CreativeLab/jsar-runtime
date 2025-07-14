@@ -1352,4 +1352,32 @@ public:
     }
 #undef CASE
   }
+
+  // Convert program parameter to string label.
+  static std::string WebGLProgramParameterToString(int param)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+
+    switch (param)
+    {
+      CASE(WEBGL_DELETE_STATUS);
+      CASE(WEBGL_LINK_STATUS);
+      CASE(WEBGL_VALIDATE_STATUS);
+      CASE(WEBGL_ATTACHED_SHADERS);
+      CASE(WEBGL_ACTIVE_ATTRIBUTES);
+      CASE(WEBGL_ACTIVE_UNIFORMS);
+      CASE(WEBGL2_TRANSFORM_FEEDBACK_BUFFER_MODE);
+      CASE(WEBGL2_TRANSFORM_FEEDBACK_VARYINGS);
+      CASE(WEBGL2_ACTIVE_UNIFORM_BLOCKS);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << param;
+      return ss.str();
+    }
+#undef CASE
+  }
 };
