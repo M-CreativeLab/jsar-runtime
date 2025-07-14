@@ -47,6 +47,13 @@ namespace commandbuffers
         , maxVertexTextureImageUnits(that.maxVertexTextureImageUnits)
         , maxVertexUniformVectors(that.maxVertexUniformVectors)
     {
+      std::memcpy(vertexShaderPrecisionFormats,
+                  that.vertexShaderPrecisionFormats,
+                  sizeof(vertexShaderPrecisionFormats));
+      std::memcpy(fragmentShaderPrecisionFormats,
+                  that.fragmentShaderPrecisionFormats,
+                  sizeof(fragmentShaderPrecisionFormats));
+
       if (clone)
       {
         vendor = that.vendor;
@@ -73,7 +80,7 @@ namespace commandbuffers
       version = message.getSegment(1)->toString();
       renderer = message.getSegment(2)->toString();
     }
-    std::string toString(const char* line_prefix = "  ") const override
+    std::string toString(const char *line_prefix = "  ") const override
     {
       std::stringstream ss;
       ss << line_prefix << "MAX_COMBINED_TEXTURE_IMAGE_UNITS = " << maxCombinedTextureImageUnits << std::endl
@@ -105,6 +112,10 @@ namespace commandbuffers
     string vendor;
     string version;
     string renderer;
+
+    // Cache for shader precision formats: GL_HIGH_FLOAT, GL_MEDIUM_FLOAT, GL_LOW_FLOAT.
+    int vertexShaderPrecisionFormats[3][3];
+    int fragmentShaderPrecisionFormats[3][3];
   };
 
   class WebGL2ContextInitCommandBufferRequest final
@@ -162,7 +173,7 @@ namespace commandbuffers
     }
 
   public:
-    std::string toString(const char* line_prefix) const override
+    std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
       ss << line_prefix << "GL_MAX_3D_TEXTURE_SIZE = " << max3DTextureSize << std::endl

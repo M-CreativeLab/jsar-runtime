@@ -56,36 +56,56 @@ namespace client_graphics
     if (id >= commandbuffers::MinimumContextId + commandbuffers::MaxinumContextsCountPerContent)
       throw runtime_error("Too many contexts created in the content process.");
 
+    auto sentAt = chrono::system_clock::now();
     auto createReq = CreateWebGLContextRequest();
     sendCommandBufferRequestDirectly(createReq, true);
 
-    auto sentAt = chrono::system_clock::now();
-    auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
-    sendCommandBufferRequest(initCommandBuffer, true);
+    static WebGL1ContextInitCommandBufferResponse *initResp = nullptr;
+    if (initResp == nullptr)
+    {
+      auto initReq = WebGL1ContextInitCommandBufferRequest();
+      sendCommandBufferRequest(initReq, true);
 
-    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, 3000);
-    if (resp == nullptr) [[unlikely]]
-      throw runtime_error("Failed to initialize WebGL context");
+      initResp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,
+                                                                                   3000);
+      if (initResp == nullptr) [[unlikely]]
+        throw runtime_error("Failed to initialize WebGL context");
+    }
 
-    auto respondAt = chrono::system_clock::now();
-    cout << "Received `WebGL1Context` response in " << chrono::duration_cast<chrono::milliseconds>(respondAt - sentAt).count() << "ms" << endl;
-    cout << resp->toString("  ") << endl;
+    auto initializedAt = chrono::system_clock::now();
+    cout << "Initialized a `WebGL1Context` in "
+         << chrono::duration_cast<chrono::milliseconds>(initializedAt - sentAt).count() << "ms" << endl;
+    cout << initResp->toString("  ") << endl;
 
-    viewport_ = resp->drawingViewport;
-    maxCombinedTextureImageUnits = resp->maxCombinedTextureImageUnits;
-    maxCubeMapTextureSize = resp->maxCubeMapTextureSize;
-    maxFragmentUniformVectors = resp->maxFragmentUniformVectors;
-    maxRenderbufferSize = resp->maxRenderbufferSize;
-    maxTextureImageUnits = resp->maxTextureImageUnits;
-    maxTextureSize = resp->maxTextureSize;
-    maxVaryingVectors = resp->maxVaryingVectors;
-    maxVertexAttribs = resp->maxVertexAttribs;
-    maxVertexTextureImageUnits = resp->maxVertexTextureImageUnits;
-    maxVertexUniformVectors = resp->maxVertexUniformVectors;
-    vendor = resp->vendor;
-    version = resp->version;
-    renderer = resp->renderer;
-    delete resp;
+    viewport_ = initResp->drawingViewport;
+    maxCombinedTextureImageUnits = initResp->maxCombinedTextureImageUnits;
+    maxCubeMapTextureSize = initResp->maxCubeMapTextureSize;
+    maxFragmentUniformVectors = initResp->maxFragmentUniformVectors;
+    maxRenderbufferSize = initResp->maxRenderbufferSize;
+    maxTextureImageUnits = initResp->maxTextureImageUnits;
+    maxTextureSize = initResp->maxTextureSize;
+    maxVaryingVectors = initResp->maxVaryingVectors;
+    maxVertexAttribs = initResp->maxVertexAttribs;
+    maxVertexTextureImageUnits = initResp->maxVertexTextureImageUnits;
+    maxVertexUniformVectors = initResp->maxVertexUniformVectors;
+    vendor = initResp->vendor;
+    version = initResp->version;
+    renderer = initResp->renderer;
+
+    // Create shader precision formats.
+    {
+      for (int i = 0; i < 3; i++)
+      {
+        auto vertexFormat = initResp->vertexShaderPrecisionFormats[i];
+        vertexShaderPrecisionFormats_[WEBGL_LOW_FLOAT + i] = WebGLShaderPrecisionFormat(vertexFormat[0],
+                                                                                        vertexFormat[1],
+                                                                                        vertexFormat[2]);
+        auto fragmentFormat = initResp->fragmentShaderPrecisionFormats[i];
+        fragmentShaderPrecisionFormats_[WEBGL_LOW_FLOAT + i] = WebGLShaderPrecisionFormat(fragmentFormat[0],
+                                                                                          fragmentFormat[1],
+                                                                                          fragmentFormat[2]);
+      }
+    }
   }
 
   WebGLContext::~WebGLContext()
@@ -848,9 +868,9 @@ namespace client_graphics
     program->waitForCompleted();
 
     if (program->hasAttribLocation(name))
-        return program->getAttribLocation(name);
-      else
-        return nullopt;
+      return program->getAttribLocation(name);
+    else
+      return nullopt;
   }
 
   optional<WebGLUniformLocation> WebGLContext::getUniformLocation(shared_ptr<WebGLProgram> program,
@@ -1483,6 +1503,24 @@ namespace client_graphics
 
   WebGLShaderPrecisionFormat WebGLContext::getShaderPrecisionFormat(int shadertype, int precisiontype)
   {
+    if (shadertype != WEBGL_VERTEX_SHADER && shadertype != WEBGL_FRAGMENT_SHADER)
+      throw runtime_error("Invalid shader type.");
+
+    // Check cache first
+    if (shadertype == WEBGL_VERTEX_SHADER)
+    {
+      auto it = vertexShaderPrecisionFormats_.find(precisiontype);
+      if (it != vertexShaderPrecisionFormats_.end())
+        return it->second;
+    }
+    else if (shadertype == WEBGL_FRAGMENT_SHADER)
+    {
+      auto it = fragmentShaderPrecisionFormats_.find(precisiontype);
+      if (it != fragmentShaderPrecisionFormats_.end())
+        return it->second;
+    }
+
+    // Send command to get shader precision format if not found in cache
     auto req = GetShaderPrecisionFormatCommandBufferRequest(shadertype, precisiontype);
     sendCommandBufferRequest(req, true);
 
@@ -1507,24 +1545,28 @@ namespace client_graphics
     if (supportedExtensions_.has_value())
       return supportedExtensions_.value();
 
-    auto req = GetExtensionsCommandBufferRequest();
-    sendCommandBufferRequest(req, true);
+    static GetExtensionsCommandBufferResponse *extensionsResp = nullptr;
+    if (extensionsResp == nullptr)
+    {
+      auto req = GetExtensionsCommandBufferRequest();
+      sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
-    if (resp == nullptr)
-      throw runtime_error("Failed to get supported extensions: timeout.");
+      extensionsResp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
+      if (extensionsResp == nullptr)
+        throw runtime_error("Failed to get supported extensions: timeout.");
+    }
 
     vector<string> extensionsList;
-    for (size_t i = 0; i < resp->extensions.size(); i++)
+    for (size_t i = 0; i < extensionsResp->extensions.size(); i++)
     {
       // remove GL_ prefix
-      string extension = resp->extensions[i];
+      string extension = extensionsResp->extensions[i];
       if (extension.find("GL_") == 0)
         extensionsList.push_back(extension.substr(3));
       else
         extensionsList.push_back(extension);
     }
-    delete resp;
+
     supportedExtensions_ = extensionsList;
     return supportedExtensions_.value();
   }
@@ -1592,48 +1634,50 @@ namespace client_graphics
   WebGL2Context::WebGL2Context(ContextAttributes &attrs)
       : WebGLContext(attrs, true)
   {
-    auto req = WebGL2ContextInitCommandBufferRequest();
-    sendCommandBufferRequest(req, true);
+    static WebGL2ContextInitCommandBufferResponse *initResp = nullptr;
+    if (initResp == nullptr)
+    {
+      auto req = WebGL2ContextInitCommandBufferRequest();
+      sendCommandBufferRequest(req, true);
 
-    // Wait for the context init response
-    auto resp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
-    if (resp == nullptr)
-      throw runtime_error("Failed to initialize WebGL2 context: timeout.");
+      // Wait for the context init response
+      initResp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
+      if (initResp == nullptr)
+        throw runtime_error("Failed to initialize WebGL2 context: timeout.");
+    }
 
-    max3DTextureSize = resp->max3DTextureSize;
-    maxArrayTextureLayers = resp->maxArrayTextureLayers;
-    maxColorAttachments = resp->maxColorAttachments;
-    maxCombinedUniformBlocks = resp->maxCombinedUniformBlocks;
-    maxDrawBuffers = resp->maxDrawBuffers;
-    maxElementsIndices = resp->maxElementsIndices;
-    maxElementsVertices = resp->maxElementsVertices;
-    maxFragmentInputComponents = resp->maxFragmentInputComponents;
-    maxFragmentUniformBlocks = resp->maxFragmentUniformBlocks;
-    maxFragmentUniformComponents = resp->maxFragmentUniformComponents;
-    maxProgramTexelOffset = resp->maxProgramTexelOffset;
-    maxSamples = resp->maxSamples;
-    maxTransformFeedbackInterleavedComponents = resp->maxTransformFeedbackInterleavedComponents;
-    maxTransformFeedbackSeparateAttributes = resp->maxTransformFeedbackSeparateAttributes;
-    maxTransformFeedbackSeparateComponents = resp->maxTransformFeedbackSeparateComponents;
-    maxUniformBufferBindings = resp->maxUniformBufferBindings;
-    maxVaryingComponents = resp->maxVaryingComponents;
-    maxVertexOutputComponents = resp->maxVertexOutputComponents;
-    maxVertexUniformBlocks = resp->maxVertexUniformBlocks;
-    maxVertexUniformComponents = resp->maxVertexUniformComponents;
-    minProgramTexelOffset = resp->minProgramTexelOffset;
-    maxClientWaitTimeout = resp->maxClientWaitTimeout;
-    maxCombinedFragmentUniformComponents = resp->maxCombinedFragmentUniformComponents;
-    maxCombinedVertexUniformComponents = resp->maxCombinedVertexUniformComponents;
-    maxElementIndex = resp->maxElementIndex;
-    maxServerWaitTimeout = resp->maxServerWaitTimeout;
-    maxUniformBlockSize = resp->maxUniformBlockSize;
-    maxTextureLODBias = resp->maxTextureLODBias;
+    max3DTextureSize = initResp->max3DTextureSize;
+    maxArrayTextureLayers = initResp->maxArrayTextureLayers;
+    maxColorAttachments = initResp->maxColorAttachments;
+    maxCombinedUniformBlocks = initResp->maxCombinedUniformBlocks;
+    maxDrawBuffers = initResp->maxDrawBuffers;
+    maxElementsIndices = initResp->maxElementsIndices;
+    maxElementsVertices = initResp->maxElementsVertices;
+    maxFragmentInputComponents = initResp->maxFragmentInputComponents;
+    maxFragmentUniformBlocks = initResp->maxFragmentUniformBlocks;
+    maxFragmentUniformComponents = initResp->maxFragmentUniformComponents;
+    maxProgramTexelOffset = initResp->maxProgramTexelOffset;
+    maxSamples = initResp->maxSamples;
+    maxTransformFeedbackInterleavedComponents = initResp->maxTransformFeedbackInterleavedComponents;
+    maxTransformFeedbackSeparateAttributes = initResp->maxTransformFeedbackSeparateAttributes;
+    maxTransformFeedbackSeparateComponents = initResp->maxTransformFeedbackSeparateComponents;
+    maxUniformBufferBindings = initResp->maxUniformBufferBindings;
+    maxVaryingComponents = initResp->maxVaryingComponents;
+    maxVertexOutputComponents = initResp->maxVertexOutputComponents;
+    maxVertexUniformBlocks = initResp->maxVertexUniformBlocks;
+    maxVertexUniformComponents = initResp->maxVertexUniformComponents;
+    minProgramTexelOffset = initResp->minProgramTexelOffset;
+    maxClientWaitTimeout = initResp->maxClientWaitTimeout;
+    maxCombinedFragmentUniformComponents = initResp->maxCombinedFragmentUniformComponents;
+    maxCombinedVertexUniformComponents = initResp->maxCombinedVertexUniformComponents;
+    maxElementIndex = initResp->maxElementIndex;
+    maxServerWaitTimeout = initResp->maxServerWaitTimeout;
+    maxUniformBlockSize = initResp->maxUniformBlockSize;
+    maxTextureLODBias = initResp->maxTextureLODBias;
 
     // Extensions
-    OVR_maxViews = resp->OVR_maxViews;
-    maxTextureMaxAnisotropy = resp->maxTextureMaxAnisotropy;
-
-    delete resp;
+    OVR_maxViews = initResp->OVR_maxViews;
+    maxTextureMaxAnisotropy = initResp->maxTextureMaxAnisotropy;
   }
 
   void WebGL2Context::beginQuery(WebGLQueryTarget target, shared_ptr<WebGLQuery> query)

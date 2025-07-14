@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <unordered_map>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <common/utility.hpp>
@@ -796,6 +798,8 @@ namespace client_graphics
     WebGLState clientState_;
     WebGLError lastError_ = WebGLError::kNoError;
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
+    std::unordered_map<int, WebGLShaderPrecisionFormat> vertexShaderPrecisionFormats_;
+    std::unordered_map<int, WebGLShaderPrecisionFormat> fragmentShaderPrecisionFormats_;
     bool isWebGL2_ = false;
     bool isContextLost_ = false;
     bool unpackFlipY_ = false;

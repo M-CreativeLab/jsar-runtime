@@ -4,7 +4,7 @@
   XX(CREATE_WEBGL_CONTEXT, CreateWebGLContextRequest, "GL::CreateContext")                                                       \
   XX(REMOVE_WEBGL_CONTEXT, RemoveWebGLContextRequest, "GL::RemoveContext")                                                       \
   XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferRequest, "GL::ContextInit")                                               \
-  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferRequest, "GL::ContextInit")                                              \
+  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferRequest, "GL::Context2Init")                                             \
   XX(CREATE_PROGRAM, CreateProgramCommandBufferRequest, "GL::CreateProgram")                                                     \
   XX(DELETE_PROGRAM, DeleteProgramCommandBufferRequest, "GL::DeleteProgram")                                                     \
   XX(LINK_PROGRAM, LinkProgramCommandBufferRequest, "GL::LinkProgram")                                                           \
@@ -141,7 +141,7 @@
 
 #define TR_COMMAND_BUFFER_RESPONSES_MAP(XX)                                                                      \
   XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferResponse, "GL::ContextInit")                              \
-  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse, "GL::ContextInit")                             \
+  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse, "GL::Context2Init")                            \
   XX(GET_EXTENSIONS, GetExtensionsCommandBufferResponse, "GL::GetExtensions")                                    \
   XX(LINK_PROGRAM, LinkProgramCommandBufferResponse, "GL::LinkProgram")                                          \
   XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferResponse, "GL::GetProgramParam")                             \

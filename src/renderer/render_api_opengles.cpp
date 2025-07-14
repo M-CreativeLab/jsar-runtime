@@ -378,6 +378,20 @@ private:
     res.vendor = string((const char *)glGetString(GL_VENDOR));
     res.version = string((const char *)glGetString(GL_VERSION));
     res.renderer = string((const char *)glGetString(GL_RENDERER));
+
+    // Cache for shader precision formats.
+    {
+      auto &vertexFormats = res.vertexShaderPrecisionFormats;
+      glGetShaderPrecisionFormat(GL_VERTEX_SHADER, GL_LOW_FLOAT, &vertexFormats[0][0], &vertexFormats[0][2]);
+      glGetShaderPrecisionFormat(GL_VERTEX_SHADER, GL_MEDIUM_FLOAT, &vertexFormats[1][0], &vertexFormats[1][2]);
+      glGetShaderPrecisionFormat(GL_VERTEX_SHADER, GL_HIGH_FLOAT, &vertexFormats[2][0], &vertexFormats[2][2]);
+
+      auto &fragmentFormats = res.fragmentShaderPrecisionFormats;
+      glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_LOW_FLOAT, &fragmentFormats[0][0], &fragmentFormats[0][2]);
+      glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_MEDIUM_FLOAT, &fragmentFormats[1][0], &fragmentFormats[1][2]);
+      glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, &fragmentFormats[2][0], &fragmentFormats[2][2]);
+    }
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, &res, options);
     reqContentRenderer->sendCommandBufferResponse(res);

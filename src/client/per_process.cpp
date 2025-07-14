@@ -667,11 +667,11 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(in
     isAsyncCommandBufferResponseScheduled = false;
   }
 
-  TrCommandBufferResponse* response = commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+  TrCommandBufferResponse *response = commandBufferChanReceiver->recvCommandBufferResponse(timeout);
   auto after = chrono::steady_clock::now();
   auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
-  cerr << "Received command buffer response in " << duration << "ms which blocks the main thread." << endl
-       << "   command buffer: " << response->toString() << endl;
+  cerr << "Received command buffer response(" << commandTypeToStr(response->type) << ") "
+       << "in " << duration << "ms which blocks the main thread." << endl;
   return response;
 }
 
