@@ -913,7 +913,9 @@ namespace client_graphics
 
   void WebGLContext::uniform1fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform1fvCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform1fvCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -927,7 +929,9 @@ namespace client_graphics
 
   void WebGLContext::uniform1iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform1ivCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform1ivCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -973,19 +977,25 @@ namespace client_graphics
 
   void WebGLContext::uniform3fv(WebGLUniformLocation location, const vector<float> value)
   {
-    auto req = Uniform3fvCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform3fvCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform3i(WebGLUniformLocation location, int v0, int v1, int v2)
   {
-    auto req = Uniform3iCommandBufferRequest(location.index.value_or(0), v0, v1, v2);
+    auto req = Uniform3iCommandBufferRequest(location.programId, location.name, v0, v1, v2);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
   void WebGLContext::uniform3iv(WebGLUniformLocation location, const vector<int> value)
   {
-    auto req = Uniform3ivCommandBufferRequest(location.index.value_or(0), value);
+    auto req = Uniform3ivCommandBufferRequest(location.programId, location.name, value);
+    if (location.index.has_value())
+      req.setLocationIndex(location.index);
     sendCommandBufferRequest(req);
   }
 
@@ -2238,7 +2248,7 @@ namespace client_graphics
                                           int uniformBlockIndex,
                                           uint32_t uniformBlockBinding)
   {
-    if (uniformBlockIndex < UINT32_MAX)
+    if (uniformBlockIndex < UINT32_MAX) [[likely]]
     {
       auto commandBuffer = commandbuffers::UniformBlockBindingCommandBufferRequest(program->id,
                                                                                    uniformBlockIndex,

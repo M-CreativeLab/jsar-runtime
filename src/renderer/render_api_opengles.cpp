@@ -1592,20 +1592,22 @@ private:
                                    renderer::TrContentRenderer *reqContentRenderer,
                                    ApiCallOptions &options)
   {
-    auto location = req->location;
-    auto count = req->values.size();
-    auto value = req->values.data();
-
-    glUniform1fv(location, count, value);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
     {
-      PrintDebugInfo(req, nullptr, nullptr, options);
-
-      auto glContext = reqContentRenderer->getContextGL();
-      auto contentId = reqContentRenderer->getContent()->id;
-      DEBUG(DEBUG_TAG, "    Content: %d", contentId);
-      DEBUG(DEBUG_TAG, "    Program: %d", glContext->program());
+      DEBUG(LOG_TAG_ERROR,
+            "uniform1f(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
     }
+
+    GLsizei count = req->values.size();
+    const GLfloat *value = req->values.data();
+
+    glUniform1fv(loc.value(), count, value);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1625,10 +1627,20 @@ private:
   }
   TR_OPENGL_FUNC void OnUniform1iv(Uniform1ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size();
-    auto value = req->values.data();
-    glUniform1iv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform1iv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size();
+    const GLint *value = req->values.data();
+
+    glUniform1iv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1718,29 +1730,59 @@ private:
   }
   TR_OPENGL_FUNC void OnUniform3fv(Uniform3fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 3;
-    auto value = req->values.data();
-    glUniform3fv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform3fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 3;
+    const GLfloat *value = req->values.data();
+
+    glUniform3fv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform3i(Uniform3iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform3i(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
     auto v0 = req->v0;
     auto v1 = req->v1;
     auto v2 = req->v2;
-    glUniform3i(loc, v0, v1, v2);
+
+    glUniform3i(loc.value(), v0, v1, v2);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnUniform3iv(Uniform3ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    auto loc = req->location;
-    auto count = req->values.size() / 3;
-    auto value = req->values.data();
-    glUniform3iv(loc, count, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniform3iv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->values.size() / 3;
+    const GLint *value = req->values.data();
+
+    glUniform3iv(loc.value(), count, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1786,18 +1828,7 @@ private:
                                   renderer::TrContentRenderer *reqContentRenderer,
                                   ApiCallOptions &options)
   {
-    optional<GLint> loc = nullopt;
-    if (req->locationAvailable)
-    {
-      loc = req->location;
-    }
-    else
-    {
-      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
-      if (program != 0) [[likely]]
-        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
-
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
     if (loc == nullopt) [[unlikely]]
     {
       DEBUG(LOG_TAG_ERROR,
@@ -1815,18 +1846,7 @@ private:
                                    renderer::TrContentRenderer *reqContentRenderer,
                                    ApiCallOptions &options)
   {
-    optional<GLint> loc = nullopt;
-    if (req->locationAvailable)
-    {
-      loc = req->location;
-    }
-    else
-    {
-      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
-      if (program != 0) [[likely]]
-        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
-
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
     if (loc == nullopt) [[unlikely]]
     {
       DEBUG(LOG_TAG_ERROR,
@@ -1847,11 +1867,21 @@ private:
                                          ApiCallOptions &options,
                                          xr::DeviceFrame *deviceFrame)
   {
-    auto loc = req->location;
-    auto count = req->count();
-    auto transpose = req->transpose;
-    auto value = req->values.data();
-    glUniformMatrix2fv(loc, count, transpose, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniformMatrix2fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->count();
+    GLboolean transpose = req->transpose;
+    const GLfloat *value = req->values.data();
+
+    glUniformMatrix2fv(loc.value(), count, transpose, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1860,11 +1890,21 @@ private:
                                          ApiCallOptions &options,
                                          xr::DeviceFrame *deviceFrame)
   {
-    auto loc = req->location;
-    auto count = req->count();
-    auto transpose = req->transpose;
-    auto value = req->values.data();
-    glUniformMatrix3fv(loc, count, transpose, value);
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "uniformMatrix3fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    GLsizei count = req->count();
+    GLboolean transpose = req->transpose;
+    const GLfloat *value = req->values.data();
+
+    glUniformMatrix3fv(loc.value(), count, transpose, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1873,26 +1913,19 @@ private:
                                          ApiCallOptions &options,
                                          xr::DeviceFrame *deviceFrame)
   {
-    optional<GLint> loc = nullopt;
-    if (req->locationAvailable)
-    {
-      loc = req->location;
-    }
-    else
-    {
-      GLuint program = reqContentRenderer->getContextGL()->ObjectManagerRef().FindProgram(req->program);
-      if (program != 0) [[likely]]
-        loc = glGetUniformLocation(program, req->locationQueryName.c_str());
-    }
-
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getUniformLoc(req);
     if (loc == nullopt) [[unlikely]]
     {
-      DEBUG(LOG_TAG_ERROR, "uniformMatrix4fv(): Failed to get location for uniform '%s' in program %d", req->locationQueryName.c_str(), req->program);
+      DEBUG(LOG_TAG_ERROR,
+            "uniformMatrix4fv(): Failed to get location for uniform '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
       return;
     }
 
-    auto count = req->count();
-    auto transpose = req->transpose;
+    GLsizei count = req->count();
+    GLboolean transpose = req->transpose;
+
     auto content = reqContentRenderer->getContent();
     if (TR_UNLIKELY(content == nullptr || content->id == -1))
     {

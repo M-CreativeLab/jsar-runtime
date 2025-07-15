@@ -188,19 +188,17 @@ namespace commandbuffers
   };
 
   class Uniform1fvCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform1fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM1FV_REQ>
+      : public SetUniformCommandBufferRequest<Uniform1fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM1FV_REQ>
   {
   public:
     Uniform1fvCommandBufferRequest() = delete;
-    Uniform1fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform1fvCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<float> &values)
+        : SetUniformCommandBufferRequest(program, location_name)
         , values(values)
     {
     }
     Uniform1fvCommandBufferRequest(const Uniform1fvCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , values()
     {
       if (clone)
@@ -210,20 +208,37 @@ namespace commandbuffers
   public:
     TrCommandBufferMessage *serialize() override
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
+      auto message = SetUniformCommandBufferRequest::serialize();
       if (values.size() > 0)
         message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      auto valuesSegment = message.getSegment(0);
+      SetUniformCommandBufferRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
     }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << this->locToString() << ","
+         << "[";
+
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        os << values[i];
+        if (i < values.size() - 1)
+          os << ", ";
+      }
+      os << "])";
+      return os.str();
+    }
 
   public:
-    uint32_t location;
     std::vector<float> values;
   };
 
@@ -245,11 +260,11 @@ namespace commandbuffers
 
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
          << this->locToString() << ","
          << v0 << ")";
-      return ss.str();
+      return os.str();
     }
 
   public:
@@ -257,19 +272,17 @@ namespace commandbuffers
   };
 
   class Uniform1ivCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform1ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM1IV_REQ>
+      : public SetUniformCommandBufferRequest<Uniform1ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM1IV_REQ>
   {
   public:
     Uniform1ivCommandBufferRequest() = delete;
-    Uniform1ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform1ivCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<int> &values)
+        : SetUniformCommandBufferRequest(program, location_name)
         , values(values)
     {
     }
     Uniform1ivCommandBufferRequest(const Uniform1ivCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , values()
     {
       if (clone)
@@ -279,36 +292,37 @@ namespace commandbuffers
   public:
     TrCommandBufferMessage *serialize() override
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
+      auto message = SetUniformCommandBufferRequest::serialize();
       if (values.size() > 0)
         message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      auto valuesSegment = message.getSegment(0);
+      SetUniformCommandBufferRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<int>();
     }
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << "Loc(" << location << "),";
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << this->locToString() << ", ";
 
-      ss << "[";
+      os << "[";
       for (size_t i = 0; i < values.size(); ++i)
       {
-        ss << values[i];
+        os << values[i];
         if (i < values.size() - 1)
-          ss << ", ";
+          os << ", ";
       }
-      ss << "])";
-      return ss.str();
+      os << "])";
+      return os.str();
     }
 
   public:
-    uint32_t location;
     std::vector<int> values;
   };
 
@@ -380,19 +394,19 @@ namespace commandbuffers
 
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
          << this->locToString() << ", ";
 
-      ss << "[";
+      os << "[";
       for (size_t i = 0; i < values.size(); ++i)
       {
-        ss << values[i];
+        os << values[i];
         if (i < values.size() - 1)
-          ss << ", ";
+          os << ", ";
       }
-      ss << "])";
-      return ss.str();
+      os << "])";
+      return os.str();
     }
 
   public:
@@ -525,19 +539,17 @@ namespace commandbuffers
   };
 
   class Uniform3fvCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform3fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM3FV_REQ>
+      : public SetUniformCommandBufferRequest<Uniform3fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM3FV_REQ>
   {
   public:
     Uniform3fvCommandBufferRequest() = delete;
-    Uniform3fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform3fvCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<float> &values)
+        : SetUniformCommandBufferRequest(program, location_name)
         , values(values)
     {
     }
     Uniform3fvCommandBufferRequest(const Uniform3fvCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , values()
     {
       if (clone)
@@ -547,55 +559,54 @@ namespace commandbuffers
   public:
     TrCommandBufferMessage *serialize() override
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
+      auto message = SetUniformCommandBufferRequest::serialize();
       if (values.size() > 2 && values.size() % 3 == 0) // Check the value size is 3x
         message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      auto valuesSegment = message.getSegment(0);
+      SetUniformCommandBufferRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
     }
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << "Loc(" << location << "),";
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << this->locToString() << ", ";
 
-      ss << "[";
+      os << "[";
       for (size_t i = 0; i < values.size(); ++i)
       {
-        ss << values[i];
+        os << values[i];
         if (i < values.size() - 1)
-          ss << ", ";
+          os << ", ";
       }
-      ss << "])";
-      return ss.str();
+      os << "])";
+      return os.str();
     }
 
   public:
-    uint32_t location;
     std::vector<float> values;
   };
 
   class Uniform3iCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform3iCommandBufferRequest, COMMAND_BUFFER_UNIFORM3I_REQ>
+      : public SetUniformCommandBufferRequest<Uniform3iCommandBufferRequest, COMMAND_BUFFER_UNIFORM3I_REQ>
   {
   public:
     Uniform3iCommandBufferRequest() = delete;
-    Uniform3iCommandBufferRequest(uint32_t location, int v0, int v1, int v2)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform3iCommandBufferRequest(uint32_t program, const std::string &location_name, int v0, int v1, int v2)
+        : SetUniformCommandBufferRequest(program, location_name)
         , v0(v0)
         , v1(v1)
         , v2(v2)
     {
     }
     Uniform3iCommandBufferRequest(const Uniform3iCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , v0(that.v0)
         , v1(that.v1)
         , v2(that.v2)
@@ -606,34 +617,31 @@ namespace commandbuffers
     {
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << "Loc(" << location << "),"
-         << v0 << ","
-         << v1 << ","
+         << this->locToString() << "), "
+         << v0 << ", "
+         << v1 << ", "
          << v2 << ")";
       return ss.str();
     }
 
   public:
-    uint32_t location;
     int v0;
     int v1;
     int v2;
   };
 
   class Uniform3ivCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<Uniform3ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM3IV_REQ>
+      : public SetUniformCommandBufferRequest<Uniform3ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM3IV_REQ>
   {
   public:
     Uniform3ivCommandBufferRequest() = delete;
-    Uniform3ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest()
-        , location(location)
+    Uniform3ivCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<int> &values)
+        : SetUniformCommandBufferRequest(program, location_name)
         , values(values)
     {
     }
     Uniform3ivCommandBufferRequest(const Uniform3ivCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that)
-        , location(that.location)
+        : SetUniformCommandBufferRequest(that, clone)
         , values()
     {
       if (clone)
@@ -643,36 +651,37 @@ namespace commandbuffers
   public:
     TrCommandBufferMessage *serialize() override
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
+      auto message = SetUniformCommandBufferRequest::serialize();
       if (values.size() > 2 && values.size() % 3 == 0) // Check the value size is 3x
         message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      auto valuesSegment = message.getSegment(0);
+      SetUniformCommandBufferRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<int>();
     }
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << "Loc(" << location << "),";
+      std::stringstream os;
+      os << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << this->locToString() << "), ";
 
-      ss << "[";
+      os << "[";
       for (size_t i = 0; i < values.size(); ++i)
       {
-        ss << values[i];
+        os << values[i];
         if (i < values.size() - 1)
-          ss << ", ";
+          os << ", ";
       }
-      ss << "])";
-      return ss.str();
+      os << "])";
+      return os.str();
     }
 
   public:
-    uint32_t location;
     std::vector<int> values;
   };
 
@@ -700,18 +709,17 @@ namespace commandbuffers
   public:
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+      std::stringstream os;
+      os << TrCommandBufferRequest::toString(line_prefix) << "("
          << this->locToString() << ","
          << v0 << ","
          << v1 << ","
          << v2 << ","
          << v3 << ")";
-      return ss.str();
+      return os.str();
     }
 
   public:
-    uint32_t location;
     Tv v0;
     Tv v1;
     Tv v2;
@@ -753,23 +761,22 @@ namespace commandbuffers
     }
     std::string toString(const char *line_prefix) const override
     {
-      std::stringstream ss;
-      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+      std::stringstream os;
+      os << TrCommandBufferRequest::toString(line_prefix) << "("
          << this->locToString() << ", ";
 
-      ss << "[";
+      os << "[";
       for (size_t i = 0; i < values.size(); ++i)
       {
-        ss << values[i];
+        os << values[i];
         if (i < values.size() - 1)
-          ss << ", ";
+          os << ", ";
       }
-      ss << "])";
-      return ss.str();
+      os << "])";
+      return os.str();
     }
 
   public:
-    uint32_t location;
     std::vector<Tv> values;
   };
 
@@ -855,14 +862,14 @@ namespace commandbuffers
       values_ss << "float[" << values.size() << "], "
                 << "ComputationGraph=" << (isComputationGraph() ? "Placeholder()" : "None");
 
-      std::stringstream ss;
-      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+      std::stringstream os;
+      os << TrCommandBufferRequest::toString(line_prefix) << "("
          << this->locToString() << ", "
          << "values={" << values_ss.str() << ", "
          << "count=" << count() << ", "
          << "transpose=" << (transpose ? "Yes" : "No")
          << ")";
-      return ss.str();
+      return os.str();
     }
 
   public:

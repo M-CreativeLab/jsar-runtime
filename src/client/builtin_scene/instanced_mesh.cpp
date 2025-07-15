@@ -111,7 +111,7 @@ namespace builtin_scene
   {
     // Skip if the instance is not enabled.
     if (!enabled_)
-      return true; 
+      return true;
 
     // Skip if the instance is transparent and not own a texture.
     if (data_.isTransparent() && !data_.ownTexture())
