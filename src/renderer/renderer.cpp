@@ -97,7 +97,7 @@ namespace renderer
     {
       for (auto contentRenderer : contentRenderers)
       {
-        auto content = contentRenderer->getContent();
+        shared_ptr<TrContentRuntime> content = contentRenderer->getContent();
         if (content == nullptr || content->disableRendering)
         {
           /**
@@ -124,12 +124,16 @@ namespace renderer
   {
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
+
+    // TODO(yorkie): support the transparents render pass.
   }
 
   void TrRenderer::onBeforeRendering()
   {
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
+
+    // TODO(yorkie): implement the before rendering logic.
   }
 
   void TrRenderer::onAfterRendering()

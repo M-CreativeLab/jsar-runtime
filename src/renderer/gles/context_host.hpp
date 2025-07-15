@@ -21,7 +21,6 @@ public:
 
 public:
   void recordFromHost();
-  void recordTextureBindingFromHost();
   void restore();
 
   inline const GLuint currentFramebufferId() const

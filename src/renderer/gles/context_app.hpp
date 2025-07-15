@@ -72,6 +72,10 @@ public: // GLES Implementations
   // Framebuffer functions
   void bindFramebuffer(GLenum target, std::optional<uint32_t> id, GLuint &framebuffer);
 
+  // Texture functions
+  void activeTexture(GLenum textureUnit);
+  void bindTexture(GLenum target, uint32_t id, GLuint &texture);
+
   // Draw functions
   void drawArrays(GLenum mode, GLint first, GLsizei count);
   void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);

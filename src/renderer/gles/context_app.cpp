@@ -146,14 +146,7 @@ void ContextGLApp::onActiveTextureUnitChanged(int active_unit)
 
 void ContextGLApp::onTextureBindingChanged(GLenum target, GLuint texture)
 {
-  GLint activeUnit;
-  glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-
-  auto &binding = m_TextureBindingsWithUnit[activeUnit];
-  if (binding == nullptr)
-    m_TextureBindingsWithUnit[activeUnit] = make_shared<OpenGLTextureBinding>(target, texture);
-  else
-    binding->reset(target, texture);
+  m_TextureBindings[m_LastActiveTextureUnit] = GLTextureBinding(target, texture);
 }
 
 void ContextGLApp::RecordProgramOnCreated(GLuint program)
@@ -370,6 +363,19 @@ void ContextGLApp::bindFramebuffer(GLenum target, optional<uint32_t> id, GLuint 
 
   glBindFramebuffer(target, framebuffer);
   onFramebufferChanged(framebuffer);
+}
+
+void ContextGLApp::activeTexture(GLenum unit)
+{
+  glActiveTexture(unit);
+  onActiveTextureUnitChanged(unit);
+}
+
+void ContextGLApp::bindTexture(GLenum target, uint32_t id, GLuint &texture)
+{
+  texture = ObjectManagerRef().FindTexture(id);
+  glBindTexture(target, texture);
+  onTextureBindingChanged(target, texture);
 }
 
 void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)

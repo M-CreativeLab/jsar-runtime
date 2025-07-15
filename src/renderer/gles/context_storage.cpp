@@ -253,19 +253,13 @@ void ContextGLStorage::restore()
     glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
   bindBuffersError = glGetError();
 
-  for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
+  for (auto &it : m_TextureBindings)
   {
-    auto unit = it->first;
-    auto &binding = it->second;
-    auto target = binding->target();
-    auto texture = binding->texture();
-    glActiveTexture(unit);
-    glBindTexture(target, texture);
+    GLenum unit = it.first;
+    GLTextureBinding &texture = it.second;
+    texture.bindTo(unit);
   }
-  if (m_LastActiveTextureUnit >= GL_TEXTURE0 && m_LastActiveTextureUnit <= GL_TEXTURE31)
-    glActiveTexture(m_LastActiveTextureUnit);
-  else
-    glActiveTexture(GL_TEXTURE0);
+  glActiveTexture(m_LastActiveTextureUnit);
   bindTextureError = glGetError();
 
 #if UNITY_ANDROID || UNITY_WEBGL
@@ -337,5 +331,5 @@ void ContextGLStorage::print()
 
 void ContextGLStorage::clearTextureBindings()
 {
-  m_TextureBindingsWithUnit.clear();
+  m_TextureBindings.clear();
 }

@@ -356,6 +356,25 @@ private:
         DEBUG(logTag, "      Mask=%d", stencilMask);
       }
     }
+
+    // Print Texture bindings
+    {
+      GLint activatedUnit;
+      glGetIntegerv(GL_ACTIVE_TEXTURE, &activatedUnit);
+      DEBUG(logTag, "    Active Texture Unit: %d", activatedUnit - GL_TEXTURE0);
+
+      GLint maxTextureUnits;
+      glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+      for (int i = 0; i < maxTextureUnits; ++i)
+      {
+        GLint textureId;
+        glActiveTexture(GL_TEXTURE0 + i);
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &textureId);
+        if (textureId != 0)
+          DEBUG(logTag, "      TEXTURE%d: texture(%d)", i, textureId);
+      }
+      glActiveTexture(activatedUnit); // Restore the active texture unit
+    }
   }
 
 private:
@@ -1169,21 +1188,13 @@ private:
                                     renderer::TrContentRenderer *reqContentRenderer,
                                     ApiCallOptions &options)
   {
-    auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
-    auto target = req->target;
-    auto texture = glObjectManager.FindTexture(req->texture);
-    GetRenderer()->getContextGL()->recordTextureBindingFromHost();
-    glBindTexture(target, texture);
-
-    auto contentGlContext = reqContentRenderer->getContextGL();
-    contentGlContext->onTextureBindingChanged(target, texture);
+    GLuint texture;
+    reqContentRenderer->getContextGL()->bindTexture(req->target, req->texture, texture);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
-      PrintDebugInfo(req, to_string(texture).c_str(), nullptr, options);
-
-      GLint activeUnit;
-      glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-      DEBUG(DEBUG_TAG, "  active: %d", activeUnit);
+      stringstream res_ss;
+      res_ss << "texture(" << texture << ")";
+      PrintDebugInfo(req, res_ss.str().c_str(), nullptr, options);
     }
   }
   TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req,
@@ -1199,7 +1210,7 @@ private:
     GLint border = req->border;
     GLenum format = req->format;
     GLenum type = req->pixelType;
-    const GLvoid *pixels = nullptr;
+    GLvoid *pixels = nullptr;
 
     if (req->pixels == nullptr)
     {
@@ -1214,7 +1225,7 @@ private:
         const auto &downsampled = transmute::ImageProcessor::GetDownsampledImage(req->pixels, width, height);
         width = downsampled.width;
         height = downsampled.height;
-        pixels = downsampled.pixels.data();
+        pixels = (GLvoid *)downsampled.pixels.data();
       }
       else
       {
@@ -1225,10 +1236,8 @@ private:
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
-      GLint currentTexture;
-      glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
+      PrintDebugInfo(req, nullptr, nullptr, options);
 
-      DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(%s [%d,%d]) => texture(%d)", options.isDefaultQueue(), gles::glEnumToString(target).c_str(), width, height, currentTexture);
       DEBUG(DEBUG_TAG, "             level: %d", level);
       DEBUG(DEBUG_TAG, "    internalformat: %s", gles::glTextureInternalFormatToString(internalformat).c_str());
       DEBUG(DEBUG_TAG, "             width: %d", width);
@@ -1294,12 +1303,7 @@ private:
   {
     glTexParameteri(req->target, req->pname, req->param);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(options.printsCall ? DEBUG_TAG : LOG_TAG_ERROR,
-            "[%d] GL::TexParameteri(target=%s, pname=%s, param=%d)",
-            options.isDefaultQueue(),
-            gles::glEnumToString(req->target).c_str(),
-            gles::glTextureParameterToString(req->pname).c_str(),
-            req->param);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnTexParameterf(TextureParameterfCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -1307,29 +1311,15 @@ private:
   {
     glTexParameterf(req->target, req->pname, req->param);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(options.printsCall ? DEBUG_TAG : LOG_TAG_ERROR,
-            "[%d] GL::TexParameterf(target=%s, pname=%s, param=%f)",
-            options.isDefaultQueue(),
-            gles::glEnumToString(req->target).c_str(),
-            gles::glTextureParameterToString(req->pname).c_str(),
-            req->param);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnActiveTexture(ActiveTextureCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
                                       ApiCallOptions &options)
   {
-    auto textureUnit = req->activeUnit;
-    glActiveTexture(textureUnit);
-    reqContentRenderer->getContextGL()->onActiveTextureUnitChanged(textureUnit);
+    reqContentRenderer->getContextGL()->activeTexture(req->activeUnit);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
       PrintDebugInfo(req, nullptr, nullptr, options);
-
-      GLint using_program;
-      glGetIntegerv(GL_CURRENT_PROGRAM, &using_program);
-      DEBUG(DEBUG_TAG, "    program: %d", using_program);
-      DEBUG(DEBUG_TAG, "         id: %d", textureUnit - GL_TEXTURE0);
-    }
   }
   TR_OPENGL_FUNC void OnGenerateMipmap(GenerateMipmapCommandBufferRequest *req,
                                        renderer::TrContentRenderer *reqContentRenderer,
@@ -1798,11 +1788,7 @@ private:
       return;
     }
 
-    glUniform4f(loc.value(),
-                TR_OPENGL_GET_NUMBER(req->v0),
-                TR_OPENGL_GET_NUMBER(req->v1),
-                TR_OPENGL_GET_NUMBER(req->v2),
-                TR_OPENGL_GET_NUMBER(req->v3));
+    glUniform4f(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }

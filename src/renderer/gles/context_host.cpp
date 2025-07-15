@@ -55,14 +55,47 @@ void ContextGLHost::recordFromHost()
   glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
 
   clearTextureBindings();
-  for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++)
+  // FIXME(yorkie): currently only record from 0-31 texture units to avoid the performance issue, we can record more
+  // texture units if needed.
+  for (int unit = GL_TEXTURE0; unit <= GL_TEXTURE31; unit++)
   {
     GLint texture = 0;
-    glActiveTexture(i);
+    glActiveTexture(unit);
 
-    // TODO: how to support other texture targets?
+    // Reading the TEXTURE_2D
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-    m_TextureBindingsWithUnit[i] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_2D_ARRAY
+    glGetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D_ARRAY, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_3D
+    glGetIntegerv(GL_TEXTURE_BINDING_3D, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_3D, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_CUBE_MAP
+    glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_CUBE_MAP, texture);
+      continue;
+    }
+
+    // TODO(yorkie): support other texture targets like GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, etc.
+    m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, 0);
   }
   glActiveTexture(m_LastActiveTextureUnit);
 
@@ -147,27 +180,6 @@ void ContextGLHost::recordFromHost()
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
     DEBUG(LOG_TAG_ERROR, "Occurs an OpenGL error in recording %s context: 0x%04X", name(), error);
-}
-
-void ContextGLHost::recordTextureBindingFromHost()
-{
-  auto &binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
-  if (binding != nullptr)
-    return;
-
-  GLuint texture;
-  GLint beforeActiveUnit;
-  glGetIntegerv(GL_ACTIVE_TEXTURE, &beforeActiveUnit);
-
-  bool isActiveNotMatched = beforeActiveUnit != m_LastActiveTextureUnit;
-  if (isActiveNotMatched)
-    glActiveTexture(m_LastActiveTextureUnit);
-
-  glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
-  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
-
-  if (isActiveNotMatched)
-    glActiveTexture(beforeActiveUnit);
 }
 
 void ContextGLHost::restore()

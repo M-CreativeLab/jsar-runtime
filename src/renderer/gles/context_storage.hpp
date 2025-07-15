@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <optional>
 #include <common/viewport.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
@@ -33,15 +34,19 @@ private:
   std::string name_;
 };
 
-class OpenGLTextureBinding
+class GLTextureBinding
 {
 public:
-  OpenGLTextureBinding(GLenum target, GLuint texture)
+  GLTextureBinding()
+      : target_(GL_TEXTURE_2D)
+      , texture_(0)
+  {
+  }
+  GLTextureBinding(GLenum target, GLuint texture)
       : target_(target)
       , texture_(texture)
   {
   }
-  OpenGLTextureBinding(OpenGLTextureBinding &) = default;
 
   inline void reset(GLenum target, GLuint texture)
   {
@@ -55,6 +60,14 @@ public:
   inline GLint texture()
   {
     return texture_;
+  }
+
+  // Bind this texture to the specified texture unit.
+  // The `unit` should be one of the GL_TEXTURE0, GL_TEXTURE1, ..., GL_TEXTURE31.
+  inline void bindTo(GLenum unit)
+  {
+    glActiveTexture(unit);
+    glBindTexture(target_, texture_);
   }
 
 private:
@@ -275,8 +288,7 @@ public:
     m_RenderbufferId = from->m_RenderbufferId;
     m_VertexArrayObjectId = from->m_VertexArrayObjectId;
     m_LastActiveTextureUnit = from->m_LastActiveTextureUnit;
-    for (auto it = from->m_TextureBindingsWithUnit.begin(); it != from->m_TextureBindingsWithUnit.end(); it++)
-      m_TextureBindingsWithUnit[it->first] = std::make_shared<OpenGLTextureBinding>(*it->second);
+    m_TextureBindings = from->m_TextureBindings;
   }
   ~ContextGLStorage()
   {
@@ -393,7 +405,7 @@ protected: /** OpenGLES objects */
   std::optional<GLuint> m_RenderbufferId;
   GLint m_VertexArrayObjectId = 0;
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
-  std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
+  std::unordered_map<GLenum, GLTextureBinding> m_TextureBindings;
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>
