@@ -566,7 +566,7 @@ namespace renderer
   void TrContentRenderer::executeBackupFrame(int viewIndex)
   {
     auto &list = stereoFrameForBackup->getCommandBuffers(viewIndex);
-    if (list.size() > 0)
+    if (list.size() > 0) [[likely]]
     {
       TrBackupGLContextScope contextScopeForBackup(this);
       constellation->renderer->executeCommandBuffers(list, this, ExecutingPassType::kCachedXRFrame);
