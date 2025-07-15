@@ -246,13 +246,23 @@ namespace client_graphics
   public:
     WebGLState() = default;
 
+    // Check if the current drawing won't affect the color buffer.
+    inline bool hasNoColorMask() const
+    {
+      return !colorMask[0] && !colorMask[1] && !colorMask[2] && !colorMask[3];
+    }
+
   public:
+    // bindings
     std::optional<std::shared_ptr<WebGLProgram>> program = std::nullopt;
     std::optional<std::shared_ptr<WebGLVertexArray>> vertexArray = std::nullopt;
     std::optional<std::shared_ptr<WebGLBuffer>> vertexBuffer = std::nullopt;
     std::optional<std::shared_ptr<WebGLBuffer>> elementBuffer = std::nullopt;
     std::optional<std::shared_ptr<WebGLFramebuffer>> framebuffer = std::nullopt;
     std::optional<std::shared_ptr<WebGLRenderbuffer>> renderbuffer = std::nullopt;
+
+    // states
+    std::array<bool, 4> colorMask = {true, true, true, true};
   };
 
   /**

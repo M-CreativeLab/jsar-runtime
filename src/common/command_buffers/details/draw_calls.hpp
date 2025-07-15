@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/command_buffers/webgl_constants.hpp>
+
 #include "../shared.hpp"
 #include "../base.hpp"
 
@@ -106,7 +108,8 @@ namespace commandbuffers
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
-      ss << "GL::DrawElements(mode=" << mode << ", "
+      ss << "GL::DrawElements("
+         << WebGLHelper::WebGLEnumToString(mode) << ", "
          << count << ", "
          << indicesType << ", "
          << indicesOffset << ")";
@@ -148,11 +151,12 @@ namespace commandbuffers
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
-      ss << "GL::DrawElementsInstanced(mode=" << mode << ", "
-         << count << ", "
-         << indicesType << ", "
-         << indicesOffset << ", "
-         << instanceCount << ")";
+      ss << "GL::DrawElementsInstanced("
+         << WebGLHelper::WebGLEnumToString(mode) << ", "
+         << "count=" << count << ", "
+         << "type=" << WebGLHelper::WebGLEnumToString(indicesType) << ", "
+         << "offset=" << indicesOffset << ", "
+         << "instances=" << instanceCount << ")";
       return ss.str();
     }
 

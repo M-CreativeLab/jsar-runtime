@@ -1363,10 +1363,11 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::colorMask(bool red, bool green, bool blue, bool alpha)
+  void WebGLContext::colorMask(bool r, bool g, bool b, bool a)
   {
-    auto req = ColorMaskCommandBufferRequest(red, green, blue, alpha);
+    auto req = ColorMaskCommandBufferRequest(r, g, b, a);
     sendCommandBufferRequest(req);
+    clientState_.colorMask = {r, g, b, a};
   }
 
   void WebGLContext::cullFace(int mode)
@@ -1639,6 +1640,12 @@ namespace client_graphics
     static bool reported = false;
     if (TR_LIKELY(reported))
       return;
+
+    if (clientState_.hasNoColorMask())
+    {
+      // If the color mask is not set, we cannot report FCP, the FCP needs to be valid when the color buffer is updated.
+      return;
+    }
 
     commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
     sendCommandBufferRequestDirectly(req);

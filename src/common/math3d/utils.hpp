@@ -1,11 +1,57 @@
 #pragma once
 
 #include <cmath>
+#include <sstream>
+
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/random.hpp>
 
 namespace math3d
 {
+  // Utility functions for converting glm types to string representations: vec2(...)
+  inline std::string to_string(const glm::vec2 &v)
+  {
+    std::stringstream out;
+    out << "vec2(" << v.x << ", " << v.y << ")";
+    return out.str();
+  }
+
+  // Utility functions for converting glm types to string representations: vec3(...)
+  inline std::string to_string(const glm::vec3 &v)
+  {
+    std::stringstream out;
+    out << "vec3(" << v.x << ", " << v.y << ", " << v.z << ")";
+    return out.str();
+  }
+
+  // Utility functions for converting glm types to string representations: vec4(...)
+  inline std::string to_string(const glm::vec4 &v)
+  {
+    std::stringstream out;
+    out << "vec4(" << v.r << ", " << v.g << ", " << v.b << ", " << v.a << ")";
+    return out.str();
+  }
+
+  // Utility functions for converting glm types to string representations: mat4(...)
+  inline std::string to_string(const glm::mat4 &m)
+  {
+    std::stringstream out;
+    out << "mat4(";
+    for (int i = 0; i < 4; ++i)
+    {
+      out << m[i][0] << ", "
+          << m[i][1] << ", "
+          << m[i][2] << ", "
+          << m[i][3];
+      if (i < 3)
+        out << ", ";
+    }
+    out << ")";
+    return out.str();
+  }
+
   template <class T>
   constexpr typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
   almost_equal(T x, T y, int ulp = 4)

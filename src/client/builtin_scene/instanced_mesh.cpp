@@ -107,6 +107,20 @@ namespace builtin_scene
     }
   }
 
+  bool Instance::skipToDraw() const
+  {
+    // Skip if the instance is not enabled.
+    if (!enabled_)
+      return true; 
+
+    // Skip if the instance is transparent and not own a texture.
+    if (data_.isTransparent() && !data_.ownTexture())
+      return true;
+
+    // Otherwise, the instance is ready to draw.
+    return false;
+  }
+
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
                                                    shared_ptr<WebGLVertexArray> vao,
                                                    shared_ptr<WebGLBuffer> instanceVbo)
@@ -126,7 +140,7 @@ namespace builtin_scene
     {
       if (TR_UNLIKELY(instance == nullptr))
         continue;
-      if (!instance->enabled_)
+      if (instance->skipToDraw())
         continue;
 
       if (filter == InstanceFilter::kAll)
