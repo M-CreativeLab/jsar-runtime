@@ -249,11 +249,23 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
           setenv("JSAR_THREEPIO_API_MODELID", modelidStr, 1);
       }
 
+      // Command setprop jsar.renderer.tracing yes
+      // Effect: Enable the renderer tracing and print the tracing logs at `TR_GLES`.
       char enableRendererTracingStr[PROP_VALUE_MAX];
       if (
         __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
         strcmp(enableRendererTracingStr, "yes") == 0)
         renderer->enableTracing();
+
+      // Command: setprop jsar.renderer.clear_stencil no|disable
+      // Effect: Disable the stencil clear operation in the renderer.
+      char disableStencilClearStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.renderer.clear_stencil", disableStencilClearStr) >= 0)
+      {
+        if (strcmp(disableStencilClearStr, "no") == 0 ||
+            strcmp(disableStencilClearStr, "disable"))
+          renderer->disableStencilClear();
+      }
 
       char enablePrintHostContextSummaryStr[PROP_VALUE_MAX];
       if (

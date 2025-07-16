@@ -1,3 +1,5 @@
+#include <renderer/renderer.hpp>
+
 #include "./context_host.hpp"
 
 #ifndef GL_COMPUTE_SHADER
@@ -185,7 +187,10 @@ void ContextGLHost::recordFromHost()
 void ContextGLHost::restore()
 {
   ContextGLStorage::restore();
-  glClear(GL_STENCIL_BUFFER_BIT);
+
+  // Clear the host's stencil buffer because it might be written by the content renderers.
+  if (!renderer::TrRenderer::GetRendererRef().isStencilClearDisabled) [[likely]]
+    glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 void ContextGLHost::onHostFramebufferChanged()

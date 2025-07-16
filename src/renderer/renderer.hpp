@@ -46,9 +46,11 @@ namespace renderer
   {
     friend class TrContentRenderer;
 
-  private:
     using ContentRendererReference = std::shared_ptr<TrContentRenderer>;
     using ContentRenderersList = std::vector<ContentRendererReference>;
+
+  private:
+    static inline std::shared_ptr<TrRenderer> Instance_ = nullptr;
 
   public:
     /**
@@ -57,9 +59,19 @@ namespace renderer
      * @param constellation The constellation that the renderer belongs to.
      * @returns The created `TrRenderer` instance.
      */
-    static inline std::shared_ptr<TrRenderer> Make(TrConstellation *constellation)
+    static std::shared_ptr<TrRenderer> Make(TrConstellation *constellation)
     {
-      return std::make_shared<TrRenderer>(constellation);
+      assert(Instance_ == nullptr && "Renderer instance is already created.");
+      Instance_ = std::make_shared<TrRenderer>(constellation);
+      return Instance_;
+    }
+    /**
+     * Get the renderer instance.
+     */
+    static inline TrRenderer &GetRendererRef()
+    {
+      assert(Instance_ != nullptr && "Renderer instance is not created yet.");
+      return *Instance_;
     }
 
   public:
@@ -76,6 +88,14 @@ namespace renderer
     inline void enableTracing()
     {
       isTracingEnabled = true;
+    }
+    /**
+     * Disable the stencil clear, it allows the host not to clear the stencil buffer if the host embedder needs to 
+     * preserve the stencil buffer for some reason.
+     */
+    inline void disableStencilClear()
+    {
+      isStencilClearDisabled = true;
     }
     /**
      * Enable the host context summary.
@@ -232,6 +252,7 @@ namespace renderer
 
   public:
     bool isTracingEnabled = false;
+    bool isStencilClearDisabled = false;
     bool isHostContextSummaryEnabled = false;
     bool isAppContextSummaryEnabled = false;
     bool useDoubleWideFramebuffer = false;
