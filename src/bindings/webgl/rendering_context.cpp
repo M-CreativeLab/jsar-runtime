@@ -1443,11 +1443,11 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto size = info[1].As<Napi::Number>().Uint32Value();
-    auto type = info[2].As<Napi::Number>().Uint32Value();
-    auto stride = info[3].As<Napi::Number>().Uint32Value();
-    auto offset = info[4].As<Napi::Number>().Uint32Value();
+    auto index = info[0].ToNumber().Uint32Value();
+    auto size = info[1].ToNumber().Uint32Value();
+    auto type = info[2].ToNumber().Uint32Value();
+    auto stride = info[3].ToNumber().Uint32Value();
+    auto offset = info[4].ToNumber().Uint32Value();
 
     glContext_->vertexAttribIPointer(index, size, type, stride, offset);
     return env.Undefined();

@@ -1,9 +1,16 @@
 #pragma once
 
 #include <map>
-#include "common/command_buffers/details/program.hpp"
+#include <unordered_map>
+#include <chrono>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <common/command_buffers/details/program.hpp>
+
 #include "./webgl_object.hpp"
 #include "./webgl_active_info.hpp"
+#include "./webgl_attrib_location.hpp"
 #include "./webgl_uniform_location.hpp"
 
 namespace client_graphics
@@ -17,6 +24,15 @@ namespace client_graphics
     }
 
   public:
+    // Returns if this program is incomplete, it means the program response has not been received from channel peer.
+    bool isIncomplete() const
+    {
+      return incomplete_;
+    }
+    // Waits for the program to be completed, it will block until the program response is received from channel peer.
+    void waitForCompleted(int timeout = 2000) const;
+    // Calls setCompleted() when the program response is received from channel peer and updates the link status.
+    void setCompleted(bool linkStatus);
     /**
      * It sets the link status of the program.
      *
@@ -27,11 +43,19 @@ namespace client_graphics
       linkStatus_ = linkStatus;
     }
     /**
-     * @returns THe current link status of the program.
+     * This method gets the current link status of the program.
+     *
+     * @param sync If `true`, it will wait for the program to be completed before returning the link status.
+     * @returns The current link status of the program.
      */
-    bool getLinkStatus()
+    bool getLinkStatus(bool sync = false) const;
+    /**
+     * @returns The number of active attributes in the program.
+     */
+    size_t countActiveAttribs() const
     {
-      return linkStatus_;
+      waitForCompleted();
+      return activeAttribs_.size();
     }
     /**
      * @returns The active attribute information at the given index.
@@ -58,6 +82,14 @@ namespace client_graphics
       return activeAttribs_.find(index) != activeAttribs_.end();
     }
     /**
+     * @returns The number of active uniforms in the program.
+     */
+    size_t countActiveUniforms() const
+    {
+      waitForCompleted();
+      return activeUniforms_.size();
+    }
+    /**
      * @param index The index of the active uniform.
      * @returns The active uniform information at the given index.
      */
@@ -71,7 +103,7 @@ namespace client_graphics
      * @param index The index of the active uniform.
      * @param activeInfo The active uniform information.
      */
-    void setActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo)
+    void setActiveUniform(int index, const commandbuffers::ActiveInfo &activeInfo)
     {
       activeUniforms_[index] = activeInfo;
     }
@@ -91,7 +123,7 @@ namespace client_graphics
      */
     void setAttribLocation(const std::string &name, int location)
     {
-      attribLocations_[name] = location;
+      attribLocations_[name] = WebGLAttribLocation(id, location, name);
     }
     /**
      * @param name The name of the attribute.
@@ -105,7 +137,7 @@ namespace client_graphics
      * @param name The name of the attribute.
      * @returns The attribute location for the given name.
      */
-    int getAttribLocation(const std::string &name)
+    const WebGLAttribLocation &getAttribLocation(const std::string &name)
     {
       return attribLocations_[name];
     }
@@ -117,7 +149,7 @@ namespace client_graphics
      */
     void setUniformLocation(const std::string &name, int location)
     {
-      uniformLocations_[name] = WebGLUniformLocation(location, name);
+      uniformLocations_[name] = WebGLUniformLocation(id, location, name);
     }
     /**
      * @param name The name of the uniform.
@@ -131,7 +163,7 @@ namespace client_graphics
      * @param name The name of the uniform.
      * @returns The uniform location for the given name.
      */
-    WebGLUniformLocation getUniformLocation(const std::string &name)
+    const WebGLUniformLocation &getUniformLocation(const std::string &name)
     {
       return uniformLocations_[name];
     }
@@ -172,39 +204,18 @@ namespace client_graphics
      * - Attribute locations
      * - Uniform locations
      */
-    void printInfo()
-    {
-      std::cout << "Program " << id << " info:" << std::endl;
-      std::cout << "Link status: " << (linkStatus_ ? "true" : "false") << std::endl;
-      std::cout << "Active attributes:" << std::endl;
-      for (auto &pair : activeAttribs_)
-      {
-        auto activeInfo = pair.second;
-        std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-      }
-
-      std::cout << "Active uniforms:" << std::endl;
-      for (auto &pair : activeUniforms_)
-      {
-        auto activeInfo = pair.second;
-        std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-      }
-
-      std::cout << "Attribute locations:" << std::endl;
-      for (auto &pair : attribLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second << std::endl;
-
-      std::cout << "Uniform locations:" << std::endl;
-      for (auto &pair : uniformLocations_)
-        std::cout << "  " << pair.first << ": " << pair.second.index << std::endl;
-    }
+    void printInfo() const;
 
   private:
+    std::atomic<bool> incomplete_ = true;
+    mutable std::mutex setCompletedMutex_;
+    mutable std::condition_variable setCompletedCv_;
+
     bool linkStatus_ = false;
     std::map<int, WebGLActiveInfo> activeAttribs_;
     std::map<int, WebGLActiveInfo> activeUniforms_;
-    std::map<std::string, int> attribLocations_;
-    std::map<std::string, WebGLUniformLocation> uniformLocations_;
+    std::unordered_map<std::string, WebGLAttribLocation> attribLocations_;
+    std::unordered_map<std::string, WebGLUniformLocation> uniformLocations_;
     std::map<std::string, int> uniformBlockIndices_;
   };
 }

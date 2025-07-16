@@ -3,18 +3,23 @@
 #include <optional>
 #include <memory>
 #include <unordered_map>
+#include <common/classes.hpp>
+#include <common/command_buffers/details/uniforms.hpp>
+#include <common/command_buffers/details/vertex_attrib.hpp>
 
 #include "./context_storage.hpp"
 #include "./framebuffer.hpp"
-
-typedef GLuint HostFramebufferIdentifier;
+#include "./gpu_command_encoder_impl.hpp"
 
 class ContextGLHost;
 class ContextGLApp : public ContextGLStorage
 {
 public:
-  ContextGLApp(std::string name);
-  ContextGLApp(std::string name, ContextGLApp *from);
+  // Create a new context for the content renderer.
+  ContextGLApp(std::string name, std::shared_ptr<renderer::TrContentRenderer>);
+  // Create a new context which inherits from another context. And `defaultRenderTarget` is the default framebuffer to
+  // be used in this context.
+  ContextGLApp(std::string name, ContextGLApp *from, std::optional<GLuint> defaultRenderTarget = std::nullopt);
 
 public:
   // Initialize the render target(framebuffer) for this context.
@@ -51,19 +56,58 @@ public:
   void RecordSamplerOnCreated(GLuint sampler);
   void RecordSamplerOnDeleted(GLuint sampler);
 
+public: // GLES Implementations
+  // State
+  void setViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+  void setScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+  void setClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+  void setClearDepth(GLfloat depth);
+  void setClearStencil(GLint s);
+
+  // Program functions
+  GLuint createProgram(uint32_t id);
+  void deleteProgram(uint32_t id, GLuint &program);
+  void useProgram(uint32_t id, GLuint &program);
+
+  // Framebuffer functions
+  void bindFramebuffer(GLenum target, std::optional<uint32_t> id, GLuint &framebuffer);
+
+  // Texture functions
+  void activeTexture(GLenum textureUnit);
+  void bindTexture(GLenum target, uint32_t id, GLuint &texture);
+
+  // Draw functions
+  void drawArrays(GLenum mode, GLint first, GLsizei count);
+  void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
+  void drawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
+  void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instancecount);
+  void drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
+
+public: // GLES Helpers
+  std::optional<GLint> getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *) const;
+  std::optional<GLint> getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *) const;
+
 public:
   void MarkAsDirty();
   bool IsDirty();
   bool IsChanged(ContextGLApp *other);
+  // Returns if the GL_FRAMEBUFFER binding is the default render target.
+  bool IsDefaultRenderTargetBinding() const;
 
 public:
-  gles::GLObjectManager &ObjectManagerRef()
+  renderer::TrContentRenderer &contentRendererChecked() const;
+  gles::GLObjectManager &ObjectManagerRef() const
   {
     return *m_GLObjectManager;
   }
 
 private:
+  [[nodiscard]] bool shouldExecuteDrawOnCurrent(GLsizei count);
+  void onAfterDraw(int drawCount);
+
+private:
   bool m_Dirty = false;
+  std::weak_ptr<renderer::TrContentRenderer> m_ContentRenderer;
   GLuint m_CurrentDefaultRenderTarget;
 
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;

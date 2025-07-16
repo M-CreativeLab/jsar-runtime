@@ -7,6 +7,8 @@
 #include <common/ipc.hpp>
 #include <common/scoped_thread.hpp>
 #include <common/command_buffers/shared.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
+#include <common/command_buffers/gpu/gpu_command_buffer.hpp>
 #include <common/frame_request/types.hpp>
 #include <common/frame_request/sender.hpp>
 #include <common/xr/types.hpp>
@@ -14,13 +16,16 @@
 #include <xr/device.hpp>
 
 #include "./gles/context_storage.hpp"
+#include "./render_api.hpp"
 
 using namespace std;
 using namespace commandbuffers;
 
 namespace renderer
 {
+  class TrRenderer;
   class TrContentRenderer;
+
   /**
    * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
    *
@@ -39,15 +44,16 @@ namespace renderer
 
   private:
     TrContentRenderer *contentRenderer;
+    ExecutingPassType previousPass = ExecutingPassType::kDefaultFrame;
   };
 
-  class TrContentRenderer final
+  class TrContentRenderer final : public std::enable_shared_from_this<TrContentRenderer>
   {
+    friend class ::TrInspector;
+    friend class xr::TrXRSession;
     friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
-    friend class ::TrInspector;
-    friend class xr::TrXRSession;
 
   public:
     /**
@@ -77,12 +83,14 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    ContextGLApp *getOpenGLContext();
-    inline shared_ptr<TrContentRuntime> getContent()
+    // Returns the current using GL context.
+    ContextGLApp *getContextGL() const;
+    inline shared_ptr<TrContentRuntime> getContent() const
     {
       return content.lock();
     }
-    pid_t getContentPid();
+    pid_t getContentPid() const;
+    TrRenderer &getRendererRef() const;
 
   public:
     /**
@@ -94,30 +102,25 @@ namespace renderer
     {
       onCommandBufferRequestReceived(req);
     }
-    /**
-     * Mark the last frame has OOM error.
-     */
+
+    // State updates
     inline void markOccurOutOfMemoryError()
     {
       lastFrameHasOutOfMemoryError = true;
     }
-    /**
-     * Increase the frame errors count.
-     */
     inline void increaseFrameErrorsCount()
     {
       lastFrameErrorsCount++;
     }
-    /**
-     * Increase the draw calls count.
-     * 
-     * @param count The count to be increased.
-     */
     inline void increaseDrawCallsCount(int count = 1)
     {
       drawCallsPerFrame += 1;
       drawCallsCountPerFrame += count;
     }
+
+    // Offscreen pass controls
+    void resetOffscreenPassGLContext(std::optional<GLuint> framebuffer);
+    void scheduleCommandBufferAtOffscreenPass(TrCommandBufferBase *req);
 
   private: // private lifecycle
     /**
@@ -126,7 +129,10 @@ namespace renderer
      * @param req The command buffer request to be handled.
      */
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
-    void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
+    void onOpaquesRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
+    void onTransparentsRenderPass(chrono::time_point<chrono::high_resolution_clock> time);
+    void onOffscreenRenderPass();
+
     void onStartFrame();
     void onEndFrame();
 
@@ -138,16 +144,15 @@ namespace renderer
      * is called in the render thread which is allowed to use the graphics APIs.
      */
     void initializeGraphicsContextsOnce();
-    /**
-     * Execute command buffers from content's list.
-     *
-     * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
-     *                  could be executed.
-     * @param viewIndex Used when `asXRFrame` is true, it specific the `viewIndex`.
-     */
-    void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
-    bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
-    void executeBackupFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
+
+    // Executes the command buffers at the default frame
+    void executeCommandBuffersAtDefaultFrame();
+    void executeCommandBuffersAtOffscreenPass();
+    // Executes the command buffers at the XR frame with the view index.
+    void executeCommandBuffersAtXRFrame(int viewIndex);
+
+    bool executeStereoFrame(int viewIndex);
+    void executeBackupFrame(int viewIndex);
     size_t getPendingStereoFramesCount();
 
   public:
@@ -157,17 +162,25 @@ namespace renderer
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
+    xr::Device *xrDevice = nullptr;
+
+    bool isGraphicsContextsInitialized = false;
+    ExecutingPassType currentPass = ExecutingPassType::kDefaultFrame;
+    // TODO(yorkie): Remove this when gpu device is ready, because WebGPU is context-less.
     std::unique_ptr<ContextGLApp> glContext;
     std::unique_ptr<ContextGLApp> glContextForBackup;
-    bool isGraphicsContextsInitialized = false;
-    bool usingBackupContext = false;
-    xr::Device *xrDevice = nullptr;
 
   private: // command buffers & rendering frames
     std::shared_mutex commandBufferRequestsMutex;
+    // TODO(yorkie): use `GPUCommandBuffer` later.
     std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     std::atomic<bool> isDefaultCommandQueuePending = false;
     std::atomic<uint32_t> defaultCommandQueueSkipTimes = 0;
+
+    // The recorded command buffers which render to other render textures, such as shadow maps, reflection maps, etc.
+    // TODO(yorkie): support multi-stage offscreen pass?
+    std::vector<TrCommandBufferBase *> commandBuffersOnOffscreenPass;
+    std::optional<ContextGLApp> glContextOnOffscreenPass;
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;

@@ -1,10 +1,14 @@
 #pragma once
 
 #include <concepts>
+#include <iostream>
+#include <sstream>
 #include <unordered_map>
 #include <shared_mutex>
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
+
+#include <common/math3d/utils.hpp>
 #include <client/graphics/webgl_context.hpp>
 
 #include "./ecs.hpp"
@@ -32,6 +36,30 @@ namespace builtin_scene
     glm::vec2 texUvOffset; /** 22 */
     glm::vec2 texUvScale;  /** 24 */
     uint32_t texLayerIndex;
+
+    friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
+    {
+      os << "InstanceData(" << std::endl
+         << "  transform=" << math3d::to_string(data.transform) << std::endl
+         << "  color=" << math3d::to_string(data.color) << std::endl
+         << "  texUvOffset=" << math3d::to_string(data.texUvOffset) << std::endl
+         << "  texUvScale=" << math3d::to_string(data.texUvScale) << std::endl
+         << "  texLayerIndex=" << data.texLayerIndex << std::endl
+         << ")";
+      return os;
+    }
+
+    // If the instance is transparent(alpha = 0.0f).
+    inline bool isTransparent() const
+    {
+      return color.a == 0.0f;
+    }
+
+    // If the instance own texture to draw.
+    inline bool ownTexture() const
+    {
+      return texUvScale.x > 0.0f || texUvScale.y > 0.0f;
+    }
   };
 
   class Instance
@@ -82,6 +110,8 @@ namespace builtin_scene
     void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
     // Notify the holders that the instance data is updated.
     void notifyHolders();
+    // Returns `true` if the instance should be skipped to draw.
+    bool skipToDraw() const;
 
   private:
     InstanceData data_;
@@ -193,7 +223,10 @@ namespace builtin_scene
      * @returns The number of instance attributes.
      */
     size_t iterateInstanceAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                     std::function<void(const IVertexAttribute &, int, size_t, size_t)> callback) const;
+                                     std::function<void(const IVertexAttribute &,
+                                                        int,
+                                                        size_t,
+                                                        size_t)> callback) const;
     /**
      * Get the instance count of this mesh.
      *

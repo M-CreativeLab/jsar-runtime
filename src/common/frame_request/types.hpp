@@ -105,13 +105,13 @@ namespace frame_request
   class TrFrameRequestSimple : public TrFrameRequestBase
   {
   public:
-    TrFrameRequestSimple(TrFrameRequestSimple &that)
-        : TrFrameRequestBase(that.type, that.size)
-        , time(that.time)
-    {
-    }
     TrFrameRequestSimple(TrFrameRequestType type)
         : TrFrameRequestBase(type, sizeof(T))
+    {
+    }
+    TrFrameRequestSimple(const TrFrameRequestSimple &that, bool clone = false)
+        : TrFrameRequestBase(that.type, that.size)
+        , time(that.time)
     {
     }
 
@@ -128,11 +128,9 @@ namespace frame_request
 
   class TrAnimationFrameRequest : public TrFrameRequestSimple<TrAnimationFrameRequest>
   {
+    using TrFrameRequestSimple::TrFrameRequestSimple;
+
   public:
-    TrAnimationFrameRequest(TrAnimationFrameRequest &that)
-        : TrFrameRequestSimple(that)
-    {
-    }
     TrAnimationFrameRequest()
         : TrFrameRequestSimple(TrFrameRequestType::AnimationFrame)
     {

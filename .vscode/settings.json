@@ -97,7 +97,8 @@
     "memory_resource": "cpp",
     "__availability": "cpp",
     "span": "cpp",
-    "execution": "cpp"
+    "execution": "cpp",
+    "cassert": "cpp"
   },
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",

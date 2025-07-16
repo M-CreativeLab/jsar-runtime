@@ -15,6 +15,18 @@ namespace commandbuffers
         , mask(mask)
     {
     }
+    ClearCommandBufferRequest(const ClearCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mask(that.mask)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << mask << ")";
+      return ss.str();
+    }
 
   public:
     int mask;
@@ -33,6 +45,25 @@ namespace commandbuffers
         , b(b)
         , a(a)
     {
+    }
+    ClearColorCommandBufferRequest(const ClearColorCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , r(that.r)
+        , g(that.g)
+        , b(that.b)
+        , a(that.a)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << r << ", "
+         << g << ", "
+         << b << ", "
+         << a << ")";
+      return ss.str();
     }
 
   public:
@@ -53,6 +84,18 @@ namespace commandbuffers
         , depth(depth)
     {
     }
+    ClearDepthCommandBufferRequest(const ClearDepthCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , depth(that.depth)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << depth << ")";
+      return ss.str();
+    }
 
   public:
     float depth;
@@ -68,6 +111,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , stencil(stencil)
     {
+    }
+    ClearStencilCommandBufferRequest(const ClearStencilCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , stencil(that.stencil)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << stencil << ")";
+      return ss.str();
     }
 
   public:

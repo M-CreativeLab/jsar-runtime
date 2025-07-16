@@ -107,6 +107,20 @@ namespace builtin_scene
     }
   }
 
+  bool Instance::skipToDraw() const
+  {
+    // Skip if the instance is not enabled.
+    if (!enabled_)
+      return true;
+
+    // Skip if the instance is transparent and not own a texture.
+    if (data_.isTransparent() && !data_.ownTexture())
+      return true;
+
+    // Otherwise, the instance is ready to draw.
+    return false;
+  }
+
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
                                                    shared_ptr<WebGLVertexArray> vao,
                                                    shared_ptr<WebGLBuffer> instanceVbo)
@@ -126,7 +140,7 @@ namespace builtin_scene
     {
       if (TR_UNLIKELY(instance == nullptr))
         continue;
-      if (!instance->enabled_)
+      if (instance->skipToDraw())
         continue;
 
       if (filter == InstanceFilter::kAll)
@@ -223,7 +237,10 @@ namespace builtin_scene
   }
 
   size_t InstancedMeshBase::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,
-                                                      function<void(const IVertexAttribute &, int, size_t, size_t)> callback) const
+                                                      function<void(const IVertexAttribute &,
+                                                                    int,
+                                                                    size_t,
+                                                                    size_t)> callback) const
   {
     auto glContext = glContext_.lock();
     if (glContext == nullptr)
@@ -234,10 +251,10 @@ namespace builtin_scene
     for (size_t i = 0; i < INSTANCE_ATTRIBUTES.size(); i++)
     {
       auto &name = INSTANCE_ATTRIBUTES[i];
-      auto index = glContext->getAttribLocation(program, name);
-      if (index.has_value())
+      auto attribLocation = glContext->getAttribLocation(program, name);
+      if (attribLocation.has_value())
       {
-        auto instanceIndex = index.value();
+        auto instanceIndex = attribLocation.value().index.value_or(-1);
         if (name == "instanceTransform")
         {
           for (int i = 0; i < 4; i++)

@@ -7,24 +7,25 @@
 #include <atomic>
 #include <memory>
 
-#include "common/classes.hpp"
-#include "common/viewport.hpp"
-#include "common/ipc.hpp"
-#include "common/command_buffers/command_buffers.hpp"
-#include "common/frame_request/types.hpp"
-#include "common/analytics/perf_counter.hpp"
-#include "common/collision/ray.hpp"
-#include "xr/device.hpp"
+#include <common/classes.hpp>
+#include <common/viewport.hpp>
+#include <common/ipc.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <common/frame_request/types.hpp>
+#include <common/analytics/perf_counter.hpp>
+#include <common/collision/ray.hpp>
+#include <xr/device.hpp>
 
 #include "./gles/context_storage.hpp"
 #include "./content_renderer.hpp"
+#include "./render_api.hpp"
 
 using namespace std;
 using namespace commandbuffers;
 using namespace frame_request;
 using namespace collision;
 
-class RenderAPI;
+class TrRenderHardwareInterface;
 
 namespace renderer
 {
@@ -45,9 +46,11 @@ namespace renderer
   {
     friend class TrContentRenderer;
 
-  private:
     using ContentRendererReference = std::shared_ptr<TrContentRenderer>;
     using ContentRenderersList = std::vector<ContentRendererReference>;
+
+  private:
+    static inline std::shared_ptr<TrRenderer> Instance_ = nullptr;
 
   public:
     /**
@@ -56,9 +59,19 @@ namespace renderer
      * @param constellation The constellation that the renderer belongs to.
      * @returns The created `TrRenderer` instance.
      */
-    static inline std::shared_ptr<TrRenderer> Make(TrConstellation *constellation)
+    static std::shared_ptr<TrRenderer> Make(TrConstellation *constellation)
     {
-      return std::make_shared<TrRenderer>(constellation);
+      assert(Instance_ == nullptr && "Renderer instance is already created.");
+      Instance_ = std::make_shared<TrRenderer>(constellation);
+      return Instance_;
+    }
+    /**
+     * Get the renderer instance.
+     */
+    static inline TrRenderer &GetRendererRef()
+    {
+      assert(Instance_ != nullptr && "Renderer instance is not created yet.");
+      return *Instance_;
     }
 
   public:
@@ -67,8 +80,6 @@ namespace renderer
 
   public:
     void initialize();
-    void onOpaquesRenderPass(analytics::PerformanceCounter &);
-    void onTransparentsRenderPass(analytics::PerformanceCounter &);
     void shutdown();
     void setLogFilter(string filterExpr);
     /**
@@ -77,6 +88,14 @@ namespace renderer
     inline void enableTracing()
     {
       isTracingEnabled = true;
+    }
+    /**
+     * Disable the stencil clear, it allows the host not to clear the stencil buffer if the host embedder needs to 
+     * preserve the stencil buffer for some reason.
+     */
+    inline void disableStencilClear()
+    {
+      isStencilClearDisabled = true;
     }
     /**
      * Enable the host context summary.
@@ -136,15 +155,20 @@ namespace renderer
     {
       commandBufferChanServer->removeClient(client);
     }
-    void setApi(RenderAPI *api);
-    RenderAPI *getApi();
+    void setRHI(TrRenderHardwareInterface *);
+    TrRenderHardwareInterface *getRHI();
     /**
      * @returns The host graphics context.
      */
-    ContextGLHost *getOpenGLContext()
+    ContextGLHost *getContextGL()
     {
       return glHostContext;
     }
+
+    void onOpaquesRenderPass(analytics::PerformanceCounter &);
+    void onTransparentsRenderPass(analytics::PerformanceCounter &);
+    void onBeforeRendering();
+    void onAfterRendering();
 
   public: // API for content renderer
     /**
@@ -221,18 +245,21 @@ namespace renderer
   private:
     void startWatchers();
     void stopWatchers();
-    bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
+    bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &list,
+                               TrContentRenderer *,
+                               ExecutingPassType);
     void calcFps();
 
   public:
     bool isTracingEnabled = false;
+    bool isStencilClearDisabled = false;
     bool isHostContextSummaryEnabled = false;
     bool isAppContextSummaryEnabled = false;
     bool useDoubleWideFramebuffer = false;
     uint32_t clientDefaultFrameRate = 45;
 
   private:
-    RenderAPI *api = nullptr;
+    TrRenderHardwareInterface *rhi = nullptr;
     TrConstellation *constellation = nullptr;
     ContextGLHost *glHostContext = nullptr;
     ContentRenderersList contentRenderers;

@@ -271,10 +271,11 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
     }
 
     auto contentRenderer = renderer->getContentRenderer(id, contextId);
-    if (TR_UNLIKELY(contentRenderer == nullptr))
+    if (contentRenderer == nullptr) [[unlikely]]
     {
+      DEBUG(LOG_TAG_ERROR, "Failed to dispatch command buffer request(%d):", commandBuffer->type);
       DEBUG(LOG_TAG_ERROR,
-            "There is no available ContentRenderer for the content(%d) with context(%d)",
+            "  There is no available ContentRenderer for the content(%d) with context(%d)",
             id,
             static_cast<int>(contextId));
       delete commandBuffer;

@@ -1,8 +1,18 @@
+#include <common/command_buffers/webgl_constants.hpp>
+#include <renderer/content_renderer.hpp>
+#include <renderer/renderer.hpp>
+#include <renderer/render_api.hpp>
+
 #include "./context_app.hpp"
 #include "./context_host.hpp"
+#include "./gpu_command_buffer_impl.hpp"
+#include "./gpu_pipeline_impl.hpp"
 
-ContextGLApp::ContextGLApp(string name)
+using namespace std;
+
+ContextGLApp::ContextGLApp(string name, shared_ptr<renderer::TrContentRenderer> content_renderer)
     : ContextGLStorage(name)
+    , m_ContentRenderer(content_renderer)
     , m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
 {
   /**
@@ -53,11 +63,15 @@ ContextGLApp::ContextGLApp(string name)
   }
 }
 
-ContextGLApp::ContextGLApp(string name, ContextGLApp *from)
+ContextGLApp::ContextGLApp(string name, ContextGLApp *from, optional<GLuint> defaultRenderTarget)
     : ContextGLStorage(name, from)
-    , m_CurrentDefaultRenderTarget(from->m_CurrentDefaultRenderTarget)
+    , m_ContentRenderer(from->m_ContentRenderer)
+    , m_CurrentDefaultRenderTarget(defaultRenderTarget.value_or(from->m_CurrentDefaultRenderTarget))
     , m_GLObjectManager(from->m_GLObjectManager)
 {
+  m_FramebufferId = m_CurrentDefaultRenderTarget;
+  m_ProgramId = from->m_ProgramId;
+
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
   m_Shaders = OpenGLNamesStorage(&from->m_Shaders);
   m_Buffers = OpenGLNamesStorage(&from->m_Buffers);
@@ -108,7 +122,8 @@ void ContextGLApp::onElementBufferChanged(int ebo)
 
 void ContextGLApp::onFramebufferChanged(int fbo)
 {
-  m_FramebufferId = fbo;
+  if (!m_FramebufferId.has_value() || m_FramebufferId != fbo)
+    m_FramebufferId = fbo;
 }
 
 void ContextGLApp::onRenderbufferChanged(int rbo)
@@ -128,14 +143,7 @@ void ContextGLApp::onActiveTextureUnitChanged(int active_unit)
 
 void ContextGLApp::onTextureBindingChanged(GLenum target, GLuint texture)
 {
-  GLint activeUnit;
-  glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-
-  auto &binding = m_TextureBindingsWithUnit[activeUnit];
-  if (binding == nullptr)
-    m_TextureBindingsWithUnit[activeUnit] = make_shared<OpenGLTextureBinding>(target, texture);
-  else
-    binding->reset(target, texture);
+  m_TextureBindings[m_LastActiveTextureUnit] = GLTextureBinding(target, texture);
 }
 
 void ContextGLApp::RecordProgramOnCreated(GLuint program)
@@ -283,6 +291,182 @@ void ContextGLApp::RecordSamplerOnDeleted(GLuint sampler)
   m_Samplers.erase(sampler);
 }
 
+void ContextGLApp::setViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  glViewport(x, y, width, height);
+  onViewportChanged(x, y, width, height);
+}
+
+void ContextGLApp::setScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  glScissor(x, y, width, height);
+}
+
+void ContextGLApp::setClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+  glClearColor(red, green, blue, alpha);
+  m_ClearColor = {red, green, blue, alpha};
+}
+
+void ContextGLApp::setClearDepth(GLfloat depth)
+{
+  glClearDepthf(depth);
+  m_ClearDepth = depth;
+}
+
+void ContextGLApp::setClearStencil(GLint s)
+{
+  glClearStencil(s);
+  m_ClearStencil = s;
+}
+
+GLuint ContextGLApp::createProgram(uint32_t id)
+{
+  GLuint program = ObjectManagerRef().CreateProgram(id);
+  RecordProgramOnCreated(program);
+  return program;
+}
+
+void ContextGLApp::deleteProgram(uint32_t id, GLuint &program)
+{
+  program = ObjectManagerRef().FindProgram(id);
+  ObjectManagerRef().DeleteProgram(id);
+
+  /**
+   * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
+   * context using the deleted program.
+   */
+  resetProgram(program);
+  RecordProgramOnDeleted(program);
+}
+
+void ContextGLApp::useProgram(uint32_t id, GLuint &program)
+{
+  program = ObjectManagerRef().FindProgram(id);
+  glUseProgram(program);
+  onProgramChanged(program);
+}
+
+void ContextGLApp::bindFramebuffer(GLenum target, optional<uint32_t> id, GLuint &framebuffer)
+{
+  if (!id.has_value())
+  {
+    framebuffer = currentDefaultRenderTarget();
+  }
+  else
+  {
+    framebuffer = ObjectManagerRef().FindFramebuffer(id.value());
+  }
+
+  glBindFramebuffer(target, framebuffer);
+  onFramebufferChanged(framebuffer);
+}
+
+void ContextGLApp::activeTexture(GLenum unit)
+{
+  glActiveTexture(unit);
+  onActiveTextureUnitChanged(unit);
+}
+
+void ContextGLApp::bindTexture(GLenum target, uint32_t id, GLuint &texture)
+{
+  texture = ObjectManagerRef().FindTexture(id);
+  glBindTexture(target, texture);
+  onTextureBindingChanged(target, texture);
+}
+
+void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawArrays(mode, first, count);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawElements(mode, count, type, indices);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawArraysInstanced(mode, first, count, instancecount);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawElementsInstanced(GLenum mode,
+                                         GLsizei count,
+                                         GLenum type,
+                                         const GLvoid *indices,
+                                         GLsizei instancecount)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawElementsInstanced(mode, count, type, indices, instancecount);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawRangeElements(GLenum mode,
+                                     GLuint start,
+                                     GLuint end,
+                                     GLsizei count,
+                                     GLenum type,
+                                     const GLvoid *indices)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawRangeElements(mode, start, end, count, type, indices);
+    onAfterDraw(count);
+  }
+}
+
+std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *req) const
+{
+  optional<GLint> loc = nullopt;
+  if (req->locationAvailable)
+  {
+    loc = req->location;
+  }
+  else
+  {
+    GLuint program = ObjectManagerRef().FindProgram(req->program);
+    if (program != 0) [[likely]]
+    {
+      loc = glGetAttribLocation(program, req->locationQueryName.c_str());
+      if (loc == -1)
+        loc = nullopt; // If the location is not found, return nullopt
+    }
+  }
+  return loc;
+}
+
+optional<GLint> ContextGLApp::getUniformLoc(commandbuffers::SetUniformCommandBufferRequestBase *req) const
+{
+  optional<GLint> loc = nullopt;
+  if (req->locationAvailable)
+  {
+    loc = req->location;
+  }
+  else
+  {
+    GLuint program = ObjectManagerRef().FindProgram(req->program);
+    if (program != 0) [[likely]]
+    {
+      loc = glGetUniformLocation(program, req->locationQueryName.c_str());
+    }
+  }
+  return loc;
+}
+
 void ContextGLApp::MarkAsDirty()
 {
   m_Dirty = true;
@@ -356,4 +540,35 @@ bool ContextGLApp::IsChanged(ContextGLApp *other)
 
   // No changes
   return false;
+}
+
+bool ContextGLApp::IsDefaultRenderTargetBinding() const
+{
+  return !m_FramebufferId.has_value() ||
+         m_FramebufferId == m_CurrentDefaultRenderTarget;
+  return true;
+}
+
+renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
+{
+  auto contentRenderer = m_ContentRenderer.lock();
+  assert(contentRenderer != nullptr && "Content renderer must not be null");
+  return *contentRenderer;
+}
+
+bool ContextGLApp::shouldExecuteDrawOnCurrent(GLsizei count)
+{
+  assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
+  if (m_FramebufferId.has_value() &&
+      m_FramebufferId.value() == 0)
+  {
+    DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not set.");
+    return false;
+  }
+  return true;
+}
+
+void ContextGLApp::onAfterDraw(int draw_count)
+{
+  contentRendererChecked().increaseDrawCallsCount(draw_count);
 }

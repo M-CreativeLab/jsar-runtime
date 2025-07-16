@@ -16,6 +16,12 @@ namespace commandbuffers
         , viewIndex(viewIndex)
     {
     }
+    XRFrameStartCommandBufferRequest(const XRFrameStartCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , stereoId(that.stereoId)
+        , viewIndex(that.viewIndex)
+    {
+    }
 
   public:
     int stereoId;
@@ -37,6 +43,12 @@ namespace commandbuffers
         , viewIndex(viewIndex)
     {
     }
+    XRFrameFlushCommandBufferRequest(const XRFrameFlushCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , stereoId(that.stereoId)
+        , viewIndex(that.viewIndex)
+    {
+    }
 
   public:
     int stereoId;
@@ -52,6 +64,12 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , stereoId(stereoId)
         , viewIndex(viewIndex)
+    {
+    }
+    XRFrameEndCommandBufferRequest(const XRFrameEndCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , stereoId(that.stereoId)
+        , viewIndex(that.viewIndex)
     {
     }
 

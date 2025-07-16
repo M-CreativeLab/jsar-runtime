@@ -1,7 +1,10 @@
 #pragma once
 
 #include <map>
-#include "common/command_buffers/details/properties.hpp"
+#include <string>
+#include <iostream>
+#include <common/command_buffers/details/properties.hpp>
+
 #include "./webgl_object.hpp"
 
 namespace client_graphics
@@ -9,6 +12,7 @@ namespace client_graphics
   class WebGLShaderPrecisionFormat
   {
   public:
+    WebGLShaderPrecisionFormat() = default;
     WebGLShaderPrecisionFormat(int rangeMin, int rangeMax, int precision)
         : rangeMin(rangeMin)
         , rangeMax(rangeMax)
@@ -22,9 +26,17 @@ namespace client_graphics
     {
     }
 
+    friend std::ostream &operator<<(std::ostream &os, const WebGLShaderPrecisionFormat &format)
+    {
+      os << "WebGLShaderPrecisionFormat("
+         << "[" << format.rangeMin << ", " << format.rangeMax << "], "
+         << format.precision << ")";
+      return os;
+    }
+
   public:
-    const int rangeMin;
-    const int rangeMax;
-    const int precision;
+    int rangeMin = 0;
+    int rangeMax = 0;
+    int precision = 0;
   };
 }

@@ -16,6 +16,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateSamplerCommandBufferRequest(const CreateSamplerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -30,6 +35,11 @@ namespace commandbuffers
     DeleteSamplerCommandBufferRequest(uint32_t sampler)
         : TrCommandBufferSimpleRequest()
         , sampler(sampler)
+    {
+    }
+    DeleteSamplerCommandBufferRequest(const DeleteSamplerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sampler(that.sampler)
     {
     }
 
@@ -49,6 +59,12 @@ namespace commandbuffers
         , sampler(sampler)
     {
     }
+    BindSamplerCommandBufferRequest(const BindSamplerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , unit(that.unit)
+        , sampler(that.sampler)
+    {
+    }
 
   public:
     uint32_t unit;
@@ -66,6 +82,13 @@ namespace commandbuffers
         , sampler(sampler)
         , pname(pname)
         , param(param)
+    {
+    }
+    SamplerParameteriCommandBufferRequest(const SamplerParameteriCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sampler(that.sampler)
+        , pname(that.pname)
+        , param(that.param)
     {
     }
 
@@ -88,6 +111,13 @@ namespace commandbuffers
         , param(param)
     {
     }
+    SamplerParameterfCommandBufferRequest(const SamplerParameterfCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sampler(that.sampler)
+        , pname(that.pname)
+        , param(that.param)
+    {
+    }
 
   public:
     uint32_t sampler;
@@ -107,6 +137,12 @@ namespace commandbuffers
         , pname(pname)
     {
     }
+    GetSamplerParameterCommandBufferRequest(const GetSamplerParameterCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sampler(that.sampler)
+        , pname(that.pname)
+    {
+    }
 
   public:
     uint32_t sampler;
@@ -120,6 +156,16 @@ namespace commandbuffers
     GetSamplerParameterCommandBufferResponse(GetSamplerParameterCommandBufferRequest *req, int value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req)
         , value(value)
+    {
+    }
+    GetSamplerParameterCommandBufferResponse(GetSamplerParameterCommandBufferRequest *req, float value)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req)
+        , value(value)
+    {
+    }
+    GetSamplerParameterCommandBufferResponse(const GetSamplerParameterCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
 
@@ -138,6 +184,11 @@ namespace commandbuffers
         , sampler(sampler)
     {
     }
+    IsSamplerCommandBufferRequest(const IsSamplerCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , sampler(that.sampler)
+    {
+    }
 
   public:
     uint32_t sampler;
@@ -150,6 +201,11 @@ namespace commandbuffers
     IsSamplerCommandBufferResponse(IsSamplerCommandBufferRequest *req, bool value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_SAMPLER_RES, req)
         , value(value)
+    {
+    }
+    IsSamplerCommandBufferResponse(const IsSamplerCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
 

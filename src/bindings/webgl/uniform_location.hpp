@@ -21,7 +21,7 @@ namespace webgl
      */
     int value() const
     {
-      return handle_.has_value() ? handle_->index : -1;
+      return handle_.has_value() ? handle_->index.value_or(-1) : -1;
     }
     /**
      * @returns the name of the uniform location.

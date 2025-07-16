@@ -2,6 +2,7 @@
 
 #include "../shared.hpp"
 #include "../base.hpp"
+#include "../webgl_constants.hpp"
 
 namespace commandbuffers
 {
@@ -14,6 +15,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , clientId(clientId)
     {
+    }
+    CreateBufferCommandBufferRequest(const CreateBufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
     }
 
   public:
@@ -30,6 +43,18 @@ namespace commandbuffers
         , buffer(buffer)
     {
     }
+    DeleteBufferCommandBufferRequest(const DeleteBufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , buffer(that.buffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << buffer << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t buffer;
@@ -45,6 +70,22 @@ namespace commandbuffers
         , target(target)
         , buffer(buffer)
     {
+    }
+    BindBufferCommandBufferRequest(const BindBufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , buffer(that.buffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << buffer
+         << ")";
+      return ss.str();
     }
 
   public:
@@ -74,6 +115,20 @@ namespace commandbuffers
           memcpy(data, srcData, srcSize);
       }
     }
+    BufferDataCommandBufferRequest(const BufferDataCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , dataSize(0)
+        , data(nullptr)
+        , usage(that.usage)
+    {
+      if (clone == true && that.data != nullptr)
+      {
+        dataSize = that.dataSize;
+        data = malloc(dataSize);
+        memcpy(data, that.data, dataSize);
+      }
+    }
     ~BufferDataCommandBufferRequest()
     {
       if (data != nullptr)
@@ -94,8 +149,18 @@ namespace commandbuffers
     {
       auto dataSegment = message.getSegment(0);
       auto dataSize = dataSegment->getSize();
-      data = malloc(dataSize);
-      memcpy(data, dataSegment->getData(), dataSize);
+      this->dataSize = dataSize;
+      this->data = malloc(dataSize);
+      memcpy(this->data, dataSegment->getData(), dataSize);
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "Buffer(" << dataSize << "), "
+         << WebGLHelper::WebGLEnumToString(usage) << ")";
+      return ss.str();
     }
 
   public:
@@ -120,6 +185,20 @@ namespace commandbuffers
       if (data != nullptr)
         memcpy(data, srcData, srcSize);
     }
+    BufferSubDataCommandBufferRequest(const BufferSubDataCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , offset(that.offset)
+        , dataSize(0)
+        , data(nullptr)
+    {
+      if (clone == true && that.data != nullptr)
+      {
+        dataSize = that.dataSize;
+        data = malloc(dataSize);
+        memcpy(data, that.data, dataSize);
+      }
+    }
     ~BufferSubDataCommandBufferRequest()
     {
       if (data != nullptr)
@@ -140,8 +219,19 @@ namespace commandbuffers
     {
       auto dataSegment = message.getSegment(0);
       auto dataSize = dataSegment->getSize();
-      data = malloc(dataSize);
-      memcpy(data, dataSegment->getData(), dataSize);
+      this->dataSize = dataSize;
+      this->data = malloc(dataSize);
+      memcpy(this->data, dataSegment->getData(), dataSize);
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "offset=" << offset << ", "
+         << "Buffer(" << dataSize << ")"
+         << ")";
+      return ss.str();
     }
 
   public:
@@ -162,6 +252,17 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateFramebufferCommandBufferRequest(const CreateFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -177,6 +278,17 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , framebuffer(framebuffer)
     {
+    }
+    DeleteFramebufferCommandBufferRequest(const DeleteFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , framebuffer(that.framebuffer)
+    {
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << framebuffer << ")";
+      return ss.str();
     }
 
   public:
@@ -194,10 +306,33 @@ namespace commandbuffers
         , framebuffer(framebuffer)
     {
     }
+    BindFramebufferCommandBufferRequest(const BindFramebufferCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , framebuffer(that.framebuffer)
+    {
+    }
+
+    // Returns if this bind operation is to switch the framebuffer to default.
+    bool isBindToDefault() const
+    {
+      // TODO(yorkie): We use 0, -1 to indicate the client want's to bind to the app's default render target.
+      return framebuffer <= 0;
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(";
+      isBindToDefault()
+        ? ss << "default"
+        : ss << framebuffer;
+      ss << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t target;
-    uint32_t framebuffer;
+    int32_t framebuffer;
   };
 
   class FramebufferRenderbufferCommandBufferRequest final
@@ -213,6 +348,27 @@ namespace commandbuffers
         , renderbufferTarget(renderbufferTarget)
         , renderbuffer(renderbuffer)
     {
+    }
+    FramebufferRenderbufferCommandBufferRequest(const FramebufferRenderbufferCommandBufferRequest &that,
+                                                bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , attachment(that.attachment)
+        , renderbufferTarget(that.renderbufferTarget)
+        , renderbuffer(that.renderbuffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "attachment=" << WebGLHelper::WebGLFramebufferAttachmentToString(attachment) << ", "
+         << "renderbuffertarget=" << WebGLHelper::WebGLEnumToString(renderbufferTarget) << ", "
+         << "renderbuffer=" << renderbuffer
+         << ")";
+      return ss.str();
     }
 
   public:
@@ -237,6 +393,28 @@ namespace commandbuffers
         , level(level)
     {
     }
+    FramebufferTexture2DCommandBufferRequest(const FramebufferTexture2DCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , attachment(that.attachment)
+        , textarget(that.textarget)
+        , texture(that.texture)
+        , level(that.level)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << "attachment=" << WebGLHelper::WebGLFramebufferAttachmentToString(attachment) << ", "
+         << "textarget=" << WebGLHelper::WebGLEnumToString(textarget) << ", "
+         << "texture=" << texture << ", "
+         << "level=" << level
+         << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t target;
@@ -257,6 +435,20 @@ namespace commandbuffers
         , target(target)
     {
     }
+    CheckFramebufferStatusCommandBufferRequest(const CheckFramebufferStatusCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target)
+         << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t target;
@@ -271,6 +463,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES, req)
         , status(status)
     {
+    }
+    CheckFramebufferStatusCommandBufferResponse(const CheckFramebufferStatusCommandBufferResponse &that, bool clone)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , status(that.status)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << line_prefix << TrCommandBufferSimpleResponse::toString(line_prefix) << "(" << status << ")";
+      return ss.str();
     }
 
   public:
@@ -288,6 +492,18 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateRenderbufferCommandBufferRequest(const CreateRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -303,6 +519,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , renderbuffer(renderbuffer)
     {
+    }
+    DeleteRenderbufferCommandBufferRequest(const DeleteRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , renderbuffer(that.renderbuffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << renderbuffer << ")";
+      return ss.str();
     }
 
   public:
@@ -320,6 +548,21 @@ namespace commandbuffers
         , target(target)
         , renderbuffer(renderbuffer)
     {
+    }
+    BindRenderbufferCommandBufferRequest(const BindRenderbufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , renderbuffer(that.renderbuffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << renderbuffer << ")";
+      return ss.str();
     }
 
   public:
@@ -341,6 +584,24 @@ namespace commandbuffers
         , height(height)
     {
     }
+    RenderbufferStorageCommandBufferRequest(const RenderbufferStorageCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << internalformat << ", "
+         << "[" << width << "x" << height << "])";
+      return ss.str();
+    }
 
   public:
     uint32_t target;
@@ -360,6 +621,19 @@ namespace commandbuffers
         , mode(mode)
     {
     }
+    ReadBufferCommandBufferRequest(const ReadBufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(mode) << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t mode;
@@ -377,6 +651,23 @@ namespace commandbuffers
         , index(index)
         , buffer(buffer)
     {
+    }
+    BindBufferBaseCommandBufferRequest(const BindBufferBaseCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , index(that.index)
+        , buffer(that.buffer)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << index << ", "
+         << buffer << ")";
+      return ss.str();
     }
 
   public:
@@ -399,6 +690,27 @@ namespace commandbuffers
         , offset(offset)
         , bufferSize(size)
     {
+    }
+    BindBufferRangeCommandBufferRequest(const BindBufferRangeCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , index(that.index)
+        , buffer(that.buffer)
+        , offset(that.offset)
+        , bufferSize(that.size)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << index << ", "
+         << buffer << ", "
+         << offset << ", "
+         << bufferSize << ")";
+      return ss.str();
     }
 
   public:
@@ -438,6 +750,38 @@ namespace commandbuffers
         , filter(filter)
     {
     }
+    BlitFramebufferCommandBufferRequest(const BlitFramebufferCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , srcX0(that.srcX0)
+        , srcY0(that.srcY0)
+        , srcX1(that.srcX1)
+        , srcY1(that.srcY1)
+        , dstX0(that.dstX0)
+        , dstY0(that.dstY0)
+        , dstX1(that.dstX1)
+        , dstY1(that.dstY1)
+        , mask(that.mask)
+        , filter(that.filter)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << srcX0 << ", "
+         << srcY0 << ", "
+         << srcX1 << ", "
+         << srcY1 << ", "
+         << dstX0 << ", "
+         << dstY0 << ", "
+         << dstX1 << ", "
+         << dstY1 << ", "
+         << mask << ", "
+         << filter
+         << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t srcX0;
@@ -470,6 +814,27 @@ namespace commandbuffers
         , width(width)
         , height(height)
     {
+    }
+    RenderbufferStorageMultisampleCommandBufferRequest(const RenderbufferStorageMultisampleCommandBufferRequest &that,
+                                                       bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , samples(that.samples)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << samples << ", "
+         << internalformat << ", "
+         << "[" << width << "x" << height << "])";
+      return ss.str();
     }
 
   public:
