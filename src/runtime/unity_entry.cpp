@@ -62,7 +62,8 @@ public:
 
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
-    auto api = RenderAPI::Create(deviceType, constellation.get());
+    RHI *rhi = RHIFactory::CreateRHI(deviceType, constellation.get());
+    assert(rhi != nullptr && "Failed to create RHI for Unity embedder.");
 
     /**
      * Check if the graphics debug log should be enabled by the property `jsar.renderer.graphics.debug`.
@@ -72,10 +73,10 @@ public:
     if (__system_property_get("jsar.renderer.graphics.debug", enableGraphicsDebugLogStr) >= 0)
     {
       if (strcmp(enableGraphicsDebugLogStr, "yes") == 0)
-        api->EnableGraphicsDebugLog(true);
+        rhi->EnableGraphicsDebugLog(true);
     }
 #endif
-    constellation->renderer->setApi(api);
+    constellation->renderer->setRHI(rhi);
   }
 
   void unload()
@@ -248,11 +249,23 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
           setenv("JSAR_THREEPIO_API_MODELID", modelidStr, 1);
       }
 
+      // Command setprop jsar.renderer.tracing yes
+      // Effect: Enable the renderer tracing and print the tracing logs at `TR_GLES`.
       char enableRendererTracingStr[PROP_VALUE_MAX];
       if (
         __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
         strcmp(enableRendererTracingStr, "yes") == 0)
         renderer->enableTracing();
+
+      // Command: setprop jsar.renderer.clear_stencil no|disable
+      // Effect: Disable the stencil clear operation in the renderer.
+      char disableStencilClearStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.renderer.clear_stencil", disableStencilClearStr) >= 0)
+      {
+        if (strcmp(disableStencilClearStr, "no") == 0 ||
+            strcmp(disableStencilClearStr, "disable") == 0)
+          renderer->disableStencilClear();
+      }
 
       char enablePrintHostContextSummaryStr[PROP_VALUE_MAX];
       if (

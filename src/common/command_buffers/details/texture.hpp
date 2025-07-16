@@ -15,6 +15,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateTextureCommandBufferRequest(const CreateTextureCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     int clientId;
@@ -28,6 +33,11 @@ namespace commandbuffers
     DeleteTextureCommandBufferRequest(uint32_t texture)
         : TrCommandBufferSimpleRequest()
         , texture(texture)
+    {
+    }
+    DeleteTextureCommandBufferRequest(const DeleteTextureCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , texture(that.texture)
     {
     }
 
@@ -46,6 +56,21 @@ namespace commandbuffers
         , texture(texture)
     {
     }
+    BindTextureCommandBufferRequest(const BindTextureCommandBufferRequest &that, bool clone)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , texture(that.texture)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << texture << ")";
+      return ss.str();
+    }
 
   public:
     int target;
@@ -60,13 +85,29 @@ namespace commandbuffers
         : TrCommandBufferRequest(type, sizeof(T))
     {
     }
-    TextureImageNDCommandBufferRequest(TextureImageNDCommandBufferRequest &that)
-        : TrCommandBufferRequest(that)
+    TextureImageNDCommandBufferRequest(const TextureImageNDCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
         , target(that.target)
         , level(that.level)
         , format(that.format)
         , pixelType(that.pixelType)
+        , ownPixelsMemory(that.ownPixelsMemory)
     {
+      if (clone)
+      {
+        if (ownPixelsMemory)
+        {
+          this->pixelsByteLength = that.pixelsByteLength;
+          this->pixels = malloc(that.pixelsByteLength);
+          if (this->pixels != nullptr) [[likely]]
+            memcpy(this->pixels, that.pixels, this->pixelsByteLength);
+        }
+        else
+        {
+          this->pixelsByteLength = that.pixelsByteLength;
+          this->pixels = that.pixels;
+        }
+      }
     }
     virtual ~TextureImageNDCommandBufferRequest()
     {
@@ -163,12 +204,24 @@ namespace commandbuffers
       {
         pixelsByteLength = pixelsSegment->getSize();
         pixels = malloc(pixelsByteLength);
-        if (pixels != nullptr)
+        if (pixels != nullptr) [[likely]]
         {
           ownPixelsMemory = true;
           memcpy(pixels, pixelsSegment->getData(), pixelsByteLength);
         }
       }
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << level << ", "
+         << WebGLHelper::WebGLEnumToString(format) << ", "
+         << WebGLHelper::WebGLEnumToString(pixelType) << ", "
+         << "pixels=" << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
+      return ss.str();
     }
 
   protected:
@@ -185,7 +238,7 @@ namespace commandbuffers
     int level;
     int format;
     int pixelType;
-    bool ownPixelsMemory = false; // if true the pixels memory will be managed by this object.
+    bool ownPixelsMemory = false; // if `true` the pixels memory will be managed by this object.
     void *pixels = nullptr;
     size_t pixelsByteLength = 0;
   };
@@ -200,6 +253,14 @@ namespace commandbuffers
     {
       this->target = target;
       this->level = level;
+    }
+    TextureImage2DCommandBufferRequest(const TextureImage2DCommandBufferRequest &that, bool clone = false)
+        : TextureImageNDCommandBufferRequest(that, clone)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+        , border(that.border)
+    {
     }
 
   public:
@@ -230,9 +291,19 @@ namespace commandbuffers
         : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ)
         , xoffset(xoffset)
         , yoffset(yoffset)
+        , width(0)
+        , height(0)
     {
       this->target = target;
       this->level = level;
+    }
+    TextureSubImage2DCommandBufferRequest(const TextureSubImage2DCommandBufferRequest &that, bool clone = false)
+        : TextureImageNDCommandBufferRequest(that, clone)
+        , xoffset(that.xoffset)
+        , yoffset(that.yoffset)
+        , width(that.width)
+        , height(that.height)
+    {
     }
 
   public:
@@ -252,9 +323,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<CopyTextureImage2DCommandBufferRequest,
                                             COMMAND_BUFFER_COPY_TEXTURE_IMAGE_2D_REQ>
   {
-  public:
-    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
-
   public:
     CopyTextureImage2DCommandBufferRequest(
       uint32_t target,
@@ -276,6 +344,18 @@ namespace commandbuffers
         , border(border)
     {
     }
+    CopyTextureImage2DCommandBufferRequest(const CopyTextureImage2DCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , level(that.level)
+        , internalFormat(that.internalFormat)
+        , x(that.x)
+        , y(that.y)
+        , width(that.width)
+        , height(that.height)
+        , border(that.border)
+    {
+    }
 
   public:
     int target;
@@ -292,9 +372,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<CopyTextureSubImage2DCommandBufferRequest,
                                             COMMAND_BUFFER_COPY_TEXTURE_SUB_IMAGE_2D_REQ>
   {
-  public:
-    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
-
   public:
     CopyTextureSubImage2DCommandBufferRequest(
       uint32_t target,
@@ -314,6 +391,18 @@ namespace commandbuffers
         , y(y)
         , width(width)
         , height(height)
+    {
+    }
+    CopyTextureSubImage2DCommandBufferRequest(const CopyTextureSubImage2DCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , level(that.level)
+        , xoffset(that.xoffset)
+        , yoffset(that.yoffset)
+        , x(that.x)
+        , y(that.y)
+        , width(that.width)
+        , height(that.height)
     {
     }
 
@@ -341,6 +430,13 @@ namespace commandbuffers
         , param(param)
     {
     }
+    TextureParameteriCommandBufferRequest(const TextureParameteriCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , pname(that.pname)
+        , param(that.param)
+    {
+    }
 
   public:
     int target;
@@ -359,6 +455,13 @@ namespace commandbuffers
         , target(target)
         , pname(pname)
         , param(param)
+    {
+    }
+    TextureParameterfCommandBufferRequest(const TextureParameterfCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+        , pname(that.pname)
+        , param(that.param)
     {
     }
 
@@ -381,6 +484,19 @@ namespace commandbuffers
       if (activeUnit < WEBGL_TEXTURE0 || activeUnit > WEBGL_TEXTURE31)
         activeUnit = WEBGL_TEXTURE0;
     }
+    ActiveTextureCommandBufferRequest(const ActiveTextureCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , activeUnit(that.activeUnit)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(activeUnit) << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t activeUnit;
@@ -397,6 +513,19 @@ namespace commandbuffers
         , target(target)
     {
     }
+    GenerateMipmapCommandBufferRequest(const GenerateMipmapCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , target(that.target)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ")";
+      return ss.str();
+    }
 
   public:
     int target;
@@ -410,11 +539,31 @@ namespace commandbuffers
         : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_IMAGE_3D_REQ)
     {
     }
+    TextureImage3DCommandBufferRequest(const TextureImage3DCommandBufferRequest &that, bool clone = false)
+        : TextureImageNDCommandBufferRequest(that, clone)
+        , internalformat(that.internalformat)
+        , width(that.width)
+        , height(that.height)
+        , depth(that.depth)
+        , border(that.border)
+    {
+    }
 
   public:
     size_t computePixelsByteLength() override
     {
       return width * height * depth * getPixelSize();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureImageNDCommandBufferRequest::toString(line_prefix)
+         << "  internalformat=" << WebGLHelper::WebGLEnumToString(internalformat) << std::endl
+         << "           width=" << width << std::endl
+         << "          height=" << height << std::endl
+         << "           depth=" << depth << std::endl
+         << "          border=" << border;
+      return ss.str();
     }
 
   public:
@@ -433,11 +582,33 @@ namespace commandbuffers
         : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_3D_REQ)
     {
     }
+    TextureSubImage3DCommandBufferRequest(const TextureSubImage3DCommandBufferRequest &that, bool clone = false)
+        : TextureImageNDCommandBufferRequest(that, clone)
+        , xoffset(that.xoffset)
+        , yoffset(that.yoffset)
+        , zoffset(that.zoffset)
+        , width(that.width)
+        , height(that.height)
+        , depth(that.depth)
+    {
+    }
 
   public:
     size_t computePixelsByteLength() override
     {
       return width * height * depth * getPixelSize();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureImageNDCommandBufferRequest::toString(line_prefix)
+         << "  xoffset=" << xoffset << std::endl
+         << "  yoffset=" << yoffset << std::endl
+         << "  zoffset=" << zoffset << std::endl
+         << "    width=" << width << std::endl
+         << "   height=" << height << std::endl
+         << "    depth=" << depth;
+      return ss.str();
     }
 
   public:
@@ -461,6 +632,13 @@ namespace commandbuffers
         , internalformat(internalformat)
     {
     }
+    TextureStorageNDCommandBufferRequest(const TextureStorageNDCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
+        , target(that.target)
+        , levels(that.levels)
+        , internalformat(that.internalformat)
+    {
+    }
 
   public:
     int target;
@@ -480,6 +658,12 @@ namespace commandbuffers
         , height(height)
     {
     }
+    TextureStorage2DCommandBufferRequest(const TextureStorage2DCommandBufferRequest &that, bool clone = false)
+        : TextureStorageNDCommandBufferRequest(that, clone)
+        , width(that.width)
+        , height(that.height)
+    {
+    }
 
   public:
     int width;
@@ -497,6 +681,13 @@ namespace commandbuffers
         , width(width)
         , height(height)
         , depth(depth)
+    {
+    }
+    TextureStorage3DCommandBufferRequest(const TextureStorage3DCommandBufferRequest &that, bool clone = false)
+        : TextureStorageNDCommandBufferRequest(that, clone)
+        , width(that.width)
+        , height(that.height)
+        , depth(that.depth)
     {
     }
 

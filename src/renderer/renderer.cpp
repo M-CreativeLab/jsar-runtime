@@ -14,14 +14,14 @@ namespace renderer
 
   TrRenderer::TrRenderer(TrConstellation *constellation)
       : constellation(constellation)
-      , api(nullptr)
+      , rhi(nullptr)
       , commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
   }
 
   TrRenderer::~TrRenderer()
   {
-    api = nullptr;
+    rhi = nullptr;
     constellation = nullptr;
 
     // TODO: use unique_ptr for `glHostContext`.
@@ -39,7 +39,7 @@ namespace renderer
 
   void TrRenderer::initialize()
   {
-    if (api == nullptr)
+    if (rhi == nullptr) [[unlikely]]
       return;
     glHostContext = new ContextGLHost();
 
@@ -47,9 +47,34 @@ namespace renderer
     startWatchers();
   }
 
+  void TrRenderer::shutdown()
+  {
+    stopWatchers();
+  }
+
+  void TrRenderer::setLogFilter(string filterExpr)
+  {
+    // TODO
+  }
+
+  void TrRenderer::setRHI(TrRenderHardwareInterface *rhi)
+  {
+    if (rhi != nullptr)
+    {
+      rhi->EnableAppGlobalLog();
+      rhi->EnableXRFrameLog();
+      this->rhi = rhi;
+    }
+  }
+
+  TrRenderHardwareInterface *TrRenderer::getRHI()
+  {
+    return rhi;
+  }
+
   void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
   {
-    if (api == nullptr) [[unlikely]]
+    if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
     tickingTimepoint = std::chrono::high_resolution_clock::now();
@@ -72,7 +97,7 @@ namespace renderer
     {
       for (auto contentRenderer : contentRenderers)
       {
-        auto content = contentRenderer->getContent();
+        shared_ptr<TrContentRuntime> content = contentRenderer->getContent();
         if (content == nullptr || content->disableRendering)
         {
           /**
@@ -82,7 +107,7 @@ namespace renderer
            */
           continue;
         }
-        contentRenderer->onHostFrame(tickingTimepoint);
+        contentRenderer->onOpaquesRenderPass(tickingTimepoint);
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
         totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
       }
@@ -97,45 +122,46 @@ namespace renderer
 
   void TrRenderer::onTransparentsRenderPass(analytics::PerformanceCounter &perfCounter)
   {
-    if (api == nullptr) [[unlikely]]
+    if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
+
+    // TODO(yorkie): support the transparents render pass.
   }
 
-  void TrRenderer::shutdown()
+  void TrRenderer::onBeforeRendering()
   {
-    stopWatchers();
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
+
+    // TODO(yorkie): implement the before rendering logic.
   }
 
-  void TrRenderer::setLogFilter(string filterExpr)
+  void TrRenderer::onAfterRendering()
   {
-    // TODO
-  }
+    if (rhi == nullptr) [[unlikely]]
+      return; // Skip if api is not ready.
 
-  void TrRenderer::setApi(RenderAPI *api)
-  {
-    if (api != nullptr)
+    glHostContext->recordFromHost();
     {
-      api->EnableAppGlobalLog();
-      api->EnableXRFrameLog();
-      this->api = api;
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
+        contentRenderer->onOffscreenRenderPass();
+      }
     }
-  }
-
-  RenderAPI *TrRenderer::getApi()
-  {
-    return api;
+    glHostContext->restore();
   }
 
   bool TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId)
   {
-    if (TR_UNLIKELY(api == nullptr))
+    if (rhi == nullptr) [[unlikely]]
       return false;
 
     // Remove the existing content renderer if it has been added again.
-    if (TR_UNLIKELY(removeContentRenderer(content->id, contextId)))
-    {
+    if (removeContentRenderer(content->id, contextId)) [[unlikely]]
       DEBUG(LOG_TAG_ERROR, "Detected the ContentRenderer(%d, %d) has been added multiple times, so it will be replaced.", content->id, static_cast<int>(contextId));
-    }
 
     // Create a new content renderer and add it to the renderer.
     {
@@ -269,17 +295,17 @@ namespace renderer
 
   void TrRenderer::setDrawingViewport(TrViewport viewport)
   {
-    api->SetDrawingViewport(viewport);
+    rhi->SetDrawingViewport(viewport);
   }
 
   void TrRenderer::setRecommendedFov(float fov)
   {
-    api->SetFieldOfView(fov);
+    rhi->SetFieldOfView(fov);
   }
 
   void TrRenderer::setTime(float time)
   {
-    api->SetTime(time);
+    rhi->SetTime(time);
   }
 
   /**
@@ -317,27 +343,29 @@ namespace renderer
     DEBUG(LOG_TAG_RENDERER, "Renderer watchers has been stopped.");
   }
 
-  bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-                                         TrContentRenderer *contentRenderer)
+  bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &list,
+                                         TrContentRenderer *content_renderer,
+                                         ExecutingPassType pass_type)
   {
-    auto xrDevice = constellation->xrDevice.get();
-    assert(xrDevice != nullptr);
-    if (xrDevice->enabled())
+    auto xr_device = constellation->xrDevice.get();
+    assert(xr_device != nullptr);
+
+    if (xr_device->enabled()) [[likely]]
     {
-      if (xrDevice->isRenderedAsMultipass())
+      if (xr_device->isRenderedAsMultipass())
       {
-        xr::MultiPassFrame deviceFrame(xrDevice, 0);
-        return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+        xr::MultiPassFrame device_frame(xr_device, 0);
+        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
       else
       {
-        xr::SinglePassFrame deviceFrame(xrDevice, 0);
-        return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+        xr::SinglePassFrame device_frame(xr_device, 0);
+        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
     }
     else
     {
-      return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
+      return rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
   }
 

@@ -4,15 +4,16 @@
 #include <mutex>
 #include <chrono>
 #include <ctime>
-#include <Unity/IUnityGraphics.h>
 
-#include "analytics/analytics.hpp"
-#include "common/debug.hpp"
-#include "common/classes.hpp"
-#include "common/command_buffers/base.hpp"
-#include "common/command_buffers/command_buffers.hpp"
-#include "common/command_buffers/webgl_constants.hpp"
-#include "xr/device.hpp"
+#include <Unity/IUnityGraphics.h>
+#include <analytics/analytics.hpp>
+#include <common/debug.hpp>
+#include <common/classes.hpp>
+#include <common/command_buffers/base.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/gpu/gpu_device.hpp>
+#include <xr/device.hpp>
 
 #define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
 
@@ -25,20 +26,40 @@ enum FrameExecutionCode
   kFrameExecutionSkipped = 4,
 };
 
+enum class ExecutingPassType
+{
+  // Default frame's command buffers are scheduled from the main scripting thread which are used to initialize some
+  // graphic resources such as: program, textures, and etc.
+  kDefaultFrame,
+  // The command buffers in XRFrame is commonly used to dispatch draw calls in each rendering frame.
+  kXRFrame,
+  kCachedXRFrame,
+  kOffscreenPass,
+};
+
 /**
  * The options to be used when making a RHI API call.
  */
 class ApiCallOptions final
 {
 public:
-  /**
-   * Executes this call in the default queue.
-   */
-  bool isDefaultQueue;
-  /**
-   * Should print the information of this call.
-   */
   bool printsCall;
+  ExecutingPassType executingPassType;
+
+  inline bool isDefaultQueue() const
+  {
+    return executingPassType == ExecutingPassType::kDefaultFrame;
+  }
+  // Returns `true` if the current executing the XR or cached XR pass.
+  inline bool isXRFramePass() const
+  {
+    return executingPassType == ExecutingPassType::kXRFrame ||
+           executingPassType == ExecutingPassType::kCachedXRFrame;
+  }
+  inline bool isOffscreenPass() const
+  {
+    return executingPassType == ExecutingPassType::kOffscreenPass;
+  }
 };
 
 /**
@@ -54,14 +75,15 @@ enum class RHIBackendType
   OpenGLESv3,
   VULKAN,
   Metal,
-  // Direct3D 11
+  // Direct3D
   D3D11,
-  // Direct3D 12
   D3D12,
 };
 
+class RHIFactory;
+
 /**
- * Rendering Hardware Interface.
+ * Transmute Rendering Hardware Interface.
  *
  * This virtual class is used to define the platform-independent high-level graphics APIs. It is used to abstract the
  * platform-specific graphics APIs, such as OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
@@ -72,38 +94,22 @@ enum class RHIBackendType
  * |-------------------|-----------|
  * | OpenGL            | Yes       |
  * | OpenGL ES         | Yes       |
+ * | Vulkan            | No        |
  * | Metal             | No        |
  * | D3D11             | No        |
  * | D3D12             | No        |
  */
-class RenderAPI
+class TrRenderHardwareInterface
 {
-private:
-  static RenderAPI *s_instance;
+  friend class RHIFactory;
 
 public:
-  /**
-   * @returns the singleton instance of the current RHI.
-   */
-  static inline RenderAPI *Get()
+  TrRenderHardwareInterface(RHIBackendType backend_type, std::unique_ptr<commandbuffers::GPUDevice> gpu_device = nullptr)
+      : backendType(backend_type)
+      , gpuDevice(std::move(gpu_device))
   {
-    return s_instance;
   }
-
-  /**
-   * Creates the RHI instance.
-   *
-   * @param apiType the type of the RHI, such as: OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
-   * @param constellation the constellation instance.
-   * @returns the created RHI instance.
-   */
-  static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
-
-public:
-  virtual ~RenderAPI()
-  {
-    s_instance = nullptr;
-  }
+  virtual ~TrRenderHardwareInterface() = default;
 
   /**
    * Process general event like initialization, shutdown, device loss/reset etc.
@@ -131,18 +137,11 @@ public:
   /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
    * there are any commands to execute.
-   *
-   * @param commandBuffers the command buffer queue.
-   * @param content the content renderer.
-   * @param deviceFrame the XR device frame that stores the frame context: views, projection matrices, etc.
-   * @param isDefaultQueue a boolean value indicating if the command queue is the default queue or XR frame queue.
-   * @returns a boolean value indicating if there are any commands to execute.
    */
-  virtual bool ExecuteCommandBuffer(
-    vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-    renderer::TrContentRenderer *content,
-    xr::DeviceFrame *deviceFrame,
-    bool isDefaultQueue) = 0;
+  virtual bool ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                                    renderer::TrContentRenderer *,
+                                    xr::DeviceFrame *,
+                                    ExecutingPassType) = 0;
 
   /**
    * Enables the graphics debug log, which is useful when you want to debug the backend graphics api.
@@ -155,6 +154,12 @@ public:
    * Disables the graphics debug log.
    */
   virtual void DisableGraphicsDebugLog() = 0;
+
+  /**
+   * Submit a GPUCommandBuffer list to the GPU device for execution.
+   */
+  void SubmitGPUCommandBuffer(std::vector<std::shared_ptr<commandbuffers::GPUCommandBuffer>> &);
+  std::unique_ptr<commandbuffers::GPUCommandEncoder> CreateCommandEncoder();
 
   /**
    * Adds a command buffer to the command buffer queue.
@@ -321,6 +326,11 @@ protected:
   bool m_PrintsContext = false;
 
   /**
+   * The GPU device instance.
+   */
+  std::unique_ptr<commandbuffers::GPUDevice> gpuDevice = nullptr;
+
+  /**
    * The default command buffer queue.
    */
   std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffers;
@@ -357,5 +367,17 @@ protected:
   std::weak_ptr<renderer::TrRenderer> renderer;
 };
 
-// Create a graphics API implementation instance for the given API type.
-RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType);
+// Alias for the RHI type.
+using RHI = TrRenderHardwareInterface;
+
+class RHIFactory
+{
+private:
+  static inline RHI *Instance_ = nullptr;
+
+public:
+  static RHI *CreateRHI(UnityGfxRenderer, TrConstellation *);
+  static RHI *Get();
+  static RHI *GetChecked();
+  static RHI &GetRef();
+};

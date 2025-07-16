@@ -37,7 +37,7 @@ namespace xr
         , viewIndex(-1)
     {
     }
-    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that)
+    TrXRFrameRenderingInfo(const TrXRFrameRenderingInfo &that)
         : sessionId(that.sessionId)
         , stereoId(that.stereoId)
         , viewIndex(that.viewIndex)

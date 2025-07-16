@@ -2,11 +2,13 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 #include <map>
 #include <memory>
 #include <thread>
 #include <mutex>
 #include <shared_mutex>
+#include <condition_variable>
 #include <node/node.h>
 #include <node/node_api.h>
 #include <node/uv.h>
@@ -48,6 +50,7 @@ using namespace media_comm;
 
 typedef uint32_t FrameRequestId;
 typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
+typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseCallback;
 
 /**
  * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
@@ -308,10 +311,21 @@ public: // commandbuffer methods
   /**
    * Receive a command buffer response from the command buffer channel with a timeout.
    *
+   * NOTE(yorkie): this method will be blocking util there is no pending async command buffer response, this is to
+   * ensure receiving a command buffer response should be sequentially, and the async command buffer response
+   * callbacks should be processed before receiving a new command buffer response.
+   *
    * @param timeout The time in milliseconds to wait for the response.
    * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
    */
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
+  /**
+   * Asynchronously receive a command buffer response from the command buffer channel, and calls the callback with the 
+   * response object.
+   * 
+   * @param callback The callback to call when the response is received.
+   */
+  void recvCommandBufferResponseAsync(AsyncCommandBufferResponseCallback callback);
 
 public: // WebXR methods
   inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
@@ -490,6 +504,11 @@ private: // command buffer fields
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
+  unique_ptr<WorkerThread> asyncCommandBufferResponseWorker = nullptr;
+  deque<AsyncCommandBufferResponseCallback> asyncCommandBufferResponseCallbacks;
+  atomic<bool> isAsyncCommandBufferResponseScheduled = false;
+  mutex asyncCommandBufferResponseMutex;
+  condition_variable asyncCommandBufferResponseCv;
 
 private: // xr fields
   shared_ptr<client_xr::XRDeviceClient> xrDeviceClient = nullptr;

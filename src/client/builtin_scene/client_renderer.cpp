@@ -53,7 +53,10 @@ namespace builtin_scene
     /**
      * Configure the vertext attributes.
      */
-    auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+    auto configureAttribute = [this](const IVertexAttribute &attrib,
+                                     int index,
+                                     size_t stride,
+                                     size_t offset)
     {
       glContext_->vertexAttribPointer(index,
                                       attrib.size(),
@@ -94,7 +97,10 @@ namespace builtin_scene
       /**
        * Configure the instance attributes.
        */
-      auto configureInstanceAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+      auto configureInstanceAttribute = [this](const IVertexAttribute &attrib,
+                                               int index,
+                                               size_t stride,
+                                               size_t offset)
       {
         glContext_->enableVertexAttribArray(index);
         glContext_->vertexAttribPointer(index,

@@ -9,42 +9,34 @@
 
 using namespace std;
 
-RenderAPI *RenderAPI::s_instance = nullptr;
-RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation *constellation)
+void TrRenderHardwareInterface::SubmitGPUCommandBuffer(vector<shared_ptr<commandbuffers::GPUCommandBuffer>> &commandBuffers)
 {
-  assert(s_instance == nullptr);
-  s_instance = CreateRenderAPI(apiType);
-  if (s_instance != nullptr)
-  {
-    s_instance->constellation = constellation;
-    s_instance->renderer = weak_ptr<renderer::TrRenderer>(constellation->renderer);
-    return s_instance;
-  }
-  else
-  {
-    DEBUG(LOG_TAG_ERROR, "Failed to create renderer for %04x", apiType);
-    return nullptr;
-  }
+  gpuDevice->queueRef().submit(commandBuffers);
 }
 
-void RenderAPI::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
+unique_ptr<commandbuffers::GPUCommandEncoder> TrRenderHardwareInterface::CreateCommandEncoder()
+{
+  return gpuDevice->createCommandEncoder("");
+}
+
+void TrRenderHardwareInterface::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
 {
   unique_lock<mutex> lock(m_CommandBuffersMutex);
   m_CommandBuffers.push_back(commandBuffer);
 }
 
-size_t RenderAPI::GetCommandBuffersCount()
+size_t TrRenderHardwareInterface::GetCommandBuffersCount()
 {
   unique_lock<mutex> lock(m_CommandBuffersMutex);
   return m_CommandBuffers.size();
 }
 
-void RenderAPI::OnCreated()
+void TrRenderHardwareInterface::OnCreated()
 {
   m_Analytics = new analytics::Analytics();
 }
 
-bool RenderAPI::OnFrameStarted()
+bool TrRenderHardwareInterface::OnFrameStarted()
 {
   auto now = std::chrono::high_resolution_clock::now();
   if (m_IsFirstFrame)
@@ -66,7 +58,7 @@ bool RenderAPI::OnFrameStarted()
 }
 
 #define MAX_DURATION_OF_FRAME 50 * 1000 // 50ms
-bool RenderAPI::CheckGpuBusyStatus()
+bool TrRenderHardwareInterface::CheckGpuBusyStatus()
 {
   auto duration = m_DeltaTimeDuration.count();
   if (duration > MAX_DURATION_OF_FRAME)
@@ -84,7 +76,7 @@ bool RenderAPI::CheckGpuBusyStatus()
   return m_IsGpuBusy;
 }
 
-RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
+TrRenderHardwareInterface *CreateRHI_Impl(UnityGfxRenderer apiType)
 {
 #if SUPPORT_D3D11
   if (apiType == kUnityGfxRendererD3D11)
@@ -105,13 +97,13 @@ RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 #if SUPPORT_OPENGL_UNIFIED
   if (apiType == kUnityGfxRendererOpenGLCore || apiType == kUnityGfxRendererOpenGLES20 || apiType == kUnityGfxRendererOpenGLES30)
   {
-    extern RenderAPI *CreateRenderAPI_OpenGLCoreES(RHIBackendType type);
+    extern TrRenderHardwareInterface *CreateRHI_OpenGL(RHIBackendType type);
     if (apiType == kUnityGfxRendererOpenGLCore)
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLCore);
+      return CreateRHI_OpenGL(RHIBackendType::OpenGLCore);
     else if (apiType == kUnityGfxRendererOpenGLES20)
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv2);
+      return CreateRHI_OpenGL(RHIBackendType::OpenGLESv2);
     else
-      return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv3);
+      return CreateRHI_OpenGL(RHIBackendType::OpenGLESv3);
   }
 #endif // if SUPPORT_OPENGL_UNIFIED
 
@@ -134,4 +126,40 @@ RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 
   // Unknown or unsupported graphics API
   return NULL;
+}
+
+
+TrRenderHardwareInterface *RHIFactory::CreateRHI(UnityGfxRenderer renderer_type, TrConstellation *constellation)
+{
+  assert(Instance_ == nullptr && "RHIFactory::CreateRHI should only be called once.");
+
+  Instance_ = CreateRHI_Impl(renderer_type);
+  if (Instance_ != nullptr)
+  {
+    Instance_->constellation = constellation;
+    Instance_->renderer = constellation->renderer;
+    return Instance_;
+  }
+  else
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to create renderer for %04x", renderer_type);
+    return nullptr;
+  }
+}
+
+TrRenderHardwareInterface *RHIFactory::Get()
+{
+  return Instance_;
+}
+
+TrRenderHardwareInterface *RHIFactory::GetChecked()
+{
+  assert(Instance_ != nullptr && "RHIFactory::GetChecked should only be called after CreateRHI.");
+  return Instance_;
+}
+
+TrRenderHardwareInterface &RHIFactory::GetRef()
+{
+  assert(Instance_ != nullptr && "RHIFactory::GetRef should only be called after CreateRHI.");
+  return *Instance_;
 }

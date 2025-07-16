@@ -14,8 +14,8 @@
 #include "./program.hpp"
 #include "./texture.hpp"
 #include "./shader.hpp"
-#include "./uniform_location.hpp"
 #include "./active_info.hpp"
+#include "./uniform_location.hpp"
 
 using namespace std;
 using namespace node;
@@ -324,15 +324,8 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
 
-    try
-    {
-      int v = glContext_->getProgramParameter(program->handle(), pname);
-      return Napi::Number::New(env, v);
-    }
-    catch (const std::exception &e)
-    {
-      return env.Undefined();
-    }
+    int v = glContext_->getProgramParameter(program->handle(), pname);
+    return Napi::Number::New(env, v);
   }
 
   template <typename ObjectType, typename ContextType>
@@ -860,33 +853,62 @@ namespace webgl
       Napi::TypeError::New(env, "framebufferTexture2D() takes 5 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    auto jsTexture = info[3];
-    if (!jsTexture.IsObject() || WebGLTexture::IsInstanceOf(jsTexture))
+
+    auto target = info[0].ToNumber().Int32Value();
+    auto attachment = info[1].ToNumber().Int32Value();
+    auto textarget = info[2].ToNumber().Int32Value();
+    auto level = info[4].ToNumber().Int32Value();
+
+    if (target != WEBGL_FRAMEBUFFER &&
+        target != WEBGL2_DRAW_FRAMEBUFFER &&
+        target != WEBGL2_READ_FRAMEBUFFER) [[unlikely]]
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidOperation, "texture isn't 0 or the name of an existing texture object");
+      glContext_->setError("framebufferTexture2d",
+                           client_graphics::WebGLError::kInvalidEnum,
+                           "target must be FRAMEBUFFER");
       return env.Undefined();
     }
 
-    auto target = info[0].As<Napi::Number>().Int32Value();
-    auto attachment = info[1].As<Napi::Number>().Int32Value();
-    auto textarget = info[2].As<Napi::Number>().Int32Value();
-    auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
-    auto level = info[4].As<Napi::Number>().Int32Value();
-
-    if (target != WEBGL_FRAMEBUFFER)
+    Napi::Value jsTexture = info[3];
+    WebGLTexture *textureObject = nullptr;
+    if (jsTexture.IsNumber())
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum, "target must be FRAMEBUFFER");
-      return env.Undefined();
+      // Only the number 0 is allowed to reset the texture binding.
+      if (jsTexture.ToNumber().Int32Value() != 0)
+      {
+        glContext_->setError("framebufferTexture2d",
+                             client_graphics::WebGLError::kInvalidOperation,
+                             "texture must be 0 if it is a number");
+        return env.Undefined();
+      }
+      else
+      {
+        textureObject = nullptr;
+      }
     }
-    if (textarget != WEBGL_TEXTURE_2D &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
-        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+    else if (jsTexture.IsNull()) // `null` means reset framebuffer's texture
     {
-      glContext_->setError("framebufferTexture2d", client_graphics::WebGLError::kInvalidEnum, "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
+      textureObject = nullptr;
+    }
+    else if (jsTexture.IsObject())
+    {
+      if (!WebGLTexture::IsInstanceOf(jsTexture))
+      {
+        glContext_->setError("framebufferTexture2d",
+                             client_graphics::WebGLError::kInvalidOperation,
+                             "texture is not a valid WebGLTexture object.");
+        return env.Undefined();
+      }
+      else
+      {
+        textureObject = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.ToObject());
+      }
+    }
+    else
+    {
+      glContext_->setError("framebufferTexture2d",
+                           client_graphics::WebGLError::kInvalidOperation,
+                           "texture must be a number, null or a WebGLTexture object");
       return env.Undefined();
     }
 
@@ -894,7 +916,7 @@ namespace webgl
       static_cast<client_graphics::WebGLFramebufferBindingTarget>(target),
       static_cast<client_graphics::WebGLFramebufferAttachment>(attachment),
       static_cast<client_graphics::WebGLTexture2DTarget>(textarget),
-      texture->handle(),
+      textureObject != nullptr ? textureObject->handle() : nullptr,
       level);
     return env.Undefined();
   }
@@ -1455,12 +1477,13 @@ namespace webgl
       Napi::TypeError::New(env, "vertexAttribPointer() takes 6 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto size = info[1].As<Napi::Number>().Uint32Value();
-    auto type = info[2].As<Napi::Number>().Uint32Value();
-    auto normalized = info[3].As<Napi::Boolean>().Value();
-    auto stride = info[4].As<Napi::Number>().Uint32Value();
-    auto offset = info[5].As<Napi::Number>().Uint32Value();
+
+    auto index = info[0].ToNumber().Uint32Value();
+    auto size = info[1].ToNumber().Uint32Value();
+    auto type = info[2].ToNumber().Uint32Value();
+    auto normalized = info[3].ToBoolean().Value();
+    auto stride = info[4].ToNumber().Uint32Value();
+    auto offset = info[5].ToNumber().Uint32Value();
 
     glContext_->vertexAttribPointer(index, size, type, normalized, stride, offset);
     return env.Undefined();
@@ -1545,10 +1568,10 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
     auto loc = glContext_->getAttribLocation(program->handle(), name);
-    if (loc.has_value())
-      return Napi::Number::New(env, loc.value());
-    else
+    if (!loc.has_value())
       return Napi::Number::New(env, -1);
+    else
+      return Napi::Number::New(env, loc.value().index.value_or(-1));
   }
 
   template <typename ObjectType, typename ContextType>

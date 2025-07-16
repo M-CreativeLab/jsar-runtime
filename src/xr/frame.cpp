@@ -347,7 +347,7 @@ namespace xr
     commandbuffers::TrCommandBufferBase *newReq = nullptr;
     switch (srcReq->type)
     {
-#define XX(commandType, requestType)                              \
+#define XX(commandType, requestType, _)                           \
   case commandbuffers::COMMAND_BUFFER_##commandType##_REQ:        \
   {                                                               \
     newReq = dynamic_cast<commandbuffers::requestType *>(srcReq); \

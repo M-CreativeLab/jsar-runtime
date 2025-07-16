@@ -244,7 +244,7 @@ namespace commandbuffers
   // Check this command type is a request type.
   template <CommandBufferType Type>
   concept is_commandbuffer_request = (
-#define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
+#define XX(name, type, _) Type == COMMAND_BUFFER_##name##_REQ ||
     TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
 #undef XX
       false);
@@ -252,7 +252,7 @@ namespace commandbuffers
   // Check this command type is a response type.
   template <CommandBufferType Type>
   concept is_commandbuffer_response = (
-#define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
+#define XX(name, type, _) Type == COMMAND_BUFFER_##name##_REQ ||
     TR_COMMAND_BUFFER_RESPONSES_MAP(XX)
 #undef XX
       false);

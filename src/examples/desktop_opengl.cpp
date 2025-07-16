@@ -53,8 +53,8 @@ namespace jsar::example
         : TrEmbedder()
     {
       auto renderer = constellation->renderer;
-      auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation.get());
-      renderer->setApi(api);
+      auto rhi = RHIFactory::CreateRHI(kUnityGfxRendererOpenGLCore, constellation.get());
+      renderer->setRHI(rhi);
       renderer->useDoubleWideFramebuffer = true;
 
       // Check the environment variable to enable tracing
@@ -204,6 +204,19 @@ namespace jsar::example
       if (windowCtx_->isTerminated())
         return false;
 
+      // Make the context available before starting the embedder
+      glfwMakeContextCurrent(windowCtx_->window);
+      glfwSwapInterval(1);
+      {
+        // Get environment variables for OpenGL context
+        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
+        if (str != NULL && strcmp(str, "1") == 0)
+          multisampleEnabled = false;
+
+        // Initialize OpenGL context
+        prepareRenderTarget(samples);
+      }
+
       embedder_ = std::make_unique<DesktopEmbedder>();
       assert(embedder_ != nullptr);
 
@@ -227,22 +240,6 @@ namespace jsar::example
           embedder_->configureXrDevice(init);
           windowCtx_->createXrRenderer();
         }
-      }
-
-      // Make the context available before starting the embedder
-      glfwMakeContextCurrent(windowCtx_->window);
-      glfwSwapInterval(1);
-      {
-        auto version = glGetString(GL_VERSION);
-        fprintf(stdout, "OpenGL version: %s\n", version);
-
-        // Get environment variables for OpenGL context
-        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
-        if (str != NULL && strcmp(str, "1") == 0)
-          multisampleEnabled = false;
-
-        // Initialize OpenGL context
-        prepareRenderTarget(samples);
       }
 
       if (!embedder_->start())
@@ -458,17 +455,20 @@ namespace jsar::example
                           GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                           GL_NEAREST);
 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
-        glBlitFramebuffer(0,
-                          0,
-                          drawingViewport.width(),
-                          drawingViewport.height(),
-                          0,
-                          0,
-                          drawingViewport.width(),
-                          drawingViewport.height(),
-                          GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
-                          GL_NEAREST);
+        if (multisampleEnabled)
+        {
+          glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
+          glBlitFramebuffer(0,
+                            0,
+                            drawingViewport.width(),
+                            drawingViewport.height(),
+                            0,
+                            0,
+                            drawingViewport.width(),
+                            drawingViewport.height(),
+                            GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
+                            GL_NEAREST);
+        }
 
         // Unbind the framebuffers before swapping buffersAdd commentMore actions
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

@@ -16,6 +16,18 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateVertexArrayCommandBufferRequest(const CreateVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -31,6 +43,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , vertexArray(vertexArray)
     {
+    }
+    DeleteVertexArrayCommandBufferRequest(const DeleteVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
     }
 
   public:
@@ -48,6 +72,18 @@ namespace commandbuffers
         , vertexArray(vertexArray)
     {
     }
+    BindVertexArrayCommandBufferRequest(const BindVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t vertexArray;
@@ -64,6 +100,18 @@ namespace commandbuffers
         , vertexArray(vertexArray)
     {
     }
+    IsVertexArrayCommandBufferRequest(const IsVertexArrayCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , vertexArray(that.vertexArray)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << vertexArray << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t vertexArray;
@@ -75,6 +123,11 @@ namespace commandbuffers
     IsVertexArrayCommandBufferResponse(IsVertexArrayCommandBufferRequest *req, bool value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req)
         , value(value)
+    {
+    }
+    IsVertexArrayCommandBufferResponse(const IsVertexArrayCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
     ~IsVertexArrayCommandBufferResponse()

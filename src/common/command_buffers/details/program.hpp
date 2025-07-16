@@ -16,6 +16,18 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    CreateProgramCommandBufferRequest(const CreateProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -32,6 +44,18 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    DeleteProgramCommandBufferRequest(const DeleteProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -47,6 +71,18 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest()
         , clientId(clientId)
     {
+    }
+    LinkProgramCommandBufferRequest(const LinkProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
     }
 
   public:
@@ -137,6 +173,19 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req)
         , success(success)
     {
+    }
+    LinkProgramCommandBufferResponse(const LinkProgramCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , success(that.success)
+    {
+      if (clone)
+      {
+        activeAttribs = that.activeAttribs;
+        activeUniforms = that.activeUniforms;
+        attribLocations = that.attribLocations;
+        uniformLocations = that.uniformLocations;
+        uniformBlocks = that.uniformBlocks;
+      }
     }
 
   public:
@@ -315,6 +364,18 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    UseProgramCommandBufferRequest(const UseProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -333,8 +394,8 @@ namespace commandbuffers
         , attribName(name)
     {
     }
-    BindAttribLocationCommandBufferRequest(BindAttribLocationCommandBufferRequest &that)
-        : TrCommandBufferSimpleRequest(that)
+    BindAttribLocationCommandBufferRequest(const BindAttribLocationCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
         , program(that.program)
         , attribIndex(that.attribIndex)
     {
@@ -370,6 +431,21 @@ namespace commandbuffers
         , pname(pname)
     {
     }
+    GetProgramParamCommandBufferRequest(const GetProgramParamCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+        , pname(that.pname)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << clientId << ", "
+         << WebGLHelper::WebGLProgramParameterToString(pname) << ")";
+      return ss.str();
+    }
 
   public:
     uint32_t clientId;
@@ -380,14 +456,14 @@ namespace commandbuffers
       : public TrCommandBufferSimpleResponse<GetProgramParamCommandBufferResponse>
   {
   public:
-    GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferResponse &that)
-        : TrCommandBufferSimpleResponse(that)
-        , value(that.value)
-    {
-    }
     GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferRequest *req, int value)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req)
         , value(value)
+    {
+    }
+    GetProgramParamCommandBufferResponse(const GetProgramParamCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , value(that.value)
     {
     }
 
@@ -406,6 +482,11 @@ namespace commandbuffers
         , clientId(clientId)
     {
     }
+    GetProgramInfoLogCommandBufferRequest(const GetProgramInfoLogCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , clientId(that.clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
@@ -419,6 +500,13 @@ namespace commandbuffers
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req)
         , infoLog(infoLog)
     {
+    }
+    GetProgramInfoLogCommandBufferResponse(const GetProgramInfoLogCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferSimpleResponse(that, clone)
+        , infoLog()
+    {
+      if (clone)
+        infoLog = that.infoLog;
     }
 
   public:
@@ -434,6 +522,6 @@ namespace commandbuffers
     }
 
   public:
-    string infoLog;
+    std::string infoLog;
   };
 }

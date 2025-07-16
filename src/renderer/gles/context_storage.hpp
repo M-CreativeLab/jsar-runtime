@@ -1,23 +1,53 @@
 #pragma once
 
 #include <string>
+#include <array>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <optional>
 #include <common/viewport.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
 
 #include "./common.hpp"
 #include "./object_manager.hpp"
 
-class OpenGLTextureBinding
+class GLErrorGuard
 {
 public:
-  OpenGLTextureBinding(GLenum target, GLuint texture)
+  GLErrorGuard(std::string name, bool clearError = true)
+      : name_(std::move(name))
+  {
+    if (clearError)
+      glGetError();
+  }
+  ~GLErrorGuard()
+  {
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+      DEBUG(LOG_TAG_ERROR,
+            "Occurs error in %s: %s",
+            name_.c_str(),
+            WebGLHelper::WebGLErrorToString(err).c_str());
+  }
+
+private:
+  std::string name_;
+};
+
+class GLTextureBinding
+{
+public:
+  GLTextureBinding()
+      : target_(GL_TEXTURE_2D)
+      , texture_(0)
+  {
+  }
+  GLTextureBinding(GLenum target, GLuint texture)
       : target_(target)
       , texture_(texture)
   {
   }
-  OpenGLTextureBinding(OpenGLTextureBinding &) = default;
 
   inline void reset(GLenum target, GLuint texture)
   {
@@ -31,6 +61,14 @@ public:
   inline GLint texture()
   {
     return texture_;
+  }
+
+  // Bind this texture to the specified texture unit.
+  // The `unit` should be one of the GL_TEXTURE0, GL_TEXTURE1, ..., GL_TEXTURE31.
+  inline void bindTo(GLenum unit)
+  {
+    glActiveTexture(unit);
+    glBindTexture(target_, texture_);
   }
 
 private:
@@ -200,11 +238,14 @@ public:
   ContextGLStorage(std::string name)
       : name_(name)
   {
-    glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
-    glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
   }
   ContextGLStorage(std::string name, ContextGLStorage *from)
       : name_(name)
+      , m_ClearColor(from->m_ClearColor)
+      , m_ClearDepth(from->m_ClearDepth)
+      , m_ClearStencil(from->m_ClearStencil)
+      , m_CullFace(from->m_CullFace)
+      , m_FrontFace(from->m_FrontFace)
   {
     // Viewport
     viewport_[0] = from->viewport_[0];
@@ -248,8 +289,7 @@ public:
     m_RenderbufferId = from->m_RenderbufferId;
     m_VertexArrayObjectId = from->m_VertexArrayObjectId;
     m_LastActiveTextureUnit = from->m_LastActiveTextureUnit;
-    for (auto it = from->m_TextureBindingsWithUnit.begin(); it != from->m_TextureBindingsWithUnit.end(); it++)
-      m_TextureBindingsWithUnit[it->first] = std::make_shared<OpenGLTextureBinding>(*it->second);
+    m_TextureBindings = from->m_TextureBindings;
   }
   ~ContextGLStorage()
   {
@@ -315,22 +355,32 @@ protected:
   bool is_force_changed_ = false;
 
 protected: /** Global States */
+  // Clear values
+  std::optional<std::array<GLfloat, 4>> m_ClearColor; // [red, green, blue, alpha]
+  std::optional<GLfloat> m_ClearDepth;
+  std::optional<GLint> m_ClearStencil;
+
   // Culling & face
   GLboolean m_CullFaceEnabled;
-  GLenum m_CullFace;
-  GLenum m_FrontFace;
+  std::optional<GLenum> m_CullFace;
+  std::optional<GLenum> m_FrontFace;
+
   // Color
   GLboolean m_ColorMask[4]; // [reg, green, blue, alpha]
+
   // Depth
   GLboolean m_DepthTestEnabled;
   GLboolean m_DepthMask; // If depth buffer writing is enabled
   GLenum m_DepthFunc = GL_LEQUAL;
   GLfloat m_DepthRange[2] = {0.0f, 1.0f};
+
   // Dither
   GLboolean m_DitherEnabled;
+
   // Blending
   GLboolean m_BlendEnabled;
   OpenGLBlendingFunc m_BlendFunc;
+
   // Stencil
   GLboolean m_StencilTestEnabled;
   GLuint m_StencilMask;
@@ -339,9 +389,11 @@ protected: /** Global States */
   StencilFuncParameters m_StencilFuncBack;
   StencilOpParameters m_StencilOp;
   StencilOpParameters m_StencilOpBack;
+
   // Scissor
   GLboolean m_ScissorTestEnabled;
   Rect m_ScissorBox;
+
   // Others
   GLfloat m_LineWidth = 1.0f;
   PolygonOffsetParameters m_PolygonOffset;
@@ -354,7 +406,7 @@ protected: /** OpenGLES objects */
   std::optional<GLuint> m_RenderbufferId;
   GLint m_VertexArrayObjectId = 0;
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
-  std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
+  std::unordered_map<GLenum, GLTextureBinding> m_TextureBindings;
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>

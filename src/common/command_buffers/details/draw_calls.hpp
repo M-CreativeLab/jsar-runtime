@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/command_buffers/webgl_constants.hpp>
+
 #include "../shared.hpp"
 #include "../base.hpp"
 
@@ -16,6 +18,22 @@ namespace commandbuffers
         , first(first)
         , count(count)
     {
+    }
+    DrawArraysCommandBufferRequest(const DrawArraysCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , first(that.first)
+        , count(that.count)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawArrays(mode=" << mode << ", "
+         << first << ", "
+         << count << ")";
+      return ss.str();
     }
 
   public:
@@ -38,6 +56,24 @@ namespace commandbuffers
         , instanceCount(instanceCount)
     {
     }
+    DrawArraysInstancedCommandBufferRequest(const DrawArraysInstancedCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , first(that.first)
+        , count(that.count)
+        , instanceCount(that.instanceCount)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawArraysInstanced(mode=" << mode << ", "
+         << first << ", "
+         << count << ", "
+         << instanceCount << ")";
+      return ss.str();
+    }
 
   public:
     int mode;
@@ -59,6 +95,25 @@ namespace commandbuffers
         , indicesType(type)
         , indicesOffset(offset)
     {
+    }
+    DrawElementsCommandBufferRequest(const DrawElementsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawElements("
+         << WebGLHelper::WebGLEnumToString(mode) << ", "
+         << count << ", "
+         << indicesType << ", "
+         << indicesOffset << ")";
+      return ss.str();
     }
 
   public:
@@ -83,6 +138,27 @@ namespace commandbuffers
         , instanceCount(instanceCount)
     {
     }
+    DrawElementsInstancedCommandBufferRequest(const DrawElementsInstancedCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
+        , instanceCount(that.instanceCount)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << "GL::DrawElementsInstanced("
+         << WebGLHelper::WebGLEnumToString(mode) << ", "
+         << "count=" << count << ", "
+         << "type=" << WebGLHelper::WebGLEnumToString(indicesType) << ", "
+         << "offset=" << indicesOffset << ", "
+         << "instances=" << instanceCount << ")";
+      return ss.str();
+    }
 
   public:
     int mode;
@@ -95,6 +171,8 @@ namespace commandbuffers
   class DrawBuffersCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<DrawBuffersCommandBufferRequest, COMMAND_BUFFER_DRAW_BUFFERS_REQ>
   {
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
+
   public:
     DrawBuffersCommandBufferRequest() = delete;
     DrawBuffersCommandBufferRequest(size_t n, const uint32_t *bufs)
@@ -103,6 +181,14 @@ namespace commandbuffers
     {
       for (size_t i = 0; i < n; i++)
         this->bufs[i] = bufs[i];
+    }
+    DrawBuffersCommandBufferRequest(const DrawBuffersCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , n(that.n)
+        , bufs()
+    {
+      for (size_t i = 0; i < that.n; i++)
+        this->bufs[i] = that.bufs[i];
     }
 
   public:
@@ -114,7 +200,6 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<DrawRangeElementsCommandBufferRequest,
                                             COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ>
   {
-
   public:
     DrawRangeElementsCommandBufferRequest() = delete;
     DrawRangeElementsCommandBufferRequest(int mode, int start, int end, int count, int type, int offset)
@@ -125,6 +210,16 @@ namespace commandbuffers
         , count(count)
         , indicesType(type)
         , indicesOffset(offset)
+    {
+    }
+    DrawRangeElementsCommandBufferRequest(const DrawRangeElementsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , mode(that.mode)
+        , start(that.start)
+        , end(that.end)
+        , count(that.count)
+        , indicesType(that.indicesType)
+        , indicesOffset(that.indicesOffset)
     {
     }
 

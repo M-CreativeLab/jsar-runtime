@@ -1,3 +1,5 @@
+#include <renderer/renderer.hpp>
+
 #include "./context_host.hpp"
 
 #ifndef GL_COMPUTE_SHADER
@@ -26,6 +28,21 @@ void ContextGLHost::recordFromHost()
     is_framebuffer_changed = true;
   }
 
+  // Record clear values
+  {
+    GLfloat clear_color[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
+    m_ClearColor = {clear_color[0], clear_color[1], clear_color[2], clear_color[3]};
+
+    GLfloat clear_depth;
+    glGetFloatv(GL_DEPTH_CLEAR_VALUE, &clear_depth);
+    m_ClearDepth = clear_depth;
+
+    GLint clear_stencil;
+    glGetIntegerv(GL_STENCIL_CLEAR_VALUE, &clear_stencil);
+    m_ClearStencil = clear_stencil;
+  }
+
   // Record objects
   glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
   glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);
@@ -40,14 +57,47 @@ void ContextGLHost::recordFromHost()
   glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
 
   clearTextureBindings();
-  for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++)
+  // FIXME(yorkie): currently only record from 0-31 texture units to avoid the performance issue, we can record more
+  // texture units if needed.
+  for (int unit = GL_TEXTURE0; unit <= GL_TEXTURE31; unit++)
   {
     GLint texture = 0;
-    glActiveTexture(i);
+    glActiveTexture(unit);
 
-    // TODO: how to support other texture targets?
+    // Reading the TEXTURE_2D
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-    m_TextureBindingsWithUnit[i] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_2D_ARRAY
+    glGetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D_ARRAY, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_3D
+    glGetIntegerv(GL_TEXTURE_BINDING_3D, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_3D, texture);
+      continue;
+    }
+
+    // Reading the TEXTURE_CUBE_MAP
+    glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &texture);
+    if (texture > 0)
+    {
+      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_CUBE_MAP, texture);
+      continue;
+    }
+
+    // TODO(yorkie): support other texture targets like GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, etc.
+    m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, 0);
   }
   glActiveTexture(m_LastActiveTextureUnit);
 
@@ -60,8 +110,15 @@ void ContextGLHost::recordFromHost()
   m_ScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
   // Global States
-  glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
-  glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+  {
+    GLenum cullface, frontface;
+    glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&cullface);
+    glGetIntegerv(GL_FRONT_FACE, (GLint *)&frontface);
+    m_CullFace = cullface;
+    m_FrontFace = frontface;
+  }
+
+  // Color mask
   glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean *)&m_ColorMask);
   /**
    * Recording the depth parameters.
@@ -127,31 +184,13 @@ void ContextGLHost::recordFromHost()
     DEBUG(LOG_TAG_ERROR, "Occurs an OpenGL error in recording %s context: 0x%04X", name(), error);
 }
 
-void ContextGLHost::recordTextureBindingFromHost()
-{
-  auto &binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
-  if (binding != nullptr)
-    return;
-
-  GLuint texture;
-  GLint beforeActiveUnit;
-  glGetIntegerv(GL_ACTIVE_TEXTURE, &beforeActiveUnit);
-
-  bool isActiveNotMatched = beforeActiveUnit != m_LastActiveTextureUnit;
-  if (isActiveNotMatched)
-    glActiveTexture(m_LastActiveTextureUnit);
-
-  glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
-  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
-
-  if (isActiveNotMatched)
-    glActiveTexture(beforeActiveUnit);
-}
-
 void ContextGLHost::restore()
 {
   ContextGLStorage::restore();
-  glClear(GL_STENCIL_BUFFER_BIT);
+
+  // Clear the host's stencil buffer because it might be written by the content renderers.
+  if (!renderer::TrRenderer::GetRendererRef().isStencilClearDisabled) [[likely]]
+    glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 void ContextGLHost::onHostFramebufferChanged()

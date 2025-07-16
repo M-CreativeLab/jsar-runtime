@@ -11,6 +11,14 @@ public:
   FooCommand(int a) : a(a)
   {
   }
+  FooCommand(const FooCommand& that, bool clone = false)
+      : a(that.a) // Copy constructor
+  {
+    if (clone)
+    {
+      // Perform deep copy if necessary
+    }
+  }
 
 public:
   int a;

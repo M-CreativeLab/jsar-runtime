@@ -85,8 +85,7 @@ unique_ptr<GLFramebufferAttachment> GLFramebufferAttachment::FromCurrent(GLenum 
     GLint is_texture_array = 0;
     glBindTexture(GL_TEXTURE_2D_ARRAY, attachment_texture);
     glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_DEPTH, &is_texture_array);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &attachment_object->width_);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &attachment_object->height_);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, current_texture_binding);
 
     if (is_texture_array > 0)
     {
@@ -99,12 +98,27 @@ unique_ptr<GLFramebufferAttachment> GLFramebufferAttachment::FromCurrent(GLenum 
                                              : GL_TEXTURE_2D;
     }
 
-    glGetTexLevelParameteriv(attachment_object->texture_target_,
-                             0,
-                             GL_TEXTURE_INTERNAL_FORMAT,
-                             &attachment_object->texture_internal_format_);
+    GLenum textarget = attachment_object->texture_target_;
+    optional<GLenum> texture_binding_name = nullopt;
+    if (textarget == GL_TEXTURE_2D)
+      texture_binding_name = GL_TEXTURE_BINDING_2D;
+    else if (textarget == GL_TEXTURE_2D_ARRAY)
+      texture_binding_name = GL_TEXTURE_BINDING_2D_ARRAY;
+    else if (textarget == GL_TEXTURE_2D_MULTISAMPLE)
+      texture_binding_name = GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+    assert(texture_binding_name.has_value());
 
-    glBindTexture(GL_TEXTURE_2D_ARRAY, current_texture_binding);
+    glGetIntegerv(texture_binding_name.value(), &current_texture_binding);
+    {
+      glBindTexture(textarget, attachment_texture);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_WIDTH, &attachment_object->width_);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_HEIGHT, &attachment_object->height_);
+      glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_INTERNAL_FORMAT, &attachment_object->texture_internal_format_);
+    }
+    glBindTexture(textarget, current_texture_binding);
+
+    // Clear any errors from the previous call
+    glGetError();
   }
   else if (attachment_type == GL_NONE)
   {
@@ -120,7 +134,7 @@ void GLFramebufferAttachment::print(const char *prefix) const
 {
   if (isTexture())
     DEBUG(LOG_TAG_RENDERER,
-          "  [%s]: FramebufferAttachment(Texture(%u, %s, [%dx%d], %s), multiview(%s, base=%d), samples(%d))",
+          "%s: FramebufferAttachment(Texture(%u, %s, [%dx%d], %s), multiview(%s, base=%d), samples(%d))",
           prefix,
           id_,
           gles::glTextureTargetToString(texture_target_).c_str(),
@@ -132,7 +146,7 @@ void GLFramebufferAttachment::print(const char *prefix) const
           samples_);
   else if (isRenderbuffer())
     DEBUG(LOG_TAG_RENDERER,
-          "  [%s]: FramebufferAttachment(Renderbuffer(%u, [%dx%d]), samples(%d))",
+          "%s: FramebufferAttachment(Renderbuffer(%u, [%dx%d]), samples(%d))",
           prefix,
           id_,
           width_,

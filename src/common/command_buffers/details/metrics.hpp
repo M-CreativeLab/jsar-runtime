@@ -22,9 +22,14 @@ namespace commandbuffers
         , category(category)
     {
     }
+    PaintingMetricsCommandBufferRequest(const PaintingMetricsCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that, clone)
+        , category(that.category)
+    {
+    }
 
   public:
-    inline std::string toString()
+    inline std::string toString(const char *line_prefix) const override
     {
       if (category == MetricsCategory::FirstContentfulPaint)
         return "FCP";

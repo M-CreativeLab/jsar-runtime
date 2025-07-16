@@ -1,5 +1,8 @@
 #pragma once
 
+#include <iostream>
+#include <string>
+
 #include "./shared.hpp"
 #include "../xr/types.hpp"
 
@@ -55,6 +58,19 @@ namespace commandbuffers
         : TrIpcSerializableBase(type, size)
     {
     }
+    TrCommandBufferBase(const TrCommandBufferBase &that)
+        : TrIpcSerializableBase(that.type, that.size)
+        , id(that.id)
+        , contextId(that.contextId)
+        , renderingInfo(that.renderingInfo)
+    {
+    }
+
+  public:
+    virtual std::string toString(const char *prefix = "") const
+    {
+      return "";
+    }
 
   public:
     /**
@@ -87,11 +103,15 @@ namespace commandbuffers
         : TrCommandBufferBase(type, size)
     {
     }
-    TrCommandBufferRequest(TrCommandBufferRequest &that)
-        : TrCommandBufferBase(that.type, that.size)
+    TrCommandBufferRequest(const TrCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferBase(that)
     {
-      contextId = that.contextId;
-      renderingInfo = that.renderingInfo;
+    }
+
+  public:
+    virtual std::string toString(const char *_ /* ignore prefix in request */ = nullptr) const override
+    {
+      return commandTypeToStr(this->type);
     }
   };
 
@@ -104,11 +124,18 @@ namespace commandbuffers
     {
       contextId = req->contextId;
     }
-    TrCommandBufferResponse(TrCommandBufferResponse &that)
-        : TrCommandBufferBase(that.type, that.size)
+    TrCommandBufferResponse(const TrCommandBufferResponse &that, bool clone = false)
+        : TrCommandBufferBase(that)
         , requestId(that.requestId)
     {
-      contextId = that.contextId;
+    }
+
+  public:
+    virtual std::string toString(const char *prefix = "") const override
+    {
+      std::stringstream ss;
+      ss << prefix << commandTypeToStr(this->type);
+      return ss.str();
     }
 
   public:
@@ -130,17 +157,11 @@ namespace commandbuffers
         : TrCommandBufferRequest(Type, sizeof(Derived))
     {
     }
-    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that)
-        : TrCommandBufferRequest(that)
+    TrCommandBufferSimpleRequest(const TrCommandBufferSimpleRequest &that, bool clone = false)
+        : TrCommandBufferRequest(that, clone)
     {
     }
     ~TrCommandBufferSimpleRequest() = default;
-
-  public:
-    inline void print()
-    {
-      DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(Type).c_str());
-    }
   };
 
   /**
@@ -153,12 +174,12 @@ namespace commandbuffers
   class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
   {
   public:
-    TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that)
-        : TrCommandBufferResponse(that)
-    {
-    }
     TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
         : TrCommandBufferResponse(type, sizeof(Derived), req)
+    {
+    }
+    TrCommandBufferSimpleResponse(const TrCommandBufferSimpleResponse &that, bool clone = false)
+        : TrCommandBufferResponse(that, clone)
     {
     }
   };
