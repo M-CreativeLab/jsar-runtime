@@ -2,6 +2,17 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.8.1
+
+### Improvements
+
+- Optimize rendering pipeline to support offscreen rendering correctly.
+- Speed up the graphics initialization of each content process.
+
+### Fixes
+
+- Correct the FCP timing for actual writing to the color buffer in the shared render target.
+
 ## v0.8.0
 
 ### New Features & Improvements
