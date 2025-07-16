@@ -1990,6 +1990,22 @@ private:
       }
     }
   }
+  TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+  {
+    auto n = req->n;
+    auto buffers = req->bufs;
+    glDrawBuffers(n, (const GLenum *)buffers);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es2/glDrawBuffers") != GL_NO_ERROR || options.printsCall))
+    {
+      PrintDebugInfo(req, nullptr, nullptr, options);
+
+      GLint bindingFramebuffer;
+      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &bindingFramebuffer);
+      DEBUG(DEBUG_TAG, "    framebuffer: %d", bindingFramebuffer);
+      for (int i = 0; i < n; i++)
+        DEBUG(DEBUG_TAG, "    buffers[%d]: %s", i, gles::glDrawBufferTargetToString(buffers[i]).c_str());
+    }
+  }
   TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
     auto mode = req->mode;
@@ -2017,22 +2033,6 @@ private:
       DumpDrawCallInfo(DEBUG_TAG, "DrawElements", options.isDefaultQueue(), mode, count, type, indices);
     }
   }
-  TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
-  {
-    auto n = req->n;
-    auto buffers = req->bufs;
-    glDrawBuffers(n, (const GLenum *)buffers);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer, "https://docs.gl/es2/glDrawBuffers") != GL_NO_ERROR || options.printsCall))
-    {
-      PrintDebugInfo(req, nullptr, nullptr, options);
-
-      GLint bindingFramebuffer;
-      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &bindingFramebuffer);
-      DEBUG(DEBUG_TAG, "    framebuffer: %d", bindingFramebuffer);
-      for (int i = 0; i < n; i++)
-        DEBUG(DEBUG_TAG, "    buffers[%d]: %s", i, gles::glDrawBufferTargetToString(buffers[i]).c_str());
-    }
-  }
   TR_OPENGL_FUNC void OnDrawArraysInstanced(DrawArraysInstancedCommandBufferRequest *req,
                                             renderer::TrContentRenderer *reqContentRenderer,
                                             ApiCallOptions &options)
@@ -2042,9 +2042,7 @@ private:
     auto count = req->count;
     auto instanceCount = req->instanceCount;
 
-    assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-    glDrawArraysInstanced(mode, first, count, instanceCount);
-    reqContentRenderer->increaseDrawCallsCount(count);
+    reqContentRenderer->getContextGL()->drawArraysInstanced(mode, first, count, instanceCount);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       PrintDebugInfo(req, nullptr, nullptr, options);
@@ -2059,15 +2057,13 @@ private:
     auto count = req->count;
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
-    auto instanceCount = req->instanceCount;
+    auto instancecount = req->instanceCount;
 
-    assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-    glDrawElementsInstanced(mode, count, type, indices, instanceCount);
-    reqContentRenderer->increaseDrawCallsCount(count);
+    reqContentRenderer->getContextGL()->drawElementsInstanced(mode, count, type, indices, instancecount);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       PrintDebugInfo(req, nullptr, nullptr, options);
-      DumpDrawCallInfo(DEBUG_TAG, "DrawElementsInstanced", options.isDefaultQueue(), mode, count, type, indices);
+      DumpDrawCallInfo(DEBUG_TAG, "DrawElementsInstanced", options.isDefaultQueue(), mode, count, 0, nullptr);
     }
   }
   TR_OPENGL_FUNC void OnDrawRangeElements(DrawRangeElementsCommandBufferRequest *req,
@@ -2081,13 +2077,11 @@ private:
     auto type = req->indicesType;
     auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
-    assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-    glDrawRangeElements(mode, start, end, count, type, indices);
-    reqContentRenderer->increaseDrawCallsCount(count);
+    reqContentRenderer->getContextGL()->drawRangeElements(mode, start, end, count, type, indices);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       PrintDebugInfo(req, nullptr, nullptr, options);
-      DumpDrawCallInfo(DEBUG_TAG, "DrawRangeElements", options.isDefaultQueue(), mode, count, type, indices);
+      DumpDrawCallInfo(DEBUG_TAG, "DrawRangeElements", options.isDefaultQueue(), mode, count, 0, nullptr);
     }
   }
   TR_OPENGL_FUNC void OnHint(HintCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)

@@ -377,7 +377,7 @@ void ContextGLApp::bindTexture(GLenum target, uint32_t id, GLuint &texture)
 
 void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
-  if (shouleExecuteDrawOnCurrent(count))
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
   {
     glDrawArrays(mode, first, count);
     onAfterDraw(count);
@@ -386,13 +386,48 @@ void ContextGLApp::drawArrays(GLenum mode, GLint first, GLsizei count)
 
 void ContextGLApp::drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)
 {
-  if (shouleExecuteDrawOnCurrent(count))
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
   {
     glDrawElements(mode, count, type, indices);
     onAfterDraw(count);
   }
 }
 
+void ContextGLApp::drawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawArraysInstanced(mode, first, count, instancecount);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawElementsInstanced(GLenum mode,
+                                         GLsizei count,
+                                         GLenum type,
+                                         const GLvoid *indices,
+                                         GLsizei instancecount)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawElementsInstanced(mode, count, type, indices, instancecount);
+    onAfterDraw(count);
+  }
+}
+
+void ContextGLApp::drawRangeElements(GLenum mode,
+                                     GLuint start,
+                                     GLuint end,
+                                     GLsizei count,
+                                     GLenum type,
+                                     const GLvoid *indices)
+{
+  if (shouldExecuteDrawOnCurrent(count)) [[likely]]
+  {
+    glDrawRangeElements(mode, start, end, count, type, indices);
+    onAfterDraw(count);
+  }
+}
 
 std::optional<GLint> ContextGLApp::getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *req) const
 {
@@ -521,11 +556,11 @@ renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
   return *contentRenderer;
 }
 
-bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
+bool ContextGLApp::shouldExecuteDrawOnCurrent(GLsizei count)
 {
   assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
   if (m_FramebufferId.has_value() &&
-      m_FramebufferId.value() == 0) [[unlikely]]
+      m_FramebufferId.value() == 0)
   {
     DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not set.");
     return false;

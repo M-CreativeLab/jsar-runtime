@@ -263,7 +263,7 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
       if (__system_property_get("jsar.renderer.clear_stencil", disableStencilClearStr) >= 0)
       {
         if (strcmp(disableStencilClearStr, "no") == 0 ||
-            strcmp(disableStencilClearStr, "disable"))
+            strcmp(disableStencilClearStr, "disable") == 0)
           renderer->disableStencilClear();
       }
 

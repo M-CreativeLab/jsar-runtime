@@ -99,14 +99,23 @@ unique_ptr<GLFramebufferAttachment> GLFramebufferAttachment::FromCurrent(GLenum 
     }
 
     GLenum textarget = attachment_object->texture_target_;
-    glGetIntegerv(textarget, &current_texture_binding);
+    optional<GLenum> texture_binding_name = nullopt;
+    if (textarget == GL_TEXTURE_2D)
+      texture_binding_name = GL_TEXTURE_BINDING_2D;
+    else if (textarget == GL_TEXTURE_2D_ARRAY)
+      texture_binding_name = GL_TEXTURE_BINDING_2D_ARRAY;
+    else if (textarget == GL_TEXTURE_2D_MULTISAMPLE)
+      texture_binding_name = GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+    assert(texture_binding_name.has_value());
+
+    glGetIntegerv(texture_binding_name.value(), &current_texture_binding);
     {
       glBindTexture(textarget, attachment_texture);
       glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_WIDTH, &attachment_object->width_);
       glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_HEIGHT, &attachment_object->height_);
       glGetTexLevelParameteriv(textarget, 0, GL_TEXTURE_INTERNAL_FORMAT, &attachment_object->texture_internal_format_);
-      glBindTexture(textarget, current_texture_binding);
     }
+    glBindTexture(textarget, current_texture_binding);
 
     // Clear any errors from the previous call
     glGetError();

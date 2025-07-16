@@ -79,6 +79,9 @@ public: // GLES Implementations
   // Draw functions
   void drawArrays(GLenum mode, GLint first, GLsizei count);
   void drawElements(GLenum mode, GLsizei count, GLenum type, const void *indices);
+  void drawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
+  void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei instancecount);
+  void drawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
 
 public: // GLES Helpers
   std::optional<GLint> getAttribLoc(commandbuffers::SetVertexAttribCommandBufferRequestBase *) const;
@@ -99,7 +102,7 @@ public:
   }
 
 private:
-  [[nodiscard]] bool shouleExecuteDrawOnCurrent(GLsizei count);
+  [[nodiscard]] bool shouldExecuteDrawOnCurrent(GLsizei count);
   void onAfterDraw(int drawCount);
 
 private:
