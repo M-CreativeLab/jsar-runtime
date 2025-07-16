@@ -95,9 +95,6 @@ GLuint ContextGLApp::currentDefaultRenderTarget() const
 void ContextGLApp::onFrameWillStart(ContextGLHost *host_context)
 {
   m_CurrentDefaultRenderTarget = host_context->currentFramebufferId();
-  if (!m_FramebufferId.has_value())
-    m_FramebufferId = m_CurrentDefaultRenderTarget;
-
   glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentDefaultRenderTarget);
   glClear(GL_STENCIL_BUFFER_BIT);
 
@@ -527,14 +524,10 @@ renderer::TrContentRenderer &ContextGLApp::contentRendererChecked() const
 bool ContextGLApp::shouleExecuteDrawOnCurrent(GLsizei count)
 {
   assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
-  if (!m_FramebufferId.has_value() || m_FramebufferId.value() == 0) [[unlikely]]
+  if (m_FramebufferId.has_value() &&
+      m_FramebufferId.value() == 0) [[unlikely]]
   {
     DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not set.");
-    return false;
-  }
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) [[unlikely]]
-  {
-    DEBUG(LOG_TAG_ERROR, "Skip this draw: the framebuffer is not complete.");
     return false;
   }
   return true;

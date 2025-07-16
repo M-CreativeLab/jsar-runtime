@@ -199,13 +199,6 @@ private:
         DEBUG(logTag, "     Viewport: (%d, %d, %d, %d)", viewport[0], viewport[1], viewport[2], viewport[3]);
         DEBUG(logTag, "      Scissor: (%d, %d, %d, %d)", scissor[0], scissor[1], scissor[2], scissor[3]);
       }
-
-      auto color0 = GLFramebufferAttachment::FromCurrent(GL_COLOR_ATTACHMENT0);
-      auto depth = GLFramebufferAttachment::FromCurrent(GL_DEPTH_ATTACHMENT);
-      if (color0 != nullptr)
-        color0->print("       Color0");
-      if (depth != nullptr)
-        depth->print("        Depth");
     }
 
     // Print LINK_STATUS
@@ -1970,6 +1963,7 @@ private:
 
     if (matrixToUse == nullptr) [[unlikely]]
     {
+      PrintDebugInfo(req, nullptr, nullptr, options);
       DEBUG(LOG_TAG_ERROR,
             "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d, deviceFrame=%p",
             req->computationGraph4values.placeholderId,
@@ -2597,12 +2591,13 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   ContextGLApp *contentGlContext = content_renderer->getContextGL();
   ContextGLApp contextBaseState = ContextGLApp("tmp", contentGlContext);
 
-  bool should_copy_to_offscreen_pass = false;
-  for (auto commandbuffer : list)
+  bool should_move_to_offscreen_pass = false;
+  for (auto it = list.begin(); it != list.end();)
   {
+    commandbuffers::TrCommandBufferBase *commandbuffer = *it;
     assert(commandbuffer != nullptr && "command buffer must not be nullptr");
-    CommandBufferType commandType = commandbuffer->type;
 
+    CommandBufferType commandType = commandbuffer->type;
     if (commandType == COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ)
     {
       auto req = dynamic_cast<BindFramebufferCommandBufferRequest *>(commandbuffer);
@@ -2613,35 +2608,37 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
            req->target == GL_DRAW_FRAMEBUFFER))
       {
         if (req->isBindToDefault()) // Stop copying commandbuffers into offscreen pass if it is to bind to default.
-          should_copy_to_offscreen_pass = false;
+          should_move_to_offscreen_pass = false;
         else
         {
           GLuint framebuffer = contentGlContext->ObjectManagerRef().FindFramebuffer(req->framebuffer);
-          should_copy_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
-          if (should_copy_to_offscreen_pass == true)
+          should_move_to_offscreen_pass = framebuffer != contentGlContext->currentDefaultRenderTarget();
+          if (should_move_to_offscreen_pass == true)
             content_renderer->resetOffscreenPassGLContext(framebuffer);
         }
       }
     }
 
-#define ADD_COMMAND_BUFFER_HANDLER(commandType, RequestType, handlerName)             \
-  case COMMAND_BUFFER_##commandType##_REQ:                                            \
-  {                                                                                   \
-    auto cbRequest = dynamic_cast<RequestType *>(commandbuffer);                      \
-    if (cbRequest != nullptr)                                                         \
-    {                                                                                 \
-      if (pass_type == ExecutingPassType::kXRFrame &&                                 \
-          should_copy_to_offscreen_pass == true)                                      \
-      {                                                                               \
-        auto copied_commandbuffer = new RequestType(*cbRequest, true);                \
-        content_renderer->scheduleCommandBufferAtOffscreenPass(copied_commandbuffer); \
-      }                                                                               \
-      else                                                                            \
-      {                                                                               \
-        On##handlerName(cbRequest, content_renderer, callOptions);                    \
-      }                                                                               \
-    }                                                                                 \
-    break;                                                                            \
+    // Move the command buffers to offscreen pass if needed
+    if (pass_type == ExecutingPassType::kXRFrame && should_move_to_offscreen_pass == true)
+    {
+      content_renderer->scheduleCommandBufferAtOffscreenPass(commandbuffer);
+      it = list.erase(it); // Remove this command buffer from the original list
+      continue;            // Skip to the next command buffer
+    }
+
+    // Move to the next command buffer
+    it++;
+
+#define ADD_COMMAND_BUFFER_HANDLER(commandType, RequestType, handlerName) \
+  case COMMAND_BUFFER_##commandType##_REQ:                                \
+  {                                                                       \
+    auto cbRequest = dynamic_cast<RequestType *>(commandbuffer);          \
+    if (cbRequest != nullptr)                                             \
+    {                                                                     \
+      On##handlerName(cbRequest, content_renderer, callOptions);          \
+    }                                                                     \
+    break;                                                                \
   }
 
 #define ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(commandType, RequestType, handlerName) \
@@ -2650,16 +2647,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     auto cbRequest = dynamic_cast<RequestType *>(commandbuffer);                            \
     if (cbRequest != nullptr)                                                               \
     {                                                                                       \
-      if (pass_type == ExecutingPassType::kXRFrame &&                                       \
-          should_copy_to_offscreen_pass == true)                                            \
-      {                                                                                     \
-        auto copied_commandbuffer = new RequestType(*cbRequest, true);                      \
-        content_renderer->scheduleCommandBufferAtOffscreenPass(copied_commandbuffer);       \
-      }                                                                                     \
-      else                                                                                  \
-      {                                                                                     \
-        On##handlerName(cbRequest, content_renderer, callOptions, device_frame);            \
-      }                                                                                     \
+      On##handlerName(cbRequest, content_renderer, callOptions, device_frame);              \
     }                                                                                       \
     break;                                                                                  \
   }
