@@ -606,12 +606,24 @@ namespace client_graphics
      */
     bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush = false);
 
+    /**
+     * Receives a command buffer response from the server, and returns the response as a pointer to the specified type.
+     * 
+     * @param responseType The type of the response command buffer, that is used to check the response type.
+     * @param req The request command buffer that is used to match the response.
+     * @param timeout The timeout in milliseconds to wait for the response, default is 1000ms.
+     * @returns A pointer to the response command buffer of the specified type, or nullptr if the response is not 
+     *          received within the timeout or if the response type does not match.
+     */
     template <typename R>
-    R *recvCommandBufferResponse(commandbuffers::CommandBufferType responseType, int timeout = 1000)
+    R *recvResponse(commandbuffers::CommandBufferType responseType,
+                    const commandbuffers::TrCommandBufferBase &req,
+                    int timeout = 1000)
     {
-      auto response = clientContext_->recvCommandBufferResponse(timeout);
+      auto response = clientContext_->recvCommandBufferResponse(this, req.id, timeout);
       if (response == nullptr) [[unlikely]]
         return nullptr;
+
       if (response->type != responseType) [[unlikely]]
       {
         std::cerr << "recvCommandBuffer(): "
@@ -622,8 +634,17 @@ namespace client_graphics
       return dynamic_cast<R *>(response);
     }
 
+    /**
+     * It receives a command buffer response **asynchronously**, and calls the callback function with the response.
+     * 
+     * @param responseType The type of the response command buffer, that is used to check the response type.
+     * @param req The request command buffer that is used to match the response.
+     * @param callback The callback function that is called with the response command buffer of the specified type.
+     */
     template <typename R>
-    void recvResponseAsync(commandbuffers::CommandBufferType responseType, std::function<void(const R &)> callback)
+    void recvResponseAsync(commandbuffers::CommandBufferType responseType,
+                           const commandbuffers::TrCommandBufferBase &req,
+                           std::function<void(const R &)> callback)
     {
       auto onResponse = [responseType, callback](const commandbuffers::TrCommandBufferBase &response)
       {
@@ -636,7 +657,7 @@ namespace client_graphics
         }
         callback(dynamic_cast<const R &>(response));
       };
-      clientContext_->recvCommandBufferResponseAsync(onResponse);
+      clientContext_->recvCommandBufferResponseAsync(this, req.id, onResponse);
     }
 
     bool sendFlushCommand(std::shared_ptr<client_xr::XRSession> session);
