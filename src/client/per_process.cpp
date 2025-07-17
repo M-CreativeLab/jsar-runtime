@@ -449,30 +449,47 @@ void TrClientContextPerProcess::start()
     commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
     commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
 
-    // This worker is used to process the asynchronous command buffer responses.
-    auto onAsyncCommandBufferResponseWork = [this](WorkerThread &worker)
+    // This worker is used to receive commandbuffer responses.
+    auto onCommandBufferResponseWork = [this](WorkerThread &worker)
     {
-      unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
-      asyncCommandBufferResponseCv.wait(lock, [this]()
-                                        { return !asyncCommandBufferResponseCallbacks.empty(); });
-
-      while (!asyncCommandBufferResponseCallbacks.empty())
+      // TODO(yorkie): use specific condition variable to avoid the loop?
+      TrCommandBufferResponse *resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
+      if (resp != nullptr)
       {
-        auto &responseCallback = asyncCommandBufferResponseCallbacks.front();
-        TrCommandBufferResponse *resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
-        if (resp != nullptr) [[likely]]
-        {
-          responseCallback(*resp);
-          delete resp; // End
-        }
-        asyncCommandBufferResponseCallbacks.pop_front();
-      }
+        unique_lock<shared_mutex> lock(mutexForAsyncCommandbufferResponseCallbacks);
 
-      // Notify the main thread that the async command buffer response is processed.
-      asyncCommandBufferResponseCv.notify_one();
+        for (auto it = asyncCommandbufferResponseCallbacks.begin();
+             it != asyncCommandbufferResponseCallbacks.end();
+             it++)
+        {
+          auto &asyncResponseCallback = *it;
+          assert(asyncResponseCallback.context != nullptr &&
+                 "Async response callback context is null.");
+          if (asyncResponseCallback.context->id == resp->contextId &&
+              asyncResponseCallback.requestId == resp->requestId)
+          {
+            asyncResponseCallback.call(*resp);
+            it = asyncCommandbufferResponseCallbacks.erase(it);
+            delete resp; // End the response
+            return;
+          }
+        }
+
+        /**
+         * If not consumed by async response callbacks, push this response to the pending list and notify the waiting
+         * sync receivers.
+         */
+        {
+          unique_lock<mutex> lock(mutexForCommandbufferResponses);
+          pendingCommandbufferResponses.push_back(resp);
+          assert(pendingCommandbufferResponses.size() < 50 &&
+                 "Pending command buffer responses size is too large, no one is consuming them?");
+          commandbufferResponseCv.notify_all();
+        }
+      }
     };
-    asyncCommandBufferResponseWorker = make_unique<WorkerThread>("TrAsyncCommandBufferResponseWorker",
-                                                                 onAsyncCommandBufferResponseWork);
+    commandbufferResponseWorker = make_unique<WorkerThread>("TrCommandbufferResponseWorker",
+                                                            onCommandBufferResponseWork);
   }
 
   // XR device initialization
@@ -655,32 +672,68 @@ bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &co
   return commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
 }
 
-TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(int timeout)
+TrCommandBufferResponse *TrClientContextPerProcess::selectCommandbufferResponse(client_graphics::WebGLContext *context,
+                                                                                int requestId)
 {
-  auto before = chrono::steady_clock::now();
-  // Wait for the async command buffer responses to be processed.
-  if (isAsyncCommandBufferResponseScheduled)
+  // First, check if there are any pending async command buffer responses.
+  if (!pendingCommandbufferResponses.empty())
   {
-    unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
-    asyncCommandBufferResponseCv.wait(lock, [this]()
-                                      { return asyncCommandBufferResponseCallbacks.empty(); });
-    isAsyncCommandBufferResponseScheduled = false;
+    // Process all pending async command buffer responses.
+    for (auto it = pendingCommandbufferResponses.begin();
+         it != pendingCommandbufferResponses.end();)
+    {
+      TrCommandBufferResponse *resp = *it;
+      if (resp->contextId == context->id &&
+          resp->requestId == requestId)
+      {
+        // Found the response, remove it from the pending list.
+        it = pendingCommandbufferResponses.erase(it);
+        return resp;
+      }
+      else
+      {
+        ++it; // Move to the next response.
+      }
+    }
   }
-
-  TrCommandBufferResponse *response = commandBufferChanReceiver->recvCommandBufferResponse(timeout);
-  auto after = chrono::steady_clock::now();
-  auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
-  cerr << "Received command buffer response(" << commandTypeToStr(response->type) << ") "
-       << "in " << duration << "ms which blocks the main thread." << endl;
-  return response;
+  return nullptr;
 }
 
-void TrClientContextPerProcess::recvCommandBufferResponseAsync(AsyncCommandBufferResponseCallback callback)
+TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(client_graphics::WebGLContext *context,
+                                                                              int requestId,
+                                                                              int timeout)
 {
-  unique_lock<mutex> lock(asyncCommandBufferResponseMutex);
-  isAsyncCommandBufferResponseScheduled = true;
-  asyncCommandBufferResponseCallbacks.push_back(callback);
-  asyncCommandBufferResponseCv.notify_one();
+  unique_lock<mutex> lock(mutexForCommandbufferResponses);
+  auto before = chrono::steady_clock::now();
+
+  // First, check if there are any pending async command buffer responses.
+  TrCommandBufferResponse *resp = selectCommandbufferResponse(context, requestId);
+
+  // If no pending response found, wait for the command buffer response updates.
+  if (resp == nullptr)
+  {
+    auto check = [this, context, requestId, &resp]()
+    {
+      resp = selectCommandbufferResponse(context, requestId);
+      return resp != nullptr;
+    };
+    commandbufferResponseCv.wait_for(lock, chrono::milliseconds(timeout), check);
+  }
+
+  auto after = chrono::steady_clock::now();
+  auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
+  cerr << "Received command buffer response(" << commandTypeToStr(resp->type) << ") "
+       << "in " << duration << "ms which blocks the main thread." << endl;
+  return resp;
+}
+
+void TrClientContextPerProcess::recvCommandBufferResponseAsync(client_graphics::WebGLContext *context,
+                                                               int requestId,
+                                                               AsyncCommandBufferResponseFunction func)
+{
+  unique_lock<shared_mutex> lock(mutexForAsyncCommandbufferResponseCallbacks);
+  asyncCommandbufferResponseCallbacks.push_back(
+    AsyncCommandBufferResponseCallback{context, requestId, func});
 }
 
 void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)
