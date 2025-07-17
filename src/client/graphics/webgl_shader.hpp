@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+#include <string>
+
 #include "common/command_buffers/details/program.hpp"
 #include "./webgl_object.hpp"
 
@@ -23,5 +25,6 @@ namespace client_graphics
 
   public:
     WebGLShaderType type;
+    std::string source;
   };
 }

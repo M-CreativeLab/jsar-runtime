@@ -335,7 +335,8 @@ namespace client_graphics
 
   void WebGLContext::shaderSource(shared_ptr<WebGLShader> shader, const string &source)
   {
-    auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher2::GetPatchedSource(source));
+    shader->source = GLSLSourcePatcher2::GetPatchedSource(source);
+    auto req = ShaderSourceCommandBufferRequest(shader->id, shader->source);
     sendCommandBufferRequest(req);
   }
 
@@ -400,8 +401,15 @@ namespace client_graphics
 
     auto onGetShaderInfoLogResponse = [shader](const GetShaderInfoLogCommandBufferResponse &resp)
     {
-      if (!resp.infoLog.empty())
-        cerr << "getShaderInfoLog(" << shader->id << "): " << resp.infoLog << endl;
+      if (!resp.infoLog.empty() && resp.infoLog.find("ERROR:") == 0)
+      {
+        // TODO(yorkie): print to console domain in inspector.
+        cerr << "Shader(" << shader->id << ") compilation error:" << endl
+             << resp.infoLog << endl
+             << "============== shader source ==============" << endl
+             << shader->source << endl
+             << "============================================" << endl;
+      }
     };
     recvResponseAsync<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES,
                                                              req,
