@@ -66,8 +66,9 @@ namespace client_graphics
       auto initReq = WebGL1ContextInitCommandBufferRequest();
       sendCommandBufferRequest(initReq, true);
 
-      initResp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,
-                                                                                   3000);
+      initResp = recvResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,
+                                                                      initReq,
+                                                                      3000);
       if (initResp == nullptr) [[unlikely]]
         throw runtime_error("Failed to initialize WebGL context");
     }
@@ -246,7 +247,7 @@ namespace client_graphics
       // Mark the program as completed.
       program->setCompleted(true);
     };
-    recvResponseAsync<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES, onLinkProgramResponse);
+    recvResponseAsync<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES, req, onLinkProgramResponse);
 
     // Mark the program linked successfully.
     program->setLinkStatus(true);
@@ -284,8 +285,8 @@ namespace client_graphics
     auto req = GetProgramParamCommandBufferRequest(program->id, pname);
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetProgramParamCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES);
-    if (resp != nullptr)
+    auto resp = recvResponse<GetProgramParamCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req);
+    if (resp != nullptr) [[likely]]
       return resp->value;
     else
       throw runtime_error("Failed to get program parameter: timeout.");
@@ -303,7 +304,7 @@ namespace client_graphics
       auto req = GetProgramInfoLogCommandBufferRequest(program->id);
       sendCommandBufferRequest(req, true);
 
-      auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
+      auto resp = recvResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req);
       if (resp != nullptr) [[likely]]
       {
         string log(resp->infoLog);
@@ -334,7 +335,8 @@ namespace client_graphics
 
   void WebGLContext::shaderSource(shared_ptr<WebGLShader> shader, const string &source)
   {
-    auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher2::GetPatchedSource(source));
+    shader->source = GLSLSourcePatcher2::GetPatchedSource(source);
+    auto req = ShaderSourceCommandBufferRequest(shader->id, shader->source);
     sendCommandBufferRequest(req);
   }
 
@@ -361,8 +363,8 @@ namespace client_graphics
     auto req = GetShaderSourceCommandBufferRequest(shader->id);
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES);
-    if (resp != nullptr)
+    auto resp = recvResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES, req);
+    if (resp != nullptr) [[likely]]
     {
       string source(resp->source);
       delete resp;
@@ -379,8 +381,8 @@ namespace client_graphics
     auto req = GetShaderParamCommandBufferRequest(shader->id, pname);
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetShaderParamCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PARAM_RES);
-    if (resp != nullptr)
+    auto resp = recvResponse<GetShaderParamCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req);
+    if (resp != nullptr) [[likely]]
     {
       int value = resp->value;
       delete resp;
@@ -399,10 +401,18 @@ namespace client_graphics
 
     auto onGetShaderInfoLogResponse = [shader](const GetShaderInfoLogCommandBufferResponse &resp)
     {
-      if (!resp.infoLog.empty())
-        cerr << "getShaderInfoLog(" << shader->id << "): " << resp.infoLog << endl;
+      if (!resp.infoLog.empty() && resp.infoLog.find("ERROR:") == 0)
+      {
+        // TODO(yorkie): print to console domain in inspector.
+        cerr << "Shader(" << shader->id << ") compilation error:" << endl
+             << resp.infoLog << endl
+             << "============== shader source ==============" << endl
+             << shader->source << endl
+             << "============================================" << endl;
+      }
     };
     recvResponseAsync<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES,
+                                                             req,
                                                              onGetShaderInfoLogResponse);
 
     // Return an empty string directly, and the response will be logged in the async callback.
@@ -534,8 +544,9 @@ namespace client_graphics
     auto req = CheckFramebufferStatusCommandBufferRequest(static_cast<uint32_t>(target));
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<CheckFramebufferStatusCommandBufferResponse>(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES);
-    if (resp != nullptr)
+    auto resp = recvResponse<CheckFramebufferStatusCommandBufferResponse>(
+      COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES, req);
+    if (resp != nullptr) [[likely]]
     {
       uint32_t r = resp->status;
       delete resp;
@@ -1409,8 +1420,8 @@ namespace client_graphics
     auto req = GetBooleanvCommandBufferRequest(static_cast<uint32_t>(pname));
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES);
-    if (resp == nullptr)
+    auto resp = recvResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES, req);
+    if (resp == nullptr) [[unlikely]]
     {
       string msg = "Failed to get boolean parameter(" + to_string(static_cast<uint32_t>(pname)) + "): timeout.";
       throw runtime_error(msg);
@@ -1475,8 +1486,8 @@ namespace client_graphics
     auto req = GetIntegervCommandBufferRequest(static_cast<uint32_t>(pname));
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
-    if (resp == nullptr)
+    auto resp = recvResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES, req);
+    if (resp == nullptr) [[unlikely]]
       throw runtime_error("Failed to get integer parameter: timeout.");
 
     int v = resp->value;
@@ -1514,8 +1525,8 @@ namespace client_graphics
     auto req = GetStringCommandBufferRequest(static_cast<uint32_t>(pname));
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetStringCommandBufferResponse>(COMMAND_BUFFER_GET_STRING_RES);
-    if (resp == nullptr)
+    auto resp = recvResponse<GetStringCommandBufferResponse>(COMMAND_BUFFER_GET_STRING_RES, req);
+    if (resp == nullptr) [[unlikely]]
     {
       string msg = "Failed to get string parameter(" + to_string(static_cast<uint32_t>(pname)) + "): timeout.";
       throw runtime_error(msg);
@@ -1549,8 +1560,9 @@ namespace client_graphics
     auto req = GetShaderPrecisionFormatCommandBufferRequest(shadertype, precisiontype);
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetShaderPrecisionFormatCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES);
-    if (resp == nullptr)
+    auto resp = recvResponse<GetShaderPrecisionFormatCommandBufferResponse>(
+      COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req);
+    if (resp == nullptr) [[unlikely]]
       throw runtime_error("Failed to get shader precision format: timeout.");
 
     WebGLShaderPrecisionFormat format(*resp);
@@ -1576,8 +1588,8 @@ namespace client_graphics
       auto req = GetExtensionsCommandBufferRequest();
       sendCommandBufferRequest(req, true);
 
-      extensionsResp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
-      if (extensionsResp == nullptr)
+      extensionsResp = recvResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES, req);
+      if (extensionsResp == nullptr) [[unlikely]]
         throw runtime_error("Failed to get supported extensions: timeout.");
     }
 
@@ -1672,8 +1684,8 @@ namespace client_graphics
       sendCommandBufferRequest(req, true);
 
       // Wait for the context init response
-      initResp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
-      if (initResp == nullptr)
+      initResp = recvResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES, req);
+      if (initResp == nullptr) [[unlikely]]
         throw runtime_error("Failed to initialize WebGL2 context: timeout.");
     }
 
@@ -2083,8 +2095,8 @@ namespace client_graphics
     auto req = GetIntegervCommandBufferRequest(static_cast<uint32_t>(pname));
     sendCommandBufferRequest(req, true);
 
-    auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
-    if (resp == nullptr)
+    auto resp = recvResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES, req);
+    if (resp == nullptr) [[unlikely]]
       throw runtime_error("Failed to get integer parameter: timeout.");
 
     int v = resp->value;

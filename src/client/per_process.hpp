@@ -50,7 +50,7 @@ using namespace media_comm;
 
 typedef uint32_t FrameRequestId;
 typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
-typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseCallback;
+typedef function<void(const TrCommandBufferResponse &)> AsyncCommandBufferResponseFunction;
 
 /**
  * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
@@ -304,10 +304,16 @@ public: // commandbuffer methods
    * Send a command buffer request to the command buffer channel.
    *
    * @param commandBuffer The command buffer to send.
-   * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush the buffer queue.
+   * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush 
+   *                     the buffer queue.
    * @returns true if the command buffer request is sent successfully.
    */
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
+  /**
+   * Select a `TrCommandBufferResponse` from the pending list and returns it, note that selected response will be 
+   * removed from the pending list.
+   */
+  [[nodiscard]] TrCommandBufferResponse *selectCommandbufferResponse(client_graphics::WebGLContext *, int requestId);
   /**
    * Receive a command buffer response from the command buffer channel with a timeout.
    *
@@ -318,14 +324,18 @@ public: // commandbuffer methods
    * @param timeout The time in milliseconds to wait for the response.
    * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
    */
-  TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
+  [[nodiscard]] TrCommandBufferResponse *recvCommandBufferResponse(client_graphics::WebGLContext *,
+                                                                   int requestId,
+                                                                   int timeout);
   /**
    * Asynchronously receive a command buffer response from the command buffer channel, and calls the callback with the 
    * response object.
    * 
    * @param callback The callback to call when the response is received.
    */
-  void recvCommandBufferResponseAsync(AsyncCommandBufferResponseCallback callback);
+  void recvCommandBufferResponseAsync(client_graphics::WebGLContext *,
+                                      int requestId,
+                                      AsyncCommandBufferResponseFunction);
 
 public: // WebXR methods
   inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient()
@@ -501,14 +511,26 @@ private: // media fields
   vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
 private: // command buffer fields
+  // TODO(yorkie): move to a separate WebGLContext manager class?
+
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
-  unique_ptr<WorkerThread> asyncCommandBufferResponseWorker = nullptr;
-  deque<AsyncCommandBufferResponseCallback> asyncCommandBufferResponseCallbacks;
-  atomic<bool> isAsyncCommandBufferResponseScheduled = false;
-  mutex asyncCommandBufferResponseMutex;
-  condition_variable asyncCommandBufferResponseCv;
+
+  unique_ptr<WorkerThread> commandbufferResponseWorker = nullptr;
+  vector<TrCommandBufferResponse *> pendingCommandbufferResponses;
+
+  struct AsyncCommandBufferResponseCallback
+  {
+    const client_graphics::WebGLContext *context = nullptr; // The context that the response belongs to.
+    int requestId = 0;                                      // The request id of the command buffer response.
+    AsyncCommandBufferResponseFunction call;
+  };
+  vector<AsyncCommandBufferResponseCallback> asyncCommandbufferResponseCallbacks;
+
+  condition_variable commandbufferResponseCv;
+  mutex mutexForCommandbufferResponses;
+  shared_mutex mutexForAsyncCommandbufferResponseCallbacks;
 
 private: // xr fields
   shared_ptr<client_xr::XRDeviceClient> xrDeviceClient = nullptr;
