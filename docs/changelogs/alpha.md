@@ -2,6 +2,12 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.8.2
+
+### Fixes
+
+- Fix the commandbuffer responses dispatching in client-side graphics
+
 ## v0.8.1
 
 ### Improvements
