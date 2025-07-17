@@ -470,7 +470,8 @@ void TrClientContextPerProcess::start()
           {
             asyncResponseCallback.call(*resp);
             it = asyncCommandbufferResponseCallbacks.erase(it);
-            delete resp; // End the response
+            delete resp;   // End the response
+            lock.unlock(); // Explicitly unlock the mutex before returning to avoid deadlock.
             return;
           }
         }
