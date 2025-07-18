@@ -11,23 +11,13 @@ pub(crate) struct Component {
   pub combinator: Option<crate::css_parser::ffi::SelectorComponentCombinator>,
   pub name: Option<String>,
   pub pseudo_class_type: Option<crate::css_parser::ffi::PseudoClassType>,
+  pub selector_list: Option<SelectorList>, // For functional pseudo-classes like :where()
 }
 
 impl Component {
   pub fn new(handle: &ComponentImpl) -> Self {
     use crate::css_parser::ffi::PseudoClassType;
     use crate::css_parser::ffi::SelectorComponentType;
-
-    // Debug print to understand what ComponentImpl variant we get for :where()
-    match handle {
-      ComponentImpl::Is(selector_list) => {
-        println!("DEBUG: Found ComponentImpl::Is with {} selectors", selector_list.len());
-      }
-      ComponentImpl::Where(selector_list) => {
-        println!("DEBUG: Found ComponentImpl::Where with {} selectors", selector_list.len());
-      }
-      _ => {}
-    }
 
     Self {
       tag: match handle {
@@ -65,6 +55,14 @@ impl Component {
           NonTSPseudoClass::FocusWithin => PseudoClassType::FocusWithin,
           _ => PseudoClassType::Unknown,
         }),
+        ComponentImpl::Where(_) => Some(PseudoClassType::Where),
+        ComponentImpl::Is(_) => Some(PseudoClassType::Is),
+        _ => None,
+      },
+      
+      selector_list: match handle {
+        ComponentImpl::Where(selector_list) => Some(SelectorList::new(selector_list)),
+        ComponentImpl::Is(selector_list) => Some(SelectorList::new(selector_list)), // Also support :is() while we're at it
         _ => None,
       },
     }

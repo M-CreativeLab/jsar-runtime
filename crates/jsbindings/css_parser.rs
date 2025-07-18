@@ -604,6 +604,10 @@ pub(crate) mod ffi {
     FocusWithin,
     #[cxx_name = "kTargetCurrent"]
     TargetCurrent,
+    #[cxx_name = "kWhere"]
+    Where,
+    #[cxx_name = "kIs"]
+    Is,
     #[cxx_name = "kUnknown"]
     Unknown,
     #[cxx_name = "kUnset"]
@@ -898,6 +902,11 @@ pub(crate) mod ffi {
     /// Returns the pseudo class type of the component.
     #[cxx_name = "getComponentPseudoClassType"]
     fn get_component_pseudo_class_type(component: &PrismComponent) -> PseudoClassType;
+
+    /// Returns the selector list for functional pseudo-classes like :where() and :is().
+    /// Returns None if the component is not a functional pseudo-class.
+    #[cxx_name = "getComponentSelectorList"]
+    fn get_component_selector_list(component: &PrismComponent) -> Result<Box<PrismSelectorList>>;
 
     /// Returns the component list length.
     #[cxx_name = "getComponentListLength"]
@@ -1359,6 +1368,14 @@ fn get_component_pseudo_class_type(component: &PrismComponent) -> ffi::PseudoCla
   }
 }
 
+fn get_component_selector_list(component: &PrismComponent) -> Result<Box<PrismSelectorList>, String> {
+  if let Some(selector_list) = &component.selector_list {
+    Ok(Box::new(selector_list.clone()))
+  } else {
+    Err("Component is not a functional pseudo-class".into())
+  }
+}
+
 fn get_component_list_len(list: &PrismComponentList) -> usize {
   list.len()
 }
@@ -1628,33 +1645,184 @@ mod tests {
   }
 
   #[test]
+  fn test_functional_pseudo_classes() {
+    let parser = CSSParser::default();
+    
+    // Test :is() selector
+    let selectors = parser.parse_selectors(":is(h1, h2, h3)");
+    assert!(selectors.is_some());
+    let selectors = selectors.unwrap();
+    assert_eq!(selectors.len(), 1);
+    
+    let selector = selectors.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Is));
+    
+    let inner_selectors = component.selector_list.as_ref().unwrap();
+    assert_eq!(inner_selectors.len(), 3);
+    
+    // Test combination of :where() and :is()
+    let selectors = parser.parse_selectors("div:where(.a, .b):is(:hover, :focus)");
+    assert!(selectors.is_some());
+    let selectors = selectors.unwrap();
+    assert_eq!(selectors.len(), 1);
+    
+    let selector = selectors.item(0).unwrap();
+    assert_eq!(selector.components.len(), 3); // div, :where(), :is()
+    
+    let div_component = selector.components.item(0).unwrap();
+    assert_eq!(div_component.name.as_ref().unwrap(), "div");
+    
+    let where_component = selector.components.item(1).unwrap();
+    assert_eq!(where_component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Where));
+    
+    let is_component = selector.components.item(2).unwrap();
+    assert_eq!(is_component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Is));
+    
+    println!("✓ All functional pseudo-class tests passed!");
+  }
+
+  #[test]
   fn test_where_selector() {
     let parser = CSSParser::default();
     
-    // Test basic :where() selector
-    let s = parser.parse_selectors(":where(div, span)");
-    println!("Parsing ':where(div, span)': {:?}", s);
-    if let Some(selector_list) = s {
-      println!("Number of selectors: {}", selector_list.len());
-      for i in 0..selector_list.len() {
-        if let Some(selector) = selector_list.item(i) {
-          println!("Selector {}: {:?}", i, selector);
-          for j in 0..selector.components.len() {
-            if let Some(component) = selector.components.item(j) {
-              println!("  Component {}: tag={:?}, name={:?}", j, component.tag, component.name);
+    // Test basic :where() selector with two simple selectors
+    let selectors = parser.parse_selectors(":where(div, span)");
+    assert!(selectors.is_some());
+    let selectors = selectors.unwrap();
+    assert_eq!(selectors.len(), 1);
+    
+    let selector = selectors.item(0).unwrap();
+    assert_eq!(selector.components.len(), 1);
+    
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, crate::css_parser::ffi::SelectorComponentType::PseudoClass);
+    assert_eq!(component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Where));
+    
+    // Check that :where() contains the expected inner selectors
+    assert!(component.selector_list.is_some());
+    let inner_selectors = component.selector_list.as_ref().unwrap();
+    assert_eq!(inner_selectors.len(), 2);
+    
+    // First inner selector should be "div"
+    let div_selector = inner_selectors.item(0).unwrap();
+    let div_component = div_selector.components.item(0).unwrap();
+    assert_eq!(div_component.tag, crate::css_parser::ffi::SelectorComponentType::LocalName);
+    assert_eq!(div_component.name.as_ref().unwrap(), "div");
+    
+    // Second inner selector should be "span"
+    let span_selector = inner_selectors.item(1).unwrap();
+    let span_component = span_selector.components.item(0).unwrap();
+    assert_eq!(span_component.tag, crate::css_parser::ffi::SelectorComponentType::LocalName);
+    assert_eq!(span_component.name.as_ref().unwrap(), "span");
+    
+    // Test :where() with class selectors
+    let selectors = parser.parse_selectors("p:where(.class1, .class2)");
+    assert!(selectors.is_some());
+    let selectors = selectors.unwrap();
+    assert_eq!(selectors.len(), 1);
+    
+    let selector = selectors.item(0).unwrap();
+    assert_eq!(selector.components.len(), 2);
+    
+    // First component should be "p"
+    let p_component = selector.components.item(0).unwrap();
+    assert_eq!(p_component.tag, crate::css_parser::ffi::SelectorComponentType::LocalName);
+    assert_eq!(p_component.name.as_ref().unwrap(), "p");
+    
+    // Second component should be :where(.class1, .class2)
+    let where_component = selector.components.item(1).unwrap();
+    assert_eq!(where_component.tag, crate::css_parser::ffi::SelectorComponentType::PseudoClass);
+    assert_eq!(where_component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Where));
+    
+    let inner_selectors = where_component.selector_list.as_ref().unwrap();
+    assert_eq!(inner_selectors.len(), 2);
+    
+    // Check inner class selectors
+    let class1_selector = inner_selectors.item(0).unwrap();
+    let class1_component = class1_selector.components.item(0).unwrap();
+    assert_eq!(class1_component.tag, crate::css_parser::ffi::SelectorComponentType::Class);
+    assert_eq!(class1_component.name.as_ref().unwrap(), "class1");
+    
+    let class2_selector = inner_selectors.item(1).unwrap();
+    let class2_component = class2_selector.components.item(0).unwrap();
+    assert_eq!(class2_component.tag, crate::css_parser::ffi::SelectorComponentType::Class);
+    assert_eq!(class2_component.name.as_ref().unwrap(), "class2");
+    
+    // Test nested :where() selectors
+    let selectors = parser.parse_selectors(":where(:where(div), span)");
+    assert!(selectors.is_some());
+    let selectors = selectors.unwrap();
+    assert_eq!(selectors.len(), 1);
+    
+    let selector = selectors.item(0).unwrap();
+    assert_eq!(selector.components.len(), 1);
+    
+    let outer_where = selector.components.item(0).unwrap();
+    assert_eq!(outer_where.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Where));
+    
+    let outer_inner_selectors = outer_where.selector_list.as_ref().unwrap();
+    assert_eq!(outer_inner_selectors.len(), 2);
+    
+    // First inner selector should be another :where(div)
+    let nested_where_selector = outer_inner_selectors.item(0).unwrap();
+    let nested_where_component = nested_where_selector.components.item(0).unwrap();
+    assert_eq!(nested_where_component.pseudo_class_type, Some(crate::css_parser::ffi::PseudoClassType::Where));
+    
+    let nested_inner_selectors = nested_where_component.selector_list.as_ref().unwrap();
+    assert_eq!(nested_inner_selectors.len(), 1);
+    
+    let div_nested_selector = nested_inner_selectors.item(0).unwrap();
+    let div_nested_component = div_nested_selector.components.item(0).unwrap();
+    assert_eq!(div_nested_component.name.as_ref().unwrap(), "div");
+    
+    println!("✓ All :where() selector tests passed!");
+  }
+
+  #[test]
+  fn test_where_selector_in_stylesheet() {
+    let css_text = r#"
+      :where(h1, h2, h3) {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .container :where(.button, .link) {
+        color: blue;
+      }
+      
+      p:where(.highlight, .important) {
+        font-weight: bold;
+      }
+    "#;
+    
+    let sheet = CSSParser::default().parse_stylesheet(css_text, "");
+    assert!(sheet.rules_len() > 0);
+    
+    // Check that rules with :where() selectors are parsed correctly
+    for i in 0..sheet.rules_len() {
+      if let Some(rule) = sheet.get_rule(i) {
+        match rule {
+          crate::css::stylesheets::CssRule::Style(style_rule) => {
+            let selectors = &style_rule.selectors;
+            // Just ensure selectors are parsed without errors
+            assert!(selectors.len() > 0);
+            
+            for j in 0..selectors.len() {
+              if let Some(selector) = selectors.item(j) {
+                // Verify selector components exist
+                assert!(selector.components.len() > 0);
+              }
             }
+          }
+          _ => {
+            // Skip other rule types
           }
         }
       }
     }
     
-    // Test :where() with more complex selectors
-    let s = parser.parse_selectors("p:where(.class1, .class2)");
-    println!("Parsing 'p:where(.class1, .class2)': {:?}", s);
-    
-    // Test nested :where()
-    let s = parser.parse_selectors(":where(:where(div), span)");
-    println!("Parsing ':where(:where(div), span)': {:?}", s);
+    println!("✓ :where() selector in stylesheet parsing works correctly!");
   }
 
   #[test]
