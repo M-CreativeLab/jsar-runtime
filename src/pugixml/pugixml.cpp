@@ -2934,9 +2934,39 @@ PUGI_IMPL_NS_BEGIN
 		}
 		else if (PUGI_IMPL_IS_CHARTYPE(*s, ct_space))
 		{
-			// Terminated by whitespace - safe to null terminate here
-			*s = 0;
-			return s + 1;
+			// Terminated by whitespace - we need to null-terminate the attribute value
+			// but be careful not to break subsequent whitespace skipping
+			
+			// Check if there are multiple whitespace characters
+			char_t* space_start = s;
+			char_t* space_end = s;
+			while (PUGI_IMPL_IS_CHARTYPE(*space_end, ct_space)) ++space_end;
+			
+			if (space_end > space_start + 1)
+			{
+				// Multiple spaces - safe to null-terminate the first one
+				*space_start = 0;
+				return space_start + 1;
+			}
+			else
+			{
+				// Single space - we need to be more careful
+				// Let's use the memmove approach to insert a null terminator
+				// without consuming the space character
+				
+				// Find the end of the current string
+				char_t* end = space_end;
+				while (*end) end++;
+				
+				// Move everything from the space onwards one position to the right
+				memmove(space_start + 1, space_start, (end - space_start + 1) * sizeof(char_t));
+				
+				// Now we can safely null-terminate at the space position
+				*space_start = 0;
+				
+				// Return position after the null terminator, which now points to the preserved space
+				return space_start + 1;
+			}
 		}
 		else 
 		{
