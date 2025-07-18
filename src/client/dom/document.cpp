@@ -173,7 +173,7 @@ namespace dom
     auto flag = pugi::parse_default | pugi::parse_ws_pcdata | pugi::parse_comments;
     if (isFragment)
       flag |= pugi::parse_fragment;
-    if (type_ == DocumentType::kHTML)
+    if (documentType == DocumentType::kHTML)
       flag |= pugi::parse_unquoted_attributes;
 
     auto r = doc_internal_->load_string(inputText.c_str(), flag);
