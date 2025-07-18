@@ -1,0 +1,22 @@
+{
+  "css": {
+    "properties": {
+      "color": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/color",
+          "spec_url": "https://www.w3.org/TR/css-color-3/#color",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

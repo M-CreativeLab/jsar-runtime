@@ -1,0 +1,22 @@
+{
+  "html": {
+    "elements": {
+      "button": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/button",
+          "spec_url": "https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "api": {
+    "XMLHttpRequest": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest",
+        "spec_url": "https://xhr.spec.whatwg.org/#interface-xmlhttprequest",
+        "support": {
+          "jsar": {
+            "version_added": "0.7.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "open": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/open",
+          "spec_url": "https://xhr.spec.whatwg.org/#the-open()-method",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "send": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/send",
+          "spec_url": "https://xhr.spec.whatwg.org/#the-send()-method",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "setRequestHeader": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/setRequestHeader",
+          "spec_url": "https://xhr.spec.whatwg.org/#the-setrequestheader()-method",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "responseText": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/responseText",
+          "spec_url": "https://xhr.spec.whatwg.org/#the-responsetext-attribute",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "status": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/XMLHttpRequest/status",
+          "spec_url": "https://xhr.spec.whatwg.org/#the-status-attribute",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

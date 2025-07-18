@@ -1,0 +1,132 @@
+{
+  "api": {
+    "Navigator": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator",
+        "spec_url": "https://html.spec.whatwg.org/multipage/system-state.html#the-navigator-object",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "userAgent": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/userAgent",
+          "spec_url": "https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-useragent",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "appName": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/appName",
+          "spec_url": "https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appname",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "appVersion": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/appVersion",
+          "spec_url": "https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-appversion",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "platform": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/platform",
+          "spec_url": "https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-platform",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "geolocation": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/geolocation",
+          "spec_url": "https://w3c.github.io/geolocation-api/#dom-navigator-geolocation",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "mediaDevices": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/mediaDevices",
+          "spec_url": "https://w3c.github.io/mediacapture-main/#dom-navigator-mediadevices",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "serviceWorker": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Navigator/serviceWorker",
+          "spec_url": "https://w3c.github.io/ServiceWorker/#navigator-service-worker",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

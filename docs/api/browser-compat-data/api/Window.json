@@ -1,0 +1,228 @@
+{
+  "api": {
+    "Window": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window",
+        "spec_url": "https://html.spec.whatwg.org/multipage/window-object.html#the-window-object",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "console": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/console",
+          "spec_url": "https://console.spec.whatwg.org/#console",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "setTimeout": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/setTimeout",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "clearTimeout": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/clearTimeout",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "setInterval": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/setInterval",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "clearInterval": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/clearInterval",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "requestAnimationFrame": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame",
+          "spec_url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-animationframeprovider-requestanimationframe",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "cancelAnimationFrame": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/cancelAnimationFrame",
+          "spec_url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-animationframeprovider-cancelanimationframe",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "fetch": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/fetch",
+          "spec_url": "https://fetch.spec.whatwg.org/#fetch-method",
+          "support": {
+            "jsar": {
+              "version_added": "0.7.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "alert": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/alert",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-alert",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "confirm": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/confirm",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-confirm",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "prompt": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/prompt",
+          "spec_url": "https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-prompt",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "localStorage": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/localStorage",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "sessionStorage": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Window/sessionStorage",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-sessionstorage",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}
