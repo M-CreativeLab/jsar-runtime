@@ -149,8 +149,10 @@ unique_ptr<TrInspectorClient> TrInspectorServer::accept()
 int TrInspectorServer::getWebSocketConnectionCount() const
 {
   int count = 0;
-  for (const auto& client : clients_) {
-    if (client->isWebSocket()) {
+  for (const auto &client : clients_)
+  {
+    if (client->isWebSocket())
+    {
       count++;
     }
   }

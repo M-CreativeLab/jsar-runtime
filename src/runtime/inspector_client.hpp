@@ -46,7 +46,10 @@ public:
   void respond(http::Response response);
   void respond(uint32_t code, const std::string &text);
   void respond(uint32_t code, const rapidjson::Document &json);
-  bool isWebSocket() const { return connectionType_ == ConnectionType::WEBSOCKET; }
+  bool isWebSocket() const
+  {
+    return connectionType_ == ConnectionType::WEBSOCKET;
+  }
   void sendWebSocketMessage(const std::string &message);
 
 private:
