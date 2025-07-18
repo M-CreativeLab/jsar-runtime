@@ -105,6 +105,8 @@ namespace dom
     void openInternal();
     // Fix the source string to replace invalid tags.
     std::string &fixSource(std::string &source);
+    // Fix unquoted attribute values by adding quotes around them.
+    void fixUnquotedAttributes(std::string &source);
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
