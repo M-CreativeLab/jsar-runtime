@@ -2918,7 +2918,6 @@ PUGI_IMPL_NS_BEGIN
 		char_t* value_start = s;
 		
 		// Scan until we hit whitespace, quotes, '=', '<', '>', '/', or end of string
-		// According to HTML spec, unquoted attribute values cannot contain these characters
 		while (*s && !PUGI_IMPL_IS_CHARTYPE(*s, ct_space) && 
 		       *s != '"' && *s != '\'' && *s != '=' && *s != '<' && *s != '>' && *s != '/')
 		{
