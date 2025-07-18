@@ -50,17 +50,20 @@ public:
   {
     return connectionType_ == ConnectionType::WEBSOCKET;
   }
-  void sendWebSocketMessage(const std::string &message);
+  void sendWebSocketMessage(const string &message);
 
 private:
   bool setNonBlocking();
   void recv();
-  void send(const std::string &data);
+  void send(const string &data);
   void end();
+  void sendHttpErrorResponse(uint32_t code, const string &message);
+
+  // WebSocket related methods
   bool tryUpgradeToWebSocket();
   void handleWebSocketFrame();
-  void sendWebSocketFrame(const std::string &data);
-  std::string generateWebSocketAcceptKey(const std::string &webSocketKey);
+  void sendWebSocketFrame(const string &data);
+  string generateWebSocketAcceptKey(const string &webSocketKey);
 
 private:
   void onUrl(const char *at, size_t length);

@@ -210,3 +210,11 @@ bool TrInspector::getStatistics(rapidjson::Document &json)
 
   return true;
 }
+
+void TrInspector::onMessage(TrInspectorClient &client, const string &message)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
+
+  // For now, just echo the message back (placeholder for CDP implementation)
+  client.sendWebSocketMessage("Echo: " + message);
+}

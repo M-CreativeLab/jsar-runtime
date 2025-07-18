@@ -20,7 +20,7 @@ A command-line Node.js client that demonstrates WebSocket connection and message
 npm install ws
 
 # Run the client
-node examples/inspector_websocket_client.js
+node fixtures/inspector-client/inspector_websocket_client.js
 ```
 
 **Features:**
@@ -36,9 +36,9 @@ An interactive HTML page for testing WebSocket connections from a browser.
 **Usage:**
 ```bash
 # Open in any modern web browser
-open examples/inspector_websocket_test.html
+open fixtures/inspector-client/inspector_websocket_test.html
 # or
-firefox examples/inspector_websocket_test.html
+firefox fixtures/inspector-client/inspector_websocket_test.html
 ```
 
 **Features:**

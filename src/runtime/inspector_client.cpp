@@ -2,6 +2,7 @@
 #include <span>
 #include <ostream>
 #include <common/debug.hpp>
+#include <common/utility.hpp>
 #include <sstream>
 #include <cstring>
 #include <algorithm>
@@ -103,15 +104,20 @@ void TrInspectorClient::tick()
   if (connectionType_ == ConnectionType::WEBSOCKET)
   {
     handleWebSocketFrame();
-    return;
   }
-
-  auto err = llhttp_execute(&httpParser_, buffer_.data(), buffer_.size());
-  if (err != HPE_OK)
+  else if (connectionType_ == ConnectionType::HTTP)
   {
-    string incomingText(buffer_.begin(), buffer_.end());
-    DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n", llhttp_errno_name(err), incomingText.c_str());
-    shouldClose_ = true;
+    auto err = llhttp_execute(&httpParser_, buffer_.data(), buffer_.size());
+    if (err != HPE_OK)
+    {
+      string incomingText(buffer_.begin(), buffer_.end());
+      DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n", llhttp_errno_name(err), incomingText.c_str());
+      shouldClose_ = true;
+    }
+  }
+  else
+  {
+    assert(false && "Unknown connection type");
   }
 }
 
@@ -337,12 +343,12 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
   bool hasUpgrade = false;
   bool hasConnection = false;
   bool hasWebSocketKey = false;
-  std::string webSocketKey;
+  string webSocketKey;
 
   for (const auto &header : headers_)
   {
-    std::string lowerKey = header.first;
-    std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
+    string lowerKey = header.first;
+    transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
 
     if (lowerKey == "upgrade" && header.second == "websocket")
     {
@@ -350,9 +356,9 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     }
     else if (lowerKey == "connection")
     {
-      std::string lowerValue = header.second;
-      std::transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
-      if (lowerValue.find("upgrade") != std::string::npos)
+      string lowerValue = header.second;
+      transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
+      if (lowerValue.find("upgrade") != string::npos)
       {
         hasConnection = true;
       }
@@ -376,25 +382,17 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     if (!inspector->canAcceptWebSocketConnection())
     {
       DEBUG(LOG_TAG_INSPECTOR, "WebSocket connection limit reached, rejecting upgrade");
-      // Send 503 Service Unavailable
-      std::stringstream response;
-      response << "HTTP/1.1 503 Service Unavailable\r\n";
-      response << "Content-Type: text/plain\r\n";
-      response << "Content-Length: 44\r\n";
-      response << "\r\n";
-      response << "Too many WebSocket connections (max 5)";
-      send(response.str());
-      end();
+      sendHttpErrorResponse(503, "Too many WebSocket connections (max 5)");
       return true; // We handled the request, even though we rejected it
     }
 
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested and approved");
 
     // Generate WebSocket accept key
-    std::string acceptKey = generateWebSocketAcceptKey(webSocketKey);
+    string acceptKey = generateWebSocketAcceptKey(webSocketKey);
 
     // Send WebSocket handshake response
-    std::stringstream response;
+    stringstream response;
     response << "HTTP/1.1 101 Switching Protocols\r\n";
     response << "Upgrade: websocket\r\n";
     response << "Connection: Upgrade\r\n";
@@ -535,47 +533,8 @@ std::string TrInspectorClient::generateWebSocketAcceptKey(const std::string &web
   // Compute SHA-1 hash
   auto hash = sha1(combined);
 
-  // Base64 encode the hash
-  auto base64Encode = [](const std::array<uint8_t, 20> &input) -> std::string
-  {
-    const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    std::string result;
-
-    for (size_t i = 0; i < input.size(); i += 3)
-    {
-      uint32_t val = 0;
-      int padding = 0;
-
-      for (int j = 0; j < 3; j++)
-      {
-        val <<= 8;
-        if (i + j < input.size())
-        {
-          val |= input[i + j];
-        }
-        else
-        {
-          padding++;
-        }
-      }
-
-      for (int j = 0; j < 4; j++)
-      {
-        if (j < 4 - padding)
-        {
-          result += chars[(val >> (18 - j * 6)) & 0x3F];
-        }
-        else
-        {
-          result += '=';
-        }
-      }
-    }
-
-    return result;
-  };
-
-  return base64Encode(hash);
+  // Base64 encode the hash using utility function
+  return Base64Encode(hash);
 }
 
 void TrInspectorClient::handleWebSocketFrame()
@@ -657,20 +616,24 @@ void TrInspectorClient::handleWebSocketFrame()
       std::copy(buffer_.begin() + payloadStart, buffer_.begin() + payloadStart + payloadLength, payload.begin());
     }
 
-    std::string message(payload.begin(), payload.end());
+    string message(payload.begin(), payload.end());
     DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
 
-    // For now, just echo the message back (placeholder for CDP implementation)
-    sendWebSocketMessage("Echo: " + message);
+    // Forward message to inspector for handling
+    auto inspector = inspector_.lock();
+    if (inspector)
+    {
+      inspector->onMessage(*this, message);
+    }
   }
 
   // Remove processed frame from buffer
   buffer_.erase(buffer_.begin(), buffer_.begin() + frameHeaderSize + payloadLength);
 }
 
-void TrInspectorClient::sendWebSocketFrame(const std::string &data)
+void TrInspectorClient::sendWebSocketFrame(const string &data)
 {
-  std::vector<uint8_t> frame;
+  vector<uint8_t> frame;
 
   // First byte: FIN=1, RSV=000, Opcode=0001 (text frame)
   frame.push_back(0x81);
@@ -704,10 +667,37 @@ void TrInspectorClient::sendWebSocketFrame(const std::string &data)
   }
 }
 
-void TrInspectorClient::sendWebSocketMessage(const std::string &message)
+void TrInspectorClient::sendWebSocketMessage(const string &message)
 {
   if (connectionType_ == ConnectionType::WEBSOCKET)
   {
     sendWebSocketFrame(message);
   }
+}
+
+void TrInspectorClient::sendHttpErrorResponse(uint32_t code, const string &message)
+{
+  stringstream response;
+  response << "HTTP/1.1 " << code;
+
+  switch (code)
+  {
+  case 400:
+    response << " Bad Request\r\n";
+    break;
+  case 503:
+    response << " Service Unavailable\r\n";
+    break;
+  default:
+    response << " Error\r\n";
+    break;
+  }
+
+  response << "Content-Type: text/plain\r\n";
+  response << "Content-Length: " << message.length() << "\r\n";
+  response << "\r\n";
+  response << message;
+
+  send(response.str());
+  end();
 }

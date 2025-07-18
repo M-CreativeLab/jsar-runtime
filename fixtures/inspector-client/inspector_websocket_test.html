@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSAR Inspector WebSocket Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+    .connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .message { background: #e2e3e5; padding: 10px; margin: 5px 0; border-radius: 4px; }
+    .sent { background: #d1ecf1; }
+    .received { background: #d4edda; }
+    button { padding: 8px 16px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:disabled { background: #6c757d; cursor: not-allowed; }
+    input { padding: 8px; width: 300px; margin: 5px; }
+    textarea { width: 100%; height: 100px; margin: 5px 0; font-family: monospace; }
+    pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JSAR Inspector WebSocket Test</h1>
+    <p>This page demonstrates connecting to the JSAR Inspector WebSocket endpoint for debugging.</p>
+    
+    <div class="status" id="status">Disconnected</div>
+    
+    <div>
+      <input type="text" id="url" value="ws://localhost:9423/devtools/inspector/1" placeholder="WebSocket URL">
+      <button onclick="connect()" id="connectBtn">Connect</button>
+      <button onclick="disconnect()" id="disconnectBtn" disabled>Disconnect</button>
+    </div>
+    
+    <h3>Send Message</h3>
+    <div>
+      <textarea id="messageInput" placeholder='{"id": 1, "method": "Runtime.enable", "params": {}}'></textarea>
+      <br>
+      <button onclick="sendMessage()" id="sendBtn" disabled>Send Message</button>
+      <button onclick="sendPredefinedMessage('runtime.enable')">Send Runtime.enable</button>
+    </div>
+    
+    <h3>Messages</h3>
+    <div id="messages"></div>
+  </div>
+
+  <script>
+    let ws = null;
+    let messageId = 1;
+    
+    const statusEl = document.getElementById('status');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesEl = document.getElementById('messages');
+    const urlInput = document.getElementById('url');
+    const messageInput = document.getElementById('messageInput');
+    
+    // Set default message
+    messageInput.value = JSON.stringify({
+      id: messageId,
+      method: 'Runtime.enable',
+      params: {}
+    }, null, 2);
+    
+    function connect() {
+      const url = urlInput.value;
+      
+      try {
+        ws = new WebSocket(url);
+        
+        ws.onopen = function() {
+          updateStatus('Connected', true);
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          sendBtn.disabled = false;
+          addMessage('Connection opened', 'system');
+        };
+        
+        ws.onmessage = function(event) {
+          addMessage(event.data, 'received');
+        };
+        
+        ws.onclose = function(event) {
+          updateStatus('Disconnected', false);
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          sendBtn.disabled = true;
+          addMessage(`Connection closed (code: ${event.code})`, 'system');
+        };
+        
+        ws.onerror = function(error) {
+          addMessage('WebSocket error occurred', 'error');
+          console.error('WebSocket error:', error);
+        };
+        
+        updateStatus('Connecting...', false);
+        
+      } catch (error) {
+        addMessage(`Failed to connect: ${error.message}`, 'error');
+        console.error('Connection error:', error);
+      }
+    }
+    
+    function disconnect() {
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+    }
+    
+    function sendMessage() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        addMessage('Not connected', 'error');
+        return;
+      }
+      
+      const message = messageInput.value.trim();
+      if (!message) {
+        addMessage('No message to send', 'error');
+        return;
+      }
+      
+      try {
+        // Validate JSON
+        JSON.parse(message);
+        ws.send(message);
+        addMessage(message, 'sent');
+        
+        // Update message ID for next message
+        messageId++;
+        
+      } catch (error) {
+        addMessage(`Invalid JSON: ${error.message}`, 'error');
+      }
+    }
+    
+    function sendPredefinedMessage(type) {
+      let message;
+      
+      switch (type) {
+        case 'runtime.enable':
+          message = {
+            id: messageId++,
+            method: 'Runtime.enable',
+            params: {}
+          };
+          break;
+        default:
+          message = {
+            id: messageId++,
+            method: 'Test.ping',
+            params: { message: 'Hello JSAR Inspector!' }
+          };
+      }
+      
+      messageInput.value = JSON.stringify(message, null, 2);
+      sendMessage();
+    }
+    
+    function updateStatus(text, connected) {
+      statusEl.textContent = text;
+      statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+    }
+    
+    function addMessage(text, type) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message ' + type;
+      
+      const timestamp = new Date().toLocaleTimeString();
+      const prefix = type === 'sent' ? '→ ' : type === 'received' ? '← ' : '• ';
+      
+      if (type === 'sent' || type === 'received') {
+        try {
+          const parsed = JSON.parse(text);
+          messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong><pre>${JSON.stringify(parsed, null, 2)}</pre>`;
+        } catch {
+          messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong><pre>${text}</pre>`;
+        }
+      } else {
+        messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong>${text}`;
+      }
+      
+      messagesEl.appendChild(messageEl);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+    
+    // Allow Enter key to send message
+    messageInput.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

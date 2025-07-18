@@ -7,7 +7,7 @@
  * endpoint and send/receive messages for debugging purposes.
  * 
  * Usage:
- *   node examples/inspector_websocket_client.js
+ *   node fixtures/inspector-client/inspector_websocket_client.js
  * 
  * Prerequisites:
  *   - JSAR runtime must be running with inspector enabled
