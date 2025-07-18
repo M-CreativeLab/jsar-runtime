@@ -17,14 +17,14 @@ namespace dom
   using namespace std;
   using namespace std::placeholders;
 
-  float DocumentEventDispatcher::getClickDistanceThreshold()
+  float DocumentEventDispatcher::GetClickDistanceThreshold()
   {
     // Default threshold: 5 pixels
     float defaultThresholdPixels = 5.0f;
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char thresholdStr[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.click.distance.threshold", thresholdStr) >= 0)
+    if (__system_property_get("jsar.events.click_distance_threshold", thresholdStr) >= 0)
     {
       char *endptr;
       float threshold = strtof(thresholdStr, &endptr);

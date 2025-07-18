@@ -48,7 +48,7 @@ namespace dom
     glm::vec3 current_scroll_end_point_;
     bool is_scroll_in_progress_ = false;
 
-    static float getClickDistanceThreshold();
-    static inline float Click_distance_threshold_ = getClickDistanceThreshold();
+    static float GetClickDistanceThreshold();
+    static inline float Click_distance_threshold_ = GetClickDistanceThreshold();
   };
 }
