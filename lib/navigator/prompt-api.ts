@@ -11,6 +11,7 @@ import {
   QuotaExceededError,
   LanguageModelMonitor,
 } from './prompt-api-types';
+import { bridgeToExistingLLM } from './llm-bridge';
 
 class LanguageModelMonitorImpl extends EventTarget implements LanguageModelMonitor {
   constructor() {
@@ -84,14 +85,29 @@ class LanguageModelSessionImpl extends EventTarget implements LanguageModelSessi
       
       console.log('LanguageModel: Starting prompt with input:', conversationText);
       
-      // For now, use a simple mock response since we're focusing on the API structure
-      // In a real implementation, this would integrate with the threepio callLLM function
-      const response = await this._mockLLMCall(conversationText, systemPrompt);
+      // Use the LLM bridge to connect to existing infrastructure
+      const stream = bridgeToExistingLLM({
+        input: conversationText,
+        systemPrompt: systemPrompt
+      });
+
+      let response = '';
+      for await (const chunk of stream) {
+        if (options.signal?.aborted) {
+          throw new DOMException('Operation was aborted', 'AbortError');
+        }
+        
+        if (chunk.type === 'text' && chunk.text) {
+          response += chunk.text;
+        } else if (chunk.type === 'error') {
+          throw new Error(chunk.error?.message || 'Unknown error');
+        }
+      }
 
       // Add assistant response to conversation
-      this._conversation.push({ role: 'assistant', content: response });
+      this._conversation.push({ role: 'assistant', content: response.trim() });
       
-      return response;
+      return response.trim();
     } catch (error) {
       console.error('LanguageModel: Error in prompt:', error);
       throw error;
@@ -121,23 +137,25 @@ class LanguageModelSessionImpl extends EventTarget implements LanguageModelSessi
       async start(controller) {
         let response = '';
         try {
-          // Mock streaming response for now
-          const fullResponse = await this._mockLLMCall(conversationText, systemPrompt);
+          // Use the LLM bridge for streaming
+          const stream = bridgeToExistingLLM({
+            input: conversationText,
+            systemPrompt: systemPrompt
+          });
           
-          // Simulate streaming by chunking the response
-          const chunks = fullResponse.split(' ');
-          for (const chunk of chunks) {
+          for await (const chunk of stream) {
             if (options.signal?.aborted) {
               controller.error(new DOMException('Operation was aborted', 'AbortError'));
               return;
             }
             
-            const chunkWithSpace = chunk + ' ';
-            response += chunkWithSpace;
-            controller.enqueue(chunkWithSpace);
-            
-            // Small delay to simulate streaming
-            await new Promise(resolve => setTimeout(resolve, 50));
+            if (chunk.type === 'text' && chunk.text) {
+              response += chunk.text;
+              controller.enqueue(chunk.text);
+            } else if (chunk.type === 'error') {
+              controller.error(new Error(chunk.error?.message || 'Unknown error'));
+              return;
+            }
           }
           
           // Add complete response to conversation
@@ -270,27 +288,6 @@ class LanguageModelSessionImpl extends EventTarget implements LanguageModelSessi
     
     this._inputUsage -= freedSpace;
     this.dispatchEvent(new Event('quotaoverflow'));
-  }
-
-  private async _mockLLMCall(input: string, systemPrompt: string | null): Promise<string> {
-    // This is a mock implementation for demonstration
-    // In a real implementation, this would integrate with the threepio LLM system
-    console.log('Mock LLM Call - System:', systemPrompt);
-    console.log('Mock LLM Call - Input:', input);
-    
-    // Simulate some processing time
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return a mock response based on the input
-    if (input.toLowerCase().includes('hello')) {
-      return 'Hello! How can I help you today?';
-    } else if (input.toLowerCase().includes('weather')) {
-      return 'I\'m sorry, I don\'t have access to current weather information. You might want to check a weather service or app for accurate current conditions.';
-    } else if (input.toLowerCase().includes('poem')) {
-      return 'Here is a short poem for you:\n\nRoses are red,\nViolets are blue,\nAI is helpful,\nAnd so are you!';
-    } else {
-      return `I understand you said: "${input}". I'm a language model assistant and I'm here to help with various tasks. What would you like to know or discuss?`;
-    }
   }
 }
 
