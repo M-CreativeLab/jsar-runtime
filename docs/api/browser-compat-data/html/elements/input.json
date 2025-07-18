@@ -1,0 +1,22 @@
+{
+  "html": {
+    "elements": {
+      "input": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/input",
+          "spec_url": "https://html.spec.whatwg.org/multipage/input.html#the-input-element",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

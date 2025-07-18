@@ -1,0 +1,52 @@
+{
+  "api": {
+    "Geolocation": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Geolocation",
+        "spec_url": "https://w3c.github.io/geolocation-api/#geolocation_interface",
+        "support": {
+          "jsar": {
+            "version_added": false
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "getCurrentPosition": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Geolocation/getCurrentPosition",
+          "spec_url": "https://w3c.github.io/geolocation-api/#dom-geolocation-getcurrentposition",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "watchPosition": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Geolocation/watchPosition",
+          "spec_url": "https://w3c.github.io/geolocation-api/#dom-geolocation-watchposition",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

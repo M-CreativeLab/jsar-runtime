@@ -1,0 +1,84 @@
+{
+  "api": {
+    "Event": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Event",
+        "spec_url": "https://dom.spec.whatwg.org/#interface-event",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "type": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Event/type",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-event-type",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "target": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Event/target",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-event-target",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "preventDefault": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Event/preventDefault",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-event-preventdefault",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "stopPropagation": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Event/stopPropagation",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-event-stoppropagation",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}
