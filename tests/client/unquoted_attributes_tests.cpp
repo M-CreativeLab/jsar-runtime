@@ -17,9 +17,6 @@ TEST_CASE("pugixml unquoted attributes parsing", "[HTML][Parsing]")
     REQUIRE(string(doc.child("a").attribute("href").value()) == "foobar");
   }
 
-  // NOTE: Multiple unquoted attributes are not yet supported due to buffer management complexity
-  // TODO: Implement support for multiple unquoted attributes
-  /*
   SECTION("Multiple unquoted attributes")
   {
     pugi::xml_document doc;
@@ -31,7 +28,6 @@ TEST_CASE("pugixml unquoted attributes parsing", "[HTML][Parsing]")
     REQUIRE(string(div.attribute("class").value()) == "container");
     REQUIRE(string(div.attribute("id").value()) == "main");
   }
-  */
 
   SECTION("Mixed quoted and unquoted attributes")
   {
