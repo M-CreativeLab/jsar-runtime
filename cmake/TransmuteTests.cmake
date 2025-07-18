@@ -9,6 +9,9 @@ file(GLOB TR_COMMON_TESTS_SOURCE
 file(GLOB_RECURSE TR_CLIENT_BUILTIN_SCENE_SOURCE
     "src/client/builtin_scene/*.cpp"
 )
+file(GLOB_RECURSE TR_PUGIXML_SOURCE
+    "src/pugixml/*.cpp"
+)
 
 # check for TR_BUILD_TESTS
 if (TR_BUILD_TESTS)
@@ -24,6 +27,7 @@ if (TR_BUILD_TESTS)
         ${TR_COMMON_SOURCE}
         ${TR_COMMON_TESTS_SOURCE}
         ${TR_CLIENT_BUILTIN_SCENE_SOURCE}
+        ${TR_PUGIXML_SOURCE}
         tests/runtime.cpp
         tests/math.cpp
     )

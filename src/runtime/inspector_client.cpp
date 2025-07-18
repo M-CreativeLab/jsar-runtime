@@ -94,7 +94,12 @@ TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
 TrInspectorClient::~TrInspectorClient()
 {
   if (fd_ != -1)
+  {
     close(fd_);
+    DEBUG(LOG_TAG_INSPECTOR,
+          "Inspector client fd(%d) is closed in destructor.",
+          fd_);
+  }
 }
 
 void TrInspectorClient::tick()
@@ -108,10 +113,24 @@ void TrInspectorClient::tick()
   else if (connectionType_ == ConnectionType::HTTP)
   {
     auto err = llhttp_execute(&httpParser_, buffer_.data(), buffer_.size());
-    if (err != HPE_OK)
+    if (err == HPE_PAUSED_UPGRADE)
+    {
+      if (connectionType_ != ConnectionType::WEBSOCKET) [[unlikely]]
+      {
+        DEBUG(LOG_TAG_ERROR,
+              "Received HPE_PAUSED_UPGRADE but the connection type is not WEBSOCKET, this should not happen.");
+        shouldClose_ = true;
+        return;
+      }
+      llhttp_resume_after_upgrade(&httpParser_);
+    }
+    else if (err != HPE_OK)
     {
       string incomingText(buffer_.begin(), buffer_.end());
-      DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n", llhttp_errno_name(err), incomingText.c_str());
+      DEBUG(LOG_TAG_ERROR,
+            "Failed to parse the HTTP message, the error is: %s, and the message: %s\n",
+            llhttp_errno_name(err),
+            incomingText.c_str());
       shouldClose_ = true;
     }
   }
