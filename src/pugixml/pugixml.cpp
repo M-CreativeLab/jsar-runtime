@@ -3472,8 +3472,6 @@ PUGI_IMPL_NS_BEGIN
 								}
 								else if (*s == '>')
 								{
-									++s;
-
 									if (is_void_tag(cursor->name))
 									{
 										PUGI_IMPL_POPNODE();
