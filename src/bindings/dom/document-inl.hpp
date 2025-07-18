@@ -307,4 +307,90 @@ namespace dombinding
       return env.Undefined();
     }
   }
+
+  template <typename ObjectType, typename DocumentType>
+  Napi::Value DocumentBase<ObjectType, DocumentType>::Write(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "Failed to execute 'write' on 'Document': 1 argument required, but only 0 present.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::string content;
+    for (size_t i = 0; i < info.Length(); i++)
+    {
+      if (info[i].IsString())
+      {
+        content += info[i].ToString().Utf8Value();
+        content += "\n";
+      }
+      else if (info[i].IsObject())
+      {
+        Napi::Object textNode = info[i].As<Napi::Object>();
+        if (Text::IsInstanceOf(textNode))
+        {
+          content += Napi::ObjectWrap<Text>::Unwrap(textNode)->Data();
+          content += "\n";
+        }
+        else
+        {
+          Napi::TypeError::New(env, "Failed to execute 'write' on 'Document': Argument is not a valid Text node.")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Failed to execute 'write' on 'Document': Argument must be a string or Text node.")
+          .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+    this->node->write(content);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename DocumentType>
+  Napi::Value DocumentBase<ObjectType, DocumentType>::Writeln(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    std::string content;
+    for (size_t i = 0; i < info.Length(); i++)
+    {
+      if (info[i].IsString())
+      {
+        content += info[i].ToString().Utf8Value();
+        content += "\n";
+      }
+      else if (info[i].IsObject())
+      {
+        Napi::Object textNode = info[i].As<Napi::Object>();
+        if (Text::IsInstanceOf(textNode))
+        {
+          content += Napi::ObjectWrap<Text>::Unwrap(textNode)->Data();
+          content += "\n";
+        }
+        else
+        {
+          Napi::TypeError::New(env, "Failed to execute 'writeln' on 'Document': Argument is not a valid Text node.").ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Failed to execute 'writeln' on 'Document': Argument must be a string or Text node.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+
+    this->node->writeln(content);
+    return env.Undefined();
+  }
 }

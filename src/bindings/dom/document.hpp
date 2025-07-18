@@ -57,6 +57,8 @@ namespace dombinding
                                      napi_default_method),
           ObjectType::InstanceMethod("querySelector", &ObjectType::QuerySelector, napi_default_method),
           ObjectType::InstanceMethod("querySelectorAll", &ObjectType::QuerySelectorAll, napi_default_method),
+          ObjectType::InstanceMethod("write", &ObjectType::Write, napi_default_method),
+          ObjectType::InstanceMethod("writeln", &ObjectType::Writeln, napi_default_method),
         });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
@@ -138,6 +140,8 @@ namespace dombinding
     Napi::Value GetElementsByTagName(const Napi::CallbackInfo &info);
     Napi::Value QuerySelector(const Napi::CallbackInfo &info);
     Napi::Value QuerySelectorAll(const Napi::CallbackInfo &info);
+    Napi::Value Write(const Napi::CallbackInfo &info);
+    Napi::Value Writeln(const Napi::CallbackInfo &info);
 
   private:
     std::unique_ptr<Napi::ObjectReference> headElement = nullptr;

@@ -337,6 +337,21 @@ namespace dom
     onStyleSheetsDidChange();
   }
 
+  void Document::write(const std::string &markup)
+  {
+    // TODO(yorkie): implement the write logic.
+    // This method is used to write the markup into the document.
+    cerr << "Document::write() is not implemented yet." << endl
+         << "Markup: " << markup << endl
+         << "This method is used to write the markup into the document." << endl;
+  }
+
+  void Document::writeln(const std::string &markup)
+  {
+    // Write the markup followed by a newline
+    write(markup + "\n");
+  }
+
   void Document::onNodeAdded(const std::shared_ptr<Node> node, bool fast_insert, bool recursive)
   {
     if (TR_UNLIKELY(node == nullptr))
