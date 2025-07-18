@@ -9,6 +9,7 @@ class TrInspector;
 class TrInspectorServer
 {
   static constexpr int kDefaultPort = 9423;
+  static constexpr int kMaxWebSocketConnections = 5;
 
 public:
   TrInspectorServer(std::shared_ptr<TrInspector> inspector);
@@ -17,6 +18,7 @@ public:
 public:
   void tryAccept();
   void tick();
+  int getWebSocketConnectionCount() const;
 
 private:
   bool setNonBlocking();

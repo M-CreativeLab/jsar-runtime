@@ -21,6 +21,12 @@ class TrInspectorClient
     HEAD,
   };
 
+  enum class ConnectionType
+  {
+    HTTP,
+    WEBSOCKET
+  };
+
 public:
   TrInspectorClient(int fd, std::shared_ptr<TrInspector> inspector);
   ~TrInspectorClient();
@@ -40,12 +46,18 @@ public:
   void respond(http::Response response);
   void respond(uint32_t code, const std::string &text);
   void respond(uint32_t code, const rapidjson::Document &json);
+  bool isWebSocket() const { return connectionType_ == ConnectionType::WEBSOCKET; }
+  void sendWebSocketMessage(const std::string &message);
 
 private:
   bool setNonBlocking();
   void recv();
   void send(const std::string &data);
   void end();
+  bool tryUpgradeToWebSocket();
+  void handleWebSocketFrame();
+  void sendWebSocketFrame(const std::string &data);
+  std::string generateWebSocketAcceptKey(const std::string &webSocketKey);
 
 private:
   void onUrl(const char *at, size_t length);
@@ -78,4 +90,6 @@ private:
   http::HeaderFields headers_;
   llhttp_t httpParser_;
   llhttp_settings_t parsingSettings_;
+  ConnectionType connectionType_ = ConnectionType::HTTP;
+  std::vector<char> websocketBuffer_;
 };
