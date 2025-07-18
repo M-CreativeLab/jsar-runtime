@@ -198,6 +198,53 @@
     }
     .api-item {
       transition: all 0.2s ease-in-out;
+    }
+    
+    /* Chart styles */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .chart-bar {
+      display: inline-block;
+      margin: 0 2px;
+      border-radius: 2px 2px 0 0;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .chart-bar:hover {
+      opacity: 0.8;
+    }
+    .chart-legend {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    .chart-tooltip {
+      position: absolute;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+    }
       background-color: var(--bg-card);
       border: 1px solid var(--border-color);
     }
@@ -473,6 +520,19 @@
         <div class="text-2xl font-bold text-accent" id="latest-version">-</div>
         <div class="text-sm text-secondary">Latest Support</div>
         <div class="text-xs text-tertiary mt-1">Most recent API version</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Support Chart -->
+  <div class="container mb-6">
+    <h3 class="text-md font-semibold text-primary mb-4">📈 API Support by Version</h3>
+    <div class="card rounded-lg shadow-sm p-6">
+      <div class="mb-4">
+        <div class="text-sm text-secondary mb-2">APIs supported across JSAR Runtime versions</div>
+      </div>
+      <div id="version-chart" class="w-full" style="height: 300px;">
+        <!-- Chart will be rendered here -->
       </div>
     </div>
   </div>

@@ -15,6 +15,7 @@ class JSARCompatibilityViewer {
       this.setupThemeToggle();
       this.updateStats();
       this.renderAPIs();
+      this.renderVersionChart();
       this.hideLoading();
     } catch (error) {
       console.error('Failed to load compatibility data:', error);
@@ -28,15 +29,15 @@ class JSARCompatibilityViewer {
       const githubResponse = await fetch('https://api.github.com/repos/M-CreativeLab/jsar-runtime/releases');
       if (githubResponse.ok) {
         const releases = await githubResponse.json();
-        // Filter out releases that start with "amidala-"
-        const filteredReleases = releases.filter(r => !r.tag_name.startsWith('amidala-'));
+        // Filter to include only releases that start with "amidala-"
+        const filteredReleases = releases.filter(r => r.tag_name.startsWith('amidala-'));
         if (filteredReleases.length > 0) {
-          // Get the latest release version
-          this.currentVersion = filteredReleases[0].tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+          // Get the latest release version (remove 'amidala-' prefix)
+          this.currentVersion = filteredReleases[0].tag_name.replace(/^amidala-/, ''); 
           console.log('Loaded runtime version from GitHub API:', this.currentVersion);
           
           // Also populate version dropdown with available versions
-          this.populateVersionDropdown(filteredReleases.map(r => r.tag_name.replace(/^v/, '')));
+          this.populateVersionDropdown(filteredReleases.map(r => r.tag_name.replace(/^amidala-/, '')));
         } else {
           throw new Error('No releases found');
         }
@@ -456,6 +457,125 @@ class JSARCompatibilityViewer {
       return '<span class="badge bg-green-100 text-success">✅ Stable</span>';
     }
     return '';
+  }
+
+  renderVersionChart() {
+    if (!this.browserInfo || !this.browserInfo.browsers?.jsar?.releases) {
+      console.warn('Browser info not available for chart rendering');
+      return;
+    }
+
+    const chartContainer = document.getElementById('version-chart');
+    if (!chartContainer) {
+      console.warn('Chart container not found');
+      return;
+    }
+
+    // Get all versions and sort them
+    const versions = Object.keys(this.browserInfo.browsers.jsar.releases).sort((a, b) => {
+      const parseVersion = (v) => v.split('.').map(Number);
+      const aVersion = parseVersion(a);
+      const bVersion = parseVersion(b);
+      
+      for (let i = 0; i < Math.max(aVersion.length, bVersion.length); i++) {
+        const aPart = aVersion[i] || 0;
+        const bPart = bVersion[i] || 0;
+        if (aPart !== bPart) return aPart - bPart;
+      }
+      return 0;
+    });
+
+    // Calculate API counts per version
+    const versionData = versions.map(version => {
+      const stableCount = this.compatData.filter(api => 
+        api.version <= version && (api.standardTrack && !api.experimental && !api.deprecated)
+      ).length;
+      
+      const experimentalCount = this.compatData.filter(api => 
+        api.version <= version && api.experimental && !api.deprecated
+      ).length;
+      
+      return {
+        version,
+        stable: stableCount,
+        experimental: experimentalCount,
+        total: stableCount + experimentalCount
+      };
+    });
+
+    // Find max count for scaling
+    const maxCount = Math.max(...versionData.map(d => d.total));
+    const chartHeight = 250;
+    
+    // Create chart HTML
+    const chartHTML = `
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #10b981;"></div>
+          <span>Stable APIs</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #f59e0b;"></div>
+          <span>Experimental APIs</span>
+        </div>
+      </div>
+      <div class="chart-container" style="height: ${chartHeight}px;">
+        <div style="display: flex; align-items: end; height: 100%; padding: 0 1rem;">
+          ${versionData.map(data => {
+            const stableHeight = (data.stable / maxCount) * (chartHeight - 40);
+            const experimentalHeight = (data.experimental / maxCount) * (chartHeight - 40);
+            const barWidth = Math.max(30, (chartContainer.offsetWidth - 40) / versionData.length - 4);
+            
+            return `
+              <div style="display: flex; flex-direction: column; align-items: center; margin: 0 2px; min-width: ${barWidth}px;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  ${experimentalHeight > 0 ? `
+                    <div class="chart-bar" 
+                         style="width: ${barWidth - 4}px; height: ${experimentalHeight}px; background-color: #f59e0b;"
+                         title="v${data.version}: ${data.experimental} experimental APIs"></div>
+                  ` : ''}
+                  <div class="chart-bar" 
+                       style="width: ${barWidth - 4}px; height: ${stableHeight}px; background-color: #10b981;"
+                       title="v${data.version}: ${data.stable} stable APIs"></div>
+                </div>
+                <div style="margin-top: 8px; font-size: 0.75rem; transform: rotate(-45deg); transform-origin: center; white-space: nowrap;">
+                  v${data.version}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="position: absolute; right: 0; top: 0; bottom: 40px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary);">
+          <span>${maxCount}</span>
+          <span>${Math.floor(maxCount / 2)}</span>
+          <span>0</span>
+        </div>
+      </div>
+    `;
+    
+    chartContainer.innerHTML = chartHTML;
+
+    // Add tooltip functionality
+    const tooltip = document.createElement('div');
+    tooltip.className = 'chart-tooltip';
+    chartContainer.appendChild(tooltip);
+
+    chartContainer.querySelectorAll('.chart-bar').forEach(bar => {
+      bar.addEventListener('mouseenter', (e) => {
+        tooltip.innerHTML = e.target.title;
+        tooltip.style.display = 'block';
+      });
+
+      bar.addEventListener('mousemove', (e) => {
+        const rect = chartContainer.getBoundingClientRect();
+        tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+        tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+      });
+
+      bar.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+    });
   }
 
   hideLoading() {
