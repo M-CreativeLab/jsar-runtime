@@ -250,7 +250,8 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-3xl font-bold text-primary">JSAR Browser Compatibility</h1>
-          <p class="text-secondary mt-2">Web APIs and HTML Elements supported by JSAR Runtime</p>
+          <p class="text-secondary mt-2">Comprehensive overview of Web APIs and HTML Elements supported by JSAR Runtime</p>
+          <p class="text-xs text-tertiary mt-1">Interactive dashboard to explore compatibility data across all JSAR versions</p>
         </div>
         <div class="flex items-center gap-4">
           <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -268,6 +269,8 @@
   <!-- Search and Filter -->
   <div class="container py-6">
     <div class="card rounded-lg shadow-sm p-6 mb-6">
+      <h2 class="text-lg font-semibold text-primary mb-4">🔍 Search & Filter APIs</h2>
+      <p class="text-sm text-secondary mb-4">Find specific APIs, HTML elements, or features using the search and filters below</p>
       <div class="flex flex-col gap-4" id="filters">
         <div class="flex-1">
           <label for="search" class="block text-sm font-medium text-primary mb-2">Search APIs</label>
@@ -284,7 +287,7 @@
             </select>
           </div>
           <div>
-            <label for="version" class="block text-sm font-medium text-primary mb-2">Version</label>
+            <label for="version" class="block text-sm font-medium text-primary mb-2">Minimum Version</label>
             <select id="version">
               <option value="all">All Versions</option>
               <option value="0.4.0">0.4.0+</option>
@@ -301,22 +304,27 @@
 
   <!-- Stats -->
   <div class="container mb-6">
+    <h2 class="text-lg font-semibold text-primary mb-4">📊 Compatibility Overview</h2>
     <div class="grid grid-cols-1 gap-4" id="stats-grid">
       <div class="card rounded-lg shadow-sm p-4">
         <div class="text-2xl font-bold text-accent" id="total-apis">-</div>
         <div class="text-sm text-secondary">Total APIs</div>
+        <div class="text-xs text-tertiary mt-1">All APIs tracked across categories</div>
       </div>
       <div class="card rounded-lg shadow-sm p-4">
         <div class="text-2xl font-bold text-success" id="stable-apis">-</div>
         <div class="text-sm text-secondary">Stable APIs</div>
+        <div class="text-xs text-tertiary mt-1">Production-ready implementations</div>
       </div>
       <div class="card rounded-lg shadow-sm p-4">
         <div class="text-2xl font-bold text-warning" id="experimental-apis">-</div>
         <div class="text-sm text-secondary">Experimental</div>
+        <div class="text-xs text-tertiary mt-1">APIs under development</div>
       </div>
       <div class="card rounded-lg shadow-sm p-4">
         <div class="text-2xl font-bold text-accent" id="latest-version">-</div>
         <div class="text-sm text-secondary">Latest Support</div>
+        <div class="text-xs text-tertiary mt-1">Most recent API version</div>
       </div>
     </div>
   </div>
@@ -331,6 +339,10 @@
 
   <!-- Main Content -->
   <div id="content" class="container pb-12 hidden">
+    <div class="mb-4">
+      <h2 class="text-lg font-semibold text-primary mb-2">🛠️ API Reference</h2>
+      <p class="text-sm text-secondary">Browse all supported APIs organized by category. Click on links to access detailed documentation.</p>
+    </div>
     <div id="api-container" class="category-grid">
       <!-- API items will be inserted here -->
     </div>
@@ -341,7 +353,8 @@
     <div class="text-center py-12">
       <div class="text-tertiary" style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
       <h3 class="text-lg font-medium text-primary mb-2">No APIs found</h3>
-      <p class="text-secondary">Try adjusting your search or filters</p>
+      <p class="text-secondary">Try adjusting your search terms or filters above</p>
+      <p class="text-xs text-tertiary mt-2">Consider searching for broader terms or selecting "All Categories"</p>
     </div>
   </div>
 

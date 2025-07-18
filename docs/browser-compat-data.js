@@ -25,23 +25,27 @@ class JSARCompatibilityViewer {
   async loadRuntimeVersion() {
     try {
       // Try to load package.json to get the current version
-      const response = await fetch('../package.json');
+      const response = await fetch('../../package.json');
       if (response.ok) {
         const packageData = await response.json();
         this.currentVersion = packageData.version;
+        console.log('Loaded runtime version from package.json:', this.currentVersion);
       } else {
         // Fallback: try to get from browser compat data
         this.browserInfo = await this.loadJSON('./api/browser-compat-data/browsers/jsar.json');
         if (this.browserInfo && this.browserInfo.browsers && this.browserInfo.browsers.jsar) {
           const versions = Object.keys(this.browserInfo.browsers.jsar.releases || {});
           this.currentVersion = versions.sort((a, b) => this.compareVersions(b, a))[0] || '0.8.2';
+          console.log('Loaded runtime version from browser compat data:', this.currentVersion);
         } else {
           this.currentVersion = '0.8.2'; // Default fallback
+          console.log('Using default runtime version:', this.currentVersion);
         }
       }
     } catch (error) {
       console.warn('Could not load runtime version:', error);
       this.currentVersion = '0.8.2'; // Default fallback
+      console.log('Using fallback runtime version:', this.currentVersion);
     }
 
     // Update the UI with the current version
@@ -322,12 +326,16 @@ class JSARCompatibilityViewer {
 
   renderAPIGroup(groupName, apis) {
     const categoryColor = this.getCategoryColor(apis[0].category);
+    const categoryIcon = this.getCategoryIcon(apis[0].category);
     
     return `
       <div class="api-item card rounded-lg shadow-sm ${categoryColor} overflow-hidden" style="border-left: 4px solid;">
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-primary">${groupName}</h3>
+            <h3 class="text-lg font-semibold text-primary flex items-center gap-2">
+              <span>${categoryIcon}</span>
+              ${groupName}
+            </h3>
             <span class="badge bg-secondary text-secondary">
               ${apis.length} API${apis.length > 1 ? 's' : ''}
             </span>
@@ -371,6 +379,15 @@ class JSARCompatibilityViewer {
     }
   }
 
+  getCategoryIcon(category) {
+    switch (category) {
+      case 'api': return '⚙️';
+      case 'html': return '🏗️';
+      case 'global': return '🌐';
+      default: return '📁';
+    }
+  }
+
   getStatusBadge(api) {
     if (api.deprecated) {
       return '<span class="badge bg-red-100 text-error">⚠️ Deprecated</span>';
@@ -394,7 +411,11 @@ class JSARCompatibilityViewer {
       <div class="text-center py-12">
         <div class="text-error" style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
         <h3 class="text-lg font-medium text-primary mb-2">Failed to load compatibility data</h3>
-        <p class="text-secondary">Please check the console for more details or try refreshing the page</p>
+        <p class="text-secondary">Unable to fetch API compatibility information</p>
+        <p class="text-xs text-tertiary mt-2">Please check the console for more details or try refreshing the page</p>
+        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-opacity-90">
+          🔄 Refresh Page
+        </button>
       </div>
     `;
   }
