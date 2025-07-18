@@ -24,33 +24,33 @@ namespace client_cssom::values::computed
   public:
     // Default constructor creates a 'none' image
     Image() = default;
-    
+
     // Copy constructor
-    Image(const Image&) = default;
-    Image& operator=(const Image&) = default;
-    
+    Image(const Image &) = default;
+    Image &operator=(const Image &) = default;
+
     // Move constructor
-    Image(Image&&) = default;
-    Image& operator=(Image&&) = default;
-    
+    Image(Image &&) = default;
+    Image &operator=(Image &&) = default;
+
     // Check if image is none/empty
     bool isNone() const
     {
       return std::holds_alternative<std::monostate>(*this);
     }
-    
+
     // Check if image is a URL
     bool isUrl() const
     {
       return std::holds_alternative<specified::UrlOrNone>(*this);
     }
-    
+
     // Check if image is a gradient
     bool isGradient() const
     {
       return std::holds_alternative<Gradient>(*this);
     }
-    
+
     // Get URL if it's a URL, otherwise return empty string
     std::string getUrl() const;
   };

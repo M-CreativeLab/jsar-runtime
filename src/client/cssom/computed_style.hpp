@@ -540,7 +540,8 @@ private:                                                \
     {
     public:
       explicit ComputedStyleBitfields()
-          : has_transform_(false), has_background_image_(false)
+          : has_transform_(false)
+          , has_background_image_(false)
       {
       }
 

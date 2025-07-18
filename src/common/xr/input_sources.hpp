@@ -141,7 +141,7 @@ namespace xr
   class TrRayHitResult
   {
   public:
-    TrRayHitResult() {};
+    TrRayHitResult(){};
     TrRayHitResult(bool hit, float *matrixValues = nullptr)
     {
       this->hit = hit;

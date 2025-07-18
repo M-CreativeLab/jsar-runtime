@@ -35,14 +35,14 @@ namespace client_cssom::values::specified
   public:
     // Default constructor creates a 'none' image
     Image() = default;
-    
+
     // Copy constructor
-    Image(const Image&) = default;
-    Image& operator=(const Image&) = default;
-    
+    Image(const Image &) = default;
+    Image &operator=(const Image &) = default;
+
     // Move constructor
-    Image(Image&&) = default;
-    Image& operator=(Image&&) = default;
+    Image(Image &&) = default;
+    Image &operator=(Image &&) = default;
 
     // Static factory methods
     static Image None()
@@ -52,7 +52,7 @@ namespace client_cssom::values::specified
       return img;
     }
 
-    static Image Url(const std::string& url_str)
+    static Image Url(const std::string &url_str)
     {
       Image img;
       UrlOrNone url_or_none;
@@ -66,13 +66,13 @@ namespace client_cssom::values::specified
     {
       return std::holds_alternative<std::monostate>(*this);
     }
-    
+
     // Check if image is a URL
     bool isUrl() const
     {
       return std::holds_alternative<UrlOrNone>(*this);
     }
-    
+
     // Check if image is a gradient
     bool isGradient() const
     {
@@ -88,13 +88,13 @@ namespace client_cssom::values::specified
         *this = None();
         return true;
       }
-      
+
       // Handle url() syntax - simplified parsing
       if (input.length() >= 5 && input.substr(0, 4) == "url(" && input.back() == ')')
       {
         std::string url_content = input.substr(4, input.length() - 5);
         // Remove quotes if present
-        if (url_content.length() >= 2 && 
+        if (url_content.length() >= 2 &&
             ((url_content.front() == '"' && url_content.back() == '"') ||
              (url_content.front() == '\'' && url_content.back() == '\'')))
         {
@@ -103,9 +103,9 @@ namespace client_cssom::values::specified
         *this = Url(url_content);
         return true;
       }
-      
+
       // TODO: Add gradient parsing support when needed
-      
+
       // Default to none for unrecognized values
       *this = None();
       return false;
@@ -120,7 +120,7 @@ namespace client_cssom::values::specified
       }
       else if (isUrl())
       {
-        const auto& url_or_none = std::get<UrlOrNone>(*this);
+        const auto &url_or_none = std::get<UrlOrNone>(*this);
         if (url_or_none.url.has_value())
         {
           return "url(\"" + url_or_none.url.value() + "\")";
@@ -135,25 +135,25 @@ namespace client_cssom::values::specified
     computed::Image toComputedValue(computed::Context &context) const override
     {
       computed::Image computed_img;
-      
+
       if (isNone())
       {
         computed_img.emplace<std::monostate>();
       }
       else if (isUrl())
       {
-        const auto& url_or_none = std::get<UrlOrNone>(*this);
+        const auto &url_or_none = std::get<UrlOrNone>(*this);
         computed_img.emplace<UrlOrNone>(url_or_none);
       }
       else if (isGradient())
       {
         // TODO: Convert gradient to computed gradient when needed
-        const auto& gradient = std::get<Gradient>(*this);
+        const auto &gradient = std::get<Gradient>(*this);
         computed::Gradient computed_gradient;
         // For now, just create an empty gradient
         computed_img.emplace<computed::Gradient>(computed_gradient);
       }
-      
+
       return computed_img;
     }
   };

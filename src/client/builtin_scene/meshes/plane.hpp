@@ -15,10 +15,10 @@ namespace builtin_scene::meshes
     Plane(math::Dir3 normal, glm::vec2 halfSize)
         : Mesh("Plane", PrimitiveTopology::kTriangles)
         , normal_(normal)
-        , halfSize_(halfSize) {};
+        , halfSize_(halfSize){};
     // Constructs a plane with the given normal and a default half size of 0.5f.
     Plane(math::Dir3 normal, float halfSize = 0.5f)
-        : Plane(normal, glm::vec2(halfSize, halfSize)) {};
+        : Plane(normal, glm::vec2(halfSize, halfSize)){};
 
   public:
     inline math::Dir3 normal()
