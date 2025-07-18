@@ -48,6 +48,6 @@ namespace dom
     glm::vec3 current_scroll_end_point_;
     bool is_scroll_in_progress_ = false;
 
-    static inline float click_distance_threshold_ = client_cssom::pixelToMeter(1);
+    static inline float click_distance_threshold_ = client_cssom::pixelToMeter(5);
   };
 }
