@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <cstring>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/dom/element.hpp>
 #include <client/html/html_element.hpp>
@@ -6,10 +8,48 @@
 
 #include "./document_event_dispatcher.hpp"
 
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+#include <sys/system_properties.h>
+#endif
+
 namespace dom
 {
   using namespace std;
   using namespace std::placeholders;
+
+  float DocumentEventDispatcher::getClickDistanceThreshold()
+  {
+    // Default threshold: 5 pixels
+    float defaultThresholdPixels = 5.0f;
+    
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+    char thresholdStr[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.xr.click.distance.threshold", thresholdStr) >= 0)
+    {
+      char* endptr;
+      float threshold = strtof(thresholdStr, &endptr);
+      if (endptr != thresholdStr && threshold > 0)
+      {
+        return client_cssom::pixelToMeter(threshold);
+      }
+    }
+#endif
+
+    // Check environment variable
+    const char* envThreshold = std::getenv("JSAR_XR_CLICK_DISTANCE_THRESHOLD");
+    if (envThreshold != nullptr)
+    {
+      char* endptr;
+      float threshold = strtof(envThreshold, &endptr);
+      if (endptr != envThreshold && threshold > 0)
+      {
+        return client_cssom::pixelToMeter(threshold);
+      }
+    }
+
+    // Return default threshold
+    return client_cssom::pixelToMeter(defaultThresholdPixels);
+  }
 
   DocumentEventDispatcher::DocumentEventDispatcher(HTMLDocument *document)
       : document_(document)
