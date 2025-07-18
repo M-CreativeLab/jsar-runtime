@@ -1,3 +1,5 @@
+import { LanguageModel } from './prompt-api';
+
 class NavigatorImpl implements Navigator {
   clipboard: Clipboard;
   credentials: CredentialsContainer;
@@ -11,6 +13,14 @@ class NavigatorImpl implements Navigator {
   serviceWorker: ServiceWorkerContainer;
   userActivation: UserActivation;
   wakeLock: WakeLock;
+
+  /**
+   * The Prompt API provides access to language models for text generation.
+   * Based on the specification: https://github.com/webmachinelearning/prompt-api
+   */
+  get languageModel() {
+    return LanguageModel;
+  }
 
   canShare(_data?: ShareData): boolean {
     throw new Error('Method not implemented.');
