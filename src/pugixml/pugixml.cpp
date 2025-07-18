@@ -3444,13 +3444,15 @@ PUGI_IMPL_NS_BEGIN
 										}
 										else PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
 									}
-									else	// '<script async'
+									else // '<... #="..." ...>
 									{
 										a->value = a->name;
 
-										// Step back
-										--s;
-										ch = *s;
+										// Step back to the `ch`
+										// It is set to 0 by PUGI_IMPL_ENDSEG() above, so we need to reset the last character to '>' so 
+										// that the next loop iteration will handle it correctly.
+										*(s - 1) = ch;
+										s--;
 									}
 								}
 								else if (*s == '/')
@@ -3479,7 +3481,7 @@ PUGI_IMPL_NS_BEGIN
 									}
 									else if (is_pcdata_tag(cursor->name))
 									{
-										s = parse_pcdata_tag(s, cursor);
+										s = parse_pcdata_tag(s + 1, cursor);
 
 										if (!*s) break;
 										goto LOC_TAG;

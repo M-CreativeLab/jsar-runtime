@@ -62,6 +62,107 @@ namespace dom
       setSource("<html><head></head><body></body></html>");
   }
 
+  // This class is used to trace the source code of the document and print the line containing the offset with a
+  // caret (^) indicating the position.
+  class SourceTrace
+  {
+  public:
+    SourceTrace(const string &source, size_t offset)
+        : source(source)
+        , offset(offset)
+    {
+    }
+
+    friend ostream &operator<<(ostream &os, const SourceTrace &trace)
+    {
+      auto &source = trace.source;
+      auto &offset = trace.offset;
+
+      // Print the first line
+      // TODO(yorkie): support filename?
+      os << "(source):";
+
+      if (source.empty())
+      {
+        // Empty source string, nothing to print.
+        os << offset << endl
+           << "^" << endl;
+        return os;
+      }
+
+      // 1. Search for the line containing the offset.
+      size_t line_num = 0;
+      size_t line_start = 0;
+      size_t current = 0;
+      bool found_line = false;
+      size_t line_length = 0;
+
+      while (current <= source.length())
+      {
+        size_t line_end = source.find('\n', current);
+        if (line_end == string::npos)
+          line_end = source.length();
+        else
+          line_num++;
+
+        line_length = line_end - current;
+        if (offset >= current && offset <= line_end)
+        {
+          line_start = current;
+          found_line = true;
+          break;
+        }
+
+        if (line_end == source.length())
+          break; // String ends, no more lines to check.
+
+        current = line_end + 1;
+      }
+
+      // 2. Extract the line containing the offset.
+      string line;
+      if (found_line)
+      {
+        line = source.substr(line_start, line_length);
+      }
+      else
+      {
+        // If the offset is not found, we take the last line of the source.
+        size_t last_line_start = source.find_last_of('\n');
+        if (last_line_start == string::npos)
+        {
+          line = source;
+        }
+        else
+        {
+          line = source.substr(last_line_start + 1);
+        }
+      }
+
+      // 3. Calculate the display column position.
+      size_t line_offset = (found_line) ? (offset - line_start) : line.length();
+      size_t display_col = 0;
+
+      // Calculate the display column position based on tabs and spaces.
+      for (size_t i = 0; i < line_offset && i < line.length(); ++i)
+      {
+        if (line[i] == '\t')
+          display_col = display_col + (8 - (display_col % 8));
+        else
+          ++display_col;
+      }
+
+      os << line_num << ":" << (display_col + 1) << endl
+         << line << endl
+         << string(display_col, ' ') << '^';
+      return os;
+    }
+
+  public:
+    string_view source;
+    size_t offset;
+  };
+
   void Document::setSource(const string &source, bool isFragment)
   {
     string inputText(source);
@@ -74,24 +175,12 @@ namespace dom
       flag |= pugi::parse_fragment;
 
     auto r = doc_internal_->load_string(inputText.c_str(), flag);
-    if (r.status != pugi::xml_parse_status::status_ok)
+    if (r.status != pugi::xml_parse_status::status_ok) [[unlikely]]
     {
-      cerr << "Document::setSource: " << r.description() << " at:" << endl;
-
-      // Print the offset in source
-      char errorSnippet[128];
-      size_t start = std::max(0, static_cast<int>(r.offset) - 64);
-      size_t end = std::min(inputText.size(), start + 128);
-      strncpy(errorSnippet, inputText.c_str() + start, end - start);
-      errorSnippet[end - start] = '\0'; // Null-terminate the snippet
-      {
-        // search for \n and set to \0
-        size_t newlinePos = strcspn(errorSnippet, "\n");
-        if (newlinePos < sizeof(errorSnippet))
-          errorSnippet[newlinePos] = '\0'; // Truncate at the first newline
-      }
-      cerr << "  '" << errorSnippet << "'" << endl;
-      cerr << "  " << string(r.offset - start, ' ') << "^" << endl;
+      cerr << SourceTrace(inputText, r.offset) << endl
+           << "SyntaxError: " << r.description() << endl
+           << string(4, ' ') << "at Document::setSource()" << endl
+           << endl;
     }
 
     resetFrom(doc_internal_, getPtr<Document>());
