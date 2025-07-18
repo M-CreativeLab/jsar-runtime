@@ -7,6 +7,7 @@
 #include <crates/bindings.hpp>
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
+#include <client/cssom/values/computed/image.hpp>
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
@@ -372,6 +373,14 @@ namespace client_cssom
     {
       return bitfields_.HasBackgroundColor();
     }
+    inline const values::computed::Image &backgroundImage() const
+    {
+      return background_image_;
+    }
+    inline bool hasBackgroundImage() const
+    {
+      return bitfields_.HasBackgroundImage();
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -500,6 +509,7 @@ namespace client_cssom
     // Colors
     values::computed::Color color_ = values::computed::Color::Black();
     values::computed::Color background_color_ = values::computed::Color::Transparent();
+    values::computed::Image background_image_;
 
     // 3D Transforms
     values::computed::Transform transform_;
@@ -530,13 +540,14 @@ private:                                                \
     {
     public:
       explicit ComputedStyleBitfields()
-          : has_transform_(false)
+          : has_transform_(false), has_background_image_(false)
       {
       }
 
       ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
       ADD_BOOLEAN_BITFIELD(has_color_, HasColor);
       ADD_BOOLEAN_BITFIELD(has_background_color_, HasBackgroundColor);
+      ADD_BOOLEAN_BITFIELD(has_background_image_, HasBackgroundImage);
       ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
       ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
       ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
