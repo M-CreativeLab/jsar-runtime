@@ -21,6 +21,12 @@ void TrInspector::tick()
   server_->tick();
 }
 
+bool TrInspector::canAcceptWebSocketConnection()
+{
+  const int maxConnections = 5;
+  return server_->countWebSocketClients() < maxConnections;
+}
+
 void TrInspector::onRequest(TrInspectorClient &requestClient)
 {
   string requestUrl = requestClient.url();
@@ -203,4 +209,12 @@ bool TrInspector::getStatistics(rapidjson::Document &json)
   json.AddMember("renderers", renderers_list, allocator);
 
   return true;
+}
+
+void TrInspector::onMessage(TrInspectorClient &client, const string &message)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
+
+  // For now, just echo the message back (placeholder for CDP implementation)
+  client.sendWebSocketMessage("Echo: " + message);
 }

@@ -23,6 +23,8 @@ public:
 public:
   void initialize();
   void tick();
+  bool canAcceptWebSocketConnection();
+  void onMessage(TrInspectorClient &client, const string &message);
 
 private:
   void onRequest(TrInspectorClient &);
