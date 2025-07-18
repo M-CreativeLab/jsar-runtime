@@ -51,19 +51,41 @@ namespace client_cssom::values::generics
   template <typename L, typename LP, typename Color>
   class GenericGradient
   {
-  private:
+  public:
     class LinearGradient
     {
     public:
-      LineDirection direction;
+      LineDirection direction = LineDirection::kToRight;
       std::vector<GenericGradientItem<Color, LP>> items;
     };
 
-    // TODO(yorkie): add radial gradient when needed.
+    class RadialGradient
+    {
+    public:
+      enum Shape { kCircle, kEllipse };
+      enum Size { kClosestSide, kClosestCorner, kFarthestSide, kFarthestCorner };
+      
+      Shape shape = Shape::kEllipse;
+      Size size = Size::kFarthestCorner;
+      std::vector<GenericGradientItem<Color, LP>> items;
+    };
+
     // TODO(yorkie): add conic gradient when needed.
+    
+    using GradientType = std::variant<LinearGradient, RadialGradient>;
 
   public:
-    bool repeating;
+    bool repeating = false;
+    GradientType gradient_type;
+    
+    // Constructor for linear gradient
+    GenericGradient(const LinearGradient& linear) : gradient_type(linear) {}
+    
+    // Constructor for radial gradient  
+    GenericGradient(const RadialGradient& radial) : gradient_type(radial) {}
+    
+    // Default constructor (creates linear gradient)
+    GenericGradient() : gradient_type(LinearGradient{}) {}
   };
 
   template <typename G, typename ImageUrl>

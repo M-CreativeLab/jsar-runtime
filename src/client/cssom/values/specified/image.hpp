@@ -21,8 +21,12 @@ namespace client_cssom::values::specified
   class Gradient : public generics::GenericGradient<
                      specified::NoCalcLength,
                      specified::LengthPercentage,
-                     specified::Color>
+                     specified::Color>,
+                   public ToComputedValue<computed::Gradient>
   {
+  public:
+    // Convert to computed value
+    computed::Gradient toComputedValue(computed::Context &context) const;
   };
 
   class Image : public generics::GenericImage<Gradient, specified::UrlOrNone>,
@@ -31,6 +35,15 @@ namespace client_cssom::values::specified
                 public ToComputedValue<computed::Image>
   {
     friend class Parse;
+
+  private:
+    // Helper methods for parsing gradients
+    bool parseGradient(const std::string &input);
+    bool parseLinearGradient(const std::string &content, bool repeating = false);
+    bool parseRadialGradient(const std::string &content, bool repeating = false);
+    
+    // Helper method for gradient CSS serialization
+    std::string gradientToCss(const Gradient &gradient) const;
 
   public:
     // Default constructor creates a 'none' image
@@ -89,10 +102,18 @@ namespace client_cssom::values::specified
         return true;
       }
 
-      // Handle url() syntax - simplified parsing
+      // Handle url() syntax - improved parsing
       if (input.length() >= 5 && input.substr(0, 4) == "url(" && input.back() == ')')
       {
         std::string url_content = input.substr(4, input.length() - 5);
+        // Trim whitespace
+        size_t start = url_content.find_first_not_of(" \t\n\r");
+        size_t end = url_content.find_last_not_of(" \t\n\r");
+        if (start != std::string::npos)
+        {
+          url_content = url_content.substr(start, end - start + 1);
+        }
+        
         // Remove quotes if present
         if (url_content.length() >= 2 &&
             ((url_content.front() == '"' && url_content.back() == '"') ||
@@ -104,7 +125,11 @@ namespace client_cssom::values::specified
         return true;
       }
 
-      // TODO: Add gradient parsing support when needed
+      // Handle gradient functions
+      if (parseGradient(input))
+      {
+        return true;
+      }
 
       // Default to none for unrecognized values
       *this = None();
@@ -127,7 +152,11 @@ namespace client_cssom::values::specified
         }
         return "none";
       }
-      // TODO: Add gradient serialization when needed
+      else if (isGradient())
+      {
+        const auto &gradient = std::get<Gradient>(*this);
+        return gradientToCss(gradient);
+      }
       return "none";
     }
 
@@ -147,10 +176,8 @@ namespace client_cssom::values::specified
       }
       else if (isGradient())
       {
-        // TODO: Convert gradient to computed gradient when needed
         const auto &gradient = std::get<Gradient>(*this);
-        computed::Gradient computed_gradient;
-        // For now, just create an empty gradient
+        computed::Gradient computed_gradient = gradient.toComputedValue(context);
         computed_img.emplace<computed::Gradient>(computed_gradient);
       }
 
