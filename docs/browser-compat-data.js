@@ -505,9 +505,13 @@ class JSARCompatibilityViewer {
 
     // Find max count for scaling
     const maxCount = Math.max(...versionData.map(d => d.total));
+    const chartWidth = chartContainer.offsetWidth || 800;
     const chartHeight = 250;
+    const padding = { top: 20, right: 40, bottom: 60, left: 40 };
+    const innerWidth = chartWidth - padding.left - padding.right;
+    const innerHeight = chartHeight - padding.top - padding.bottom;
     
-    // Create chart HTML
+    // Create line chart HTML with SVG
     const chartHTML = `
       <div class="chart-legend">
         <div class="legend-item">
@@ -519,37 +523,75 @@ class JSARCompatibilityViewer {
           <span>Experimental APIs</span>
         </div>
       </div>
-      <div class="chart-container" style="height: ${chartHeight}px;">
-        <div style="display: flex; align-items: end; height: 100%; padding: 0 1rem;">
-          ${versionData.map(data => {
-            const stableHeight = (data.stable / maxCount) * (chartHeight - 40);
-            const experimentalHeight = (data.experimental / maxCount) * (chartHeight - 40);
-            const barWidth = Math.max(30, (chartContainer.offsetWidth - 40) / versionData.length - 4);
-            
+      <div class="chart-container" style="height: ${chartHeight}px; position: relative;">
+        <svg width="${chartWidth}" height="${chartHeight}" style="display: block;">
+          <!-- Grid lines -->
+          ${Array.from({length: 6}, (_, i) => {
+            const y = padding.top + (innerHeight / 5) * i;
+            const value = Math.round(maxCount - (maxCount / 5) * i);
             return `
-              <div style="display: flex; flex-direction: column; align-items: center; margin: 0 2px; min-width: ${barWidth}px;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                  ${experimentalHeight > 0 ? `
-                    <div class="chart-bar" 
-                         style="width: ${barWidth - 4}px; height: ${experimentalHeight}px; background-color: #f59e0b;"
-                         title="v${data.version}: ${data.experimental} experimental APIs"></div>
-                  ` : ''}
-                  <div class="chart-bar" 
-                       style="width: ${barWidth - 4}px; height: ${stableHeight}px; background-color: #10b981;"
-                       title="v${data.version}: ${data.stable} stable APIs"></div>
-                </div>
-                <div style="margin-top: 8px; font-size: 0.75rem; transform: rotate(-45deg); transform-origin: center; white-space: nowrap;">
-                  v${data.version}
-                </div>
-              </div>
+              <line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" 
+                    stroke="var(--border-color)" stroke-width="1" opacity="0.3"/>
+              <text x="${padding.left - 10}" y="${y + 4}" fill="var(--text-tertiary)" 
+                    font-size="12" text-anchor="end">${value}</text>
             `;
           }).join('')}
-        </div>
-        <div style="position: absolute; right: 0; top: 0; bottom: 40px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.75rem; color: var(--text-tertiary);">
-          <span>${maxCount}</span>
-          <span>${Math.floor(maxCount / 2)}</span>
-          <span>0</span>
-        </div>
+          
+          <!-- X-axis labels -->
+          ${versionData.map((data, i) => {
+            const x = padding.left + (innerWidth / (versionData.length - 1)) * i;
+            return `
+              <text x="${x}" y="${chartHeight - 10}" fill="var(--text-tertiary)" 
+                    font-size="11" text-anchor="middle">v${data.version}</text>
+            `;
+          }).join('')}
+          
+          <!-- Stable APIs line -->
+          <polyline
+            fill="none"
+            stroke="#10b981"
+            stroke-width="3"
+            points="${versionData.map((data, i) => {
+              const x = padding.left + (innerWidth / (versionData.length - 1)) * i;
+              const y = padding.top + innerHeight - (data.stable / maxCount) * innerHeight;
+              return `${x},${y}`;
+            }).join(' ')}"
+          />
+          
+          <!-- Experimental APIs line -->
+          <polyline
+            fill="none"
+            stroke="#f59e0b"
+            stroke-width="3"
+            points="${versionData.map((data, i) => {
+              const x = padding.left + (innerWidth / (versionData.length - 1)) * i;
+              const y = padding.top + innerHeight - (data.experimental / maxCount) * innerHeight;
+              return `${x},${y}`;
+            }).join(' ')}"
+          />
+          
+          <!-- Data points for stable APIs -->
+          ${versionData.map((data, i) => {
+            const x = padding.left + (innerWidth / (versionData.length - 1)) * i;
+            const y = padding.top + innerHeight - (data.stable / maxCount) * innerHeight;
+            return `
+              <circle cx="${x}" cy="${y}" r="4" fill="#10b981" stroke="#ffffff" stroke-width="2"
+                      class="chart-point" data-tooltip="v${data.version}: ${data.stable} stable APIs" 
+                      style="cursor: pointer;"/>
+            `;
+          }).join('')}
+          
+          <!-- Data points for experimental APIs -->
+          ${versionData.map((data, i) => {
+            const x = padding.left + (innerWidth / (versionData.length - 1)) * i;
+            const y = padding.top + innerHeight - (data.experimental / maxCount) * innerHeight;
+            return `
+              <circle cx="${x}" cy="${y}" r="4" fill="#f59e0b" stroke="#ffffff" stroke-width="2"
+                      class="chart-point" data-tooltip="v${data.version}: ${data.experimental} experimental APIs" 
+                      style="cursor: pointer;"/>
+            `;
+          }).join('')}
+        </svg>
       </div>
     `;
     
@@ -560,19 +602,19 @@ class JSARCompatibilityViewer {
     tooltip.className = 'chart-tooltip';
     chartContainer.appendChild(tooltip);
 
-    chartContainer.querySelectorAll('.chart-bar').forEach(bar => {
-      bar.addEventListener('mouseenter', (e) => {
-        tooltip.innerHTML = e.target.title;
+    chartContainer.querySelectorAll('.chart-point').forEach(point => {
+      point.addEventListener('mouseenter', (e) => {
+        tooltip.innerHTML = e.target.getAttribute('data-tooltip');
         tooltip.style.display = 'block';
       });
 
-      bar.addEventListener('mousemove', (e) => {
+      point.addEventListener('mousemove', (e) => {
         const rect = chartContainer.getBoundingClientRect();
         tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
         tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
       });
 
-      bar.addEventListener('mouseleave', () => {
+      point.addEventListener('mouseleave', () => {
         tooltip.style.display = 'none';
       });
     });
