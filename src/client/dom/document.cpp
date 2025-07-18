@@ -75,7 +75,24 @@ namespace dom
 
     auto r = doc_internal_->load_string(inputText.c_str(), flag);
     if (r.status != pugi::xml_parse_status::status_ok)
-      throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
+    {
+      cerr << "Document::setSource: " << r.description() << " at:" << endl;
+
+      // Print the offset in source
+      char errorSnippet[128];
+      size_t start = std::max(0, static_cast<int>(r.offset) - 64);
+      size_t end = std::min(inputText.size(), start + 128);
+      strncpy(errorSnippet, inputText.c_str() + start, end - start);
+      errorSnippet[end - start] = '\0'; // Null-terminate the snippet
+      {
+        // search for \n and set to \0
+        size_t newlinePos = strcspn(errorSnippet, "\n");
+        if (newlinePos < sizeof(errorSnippet))
+          errorSnippet[newlinePos] = '\0'; // Truncate at the first newline
+      }
+      cerr << "  '" << errorSnippet << "'" << endl;
+      cerr << "  " << string(r.offset - start, ' ') << "^" << endl;
+    }
 
     resetFrom(doc_internal_, getPtr<Document>());
     is_source_loaded_ = true;

@@ -3324,6 +3324,37 @@ PUGI_IMPL_NS_BEGIN
 			return s;
 		}
 
+		char_t* parse_pcdata_tag(char_t* s, xml_node_struct* cursor)
+		{
+			char_t* parsed_pcdata = s;
+			{
+				char_t* pcdata_end = s;
+				while (*pcdata_end)
+				{
+					if (pcdata_end[0] == '<' && pcdata_end[1] == '/')
+					{
+						char_t* close_tag_name = pcdata_end + 2;
+						size_t len = strlen(cursor->name) * sizeof(char_t);
+						if (memcmp(close_tag_name, cursor->name, len) == 0)
+						{
+							char_t next_char = close_tag_name[len / sizeof(char_t)];
+							if (next_char == '>')
+								break;
+						}
+					}
+					pcdata_end++;
+				}
+				*pcdata_end = 0;
+				s = pcdata_end + 1;
+			}
+
+			// Append pcdata node as a child
+			xml_node_struct* prev_cursor = cursor;
+			PUGI_IMPL_PUSHNODE(node_pcdata);
+			cursor->value = parsed_pcdata;
+			return s;
+		}
+
 		char_t* parse_tree(char_t* s, xml_node_struct* root, unsigned int optmsk, char_t endch)
 		{
 			strconv_attribute_t strconv_attribute = get_strconv_attribute(optmsk);
@@ -3360,35 +3391,7 @@ PUGI_IMPL_NS_BEGIN
 							}
 							else if (is_pcdata_tag(cursor->name))
 							{
-								char_t* parsed_pcdata = s;
-								{
-									char_t* pcdata_end = s;
-									while (*pcdata_end)
-									{
-										if (pcdata_end[0] == '<' && pcdata_end[1] == '/')
-										{
-											char_t* close_tag_name = pcdata_end + 2;
-											size_t len = strlen(cursor->name) * sizeof(char_t);
-											if (memcmp(close_tag_name, cursor->name, len) == 0)
-											{
-												char_t next_char = close_tag_name[len / sizeof(char_t)];
-												if (next_char == '>')
-													break;
-											}
-										}
-										pcdata_end++;
-									}
-									*pcdata_end = 0;
-									s = pcdata_end + 1;
-								}
-
-								// Append pcdata node as a child
-								xml_node_struct* prev_cursor = cursor;
-								PUGI_IMPL_PUSHNODE(node_pcdata);
-								cursor->value = parsed_pcdata;
-
-								// Pop since this is a standalone.
-								cursor = prev_cursor;
+								s = parse_pcdata_tag(s, cursor);
 
 								if (!*s) break;
 								goto LOC_TAG;
@@ -3475,6 +3478,18 @@ PUGI_IMPL_NS_BEGIN
 									{
 										PUGI_IMPL_POPNODE();
 										s++;
+									}
+									else if (is_pcdata_tag(cursor->name))
+									{
+										s = parse_pcdata_tag(s, cursor);
+
+										if (!*s) break;
+										goto LOC_TAG;
+									}
+									else
+									{
+										PUGI_IMPL_ENDSEG();
+										break; // End of tag.
 									}
 									break;
 								}
