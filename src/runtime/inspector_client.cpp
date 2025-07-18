@@ -115,7 +115,7 @@ void TrInspectorClient::tick()
       shouldClose_ = true;
     }
   }
-  else
+  else [[unlikely]]
   {
     assert(false && "Unknown connection type");
   }
@@ -617,7 +617,6 @@ void TrInspectorClient::handleWebSocketFrame()
     }
 
     string message(payload.begin(), payload.end());
-    DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
 
     // Forward message to inspector for handling
     auto inspector = inspector_.lock();

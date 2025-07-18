@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <concepts>
+#include <memory>
 #include <unistd.h>
 
 #ifndef TR_UNLIKELY

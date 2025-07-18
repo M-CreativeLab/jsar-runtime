@@ -24,7 +24,7 @@ void TrInspector::tick()
 bool TrInspector::canAcceptWebSocketConnection()
 {
   const int maxConnections = 5;
-  return server_->getWebSocketConnectionCount() < maxConnections;
+  return server_->countWebSocketClients() < maxConnections;
 }
 
 void TrInspector::onRequest(TrInspectorClient &requestClient)

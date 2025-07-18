@@ -18,7 +18,7 @@ public:
 public:
   void tryAccept();
   void tick();
-  int getWebSocketConnectionCount() const;
+  int countWebSocketClients() const;
 
 private:
   bool setNonBlocking();
