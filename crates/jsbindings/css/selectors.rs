@@ -18,6 +18,17 @@ impl Component {
     use crate::css_parser::ffi::PseudoClassType;
     use crate::css_parser::ffi::SelectorComponentType;
 
+    // Debug print to understand what ComponentImpl variant we get for :where()
+    match handle {
+      ComponentImpl::Is(selector_list) => {
+        println!("DEBUG: Found ComponentImpl::Is with {} selectors", selector_list.len());
+      }
+      ComponentImpl::Where(selector_list) => {
+        println!("DEBUG: Found ComponentImpl::Where with {} selectors", selector_list.len());
+      }
+      _ => {}
+    }
+
     Self {
       tag: match handle {
         ComponentImpl::LocalName(_) => SelectorComponentType::LocalName,
@@ -30,6 +41,8 @@ impl Component {
         ComponentImpl::PseudoElement(_) => SelectorComponentType::PseudoElement,
         ComponentImpl::NonTSPseudoClass(_) => SelectorComponentType::PseudoClass,
         ComponentImpl::Combinator(_) => SelectorComponentType::Combinator,
+        ComponentImpl::Is(_) => SelectorComponentType::PseudoClass, // :is() support
+        ComponentImpl::Where(_) => SelectorComponentType::PseudoClass, // :where() support
         _ => SelectorComponentType::Unsupported,
       },
       combinator: match handle {

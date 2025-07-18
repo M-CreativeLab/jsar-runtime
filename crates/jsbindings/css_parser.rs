@@ -1628,6 +1628,36 @@ mod tests {
   }
 
   #[test]
+  fn test_where_selector() {
+    let parser = CSSParser::default();
+    
+    // Test basic :where() selector
+    let s = parser.parse_selectors(":where(div, span)");
+    println!("Parsing ':where(div, span)': {:?}", s);
+    if let Some(selector_list) = s {
+      println!("Number of selectors: {}", selector_list.len());
+      for i in 0..selector_list.len() {
+        if let Some(selector) = selector_list.item(i) {
+          println!("Selector {}: {:?}", i, selector);
+          for j in 0..selector.components.len() {
+            if let Some(component) = selector.components.item(j) {
+              println!("  Component {}: tag={:?}, name={:?}", j, component.tag, component.name);
+            }
+          }
+        }
+      }
+    }
+    
+    // Test :where() with more complex selectors
+    let s = parser.parse_selectors("p:where(.class1, .class2)");
+    println!("Parsing 'p:where(.class1, .class2)': {:?}", s);
+    
+    // Test nested :where()
+    let s = parser.parse_selectors(":where(:where(div), span)");
+    println!("Parsing ':where(:where(div), span)': {:?}", s);
+  }
+
+  #[test]
   fn test_parse_selectors() {
     let parser = CSSParser::default();
     let s = parser.parse_selectors("body, .foo > div#bar");
