@@ -21,12 +21,12 @@ namespace dom
   {
     // Default threshold: 5 pixels
     float defaultThresholdPixels = 5.0f;
-    
+
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char thresholdStr[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.xr.click.distance.threshold", thresholdStr) >= 0)
+    if (__system_property_get("jsar.click.distance.threshold", thresholdStr) >= 0)
     {
-      char* endptr;
+      char *endptr;
       float threshold = strtof(thresholdStr, &endptr);
       if (endptr != thresholdStr && threshold > 0)
       {
@@ -36,10 +36,10 @@ namespace dom
 #endif
 
     // Check environment variable
-    const char* envThreshold = std::getenv("JSAR_XR_CLICK_DISTANCE_THRESHOLD");
+    const char *envThreshold = std::getenv("JSAR_CLICK_DISTANCE_THRESHOLD");
     if (envThreshold != nullptr)
     {
-      char* endptr;
+      char *endptr;
       float threshold = strtof(envThreshold, &endptr);
       if (endptr != envThreshold && threshold > 0)
       {
@@ -103,7 +103,7 @@ namespace dom
             // Criteria 1: same target
             current_mousedown_target_.lock() == target &&
             // Criteria 2: distance < threshold
-            glm::distance(current_mousedown_hit_point_, hitPoint) < click_distance_threshold_
+            glm::distance(current_mousedown_hit_point_, hitPoint) < Click_distance_threshold_
             // TODO(yorkie): add criteria: time < 500ms?
         )
           target->simulateClick(hitPoint);

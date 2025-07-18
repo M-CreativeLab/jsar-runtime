@@ -49,6 +49,6 @@ namespace dom
     bool is_scroll_in_progress_ = false;
 
     static float getClickDistanceThreshold();
-    static inline float click_distance_threshold_ = getClickDistanceThreshold();
+    static inline float Click_distance_threshold_ = getClickDistanceThreshold();
   };
 }
