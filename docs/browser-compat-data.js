@@ -28,13 +28,15 @@ class JSARCompatibilityViewer {
       const githubResponse = await fetch('https://api.github.com/repos/M-CreativeLab/jsar-runtime/releases');
       if (githubResponse.ok) {
         const releases = await githubResponse.json();
-        if (releases.length > 0) {
+        // Filter out releases that start with "amidala-"
+        const filteredReleases = releases.filter(r => !r.tag_name.startsWith('amidala-'));
+        if (filteredReleases.length > 0) {
           // Get the latest release version
-          this.currentVersion = releases[0].tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+          this.currentVersion = filteredReleases[0].tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
           console.log('Loaded runtime version from GitHub API:', this.currentVersion);
           
           // Also populate version dropdown with available versions
-          this.populateVersionDropdown(releases.map(r => r.tag_name.replace(/^v/, '')));
+          this.populateVersionDropdown(filteredReleases.map(r => r.tag_name.replace(/^v/, '')));
         } else {
           throw new Error('No releases found');
         }
@@ -396,6 +398,12 @@ class JSARCompatibilityViewer {
     `;
   }
 
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   renderAPIItem(api) {
     const statusBadge = this.getStatusBadge(api);
     const versionBadge = `<span class="version-badge">${api.version}</span>`;
@@ -404,7 +412,7 @@ class JSARCompatibilityViewer {
       <div class="api-item-row">
         <div class="api-main-info">
           <div class="api-name-section">
-            <h4 class="api-name">${api.name}</h4>
+            <h4 class="api-name">${this.escapeHtml(api.name)}</h4>
             <div class="api-badges">
               ${statusBadge}
               ${versionBadge}

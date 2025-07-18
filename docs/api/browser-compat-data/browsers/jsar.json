@@ -34,6 +34,18 @@
         },
         "0.7.3": {
           "release_date": "2024-03-01"
+        },
+        "0.8.0": {
+          "release_date": "2024-06-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v080"
+        },
+        "0.8.1": {
+          "release_date": "2024-09-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v081"
+        },
+        "0.8.2": {
+          "release_date": "2024-12-01",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v082"
         }
       }
     }
