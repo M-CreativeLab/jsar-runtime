@@ -15,11 +15,9 @@
 #include <unistd.h>
 #include <errno.h>
 
-// For WebSocket key generation
-#include <openssl/sha.h>
-#include <openssl/bio.h>
-#include <openssl/evp.h>
-#include <openssl/buffer.h>
+// For WebSocket key generation (simple implementation without OpenSSL)
+#include <array>
+#include <iomanip>
 
 #include "./inspector_client.hpp"
 #include "./inspector.hpp"
@@ -422,27 +420,162 @@ std::string TrInspectorClient::generateWebSocketAcceptKey(const std::string &web
   const std::string magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
   std::string combined = webSocketKey + magic;
 
+  // Simple SHA-1 implementation (minimal for WebSocket compliance)
+  auto sha1 = [](const std::string &input) -> std::array<uint8_t, 20>
+  {
+    // This is a simplified SHA-1 implementation for demonstration
+    // In production, you might want to use a proper crypto library
+    std::array<uint8_t, 20> hash = {};
+
+    // Initialize hash values
+    uint32_t h0 = 0x67452301;
+    uint32_t h1 = 0xEFCDAB89;
+    uint32_t h2 = 0x98BADCFE;
+    uint32_t h3 = 0x10325476;
+    uint32_t h4 = 0xC3D2E1F0;
+
+    // Pre-processing
+    std::vector<uint8_t> message(input.begin(), input.end());
+    size_t originalLength = message.size();
+
+    // Append bit '1'
+    message.push_back(0x80);
+
+    // Append zeros
+    while ((message.size() % 64) != 56)
+    {
+      message.push_back(0x00);
+    }
+
+    // Append original length as 64-bit big-endian
+    uint64_t bitLength = originalLength * 8;
+    for (int i = 7; i >= 0; i--)
+    {
+      message.push_back((bitLength >> (i * 8)) & 0xFF);
+    }
+
+    // Process message in 512-bit chunks
+    for (size_t chunk = 0; chunk < message.size(); chunk += 64)
+    {
+      std::array<uint32_t, 80> w = {};
+
+      // Break chunk into sixteen 32-bit big-endian words
+      for (int i = 0; i < 16; i++)
+      {
+        w[i] = (static_cast<uint32_t>(message[chunk + i * 4]) << 24) |
+               (static_cast<uint32_t>(message[chunk + i * 4 + 1]) << 16) |
+               (static_cast<uint32_t>(message[chunk + i * 4 + 2]) << 8) |
+               static_cast<uint32_t>(message[chunk + i * 4 + 3]);
+      }
+
+      // Extend the sixteen 32-bit words into eighty 32-bit words
+      for (int i = 16; i < 80; i++)
+      {
+        uint32_t temp = w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16];
+        w[i] = (temp << 1) | (temp >> 31);
+      }
+
+      // Initialize hash value for this chunk
+      uint32_t a = h0, b = h1, c = h2, d = h3, e = h4;
+
+      // Main loop
+      for (int i = 0; i < 80; i++)
+      {
+        uint32_t f, k;
+        if (i < 20)
+        {
+          f = (b & c) | ((~b) & d);
+          k = 0x5A827999;
+        }
+        else if (i < 40)
+        {
+          f = b ^ c ^ d;
+          k = 0x6ED9EBA1;
+        }
+        else if (i < 60)
+        {
+          f = (b & c) | (b & d) | (c & d);
+          k = 0x8F1BBCDC;
+        }
+        else
+        {
+          f = b ^ c ^ d;
+          k = 0xCA62C1D6;
+        }
+
+        uint32_t temp = ((a << 5) | (a >> 27)) + f + e + k + w[i];
+        e = d;
+        d = c;
+        c = (b << 30) | (b >> 2);
+        b = a;
+        a = temp;
+      }
+
+      // Add this chunk's hash to result
+      h0 += a;
+      h1 += b;
+      h2 += c;
+      h3 += d;
+      h4 += e;
+    }
+
+    // Produce the final hash value as a 160-bit number (20 bytes)
+    for (int i = 0; i < 4; i++)
+    {
+      hash[i] = (h0 >> (24 - i * 8)) & 0xFF;
+      hash[i + 4] = (h1 >> (24 - i * 8)) & 0xFF;
+      hash[i + 8] = (h2 >> (24 - i * 8)) & 0xFF;
+      hash[i + 12] = (h3 >> (24 - i * 8)) & 0xFF;
+      hash[i + 16] = (h4 >> (24 - i * 8)) & 0xFF;
+    }
+
+    return hash;
+  };
+
   // Compute SHA-1 hash
-  unsigned char hash[SHA_DIGEST_LENGTH];
-  SHA1(reinterpret_cast<const unsigned char *>(combined.c_str()), combined.length(), hash);
+  auto hash = sha1(combined);
 
   // Base64 encode the hash
-  BIO *bio, *b64;
-  BUF_MEM *bufferPtr;
+  auto base64Encode = [](const std::array<uint8_t, 20> &input) -> std::string
+  {
+    const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string result;
 
-  b64 = BIO_new(BIO_f_base64());
-  bio = BIO_new(BIO_s_mem());
-  bio = BIO_push(b64, bio);
+    for (size_t i = 0; i < input.size(); i += 3)
+    {
+      uint32_t val = 0;
+      int padding = 0;
 
-  BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-  BIO_write(bio, hash, SHA_DIGEST_LENGTH);
-  BIO_flush(bio);
-  BIO_get_mem_ptr(bio, &bufferPtr);
+      for (int j = 0; j < 3; j++)
+      {
+        val <<= 8;
+        if (i + j < input.size())
+        {
+          val |= input[i + j];
+        }
+        else
+        {
+          padding++;
+        }
+      }
 
-  std::string result(bufferPtr->data, bufferPtr->length);
-  BIO_free_all(bio);
+      for (int j = 0; j < 4; j++)
+      {
+        if (j < 4 - padding)
+        {
+          result += chars[(val >> (18 - j * 6)) & 0x3F];
+        }
+        else
+        {
+          result += '=';
+        }
+      }
+    }
 
-  return result;
+    return result;
+  };
+
+  return base64Encode(hash);
 }
 
 void TrInspectorClient::handleWebSocketFrame()
