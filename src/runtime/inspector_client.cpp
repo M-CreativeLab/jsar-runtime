@@ -360,11 +360,25 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
   if (hasUpgrade && hasConnection && hasWebSocketKey) {
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();
-    if (inspector != nullptr) {
-      // For simplicity, we'll implement the connection count check in the inspector
-      // In a more complete implementation, we'd check the server's connection count
-      DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested, checking connection limit");
+    if (inspector == nullptr) {
+      return false;
     }
+    
+    if (!inspector->canAcceptWebSocketConnection()) {
+      DEBUG(LOG_TAG_INSPECTOR, "WebSocket connection limit reached, rejecting upgrade");
+      // Send 503 Service Unavailable
+      std::stringstream response;
+      response << "HTTP/1.1 503 Service Unavailable\r\n";
+      response << "Content-Type: text/plain\r\n";
+      response << "Content-Length: 44\r\n";
+      response << "\r\n";
+      response << "Too many WebSocket connections (max 5)";
+      send(response.str());
+      end();
+      return true; // We handled the request, even though we rejected it
+    }
+    
+    DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested and approved");
     
     // Generate WebSocket accept key
     std::string acceptKey = generateWebSocketAcceptKey(webSocketKey);

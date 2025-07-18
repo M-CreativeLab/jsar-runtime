@@ -21,6 +21,12 @@ void TrInspector::tick()
   server_->tick();
 }
 
+bool TrInspector::canAcceptWebSocketConnection()
+{
+  const int maxConnections = 5;
+  return server_->getWebSocketConnectionCount() < maxConnections;
+}
+
 void TrInspector::onRequest(TrInspectorClient &requestClient)
 {
   string requestUrl = requestClient.url();
