@@ -24,32 +24,74 @@ class JSARCompatibilityViewer {
 
   async loadRuntimeVersion() {
     try {
-      // Try to load package.json to get the current version
-      const response = await fetch('../../package.json');
-      if (response.ok) {
-        const packageData = await response.json();
-        this.currentVersion = packageData.version;
-        console.log('Loaded runtime version from package.json:', this.currentVersion);
-      } else {
-        // Fallback: try to get from browser compat data
-        this.browserInfo = await this.loadJSON('./api/browser-compat-data/browsers/jsar.json');
-        if (this.browserInfo && this.browserInfo.browsers && this.browserInfo.browsers.jsar) {
-          const versions = Object.keys(this.browserInfo.browsers.jsar.releases || {});
-          this.currentVersion = versions.sort((a, b) => this.compareVersions(b, a))[0] || '0.8.2';
-          console.log('Loaded runtime version from browser compat data:', this.currentVersion);
+      // First try to get versions from GitHub API
+      const githubResponse = await fetch('https://api.github.com/repos/M-CreativeLab/jsar-runtime/releases');
+      if (githubResponse.ok) {
+        const releases = await githubResponse.json();
+        if (releases.length > 0) {
+          // Get the latest release version
+          this.currentVersion = releases[0].tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+          console.log('Loaded runtime version from GitHub API:', this.currentVersion);
+          
+          // Also populate version dropdown with available versions
+          this.populateVersionDropdown(releases.map(r => r.tag_name.replace(/^v/, '')));
         } else {
-          this.currentVersion = '0.8.2'; // Default fallback
-          console.log('Using default runtime version:', this.currentVersion);
+          throw new Error('No releases found');
         }
+      } else {
+        throw new Error('GitHub API request failed');
       }
     } catch (error) {
-      console.warn('Could not load runtime version:', error);
-      this.currentVersion = '0.8.2'; // Default fallback
-      console.log('Using fallback runtime version:', this.currentVersion);
+      console.warn('Could not load runtime version from GitHub API:', error);
+      
+      try {
+        // Fallback 1: Try to load package.json
+        const response = await fetch('../package.json');
+        if (response.ok) {
+          const packageData = await response.json();
+          this.currentVersion = packageData.version;
+          console.log('Loaded runtime version from package.json:', this.currentVersion);
+        } else {
+          throw new Error('Package.json not accessible');
+        }
+      } catch (packageError) {
+        try {
+          // Fallback 2: try to get from browser compat data
+          this.browserInfo = await this.loadJSON('./api/browser-compat-data/browsers/jsar.json');
+          if (this.browserInfo && this.browserInfo.browsers && this.browserInfo.browsers.jsar) {
+            const versions = Object.keys(this.browserInfo.browsers.jsar.releases || {});
+            this.currentVersion = versions.sort((a, b) => this.compareVersions(b, a))[0] || '0.8.2';
+            console.log('Loaded runtime version from browser compat data:', this.currentVersion);
+          } else {
+            this.currentVersion = '0.8.2'; // Default fallback
+            console.log('Using default runtime version:', this.currentVersion);
+          }
+        } catch (compatError) {
+          console.warn('Could not load runtime version from any source:', compatError);
+          this.currentVersion = '0.8.2'; // Default fallback
+          console.log('Using fallback runtime version:', this.currentVersion);
+        }
+      }
     }
 
     // Update the UI with the current version
     document.getElementById('runtime-version').textContent = this.currentVersion;
+  }
+
+  populateVersionDropdown(versions) {
+    const versionSelect = document.getElementById('version');
+    // Clear existing options except "All Versions"
+    while (versionSelect.children.length > 1) {
+      versionSelect.removeChild(versionSelect.lastChild);
+    }
+    
+    // Add version options in descending order
+    versions.sort((a, b) => this.compareVersions(b, a)).forEach(version => {
+      const option = document.createElement('option');
+      option.value = version;
+      option.textContent = `${version}+`;
+      versionSelect.appendChild(option);
+    });
   }
 
   async loadCompatibilityData() {
@@ -107,11 +149,14 @@ class JSARCompatibilityViewer {
 
   async loadJSON(url) {
     try {
+      console.log('Loading:', url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to load ${url}: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      console.log('Successfully loaded:', url);
+      return data;
     } catch (error) {
       console.warn(`Could not load ${url}:`, error);
       return null;
@@ -293,21 +338,23 @@ class JSARCompatibilityViewer {
     const container = document.getElementById('api-container');
     const emptyState = document.getElementById('empty-state');
     
-    if (this.filteredData.length === 0) {
+    if (!this.filteredData || this.filteredData.length === 0) {
       container.innerHTML = '';
-      emptyState.classList.remove('hidden');
+      if (emptyState) emptyState.classList.remove('hidden');
       return;
     }
     
-    emptyState.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
     
     // Group APIs by parent/category for better organization
     const grouped = this.groupAPIsByParent(this.filteredData);
     
-    container.innerHTML = Object.keys(grouped).map(groupName => {
-      const apis = grouped[groupName];
-      return this.renderAPIGroup(groupName, apis);
-    }).join('');
+    container.innerHTML = Object.keys(grouped)
+      .sort() // Sort groups alphabetically
+      .map(groupName => {
+        const apis = grouped[groupName];
+        return this.renderAPIGroup(groupName, apis);
+      }).join('');
   }
 
   groupAPIsByParent(apis) {
@@ -329,7 +376,7 @@ class JSARCompatibilityViewer {
     const categoryIcon = this.getCategoryIcon(apis[0].category);
     
     return `
-      <div class="api-item card rounded-lg shadow-sm ${categoryColor} overflow-hidden" style="border-left: 4px solid;">
+      <div class="api-group card rounded-lg shadow-sm ${categoryColor} overflow-hidden" style="border-left: 4px solid;">
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-primary flex items-center gap-2">
@@ -341,7 +388,7 @@ class JSARCompatibilityViewer {
             </span>
           </div>
           
-          <div class="space-y-3">
+          <div class="api-list space-y-2">
             ${apis.map(api => this.renderAPIItem(api)).join('')}
           </div>
         </div>
@@ -351,19 +398,21 @@ class JSARCompatibilityViewer {
 
   renderAPIItem(api) {
     const statusBadge = this.getStatusBadge(api);
-    const versionBadge = `<span class="badge bg-accent text-white">v${api.version}</span>`;
+    const versionBadge = `<span class="version-badge">${api.version}</span>`;
     
     return `
-      <div class="flex items-center justify-between p-4 bg-secondary rounded" style="padding: 0.75rem;">
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-1">
-            <code class="text-sm font-mono text-primary">${api.name}</code>
-            ${statusBadge}
-            ${versionBadge}
+      <div class="api-item-row">
+        <div class="api-main-info">
+          <div class="api-name-section">
+            <h4 class="api-name">${api.name}</h4>
+            <div class="api-badges">
+              ${statusBadge}
+              ${versionBadge}
+            </div>
           </div>
-          <div class="flex gap-2 text-xs">
-            ${api.mdnUrl ? `<a href="${api.mdnUrl}" target="_blank" class="text-accent">📚 MDN Docs</a>` : ''}
-            ${api.specUrl ? `<a href="${api.specUrl}" target="_blank" class="text-success">📋 Specification</a>` : ''}
+          <div class="api-links">
+            ${api.mdnUrl ? `<a href="${api.mdnUrl}" target="_blank" class="doc-link mdn-link" title="MDN Documentation">📚 MDN</a>` : ''}
+            ${api.specUrl ? `<a href="${api.specUrl}" target="_blank" class="doc-link spec-link" title="Official Specification">📋 Spec</a>` : ''}
           </div>
         </div>
       </div>
