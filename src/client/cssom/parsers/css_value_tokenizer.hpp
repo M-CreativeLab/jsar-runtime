@@ -4,7 +4,7 @@
 #include <vector>
 #include <variant>
 
-namespace client_cssom::css_tokenizer
+namespace client_cssom::css_value_tokenizer
 {
   enum class TokenType
   {
@@ -29,22 +29,36 @@ namespace client_cssom::css_tokenizer
   {
     TokenType type;
     std::string value;
-    std::string unit; // For dimension tokens
+    std::string unit;           // For dimension tokens
     double numeric_value = 0.0; // For number/percentage/dimension tokens
     size_t start_position = 0;
     size_t end_position = 0;
 
-    Token(TokenType t, const std::string& v = "") : type(t), value(v) {}
-    Token(TokenType t, const std::string& v, double num) : type(t), value(v), numeric_value(num) {}
-    Token(TokenType t, const std::string& v, const std::string& u, double num) 
-      : type(t), value(v), unit(u), numeric_value(num) {}
+    Token(TokenType t, const std::string &v = "")
+        : type(t)
+        , value(v)
+    {
+    }
+    Token(TokenType t, const std::string &v, double num)
+        : type(t)
+        , value(v)
+        , numeric_value(num)
+    {
+    }
+    Token(TokenType t, const std::string &v, const std::string &u, double num)
+        : type(t)
+        , value(v)
+        , unit(u)
+        , numeric_value(num)
+    {
+    }
   };
 
-  class CSSTokenizer
+  class CSSValueTokenizer
   {
   public:
-    explicit CSSTokenizer(const std::string& input);
-    
+    explicit CSSValueTokenizer(const std::string &input);
+
     std::vector<Token> tokenize();
     Token next_token();
     bool has_next() const;
@@ -70,8 +84,8 @@ namespace client_cssom::css_tokenizer
     Token consume_string(char quote_char);
     Token consume_number();
     Token consume_url();
-    Token consume_function(const std::string& name);
+    Token consume_function(const std::string &name);
     std::string consume_identifier_sequence();
-    void consume_escape_sequence(std::string& result);
+    void consume_escape_sequence(std::string &result);
   };
 }

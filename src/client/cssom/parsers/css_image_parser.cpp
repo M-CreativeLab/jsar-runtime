@@ -4,68 +4,69 @@
 namespace client_cssom::css_parser
 {
   using namespace values;
-  
-  values::specified::Image CSSImageParser::parseImage(const std::string& input)
+
+  values::specified::Image CSSImageParser::parseImage(const std::string &input)
   {
-    css_tokenizer::CSSTokenizer tokenizer(input);
-    std::vector<css_tokenizer::Token> tokens = tokenizer.tokenize();
-    
+    css_value_tokenizer::CSSValueTokenizer tokenizer(input);
+    std::vector<css_value_tokenizer::Token> tokens = tokenizer.tokenize();
+
     CSSImageParser parser(tokens);
     return parser.parse();
   }
 
-  CSSImageParser::CSSImageParser(const std::vector<css_tokenizer::Token>& tokens)
-    : tokens_(tokens), position_(0)
+  CSSImageParser::CSSImageParser(const std::vector<css_value_tokenizer::Token> &tokens)
+      : tokens_(tokens)
+      , position_(0)
   {
   }
 
   values::specified::Image CSSImageParser::parse()
   {
     skipWhitespace();
-    
+
     if (!hasNext())
     {
       return values::specified::Image::None();
     }
 
-    const auto& token = currentToken();
-    
+    const auto &token = currentToken();
+
     // Handle 'none' keyword
-    if (token.type == css_tokenizer::TokenType::kIdentifier && token.value == "none")
+    if (token.type == css_value_tokenizer::TokenType::kIdentifier && token.value == "none")
     {
       advance();
       return values::specified::Image::None();
     }
-    
+
     // Handle url() function
-    if (token.type == css_tokenizer::TokenType::kUrl)
+    if (token.type == css_value_tokenizer::TokenType::kUrl)
     {
       return parseUrl();
     }
-    
+
     // Handle gradient functions
-    if (token.type == css_tokenizer::TokenType::kFunction)
+    if (token.type == css_value_tokenizer::TokenType::kFunction)
     {
       return parseGradient(token.value);
     }
-    
+
     // Default to none for unrecognized input
     return values::specified::Image::None();
   }
 
   values::specified::Image CSSImageParser::parseUrl()
   {
-    const auto& token = currentToken();
-    if (token.type != css_tokenizer::TokenType::kUrl)
+    const auto &token = currentToken();
+    if (token.type != css_value_tokenizer::TokenType::kUrl)
     {
       return values::specified::Image::None();
     }
-    
+
     advance();
     return values::specified::Image::Url(token.value);
   }
 
-  values::specified::Image CSSImageParser::parseGradient(const std::string& function_name)
+  values::specified::Image CSSImageParser::parseGradient(const std::string &function_name)
   {
     if (function_name == "linear-gradient")
     {
@@ -83,7 +84,7 @@ namespace client_cssom::css_parser
     {
       return parseRadialGradient(true);
     }
-    
+
     return values::specified::Image::None();
   }
 
@@ -104,49 +105,64 @@ namespace client_cssom::css_parser
     if (hasNext())
     {
       // Try to parse direction keywords
-      const auto& token = currentToken();
-      if (token.type == css_tokenizer::TokenType::kIdentifier)
+      const auto &token = currentToken();
+      if (token.type == css_value_tokenizer::TokenType::kIdentifier)
       {
         if (token.value == "to")
         {
           advance();
           skipWhitespace();
-          
-          if (hasNext() && currentToken().type == css_tokenizer::TokenType::kIdentifier)
+
+          if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)
           {
             std::string direction_keyword = currentToken().value;
             advance();
-            
+
             // Check for compound directions (e.g., "to top left")
-            if (hasNext() && currentToken().type == css_tokenizer::TokenType::kIdentifier)
+            if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)
             {
               direction_keyword += " " + currentToken().value;
               advance();
             }
-            
+
             // Map direction keywords
-            if (direction_keyword == "right") {
+            if (direction_keyword == "right")
+            {
               linearGrad.direction = generics::LineDirection::kToRight;
               hasDirection = true;
-            } else if (direction_keyword == "left") {
+            }
+            else if (direction_keyword == "left")
+            {
               linearGrad.direction = generics::LineDirection::kToLeft;
               hasDirection = true;
-            } else if (direction_keyword == "top") {
+            }
+            else if (direction_keyword == "top")
+            {
               linearGrad.direction = generics::LineDirection::kToTop;
               hasDirection = true;
-            } else if (direction_keyword == "bottom") {
+            }
+            else if (direction_keyword == "bottom")
+            {
               linearGrad.direction = generics::LineDirection::kToBottom;
               hasDirection = true;
-            } else if (direction_keyword == "top left") {
+            }
+            else if (direction_keyword == "top left")
+            {
               linearGrad.direction = generics::LineDirection::kToTopLeft;
               hasDirection = true;
-            } else if (direction_keyword == "top right") {
+            }
+            else if (direction_keyword == "top right")
+            {
               linearGrad.direction = generics::LineDirection::kToTopRight;
               hasDirection = true;
-            } else if (direction_keyword == "bottom left") {
+            }
+            else if (direction_keyword == "bottom left")
+            {
               linearGrad.direction = generics::LineDirection::kToBottomLeft;
               hasDirection = true;
-            } else if (direction_keyword == "bottom right") {
+            }
+            else if (direction_keyword == "bottom right")
+            {
               linearGrad.direction = generics::LineDirection::kToBottomRight;
               hasDirection = true;
             }
@@ -154,12 +170,12 @@ namespace client_cssom::css_parser
         }
         // TODO: Parse angle values (e.g., "45deg", "0.25turn", "1.5708rad")
       }
-      
+
       // If we parsed a direction, expect a comma
       if (hasDirection)
       {
         skipWhitespace();
-        if (hasNext() && currentToken().type == css_tokenizer::TokenType::kComma)
+        if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kComma)
         {
           advance();
           skipWhitespace();
@@ -194,11 +210,11 @@ namespace client_cssom::css_parser
 
     // Parse optional shape/size
     bool hasShapeSize = parseRadialGradientShape(radialGrad);
-    
+
     if (hasShapeSize)
     {
       skipWhitespace();
-      if (hasNext() && currentToken().type == css_tokenizer::TokenType::kComma)
+      if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kComma)
       {
         advance();
         skipWhitespace();
@@ -217,16 +233,16 @@ namespace client_cssom::css_parser
     return image;
   }
 
-  bool CSSImageParser::parseRadialGradientShape(generics::GenericGradient<specified::NoCalcLength, 
-                                                                          specified::LengthPercentage, 
-                                                                          specified::Color>::RadialGradient& radial)
+  bool CSSImageParser::parseRadialGradientShape(generics::GenericGradient<specified::NoCalcLength,
+                                                                          specified::LengthPercentage,
+                                                                          specified::Color>::RadialGradient &radial)
   {
     bool modified = false;
-    
-    while (hasNext() && currentToken().type == css_tokenizer::TokenType::kIdentifier)
+
+    while (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)
     {
-      const std::string& keyword = currentToken().value;
-      
+      const std::string &keyword = currentToken().value;
+
       if (keyword == "circle")
       {
         radial.shape = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Shape::kCircle;
@@ -267,26 +283,26 @@ namespace client_cssom::css_parser
       {
         break; // Not a shape/size keyword
       }
-      
+
       skipWhitespace();
     }
-    
+
     return modified;
   }
 
   std::vector<generics::GenericGradientItem<specified::Color, specified::LengthPercentage>> CSSImageParser::parseColorStops()
   {
     std::vector<generics::GenericGradientItem<specified::Color, specified::LengthPercentage>> colorStops;
-    
+
     while (hasNext())
     {
       auto colorStop = parseColorStop();
       colorStops.push_back(colorStop);
-      
+
       skipWhitespace();
-      
+
       // Check for comma separator
-      if (hasNext() && currentToken().type == css_tokenizer::TokenType::kComma)
+      if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kComma)
       {
         advance();
         skipWhitespace();
@@ -296,28 +312,28 @@ namespace client_cssom::css_parser
         break;
       }
     }
-    
+
     return colorStops;
   }
 
   generics::GenericGradientItem<specified::Color, specified::LengthPercentage> CSSImageParser::parseColorStop()
   {
     generics::GenericGradientItem<specified::Color, specified::LengthPercentage> colorStop;
-    
+
     // For now, create simple color stops
     // TODO: Implement proper color parsing and position parsing
     colorStop.type = generics::GenericGradientItem<specified::Color, specified::LengthPercentage>::kSimpleColorStop;
-    
+
     // Skip color name tokens for now
-    if (hasNext() && currentToken().type == css_tokenizer::TokenType::kIdentifier)
+    if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)
     {
       advance();
     }
-    
+
     return colorStop;
   }
 
-  bool CSSImageParser::consumeToken(css_tokenizer::TokenType expected_type)
+  bool CSSImageParser::consumeToken(css_value_tokenizer::TokenType expected_type)
   {
     if (hasNext() && currentToken().type == expected_type)
     {
@@ -327,9 +343,9 @@ namespace client_cssom::css_parser
     return false;
   }
 
-  bool CSSImageParser::consumeIdentifier(const std::string& expected_value)
+  bool CSSImageParser::consumeIdentifier(const std::string &expected_value)
   {
-    if (hasNext() && currentToken().type == css_tokenizer::TokenType::kIdentifier && 
+    if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier &&
         currentToken().value == expected_value)
     {
       advance();
@@ -338,9 +354,9 @@ namespace client_cssom::css_parser
     return false;
   }
 
-  bool CSSImageParser::consumeFunction(const std::string& expected_name)
+  bool CSSImageParser::consumeFunction(const std::string &expected_name)
   {
-    if (hasNext() && currentToken().type == css_tokenizer::TokenType::kFunction && 
+    if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kFunction &&
         currentToken().value == expected_name)
     {
       advance();
@@ -354,15 +370,15 @@ namespace client_cssom::css_parser
     return position_ < tokens_.size();
   }
 
-  const css_tokenizer::Token& CSSImageParser::currentToken() const
+  const css_value_tokenizer::Token &CSSImageParser::currentToken() const
   {
-    static css_tokenizer::Token eof_token(css_tokenizer::TokenType::kEOF);
+    static css_value_tokenizer::Token eof_token(css_value_tokenizer::TokenType::kEOF);
     return hasNext() ? tokens_[position_] : eof_token;
   }
 
-  const css_tokenizer::Token& CSSImageParser::peekToken(size_t offset) const
+  const css_value_tokenizer::Token &CSSImageParser::peekToken(size_t offset) const
   {
-    static css_tokenizer::Token eof_token(css_tokenizer::TokenType::kEOF);
+    static css_value_tokenizer::Token eof_token(css_value_tokenizer::TokenType::kEOF);
     size_t peek_pos = position_ + offset;
     return peek_pos < tokens_.size() ? tokens_[peek_pos] : eof_token;
   }
@@ -377,7 +393,7 @@ namespace client_cssom::css_parser
 
   void CSSImageParser::skipWhitespace()
   {
-    while (hasNext() && currentToken().type == css_tokenizer::TokenType::kWhitespace)
+    while (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kWhitespace)
     {
       advance();
     }

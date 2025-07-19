@@ -50,7 +50,6 @@ type PropertyDeclarationBlock = CrateProperties::PropertyDeclarationBlock;
 type SpecifiedTransformValue = CrateSpecifiedValues::Transform;
 type SpecifiedTransformOperation = CrateSpecifiedValues::TransformOperation;
 type SpecifiedGridTemplateComponent = CrateSpecifiedValues::GridTemplateComponent;
-type SpecifiedImageValue = CrateSpecifiedValues::Image;
 
 #[no_mangle]
 extern "C" fn parse_font_family(input_str: *const c_char) -> *mut *mut c_char {
@@ -400,29 +399,6 @@ impl CSSParser {
     GridAutoFlow::parse(&context, &mut parser)
       .map(|flow| flow)
       .unwrap_or(GridAutoFlow::ROW)
-  }
-
-  /// Parse a CSS image value using the Servo CSS parser
-  /// Supports the complete <image> syntax from CSS specifications
-  pub fn parse_image(&self, input: &str) -> anyhow::Result<CrateSpecifiedValues::Image> {
-    use StyleSpecifiedValues::Image;
-
-    let mut input = cssparser::ParserInput::new(input);
-    let mut parser = cssparser::Parser::new(&mut input);
-    let context = StyleParserContext::new(
-      Origin::Author,
-      &self.url_data,
-      Some(CssRuleType::Style),
-      ParsingMode::DEFAULT,
-      QuirksMode::NoQuirks,
-      Default::default(),
-      None,
-      None,
-    );
-
-    Image::parse(&context, &mut parser)
-      .map(|image| CrateSpecifiedValues::Image::from(image))
-      .map_err(|e| anyhow::anyhow!("Failed to parse image: {:?}", e))
   }
 
   pub fn parse_grid_line(&self, input: &str) -> anyhow::Result<CrateSpecifiedValues::GridLine> {
@@ -823,8 +799,6 @@ pub(crate) mod ffi {
     type SpecifiedTransformOperation;
     #[cxx_name = "GridTemplateComponent"]
     type SpecifiedGridTemplateComponent;
-    #[cxx_name = "Image"]
-    type SpecifiedImageValue;
 
     #[cxx_name = "getNumberMatrixItem"]
     fn get_number_matrix_item(
@@ -896,26 +870,6 @@ pub(crate) mod ffi {
 
     #[cxx_name = "showTransformOperation"]
     fn show_transform_operation(operation: &SpecifiedTransformOperation);
-
-    /// Check if the image is none
-    #[cxx_name = "isImageNone"]
-    fn is_image_none(image: &SpecifiedImageValue) -> bool;
-
-    /// Check if the image is a URL
-    #[cxx_name = "isImageUrl"]
-    fn is_image_url(image: &SpecifiedImageValue) -> bool;
-
-    /// Check if the image is a gradient
-    #[cxx_name = "isImageGradient"]
-    fn is_image_gradient(image: &SpecifiedImageValue) -> bool;
-
-    /// Get the URL from an image value
-    #[cxx_name = "getImageUrl"]
-    fn get_image_url(image: &SpecifiedImageValue) -> String;
-
-    /// Get the CSS representation of an image value
-    #[cxx_name = "imageToCss"]
-    fn image_to_css(image: &SpecifiedImageValue) -> String;
   }
 
   #[namespace = "holocron::css::selectors"]
@@ -1054,13 +1008,6 @@ pub(crate) mod ffi {
       parser: &CSSParser,
       input: &str,
     ) -> Result<Box<SpecifiedGridTemplateComponent>>;
-
-    /// Parses the given image value.
-    #[cxx_name = "parseImage"]
-    unsafe fn parse_image(
-      parser: &CSSParser,
-      input: &str,
-    ) -> Result<Box<SpecifiedImageValue>>;
   }
 }
 
@@ -1542,32 +1489,6 @@ fn parse_grid_template_component(
   input_str: &str,
 ) -> anyhow::Result<Box<SpecifiedGridTemplateComponent>> {
   parser.parse_grid_template_component(input_str)
-}
-
-fn parse_image(parser: &CSSParser, input_str: &str) -> anyhow::Result<Box<SpecifiedImageValue>> {
-  parser
-    .parse_image(input_str)
-    .map(|image| Box::new(image))
-}
-
-fn is_image_none(image: &SpecifiedImageValue) -> bool {
-  image.is_none()
-}
-
-fn is_image_url(image: &SpecifiedImageValue) -> bool {
-  image.is_url()
-}
-
-fn is_image_gradient(image: &SpecifiedImageValue) -> bool {
-  image.is_gradient()
-}
-
-fn get_image_url(image: &SpecifiedImageValue) -> String {
-  image.get_url()
-}
-
-fn image_to_css(image: &SpecifiedImageValue) -> String {
-  image.to_css()
 }
 
 mod tests {

@@ -1,19 +1,21 @@
-#include "./css_tokenizer.hpp"
+#include "./css_value_tokenizer.hpp"
 #include <cctype>
 #include <algorithm>
 
-namespace client_cssom::css_tokenizer
+namespace client_cssom::css_value_tokenizer
 {
-  CSSTokenizer::CSSTokenizer(const std::string& input)
-    : input_(input), position_(0), length_(input.length())
+  CSSValueTokenizer::CSSValueTokenizer(const std::string &input)
+      : input_(input)
+      , position_(0)
+      , length_(input.length())
   {
   }
 
-  std::vector<Token> CSSTokenizer::tokenize()
+  std::vector<Token> CSSValueTokenizer::tokenize()
   {
     std::vector<Token> tokens;
     reset();
-    
+
     while (has_next())
     {
       Token token = next_token();
@@ -26,14 +28,14 @@ namespace client_cssom::css_tokenizer
         break;
       }
     }
-    
+
     return tokens;
   }
 
-  Token CSSTokenizer::next_token()
+  Token CSSValueTokenizer::next_token()
   {
     skip_whitespace();
-    
+
     if (position_ >= length_)
     {
       return Token(TokenType::kEOF);
@@ -64,7 +66,7 @@ namespace client_cssom::css_tokenizer
     if (is_identifier_start(c))
     {
       std::string identifier = consume_identifier_sequence();
-      
+
       // Check if it's a function
       if (position_ < length_ && current_char() == '(')
       {
@@ -83,50 +85,50 @@ namespace client_cssom::css_tokenizer
           return token;
         }
       }
-      
+
       return Token(TokenType::kIdentifier, identifier);
     }
 
     // Single character tokens
     switch (c)
     {
-      case '(':
-        advance();
-        return Token(TokenType::kLeftParen, "(");
-      case ')':
-        advance();
-        return Token(TokenType::kRightParen, ")");
-      case ',':
-        advance();
-        return Token(TokenType::kComma, ",");
-      default:
-        advance();
-        return Token(TokenType::kDelimiter, std::string(1, c));
+    case '(':
+      advance();
+      return Token(TokenType::kLeftParen, "(");
+    case ')':
+      advance();
+      return Token(TokenType::kRightParen, ")");
+    case ',':
+      advance();
+      return Token(TokenType::kComma, ",");
+    default:
+      advance();
+      return Token(TokenType::kDelimiter, std::string(1, c));
     }
   }
 
-  bool CSSTokenizer::has_next() const
+  bool CSSValueTokenizer::has_next() const
   {
     return position_ < length_;
   }
 
-  void CSSTokenizer::reset()
+  void CSSValueTokenizer::reset()
   {
     position_ = 0;
   }
 
-  char CSSTokenizer::current_char() const
+  char CSSValueTokenizer::current_char() const
   {
     return position_ < length_ ? input_[position_] : '\0';
   }
 
-  char CSSTokenizer::peek_char(size_t offset) const
+  char CSSValueTokenizer::peek_char(size_t offset) const
   {
     size_t peek_pos = position_ + offset;
     return peek_pos < length_ ? input_[peek_pos] : '\0';
   }
 
-  void CSSTokenizer::advance()
+  void CSSValueTokenizer::advance()
   {
     if (position_ < length_)
     {
@@ -134,7 +136,7 @@ namespace client_cssom::css_tokenizer
     }
   }
 
-  void CSSTokenizer::skip_whitespace()
+  void CSSValueTokenizer::skip_whitespace()
   {
     while (position_ < length_ && is_whitespace(current_char()))
     {
@@ -142,46 +144,46 @@ namespace client_cssom::css_tokenizer
     }
   }
 
-  bool CSSTokenizer::is_whitespace(char c) const
+  bool CSSValueTokenizer::is_whitespace(char c) const
   {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
   }
 
-  bool CSSTokenizer::is_letter(char c) const
+  bool CSSValueTokenizer::is_letter(char c) const
   {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
 
-  bool CSSTokenizer::is_digit(char c) const
+  bool CSSValueTokenizer::is_digit(char c) const
   {
     return c >= '0' && c <= '9';
   }
 
-  bool CSSTokenizer::is_hex_digit(char c) const
+  bool CSSValueTokenizer::is_hex_digit(char c) const
   {
     return is_digit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
   }
 
-  bool CSSTokenizer::is_identifier_start(char c) const
+  bool CSSValueTokenizer::is_identifier_start(char c) const
   {
     return is_letter(c) || c == '_' || c == '-' || static_cast<unsigned char>(c) >= 0x80;
   }
 
-  bool CSSTokenizer::is_identifier_char(char c) const
+  bool CSSValueTokenizer::is_identifier_char(char c) const
   {
     return is_identifier_start(c) || is_digit(c);
   }
 
-  Token CSSTokenizer::consume_identifier()
+  Token CSSValueTokenizer::consume_identifier()
   {
     return Token(TokenType::kIdentifier, consume_identifier_sequence());
   }
 
-  Token CSSTokenizer::consume_string(char quote_char)
+  Token CSSValueTokenizer::consume_string(char quote_char)
   {
     advance(); // Skip opening quote
     std::string value;
-    
+
     while (position_ < length_ && current_char() != quote_char)
     {
       char c = current_char();
@@ -200,28 +202,28 @@ namespace client_cssom::css_tokenizer
         advance();
       }
     }
-    
+
     if (position_ < length_ && current_char() == quote_char)
     {
       advance(); // Skip closing quote
     }
-    
+
     return Token(TokenType::kString, value);
   }
 
-  Token CSSTokenizer::consume_number()
+  Token CSSValueTokenizer::consume_number()
   {
     std::string number_str;
-    
+
     // Consume integer part
     while (position_ < length_ && is_digit(current_char()))
     {
       number_str += current_char();
       advance();
     }
-    
+
     // Consume decimal part
-    if (position_ < length_ && current_char() == '.' && 
+    if (position_ < length_ && current_char() == '.' &&
         position_ + 1 < length_ && is_digit(peek_char()))
     {
       number_str += current_char();
@@ -232,36 +234,36 @@ namespace client_cssom::css_tokenizer
         advance();
       }
     }
-    
+
     // Convert to number
     double numeric_value = std::stod(number_str);
-    
+
     // Check for percentage
     if (position_ < length_ && current_char() == '%')
     {
       advance();
       return Token(TokenType::kPercentage, number_str + "%", numeric_value);
     }
-    
+
     // Check for dimension (unit)
     if (position_ < length_ && is_identifier_start(current_char()))
     {
       std::string unit = consume_identifier_sequence();
       return Token(TokenType::kDimension, number_str + unit, unit, numeric_value);
     }
-    
+
     return Token(TokenType::kNumber, number_str, numeric_value);
   }
 
-  Token CSSTokenizer::consume_url()
+  Token CSSValueTokenizer::consume_url()
   {
     advance(); // Skip 'l' from 'url'
     advance(); // Skip '('
-    
+
     skip_whitespace();
-    
+
     std::string url_value;
-    
+
     // Check if it starts with a quote
     if (position_ < length_ && (current_char() == '"' || current_char() == '\''))
     {
@@ -295,28 +297,28 @@ namespace client_cssom::css_tokenizer
         }
       }
     }
-    
+
     skip_whitespace();
-    
+
     if (position_ < length_ && current_char() == ')')
     {
       advance(); // Skip ')'
       return Token(TokenType::kUrl, url_value);
     }
-    
+
     return Token(TokenType::kBadUrl, url_value);
   }
 
-  Token CSSTokenizer::consume_function(const std::string& name)
+  Token CSSValueTokenizer::consume_function(const std::string &name)
   {
     advance(); // Skip '('
     return Token(TokenType::kFunction, name);
   }
 
-  std::string CSSTokenizer::consume_identifier_sequence()
+  std::string CSSValueTokenizer::consume_identifier_sequence()
   {
     std::string identifier;
-    
+
     while (position_ < length_ && is_identifier_char(current_char()))
     {
       char c = current_char();
@@ -330,19 +332,19 @@ namespace client_cssom::css_tokenizer
         advance();
       }
     }
-    
+
     return identifier;
   }
 
-  void CSSTokenizer::consume_escape_sequence(std::string& result)
+  void CSSValueTokenizer::consume_escape_sequence(std::string &result)
   {
     advance(); // Skip '\'
-    
+
     if (position_ >= length_)
     {
       return;
     }
-    
+
     char c = current_char();
     if (is_hex_digit(c))
     {
@@ -353,13 +355,13 @@ namespace client_cssom::css_tokenizer
         hex_digits += current_char();
         advance();
       }
-      
+
       // Skip optional whitespace after hex digits
       if (position_ < length_ && is_whitespace(current_char()))
       {
         advance();
       }
-      
+
       // Convert hex to character
       if (!hex_digits.empty())
       {
