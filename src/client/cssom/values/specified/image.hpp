@@ -36,15 +36,6 @@ namespace client_cssom::values::specified
   {
     friend class Parse;
 
-  private:
-    // Helper methods for parsing gradients
-    bool parseGradient(const std::string &input);
-    bool parseLinearGradient(const std::string &content, bool repeating = false);
-    bool parseRadialGradient(const std::string &content, bool repeating = false);
-    
-    // Helper method for gradient CSS serialization
-    std::string gradientToCss(const Gradient &gradient) const;
-
   public:
     // Default constructor creates a 'none' image
     Image() = default;
@@ -92,96 +83,17 @@ namespace client_cssom::values::specified
       return std::holds_alternative<Gradient>(*this);
     }
 
-    // Parse implementation
-    bool parse(const std::string &input) override
-    {
-      // Handle 'none' value
-      if (input == "none")
-      {
-        *this = None();
-        return true;
-      }
-
-      // Handle url() syntax - improved parsing
-      if (input.length() >= 5 && input.substr(0, 4) == "url(" && input.back() == ')')
-      {
-        std::string url_content = input.substr(4, input.length() - 5);
-        // Trim whitespace
-        size_t start = url_content.find_first_not_of(" \t\n\r");
-        size_t end = url_content.find_last_not_of(" \t\n\r");
-        if (start != std::string::npos)
-        {
-          url_content = url_content.substr(start, end - start + 1);
-        }
-        
-        // Remove quotes if present
-        if (url_content.length() >= 2 &&
-            ((url_content.front() == '"' && url_content.back() == '"') ||
-             (url_content.front() == '\'' && url_content.back() == '\'')))
-        {
-          url_content = url_content.substr(1, url_content.length() - 2);
-        }
-        *this = Url(url_content);
-        return true;
-      }
-
-      // Handle gradient functions
-      if (parseGradient(input))
-      {
-        return true;
-      }
-
-      // Default to none for unrecognized values
-      *this = None();
-      return false;
-    }
+    // Parse implementation using proper CSS tokenizer and parser
+    bool parse(const std::string &input) override;
 
     // CSS serialization
-    std::string toCss() const override
-    {
-      if (isNone())
-      {
-        return "none";
-      }
-      else if (isUrl())
-      {
-        const auto &url_or_none = std::get<UrlOrNone>(*this);
-        if (url_or_none.url.has_value())
-        {
-          return "url(\"" + url_or_none.url.value() + "\")";
-        }
-        return "none";
-      }
-      else if (isGradient())
-      {
-        const auto &gradient = std::get<Gradient>(*this);
-        return gradientToCss(gradient);
-      }
-      return "none";
-    }
+    std::string toCss() const override;
 
     // Convert to computed value
-    computed::Image toComputedValue(computed::Context &context) const override
-    {
-      computed::Image computed_img;
+    computed::Image toComputedValue(computed::Context &context) const override;
 
-      if (isNone())
-      {
-        computed_img.emplace<std::monostate>();
-      }
-      else if (isUrl())
-      {
-        const auto &url_or_none = std::get<UrlOrNone>(*this);
-        computed_img.emplace<UrlOrNone>(url_or_none);
-      }
-      else if (isGradient())
-      {
-        const auto &gradient = std::get<Gradient>(*this);
-        computed::Gradient computed_gradient = gradient.toComputedValue(context);
-        computed_img.emplace<computed::Gradient>(computed_gradient);
-      }
-
-      return computed_img;
-    }
+  private:
+    // Helper method for gradient CSS serialization
+    std::string gradientToCss(const Gradient &gradient) const;
   };
 }

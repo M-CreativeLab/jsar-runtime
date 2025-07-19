@@ -586,3 +586,57 @@ where
 pub(crate) type GridTemplateComponent =
   SpecifiedProperty<StyleSpecifiedValues::GridTemplateComponent>;
 pub(crate) type GridLine = SpecifiedProperty<StyleSpecifiedValues::GridLine>;
+
+/// CSS Image type that can represent URLs, gradients, and other image values
+#[derive(Clone, Debug)]
+pub(crate) struct Image {
+  handle: StyleSpecifiedValues::Image,
+}
+
+impl Image {
+  pub fn new(handle: StyleSpecifiedValues::Image) -> Self {
+    Self { handle }
+  }
+
+  pub fn is_none(&self) -> bool {
+    match &self.handle {
+      StyleSpecifiedValues::Image::None => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_url(&self) -> bool {
+    match &self.handle {
+      StyleSpecifiedValues::Image::Url(..) => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_gradient(&self) -> bool {
+    match &self.handle {
+      StyleSpecifiedValues::Image::Gradient(..) => true,
+      _ => false,
+    }
+  }
+
+  /// Get the URL if this is a URL image, otherwise return empty string
+  pub fn get_url(&self) -> String {
+    match &self.handle {
+      StyleSpecifiedValues::Image::Url(url) => {
+        url.url().as_str().to_string()
+      }
+      _ => String::new(),
+    }
+  }
+
+  /// Get CSS serialization of this image
+  pub fn to_css(&self) -> String {
+    self.handle.to_css_string()
+  }
+}
+
+impl From<StyleSpecifiedValues::Image> for Image {
+  fn from(image: StyleSpecifiedValues::Image) -> Self {
+    Self::new(image)
+  }
+}
