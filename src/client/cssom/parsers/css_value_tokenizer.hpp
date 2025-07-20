@@ -60,7 +60,7 @@ namespace client_cssom::css_value_tokenizer
 
     std::vector<Token> tokenize();
     Token nextToken();
-    bool has_next() const;
+    bool hasNext() const;
     void reset();
 
   private:

@@ -18,6 +18,8 @@ namespace client_cssom::css_parser
 
     values::specified::Image parse();
     values::specified::Image parseUrl();
+    values::specified::Image parseSrc();
+    values::specified::Image parseImageSet();
     values::specified::Image parseGradient(const std::string &function_name);
     values::specified::Image parseLinearGradient(bool repeating = false);
     values::specified::Image parseRadialGradient(bool repeating = false);

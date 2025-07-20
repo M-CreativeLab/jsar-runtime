@@ -44,10 +44,21 @@ namespace client_cssom::css_parser
       return parseUrl();
     }
 
-    // Handle gradient functions
+    // Handle gradient functions and other image functions
     if (token.type == css_value_tokenizer::TokenType::kFunction)
     {
-      return parseGradient(token.value);
+      if (token.value == "src")
+      {
+        return parseSrc();
+      }
+      else if (token.value == "image-set")
+      {
+        return parseImageSet();
+      }
+      else
+      {
+        return parseGradient(token.value);
+      }
     }
 
     // Default to none for unrecognized input
@@ -64,6 +75,93 @@ namespace client_cssom::css_parser
 
     advance();
     return values::specified::Image::Url(token.value);
+  }
+
+  values::specified::Image CSSImageParser::parseSrc()
+  {
+    if (!consumeFunction("src"))
+    {
+      return values::specified::Image::None();
+    }
+
+    skipWhitespace();
+
+    // src() function expects a URL string
+    if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kString)
+    {
+      std::string url = currentToken().value;
+      advance();
+
+      skipWhitespace();
+
+      // Consume closing parenthesis
+      if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kRightParen)
+      {
+        advance();
+        return values::specified::Image::Url(url);
+      }
+    }
+
+    return values::specified::Image::None();
+  }
+
+  values::specified::Image CSSImageParser::parseImageSet()
+  {
+    if (!consumeFunction("image-set"))
+    {
+      return values::specified::Image::None();
+    }
+
+    skipWhitespace();
+
+    // For now, just parse the first image option in the image-set
+    // A full implementation would parse all options and resolutions
+    if (hasNext())
+    {
+      const auto &token = currentToken();
+
+      // Parse src() function inside image-set
+      if (token.type == css_value_tokenizer::TokenType::kFunction && token.value == "src")
+      {
+        auto image = parseSrc();
+
+        // Skip any resolution descriptors and additional options for now
+        while (hasNext() && currentToken().type != css_value_tokenizer::TokenType::kRightParen)
+        {
+          advance();
+        }
+
+        // Consume closing parenthesis
+        if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kRightParen)
+        {
+          advance();
+        }
+
+        return image;
+      }
+
+      // Parse url() function inside image-set
+      if (token.type == css_value_tokenizer::TokenType::kUrl)
+      {
+        auto image = parseUrl();
+
+        // Skip any resolution descriptors and additional options for now
+        while (hasNext() && currentToken().type != css_value_tokenizer::TokenType::kRightParen)
+        {
+          advance();
+        }
+
+        // Consume closing parenthesis
+        if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kRightParen)
+        {
+          advance();
+        }
+
+        return image;
+      }
+    }
+
+    return values::specified::Image::None();
   }
 
   values::specified::Image CSSImageParser::parseGradient(const std::string &function_name)

@@ -16,7 +16,7 @@ namespace client_cssom::css_value_tokenizer
     std::vector<Token> tokens;
     reset();
 
-    while (has_next())
+    while (hasNext())
     {
       Token token = nextToken();
       if (token.type != TokenType::kWhitespace)
@@ -66,7 +66,7 @@ namespace client_cssom::css_value_tokenizer
       // Check if it's a function
       if (position_ < length_ && current_char() == '(')
       {
-        if (identifier == "url")
+        if (identifier == "url" || identifier == "src")
         {
           auto token = consume_url();
           token.start_position = token_start;
@@ -103,7 +103,7 @@ namespace client_cssom::css_value_tokenizer
     }
   }
 
-  bool CSSValueTokenizer::has_next() const
+  bool CSSValueTokenizer::hasNext() const
   {
     return position_ < length_;
   }
