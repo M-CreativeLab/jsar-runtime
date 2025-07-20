@@ -372,15 +372,15 @@ namespace client_cssom::css_parser
 
   const css_value_tokenizer::Token &CSSImageParser::currentToken() const
   {
-    static css_value_tokenizer::Token eof_token(css_value_tokenizer::TokenType::kEOF);
-    return hasNext() ? tokens_[position_] : eof_token;
+    static css_value_tokenizer::Token dummy_token(css_value_tokenizer::TokenType::kWhitespace);
+    return hasNext() ? tokens_[position_] : dummy_token;
   }
 
   const css_value_tokenizer::Token &CSSImageParser::peekToken(size_t offset) const
   {
-    static css_value_tokenizer::Token eof_token(css_value_tokenizer::TokenType::kEOF);
+    static css_value_tokenizer::Token dummy_token(css_value_tokenizer::TokenType::kWhitespace);
     size_t peek_pos = position_ + offset;
-    return peek_pos < tokens_.size() ? tokens_[peek_pos] : eof_token;
+    return peek_pos < tokens_.size() ? tokens_[peek_pos] : dummy_token;
   }
 
   void CSSImageParser::advance()

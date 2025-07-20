@@ -18,27 +18,23 @@ namespace client_cssom::css_value_tokenizer
 
     while (has_next())
     {
-      Token token = next_token();
+      Token token = nextToken();
       if (token.type != TokenType::kWhitespace)
       {
         tokens.push_back(token);
-      }
-      if (token.type == TokenType::kEOF)
-      {
-        break;
       }
     }
 
     return tokens;
   }
 
-  Token CSSValueTokenizer::next_token()
+  Token CSSValueTokenizer::nextToken()
   {
     skip_whitespace();
 
     if (position_ >= length_)
     {
-      return Token(TokenType::kEOF);
+      return Token(TokenType::kWhitespace); // Return dummy token when done
     }
 
     char c = current_char();

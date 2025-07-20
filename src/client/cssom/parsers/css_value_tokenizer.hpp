@@ -20,7 +20,6 @@ namespace client_cssom::css_value_tokenizer
     kLeftParen,
     kRightParen,
     kWhitespace,
-    kEOF,
     kBadString,
     kBadUrl
   };
@@ -60,7 +59,7 @@ namespace client_cssom::css_value_tokenizer
     explicit CSSValueTokenizer(const std::string &input);
 
     std::vector<Token> tokenize();
-    Token next_token();
+    Token nextToken();
     bool has_next() const;
     void reset();
 
