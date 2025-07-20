@@ -1,0 +1,11 @@
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/TransmuteCore.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/TransmuteClientBinaryHeader.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/llhttp_static.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/TransmuteClientShadersHeader.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/TransmuteClient.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/edit_cache.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/rebuild_cache.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/list_install_components.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/install.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/install/local.dir
+/home/runner/work/jsar-runtime/jsar-runtime/build_test/CMakeFiles/install/strip.dir

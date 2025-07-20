@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <regex>
 #include <cstring>
+#include <crates/url_parser.hpp>
 
 // Platform-specific networking includes
 #ifdef _WIN32
@@ -675,19 +676,37 @@ namespace client_networking
   http::Uri HttpRequest::parseUrl(const std::string& url) {
     http::Uri uri;
     
-    // Simple URL parsing - could be enhanced with a proper URL parser
-    std::regex urlRegex(R"(^(https?):\/\/([^:\/\s]+)(?::(\d+))?([^?\s]*)(?:\?([^#\s]*))?(?:#([^\s]*))?$)");
-    std::smatch match;
-    
-    if (std::regex_match(url, match, urlRegex)) {
-      uri.scheme = match[1];
-      uri.host = match[2];
-      uri.port = match[3];
-      uri.path = match[4].str().empty() ? "/" : match[4];
-      uri.query = match[5];
-      uri.fragment = match[6];
-    } else {
-      throw std::invalid_argument("Invalid URL format: " + url);
+    try {
+      auto parsed_url = crates::parseURL(url);
+      
+      // Map crates::URL fields to http::Uri fields
+      uri.scheme = parsed_url.protocol;
+      if (!uri.scheme.empty() && uri.scheme.back() == ':') {
+        uri.scheme.pop_back(); // Remove trailing ':'
+      }
+      
+      uri.user = parsed_url.username;
+      uri.password = parsed_url.password;
+      uri.host = parsed_url.hostname;
+      
+      if (parsed_url.port > 0) {
+        uri.port = std::to_string(parsed_url.port);
+      }
+      
+      uri.path = parsed_url.pathname.empty() ? "/" : parsed_url.pathname;
+      
+      uri.query = parsed_url.search;
+      if (!uri.query.empty() && uri.query.front() == '?') {
+        uri.query = uri.query.substr(1); // Remove leading '?'
+      }
+      
+      uri.fragment = parsed_url.hash;
+      if (!uri.fragment.empty() && uri.fragment.front() == '#') {
+        uri.fragment = uri.fragment.substr(1); // Remove leading '#'
+      }
+      
+    } catch (const std::exception& e) {
+      throw std::invalid_argument("Invalid URL format: " + url + " (" + e.what() + ")");
     }
     
     return uri;
