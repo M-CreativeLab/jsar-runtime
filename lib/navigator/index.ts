@@ -1,3 +1,5 @@
+import { getNetworkMonitor } from '../events/network-events';
+
 class NavigatorImpl implements Navigator {
   clipboard: Clipboard;
   credentials: CredentialsContainer;
@@ -61,6 +63,12 @@ class NavigatorImpl implements Navigator {
     throw new Error('Method not implemented.');
   }
 
+  constructor() {
+    // Initialize navigator.onLine with the current network status
+    const networkMonitor = getNetworkMonitor();
+    this.onLine = networkMonitor.isOnline;
+  }
+
   /**
    * The `XRSystem` interface provides methods to:
    * 
@@ -107,7 +115,7 @@ class NavigatorImpl implements Navigator {
   language: string;
   languages: readonly string[];
   locks: LockManager;
-  onLine: boolean;
+  onLine: boolean = true; // Initialize with true, will be updated by network monitor
   mimeTypes: MimeTypeArray;
   pdfViewerEnabled: boolean = false;
   plugins: PluginArray;
