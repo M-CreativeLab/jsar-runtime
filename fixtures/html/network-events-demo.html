@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Events Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .status.online {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.offline {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .network-feature {
+            margin: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .network-feature:disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Network Events Demo</h1>
+        <p>This example demonstrates network online/offline events in JSAR.</p>
+        
+        <div id="status" class="status">Checking...</div>
+        
+        <h2>Network-dependent Features</h2>
+        <button class="network-feature" onclick="syncData()">Sync Data</button>
+        <button class="network-feature" onclick="fetchUpdates()">Fetch Updates</button>
+        <button class="network-feature" onclick="uploadFile()">Upload File</button>
+        
+        <h2>Event Log</h2>
+        <div id="log" class="log">
+            <div class="log-entry">Ready to monitor network events...</div>
+        </div>
+        
+        <h2>Test Network Status</h2>
+        <button onclick="checkNetworkStatus()">Check Current Status</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        // Network Events Demo
+        // This example shows how to use the network online/offline events in JSAR
+
+        function logEvent(message) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Method 1: Using event handler properties
+        window.ononline = function() {
+            logEvent('📶 Network is back online!');
+            
+            // Resume network operations
+            document.getElementById('status').textContent = 'Online';
+            document.getElementById('status').className = 'status online';
+            
+            // Re-enable network-dependent features
+            enableNetworkFeatures();
+        };
+
+        window.onoffline = function() {
+            logEvent('📵 Network went offline!');
+            
+            // Switch to offline mode
+            document.getElementById('status').textContent = 'Offline';
+            document.getElementById('status').className = 'status offline';
+            
+            // Disable network-dependent features
+            disableNetworkFeatures();
+        };
+
+        // Method 2: Check current network status
+        function checkNetworkStatus() {
+            if (navigator.onLine) {
+                logEvent('✅ Currently online');
+                return true;
+            } else {
+                logEvent('❌ Currently offline');
+                return false;
+            }
+        }
+
+        // Example functions for handling network state
+        function enableNetworkFeatures() {
+            // Re-enable sync, live updates, etc.
+            document.querySelectorAll('.network-feature').forEach(element => {
+                element.disabled = false;
+            });
+            logEvent('🔓 Network features enabled');
+        }
+
+        function disableNetworkFeatures() {
+            // Disable features that require network
+            document.querySelectorAll('.network-feature').forEach(element => {
+                element.disabled = true;
+            });
+            logEvent('🔒 Network features disabled');
+        }
+
+        // Initialize the app
+        function initializeApp() {
+            // Check initial network status
+            const isOnline = checkNetworkStatus();
+            
+            // Set up the UI
+            const statusElement = document.getElementById('status');
+            if (isOnline) {
+                statusElement.textContent = 'Online';
+                statusElement.className = 'status online';
+                enableNetworkFeatures();
+            } else {
+                statusElement.textContent = 'Offline';
+                statusElement.className = 'status offline';
+                disableNetworkFeatures();
+            }
+            
+            logEvent('🚀 Network monitoring initialized');
+        }
+
+        // Example: Sync data when coming back online
+        window.ononline = function() {
+            logEvent('🔄 Syncing data after reconnection...');
+            
+            // Sync pending changes
+            syncPendingData()
+                .then(() => logEvent('✅ Sync completed'))
+                .catch(err => logEvent('❌ Sync failed: ' + err.message));
+        };
+
+        async function syncPendingData() {
+            // Example implementation
+            const pendingItems = getPendingItems();
+            
+            for (const item of pendingItems) {
+                try {
+                    await uploadItem(item);
+                    markItemAsSynced(item);
+                } catch (error) {
+                    logEvent('Failed to sync item: ' + item.id + ' - ' + error.message);
+                }
+            }
+        }
+
+        function getPendingItems() {
+            // Return items that need to be synced
+            return JSON.parse(localStorage.getItem('pendingItems') || '[]');
+        }
+
+        async function uploadItem(item) {
+            // Upload item to server
+            const response = await fetch('/api/items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(item)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+            
+            return response.json();
+        }
+
+        function markItemAsSynced(item) {
+            // Remove from pending items
+            const pendingItems = getPendingItems();
+            const updatedItems = pendingItems.filter(p => p.id !== item.id);
+            localStorage.setItem('pendingItems', JSON.stringify(updatedItems));
+        }
+
+        // Demo feature functions
+        function syncData() {
+            if (navigator.onLine) {
+                logEvent('🔄 Syncing data...');
+                setTimeout(() => logEvent('✅ Data sync completed'), 1000);
+            } else {
+                logEvent('❌ Cannot sync: offline');
+            }
+        }
+
+        function fetchUpdates() {
+            if (navigator.onLine) {
+                logEvent('📥 Fetching updates...');
+                setTimeout(() => logEvent('✅ Updates fetched'), 800);
+            } else {
+                logEvent('❌ Cannot fetch: offline');
+            }
+        }
+
+        function uploadFile() {
+            if (navigator.onLine) {
+                logEvent('📤 Uploading file...');
+                setTimeout(() => logEvent('✅ File uploaded'), 1200);
+            } else {
+                logEvent('❌ Cannot upload: offline');
+            }
+        }
+
+        function clearLog() {
+            const log = document.getElementById('log');
+            log.innerHTML = '<div class="log-entry">Log cleared...</div>';
+        }
+
+        // Run when the page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

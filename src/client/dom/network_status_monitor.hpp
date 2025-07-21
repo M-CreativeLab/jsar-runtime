@@ -80,13 +80,11 @@ namespace dom
     /**
      * Platform-specific network status check implementations
      */
-#if defined(UNITY_WIN)
-    bool checkNetworkStatusWindows();
-#elif defined(UNITY_OSX) || defined(UNITY_IOS) || defined(UNITY_TVOS)
+#if defined(__APPLE__)
     bool checkNetworkStatusApple();
-#elif defined(UNITY_LINUX) || defined(UNITY_EMBEDDED_LINUX) || defined(UNITY_EMBEDDED_LINUX_GL)
+#elif defined(__linux__)
     bool checkNetworkStatusLinux();
-#elif defined(UNITY_ANDROID)
+#elif defined(__ANDROID__)
     bool checkNetworkStatusAndroid();
 #else
     bool checkNetworkStatusGeneric();

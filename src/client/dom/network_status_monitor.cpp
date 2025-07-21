@@ -5,15 +5,10 @@
 #include <runtime/platform_base.hpp>
 
 // Platform-specific includes
-#if defined(UNITY_WIN)
-#include <windows.h>
-#include <netlistmgr.h>
-#include <comdef.h>
-#pragma comment(lib, "ole32.lib")
-#elif defined(UNITY_OSX) || defined(UNITY_IOS) || defined(UNITY_TVOS)
+#if defined(__APPLE__)
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
-#elif defined(UNITY_LINUX) || defined(UNITY_EMBEDDED_LINUX) || defined(UNITY_EMBEDDED_LINUX_GL)
+#elif defined(__linux__)
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -22,7 +17,7 @@
 #include <net/if.h>
 #include <fcntl.h>
 #include <errno.h>
-#elif defined(UNITY_ANDROID)
+#elif defined(__ANDROID__)
 // Android-specific headers would go here
 // For now, use generic implementation
 #include <unistd.h>
@@ -33,7 +28,8 @@
 #include <errno.h>
 #endif
 
-#if !defined(UNITY_WIN)
+// Common socket includes for non-Apple platforms
+#if !defined(__APPLE__)
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -134,63 +130,18 @@ namespace dom
 
   bool NetworkStatusMonitor::checkNetworkStatus()
   {
-#if defined(UNITY_WIN)
-    return checkNetworkStatusWindows();
-#elif defined(UNITY_OSX) || defined(UNITY_IOS) || defined(UNITY_TVOS)
+#if defined(__APPLE__)
     return checkNetworkStatusApple();
-#elif defined(UNITY_LINUX) || defined(UNITY_EMBEDDED_LINUX) || defined(UNITY_EMBEDDED_LINUX_GL)
+#elif defined(__linux__)
     return checkNetworkStatusLinux();
-#elif defined(UNITY_ANDROID)
+#elif defined(__ANDROID__)
     return checkNetworkStatusAndroid();
 #else
     return checkNetworkStatusGeneric();
 #endif
   }
 
-#if defined(UNITY_WIN)
-  bool NetworkStatusMonitor::checkNetworkStatusWindows()
-  {
-    try
-    {
-      // Use Windows Network Location Awareness (NLA) API
-      HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-      if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
-      {
-        return true; // Default to online if COM initialization fails
-      }
-
-      INetworkListManager* pNetworkListManager = nullptr;
-      hr = CoCreateInstance(CLSID_NetworkListManager, NULL, CLSCTX_ALL,
-                           IID_INetworkListManager, (LPVOID*)&pNetworkListManager);
-
-      if (SUCCEEDED(hr) && pNetworkListManager)
-      {
-        NLM_CONNECTIVITY connectivity;
-        hr = pNetworkListManager->GetConnectivity(&connectivity);
-        pNetworkListManager->Release();
-        
-        if (SUCCEEDED(hr))
-        {
-          // Check if we have internet connectivity
-          bool hasConnectivity = (connectivity & NLM_CONNECTIVITY_IPV4_INTERNET) ||
-                                (connectivity & NLM_CONNECTIVITY_IPV6_INTERNET);
-          CoUninitialize();
-          return hasConnectivity;
-        }
-      }
-
-      CoUninitialize();
-    }
-    catch (...)
-    {
-      // If anything fails, default to online
-    }
-    
-    return true; // Default to online
-  }
-#endif
-
-#if defined(UNITY_OSX) || defined(UNITY_IOS) || defined(UNITY_TVOS)
+#if defined(__APPLE__)
   bool NetworkStatusMonitor::checkNetworkStatusApple()
   {
     // Use SystemConfiguration framework to check network reachability
@@ -217,7 +168,7 @@ namespace dom
   }
 #endif
 
-#if defined(UNITY_LINUX) || defined(UNITY_EMBEDDED_LINUX) || defined(UNITY_EMBEDDED_LINUX_GL)
+#if defined(__linux__)
   bool NetworkStatusMonitor::checkNetworkStatusLinux()
   {
     // Simple approach: check if we have any active network interfaces
@@ -249,7 +200,7 @@ namespace dom
   }
 #endif
 
-#if defined(UNITY_ANDROID)
+#if defined(__ANDROID__)
   bool NetworkStatusMonitor::checkNetworkStatusAndroid()
   {
     // For Android, we would typically use the ConnectivityManager
