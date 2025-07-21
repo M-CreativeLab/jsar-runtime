@@ -7,7 +7,6 @@ import { createWindow } from './window';
 import { XMLHttpRequestImpl } from './xhr';
 import { ErrorEventImpl } from './events/error-event';
 import { PointerEventImpl } from './events/pointer-event';
-import { initializeNetworkMonitoring } from './events/network-events';
 import {
   requestAnimationFrame as requestAnimationFrameImpl,
   cancelAnimationFrame as cancelAnimationFrameImpl,
@@ -137,9 +136,6 @@ export function loadPolyfills() {
   });
 
   globalThis.window = createWindow();
-
-  // Initialize network monitoring
-  initializeNetworkMonitoring();
 
   console.info('Polyfills have been loaded.');
   console.info(`window() =>`, typeof window, typeof globalThis.window);

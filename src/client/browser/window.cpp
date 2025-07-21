@@ -1,5 +1,7 @@
 #include <client/dom/element.hpp>
 #include <client/dom/document.hpp>
+#include <client/dom/network_status_monitor.hpp>
+#include <client/bindings/network_bindings.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
 #include <client/cssom/values/computed/context.hpp>
@@ -18,6 +20,11 @@ namespace browser
       : dom::DOMEventTarget()
       , client_context_(client_context)
   {
+    // Initialize network event monitoring
+    initializeNetworkEvents();
+    
+    // Register this window with the bindings system
+    bindings::setCurrentWindow(this);
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
@@ -61,5 +68,35 @@ namespace browser
     auto elementStyle = htmlElement->style();
     computedStyle->update(elementStyle, context); // Override the style from the element's.
     return *computedStyle;
+  }
+
+  void Window::initializeNetworkEvents()
+  {
+    // Get the network monitor and register for status changes
+    auto& networkMonitor = dom::getNetworkMonitor();
+    
+    // Register a callback to handle network status changes
+    networkMonitor.addStatusChangeCallback([this](bool isOnline) {
+      this->handleNetworkStatusChange(isOnline);
+    });
+  }
+
+  void Window::handleNetworkStatusChange(bool isOnline)
+  {
+    // Create and dispatch the appropriate event
+    std::string eventType = isOnline ? "online" : "offline";
+    
+    // Call the appropriate event handler if set
+    if (isOnline && ononline)
+    {
+      ononline();
+    }
+    else if (!isOnline && onoffline)
+    {
+      onoffline();
+    }
+    
+    // TODO: Also dispatch DOM events for addEventListener support
+    // This would require proper integration with the DOM event system
   }
 }

@@ -16,6 +16,12 @@
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
 
+// Forward declarations
+namespace dom
+{
+  class NetworkStatusMonitor;
+}
+
 namespace browser
 {
   /**
@@ -237,6 +243,27 @@ namespace browser
      */
     const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
                                                         std::optional<std::string> pseudoElt = std::nullopt) const;
+
+  public: // Network event support
+    /**
+     * Online event handler property
+     */
+    std::function<void()> ononline = nullptr;
+
+    /**
+     * Offline event handler property  
+     */
+    std::function<void()> onoffline = nullptr;
+
+    /**
+     * Initialize network event monitoring for this window
+     */
+    void initializeNetworkEvents();
+
+    /**
+     * Handle network status change
+     */
+    void handleNetworkStatusChange(bool isOnline);
 
   private:
     // Configure the document to the window.
