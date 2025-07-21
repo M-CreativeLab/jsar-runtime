@@ -49,10 +49,16 @@ export class NetworkStatusMonitor extends EventTarget {
       if (typeof globalThis.fetch === 'function') {
         // Try a simple data URL fetch which should work if networking is available
         try {
-          await globalThis.fetch('data:text/plain;base64,', { 
-            method: 'HEAD',
-            signal: AbortSignal.timeout(1000)
+          // Create a manual timeout instead of using AbortSignal.timeout for compatibility
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout')), 1000);
           });
+          
+          const fetchPromise = globalThis.fetch('data:text/plain;base64,', { 
+            method: 'HEAD'
+          });
+          
+          await Promise.race([fetchPromise, timeoutPromise]);
           return true;
         } catch {
           // If even data URL fails, likely offline or severely restricted
