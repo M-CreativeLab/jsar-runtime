@@ -5,8 +5,13 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
-#include <common/events_v2/event_target.hpp>
-#include <client/dom/dom_event_target.hpp>
+#include <vector>
+
+// Forward declarations
+namespace browser
+{
+  class Window;
+}
 
 namespace dom
 {
@@ -15,7 +20,7 @@ namespace dom
    * Monitors network connectivity status and dispatches online/offline events.
    * Uses platform-specific APIs when available, falls back to simple connectivity checks.
    */
-  class NetworkStatusMonitor : public DOMEventTarget
+  class NetworkStatusMonitor
   {
   public:
     NetworkStatusMonitor();

@@ -2,7 +2,7 @@
 #include <client/browser/window.hpp>
 #include <client/browser/navigator.hpp>
 #include <common/events_v2/event.hpp>
-#include <src/runtime/platform_base.hpp>
+#include <runtime/platform_base.hpp>
 
 // Platform-specific includes
 #if defined(UNITY_WIN)
@@ -48,7 +48,6 @@ namespace dom
   static std::unique_ptr<NetworkStatusMonitor> g_networkMonitor = nullptr;
 
   NetworkStatusMonitor::NetworkStatusMonitor()
-      : DOMEventTarget()
   {
     initializeNetworkStatus();
   }
@@ -154,7 +153,7 @@ namespace dom
     try
     {
       // Use Windows Network Location Awareness (NLA) API
-      HRESULT hr = CoInitialize(NULL);
+      HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
       if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
       {
         return true; // Default to online if COM initialization fails
@@ -175,6 +174,7 @@ namespace dom
           // Check if we have internet connectivity
           bool hasConnectivity = (connectivity & NLM_CONNECTIVITY_IPV4_INTERNET) ||
                                 (connectivity & NLM_CONNECTIVITY_IPV6_INTERNET);
+          CoUninitialize();
           return hasConnectivity;
         }
       }
