@@ -1661,5 +1661,20 @@ mod tests {
       assert!(s.is_some());
       println!("div:active: {:?}", s.unwrap());
     }
+
+    // Test attribute selectors
+    {
+      let s = parser.parse_selectors("[data-test]");
+      assert!(s.is_some());
+      println!("[data-test]: {:?}", s.unwrap());
+
+      let s = parser.parse_selectors("[data-test=value]");
+      assert!(s.is_some());
+      println!("[data-test=value]: {:?}", s.unwrap());
+
+      let s = parser.parse_selectors("div[class~=active]");
+      assert!(s.is_some());
+      println!("div[class~=active]: {:?}", s.unwrap());
+    }
   }
 }
