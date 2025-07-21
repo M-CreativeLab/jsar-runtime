@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transform Test</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+    }
+
+    .test-box {
+      width: 200px;
+      height: 200px;
+      background-color: rgba(0, 255, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 30px;
+      font-weight: bold;
+      border: 3px solid red;
+      margin: 20px;
+    }
+
+    /* Test translation (should work) */
+    .translate3d {
+      transform: translate3d(50px, 50px, 100px);
+    }
+
+    /* Test scale (what we're adding) */
+    .scale {
+      transform: scale(1.5);
+    }
+
+    .scale3d {
+      transform: scale3d(1.5, 0.8, 2.0);
+    }
+
+    .scalex {
+      transform: scaleX(2.0);
+    }
+
+    .scaley {
+      transform: scaleY(0.5);
+    }
+
+    .scalez {
+      transform: scaleZ(1.5);
+    }
+
+    /* Test rotation (what we're adding) */
+    .rotate {
+      transform: rotate(45deg);
+    }
+
+    .rotate3d {
+      transform: rotate3d(1, 1, 0, 45deg);
+    }
+
+    .rotatex {
+      transform: rotateX(45deg);
+    }
+
+    .rotatey {
+      transform: rotateY(45deg);
+    }
+
+    .rotatez {
+      transform: rotateZ(45deg);
+    }
+
+    /* Test combined transforms */
+    .combined {
+      transform: translate3d(50px, 50px, 50px) rotate(45deg) scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <h1>JSAR Transform Test - Rotation and Scale</h1>
+  <div class="container">
+    <div class="test-box translate3d">translate3d (works)</div>
+    <div class="test-box scale">scale</div>
+    <div class="test-box scale3d">scale3d</div>
+    <div class="test-box scalex">scaleX</div>
+    <div class="test-box scaley">scaleY</div>
+    <div class="test-box scalez">scaleZ</div>
+  </div>
+  <div class="container">
+    <div class="test-box rotate">rotate</div>
+    <div class="test-box rotate3d">rotate3d</div>
+    <div class="test-box rotatex">rotateX</div>
+    <div class="test-box rotatey">rotateY</div>
+    <div class="test-box rotatez">rotateZ</div>
+    <div class="test-box combined">combined</div>
+  </div>
+</body>
+</html>

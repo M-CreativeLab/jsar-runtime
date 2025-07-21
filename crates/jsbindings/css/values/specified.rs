@@ -39,6 +39,23 @@ impl From<&StyleSpecifiedValues::Number> for Number {
 #[derive(Clone, Debug)]
 pub(crate) struct Angle(StyleSpecifiedValues::Angle);
 
+impl Angle {
+  pub fn degrees(&self) -> f32 {
+    self.0.degrees()
+  }
+
+  pub fn unit(&self) -> &str {
+    use StyleSpecifiedValues::AngleValue;
+    match self.0.value() {
+      AngleValue::Deg(..) => "deg",
+      AngleValue::Grad(..) => "grad",
+      AngleValue::Rad(..) => "rad",
+      AngleValue::Turn(..) => "turn",
+      _ => "deg", // fallback
+    }
+  }
+}
+
 impl From<StyleSpecifiedValues::Angle> for Angle {
   fn from(angle: StyleSpecifiedValues::Angle) -> Self {
     Self(angle)
@@ -526,6 +543,120 @@ impl TransformOperation {
   pub fn try_into_translate3d(&self) -> Option<(LengthPercentage, LengthPercentage, Length)> {
     match self {
       TransformOperation::Translate3D(x, y, z) => Some((x.clone(), y.clone(), z.clone())),
+      _ => None,
+    }
+  }
+
+  // Scale extraction functions
+  pub fn try_into_scale(&self) -> Option<(&Number, &Number)> {
+    match self {
+      TransformOperation::Scale(x, y) => Some((x, y)),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_scale_x(&self) -> Option<&Number> {
+    match self {
+      TransformOperation::ScaleX(x) => Some(x),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_scale_x(&self) -> Option<Number> {
+    match self {
+      TransformOperation::ScaleX(x) => Some(x.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_scale_y(&self) -> Option<&Number> {
+    match self {
+      TransformOperation::ScaleY(y) => Some(y),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_scale_y(&self) -> Option<Number> {
+    match self {
+      TransformOperation::ScaleY(y) => Some(y.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_scale_z(&self) -> Option<&Number> {
+    match self {
+      TransformOperation::ScaleZ(z) => Some(z),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_scale_z(&self) -> Option<Number> {
+    match self {
+      TransformOperation::ScaleZ(z) => Some(z.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_scale3d(&self) -> Option<(Number, Number, Number)> {
+    match self {
+      TransformOperation::Scale3D(x, y, z) => Some((x.clone(), y.clone(), z.clone())),
+      _ => None,
+    }
+  }
+
+  // Rotation extraction functions
+  pub fn try_into_rotate(&self) -> Option<&Angle> {
+    match self {
+      TransformOperation::Rotate(angle) => Some(angle),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_rotate_x(&self) -> Option<&Angle> {
+    match self {
+      TransformOperation::RotateX(angle) => Some(angle),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_rotate_x(&self) -> Option<Angle> {
+    match self {
+      TransformOperation::RotateX(angle) => Some(angle.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_rotate_y(&self) -> Option<&Angle> {
+    match self {
+      TransformOperation::RotateY(angle) => Some(angle),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_rotate_y(&self) -> Option<Angle> {
+    match self {
+      TransformOperation::RotateY(angle) => Some(angle.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_get_rotate_z(&self) -> Option<&Angle> {
+    match self {
+      TransformOperation::RotateZ(angle) => Some(angle),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_rotate_z(&self) -> Option<Angle> {
+    match self {
+      TransformOperation::RotateZ(angle) => Some(angle.clone()),
+      _ => None,
+    }
+  }
+
+  pub fn try_into_rotate3d(&self) -> Option<(Number, Number, Number, Angle)> {
+    match self {
+      TransformOperation::Rotate3D(x, y, z, angle) => Some((x.clone(), y.clone(), z.clone(), angle.clone())),
       _ => None,
     }
   }

@@ -547,6 +547,36 @@ pub(crate) mod ffi {
     pub z: Box<SpecifiedLength>,
   }
 
+  /// Represents a 2D scale transform in FFI context.
+  #[derive(Clone, Debug)]
+  #[namespace = "holocron::css::values::specified::transform"]
+  #[cxx_name = "Scale"]
+  struct SpecifiedTransformScale {
+    pub x: Box<SpecifiedNumberValue>,
+    pub y: Box<SpecifiedNumberValue>,
+  }
+
+  /// Represents a 3D scale transform in FFI context.
+  #[derive(Clone, Debug)]
+  #[namespace = "holocron::css::values::specified::transform"]
+  #[cxx_name = "Scale3D"]
+  struct SpecifiedTransformScale3D {
+    pub x: Box<SpecifiedNumberValue>,
+    pub y: Box<SpecifiedNumberValue>,
+    pub z: Box<SpecifiedNumberValue>,
+  }
+
+  /// Represents a 3D rotation transform in FFI context.
+  #[derive(Clone, Debug)]
+  #[namespace = "holocron::css::values::specified::transform"]
+  #[cxx_name = "Rotate3D"]
+  struct SpecifiedTransformRotate3D {
+    pub x: Box<SpecifiedNumberValue>,
+    pub y: Box<SpecifiedNumberValue>,
+    pub z: Box<SpecifiedNumberValue>,
+    pub angle: Box<SpecifiedAngleValue>,
+  }
+
   /// The component type in a selector, such as:
   ///
   /// - LocalName: `div`
@@ -736,6 +766,12 @@ pub(crate) mod ffi {
     #[cxx_name = "getNumberValue"]
     fn get_number_value(value: &SpecifiedNumberValue) -> f32;
 
+    #[cxx_name = "getAngleValue"]
+    fn get_angle_value(value: &SpecifiedAngleValue) -> f32;
+
+    #[cxx_name = "getAngleUnit"]
+    fn get_angle_unit(value: &SpecifiedAngleValue) -> &str;
+
     #[cxx_name = "getPercentageValue"]
     fn get_percentage_value(value: &SpecifiedPercentageValue) -> f32;
 
@@ -867,6 +903,58 @@ pub(crate) mod ffi {
     fn try_get_transform_operation_as_translate3d(
       operation: &SpecifiedTransformOperation,
     ) -> Result<SpecifiedTransformTranslate3D>;
+
+    // Scale operation extractors
+    #[cxx_name = "tryGetTransformOperationAsScale"]
+    fn try_get_transform_operation_as_scale(
+      operation: &SpecifiedTransformOperation,
+    ) -> Result<SpecifiedTransformScale>;
+
+    #[cxx_name = "tryGetTransformOperationAsScaleX"]
+    unsafe fn try_get_transform_operation_as_scale_x<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedNumberValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsScaleY"]
+    unsafe fn try_get_transform_operation_as_scale_y<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedNumberValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsScaleZ"]
+    unsafe fn try_get_transform_operation_as_scale_z<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedNumberValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsScale3D"]
+    fn try_get_transform_operation_as_scale3d(
+      operation: &SpecifiedTransformOperation,
+    ) -> Result<SpecifiedTransformScale3D>;
+
+    // Rotation operation extractors
+    #[cxx_name = "tryGetTransformOperationAsRotate"]
+    unsafe fn try_get_transform_operation_as_rotate<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedAngleValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsRotateX"]
+    unsafe fn try_get_transform_operation_as_rotate_x<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedAngleValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsRotateY"]
+    unsafe fn try_get_transform_operation_as_rotate_y<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedAngleValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsRotateZ"]
+    unsafe fn try_get_transform_operation_as_rotate_z<'a>(
+      operation: &'a SpecifiedTransformOperation,
+    ) -> Result<&'a SpecifiedAngleValue>;
+
+    #[cxx_name = "tryGetTransformOperationAsRotate3D"]
+    fn try_get_transform_operation_as_rotate3d(
+      operation: &SpecifiedTransformOperation,
+    ) -> Result<SpecifiedTransformRotate3D>;
 
     #[cxx_name = "showTransformOperation"]
     fn show_transform_operation(operation: &SpecifiedTransformOperation);
@@ -1145,6 +1233,14 @@ fn get_number_value(value: &SpecifiedNumberValue) -> f32 {
   value.get_value()
 }
 
+fn get_angle_value(value: &SpecifiedAngleValue) -> f32 {
+  value.degrees()
+}
+
+fn get_angle_unit(value: &SpecifiedAngleValue) -> &str {
+  value.unit()
+}
+
 fn get_percentage_value(value: &SpecifiedPercentageValue) -> f32 {
   value.get_percent()
 }
@@ -1327,6 +1423,140 @@ fn try_get_transform_operation_as_translate3d(
   } else {
     Err(anyhow::anyhow!(
       "Failed to get transform operation as translate3d"
+    ))
+  }
+}
+
+// Scale operation implementations
+fn try_get_transform_operation_as_scale(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<ffi::SpecifiedTransformScale> {
+  if let Some((x, y)) = operation.try_into_scale() {
+    Ok(ffi::SpecifiedTransformScale {
+      x: Box::new(x.clone()),
+      y: Box::new(y.clone()),
+    })
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as scale"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_scale_x(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedNumberValue> {
+  if let Some(x) = operation.try_get_scale_x() {
+    Ok(x)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as scaleX"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_scale_y(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedNumberValue> {
+  if let Some(y) = operation.try_get_scale_y() {
+    Ok(y)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as scaleY"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_scale_z(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedNumberValue> {
+  if let Some(z) = operation.try_get_scale_z() {
+    Ok(z)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as scaleZ"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_scale3d(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<ffi::SpecifiedTransformScale3D> {
+  if let Some((x, y, z)) = operation.try_into_scale3d() {
+    Ok(ffi::SpecifiedTransformScale3D {
+      x: Box::new(x),
+      y: Box::new(y),
+      z: Box::new(z),
+    })
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as scale3d"
+    ))
+  }
+}
+
+// Rotation operation implementations
+fn try_get_transform_operation_as_rotate(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedAngleValue> {
+  if let Some(angle) = operation.try_into_rotate() {
+    Ok(angle)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as rotate"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_rotate_x(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedAngleValue> {
+  if let Some(angle) = operation.try_get_rotate_x() {
+    Ok(angle)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as rotateX"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_rotate_y(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedAngleValue> {
+  if let Some(angle) = operation.try_get_rotate_y() {
+    Ok(angle)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as rotateY"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_rotate_z(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<&SpecifiedAngleValue> {
+  if let Some(angle) = operation.try_get_rotate_z() {
+    Ok(angle)
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as rotateZ"
+    ))
+  }
+}
+
+fn try_get_transform_operation_as_rotate3d(
+  operation: &SpecifiedTransformOperation,
+) -> anyhow::Result<ffi::SpecifiedTransformRotate3D> {
+  if let Some((x, y, z, angle)) = operation.try_into_rotate3d() {
+    Ok(ffi::SpecifiedTransformRotate3D {
+      x: Box::new(x),
+      y: Box::new(y),
+      z: Box::new(z),
+      angle: Box::new(angle),
+    })
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to get transform operation as rotate3d"
     ))
   }
 }
@@ -1529,6 +1759,130 @@ mod tests {
         assert_eq!(5.0, z.to_no_calc_length().unitless_value());
       }
       _ => panic!("Expected translate operation"),
+    }
+  }
+
+  #[test]
+  fn test_parse_scale_transform() {
+    let css_parser = CSSParser::default();
+    
+    // Test scale(2.0)
+    let transform = parse_transform(&css_parser, "scale(2.0)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::Scale(x, y) => {
+        assert_eq!(2.0, x.get_value());
+        assert_eq!(2.0, y.get_value());
+      }
+      _ => panic!("Expected scale operation, got: {:?}", item),
+    }
+
+    // Test scale3d(1.5, 0.8, 2.0)
+    let transform = parse_transform(&css_parser, "scale3d(1.5, 0.8, 2.0)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::Scale3D(x, y, z) => {
+        assert_eq!(1.5, x.get_value());
+        assert_eq!(0.8, y.get_value());
+        assert_eq!(2.0, z.get_value());
+      }
+      _ => panic!("Expected scale3d operation, got: {:?}", item),
+    }
+
+    // Test scaleX(2.0)
+    let transform = parse_transform(&css_parser, "scaleX(2.0)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::ScaleX(x) => {
+        assert_eq!(2.0, x.get_value());
+      }
+      _ => panic!("Expected scaleX operation, got: {:?}", item),
+    }
+  }
+
+  #[test]
+  fn test_parse_rotate_transform() {
+    let css_parser = CSSParser::default();
+    
+    // Test rotate(45deg)
+    let transform = parse_transform(&css_parser, "rotate(45deg)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::Rotate(angle) => {
+        assert_eq!(45.0, angle.degrees());
+        assert_eq!("deg", angle.unit());
+      }
+      _ => panic!("Expected rotate operation, got: {:?}", item),
+    }
+
+    // Test rotateX(90deg)
+    let transform = parse_transform(&css_parser, "rotateX(90deg)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::RotateX(angle) => {
+        assert_eq!(90.0, angle.degrees());
+        assert_eq!("deg", angle.unit());
+      }
+      _ => panic!("Expected rotateX operation, got: {:?}", item),
+    }
+
+    // Test rotate3d(1, 1, 0, 45deg)
+    let transform = parse_transform(&css_parser, "rotate3d(1, 1, 0, 45deg)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::Rotate3D(x, y, z, angle) => {
+        assert_eq!(1.0, x.get_value());
+        assert_eq!(1.0, y.get_value());
+        assert_eq!(0.0, z.get_value());
+        assert_eq!(45.0, angle.degrees());
+        assert_eq!("deg", angle.unit());
+      }
+      _ => panic!("Expected rotate3d operation, got: {:?}", item),
+    }
+  }
+
+  #[test]
+  fn test_parse_combined_transform() {
+    let css_parser = CSSParser::default();
+    
+    // Test combined transforms: translate3d(10px, 20px, 30px) rotate(45deg) scale(1.5)
+    let transform = parse_transform(&css_parser, "translate3d(10px, 20px, 30px) rotate(45deg) scale(1.5)");
+    assert_eq!(transform.len(), 3);
+    
+    // Check translate3d
+    let translate_item = transform.get_operation_ref(0);
+    match translate_item {
+      CrateSpecifiedValues::TransformOperation::Translate3D(x, y, z) => {
+        assert_eq!(10.0, x.to_no_calc_length().unitless_value());
+        assert_eq!(20.0, y.to_no_calc_length().unitless_value());
+        assert_eq!(30.0, z.to_no_calc_length().unitless_value());
+      }
+      _ => panic!("Expected translate3d operation"),
+    }
+    
+    // Check rotate
+    let rotate_item = transform.get_operation_ref(1);
+    match rotate_item {
+      CrateSpecifiedValues::TransformOperation::Rotate(angle) => {
+        assert_eq!(45.0, angle.degrees());
+      }
+      _ => panic!("Expected rotate operation"),
+    }
+    
+    // Check scale
+    let scale_item = transform.get_operation_ref(2);
+    match scale_item {
+      CrateSpecifiedValues::TransformOperation::Scale(x, y) => {
+        assert_eq!(1.5, x.get_value());
+        assert_eq!(1.5, y.get_value());
+      }
+      _ => panic!("Expected scale operation"),
     }
   }
 
