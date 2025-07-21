@@ -1,5 +1,5 @@
 #include "./image.hpp"
-#include <client/cssom/values/specified/url.hpp>
+#include "./url.hpp"
 
 namespace client_cssom::values::computed
 {
@@ -7,7 +7,7 @@ namespace client_cssom::values::computed
   {
     if (isUrl())
     {
-      const auto &url_or_none = std::get<specified::UrlOrNone>(*this);
+      const auto &url_or_none = std::get<computed::UrlOrNone>(*this);
       if (url_or_none.url.has_value())
       {
         return url_or_none.url.value();
