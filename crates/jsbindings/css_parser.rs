@@ -557,6 +557,8 @@ pub(crate) mod ffi {
   /// - Scope: `:scope`
   /// - Host: `:host`
   /// - Combinator: `>`, `~`, `+`, `::`, `::part`, `::slotted`
+  /// - AttributeExists: `[attr]`
+  /// - AttributeValue: `[attr=val]`, `[attr~=val]`, etc.
   ///
   #[repr(u8)]
   #[derive(Clone, Debug)]
@@ -583,8 +585,40 @@ pub(crate) mod ffi {
     PseudoClass,
     #[cxx_name = "kCombinator"]
     Combinator,
+    #[cxx_name = "kAttributeExists"]
+    AttributeExists,
+    #[cxx_name = "kAttributeValue"]
+    AttributeValue,
     #[cxx_name = "kUnsupported"]
     Unsupported,
+  }
+
+  /// The attribute selector operator type, such as:
+  ///
+  /// - Equal: `[attr=val]`
+  /// - Includes: `[attr~=val]`  
+  /// - DashMatch: `[attr|=val]`
+  /// - Prefix: `[attr^=val]`
+  /// - Substring: `[attr*=val]`
+  /// - Suffix: `[attr$=val]`
+  ///
+  #[repr(u8)]
+  #[derive(Clone, Debug)]
+  #[namespace = "holocron::css::selectors"]
+  #[cxx_name = "AttributeSelectorOperator"]
+  enum AttributeSelectorOperator {
+    #[cxx_name = "kEqual"]
+    Equal,
+    #[cxx_name = "kIncludes"]
+    Includes,
+    #[cxx_name = "kDashMatch"]
+    DashMatch,
+    #[cxx_name = "kPrefix"]
+    Prefix,
+    #[cxx_name = "kSubstring"]
+    Substring,
+    #[cxx_name = "kSuffix"]
+    Suffix,
   }
 
   #[repr(u8)]
@@ -898,6 +932,18 @@ pub(crate) mod ffi {
     /// Returns the pseudo class type of the component.
     #[cxx_name = "getComponentPseudoClassType"]
     fn get_component_pseudo_class_type(component: &PrismComponent) -> PseudoClassType;
+
+    /// Returns the attribute name of the component (for attribute selectors).
+    #[cxx_name = "tryGetComponentAttributeName"]
+    fn try_get_component_attribute_name(component: &PrismComponent) -> String;
+
+    /// Returns the attribute value of the component (for attribute selectors).
+    #[cxx_name = "tryGetComponentAttributeValue"]
+    fn try_get_component_attribute_value(component: &PrismComponent) -> String;
+
+    /// Returns the attribute operator of the component (for attribute selectors).
+    #[cxx_name = "tryGetComponentAttributeOperator"]
+    fn try_get_component_attribute_operator(component: &PrismComponent) -> AttributeSelectorOperator;
 
     /// Returns the component list length.
     #[cxx_name = "getComponentListLength"]
@@ -1359,6 +1405,30 @@ fn get_component_pseudo_class_type(component: &PrismComponent) -> ffi::PseudoCla
   }
 }
 
+fn try_get_component_attribute_name(component: &PrismComponent) -> String {
+  if let Some(attribute_name) = &component.attribute_name {
+    attribute_name.clone()
+  } else {
+    String::new()
+  }
+}
+
+fn try_get_component_attribute_value(component: &PrismComponent) -> String {
+  if let Some(attribute_value) = &component.attribute_value {
+    attribute_value.clone()
+  } else {
+    String::new()
+  }
+}
+
+fn try_get_component_attribute_operator(component: &PrismComponent) -> ffi::AttributeSelectorOperator {
+  if let Some(attribute_operator) = component.attribute_operator {
+    attribute_operator
+  } else {
+    ffi::AttributeSelectorOperator::Equal // Default fallback
+  }
+}
+
 fn get_component_list_len(list: &PrismComponentList) -> usize {
   list.len()
 }
@@ -1664,17 +1734,141 @@ mod tests {
 
     // Test attribute selectors
     {
+      // Attribute existence
       let s = parser.parse_selectors("[data-test]");
       assert!(s.is_some());
       println!("[data-test]: {:?}", s.unwrap());
 
+      // Exact value match
       let s = parser.parse_selectors("[data-test=value]");
       assert!(s.is_some());
       println!("[data-test=value]: {:?}", s.unwrap());
 
+      // Whitespace-separated token match
       let s = parser.parse_selectors("div[class~=active]");
       assert!(s.is_some());
       println!("div[class~=active]: {:?}", s.unwrap());
+
+      // Dash-separated match
+      let s = parser.parse_selectors("[lang|=en]");
+      assert!(s.is_some());
+      println!("[lang|=en]: {:?}", s.unwrap());
+
+      // Prefix match
+      let s = parser.parse_selectors("[data-url^=https]");
+      assert!(s.is_some());
+      println!("[data-url^=https]: {:?}", s.unwrap());
+
+      // Suffix match
+      let s = parser.parse_selectors("[src$=\".jpg\"]");
+      if s.is_some() {
+        println!("[src$=\".jpg\"]: {:?}", s.unwrap());
+      } else {
+        println!("[src$=\".jpg\"]: failed to parse");
+      }
+
+      // Substring match
+      let s = parser.parse_selectors("[title*=example]");
+      if s.is_some() {
+        println!("[title*=example]: {:?}", s.unwrap());
+      } else {
+        println!("[title*=example]: failed to parse");
+      }
+
+      // Complex selector with attribute
+      let s = parser.parse_selectors("div.container[data-role=main]");
+      if s.is_some() {
+        println!("div.container[data-role=main]: {:?}", s.unwrap());
+      } else {
+        println!("div.container[data-role=main]: failed to parse");
+      }
     }
+  }
+
+  #[test]
+  fn test_attribute_selectors() {
+    use crate::css_parser::ffi::{SelectorComponentType, AttributeSelectorOperator};
+    
+    let parser = CSSParser::default();
+
+    // Test [attr] - attribute existence
+    let s = parser.parse_selectors("[data-test]").unwrap();
+    assert_eq!(s.len(), 1);
+    let selector = s.item(0).unwrap();
+    let components = selector.components;
+    assert_eq!(components.len(), 1);
+    let component = components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeExists);
+    assert_eq!(component.attribute_name, Some("data-test".to_string()));
+    assert_eq!(component.attribute_value, None);
+
+    // Test [attr=val] - exact match
+    let s = parser.parse_selectors("[data-test=\"value\"]").unwrap();
+    assert_eq!(s.len(), 1);
+    let selector = s.item(0).unwrap();
+    let components = selector.components;
+    assert_eq!(components.len(), 1);
+    let component = components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_name, Some("data-test".to_string()));
+    assert_eq!(component.attribute_value, Some("\"value\"".to_string()));
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Equal));
+
+    // Test [attr~=val] - whitespace-separated token match
+    let s = parser.parse_selectors("[class~=\"active\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Includes));
+
+    // Test [attr|=val] - dash-separated match
+    let s = parser.parse_selectors("[lang|=\"en\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::DashMatch));
+
+    // Test [attr^=val] - prefix match
+    let s = parser.parse_selectors("[data-url^=\"https\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Prefix));
+
+    // Test [attr$=val] - suffix match
+    let s = parser.parse_selectors("[src$=\".jpg\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Suffix));
+
+    // Test [attr*=val] - substring match
+    let s = parser.parse_selectors("[title*=\"example\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Substring));
+
+    // Test complex selector with multiple components including attribute
+    let s = parser.parse_selectors("div.container[data-role=\"main\"]").unwrap();
+    let components = s.item(0).unwrap().components;
+    assert_eq!(components.len(), 3);
+    
+    // div
+    let div_component = components.item(0).unwrap();
+    assert_eq!(div_component.tag, SelectorComponentType::LocalName);
+    assert_eq!(div_component.name, Some("div".to_string()));
+    
+    // .container
+    let class_component = components.item(1).unwrap();
+    assert_eq!(class_component.tag, SelectorComponentType::Class);
+    assert_eq!(class_component.name, Some("container".to_string()));
+    
+    // [data-role="main"]
+    let attr_component = components.item(2).unwrap();
+    assert_eq!(attr_component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(attr_component.attribute_name, Some("data-role".to_string()));
+    assert_eq!(attr_component.attribute_value, Some("\"main\"".to_string()));
+    assert_eq!(attr_component.attribute_operator, Some(AttributeSelectorOperator::Equal));
   }
 }

@@ -11,14 +11,19 @@ pub(crate) struct Component {
   pub combinator: Option<crate::css_parser::ffi::SelectorComponentCombinator>,
   pub name: Option<String>,
   pub pseudo_class_type: Option<crate::css_parser::ffi::PseudoClassType>,
+  // Attribute selector data
+  pub attribute_name: Option<String>,
+  pub attribute_value: Option<String>,
+  pub attribute_operator: Option<crate::css_parser::ffi::AttributeSelectorOperator>,
 }
 
 impl Component {
   pub fn new(handle: &ComponentImpl) -> Self {
     use crate::css_parser::ffi::PseudoClassType;
     use crate::css_parser::ffi::SelectorComponentType;
+    use crate::css_parser::ffi::AttributeSelectorOperator;
 
-    Self {
+    let mut component = Self {
       tag: match handle {
         ComponentImpl::LocalName(_) => SelectorComponentType::LocalName,
         ComponentImpl::ID(_) => SelectorComponentType::ID,
@@ -30,6 +35,9 @@ impl Component {
         ComponentImpl::PseudoElement(_) => SelectorComponentType::PseudoElement,
         ComponentImpl::NonTSPseudoClass(_) => SelectorComponentType::PseudoClass,
         ComponentImpl::Combinator(_) => SelectorComponentType::Combinator,
+        ComponentImpl::AttributeInNoNamespaceExists { .. } => SelectorComponentType::AttributeExists,
+        ComponentImpl::AttributeInNoNamespace { .. } => SelectorComponentType::AttributeValue,
+        ComponentImpl::AttributeOther(_) => SelectorComponentType::AttributeValue,
         _ => SelectorComponentType::Unsupported,
       },
       combinator: match handle {
@@ -54,7 +62,54 @@ impl Component {
         }),
         _ => None,
       },
+
+      // Initialize attribute fields
+      attribute_name: None,
+      attribute_value: None,
+      attribute_operator: None,
+    };
+
+    // Fill in attribute selector information
+    match handle {
+      ComponentImpl::AttributeInNoNamespaceExists { local_name, .. } => {
+        component.attribute_name = Some(local_name.to_css_string());
+      }
+      ComponentImpl::AttributeInNoNamespace { local_name, operator, value, .. } => {
+        component.attribute_name = Some(local_name.to_css_string());
+        component.attribute_value = Some(value.to_css_string());
+        component.attribute_operator = Some(match operator {
+          selectors::attr::AttrSelectorOperator::Equal => AttributeSelectorOperator::Equal,
+          selectors::attr::AttrSelectorOperator::Includes => AttributeSelectorOperator::Includes,
+          selectors::attr::AttrSelectorOperator::DashMatch => AttributeSelectorOperator::DashMatch,
+          selectors::attr::AttrSelectorOperator::Prefix => AttributeSelectorOperator::Prefix,
+          selectors::attr::AttrSelectorOperator::Substring => AttributeSelectorOperator::Substring,
+          selectors::attr::AttrSelectorOperator::Suffix => AttributeSelectorOperator::Suffix,
+        });
+      }
+      ComponentImpl::AttributeOther(attr) => {
+        // For namespaced attributes, extract what we can
+        component.attribute_name = Some(attr.local_name.to_css_string());
+        match &attr.operation {
+          selectors::attr::ParsedAttrSelectorOperation::Exists => {
+            // This is an [attr] selector without a value
+          }
+          selectors::attr::ParsedAttrSelectorOperation::WithValue { operator, case_sensitivity: _, value } => {
+            component.attribute_value = Some(value.to_css_string());
+            component.attribute_operator = Some(match operator {
+              selectors::attr::AttrSelectorOperator::Equal => AttributeSelectorOperator::Equal,
+              selectors::attr::AttrSelectorOperator::Includes => AttributeSelectorOperator::Includes,
+              selectors::attr::AttrSelectorOperator::DashMatch => AttributeSelectorOperator::DashMatch,
+              selectors::attr::AttrSelectorOperator::Prefix => AttributeSelectorOperator::Prefix,
+              selectors::attr::AttrSelectorOperator::Substring => AttributeSelectorOperator::Substring,
+              selectors::attr::AttrSelectorOperator::Suffix => AttributeSelectorOperator::Suffix,
+            });
+          }
+        }
+      }
+      _ => {}
     }
+
+    component
   }
 }
 
