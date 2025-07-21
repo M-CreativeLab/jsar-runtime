@@ -1912,12 +1912,12 @@ private:
     size_t matrixValuesSize = req->values.size();
 
     /**
-     * NOTE(yorkie): Only the `XRFrame` pass can use the computation graph to compute the matrix values.
-     * 
+     * NOTE(yorkie): Only the `XRFrame` and `Offscreen` pass can use the computation graph to compute the matrix values.
+     *
      * Computation graph is a feature to allow the content to use the host's live values to set the uniform matrices
      * in XRFrame pass to avoid the latency of the XR session. Therefore, we should disable using it for other passes.
      */
-    if (options.isXRFramePass() &&
+    if ((options.isXRFramePass() || options.isOffscreenPass()) &&
         deviceFrame != nullptr &&
         req->isComputationGraph())
     {
