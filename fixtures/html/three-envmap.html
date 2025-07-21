@@ -62,65 +62,46 @@
       renderer.setAnimationLoop(() => renderer.render(scene, camera));
     }
 
-    async function loadCubeTextureWithMipmaps() {
-      const path = 'https://threejs.org/examples/textures/cube/angus/';
-      const format = '.jpg';
-      const mipmaps = [];
-      const maxLevel = 8;
-
-      async function loadCubeTexture(urls) {
-        return new Promise(function (resolve) {
-          new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
-            resolve(cubeTexture);
-          });
-        });
-      }
-
-      // load mipmaps
-      const pendings = [];
-
-      for (let level = 0; level <= maxLevel; ++level) {
-        const urls = [];
-        for (let face = 0; face < 6; ++face) {
-          urls.push(path + 'cube_m0' + level + '_c0' + face + format);
-        }
-
-        const mipmapLevel = level;
-        pendings.push(loadCubeTexture(urls).then(function (cubeTexture) {
-          mipmaps[mipmapLevel] = cubeTexture;
-        }));
-      }
-
-      await Promise.all(pendings);
-
-      const customizedCubeTexture = mipmaps.shift();
-      customizedCubeTexture.mipmaps = mipmaps;
-      customizedCubeTexture.colorSpace = THREE.SRGBColorSpace;
-      customizedCubeTexture.minFilter = THREE.LinearMipMapLinearFilter;
-      customizedCubeTexture.magFilter = THREE.LinearFilter;
-      customizedCubeTexture.generateMipmaps = false;
-      customizedCubeTexture.needsUpdate = true;
-      return customizedCubeTexture;
+    async function loadCubeTexture() {
+      const loader = new THREE.CubeTextureLoader();
+      loader.setPath('https://threejs.org/examples/textures/cube/Bridge2/');
+      return loader.load(['posx.jpg', 'negx.jpg', 'posy.jpg', 'negy.jpg', 'posz.jpg', 'negz.jpg']);
     }
 
     init(async () => {
-      const cubeTexture = await loadCubeTextureWithMipmaps();
-      console.info('loaded cube texture', cubeTexture);
-      scene.environment = cubeTexture;
+      const envMap = await loadCubeTexture();
+      // scene.background = envMap;
+      // scene.environment = envMap;
 
       //model
       const sphere = new THREE.SphereGeometry(0.5, 128, 128);
-      let material = new THREE.MeshPhysicalMaterial({
+      const material = new THREE.MeshBasicMaterial({
         color: 0xffffff,
-        metalness: 0.5,
-        roughness: 0.1,
-        envMap: cubeTexture,
-        envMapIntensity: 1.0,
+        envMap,
       });
 
       let mesh = new THREE.Mesh(sphere, material);
       mesh.position.set(-0.5, 0, -1.5);
       scene.add(mesh);
+
+      const sphere2 = new THREE.SphereGeometry(0.5, 128, 128);
+      const pbrMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.2,
+        roughness: 0.0,
+        ior: 1.5,
+        specularIntensity: 1.0,
+        specularColor: new THREE.Color(0xffffff),
+        envMap,
+        envMapIntensity: 1.0,
+        transmission: 1,
+        side: THREE.DoubleSide,
+        transparent: true,
+      });
+
+      let mesh2 = new THREE.Mesh(sphere2, pbrMaterial);
+      mesh2.position.set(0.5, 0, -1.5);
+      scene.add(mesh2);
     });
   </script>
 </head>
