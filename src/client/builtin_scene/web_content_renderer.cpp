@@ -7,6 +7,7 @@
 #include <skia/include/core/SkColor.h>
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
+#include <skia/include/effects/SkGradientShader.h>
 #include <client/layout/fragment.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/cssom/values/generics/border.hpp>
@@ -61,40 +62,75 @@ namespace builtin_scene::web_renderer
   optional<SkPaint> drawBackground(SkCanvas *canvas,
                                    SkRRect &originalRRect,
                                    const client_layout::Fragment &fragment,
-                                   const client_cssom::ComputedStyle &style)
+                                   const client_cssom::ComputedStyle &style,
+                                   bool &textureRequired)
   {
+    optional<SkPaint> fillPaint = nullopt;
+
+    // Mark the texture as not required by default.
+    textureRequired = false;
+
+    // TODO(yorkie): Skip if there is no color or image?
+    SkRRect roundedRect;
+    {
+      const SkRect &originalRect = originalRRect.rect();
+      float insetTop = fragment.border().top();
+      float insetRight = fragment.border().right();
+      float insetBottom = fragment.border().bottom();
+      float insetLeft = fragment.border().left();
+
+      SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
+                                     originalRect.fTop + insetTop,
+                                     originalRect.width() - insetLeft - insetRight,
+                                     originalRect.height() - insetTop - insetBottom);
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+        radii[i] = originalRRect.radii(static_cast<SkRRect::Corner>(i));
+      roundedRect.setRectRadii(rect, radii);
+    }
+
     if (style.hasBackgroundColor())
     {
       auto color = style.backgroundColor().resolveToAbsoluteColor();
 
-      SkPaint fillPaint;
-      fillPaint.setColor(color);
-      fillPaint.setAntiAlias(true);
-      fillPaint.setStyle(SkPaint::kFill_Style);
-      {
-        const SkRect &originalRect = originalRRect.rect();
-        float insetTop = fragment.border().top();
-        float insetRight = fragment.border().right();
-        float insetBottom = fragment.border().bottom();
-        float insetLeft = fragment.border().left();
+      fillPaint = make_optional<SkPaint>();
+      fillPaint->setColor(color);
+      fillPaint->setAntiAlias(true);
+      fillPaint->setStyle(SkPaint::kFill_Style);
+      canvas->drawRRect(roundedRect, fillPaint.value());
+    }
 
-        SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
-                                       originalRect.fTop + insetTop,
-                                       originalRect.width() - insetLeft - insetRight,
-                                       originalRect.height() - insetTop - insetBottom);
-        SkRRect roundedRect;
-        SkVector radii[4];
-        for (int i = 0; i < 4; i++)
-          radii[i] = originalRRect.radii(static_cast<SkRRect::Corner>(i));
-        roundedRect.setRectRadii(rect, radii);
-        canvas->drawRRect(roundedRect, fillPaint);
-      }
-      return fillPaint;
-    }
-    else
+    if (style.hasBackgroundImage())
     {
-      return nullopt;
+      // Init the fill paint if it hasn't been set yet.
+      if (!fillPaint.has_value())
+        fillPaint = make_optional<SkPaint>();
+
+      // Defaultly, we draw a linear gradient as a placeholder.
+      {
+        // TODO(yorkie): implement drawing from ComputedStyle's background image.
+        const SkPoint pts[2] = {
+          SkPoint::Make(originalRRect.rect().fLeft, originalRRect.rect().fTop),
+          SkPoint::Make(originalRRect.rect().fRight, originalRRect.rect().fBottom)};
+        const SkColor4f colors[] = {
+          SkColor4f::FromColor(SkColorSetARGB(255, 255, 0, 0)),
+          SkColor4f::FromColor(SkColorSetARGB(255, 0, 0, 255))};
+        const SkScalar pos[] = {0.0f, 1.0f};
+        sk_sp<SkShader> shader = SkGradientShader::MakeLinear(pts,
+                                                              colors,
+                                                              SkColorSpace::MakeSRGB(),
+                                                              pos,
+                                                              2,
+                                                              SkTileMode::kClamp);
+        fillPaint->setShader(shader);
+        fillPaint->setAntiAlias(true);
+        fillPaint->setStyle(SkPaint::kFill_Style);
+      }
+      canvas->drawRRect(roundedRect, fillPaint.value());
+      // Texture is required for background image.
+      textureRequired = true;
     }
+    return fillPaint;
   }
 
   // Compute the radius for a specific corner of the rounded rectangle.
@@ -329,12 +365,12 @@ namespace builtin_scene::web_renderer
     SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
-    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style);
+    bool textureRequired = false;
+    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style, textureRequired);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
-      if (fillPaint.getStyle() == SkPaint::kFill_Style &&
-          !drawRoundedRect) // Disable using texture if the background is not rounded.
+      if (!textureRequired && !drawRoundedRect) // Disable using texture if the background is not rounded.
       {
         content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <sstream>
 #include <glm/glm.hpp>
 #include <skia/include/core/SkColor.h>
 #include <client/cssom/style_traits.hpp>

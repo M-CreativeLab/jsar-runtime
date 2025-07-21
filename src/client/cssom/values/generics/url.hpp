@@ -10,11 +10,11 @@ namespace client_cssom::values::generics
     using T = GenericUrlOrNone<U>;
 
   public:
-    T None()
+    static T None()
     {
       return T();
     }
-    T Url(const U &url)
+    static T Url(const U &url)
     {
       return T(url);
     }
