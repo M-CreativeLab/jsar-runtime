@@ -1,7 +1,6 @@
 #include <client/dom/element.hpp>
 #include <client/dom/document.hpp>
 #include <client/dom/network_status_monitor.hpp>
-#include <client/bindings/network_bindings.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
 #include <client/cssom/values/computed/context.hpp>
@@ -22,9 +21,6 @@ namespace browser
   {
     // Initialize network event monitoring
     initializeNetworkEvents();
-    
-    // Register this window with the bindings system
-    bindings::setCurrentWindow(this);
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
