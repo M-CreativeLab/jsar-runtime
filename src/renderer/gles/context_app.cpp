@@ -370,7 +370,14 @@ void ContextGLApp::activeTexture(GLenum unit)
 
 void ContextGLApp::bindTexture(GLenum target, uint32_t id, GLuint &texture)
 {
-  texture = ObjectManagerRef().FindTexture(id);
+  if (id == 0)
+  {
+    texture = 0;
+  }
+  else
+  {
+    texture = ObjectManagerRef().FindTexture(id);
+  }
   glBindTexture(target, texture);
   onTextureBindingChanged(target, texture);
 }

@@ -354,7 +354,7 @@ private:
     {
       GLint activatedUnit;
       glGetIntegerv(GL_ACTIVE_TEXTURE, &activatedUnit);
-      DEBUG(logTag, "    Active Texture Unit: %d", activatedUnit - GL_TEXTURE0);
+      DEBUG(logTag, "    Active Texture Unit(TEXTURE%d)", activatedUnit - GL_TEXTURE0);
 
       GLint maxTextureUnits;
       glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
@@ -364,7 +364,16 @@ private:
         glActiveTexture(GL_TEXTURE0 + i);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &textureId);
         if (textureId != 0)
-          DEBUG(logTag, "      TEXTURE%d: texture(%d)", i, textureId);
+        {
+          DEBUG(logTag, "      TEXTURE%d: texture(TEXTURE_2D, %d)", i, textureId);
+          continue;
+        }
+        glGetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, &textureId);
+        if (textureId != 0)
+        {
+          DEBUG(logTag, "      TEXTURE%d: texture(TEXTURE_2D_ARRAY, %d)", i, textureId);
+          continue;
+        }
       }
       glActiveTexture(activatedUnit); // Restore the active texture unit
     }
@@ -1186,7 +1195,10 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
     {
       stringstream res_ss;
-      res_ss << "texture(" << texture << ")";
+      if (texture != 0)
+        res_ss << "texture(" << texture << ")";
+      else
+        res_ss << "texture(none)";
       PrintDebugInfo(req, res_ss.str().c_str(), nullptr, options);
     }
   }
@@ -1256,7 +1268,7 @@ private:
       req->pixelType,
       req->pixels);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", options.isDefaultQueue(), req->target);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCopyTexImage2D(CopyTextureImage2DCommandBufferRequest *req,
                                        renderer::TrContentRenderer *reqContentRenderer,
@@ -1272,7 +1284,7 @@ private:
       req->height,
       req->border);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CopyTexImage2D: %d", options.isDefaultQueue(), req->target);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnCopyTexSubImage2D(CopyTextureSubImage2DCommandBufferRequest *req,
                                           renderer::TrContentRenderer *reqContentRenderer,
@@ -1288,7 +1300,7 @@ private:
       req->width,
       req->height);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::CopyTexSubImage2D: %d", options.isDefaultQueue(), req->target);
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnTexParameteri(TextureParameteriCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -1375,17 +1387,9 @@ private:
     auto width = req->width;
     auto height = req->height;
     glTexStorage2D(target, levels, internalformat, width, height);
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::TexStorage2D(target=0x%x, levels=%d, internalformat=0x%x, size=[%d,%d])",
-            options.isDefaultQueue(),
-            target,
-            levels,
-            internalformat,
-            width,
-            height);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnTexStorage3D(TextureStorage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
@@ -1396,18 +1400,9 @@ private:
     auto height = req->height;
     auto depth = req->depth;
     glTexStorage3D(target, levels, internalformat, width, height, depth);
+
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      DEBUG(DEBUG_TAG,
-            "[%d] GL::TexStorage3D(target=0x%x, levels=%d, internalformat=0x%x, size=[%d,%d,%d])",
-            options.isDefaultQueue(),
-            target,
-            levels,
-            internalformat,
-            width,
-            height,
-            depth);
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnEnableVertexAttribArray(EnableVertexAttribArrayCommandBufferRequest *req,
                                                 renderer::TrContentRenderer *reqContentRenderer,

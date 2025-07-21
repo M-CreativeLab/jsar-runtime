@@ -1,0 +1,131 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Three.js: Cubemap-mipmap</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js",
+        "three/addons/": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    var camera, scene, renderer;
+    var container = {
+      width: 0,
+      height: 0
+    };
+
+    async function init(cb) {
+      container.width = window.innerWidth;
+      container.height = window.innerHeight;
+
+      camera = new THREE.PerspectiveCamera(65, container.width / container.height, 1, 2000);
+      camera.position.z = 2000;
+      camera.position.y = 400;
+      camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
+      scene = new THREE.Scene();
+
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(0, 1, 0);
+      scene.add(light);
+
+      const gl = navigator.gl;
+      const session = await navigator.xr.requestSession('immersive-ar', {});
+      const baseLayer = new XRWebGLLayer(session, gl);
+      session.updateRenderState({ baseLayer });
+
+      renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      renderer.xr.setSession(session);
+
+      try {
+        cb();
+      } catch (err) {
+        console.error('Error during initialization:', err);
+      }
+
+      // Start rendering
+      renderer.setAnimationLoop(() => renderer.render(scene, camera));
+    }
+
+    async function loadCubeTextureWithMipmaps() {
+      const path = 'https://threejs.org/examples/textures/cube/angus/';
+      const format = '.jpg';
+      const mipmaps = [];
+      const maxLevel = 8;
+
+      async function loadCubeTexture(urls) {
+        return new Promise(function (resolve) {
+          new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
+            resolve(cubeTexture);
+          });
+        });
+      }
+
+      // load mipmaps
+      const pendings = [];
+
+      for (let level = 0; level <= maxLevel; ++level) {
+        const urls = [];
+        for (let face = 0; face < 6; ++face) {
+          urls.push(path + 'cube_m0' + level + '_c0' + face + format);
+        }
+
+        const mipmapLevel = level;
+        pendings.push(loadCubeTexture(urls).then(function (cubeTexture) {
+          mipmaps[mipmapLevel] = cubeTexture;
+        }));
+      }
+
+      await Promise.all(pendings);
+
+      const customizedCubeTexture = mipmaps.shift();
+      customizedCubeTexture.mipmaps = mipmaps;
+      customizedCubeTexture.colorSpace = THREE.SRGBColorSpace;
+      customizedCubeTexture.minFilter = THREE.LinearMipMapLinearFilter;
+      customizedCubeTexture.magFilter = THREE.LinearFilter;
+      customizedCubeTexture.generateMipmaps = false;
+      customizedCubeTexture.needsUpdate = true;
+      return customizedCubeTexture;
+    }
+
+    init(async () => {
+      const cubeTexture = await loadCubeTextureWithMipmaps();
+      console.info('loaded cube texture', cubeTexture);
+      scene.environment = cubeTexture;
+
+      //model
+      const sphere = new THREE.SphereGeometry(0.5, 128, 128);
+      let material = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.5,
+        roughness: 0.1,
+        envMap: cubeTexture,
+        envMapIntensity: 1.0,
+      });
+
+      let mesh = new THREE.Mesh(sphere, material);
+      mesh.position.set(-0.5, 0, -1.5);
+      scene.add(mesh);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
