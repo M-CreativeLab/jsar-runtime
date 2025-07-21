@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Transform Validation Test</title>
+  <style>
+    /* Test CSS parsing for new transform functions */
+    
+    /* Scale transforms */
+    .scale-test { transform: scale(1.5); }
+    .scale3d-test { transform: scale3d(1.5, 0.8, 2.0); }
+    .scalex-test { transform: scaleX(2.0); }
+    .scaley-test { transform: scaleY(0.5); }
+    .scalez-test { transform: scaleZ(1.5); }
+    
+    /* Rotation transforms */
+    .rotate-test { transform: rotate(45deg); }
+    .rotate3d-test { transform: rotate3d(1, 1, 0, 45deg); }
+    .rotatex-test { transform: rotateX(90deg); }
+    .rotatey-test { transform: rotateY(60deg); }
+    .rotatez-test { transform: rotateZ(30deg); }
+    
+    /* Combined transforms */
+    .combined-test { 
+      transform: translate3d(50px, 50px, 100px) rotate(45deg) scale(1.2);
+    }
+    
+    /* Complex combinations */
+    .complex-test {
+      transform: 
+        translateX(100px) 
+        translateZ(50px) 
+        rotateY(45deg) 
+        scaleX(1.5) 
+        scaleZ(0.8);
+    }
+    
+    /* Test different angle units */
+    .rotate-rad { transform: rotate(0.785rad); } /* ~45deg */
+    .rotate-grad { transform: rotate(50grad); } /* 45deg */
+    .rotate-turn { transform: rotate(0.125turn); } /* 45deg */
+  </style>
+</head>
+<body>
+  <h1>Transform Validation Test</h1>
+  <p>This page tests CSS parsing for the new scale and rotate transforms.</p>
+  
+  <div class="scale-test">Scale Test</div>
+  <div class="scale3d-test">Scale3D Test</div>
+  <div class="scalex-test">ScaleX Test</div>
+  <div class="scaley-test">ScaleY Test</div>
+  <div class="scalez-test">ScaleZ Test</div>
+  
+  <div class="rotate-test">Rotate Test</div>
+  <div class="rotate3d-test">Rotate3D Test</div>
+  <div class="rotatex-test">RotateX Test</div>
+  <div class="rotatey-test">RotateY Test</div>
+  <div class="rotatez-test">RotateZ Test</div>
+  
+  <div class="combined-test">Combined Test</div>
+  <div class="complex-test">Complex Test</div>
+  
+  <div class="rotate-rad">Rotate Radians</div>
+  <div class="rotate-grad">Rotate Gradians</div>
+  <div class="rotate-turn">Rotate Turns</div>
+
+  <script>
+    // Test that the CSS transforms are being parsed correctly
+    console.log('=== Transform Validation Test ===');
+    
+    const tests = [
+      'scale-test',
+      'scale3d-test', 
+      'scalex-test',
+      'scaley-test',
+      'scalez-test',
+      'rotate-test',
+      'rotate3d-test',
+      'rotatex-test',
+      'rotatey-test', 
+      'rotatez-test',
+      'combined-test',
+      'complex-test',
+      'rotate-rad',
+      'rotate-grad',
+      'rotate-turn'
+    ];
+    
+    tests.forEach(className => {
+      const element = document.querySelector(`.${className}`);
+      if (element) {
+        const computedStyle = window.getComputedStyle(element);
+        const transform = computedStyle.transform;
+        console.log(`${className}: ${transform}`);
+        
+        if (transform === 'none') {
+          console.warn(`⚠️  ${className} transform not applied - may indicate parsing issue`);
+        } else {
+          console.log(`✅ ${className} transform parsed successfully`);
+        }
+      }
+    });
+    
+    console.log('=== End Validation Test ===');
+  </script>
+</body>
+</html>
