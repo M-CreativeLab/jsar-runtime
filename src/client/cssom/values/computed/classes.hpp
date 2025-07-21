@@ -10,6 +10,7 @@
 #include "./easing.hpp"
 #include "./flex.hpp"
 #include "./font.hpp"
+#include "./image.hpp"
 #include "./length.hpp"
 #include "./length_percentage.hpp"
 #include "./percentage.hpp"

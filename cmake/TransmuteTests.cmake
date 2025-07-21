@@ -6,12 +6,6 @@ file(GLOB TR_CATCH2_SOURCE
 file(GLOB TR_COMMON_TESTS_SOURCE
     "tests/**/*_tests.cpp"
 )
-file(GLOB_RECURSE TR_CLIENT_BUILTIN_SCENE_SOURCE
-    "src/client/builtin_scene/*.cpp"
-)
-file(GLOB_RECURSE TR_PUGIXML_SOURCE
-    "src/pugixml/*.cpp"
-)
 
 # check for TR_BUILD_TESTS
 if (TR_BUILD_TESTS)
@@ -26,8 +20,6 @@ if (TR_BUILD_TESTS)
         ${TR_CATCH2_SOURCE}
         ${TR_COMMON_SOURCE}
         ${TR_COMMON_TESTS_SOURCE}
-        ${TR_CLIENT_BUILTIN_SCENE_SOURCE}
-        ${TR_PUGIXML_SOURCE}
         tests/runtime.cpp
         tests/math.cpp
     )
@@ -35,6 +27,11 @@ if (TR_BUILD_TESTS)
         PRIVATE
         ${CMAKE_SOURCE_DIR}/tests
         ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include
+    )
+    add_dependencies(TransmuteUnitTests TransmuteClientLibrary)
+    target_link_libraries(TransmuteUnitTests
+        PRIVATE
+        TransmuteClientLibrary
     )
 
     # Add tests

@@ -397,6 +397,11 @@ namespace client_cssom
       background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
       bitfields_.SetHasBackgroundColor(true);
     }
+    else if (name == "background-image")
+    {
+      background_image_ = Parse::ParseSingleValue<values::specified::Image>(value).toComputedValue(context);
+      bitfields_.SetHasBackgroundImage(true);
+    }
 
     // Flexbox
     else if (name == "flex-direction")
