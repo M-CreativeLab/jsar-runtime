@@ -3,6 +3,7 @@
 #include "./align.hpp"
 #include "./angle.hpp"
 #include "./animation.hpp"
+#include "./background.hpp"
 #include "./border.hpp"
 #include "./box.hpp"
 #include "./common.hpp"
