@@ -8,6 +8,7 @@
 #include "./constellation.hpp"
 #include "./inspector_server.hpp"
 #include "./inspector_client.hpp"
+#include "./cdp_handler.hpp"
 
 class TrInspector final : public std::enable_shared_from_this<TrInspector>
 {
@@ -46,4 +47,5 @@ public:
 
 private:
   std::unique_ptr<TrInspectorServer> server_;
+  std::unique_ptr<CdpHandler> cdpHandler_;
 };
