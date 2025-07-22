@@ -384,6 +384,14 @@ namespace client_cssom
     {
       return bitfields_.HasBackgroundImage();
     }
+    inline const values::computed::BackgroundBlendMode &backgroundBlendMode() const
+    {
+      return background_blend_mode_;
+    }
+    inline const values::computed::BackgroundClip &backgroundClip() const
+    {
+      return background_clip_;
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -515,6 +523,8 @@ namespace client_cssom
     // Background
     values::computed::Color background_color_ = values::computed::Color::Transparent();
     values::computed::Image background_image_ = values::computed::Image::None();
+    values::computed::BackgroundBlendMode background_blend_mode_ = values::computed::BackgroundBlendMode::Normal();
+    values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
 
     // 3D Transforms
     values::computed::Transform transform_;

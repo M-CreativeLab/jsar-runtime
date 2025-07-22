@@ -14,6 +14,7 @@
 #include "./values/specified/position.hpp"
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
+#include "./values/specified/background.hpp"
 
 namespace client_cssom
 {
@@ -401,6 +402,15 @@ namespace client_cssom
     {
       background_image_ = Parse::ParseSingleValue<values::specified::Image>(value).toComputedValue(context);
       bitfields_.SetHasBackgroundImage(true);
+    }
+    else if (name == "background-blend-mode")
+    {
+      background_blend_mode_ = Parse::ParseSingleValue<values::specified::BackgroundBlendMode>(value)
+                                 .toComputedValue(context);
+    }
+    else if (name == "background-clip")
+    {
+      background_clip_ = Parse::ParseSingleValue<values::specified::BackgroundClip>(value).toComputedValue(context);
     }
 
     // Flexbox

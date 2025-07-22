@@ -110,6 +110,10 @@ namespace builtin_scene::web_renderer
       if (!fillPaint.has_value())
         fillPaint = make_optional<SkPaint>();
 
+      // Set the blend mode for the paint if the background blend mode is not normal.
+      if (!style.backgroundBlendMode().isNormal())
+        fillPaint->setBlendMode(style.backgroundBlendMode());
+
       const auto &image = style.backgroundImage();
       if (image.isUrl())
       {
