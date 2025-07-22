@@ -14,8 +14,7 @@
 #include "./values/specified/position.hpp"
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
-#include "./values/specified/background_blend_mode.hpp"
-#include "./values/specified/background_clip.hpp"
+#include "./values/specified/background.hpp"
 
 namespace client_cssom
 {

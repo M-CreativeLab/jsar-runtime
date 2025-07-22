@@ -2,7 +2,6 @@
 
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/specified/box.hpp>
-#include <client/cssom/values/computed/background.hpp>
 #include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/computed/length.hpp>
 

@@ -11,8 +11,6 @@ namespace client_cssom::values::generics
                                      public ToCss,
                                      public ToComputedValue<T>
   {
-    friend class Parse;
-
   protected:
     enum Tag : uint8_t
     {
@@ -112,43 +110,6 @@ namespace client_cssom::values::generics
     {
     }
 
-    bool parse(const std::string &input) override
-    {
-      if (input == "normal")
-        tag_ = kNormal;
-      else if (input == "multiply")
-        tag_ = kMultiply;
-      else if (input == "screen")
-        tag_ = kScreen;
-      else if (input == "overlay")
-        tag_ = kOverlay;
-      else if (input == "darken")
-        tag_ = kDarken;
-      else if (input == "lighten")
-        tag_ = kLighten;
-      else if (input == "color-dodge")
-        tag_ = kColorDodge;
-      else if (input == "color-burn")
-        tag_ = kColorBurn;
-      else if (input == "hard-light")
-        tag_ = kHardLight;
-      else if (input == "soft-light")
-        tag_ = kSoftLight;
-      else if (input == "difference")
-        tag_ = kDifference;
-      else if (input == "exclusion")
-        tag_ = kExclusion;
-      else if (input == "hue")
-        tag_ = kHue;
-      else if (input == "saturation")
-        tag_ = kSaturation;
-      else if (input == "color")
-        tag_ = kColor;
-      else if (input == "luminosity")
-        tag_ = kLuminosity;
-      return true;
-    }
-
   public:
     std::string toCss() const override
     {
@@ -209,8 +170,6 @@ namespace client_cssom::values::generics
                                 public ToCss,
                                 public ToComputedValue<T>
   {
-    friend class Parse;
-
   protected:
     enum Tag : uint8_t
     {
@@ -248,19 +207,6 @@ namespace client_cssom::values::generics
     GenericBackgroundClip(Tag tag)
         : tag_(tag)
     {
-    }
-
-    bool parse(const std::string &input) override
-    {
-      if (input == "border-box")
-        tag_ = kBorderBox;
-      else if (input == "padding-box")
-        tag_ = kPaddingBox;
-      else if (input == "content-box")
-        tag_ = kContentBox;
-      else if (input == "text")
-        tag_ = kText;
-      return true;
     }
 
   public:
