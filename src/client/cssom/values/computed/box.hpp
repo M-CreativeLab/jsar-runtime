@@ -2,6 +2,8 @@
 
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/specified/box.hpp>
+#include <client/cssom/values/specified/background_blend_mode.hpp>
+#include <client/cssom/values/specified/background_clip.hpp>
 #include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/computed/length.hpp>
 
@@ -10,6 +12,8 @@ namespace client_cssom::values::computed
   using Display = specified::Display;
   using BoxSizing = specified::BoxSizing;
   using Overflow = specified::Overflow;
+  using BackgroundBlendMode = specified::BackgroundBlendMode;
+  using BackgroundClip = specified::BackgroundClip;
 
   class Padding : public generics::Rect<LengthPercentage>
   {

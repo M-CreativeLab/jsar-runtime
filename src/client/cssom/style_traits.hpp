@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <string>
+#include <vector>
 #include <glm/glm.hpp>
 #include <common/utility.hpp>
 
