@@ -60,8 +60,8 @@ namespace client_cssom::values::computed
     bool isUrlImageLoaded() const;
     bool isUrlImageLoadingOrLoaded() const;
     void startLoadingUrlImage();
-    void setUrlImageData(const void* data, size_t length);
-    const std::vector<char>& getUrlImageData() const
+    void setUrlImageData(const void *data, size_t length);
+    const std::vector<char> &getUrlImageData() const
     {
       return url_image_data_;
     }
