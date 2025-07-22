@@ -219,7 +219,13 @@ namespace builtin_scene
     else
       texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
 
-    assert(texture_ != nullptr && "The texture must be valid.");
+    if (texture_ == nullptr) [[unlikely]]
+    {
+      cerr << "Failed to resize or initialize the texture for WebContent: " << name_ << endl
+           << "  expected size: " << w << "x" << h << endl
+           << "  device pixel ratio: " << device_pixel_ratio_ << endl;
+      assert(false && "Failed to resize or initialize the texture.");
+    }
     return texture_;
   }
 

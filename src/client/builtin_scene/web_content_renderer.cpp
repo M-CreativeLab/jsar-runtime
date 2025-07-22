@@ -73,11 +73,14 @@ namespace builtin_scene::web_renderer
     // TODO(yorkie): Skip if there is no color or image?
     SkRRect roundedRect;
     {
+      // The offset factor is used to adjust the rectangle size for the background, this is to ensure that there are no
+      // gaps between the background and the border.
+      static float offsetFactor = 0.8;
       const SkRect &originalRect = originalRRect.rect();
-      float insetTop = fragment.border().top();
-      float insetRight = fragment.border().right();
-      float insetBottom = fragment.border().bottom();
-      float insetLeft = fragment.border().left();
+      float insetTop = fragment.border().top() * offsetFactor;
+      float insetRight = fragment.border().right() * offsetFactor;
+      float insetBottom = fragment.border().bottom() * offsetFactor;
+      float insetLeft = fragment.border().left() * offsetFactor;
 
       SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
                                      originalRect.fTop + insetTop,
