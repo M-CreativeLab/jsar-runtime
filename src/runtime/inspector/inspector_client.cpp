@@ -21,7 +21,7 @@
 #include <iomanip>
 
 #include "./inspector_client.hpp"
-#include "./inspector.hpp"
+#include "../inspector.hpp"
 
 using namespace std;
 

@@ -6,9 +6,9 @@
 #include <functional>
 
 #include "./constellation.hpp"
-#include "./inspector_server.hpp"
-#include "./inspector_client.hpp"
-#include "./cdp_handler.hpp"
+#include "./inspector/inspector_server.hpp"
+#include "./inspector/inspector_client.hpp"
+#include "./inspector/cdp_handler.hpp"
 
 class TrInspector final : public std::enable_shared_from_this<TrInspector>
 {

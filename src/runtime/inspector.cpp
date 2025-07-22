@@ -13,8 +13,8 @@
 #include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./embedder.hpp"
-#include "./cdp_runtime_domain.hpp"
-#include "./cdp_myexample_domain.hpp"
+#include "./inspector/cdp_runtime_domain.hpp"
+#include "./inspector/cdp_myexample_domain.hpp"
 
 using namespace std;
 using namespace std::placeholders;

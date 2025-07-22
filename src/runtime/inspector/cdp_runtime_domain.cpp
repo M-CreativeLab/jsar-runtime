@@ -1,6 +1,6 @@
 #include "./cdp_runtime_domain.hpp"
-#include "./constellation.hpp"
-#include "./embedder.hpp"
+#include "../constellation.hpp"
+#include "../embedder.hpp"
 #include "../common/debug.hpp"
 #include <rapidjson/document.h>
 
