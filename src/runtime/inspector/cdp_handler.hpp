@@ -33,6 +33,7 @@ class CdpDomainHandler
 public:
   virtual ~CdpDomainHandler() = default;
   virtual std::string handleMethod(const std::string &method, const CdpMessage &message) = 0;
+  virtual void addProtocolDefinition(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator) = 0;
 };
 
 // CDP Handler - Main coordinator for CDP message processing
@@ -47,6 +48,9 @@ public:
 
   // Register a domain handler
   void registerDomain(const std::string &domain, std::unique_ptr<CdpDomainHandler> handler);
+
+  // Get protocol definitions from all registered domains
+  void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;

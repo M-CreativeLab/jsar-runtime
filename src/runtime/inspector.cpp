@@ -28,7 +28,7 @@ void TrInspector::initialize()
   
   // Register CDP domains
   cdpHandler_->registerDomain("Runtime", make_unique<CdpRuntimeDomain>(constellation));
-  cdpHandler_->registerDomain("MyExample", make_unique<CdpMyExampleDomain>());
+  cdpHandler_->registerDomain("Example", make_unique<CdpMyExampleDomain>());
   
   DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
 }
@@ -291,74 +291,10 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
   rapidjson::Value domains;
   domains.SetArray();
   
-  // Add Runtime domain
+  // Use CDP handler to populate protocol definitions from registered domains
+  if (cdpHandler_)
   {
-    rapidjson::Value runtimeDomain;
-    runtimeDomain.SetObject();
-    runtimeDomain.AddMember("domain", rapidjson::Value().SetString("Runtime", allocator), allocator);
-    runtimeDomain.AddMember("description", rapidjson::Value().SetString("Runtime domain exposes JavaScript runtime by means of remote evaluation and mirror objects.", allocator), allocator);
-    
-    rapidjson::Value commands;
-    commands.SetArray();
-    
-    // Runtime.enable
-    rapidjson::Value enableCmd;
-    enableCmd.SetObject();
-    enableCmd.AddMember("name", rapidjson::Value().SetString("enable", allocator), allocator);
-    enableCmd.AddMember("description", rapidjson::Value().SetString("Enables reporting of execution contexts creation.", allocator), allocator);
-    commands.PushBack(enableCmd, allocator);
-    
-    // Runtime.disable
-    rapidjson::Value disableCmd;
-    disableCmd.SetObject();
-    disableCmd.AddMember("name", rapidjson::Value().SetString("disable", allocator), allocator);
-    disableCmd.AddMember("description", rapidjson::Value().SetString("Disables reporting of execution contexts creation.", allocator), allocator);
-    commands.PushBack(disableCmd, allocator);
-    
-    // Runtime.getVersion
-    rapidjson::Value versionCmd;
-    versionCmd.SetObject();
-    versionCmd.AddMember("name", rapidjson::Value().SetString("getVersion", allocator), allocator);
-    versionCmd.AddMember("description", rapidjson::Value().SetString("Returns the JavaScript runtime version information.", allocator), allocator);
-    commands.PushBack(versionCmd, allocator);
-    
-    runtimeDomain.AddMember("commands", commands, allocator);
-    domains.PushBack(runtimeDomain, allocator);
-  }
-  
-  // Add MyExample domain
-  {
-    rapidjson::Value exampleDomain;
-    exampleDomain.SetObject();
-    exampleDomain.AddMember("domain", rapidjson::Value().SetString("MyExample", allocator), allocator);
-    exampleDomain.AddMember("description", rapidjson::Value().SetString("Sample domain for testing CDP connectivity and method invocation.", allocator), allocator);
-    
-    rapidjson::Value commands;
-    commands.SetArray();
-    
-    // MyExample.ping
-    rapidjson::Value pingCmd;
-    pingCmd.SetObject();
-    pingCmd.AddMember("name", rapidjson::Value().SetString("ping", allocator), allocator);
-    pingCmd.AddMember("description", rapidjson::Value().SetString("Simple ping command that responds with pong.", allocator), allocator);
-    commands.PushBack(pingCmd, allocator);
-    
-    // MyExample.echo
-    rapidjson::Value echoCmd;
-    echoCmd.SetObject();
-    echoCmd.AddMember("name", rapidjson::Value().SetString("echo", allocator), allocator);
-    echoCmd.AddMember("description", rapidjson::Value().SetString("Echoes back the provided parameters.", allocator), allocator);
-    commands.PushBack(echoCmd, allocator);
-    
-    // MyExample.getInfo
-    rapidjson::Value infoCmd;
-    infoCmd.SetObject();
-    infoCmd.AddMember("name", rapidjson::Value().SetString("getInfo", allocator), allocator);
-    infoCmd.AddMember("description", rapidjson::Value().SetString("Returns information about this domain.", allocator), allocator);
-    commands.PushBack(infoCmd, allocator);
-    
-    exampleDomain.AddMember("commands", commands, allocator);
-    domains.PushBack(exampleDomain, allocator);
+    cdpHandler_->addProtocolDefinitions(domains, allocator);
   }
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);

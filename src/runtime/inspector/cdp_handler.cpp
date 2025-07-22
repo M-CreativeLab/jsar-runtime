@@ -176,3 +176,11 @@ std::string CdpHandler::extractMethodName(const std::string &method)
   }
   return method.substr(dotPos + 1);
 }
+
+void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
+{
+  for (const auto &[domainName, handler] : domains_)
+  {
+    handler->addProtocolDefinition(domains, allocator);
+  }
+}

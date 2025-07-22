@@ -98,3 +98,45 @@ std::string CdpRuntimeDomain::evaluate(const CdpMessage &message)
 
   return CdpResponse::success(message.id, result);
 }
+
+void CdpRuntimeDomain::addProtocolDefinition(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
+{
+  rapidjson::Value runtimeDomain;
+  runtimeDomain.SetObject();
+  runtimeDomain.AddMember("domain", rapidjson::Value().SetString("Runtime", allocator), allocator);
+  runtimeDomain.AddMember("description", rapidjson::Value().SetString("Runtime domain exposes JavaScript runtime by means of remote evaluation and mirror objects.", allocator), allocator);
+  
+  rapidjson::Value commands;
+  commands.SetArray();
+  
+  // Runtime.enable
+  rapidjson::Value enableCmd;
+  enableCmd.SetObject();
+  enableCmd.AddMember("name", rapidjson::Value().SetString("enable", allocator), allocator);
+  enableCmd.AddMember("description", rapidjson::Value().SetString("Enables reporting of execution contexts creation.", allocator), allocator);
+  commands.PushBack(enableCmd, allocator);
+  
+  // Runtime.disable
+  rapidjson::Value disableCmd;
+  disableCmd.SetObject();
+  disableCmd.AddMember("name", rapidjson::Value().SetString("disable", allocator), allocator);
+  disableCmd.AddMember("description", rapidjson::Value().SetString("Disables reporting of execution contexts creation.", allocator), allocator);
+  commands.PushBack(disableCmd, allocator);
+  
+  // Runtime.getVersion
+  rapidjson::Value versionCmd;
+  versionCmd.SetObject();
+  versionCmd.AddMember("name", rapidjson::Value().SetString("getVersion", allocator), allocator);
+  versionCmd.AddMember("description", rapidjson::Value().SetString("Returns the JavaScript runtime version information.", allocator), allocator);
+  commands.PushBack(versionCmd, allocator);
+  
+  // Runtime.evaluate
+  rapidjson::Value evaluateCmd;
+  evaluateCmd.SetObject();
+  evaluateCmd.AddMember("name", rapidjson::Value().SetString("evaluate", allocator), allocator);
+  evaluateCmd.AddMember("description", rapidjson::Value().SetString("Evaluates expression on global object.", allocator), allocator);
+  commands.PushBack(evaluateCmd, allocator);
+  
+  runtimeDomain.AddMember("commands", commands, allocator);
+  domains.PushBack(runtimeDomain, allocator);
+}
