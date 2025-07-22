@@ -5,18 +5,19 @@
 class TrConstellation;
 
 // Runtime domain handler for CDP
-class CdpRuntimeDomain : public CdpDomainHandler {
+class CdpRuntimeDomain : public CdpDomainHandler
+{
 public:
-    CdpRuntimeDomain(TrConstellation* constellation);
-    
-    std::string handleMethod(const std::string& method, const CdpMessage& message) override;
+  CdpRuntimeDomain(TrConstellation *constellation);
+
+  std::string handleMethod(const std::string &method, const CdpMessage &message) override;
 
 private:
-    TrConstellation* constellation_;
-    
-    // Runtime domain methods
-    std::string enable(const CdpMessage& message);
-    std::string disable(const CdpMessage& message);
-    std::string getVersion(const CdpMessage& message);
-    std::string evaluate(const CdpMessage& message);
+  TrConstellation *constellation_;
+
+  // Runtime domain methods
+  std::string enable(const CdpMessage &message);
+  std::string disable(const CdpMessage &message);
+  std::string getVersion(const CdpMessage &message);
+  std::string evaluate(const CdpMessage &message);
 };
