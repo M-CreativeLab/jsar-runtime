@@ -7,9 +7,7 @@
 namespace client_cssom::values::generics
 {
   template <typename T>
-  class GenericBackgroundBlendMode : public Parse,
-                                     public ToCss,
-                                     public ToComputedValue<T>
+  class GenericBackgroundBlendMode : public ToCss
   {
   protected:
     enum Tag : uint8_t
@@ -151,11 +149,6 @@ namespace client_cssom::values::generics
       return "";
     }
 
-    T toComputedValue(computed::Context &) const override
-    {
-      return static_cast<const T &>(*this);
-    }
-
     inline bool isNormal() const
     {
       return tag_ == kNormal;
@@ -166,9 +159,7 @@ namespace client_cssom::values::generics
   };
 
   template <typename T>
-  class GenericBackgroundClip : public Parse,
-                                public ToCss,
-                                public ToComputedValue<T>
+  class GenericBackgroundClip : public ToCss
   {
   protected:
     enum Tag : uint8_t
@@ -224,11 +215,6 @@ namespace client_cssom::values::generics
         return "text";
       }
       return "";
-    }
-
-    T toComputedValue(computed::Context &) const override
-    {
-      return static_cast<const T &>(*this);
     }
 
     inline bool isBorderBox() const

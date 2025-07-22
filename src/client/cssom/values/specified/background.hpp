@@ -4,7 +4,9 @@
 
 namespace client_cssom::values::specified
 {
-  class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>
+  class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>,
+                              public Parse,
+                              public ToComputedValue<BackgroundBlendMode>
   {
     friend class Parse;
 
@@ -49,9 +51,16 @@ namespace client_cssom::values::specified
         return false;
       return true;
     }
+
+    BackgroundBlendMode toComputedValue(computed::Context &) const override
+    {
+      return *this;
+    }
   };
 
-  class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>
+  class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>,
+                         public Parse,
+                         public ToComputedValue<BackgroundClip>
   {
     friend class Parse;
 
@@ -71,6 +80,11 @@ namespace client_cssom::values::specified
       else
         return false;
       return true;
+    }
+
+    BackgroundClip toComputedValue(computed::Context &) const override
+    {
+      return *this;
     }
   };
 }

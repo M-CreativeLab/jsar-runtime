@@ -1,9 +1,9 @@
 #pragma once
 
-#include <client/cssom/values/specified/background.hpp>
+#include <client/cssom/values/generics/background.hpp>
 
 namespace client_cssom::values::computed
 {
-  using BackgroundBlendMode = specified::BackgroundBlendMode;
-  using BackgroundClip = specified::BackgroundClip;
+  using BackgroundBlendMode = generics::GenericBackgroundBlendMode<BackgroundBlendMode>;
+  using BackgroundClip = generics::GenericBackgroundClip<BackgroundClip>;
 }
