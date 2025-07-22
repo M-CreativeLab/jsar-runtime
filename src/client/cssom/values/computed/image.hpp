@@ -55,5 +55,19 @@ namespace client_cssom::values::computed
 
     // Get URL if it's a URL, otherwise return empty string
     std::string getUrl() const;
+
+    // Returns the url() `Image` starts loading image data or is already loaded.
+    bool isUrlImageLoaded() const;
+    bool isUrlImageLoadingOrLoaded() const;
+    void startLoadingUrlImage();
+    void setUrlImageData(const void* data, size_t length);
+    const std::vector<char>& getUrlImageData() const
+    {
+      return url_image_data_;
+    }
+
+  private:
+    std::vector<char> url_image_data_;
+    bool is_url_image_loading_ = false;
   };
 }

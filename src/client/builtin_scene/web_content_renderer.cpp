@@ -9,6 +9,7 @@
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
 #include <client/layout/fragment.hpp>
+#include <client/canvas/image_codec.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/cssom/values/generics/border.hpp>
 
@@ -109,7 +110,42 @@ namespace builtin_scene::web_renderer
       if (!fillPaint.has_value())
         fillPaint = make_optional<SkPaint>();
 
-      // Defaultly, we draw a linear gradient as a placeholder.
+      const auto &image = style.backgroundImage();
+      if (image.isUrl())
+      {
+        if (image.isUrlImageLoaded())
+        {
+          SkBitmap bitmap;
+          // TODO(yorkie): support decoding this async?
+          if (canvas::ImageCodec::Decode(image.getUrlImageData(),
+                                         bitmap,
+                                         image.getUrl()))
+          {
+            canvas->save();
+            {
+              canvas->clipRRect(roundedRect, true);
+
+              float w = roundedRect.rect().width();
+              float h = roundedRect.rect().height();
+              SkRect srcRect = SkRect::MakeWH(w, h);
+              SkRect dstRect = SkRect::MakeWH(w, h);
+              canvas->drawImageRect(bitmap.asImage(),
+                                    srcRect,
+                                    dstRect,
+                                    SkSamplingOptions(),
+                                    nullptr,
+                                    SkCanvas::kStrict_SrcRectConstraint);
+            }
+            canvas->restore();
+            textureRequired = true;
+          }
+        }
+        else
+        {
+          // NOTE(yorkie): If the image is not loaded yet, just wait for the image to be loaded.
+        }
+      }
+      else if (image.isGradient())
       {
         // TODO(yorkie): implement drawing from ComputedStyle's background image.
         const SkPoint pts[2] = {
@@ -128,10 +164,9 @@ namespace builtin_scene::web_renderer
         fillPaint->setShader(shader);
         fillPaint->setAntiAlias(true);
         fillPaint->setStyle(SkPaint::kFill_Style);
+        canvas->drawRRect(roundedRect, fillPaint.value());
+        textureRequired = true;
       }
-      canvas->drawRRect(roundedRect, fillPaint.value());
-      // Texture is required for background image.
-      textureRequired = true;
     }
     return fillPaint;
   }

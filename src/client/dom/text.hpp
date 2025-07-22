@@ -59,7 +59,7 @@ namespace dom
     {
       return adoptedStyle_ != nullptr;
     }
-    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
+    inline client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       return *adoptedStyle_;
     }

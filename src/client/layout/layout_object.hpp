@@ -188,7 +188,7 @@ namespace client_layout
     void destroy();
 
     std::optional<client_cssom::ComputedStyle> style() const;
-    const client_cssom::ComputedStyle &styleRef() const;
+    client_cssom::ComputedStyle &styleRef() const;
 
     // The struct to represent if two fragments has differences.
     struct FragmentDifference

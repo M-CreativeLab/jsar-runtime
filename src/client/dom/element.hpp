@@ -200,7 +200,7 @@ namespace dom
     {
       return adopted_style_ != nullptr;
     }
-    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
+    inline client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       assert(adopted_style_ != nullptr && "The adopted style should not be null.");
       return *adopted_style_;

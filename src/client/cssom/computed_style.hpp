@@ -372,6 +372,10 @@ namespace client_cssom
     {
       return bitfields_.HasBackgroundColor();
     }
+    inline values::computed::Image &backgroundImage()
+    {
+      return background_image_;
+    }
     inline const values::computed::Image &backgroundImage() const
     {
       return background_image_;

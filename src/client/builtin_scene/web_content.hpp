@@ -124,6 +124,10 @@ namespace builtin_scene
     bool resetSkSurface(float width, float height);
     SkCanvas *canvas() const;
 
+    inline client_cssom::ComputedStyle &style()
+    {
+      return style_;
+    }
     inline const client_cssom::ComputedStyle &style() const
     {
       return style_;

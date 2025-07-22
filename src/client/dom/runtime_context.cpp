@@ -115,7 +115,7 @@ namespace dom
                                                     const BufferResponseCallback &responseCallback,
                                                     const optional<ErrorCallback> errorCallback)
   {
-    auto onResponse = [responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
+    auto onResponse = [url, responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
     {
       auto isolate = info.GetIsolate();
       auto context = isolate->GetCurrentContext();
