@@ -1,4 +1,11 @@
 #include <memory>
+#include <string>
+#include <map>
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include <rapidjson/document.h>
 #include <renderer/renderer.hpp>
 
@@ -34,6 +41,7 @@ void TrInspector::onRequest(TrInspectorClient &requestClient)
   if (requestUrl.size() > 1 && requestUrl.back() == '/')
     requestUrl.pop_back();
 
+  map<string, string> params;
   if (requestUrl == "/json/version")
   {
     handleRequest(std::bind(&TrInspector::getVersion, this, _1), requestClient);
@@ -52,9 +60,98 @@ void TrInspector::onRequest(TrInspectorClient &requestClient)
   {
     handleRequest(std::bind(&TrInspector::getStatistics, this, _1), requestClient);
   }
+  else if (matchRoute(requestUrl, "/:id/logs/stdout", params))
+  {
+    handleRequest(std::bind(&TrInspector::printContentLog, this, params["id"], "out"), requestClient);
+  }
+  else if (matchRoute(requestUrl, "/:id/logs/stderr", params))
+  {
+    handleRequest(std::bind(&TrInspector::printContentLog, this, params["id"], "err"), requestClient);
+  }
   else
   {
     requestClient.respond(404, "Not Found");
+  }
+}
+
+bool TrInspector::matchRoute(const string &url, const string &pattern, map<string, string> &params)
+{
+  params.clear();
+
+  // Split URL and pattern into segments
+  vector<string> urlSegments = splitPath(url);
+  vector<string> patternSegments = splitPath(pattern);
+
+  if (urlSegments.size() != patternSegments.size())
+  {
+    return false;
+  }
+
+  for (size_t i = 0; i < urlSegments.size(); ++i)
+  {
+    const string &urlSeg = urlSegments[i];
+    const string &patternSeg = patternSegments[i];
+
+    if (patternSeg.starts_with(":"))
+    {
+      // Parameter segment
+      string paramName = patternSeg.substr(1);
+      params[paramName] = urlSeg;
+    }
+    else if (urlSeg != patternSeg)
+    {
+      // Literal segment doesn't match
+      return false;
+    }
+  }
+
+  return true;
+}
+
+vector<string> TrInspector::splitPath(const string &path)
+{
+  vector<string> segments;
+  if (path.empty() || path == "/")
+  {
+    return segments;
+  }
+
+  size_t start = 1; // Skip leading slash
+  size_t pos = path.find('/', start);
+
+  while (pos != string::npos)
+  {
+    if (pos > start)
+    {
+      segments.push_back(path.substr(start, pos - start));
+    }
+    start = pos + 1;
+    pos = path.find('/', start);
+  }
+
+  // Add the last segment
+  if (start < path.length())
+  {
+    segments.push_back(path.substr(start));
+  }
+
+  return segments;
+}
+
+void TrInspector::handleRequest(std::function<std::string()> handler, TrInspectorClient &requestClient)
+{
+  try
+  {
+    string responseText = handler();
+    requestClient.respond(200, responseText);
+  }
+  catch (const std::exception &e)
+  {
+    requestClient.respond(500, "Internal Server Error: " + string(e.what()));
+  }
+  catch (...)
+  {
+    requestClient.respond(500, "Internal Server Error");
   }
 }
 
@@ -142,6 +239,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     contentJson.AddMember("pid", content->pid.load(), allocator);
     contentJson.AddMember("used", content->used.load(), allocator);
     {
+      // RequestInit fields
       rapidjson::Value requestInitJson;
       requestInitJson.SetObject();
       requestInitJson.AddMember("url",
@@ -149,6 +247,24 @@ bool TrInspector::getContents(rapidjson::Document &json)
                                 allocator);
       requestInitJson.AddMember("disableCache", requestInit.disableCache, allocator);
       contentJson.AddMember("requestInit", requestInitJson, allocator);
+    }
+    {
+      // Logs fields
+      rapidjson::Value logsJson;
+      logsJson.SetObject();
+
+      // TODO(yorkie): Reading the Host from the request header instead of using "localhost".
+      static const string inspectorHost = "localhost:" + to_string(server_->port);
+      string outPath = "http://" + inspectorHost + "/" + id + "/logs/stdout";
+      string errPath = "http://" + inspectorHost + "/" + id + "/logs/stderr";
+
+      logsJson.AddMember("stdout",
+                         rapidjson::Value().SetString(outPath.c_str(), allocator),
+                         allocator);
+      logsJson.AddMember("stderr",
+                         rapidjson::Value().SetString(errPath.c_str(), allocator),
+                         allocator);
+      contentJson.AddMember("logs", logsJson, allocator);
     }
     json.PushBack(contentJson, allocator);
   }
@@ -209,6 +325,27 @@ bool TrInspector::getStatistics(rapidjson::Document &json)
   json.AddMember("renderers", renderers_list, allocator);
 
   return true;
+}
+
+string TrInspector::printContentLog(const string &contentId, const string &logType)
+{
+  static filesystem::path logsDir = filesystem::path(constellation->options.applicationCacheDirectory) / "logs";
+
+  const auto &content = constellation->contentManager->getContent(stoi(contentId), true);
+  if (content == nullptr)
+    return "No such content";
+
+  filesystem::path logFile = logsDir / (to_string(content->pid.load()) + "." + logType + ".log");
+  if (!filesystem::exists(logFile))
+    return "No log file found for content(" + contentId + ")";
+
+  ifstream file(logFile);
+  if (!file.is_open())
+    return "Failed to open log file for content(" + contentId + ")";
+
+  stringstream buffer;
+  buffer << file.rdbuf();
+  return buffer.str();
 }
 
 void TrInspector::onMessage(TrInspectorClient &client, const string &message)

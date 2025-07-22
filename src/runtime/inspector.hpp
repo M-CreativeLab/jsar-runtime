@@ -28,6 +28,7 @@ public:
 
 private:
   void onRequest(TrInspectorClient &);
+  void handleRequest(std::function<std::string()> handler, TrInspectorClient &);
   void handleRequest(std::function<bool(rapidjson::Document &)> handler, TrInspectorClient &);
 
   // handlers
@@ -35,6 +36,10 @@ private:
   bool getContents(rapidjson::Document &);
   bool getProtocol(rapidjson::Document &);
   bool getStatistics(rapidjson::Document &);
+  std::string printContentLog(const std::string &contentId, const std::string &logType);
+
+  bool matchRoute(const std::string &url, const std::string &pattern, std::map<std::string, std::string> &params);
+  std::vector<std::string> splitPath(const std::string &path);
 
 public:
   TrConstellation *constellation = nullptr;
