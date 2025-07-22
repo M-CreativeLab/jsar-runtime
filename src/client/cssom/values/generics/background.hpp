@@ -153,6 +153,66 @@ namespace client_cssom::values::generics
     {
       return tag_ == kNormal;
     }
+    inline bool isMultiply() const
+    {
+      return tag_ == kMultiply;
+    }
+    inline bool isScreen() const
+    {
+      return tag_ == kScreen;
+    }
+    inline bool isOverlay() const
+    {
+      return tag_ == kOverlay;
+    }
+    inline bool isDarken() const
+    {
+      return tag_ == kDarken;
+    }
+    inline bool isLighten() const
+    {
+      return tag_ == kLighten;
+    }
+    inline bool isColorDodge() const
+    {
+      return tag_ == kColorDodge;
+    }
+    inline bool isColorBurn() const
+    {
+      return tag_ == kColorBurn;
+    }
+    inline bool isHardLight() const
+    {
+      return tag_ == kHardLight;
+    }
+    inline bool isSoftLight() const
+    {
+      return tag_ == kSoftLight;
+    }
+    inline bool isDifference() const
+    {
+      return tag_ == kDifference;
+    }
+    inline bool isExclusion() const
+    {
+      return tag_ == kExclusion;
+    }
+    inline bool isHue() const
+    {
+      return tag_ == kHue;
+    }
+    inline bool isSaturation() const
+    {
+      return tag_ == kSaturation;
+    }
+    inline bool isColor() const
+    {
+      return tag_ == kColor;
+    }
+    inline bool isLuminosity() const
+    {
+      return tag_ == kLuminosity;
+    }
 
   protected:
     Tag tag_;

@@ -405,7 +405,8 @@ namespace client_cssom
     }
     else if (name == "background-blend-mode")
     {
-      background_blend_mode_ = Parse::ParseSingleValue<values::specified::BackgroundBlendMode>(value).toComputedValue(context);
+      background_blend_mode_ = Parse::ParseSingleValue<values::specified::BackgroundBlendMode>(value)
+                                 .toComputedValue(context);
     }
     else if (name == "background-clip")
     {

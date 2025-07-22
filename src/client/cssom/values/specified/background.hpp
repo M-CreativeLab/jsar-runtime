@@ -1,12 +1,13 @@
 #pragma once
 
 #include <client/cssom/values/generics/background.hpp>
+#include <client/cssom/values/computed/background.hpp>
 
 namespace client_cssom::values::specified
 {
   class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>,
                               public Parse,
-                              public ToComputedValue<BackgroundBlendMode>
+                              public ToComputedValue<computed::BackgroundBlendMode>
   {
     friend class Parse;
 
@@ -52,15 +53,49 @@ namespace client_cssom::values::specified
       return true;
     }
 
-    BackgroundBlendMode toComputedValue(computed::Context &) const override
+    computed::BackgroundBlendMode toComputedValue(computed::Context &) const override
     {
-      return *this;
+      if (isNormal())
+        return computed::BackgroundBlendMode::Normal();
+      else if (isMultiply())
+        return computed::BackgroundBlendMode::Multiply();
+      else if (isScreen())
+        return computed::BackgroundBlendMode::Screen();
+      else if (isOverlay())
+        return computed::BackgroundBlendMode::Overlay();
+      else if (isDarken())
+        return computed::BackgroundBlendMode::Darken();
+      else if (isLighten())
+        return computed::BackgroundBlendMode::Lighten();
+      else if (isColorDodge())
+        return computed::BackgroundBlendMode::ColorDodge();
+      else if (isColorBurn())
+        return computed::BackgroundBlendMode::ColorBurn();
+      else if (isHardLight())
+        return computed::BackgroundBlendMode::HardLight();
+      else if (isSoftLight())
+        return computed::BackgroundBlendMode::SoftLight();
+      else if (isDifference())
+        return computed::BackgroundBlendMode::Difference();
+      else if (isExclusion())
+        return computed::BackgroundBlendMode::Exclusion();
+      else if (isHue())
+        return computed::BackgroundBlendMode::Hue();
+      else if (isSaturation())
+        return computed::BackgroundBlendMode::Saturation();
+      else if (isColor())
+        return computed::BackgroundBlendMode::Color();
+      else if (isLuminosity())
+        return computed::BackgroundBlendMode::Luminosity();
+
+      // Default to Normal if none match
+      return computed::BackgroundBlendMode::Normal();
     }
   };
 
   class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>,
                          public Parse,
-                         public ToComputedValue<BackgroundClip>
+                         public ToComputedValue<computed::BackgroundClip>
   {
     friend class Parse;
 
@@ -82,9 +117,19 @@ namespace client_cssom::values::specified
       return true;
     }
 
-    BackgroundClip toComputedValue(computed::Context &) const override
+    computed::BackgroundClip toComputedValue(computed::Context &) const override
     {
-      return *this;
+      if (isBorderBox())
+        return computed::BackgroundClip::BorderBox();
+      else if (isPaddingBox())
+        return computed::BackgroundClip::PaddingBox();
+      else if (isContentBox())
+        return computed::BackgroundClip::ContentBox();
+      else if (isText())
+        return computed::BackgroundClip::Text();
+
+      // Default to BorderBox if none match
+      return computed::BackgroundClip::BorderBox();
     }
   };
 }
