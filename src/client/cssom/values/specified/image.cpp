@@ -152,12 +152,92 @@ namespace client_cssom::values::specified
     computed::Gradient computed_gradient;
     computed_gradient.repeating = this->repeating;
 
-    // Copy the gradient type
-    // computed_gradient.gradient_type = this->gradient_type;
-
-    // TODO: Convert specified gradient components to computed values
-    // This would involve converting lengths, percentages, and colors
-    // to their computed equivalents using the context
+    // Convert gradient type from specified to computed
+    if (std::holds_alternative<LinearGradient>(this->gradient_type))
+    {
+      const auto &specified_linear = std::get<LinearGradient>(this->gradient_type);
+      computed::Gradient::LinearGradient computed_linear;
+      
+      // Copy direction (no conversion needed for enum)
+      computed_linear.direction = specified_linear.direction;
+      
+      // Convert gradient items
+      for (const auto &item : specified_linear.items)
+      {
+        computed::Gradient::LinearGradient::GradientItem computed_item;
+        computed_item.type = item.type;
+        
+        if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kSimpleColorStop)
+        {
+          const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::SimpleColorStop>(item.value);
+          typename computed::Gradient::LinearGradient::GradientItem::SimpleColorStop computed_stop;
+          computed_stop.color = color_stop.color.toComputedValue(context);
+          computed_item.value = computed_stop;
+        }
+        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kComplexColorStop)
+        {
+          const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::ComplexColorStop>(item.value);
+          typename computed::Gradient::LinearGradient::GradientItem::ComplexColorStop computed_stop;
+          computed_stop.color = color_stop.color.toComputedValue(context);
+          computed_stop.length_percentage = color_stop.length_percentage.toComputedValue(context);
+          computed_item.value = computed_stop;
+        }
+        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kInterpolationHint)
+        {
+          const auto &hint = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::InterpolationHint>(item.value);
+          typename computed::Gradient::LinearGradient::GradientItem::InterpolationHint computed_hint;
+          computed_hint.length_percentage = hint.length_percentage.toComputedValue(context);
+          computed_item.value = computed_hint;
+        }
+        
+        computed_linear.items.push_back(computed_item);
+      }
+      
+      computed_gradient.gradient_type = computed_linear;
+    }
+    else if (std::holds_alternative<RadialGradient>(this->gradient_type))
+    {
+      const auto &specified_radial = std::get<RadialGradient>(this->gradient_type);
+      computed::Gradient::RadialGradient computed_radial;
+      
+      // Copy shape and size (no conversion needed for enums)
+      computed_radial.shape = specified_radial.shape;
+      computed_radial.size = specified_radial.size;
+      
+      // Convert gradient items
+      for (const auto &item : specified_radial.items)
+      {
+        computed::Gradient::RadialGradient::GradientItem computed_item;
+        computed_item.type = item.type;
+        
+        if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kSimpleColorStop)
+        {
+          const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::SimpleColorStop>(item.value);
+          typename computed::Gradient::RadialGradient::GradientItem::SimpleColorStop computed_stop;
+          computed_stop.color = color_stop.color.toComputedValue(context);
+          computed_item.value = computed_stop;
+        }
+        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kComplexColorStop)
+        {
+          const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::ComplexColorStop>(item.value);
+          typename computed::Gradient::RadialGradient::GradientItem::ComplexColorStop computed_stop;
+          computed_stop.color = color_stop.color.toComputedValue(context);
+          computed_stop.length_percentage = color_stop.length_percentage.toComputedValue(context);
+          computed_item.value = computed_stop;
+        }
+        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kInterpolationHint)
+        {
+          const auto &hint = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::InterpolationHint>(item.value);
+          typename computed::Gradient::RadialGradient::GradientItem::InterpolationHint computed_hint;
+          computed_hint.length_percentage = hint.length_percentage.toComputedValue(context);
+          computed_item.value = computed_hint;
+        }
+        
+        computed_radial.items.push_back(computed_item);
+      }
+      
+      computed_gradient.gradient_type = computed_radial;
+    }
 
     return computed_gradient;
   }
