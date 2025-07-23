@@ -58,7 +58,3 @@ node_modules
 
 # Build artifacts
 ./build/cmake/
-build/CMakeFiles/
-build/CMakeCache.txt
-build/Makefile
-build/cmake_install.cmake
