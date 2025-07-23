@@ -32,7 +32,7 @@ namespace builtin_scene::web_renderer
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
   // Helper function to calculate background positioning area based on background-origin
-  SkRect getBackgroundPositioningArea(const SkRRect &roundedRect, const ComputedStyle &style)
+  SkRect getBackgroundPositioningArea(const SkRRect &roundedRect, const client_layout::Fragment &fragment, const ComputedStyle &style)
   {
     const SkRect &borderBox = roundedRect.rect();
 
@@ -43,10 +43,10 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundOrigin().isPaddingBox())
     {
       // For padding-box, subtract border widths
-      float borderTop = style.borderWidth().top().value;
-      float borderRight = style.borderWidth().right().value;
-      float borderBottom = style.borderWidth().bottom().value;
-      float borderLeft = style.borderWidth().left().value;
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
 
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft,
@@ -57,16 +57,15 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundOrigin().isContentBox())
     {
       // For content-box, subtract border and padding widths
-      float borderTop = style.borderWidth().top().value;
-      float borderRight = style.borderWidth().right().value;
-      float borderBottom = style.borderWidth().bottom().value;
-      float borderLeft = style.borderWidth().left().value;
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
 
-      // TODO(yorkie): implement the padding.
-      float paddingTop = 0;
-      float paddingRight = 0;
-      float paddingBottom = 0;
-      float paddingLeft = 0;
+      float paddingTop = fragment.padding().top();
+      float paddingRight = fragment.padding().right();
+      float paddingBottom = fragment.padding().bottom();
+      float paddingLeft = fragment.padding().left();
 
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft + paddingLeft,
@@ -279,7 +278,7 @@ namespace builtin_scene::web_renderer
               canvas->clipRRect(roundedRect, true);
 
               // Get the background positioning area based on background-origin
-              SkRect positioningArea = getBackgroundPositioningArea(roundedRect, style);
+              SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
 
               // Use the new helper function to draw background with repeat support
               drawBackgroundImage(canvas, bitmap.asImage(), positioningArea, style, fillPaint.value());
