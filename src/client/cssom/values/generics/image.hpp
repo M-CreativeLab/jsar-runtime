@@ -3,6 +3,7 @@
 #include <variant>
 #include <optional>
 #include <vector>
+#include <client/cssom/style_traits.hpp>
 
 namespace client_cssom::values::generics
 {
@@ -125,7 +126,32 @@ namespace client_cssom::values::generics
   };
 
   template <typename G, typename ImageUrl>
-  class GenericImage : public std::variant<std::monostate, ImageUrl, G>
+  class GenericImage : public std::variant<std::monostate, ImageUrl, G>, public ToCss
   {
+  public:
+    // CSS serialization
+    std::string toCss() const override
+    {
+      if (std::holds_alternative<std::monostate>(*this))
+      {
+        return "none";
+      }
+      else if (std::holds_alternative<ImageUrl>(*this))
+      {
+        const auto &url_or_none = std::get<ImageUrl>(*this);
+        if (url_or_none.url.has_value())
+        {
+          return "url(\"" + url_or_none.url.value() + "\")";
+        }
+        return "none";
+      }
+      else if (std::holds_alternative<G>(*this))
+      {
+        // For gradients, we need a way to serialize them
+        // This is a basic implementation - derived classes can override for more specific behavior
+        return "gradient()"; // Placeholder - should be overridden by specific implementations
+      }
+      return "none";
+    }
   };
 }

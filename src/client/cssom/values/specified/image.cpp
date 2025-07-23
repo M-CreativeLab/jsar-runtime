@@ -13,25 +13,16 @@ namespace client_cssom::values::specified
 
   std::string Image::toCss() const
   {
-    if (isNone())
-    {
-      return "none";
-    }
-    else if (isUrl())
-    {
-      const auto &url_or_none = std::get<UrlOrNone>(*this);
-      if (url_or_none.url.has_value())
-      {
-        return "url(\"" + url_or_none.url.value() + "\")";
-      }
-      return "none";
-    }
-    else if (isGradient())
+    if (isGradient())
     {
       const auto &gradient = std::get<Gradient>(*this);
       return gradientToCss(gradient);
     }
-    return "none";
+    else
+    {
+      // Delegate to base class for monostate and URL cases
+      return generics::GenericImage<Gradient, specified::UrlOrNone>::toCss();
+    }
   }
 
   computed::Image Image::toComputedValue(computed::Context &context) const
@@ -57,15 +48,15 @@ namespace client_cssom::values::specified
     return computed_img;
   }
 
-  string Image::gradientToCss(const Gradient &gradient) const
+  std::string Image::gradientToCss(const Gradient &gradient) const
   {
     // Enhanced gradient serialization with proper CSS output
     if (holds_alternative<Gradient::LinearGradient>(gradient.gradient_type))
     {
       const auto &linearGrad = std::get<Gradient::LinearGradient>(gradient.gradient_type);
-      string functionName = gradient.repeating ? "repeating-linear-gradient" : "linear-gradient";
+      std::string functionName = gradient.repeating ? "repeating-linear-gradient" : "linear-gradient";
 
-      string direction;
+      std::string direction;
       switch (linearGrad.direction)
       {
       case generics::LineDirection::kToRight:
@@ -95,7 +86,7 @@ namespace client_cssom::values::specified
       }
 
       // TODO: Add proper color stop serialization
-      string colorStops = "red, blue"; // Placeholder
+      std::string colorStops = "red, blue"; // Placeholder
       if (!linearGrad.items.empty())
       {
         // Serialize actual color stops when color parsing is implemented
@@ -106,10 +97,10 @@ namespace client_cssom::values::specified
     else if (holds_alternative<Gradient::RadialGradient>(gradient.gradient_type))
     {
       const auto &radialGrad = std::get<Gradient::RadialGradient>(gradient.gradient_type);
-      string functionName = gradient.repeating ? "repeating-radial-gradient" : "radial-gradient";
-      string shape = (radialGrad.shape == generics::RadialGradientShape::kCircle) ? "circle" : "ellipse";
+      std::string functionName = gradient.repeating ? "repeating-radial-gradient" : "radial-gradient";
+      std::string shape = (radialGrad.shape == generics::RadialGradientShape::kCircle) ? "circle" : "ellipse";
 
-      string size;
+      std::string size;
       switch (radialGrad.size)
       {
       case generics::RadialGradientSize::kClosestSide:
@@ -127,13 +118,13 @@ namespace client_cssom::values::specified
       }
 
       // TODO: Add proper color stop serialization
-      string colorStops = "red, blue"; // Placeholder
+      std::string colorStops = "red, blue"; // Placeholder
       if (!radialGrad.items.empty())
       {
         // Serialize actual color stops when color parsing is implemented
       }
 
-      string shapeSize = shape;
+      std::string shapeSize = shape;
       if (!size.empty())
       {
         shapeSize += " " + size;
