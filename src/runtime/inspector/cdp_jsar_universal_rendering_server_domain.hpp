@@ -18,7 +18,8 @@ namespace renderer
 class CdpJsarUniversalRenderingServerDomain : public CdpDomainHandler
 {
 public:
-  CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation);
+  CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const std::string &clientId);
+  ~CdpJsarUniversalRenderingServerDomain();
 
   std::string handleMethod(const std::string &method, const CdpMessage &message, const std::string &clientId) override;
 
@@ -27,13 +28,19 @@ public:
   std::string getDomainDescription() const override;
   std::vector<CdpCommand> getCommands() const override;
 
-  // Public methods for inspector integration
-  void setInspectorClient(const std::string &clientId, TrInspectorClient *client);
-  void removeInspectorClient(const std::string &clientId);
+  // Public methods for command buffer callbacks
   void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
+  
+  // Set the inspector client for this domain instance
+  void setInspectorClient(TrInspectorClient *client);
 
 private:
   TrConstellation *constellation_;
+  std::string clientId_;
+  int callbackId_ = -1; // Callback ID for unregistering
+  bool tracingEnabled_ = false;
+  TrInspectorClient *inspectorClient_ = nullptr;
+  
   renderer::TrRenderer *getRenderer() const;
 
   // Tracing control methods (also controls command buffer dispatching)
@@ -50,8 +57,5 @@ private:
   // Command buffer dispatching
   void sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
   std::string serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
-
-private:
-  std::set<std::string> commandBufferClients_; // Clients subscribed to command buffer events
-  std::map<std::string, TrInspectorClient*> inspectorClients_; // Client ID to inspector client mapping
+};
 };

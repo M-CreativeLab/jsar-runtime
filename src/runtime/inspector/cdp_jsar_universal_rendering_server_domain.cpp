@@ -9,10 +9,26 @@
 
 using namespace std;
 
-CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation)
-    : constellation_(constellation)
+CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const string &clientId)
+    : constellation_(constellation), clientId_(clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain initialized");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain initialized for client: %s", clientId_.c_str());
+}
+
+CdpJsarUniversalRenderingServerDomain::~CdpJsarUniversalRenderingServerDomain()
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain destroying for client: %s", clientId_.c_str());
+  
+  // Unregister callback if it was registered
+  if (callbackId_ != -1)
+  {
+    auto renderer = getRenderer();
+    if (renderer)
+    {
+      renderer->unregisterCommandBufferExecutionCallback(callbackId_);
+      DEBUG(LOG_TAG_INSPECTOR, "CDP: Unregistered command buffer callback for client: %s", clientId_.c_str());
+    }
+  }
 }
 
 string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method, const CdpMessage &message, const string &clientId)
@@ -66,9 +82,18 @@ string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &me
   }
 
   renderer->enableTracing();
+  tracingEnabled_ = true;
 
-  // Also enable command buffer dispatching for this client
-  commandBufferClients_.insert(clientId);
+  // Register command buffer callback if not already registered
+  if (callbackId_ == -1)
+  {
+    callbackId_ = renderer->registerCommandBufferExecutionCallback(
+      [this](const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer) {
+        this->onCommandBufferExecuted(commandBuffers, contentRenderer);
+      }
+    );
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Registered command buffer callback (ID: %d) for client: %s", callbackId_, clientId_.c_str());
+  }
 
   rapidjson::Document result;
   result.SetObject();
@@ -92,9 +117,15 @@ string CdpJsarUniversalRenderingServerDomain::disableTracing(const CdpMessage &m
   }
 
   renderer->isTracingEnabled = false;
+  tracingEnabled_ = false;
 
-  // Also disable command buffer dispatching for this client
-  commandBufferClients_.erase(clientId);
+  // Unregister command buffer callback if it was registered
+  if (callbackId_ != -1)
+  {
+    renderer->unregisterCommandBufferExecutionCallback(callbackId_);
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Unregistered command buffer callback (ID: %d) for client: %s", callbackId_, clientId_.c_str());
+    callbackId_ = -1;
+  }
 
   rapidjson::Document result;
   result.SetObject();
@@ -214,24 +245,17 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
   return CdpResponse::success(message.id, result);
 }
 
-void CdpJsarUniversalRenderingServerDomain::setInspectorClient(const string &clientId, TrInspectorClient *client)
+void CdpJsarUniversalRenderingServerDomain::setInspectorClient(TrInspectorClient *client)
 {
-  inspectorClients_[clientId] = client;
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client registered: %s", clientId.c_str());
-}
-
-void CdpJsarUniversalRenderingServerDomain::removeInspectorClient(const string &clientId)
-{
-  inspectorClients_.erase(clientId);
-  commandBufferClients_.erase(clientId); // Also remove from command buffer subscribers
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client removed: %s", clientId.c_str());
+  inspectorClient_ = client;
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client set for client: %s", clientId_.c_str());
 }
 
 void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
-  if (!commandBufferClients_.empty())
+  if (tracingEnabled_ && inspectorClient_)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Dispatching command buffer to %zu clients", commandBufferClients_.size());
+    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Dispatching command buffer to client: %s", clientId_.c_str());
     sendCommandBufferEvent(commandBuffers, contentRenderer);
   }
 }
@@ -267,18 +291,11 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::ve
 
   string eventMessage = CdpResponse::event("JSAR.UniversalRenderingServer.commandBufferExecuted", params);
 
-  // Send to all subscribed clients
-  for (const auto &clientId : commandBufferClients_)
+  // Send to this client's inspector client
+  if (inspectorClient_ && inspectorClient_->isWebSocket())
   {
-    auto clientIt = inspectorClients_.find(clientId);
-    if (clientIt != inspectorClients_.end() && clientIt->second)
-    {
-      if (clientIt->second->isWebSocket())
-      {
-        clientIt->second->sendWebSocketMessage(eventMessage);
-        DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Command buffer event sent to client: %s", clientId.c_str());
-      }
-    }
+    inspectorClient_->sendWebSocketMessage(eventMessage);
+    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Command buffer event sent to client: %s", clientId_.c_str());
   }
 }
 

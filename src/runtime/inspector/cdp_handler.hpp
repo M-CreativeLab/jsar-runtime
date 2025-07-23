@@ -65,14 +65,38 @@ public:
   // Process incoming CDP message and return response
   std::string processMessage(const std::string &message, const std::string &clientId = "");
 
-  // Register a domain handler
-  void registerDomain(const std::string &domain, std::unique_ptr<CdpDomainHandler> handler);
+  // Register a domain factory function - called to create domain instances per client
+  void registerDomainFactory(const std::string &domain, std::function<std::unique_ptr<CdpDomainHandler>(const std::string &clientId)> factory);
 
-  // Get protocol definitions from all registered domains
+  // Get protocol definitions from a sample instance of each registered domain
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
+  // Client lifecycle management
+  void onClientConnected(const std::string &clientId);
+  void onClientDisconnected(const std::string &clientId);
+
+  // Get a specific domain instance for a client
+  template<typename T>
+  T* getDomainInstance(const std::string &clientId, const std::string &domainName)
+  {
+    auto clientIt = clientDomains_.find(clientId);
+    if (clientIt == clientDomains_.end())
+    {
+      return nullptr;
+    }
+    
+    auto domainIt = clientIt->second.find(domainName);
+    if (domainIt == clientIt->second.end())
+    {
+      return nullptr;
+    }
+    
+    return dynamic_cast<T*>(domainIt->second.get());
+  }
+
 private:
-  std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
+  std::unordered_map<std::string, std::function<std::unique_ptr<CdpDomainHandler>(const std::string &clientId)>> domainFactories_;
+  std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>>> clientDomains_; // clientId -> domainName -> handler
 
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);

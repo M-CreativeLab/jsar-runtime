@@ -50,12 +50,9 @@ public:
   // Client lifecycle management
   void onClientConnected(TrInspectorClient &client);
   void onClientDisconnected(TrInspectorClient &client);
-  
-  // Command buffer execution notification
-  void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
 
 private:
   std::unique_ptr<TrInspectorServer> server_;
   std::unique_ptr<CdpHandler> cdpHandler_;
-  CdpJsarUniversalRenderingServerDomain *universalRenderingServerDomain_ = nullptr;
+};
 };

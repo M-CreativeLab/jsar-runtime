@@ -71,18 +71,6 @@ bool TrConstellation::initialize()
 
 #ifdef TR_ENABLE_INSPECTOR
     inspector->initialize();
-    
-    // Set up command buffer execution callback to notify inspector
-    if (renderer && inspector) {
-      renderer->setCommandBufferExecutionCallback([this](const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer) {
-        if (inspector) {
-          auto inspectorPtr = inspector.get();
-          if (inspectorPtr) {
-            inspectorPtr->onCommandBufferExecuted(commandBuffers, contentRenderer);
-          }
-        }
-      });
-    }
 #endif
   }
   initialized = true;

@@ -75,6 +75,20 @@ namespace renderer
     return rhi;
   }
 
+  int TrRenderer::registerCommandBufferExecutionCallback(CommandBufferExecutionCallback callback)
+  {
+    std::lock_guard<std::mutex> lock(callbacksMutex_);
+    int callbackId = nextCallbackId_++;
+    commandBufferExecutionCallbacks_[callbackId] = callback;
+    return callbackId;
+  }
+
+  void TrRenderer::unregisterCommandBufferExecutionCallback(int callbackId)
+  {
+    std::lock_guard<std::mutex> lock(callbacksMutex_);
+    commandBufferExecutionCallbacks_.erase(callbackId);
+  }
+
   void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
   {
     if (rhi == nullptr) [[unlikely]]
@@ -372,10 +386,14 @@ namespace renderer
       result = rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
     
-    // Notify callback if command buffers were executed successfully
-    if (result && commandBufferExecutionCallback_)
+    // Notify callbacks if command buffers were executed successfully
+    if (result && !commandBufferExecutionCallbacks_.empty())
     {
-      commandBufferExecutionCallback_(list, content_renderer);
+      std::lock_guard<std::mutex> lock(callbacksMutex_);
+      for (const auto& [callbackId, callback] : commandBufferExecutionCallbacks_)
+      {
+        callback(list, content_renderer);
+      }
     }
     
     return result;

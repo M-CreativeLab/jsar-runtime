@@ -27,14 +27,18 @@ void TrInspector::initialize()
   // Initialize CDP handler
   cdpHandler_ = make_unique<CdpHandler>();
 
-  // Register CDP domains
-  cdpHandler_->registerDomain("Runtime", make_unique<CdpRuntimeDomain>(constellation));
-  cdpHandler_->registerDomain("Example", make_unique<CdpMyExampleDomain>());
+  // Register CDP domain factories (not instances - instances are created per client)
+  cdpHandler_->registerDomainFactory("Runtime", [this](const std::string &clientId) {
+    return make_unique<CdpRuntimeDomain>(constellation);
+  });
   
-  // Create and store reference to UniversalRenderingServer domain for client management
-  auto universalRenderingServerDomain = make_unique<CdpJsarUniversalRenderingServerDomain>(constellation);
-  universalRenderingServerDomain_ = universalRenderingServerDomain.get();
-  cdpHandler_->registerDomain("JSAR.UniversalRenderingServer", move(universalRenderingServerDomain));
+  cdpHandler_->registerDomainFactory("Example", [](const std::string &clientId) {
+    return make_unique<CdpMyExampleDomain>();
+  });
+  
+  cdpHandler_->registerDomainFactory("JSAR.UniversalRenderingServer", [this](const std::string &clientId) {
+    return make_unique<CdpJsarUniversalRenderingServerDomain>(constellation, clientId);
+  });
 
   DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
 }
@@ -396,9 +400,18 @@ void TrInspector::onClientConnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client connected: %s", client.clientId().c_str());
   
-  if (universalRenderingServerDomain_)
+  // Create domain instances for this client
+  if (cdpHandler_)
   {
-    universalRenderingServerDomain_->setInspectorClient(client.clientId(), &client);
+    cdpHandler_->onClientConnected(client.clientId());
+    
+    // Set inspector client reference for JSAR.UniversalRenderingServer domain
+    auto* domain = cdpHandler_->getDomainInstance<CdpJsarUniversalRenderingServerDomain>(
+      client.clientId(), "JSAR.UniversalRenderingServer");
+    if (domain)
+    {
+      domain->setInspectorClient(&client);
+    }
   }
 }
 
@@ -406,16 +419,9 @@ void TrInspector::onClientDisconnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
   
-  if (universalRenderingServerDomain_)
+  // Destroy domain instances for this client
+  if (cdpHandler_)
   {
-    universalRenderingServerDomain_->removeInspectorClient(client.clientId());
-  }
-}
-
-void TrInspector::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
-{
-  if (universalRenderingServerDomain_)
-  {
-    universalRenderingServerDomain_->onCommandBufferExecuted(commandBuffers, contentRenderer);
+    cdpHandler_->onClientDisconnected(client.clientId());
   }
 }

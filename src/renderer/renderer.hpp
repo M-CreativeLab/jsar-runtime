@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 #include <common/classes.hpp>
 #include <common/viewport.hpp>
@@ -162,13 +163,16 @@ namespace renderer
     }
     
     /**
-     * Set a callback to be notified when command buffers are executed.
+     * Register a callback to be notified when command buffers are executed.
      * This is used by the inspector to dispatch command buffer events.
+     * Returns a callback ID that can be used to unregister the callback.
      */
-    void setCommandBufferExecutionCallback(CommandBufferExecutionCallback callback)
-    {
-      commandBufferExecutionCallback_ = callback;
-    }
+    int registerCommandBufferExecutionCallback(CommandBufferExecutionCallback callback);
+    
+    /**
+     * Unregister a command buffer execution callback.
+     */
+    void unregisterCommandBufferExecutionCallback(int callbackId);
     
     void setRHI(TrRenderHardwareInterface *);
     TrRenderHardwareInterface *getRHI();
@@ -294,6 +298,8 @@ namespace renderer
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
     std::unique_ptr<ipc::TrOneShotServer<TrCommandBufferMessage>> commandBufferChanServer = nullptr;
-    CommandBufferExecutionCallback commandBufferExecutionCallback_ = nullptr;
+    std::unordered_map<int, CommandBufferExecutionCallback> commandBufferExecutionCallbacks_;
+    int nextCallbackId_ = 1;
+    std::mutex callbacksMutex_;
   };
 }
