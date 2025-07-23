@@ -222,12 +222,59 @@ namespace builtin_scene::web_renderer
   // Create a gradient shader based on the computed image and rounded rectangle.
   sk_sp<SkShader> createGradientShader(const computed::Image &, const SkRRect &);
 
+  // Helper function to create text path for background-clip: text
+  SkPath createTextPath(ecs::EntityId entity, const WebContent &content, 
+                        web_renderer::RenderBaseSystem* renderSystem)
+  {
+    SkPath textPath;
+    
+    if (!renderSystem)
+      return textPath;
+    
+    // Get the text component
+    auto textComponent = renderSystem->getComponent<Text2d>(entity);
+    if (textComponent == nullptr || textComponent->content.empty())
+      return textPath;
+
+    // Create paragraph to get text bounds
+    auto clientContext = TrClientContextPerProcess::Get();
+    auto fontCollection = clientContext->getFontCacheManager();
+    auto paragraphStyle = content.paragraphStyle();
+    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection);
+    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+    paragraphBuilder->addText(textComponent->content.c_str(), textComponent->content.size());
+    paragraphBuilder->pop();
+
+    auto layoutWidth = round(content.fragment()->contentWidth()) + 1.0f;
+    auto paragraph = paragraphBuilder->Build();
+    paragraph->layout(layoutWidth);
+
+    // Create a simple approximation of text bounds for now
+    // This is a basic implementation - in a full implementation, we'd need 
+    // to properly extract text paths from the paragraph
+    const auto &fragment = content.fragment();
+    if (!fragment.has_value())
+      return textPath;
+      
+    float contentWidth = fragment->contentWidth();
+    float contentHeight = fragment->contentHeight();
+    
+    // For now, create a simple rectangular path representing text bounds
+    // TODO: In a more complete implementation, this should extract actual glyph paths
+    textPath.addRect(SkRect::MakeWH(contentWidth, contentHeight));
+    
+    return textPath;
+  }
+
   // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
   optional<SkPaint> drawBackground(SkCanvas *canvas,
                                    SkRRect &originalRRect,
                                    const client_layout::Fragment &fragment,
                                    const client_cssom::ComputedStyle &style,
-                                   bool &textureRequired)
+                                   bool &textureRequired,
+                                   ecs::EntityId entity = ecs::EntityId(), 
+                                   const WebContent *content = nullptr,
+                                   web_renderer::RenderBaseSystem* renderSystem = nullptr)
   {
     optional<SkPaint> fillPaint = nullopt;
 
@@ -264,7 +311,24 @@ namespace builtin_scene::web_renderer
       fillPaint->setColor(color);
       fillPaint->setAntiAlias(true);
       fillPaint->setStyle(SkPaint::kFill_Style);
-      canvas->drawRRect(roundedRect, fillPaint.value());
+
+      // Handle background-clip: text
+      if (style.backgroundClip().isText() && entity.isValid() && content && renderSystem)
+      {
+        SkPath textPath = createTextPath(entity, *content, renderSystem);
+        if (!textPath.isEmpty())
+        {
+          canvas->save();
+          canvas->clipPath(textPath, true);
+          canvas->drawRRect(roundedRect, fillPaint.value());
+          canvas->restore();
+          textureRequired = true; // Text clipping requires texture
+        }
+      }
+      else
+      {
+        canvas->drawRRect(roundedRect, fillPaint.value());
+      }
     }
 
     if (style.hasBackgroundImage())
@@ -295,7 +359,19 @@ namespace builtin_scene::web_renderer
           {
             canvas->save();
             {
-              canvas->clipRRect(roundedRect, true);
+              // Handle background-clip: text
+              if (style.backgroundClip().isText() && entity.isValid() && content && renderSystem)
+              {
+                SkPath textPath = createTextPath(entity, *content, renderSystem);
+                if (!textPath.isEmpty())
+                {
+                  canvas->clipPath(textPath, true);
+                }
+              }
+              else
+              {
+                canvas->clipRRect(roundedRect, true);
+              }
 
               // Get the background positioning area based on background-origin
               SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
@@ -319,7 +395,23 @@ namespace builtin_scene::web_renderer
         if (shader)
         {
           fillPaint->setShader(shader);
-          canvas->drawRRect(roundedRect, fillPaint.value());
+          
+          // Handle background-clip: text
+          if (style.backgroundClip().isText() && entity.isValid() && content && renderSystem)
+          {
+            SkPath textPath = createTextPath(entity, *content, renderSystem);
+            if (!textPath.isEmpty())
+            {
+              canvas->save();
+              canvas->clipPath(textPath, true);
+              canvas->drawRRect(roundedRect, fillPaint.value());
+              canvas->restore();
+            }
+          }
+          else
+          {
+            canvas->drawRRect(roundedRect, fillPaint.value());
+          }
           textureRequired = true;
         }
       }
@@ -783,7 +875,7 @@ namespace builtin_scene::web_renderer
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
     bool textureRequired = false;
-    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style, textureRequired);
+    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style, textureRequired, entity, &content, this);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
