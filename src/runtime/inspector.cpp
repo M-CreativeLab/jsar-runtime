@@ -15,6 +15,7 @@
 #include "./embedder.hpp"
 #include "./inspector/cdp_runtime_domain.hpp"
 #include "./inspector/cdp_myexample_domain.hpp"
+#include "./inspector/cdp_jsar_universal_rendering_server_domain.hpp"
 
 using namespace std;
 using namespace std::placeholders;
@@ -29,6 +30,7 @@ void TrInspector::initialize()
   // Register CDP domains
   cdpHandler_->registerDomain("Runtime", make_unique<CdpRuntimeDomain>(constellation));
   cdpHandler_->registerDomain("Example", make_unique<CdpMyExampleDomain>());
+  cdpHandler_->registerDomain("JSAR.UniversalRenderingServer", make_unique<CdpJsarUniversalRenderingServerDomain>(constellation));
 
   DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
 }
