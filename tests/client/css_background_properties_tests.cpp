@@ -3,19 +3,19 @@
 
 #include <client/cssom/values/specified/background.hpp>
 #include <client/cssom/values/computed/background.hpp>
+#include <client/cssom/values/computed/context.hpp>
 
-using namespace client_cssom::values::specified;
-using namespace client_cssom::values::computed;
+using namespace client_cssom::values;
 
 TEST_CASE("BackgroundOrigin parsing and conversion", "[css-background-origin]")
 {
   SECTION("Parse padding-box")
   {
-    BackgroundOrigin origin;
+    specified::BackgroundOrigin origin;
     REQUIRE(origin.parse("padding-box"));
     REQUIRE(origin.isPaddingBox());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_origin = origin.toComputedValue(context);
     REQUIRE(computed_origin.isPaddingBox());
     REQUIRE(computed_origin.toCss() == "padding-box");
@@ -23,11 +23,11 @@ TEST_CASE("BackgroundOrigin parsing and conversion", "[css-background-origin]")
 
   SECTION("Parse border-box")
   {
-    BackgroundOrigin origin;
+    specified::BackgroundOrigin origin;
     REQUIRE(origin.parse("border-box"));
     REQUIRE(origin.isBorderBox());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_origin = origin.toComputedValue(context);
     REQUIRE(computed_origin.isBorderBox());
     REQUIRE(computed_origin.toCss() == "border-box");
@@ -35,11 +35,11 @@ TEST_CASE("BackgroundOrigin parsing and conversion", "[css-background-origin]")
 
   SECTION("Parse content-box")
   {
-    BackgroundOrigin origin;
+    specified::BackgroundOrigin origin;
     REQUIRE(origin.parse("content-box"));
     REQUIRE(origin.isContentBox());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_origin = origin.toComputedValue(context);
     REQUIRE(computed_origin.isContentBox());
     REQUIRE(computed_origin.toCss() == "content-box");
@@ -47,13 +47,13 @@ TEST_CASE("BackgroundOrigin parsing and conversion", "[css-background-origin]")
 
   SECTION("Parse invalid value")
   {
-    BackgroundOrigin origin;
+    specified::BackgroundOrigin origin;
     REQUIRE_FALSE(origin.parse("invalid-value"));
   }
 
   SECTION("Default value")
   {
-    BackgroundOrigin origin;
+    specified::BackgroundOrigin origin;
     REQUIRE(origin.isPaddingBox());
   }
 }
@@ -62,11 +62,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 {
   SECTION("Parse repeat")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("repeat"));
     REQUIRE(repeat.isRepeat());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isRepeat());
     REQUIRE(computed_repeat.toCss() == "repeat");
@@ -74,11 +74,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse repeat-x")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("repeat-x"));
     REQUIRE(repeat.isRepeatX());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isRepeatX());
     REQUIRE(computed_repeat.toCss() == "repeat-x");
@@ -86,11 +86,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse repeat-y")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("repeat-y"));
     REQUIRE(repeat.isRepeatY());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isRepeatY());
     REQUIRE(computed_repeat.toCss() == "repeat-y");
@@ -98,11 +98,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse no-repeat")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("no-repeat"));
     REQUIRE(repeat.isNoRepeat());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isNoRepeat());
     REQUIRE(computed_repeat.toCss() == "no-repeat");
@@ -110,11 +110,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse space")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("space"));
     REQUIRE(repeat.isSpace());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isSpace());
     REQUIRE(computed_repeat.toCss() == "space");
@@ -122,11 +122,11 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse round")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.parse("round"));
     REQUIRE(repeat.isRound());
-    
-    computed::Context context;
+
+    auto context = computed::Context::From(nullptr);
     auto computed_repeat = repeat.toComputedValue(context);
     REQUIRE(computed_repeat.isRound());
     REQUIRE(computed_repeat.toCss() == "round");
@@ -134,13 +134,13 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
 
   SECTION("Parse invalid value")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE_FALSE(repeat.parse("invalid-value"));
   }
 
   SECTION("Default value")
   {
-    BackgroundRepeat repeat;
+    specified::BackgroundRepeat repeat;
     REQUIRE(repeat.isRepeat());
   }
 }

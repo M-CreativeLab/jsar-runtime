@@ -35,7 +35,7 @@ namespace builtin_scene::web_renderer
   SkRect getBackgroundPositioningArea(const SkRRect &roundedRect, const ComputedStyle &style)
   {
     const SkRect &borderBox = roundedRect.rect();
-    
+
     if (style.backgroundOrigin().isBorderBox())
     {
       return borderBox;
@@ -43,52 +43,51 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundOrigin().isPaddingBox())
     {
       // For padding-box, subtract border widths
-      float borderTop = style.borderWidth().top().value();
-      float borderRight = style.borderWidth().right().value();
-      float borderBottom = style.borderWidth().bottom().value();
-      float borderLeft = style.borderWidth().left().value();
-      
+      float borderTop = style.borderWidth().top().value;
+      float borderRight = style.borderWidth().right().value;
+      float borderBottom = style.borderWidth().bottom().value;
+      float borderLeft = style.borderWidth().left().value;
+
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft,
         borderBox.fTop + borderTop,
         borderBox.fRight - borderRight,
-        borderBox.fBottom - borderBottom
-      );
+        borderBox.fBottom - borderBottom);
     }
     else if (style.backgroundOrigin().isContentBox())
     {
       // For content-box, subtract border and padding widths
-      float borderTop = style.borderWidth().top().value();
-      float borderRight = style.borderWidth().right().value();
-      float borderBottom = style.borderWidth().bottom().value();
-      float borderLeft = style.borderWidth().left().value();
-      
-      float paddingTop = style.padding().top().value();
-      float paddingRight = style.padding().right().value();
-      float paddingBottom = style.padding().bottom().value();
-      float paddingLeft = style.padding().left().value();
-      
+      float borderTop = style.borderWidth().top().value;
+      float borderRight = style.borderWidth().right().value;
+      float borderBottom = style.borderWidth().bottom().value;
+      float borderLeft = style.borderWidth().left().value;
+
+      // TODO(yorkie): implement the padding.
+      float paddingTop = 0;
+      float paddingRight = 0;
+      float paddingBottom = 0;
+      float paddingLeft = 0;
+
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft + paddingLeft,
         borderBox.fTop + borderTop + paddingTop,
         borderBox.fRight - borderRight - paddingRight,
-        borderBox.fBottom - borderBottom - paddingBottom
-      );
+        borderBox.fBottom - borderBottom - paddingBottom);
     }
-    
+
     // Default to border-box
     return borderBox;
   }
 
   // Helper function to draw background image with repeat pattern
-  void drawBackgroundImage(SkCanvas *canvas, const SkImage *image, const SkRect &positioningArea, 
-                          const ComputedStyle &style, const SkPaint &paint)
+  void drawBackgroundImage(SkCanvas *canvas, const sk_sp<SkImage> &image, const SkRect &positioningArea, const ComputedStyle &style, const SkPaint &paint)
   {
-    if (!image) return;
-    
+    if (!image)
+      return;
+
     float imageWidth = static_cast<float>(image->width());
     float imageHeight = static_cast<float>(image->height());
-    
+
     if (style.backgroundRepeat().isRepeat())
     {
       // Repeat both horizontally and vertically
@@ -102,9 +101,13 @@ namespace builtin_scene::web_renderer
           {
             SkRect srcRect = SkRect::MakeWH(
               destRect.width() * imageWidth / imageWidth,
-              destRect.height() * imageHeight / imageHeight
-            );
-            canvas->drawImageRect(image, srcRect, destRect, SkSamplingOptions(), &paint);
+              destRect.height() * imageHeight / imageHeight);
+            canvas->drawImageRect(image,
+                                  srcRect,
+                                  destRect,
+                                  SkSamplingOptions(),
+                                  &paint,
+                                  SkCanvas::kStrict_SrcRectConstraint);
           }
         }
       }
@@ -119,9 +122,13 @@ namespace builtin_scene::web_renderer
         {
           SkRect srcRect = SkRect::MakeWH(
             destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight
-          );
-          canvas->drawImageRect(image, srcRect, destRect, SkSamplingOptions(), &paint);
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
         }
       }
     }
@@ -135,9 +142,13 @@ namespace builtin_scene::web_renderer
         {
           SkRect srcRect = SkRect::MakeWH(
             destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight
-          );
-          canvas->drawImageRect(image, srcRect, destRect, SkSamplingOptions(), &paint);
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
         }
       }
     }
@@ -149,9 +160,13 @@ namespace builtin_scene::web_renderer
       {
         SkRect srcRect = SkRect::MakeWH(
           destRect.width() * imageWidth / imageWidth,
-          destRect.height() * imageHeight / imageHeight
-        );
-        canvas->drawImageRect(image, srcRect, destRect, SkSamplingOptions(), &paint);
+          destRect.height() * imageHeight / imageHeight);
+        canvas->drawImageRect(image,
+                              srcRect,
+                              destRect,
+                              SkSamplingOptions(),
+                              &paint,
+                              SkCanvas::kStrict_SrcRectConstraint);
       }
     }
     else
@@ -265,9 +280,9 @@ namespace builtin_scene::web_renderer
 
               // Get the background positioning area based on background-origin
               SkRect positioningArea = getBackgroundPositioningArea(roundedRect, style);
-              
+
               // Use the new helper function to draw background with repeat support
-              drawBackgroundImage(canvas, bitmap.asImage().get(), positioningArea, style, fillPaint.value());
+              drawBackgroundImage(canvas, bitmap.asImage(), positioningArea, style, fillPaint.value());
             }
             canvas->restore();
             textureRequired = true;
