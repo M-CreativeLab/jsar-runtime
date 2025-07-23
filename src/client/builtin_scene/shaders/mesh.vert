@@ -42,9 +42,7 @@ in vec4 instanceColor;
 in vec2 instanceTexUvOffset;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
-in vec2 instanceTexUvOffsetRight;
-in vec2 instanceTexUvScaleRight;
-in uint instanceLayerIndexRight;
+in vec2 instanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
 #endif
@@ -117,12 +115,12 @@ void main() {
                               step(threshold, abs(instanceTexUvScale.y));
   } else {
     // Right eye
-    uvs = instanceTexUvOffsetRight + instanceTexUvScaleRight * uvs;
-    vInstanceLayerIndex = float(instanceLayerIndexRight);
+    uvs = instanceTexUvOffsetR + instanceTexUvScale * uvs;
+    vInstanceLayerIndex = float(instanceLayerIndex);
     
     float threshold = 1e-5;
-    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScaleRight.x)) *
-                              step(threshold, abs(instanceTexUvScaleRight.y));
+    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
+                              step(threshold, abs(instanceTexUvScale.y));
   }
 #else
   // Non-multiview: use left eye coordinates (backward compatibility)

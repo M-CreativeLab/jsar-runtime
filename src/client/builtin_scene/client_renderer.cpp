@@ -527,8 +527,6 @@ namespace builtin_scene
                 leftTextureRect->getUvScale(texturePad),
                 leftTextureRect->layer,
                 rightTextureRect->getUvOffset(texturePad),
-                rightTextureRect->getUvScale(texturePad),
-                rightTextureRect->layer,
                 hasChanged);
             }
             else
