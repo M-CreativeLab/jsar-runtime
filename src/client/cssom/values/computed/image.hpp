@@ -56,6 +56,18 @@ namespace client_cssom::values::computed
     // Get URL if it's a URL, otherwise return empty string
     std::string getUrl() const;
 
+    // Get gradient data if it's a gradient, otherwise return nullptr
+    const Gradient* getGradient() const;
+    
+    // Get linear gradient data if it's a linear gradient, otherwise return nullptr
+    const typename Gradient::LinearGradient* getLinearGradient() const;
+    
+    // Get radial gradient data if it's a radial gradient, otherwise return nullptr
+    const typename Gradient::RadialGradient* getRadialGradient() const;
+    
+    // Check if gradient is repeating (only valid if isGradient() is true)
+    bool isGradientRepeating() const;
+
     // Returns the url() `Image` starts loading image data or is already loaded.
     bool isUrlImageLoaded() const;
     bool isUrlImageLoadingOrLoaded() const;
