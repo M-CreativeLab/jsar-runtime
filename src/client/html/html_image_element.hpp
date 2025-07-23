@@ -175,6 +175,22 @@ namespace dom
     }
 
     /**
+     * @returns The spatial rendering mode of the image (e.g., "stereo" for side-by-side stereo images).
+     */
+    inline std::string spatial() const
+    {
+      return spatial_;
+    }
+
+    /**
+     * @returns True if the image is marked as a spatial (stereo) image.
+     */
+    inline bool isSpatial() const
+    {
+      return spatial_ == "stereo";
+    }
+
+    /**
      * @returns The natural width of the image in pixels.
      */
     inline int naturalWidth() const
@@ -207,5 +223,6 @@ namespace dom
 
     bool is_map_ = false;
     std::string use_map_;
+    std::string spatial_;
   };
 }

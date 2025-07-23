@@ -22,6 +22,7 @@
 #include "./web_content.hpp"
 #include "./text.hpp"
 #include "./image.hpp"
+#include "./xr.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -590,7 +591,39 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    sk_sp<SkImage> skImage = imageComponent->image();
+    // Get the appropriate image based on spatial mode and current rendering context
+    sk_sp<SkImage> skImage;
+    if (imageComponent->isSpatial())
+    {
+      auto xrContext = getResource<XRRenderingContext>();
+      if (xrContext != nullptr && xrContext->isStereoMode())
+      {
+        // Use eye-specific portion of spatial image
+        if (xrContext->isLeftEye())
+        {
+          skImage = imageComponent->getLeftEyeImage();
+        }
+        else if (xrContext->isRightEye())
+        {
+          skImage = imageComponent->getRightEyeImage();
+        }
+        else
+        {
+          skImage = imageComponent->image(); // fallback to full image
+        }
+      }
+      else
+      {
+        // Not in stereo mode, use full image
+        skImage = imageComponent->image();
+      }
+    }
+    else
+    {
+      // Non-spatial image, use as-is
+      skImage = imageComponent->image();
+    }
+
     if (skImage == nullptr)
     {
       // Disable using texture if the image is failed to load.
