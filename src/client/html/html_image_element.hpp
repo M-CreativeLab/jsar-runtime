@@ -55,7 +55,10 @@ namespace dom
 
     inline geometry::DOMRect getImageClientRect() const
     {
-      return geometry::DOMRect(0, 0, naturalWidth(), naturalHeight());
+      // For spatial (stereo) images, the layout width should be half of the natural width
+      // since spatial images contain side-by-side stereo pairs
+      int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
+      return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
     }
     bool readPixels(SkPixmap &dst) const override
     {
