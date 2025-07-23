@@ -100,6 +100,5 @@ vector<CdpCommand> CdpMyExampleDomain::getCommands() const
   return {
     {"ping", "Simple ping command that responds with pong.", nullptr},
     {"echo", "Echoes back the provided parameters.", nullptr},
-    {"getInfo", "Returns information about the Example domain.", nullptr}
-  };
+    {"getInfo", "Returns information about the Example domain.", nullptr}};
 }

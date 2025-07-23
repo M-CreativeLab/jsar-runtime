@@ -115,6 +115,5 @@ vector<CdpCommand> CdpRuntimeDomain::getCommands() const
     {"enable", "Enables reporting of execution contexts creation.", nullptr},
     {"disable", "Disables reporting of execution contexts creation.", nullptr},
     {"getVersion", "Returns the JavaScript runtime version information.", nullptr},
-    {"evaluate", "Evaluates expression on global object.", nullptr}
-  };
+    {"evaluate", "Evaluates expression on global object.", nullptr}};
 }
