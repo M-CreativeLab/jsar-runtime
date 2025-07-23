@@ -214,15 +214,15 @@ namespace client_cssom::values::generics
 
   private:
     // Helper method to serialize color stops
-    template<typename ItemVector>
-    std::string serializeColorStops(const ItemVector& items) const
+    template <typename ItemVector>
+    std::string serializeColorStops(const ItemVector &items) const
     {
       std::string colorStops;
       for (size_t i = 0; i < items.size(); ++i)
       {
         if (i > 0)
           colorStops += ", ";
-        
+
         const auto &item = items[i];
         if (item.type == GenericGradientItemBase::kSimpleColorStop)
         {

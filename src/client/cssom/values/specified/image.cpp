@@ -147,16 +147,16 @@ namespace client_cssom::values::specified
     {
       const auto &specified_linear = std::get<LinearGradient>(this->gradient_type);
       computed::Gradient::LinearGradient computed_linear;
-      
+
       // Copy direction (no conversion needed for enum)
       computed_linear.direction = specified_linear.direction;
-      
+
       // Convert gradient items
       for (const auto &item : specified_linear.items)
       {
         computed::Gradient::LinearGradient::GradientItem computed_item;
         computed_item.type = item.type;
-        
+
         if (item.type == generics::GenericGradientItemBase::kSimpleColorStop)
         {
           const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::SimpleColorStop>(item.value);
@@ -179,27 +179,27 @@ namespace client_cssom::values::specified
           computed_hint.length_percentage = hint.length_percentage.toComputedValue(context);
           computed_item.value = computed_hint;
         }
-        
+
         computed_linear.items.push_back(computed_item);
       }
-      
+
       computed_gradient.gradient_type = computed_linear;
     }
     else if (std::holds_alternative<RadialGradient>(this->gradient_type))
     {
       const auto &specified_radial = std::get<RadialGradient>(this->gradient_type);
       computed::Gradient::RadialGradient computed_radial;
-      
+
       // Copy shape and size (no conversion needed for enums)
       computed_radial.shape = specified_radial.shape;
       computed_radial.size = specified_radial.size;
-      
+
       // Convert gradient items
       for (const auto &item : specified_radial.items)
       {
         computed::Gradient::RadialGradient::GradientItem computed_item;
         computed_item.type = item.type;
-        
+
         if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kSimpleColorStop)
         {
           const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::SimpleColorStop>(item.value);
@@ -222,10 +222,10 @@ namespace client_cssom::values::specified
           computed_hint.length_percentage = hint.length_percentage.toComputedValue(context);
           computed_item.value = computed_hint;
         }
-        
+
         computed_radial.items.push_back(computed_item);
       }
-      
+
       computed_gradient.gradient_type = computed_radial;
     }
 

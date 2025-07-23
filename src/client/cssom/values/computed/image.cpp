@@ -19,7 +19,7 @@ namespace client_cssom::values::computed
     return "";
   }
 
-  const Gradient* Image::getGradient() const
+  const Gradient *Image::getGradient() const
   {
     if (isGradient())
     {
@@ -28,9 +28,9 @@ namespace client_cssom::values::computed
     return nullptr;
   }
 
-  const typename Gradient::LinearGradient* Image::getLinearGradient() const
+  const typename Gradient::LinearGradient *Image::getLinearGradient() const
   {
-    const auto* gradient = getGradient();
+    const auto *gradient = getGradient();
     if (gradient && holds_alternative<typename Gradient::LinearGradient>(gradient->gradient_type))
     {
       return &get<typename Gradient::LinearGradient>(gradient->gradient_type);
@@ -38,9 +38,9 @@ namespace client_cssom::values::computed
     return nullptr;
   }
 
-  const typename Gradient::RadialGradient* Image::getRadialGradient() const
+  const typename Gradient::RadialGradient *Image::getRadialGradient() const
   {
-    const auto* gradient = getGradient();
+    const auto *gradient = getGradient();
     if (gradient && holds_alternative<typename Gradient::RadialGradient>(gradient->gradient_type))
     {
       return &get<typename Gradient::RadialGradient>(gradient->gradient_type);
@@ -50,7 +50,7 @@ namespace client_cssom::values::computed
 
   bool Image::isGradientRepeating() const
   {
-    const auto* gradient = getGradient();
+    const auto *gradient = getGradient();
     return gradient ? gradient->repeating : false;
   }
 
