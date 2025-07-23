@@ -676,8 +676,8 @@
         messageEl.appendChild(contentEl);
       }
       
-      messagesEl.appendChild(messageEl);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      messagesEl.insertBefore(messageEl, messagesEl.firstChild);
+      messagesEl.scrollTop = 0;
     }
     
     // Allow Enter key to send message

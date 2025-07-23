@@ -413,6 +413,9 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
       return true;
     }
     
+    // Store the client ID for later use
+    clientId_ = clientId;
+    
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested for client '%s'", clientId.c_str());
     
     // Check WebSocket connection limit

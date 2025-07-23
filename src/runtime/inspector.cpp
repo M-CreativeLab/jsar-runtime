@@ -373,7 +373,7 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
   }
 
   try {
-    string response = cdpHandler_->processMessage(message);
+    string response = cdpHandler_->processMessage(message, client.clientId());
     DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
     client.sendWebSocketMessage(response);
   } catch (const std::exception& e) {

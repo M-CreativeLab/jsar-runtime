@@ -11,7 +11,11 @@ public:
   CdpRuntimeDomain(TrConstellation *constellation);
 
   std::string handleMethod(const std::string &method, const CdpMessage &message) override;
-  void addProtocolDefinition(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator) override;
+  
+  // New declarative interface
+  std::string getDomainName() const override;
+  std::string getDomainDescription() const override;
+  std::vector<CdpCommand> getCommands() const override;
 
 private:
   TrConstellation *constellation_;
