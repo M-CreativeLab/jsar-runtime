@@ -184,33 +184,33 @@ void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Do
     // Create domain object
     rapidjson::Value domainObj;
     domainObj.SetObject();
-    
+
     // Add domain name and description
-    domainObj.AddMember("domain", 
-                       rapidjson::Value().SetString(handler->getDomainName().c_str(), allocator), 
-                       allocator);
-    domainObj.AddMember("description", 
-                       rapidjson::Value().SetString(handler->getDomainDescription().c_str(), allocator), 
-                       allocator);
-    
+    domainObj.AddMember("domain",
+                        rapidjson::Value().SetString(handler->getDomainName().c_str(), allocator),
+                        allocator);
+    domainObj.AddMember("description",
+                        rapidjson::Value().SetString(handler->getDomainDescription().c_str(), allocator),
+                        allocator);
+
     // Add commands
     rapidjson::Value commands;
     commands.SetArray();
-    
+
     auto domainCommands = handler->getCommands();
     for (const auto &cmd : domainCommands)
     {
       rapidjson::Value cmdObj;
       cmdObj.SetObject();
-      cmdObj.AddMember("name", 
-                      rapidjson::Value().SetString(cmd.name.c_str(), allocator), 
-                      allocator);
-      cmdObj.AddMember("description", 
-                      rapidjson::Value().SetString(cmd.description.c_str(), allocator), 
-                      allocator);
+      cmdObj.AddMember("name",
+                       rapidjson::Value().SetString(cmd.name.c_str(), allocator),
+                       allocator);
+      cmdObj.AddMember("description",
+                       rapidjson::Value().SetString(cmd.description.c_str(), allocator),
+                       allocator);
       commands.PushBack(cmdObj, allocator);
     }
-    
+
     domainObj.AddMember("commands", commands, allocator);
     domains.PushBack(domainObj, allocator);
   }

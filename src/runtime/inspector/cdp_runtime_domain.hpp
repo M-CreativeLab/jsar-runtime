@@ -11,7 +11,7 @@ public:
   CdpRuntimeDomain(TrConstellation *constellation);
 
   std::string handleMethod(const std::string &method, const CdpMessage &message, const std::string &clientId) override;
-  
+
   // New declarative interface
   std::string getDomainName() const override;
   std::string getDomainDescription() const override;
