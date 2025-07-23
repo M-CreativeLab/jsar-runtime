@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Comprehensive Spatial Image Test Suite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        
+        .test-images {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .test-image {
+            border: 3px solid #666;
+            border-radius: 4px;
+        }
+        
+        .spatial-image {
+            border-color: #00ff00; /* Green border for spatial images */
+        }
+        
+        .regular-image {
+            border-color: #ff0000; /* Red border for regular images */
+        }
+        
+        .js-created {
+            border-color: #0099ff; /* Blue border for JS-created images */
+        }
+        
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .info-panel {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0088ff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🌐 JSAR Spatial Image Test Suite</h1>
+    
+    <div class="info-panel">
+        <h3>📋 Test Information</h3>
+        <p><strong>Purpose:</strong> Validate spatial (stereo) image functionality in JSAR</p>
+        <p><strong>Expected Behavior:</strong></p>
+        <ul>
+            <li><strong>In Stereo Mode:</strong> Spatial images show left half to left eye, right half to right eye</li>
+            <li><strong>In Non-Stereo Mode:</strong> Spatial images show full side-by-side content</li>
+            <li><strong>Regular Images:</strong> Always show full content regardless of mode</li>
+        </ul>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff00;"></div>
+            <span>Spatial Images (spatial="stereo")</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff0000;"></div>
+            <span>Regular Images</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #0099ff;"></div>
+            <span>JavaScript Created</span>
+        </div>
+    </div>
+
+    <!-- Test 1: Basic Spatial Image -->
+    <div class="test-section">
+        <h2>🧪 Test 1: Basic Spatial Image</h2>
+        <p>This spatial image should display "L" to the left eye and "R" to the right eye in stereo mode.</p>
+        <div class="test-images">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZiAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMDAwIi8+CiAgPHRleHQgeD0iMTAwIiB5PSIxMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI4MHB4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwMCI+TDwvdGV4dD4KICA8IS0tIFJpZ2h0IGhhbGYgLS0+CiAgPHJlY3QgeD0iMjAwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMDAwIi8+CiAgPHRleHQgeD0iMzAwIiB5PSIxMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI4MHB4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwMCI+UjwvdGV4dD4KPC9zdmc+"
+                 spatial="stereo" 
+                 class="test-image spatial-image" 
+                 style="width: 300px; height: 150px;" 
+                 alt="Spatial L-R Test Image" />
+        </div>
+    </div>
+
+    <!-- Test 2: Color-Based Spatial Image -->
+    <div class="test-section">
+        <h2>🎨 Test 2: Color-Based Spatial Image</h2>
+        <p>Left eye should see red, right eye should see blue in stereo mode.</p>
+        <div class="test-images">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZjogUmVkIC0tPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZmYwMDAwIi8+CiAgPCEtLSBSaWdodCBoYWxmOiBCbHVlIC0tPgogIDxyZWN0IHg9IjIwMCIgeT0iMCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMwMDAwZmYiLz4KPC9zdmc+"
+                 spatial="stereo" 
+                 class="test-image spatial-image" 
+                 style="width: 300px; height: 150px;" 
+                 alt="Spatial Red-Blue Test Image" />
+        </div>
+    </div>
+
+    <!-- Test 3: Pattern-Based Spatial Image -->
+    <div class="test-section">
+        <h2>🔺 Test 3: Pattern-Based Spatial Image</h2>
+        <p>Left eye should see a circle, right eye should see a square in stereo mode.</p>
+        <div class="test-images">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZjogQ2lyY2xlIC0tPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZWVlZWVlIiBzdHJva2U9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjYwIiBmaWxsPSIjMDAwIi8+CiAgPCEtLSBSaWdodCBoYWxmOiBTcXVhcmUgLS0+CiAgPHJlY3QgeD0iMjAwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIgc3Ryb2tlPSIjMDAwIi8+CiAgPHJlY3QgeD0iMjQwIiB5PSI0MCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAiLz4KPC9zdmc+"
+                 spatial="stereo" 
+                 class="test-image spatial-image" 
+                 style="width: 300px; height: 150px;" 
+                 alt="Spatial Circle-Square Test Image" />
+        </div>
+    </div>
+
+    <!-- Test 4: Mixed Content -->
+    <div class="test-section">
+        <h2>🔀 Test 4: Mixed Regular and Spatial Images</h2>
+        <p>Compare regular images (full display) with spatial images (eye-specific content).</p>
+        <div class="test-images">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAwODA0MCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjBweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+UkVHVUxBUjwvdGV4dD4KICA8dGV4dCB4PSIxMDAiIHk9IjEzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwcHgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmYiPklNQUdFPC90ZXh0Pgo8L3N2Zz4="
+                 class="test-image regular-image" 
+                 style="width: 150px; height: 150px;" 
+                 alt="Regular Test Image" />
+            
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZiAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzgwMDA4MCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTA1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjBweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+U1BBVElBTDwvdGV4dD4KICA8dGV4dCB4PSIxMDAiIHk9IjEzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwcHgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmYiPkxFRlQ8L3RleHQ+CiAgPCEtLSBSaWdodCBoYWxmIC0tPgogIDxyZWN0IHg9IjIwMCIgeT0iMCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiM4MDQwMDAiLz4KICA8dGV4dCB4PSIzMDAiIHk9IjEwNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwcHgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmYiPlNQQVRJQUw8L3RleHQ+CiAgPHRleHQgeD0iMzAwIiB5PSIxMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMHB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5SSUdIVDwvdGV4dD4KPC9zdmc+"
+                 spatial="stereo" 
+                 class="test-image spatial-image" 
+                 style="width: 300px; height: 150px;" 
+                 alt="Mixed Content Spatial Image" />
+        </div>
+    </div>
+
+    <!-- Test 5: JavaScript API Tests -->
+    <div class="test-section">
+        <h2>⚙️ Test 5: JavaScript API Tests</h2>
+        <p>Testing spatial image creation and manipulation via JavaScript.</p>
+        <div class="test-images" id="js-test-container">
+            <!-- Images will be added via JavaScript -->
+        </div>
+        <div>
+            <button onclick="runJavaScriptTests()">Run JavaScript Tests</button>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
+        <div class="console-output" id="console-output">
+            Console output will appear here...
+        </div>
+    </div>
+
+    <!-- Test 6: Dynamic Attribute Changes -->
+    <div class="test-section">
+        <h2>🔄 Test 6: Dynamic Attribute Changes</h2>
+        <p>Testing dynamic changes to the spatial attribute.</p>
+        <div class="test-images">
+            <img id="dynamic-test-image" 
+                 src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZiAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAwODA0MCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTZweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+U1BBVElBTDwvdGV4dD4KICA8dGV4dCB4PSIxMDAiIHk9IjEzMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2cHgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmYiPk9OPC90ZXh0PgogIDwhLS0gUmlnaHQgaGFsZiAtLT4KICA8cmVjdCB4PSIyMDAiIHk9IjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjODAwMDAwIi8+CiAgPHRleHQgeD0iMzAwIiB5PSIxMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5TUEFUSUFMPC90ZXh0PgogIDx0ZXh0IHg9IjMwMCIgeT0iMTMwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTZweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+T0ZGPC90ZXh0Pgo8L3N2Zz4="
+                 class="test-image" 
+                 style="width: 300px; height: 150px;" 
+                 alt="Dynamic Attribute Test Image" />
+        </div>
+        <div>
+            <button onclick="toggleSpatialAttribute()">Toggle Spatial Attribute</button>
+            <span id="spatial-status">Current: Regular Image</span>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = '';
+            log('Console cleared');
+        }
+
+        function runJavaScriptTests() {
+            log('🧪 Starting JavaScript API Tests...');
+            
+            // Test 1: Create spatial image via createElement
+            log('Test 1: Creating spatial image via createElement');
+            const spatialImg1 = document.createElement('img');
+            spatialImg1.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZiAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAwNDA4MCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjBweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+SlM8L3RleHQ+CiAgPHRleHQgeD0iMTAwIiB5PSIxMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMHB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5MRUZUPC90ZXh0PgogIDwhLS0gUmlnaHQgaGFsZiAtLT4KICA8cmVjdCB4PSIyMDAiIHk9IjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjODA0MDAwIi8+CiAgPHRleHQgeD0iMzAwIiB5PSIxMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMHB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5KUzwvdGV4dD4KICA8dGV4dCB4PSIzMDAiIHk9IjEzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwcHgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmYiPlJJR0hUPC90ZXh0Pgo8L3N2Zz4=';
+            spatialImg1.setAttribute('spatial', 'stereo');
+            spatialImg1.className = 'test-image js-created';
+            spatialImg1.style.width = '300px';
+            spatialImg1.style.height = '150px';
+            
+            spatialImg1.onload = function() {
+                log('✅ Spatial image loaded successfully');
+                log(`   - src: ${this.src.substring(0, 50)}...`);
+                log(`   - spatial attribute: "${this.getAttribute('spatial')}"`);
+                log(`   - dimensions: ${this.style.width} × ${this.style.height}`);
+            };
+            
+            spatialImg1.onerror = function() {
+                log('❌ Failed to load spatial image');
+            };
+            
+            document.getElementById('js-test-container').appendChild(spatialImg1);
+            
+            // Test 2: Create image via Image constructor
+            log('Test 2: Creating image via Image constructor');
+            const spatialImg2 = new Image();
+            spatialImg2.onload = function() {
+                log('✅ Image constructor test successful');
+                this.setAttribute('spatial', 'stereo');
+                this.className = 'test-image js-created';
+                this.style.width = '250px';
+                this.style.height = '125px';
+                this.style.marginLeft = '20px';
+                
+                log(`   - spatial attribute set to: "${this.getAttribute('spatial')}"`);
+                log(`   - natural dimensions: ${this.naturalWidth} × ${this.naturalHeight}`);
+                
+                document.getElementById('js-test-container').appendChild(this);
+            };
+            spatialImg2.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIExlZnQgaGFsZiAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzQwMDA4MCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTZweCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+SU1BR0U8L3RleHQ+CiAgPHRleHQgeD0iMTAwIiB5PSIxMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5MRUZUPC90ZXh0PgogIDwhLS0gUmlnaHQgaGFsZiAtLT4KICA8cmVjdCB4PSIyMDAiIHk9IjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMDA4MDQwIi8+CiAgPHRleHQgeD0iMzAwIiB5PSIxMTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5JTUFHRTU8L3RleHQ+CiAgPHRleHQgeD0iMzAwIiB5PSIxMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIj5SSUdIVDwvdGV4dD4KPC9zdmc+';
+            
+            log('🎯 JavaScript API tests initiated');
+        }
+
+        let isSpatial = false;
+        function toggleSpatialAttribute() {
+            const img = document.getElementById('dynamic-test-image');
+            const status = document.getElementById('spatial-status');
+            
+            if (isSpatial) {
+                img.removeAttribute('spatial');
+                img.className = 'test-image regular-image';
+                status.textContent = 'Current: Regular Image';
+                log('🔄 Changed to regular image');
+            } else {
+                img.setAttribute('spatial', 'stereo');
+                img.className = 'test-image spatial-image';
+                status.textContent = 'Current: Spatial Image';
+                log('🔄 Changed to spatial image');
+            }
+            isSpatial = !isSpatial;
+        }
+
+        // Initialize console
+        window.addEventListener('load', function() {
+            log('🌐 JSAR Spatial Image Test Suite Loaded');
+            log('📋 Ready to test spatial image functionality');
+            log('ℹ️  Use the buttons to run interactive tests');
+        });
+
+        // Log any image loading events
+        document.addEventListener('load', function(event) {
+            if (event.target.tagName === 'IMG') {
+                const spatialAttr = event.target.getAttribute('spatial');
+                log(`📷 Image loaded: ${spatialAttr === 'stereo' ? 'SPATIAL' : 'REGULAR'}`);
+            }
+        }, true);
+
+        document.addEventListener('error', function(event) {
+            if (event.target.tagName === 'IMG') {
+                log(`❌ Image failed to load: ${event.target.src.substring(0, 50)}...`);
+            }
+        }, true);
+    </script>
+</body>
+</html>
