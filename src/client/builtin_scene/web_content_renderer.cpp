@@ -119,6 +119,11 @@ namespace builtin_scene::web_renderer
       if (!fillPaint.has_value())
         fillPaint = make_optional<SkPaint>();
 
+      // Reset the fill paint properties.
+      fillPaint->setColor(SK_ColorBLACK);
+      fillPaint->setAntiAlias(true);
+      fillPaint->setStyle(SkPaint::kFill_Style);
+
       // Set the blend mode for the paint if the background blend mode is not normal.
       if (!style.backgroundBlendMode().isNormal())
         fillPaint->setBlendMode(style.backgroundBlendMode());
@@ -138,13 +143,10 @@ namespace builtin_scene::web_renderer
             {
               canvas->clipRRect(roundedRect, true);
 
-              float w = roundedRect.rect().width();
-              float h = roundedRect.rect().height();
-              SkRect srcRect = SkRect::MakeWH(w, h);
-              SkRect dstRect = SkRect::MakeWH(w, h);
+              SkRect drawRect = SkRect::MakeWH(roundedRect.rect().width(), roundedRect.rect().height());
               canvas->drawImageRect(bitmap.asImage(),
-                                    srcRect,
-                                    dstRect,
+                                    drawRect,
+                                    drawRect,
                                     SkSamplingOptions(),
                                     &fillPaint.value(),
                                     SkCanvas::kStrict_SrcRectConstraint);
@@ -167,8 +169,6 @@ namespace builtin_scene::web_renderer
         if (shader)
         {
           fillPaint->setShader(shader);
-          fillPaint->setAntiAlias(true);
-          fillPaint->setStyle(SkPaint::kFill_Style);
           canvas->drawRRect(roundedRect, fillPaint.value());
           textureRequired = true;
         }
