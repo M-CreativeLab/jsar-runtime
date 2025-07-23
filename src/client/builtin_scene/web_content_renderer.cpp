@@ -36,6 +36,160 @@ namespace builtin_scene::web_renderer
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
+  // Helper function to calculate background positioning area based on background-origin
+  SkRect getBackgroundPositioningArea(const SkRRect &roundedRect,
+                                      const client_layout::Fragment &fragment,
+                                      const ComputedStyle &style)
+  {
+    const SkRect &borderBox = roundedRect.rect();
+
+    if (style.backgroundOrigin().isBorderBox())
+    {
+      return borderBox;
+    }
+    else if (style.backgroundOrigin().isPaddingBox())
+    {
+      // For padding-box, subtract border widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      return SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft,
+        borderBox.fTop + borderTop,
+        borderBox.fRight - borderRight,
+        borderBox.fBottom - borderBottom);
+    }
+    else if (style.backgroundOrigin().isContentBox())
+    {
+      // For content-box, subtract border and padding widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      float paddingTop = fragment.padding().top();
+      float paddingRight = fragment.padding().right();
+      float paddingBottom = fragment.padding().bottom();
+      float paddingLeft = fragment.padding().left();
+
+      return SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft + paddingLeft,
+        borderBox.fTop + borderTop + paddingTop,
+        borderBox.fRight - borderRight - paddingRight,
+        borderBox.fBottom - borderBottom - paddingBottom);
+    }
+
+    // Default to border-box
+    return borderBox;
+  }
+
+  // Helper function to draw background image with repeat pattern
+  void drawBackgroundImage(SkCanvas *canvas,
+                           const sk_sp<SkImage> &image,
+                           const SkRect &positioningArea,
+                           const ComputedStyle &style,
+                           const SkPaint &paint)
+  {
+    if (!image)
+      return;
+
+    float imageWidth = static_cast<float>(image->width());
+    float imageHeight = static_cast<float>(image->height());
+
+    if (style.backgroundRepeat().isRepeat())
+    {
+      // Repeat both horizontally and vertically
+      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      {
+        for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+        {
+          SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
+          // Clip to positioning area
+          if (destRect.intersect(positioningArea))
+          {
+            SkRect srcRect = SkRect::MakeWH(
+              destRect.width() * imageWidth / imageWidth,
+              destRect.height() * imageHeight / imageHeight);
+            canvas->drawImageRect(image,
+                                  srcRect,
+                                  destRect,
+                                  SkSamplingOptions(),
+                                  &paint,
+                                  SkCanvas::kStrict_SrcRectConstraint);
+          }
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isRepeatX())
+    {
+      // Repeat only horizontally
+      for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+      {
+        SkRect destRect = SkRect::MakeXYWH(x, positioningArea.fTop, imageWidth, imageHeight);
+        if (destRect.intersect(positioningArea))
+        {
+          SkRect srcRect = SkRect::MakeWH(
+            destRect.width() * imageWidth / imageWidth,
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isRepeatY())
+    {
+      // Repeat only vertically
+      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      {
+        SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, y, imageWidth, imageHeight);
+        if (destRect.intersect(positioningArea))
+        {
+          SkRect srcRect = SkRect::MakeWH(
+            destRect.width() * imageWidth / imageWidth,
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isNoRepeat())
+    {
+      // No repeat - draw once at the positioning area origin
+      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      if (destRect.intersect(positioningArea))
+      {
+        SkRect srcRect = SkRect::MakeWH(
+          destRect.width() * imageWidth / imageWidth,
+          destRect.height() * imageHeight / imageHeight);
+        canvas->drawImageRect(image,
+                              srcRect,
+                              destRect,
+                              SkSamplingOptions(),
+                              &paint,
+                              SkCanvas::kStrict_SrcRectConstraint);
+      }
+    }
+    else
+    {
+      // Default to no repeat for unsupported values (space, round)
+      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      if (destRect.intersect(positioningArea))
+      {
+        canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);
+      }
+    }
+  }
+
   void InitSystem::onExecute()
   {
     auto webContentCtx = getResource<WebContentContext>();
@@ -143,13 +297,9 @@ namespace builtin_scene::web_renderer
             {
               canvas->clipRRect(roundedRect, true);
 
-              SkRect drawRect = SkRect::MakeWH(roundedRect.rect().width(), roundedRect.rect().height());
-              canvas->drawImageRect(bitmap.asImage(),
-                                    drawRect,
-                                    drawRect,
-                                    SkSamplingOptions(),
-                                    &fillPaint.value(),
-                                    SkCanvas::kStrict_SrcRectConstraint);
+              // Get the background positioning area based on background-origin
+              SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
+              drawBackgroundImage(canvas, bitmap.asImage(), positioningArea, style, fillPaint.value());
             }
             canvas->restore();
             textureRequired = true;

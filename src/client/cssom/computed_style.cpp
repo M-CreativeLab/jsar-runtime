@@ -412,6 +412,14 @@ namespace client_cssom
     {
       background_clip_ = Parse::ParseSingleValue<values::specified::BackgroundClip>(value).toComputedValue(context);
     }
+    else if (name == "background-origin")
+    {
+      background_origin_ = Parse::ParseSingleValue<values::specified::BackgroundOrigin>(value).toComputedValue(context);
+    }
+    else if (name == "background-repeat")
+    {
+      background_repeat_ = Parse::ParseSingleValue<values::specified::BackgroundRepeat>(value).toComputedValue(context);
+    }
 
     // Flexbox
     else if (name == "flex-direction")

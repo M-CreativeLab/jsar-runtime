@@ -3,66 +3,363 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JSAR Inspector WebSocket Test</title>
+  <title>JSAR Inspector CDP Test Client</title>
   <style>
-    body { font-family: monospace; padding: 20px; background: #f5f5f5; }
-    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-    .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
-    .connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .message { background: #e2e3e5; padding: 10px; margin: 5px 0; border-radius: 4px; }
-    .sent { background: #d1ecf1; }
-    .received { background: #d4edda; }
-    button { padding: 8px 16px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:disabled { background: #6c757d; cursor: not-allowed; }
-    input { padding: 8px; width: 300px; margin: 5px; }
-    textarea { width: 100%; height: 100px; margin: 5px 0; font-family: monospace; }
-    pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      padding: 20px; 
+      background: #f8f9fa; 
+      margin: 0;
+    }
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .header h1 {
+      color: #343a40;
+      margin: 0 0 10px 0;
+    }
+    .header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .status { 
+      padding: 15px; 
+      margin: 15px 0; 
+      border-radius: 8px; 
+      font-weight: 600;
+      text-align: center;
+    }
+    .connected { 
+      background: #d4edda; 
+      color: #155724; 
+      border: 1px solid #c3e6cb; 
+    }
+    .disconnected { 
+      background: #f8d7da; 
+      color: #721c24; 
+      border: 1px solid #f5c6cb; 
+    }
+    .connecting {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .test-section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+    .test-section h3 {
+      margin-top: 0;
+      color: #495057;
+    }
+    .test-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    button { 
+      padding: 10px 16px; 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    button:hover:not(:disabled) { 
+      background: #0056b3; 
+      transform: translateY(-1px);
+    }
+    button:disabled { 
+      background: #6c757d; 
+      cursor: not-allowed; 
+      transform: none;
+    }
+    button.secondary {
+      background: #6c757d;
+    }
+    button.secondary:hover:not(:disabled) {
+      background: #545b62;
+    }
+    button.danger {
+      background: #dc3545;
+    }
+    button.danger:hover:not(:disabled) {
+      background: #c82333;
+    }
+    button.success {
+      background: #28a745;
+    }
+    button.success:hover:not(:disabled) {
+      background: #218838;
+    }
+    input { 
+      padding: 10px; 
+      border: 1px solid #ced4da; 
+      border-radius: 6px; 
+      font-size: 14px;
+    }
+    textarea { 
+      width: 100%; 
+      height: 120px; 
+      margin: 10px 0; 
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; 
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      resize: vertical;
+      font-size: 13px;
+    }
+    .messages { 
+      max-height: 500px; 
+      overflow-y: auto; 
+      border: 1px solid #dee2e6; 
+      border-radius: 6px; 
+      background: white;
+    }
+    .message { 
+      padding: 12px; 
+      margin: 0; 
+      border-bottom: 1px solid #f8f9fa; 
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+    }
+    .message:last-child {
+      border-bottom: none;
+    }
+    .message.sent { 
+      background: #e3f2fd; 
+      border-left: 4px solid #2196f3;
+    }
+    .message.received { 
+      background: #e8f5e8; 
+      border-left: 4px solid #4caf50;
+    }
+    .message.system {
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+    }
+    .message.error {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+    }
+    .message-header {
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .message-time {
+      font-size: 11px;
+      color: #6c757d;
+      font-weight: normal;
+    }
+    pre { 
+      background: #f1f3f4; 
+      padding: 12px; 
+      border-radius: 4px; 
+      overflow-x: auto; 
+      margin: 8px 0 0 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #007bff;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .clear-messages {
+      float: right;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>JSAR Inspector WebSocket Test</h1>
-    <p>This page demonstrates connecting to the JSAR Inspector WebSocket endpoint for debugging.</p>
+    <div class="header">
+      <h1>🔧 JSAR Inspector CDP Test Client</h1>
+      <p>Browser-based Chrome DevTools Protocol testing for JSAR Runtime</p>
+    </div>
     
     <div class="status" id="status">Disconnected</div>
     
-    <div>
+    <div class="controls">
       <input type="text" id="url" value="ws://localhost:9423/devtools/inspector/1" placeholder="WebSocket URL">
       <button onclick="connect()" id="connectBtn">Connect</button>
       <button onclick="disconnect()" id="disconnectBtn" disabled>Disconnect</button>
     </div>
-    
-    <h3>Send Message</h3>
-    <div>
-      <textarea id="messageInput" placeholder='{"id": 1, "method": "Runtime.enable", "params": {}}'></textarea>
-      <br>
-      <button onclick="sendMessage()" id="sendBtn" disabled>Send Message</button>
-      <button onclick="sendPredefinedMessage('runtime.enable')">Send Runtime.enable</button>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="messagesSent">0</div>
+        <div class="stat-label">Messages Sent</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="messagesReceived">0</div>
+        <div class="stat-label">Messages Received</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="testsPassed">0</div>
+        <div class="stat-label">Tests Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="connectionTime">00:00</div>
+        <div class="stat-label">Connection Time</div>
+      </div>
     </div>
     
-    <h3>Messages</h3>
-    <div id="messages"></div>
+    <div class="test-section">
+      <h3>🧪 CDP Test Suite</h3>
+      <p>Run comprehensive tests to validate CDP implementation:</p>
+      <div class="test-buttons">
+        <button onclick="runAllTests()" id="runAllBtn" disabled class="success">Run All Tests</button>
+        <button onclick="runRuntimeTests()" id="runRuntimeBtn" disabled>Runtime Domain Tests</button>
+        <button onclick="runExampleTests()" id="runExampleBtn" disabled>Example Domain Tests</button>
+        <button onclick="runErrorTests()" id="runErrorBtn" disabled class="danger">Error Handling Tests</button>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h3>📤 Send Custom Message</h3>
+      <textarea id="messageInput" placeholder='{"id": 1, "method": "Runtime.enable", "params": {}}'></textarea>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button onclick="sendMessage()" id="sendBtn" disabled>Send Message</button>
+        <button onclick="loadTemplate('runtime.enable')" class="secondary">Runtime.enable</button>
+        <button onclick="loadTemplate('runtime.getVersion')" class="secondary">Runtime.getVersion</button>
+        <button onclick="loadTemplate('example.ping')" class="secondary">Example.ping</button>
+        <button onclick="loadTemplate('example.echo')" class="secondary">Example.echo</button>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>📋 Messages</h3>
+      <button onclick="clearMessages()" class="clear-messages secondary">Clear Messages</button>
+      <div class="messages" id="messages"></div>
+    </div>
   </div>
 
   <script>
     let ws = null;
     let messageId = 1;
+    let connectionStartTime = null;
+    let connectionTimer = null;
+    let messagesSent = 0;
+    let messagesReceived = 0;
+    let testsPassed = 0;
+    let currentTestSuite = null;
     
     const statusEl = document.getElementById('status');
     const connectBtn = document.getElementById('connectBtn');
     const disconnectBtn = document.getElementById('disconnectBtn');
     const sendBtn = document.getElementById('sendBtn');
+    const runAllBtn = document.getElementById('runAllBtn');
+    const runRuntimeBtn = document.getElementById('runRuntimeBtn');
+    const runExampleBtn = document.getElementById('runExampleBtn');
+    const runErrorBtn = document.getElementById('runErrorBtn');
     const messagesEl = document.getElementById('messages');
     const urlInput = document.getElementById('url');
     const messageInput = document.getElementById('messageInput');
     
     // Set default message
-    messageInput.value = JSON.stringify({
-      id: messageId,
-      method: 'Runtime.enable',
-      params: {}
-    }, null, 2);
+    loadTemplate('runtime.enable');
+    
+    // CDP test messages
+    const testSuites = {
+      runtime: [
+        {
+          name: 'Runtime.enable',
+          message: { id: 0, method: 'Runtime.enable', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Runtime.getVersion', 
+          message: { id: 0, method: 'Runtime.getVersion', params: {} },
+          expectSuccess: true
+        }
+      ],
+      example: [
+        {
+          name: 'Example.ping',
+          message: { id: 0, method: 'Example.ping', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Example.echo',
+          message: { 
+            id: 0, 
+            method: 'Example.echo', 
+            params: { 
+              message: 'Hello JSAR CDP!',
+              timestamp: Date.now(),
+              testData: { nested: true, array: [1, 2, 3] }
+            } 
+          },
+          expectSuccess: true
+        },
+        {
+          name: 'Example.getInfo',
+          message: { id: 0, method: 'Example.getInfo', params: {} },
+          expectSuccess: true
+        }
+      ],
+      errors: [
+        {
+          name: 'Unknown Domain',
+          message: { id: 0, method: 'UnknownDomain.test', params: {} },
+          expectSuccess: false,
+          expectedError: -32601
+        },
+        {
+          name: 'Unknown Method',
+          message: { id: 0, method: 'Runtime.unknownMethod', params: {} },
+          expectSuccess: false,
+          expectedError: -32601
+        }
+      ]
+    };
     
     function connect() {
       const url = urlInput.value;
@@ -71,22 +368,43 @@
         ws = new WebSocket(url);
         
         ws.onopen = function() {
-          updateStatus('Connected', true);
+          updateStatus('Connected', 'connected');
           connectBtn.disabled = true;
           disconnectBtn.disabled = false;
           sendBtn.disabled = false;
-          addMessage('Connection opened', 'system');
+          runAllBtn.disabled = false;
+          runRuntimeBtn.disabled = false;
+          runExampleBtn.disabled = false;
+          runErrorBtn.disabled = false;
+          
+          connectionStartTime = Date.now();
+          startConnectionTimer();
+          
+          addMessage('Connection opened to ' + url, 'system');
         };
         
         ws.onmessage = function(event) {
+          messagesReceived++;
+          updateStats();
           addMessage(event.data, 'received');
+          
+          // Handle test suite responses
+          if (currentTestSuite) {
+            handleTestResponse(event.data);
+          }
         };
         
         ws.onclose = function(event) {
-          updateStatus('Disconnected', false);
+          updateStatus('Disconnected', 'disconnected');
           connectBtn.disabled = false;
           disconnectBtn.disabled = true;
           sendBtn.disabled = true;
+          runAllBtn.disabled = true;
+          runRuntimeBtn.disabled = true;
+          runExampleBtn.disabled = true;
+          runErrorBtn.disabled = true;
+          
+          stopConnectionTimer();
           addMessage(`Connection closed (code: ${event.code})`, 'system');
         };
         
@@ -95,7 +413,7 @@
           console.error('WebSocket error:', error);
         };
         
-        updateStatus('Connecting...', false);
+        updateStatus('Connecting...', 'connecting');
         
       } catch (error) {
         addMessage(`Failed to connect: ${error.message}`, 'error');
@@ -110,58 +428,216 @@
       }
     }
     
-    function sendMessage() {
+    function sendMessage(customMessage = null) {
       if (!ws || ws.readyState !== WebSocket.OPEN) {
         addMessage('Not connected', 'error');
         return;
       }
       
-      const message = messageInput.value.trim();
+      const message = customMessage || messageInput.value.trim();
       if (!message) {
         addMessage('No message to send', 'error');
         return;
       }
       
       try {
-        // Validate JSON
-        JSON.parse(message);
-        ws.send(message);
-        addMessage(message, 'sent');
+        let messageObj;
+        if (typeof message === 'string') {
+          messageObj = JSON.parse(message);
+        } else {
+          messageObj = message;
+        }
         
-        // Update message ID for next message
-        messageId++;
+        const messageStr = JSON.stringify(messageObj);
+        ws.send(messageStr);
+        messagesSent++;
+        updateStats();
+        addMessage(messageStr, 'sent');
         
       } catch (error) {
         addMessage(`Invalid JSON: ${error.message}`, 'error');
       }
     }
     
-    function sendPredefinedMessage(type) {
+    function loadTemplate(type) {
       let message;
       
       switch (type) {
         case 'runtime.enable':
-          message = {
-            id: messageId++,
-            method: 'Runtime.enable',
-            params: {}
+          message = { id: messageId++, method: 'Runtime.enable', params: {} };
+          break;
+        case 'runtime.getVersion':
+          message = { id: messageId++, method: 'Runtime.getVersion', params: {} };
+          break;
+        case 'example.ping':
+          message = { id: messageId++, method: 'Example.ping', params: {} };
+          break;
+        case 'example.echo':
+          message = { 
+            id: messageId++, 
+            method: 'Example.echo', 
+            params: { 
+              message: 'Hello from browser!',
+              timestamp: Date.now()
+            } 
           };
           break;
         default:
-          message = {
-            id: messageId++,
-            method: 'Test.ping',
-            params: { message: 'Hello JSAR Inspector!' }
-          };
+          message = { id: messageId++, method: 'Runtime.enable', params: {} };
       }
       
       messageInput.value = JSON.stringify(message, null, 2);
-      sendMessage();
     }
     
-    function updateStatus(text, connected) {
+    function runAllTests() {
+      currentTestSuite = {
+        tests: [...testSuites.runtime, ...testSuites.example, ...testSuites.errors],
+        currentIndex: 0,
+        results: []
+      };
+      addMessage('🧪 Starting comprehensive CDP test suite...', 'system');
+      runNextTest();
+    }
+    
+    function runRuntimeTests() {
+      currentTestSuite = {
+        tests: testSuites.runtime,
+        currentIndex: 0,
+        results: []
+      };
+      addMessage('🔧 Starting Runtime domain tests...', 'system');
+      runNextTest();
+    }
+    
+    function runExampleTests() {
+      currentTestSuite = {
+        tests: testSuites.example,
+        currentIndex: 0,
+        results: []
+      };
+      addMessage('📋 Starting Example domain tests...', 'system');
+      runNextTest();
+    }
+    
+    function runErrorTests() {
+      currentTestSuite = {
+        tests: testSuites.errors,
+        currentIndex: 0,
+        results: []
+      };
+      addMessage('⚠️ Starting error handling tests...', 'system');
+      runNextTest();
+    }
+    
+    function runNextTest() {
+      if (!currentTestSuite || currentTestSuite.currentIndex >= currentTestSuite.tests.length) {
+        finishTestSuite();
+        return;
+      }
+      
+      const test = currentTestSuite.tests[currentTestSuite.currentIndex];
+      test.message.id = messageId++;
+      
+      addMessage(`→ Test ${currentTestSuite.currentIndex + 1}: ${test.name}`, 'system');
+      sendMessage(test.message);
+      
+      currentTestSuite.currentIndex++;
+    }
+    
+    function handleTestResponse(data) {
+      try {
+        const response = JSON.parse(data);
+        const test = currentTestSuite.tests[currentTestSuite.currentIndex - 1];
+        
+        let success = false;
+        if (test.expectSuccess) {
+          success = 'result' in response && response.id === test.message.id;
+        } else {
+          success = 'error' in response && 
+                   response.error.code === test.expectedError &&
+                   response.id === test.message.id;
+        }
+        
+        currentTestSuite.results.push({
+          test: test.name,
+          success: success,
+          response: response
+        });
+        
+        if (success) {
+          testsPassed++;
+          updateStats();
+        }
+        
+        // Continue with next test after delay
+        setTimeout(() => {
+          runNextTest();
+        }, 500);
+        
+      } catch (error) {
+        console.error('Error handling test response:', error);
+        setTimeout(() => {
+          runNextTest();
+        }, 500);
+      }
+    }
+    
+    function finishTestSuite() {
+      if (!currentTestSuite) return;
+      
+      const passed = currentTestSuite.results.filter(r => r.success).length;
+      const total = currentTestSuite.results.length;
+      
+      addMessage(`✅ Test suite completed: ${passed}/${total} tests passed`, 'system');
+      
+      currentTestSuite.results.forEach((result, index) => {
+        const status = result.success ? '✅' : '❌';
+        addMessage(`${index + 1}. ${status} ${result.test}`, 'system');
+      });
+      
+      if (passed === total) {
+        addMessage('🎉 All tests passed! CDP implementation is working correctly.', 'system');
+      } else {
+        addMessage('⚠️ Some tests failed. Check the responses for details.', 'system');
+      }
+      
+      currentTestSuite = null;
+    }
+    
+    function clearMessages() {
+      messagesEl.innerHTML = '';
+    }
+    
+    function updateStatus(text, className) {
       statusEl.textContent = text;
-      statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+      statusEl.className = 'status ' + className;
+    }
+    
+    function updateStats() {
+      document.getElementById('messagesSent').textContent = messagesSent;
+      document.getElementById('messagesReceived').textContent = messagesReceived;
+      document.getElementById('testsPassed').textContent = testsPassed;
+    }
+    
+    function startConnectionTimer() {
+      connectionTimer = setInterval(() => {
+        if (connectionStartTime) {
+          const elapsed = Math.floor((Date.now() - connectionStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          document.getElementById('connectionTime').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+      }, 1000);
+    }
+    
+    function stopConnectionTimer() {
+      if (connectionTimer) {
+        clearInterval(connectionTimer);
+        connectionTimer = null;
+      }
+      connectionStartTime = null;
+      document.getElementById('connectionTime').textContent = '00:00';
     }
     
     function addMessage(text, type) {
@@ -169,21 +645,39 @@
       messageEl.className = 'message ' + type;
       
       const timestamp = new Date().toLocaleTimeString();
-      const prefix = type === 'sent' ? '→ ' : type === 'received' ? '← ' : '• ';
+      const icons = {
+        sent: '→',
+        received: '←',
+        system: '•',
+        error: '⚠️'
+      };
+      const prefix = icons[type] || '•';
+      
+      const headerEl = document.createElement('div');
+      headerEl.className = 'message-header';
+      headerEl.innerHTML = `<span>${prefix} ${type.toUpperCase()}</span><span class="message-time">${timestamp}</span>`;
+      
+      messageEl.appendChild(headerEl);
       
       if (type === 'sent' || type === 'received') {
         try {
           const parsed = JSON.parse(text);
-          messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong><pre>${JSON.stringify(parsed, null, 2)}</pre>`;
+          const preEl = document.createElement('pre');
+          preEl.textContent = JSON.stringify(parsed, null, 2);
+          messageEl.appendChild(preEl);
         } catch {
-          messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong><pre>${text}</pre>`;
+          const preEl = document.createElement('pre');
+          preEl.textContent = text;
+          messageEl.appendChild(preEl);
         }
       } else {
-        messageEl.innerHTML = `<strong>${timestamp} ${prefix}</strong>${text}`;
+        const contentEl = document.createElement('div');
+        contentEl.textContent = text;
+        messageEl.appendChild(contentEl);
       }
       
-      messagesEl.appendChild(messageEl);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      messagesEl.insertBefore(messageEl, messagesEl.firstChild);
+      messagesEl.scrollTop = 0;
     }
     
     // Allow Enter key to send message
@@ -192,6 +686,12 @@
         sendMessage();
       }
     });
+    
+    // Initialize stats
+    updateStats();
+    
+    console.log('JSAR Inspector CDP Test Client loaded');
+    console.log('Use the interface above to test CDP functionality');
   </script>
 </body>
 </html>

@@ -13,6 +13,8 @@
 #include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./embedder.hpp"
+#include "./inspector/cdp_runtime_domain.hpp"
+#include "./inspector/cdp_myexample_domain.hpp"
 
 using namespace std;
 using namespace std::placeholders;
@@ -20,6 +22,15 @@ using namespace std::placeholders;
 void TrInspector::initialize()
 {
   server_ = make_unique<TrInspectorServer>(shared_from_this());
+
+  // Initialize CDP handler
+  cdpHandler_ = make_unique<CdpHandler>();
+
+  // Register CDP domains
+  cdpHandler_->registerDomain("Runtime", make_unique<CdpRuntimeDomain>(constellation));
+  cdpHandler_->registerDomain("Example", make_unique<CdpMyExampleDomain>());
+
+  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
 }
 
 void TrInspector::tick()
@@ -203,7 +214,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     string id = to_string(content->id);
     string title = "jsar[" + id + "]";
     string url = requestInit.url;
-    string debuggerUrl = "ws://localhost:" + to_string(requestInit.inspectorPort()) + "/devtools/inspector/" + id;
+    string debuggerUrl = "ws://localhost:9423/devtools/inspector/" + id;
     string devtoolsFrontendUrl = "devtools://devtools/inspector/devtools.html?ws=" + debuggerUrl;
 
     // Make sure the URL is a valid file URL if it's an absolute path
@@ -279,8 +290,11 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
 
   rapidjson::Value domains;
   domains.SetArray();
+
+  // Use CDP handler to populate protocol definitions from registered domains
+  if (cdpHandler_)
   {
-    // TODO: Add the domains
+    cdpHandler_->addProtocolDefinitions(domains, allocator);
   }
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);
@@ -352,6 +366,22 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
 
-  // For now, just echo the message back (placeholder for CDP implementation)
-  client.sendWebSocketMessage("Echo: " + message);
+  if (!cdpHandler_)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP handler not initialized, falling back to echo");
+    client.sendWebSocketMessage("Echo: " + message);
+    return;
+  }
+
+  try
+  {
+    string response = cdpHandler_->processMessage(message, client.clientId());
+    DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
+    client.sendWebSocketMessage(response);
+  }
+  catch (const std::exception &e)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
+    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");
+  }
 }
