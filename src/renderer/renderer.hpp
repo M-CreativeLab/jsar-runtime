@@ -19,6 +19,7 @@
 #include "./gles/context_storage.hpp"
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
+#include "./gaussian_splatting_renderer.hpp"
 
 using namespace std;
 using namespace commandbuffers;
@@ -164,6 +165,13 @@ namespace renderer
     {
       return glHostContext;
     }
+    /**
+     * @returns The 3D Gaussian Splatting renderer for handling <model> elements.
+     */
+    TrGaussianSplattingRenderer *getGaussianSplattingRenderer()
+    {
+      return gaussianSplattingRenderer.get();
+    }
 
     void onOpaquesRenderPass(analytics::PerformanceCounter &);
     void onTransparentsRenderPass(analytics::PerformanceCounter &);
@@ -264,6 +272,9 @@ namespace renderer
     ContextGLHost *glHostContext = nullptr;
     ContentRenderersList contentRenderers;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
+
+    // 3D Gaussian Splatting renderer for handling <model> elements with 3DGS content
+    std::unique_ptr<TrGaussianSplattingRenderer> gaussianSplattingRenderer = nullptr;
 
   private: // fields for frame rate calculation
     chrono::steady_clock::time_point tickingTimepoint;
