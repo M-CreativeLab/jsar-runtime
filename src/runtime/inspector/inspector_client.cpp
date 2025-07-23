@@ -389,8 +389,28 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     }
   }
 
+  // Only allow WebSocket upgrade for /devtools/inspector/:client paths
   if (hasUpgrade && hasConnection && hasWebSocketKey)
   {
+    // Validate URL path - must match /devtools/inspector/:client pattern
+    if (!url_.starts_with("/devtools/inspector/"))
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade rejected: invalid path '%s'", url_.c_str());
+      sendHttpErrorResponse(404, "WebSocket upgrades only supported on /devtools/inspector/:client");
+      return true; // We handled the request, even though we rejected it
+    }
+    
+    // Extract client ID from URL
+    string clientId = url_.substr(20); // Skip "/devtools/inspector/"
+    if (clientId.empty())
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade rejected: missing client ID in path '%s'", url_.c_str());
+      sendHttpErrorResponse(400, "Missing client ID in WebSocket URL");
+      return true;
+    }
+    
+    DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested for client '%s'", clientId.c_str());
+    
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();
     if (inspector == nullptr)
@@ -405,7 +425,7 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
       return true; // We handled the request, even though we rejected it
     }
 
-    DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested and approved");
+    DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade approved for client '%s'", clientId.c_str());
 
     // Generate WebSocket accept key
     string acceptKey = generateWebSocketAcceptKey(webSocketKey);

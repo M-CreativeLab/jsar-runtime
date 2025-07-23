@@ -6,26 +6,32 @@ This directory contains examples demonstrating how to connect to and interact wi
 
 - JSAR runtime must be running with inspector enabled (build with `INSPECTOR=yes`)
 - Default inspector port: 9423
-- WebSocket endpoint: `ws://localhost:9423/devtools/inspector/1`
+- WebSocket endpoint: `ws://localhost:9423/devtools/inspector/:client` ⭐ UPDATED
+
+**Note:** WebSocket upgrades are now restricted to the `/devtools/inspector/:client` path pattern for security and compatibility.
 
 ## Examples
 
-### 1. Node.js CDP Test Client (`inspector_cdp_test_client.js`) ⭐ NEW
+### 1. Browser CDP Test Client (`inspector_websocket_test.html`) ⭐ NEW
 
-A comprehensive Node.js client that tests the new Chrome DevTools Protocol support.
+A comprehensive browser-based client that provides full CDP testing capabilities with an intuitive interface.
 
 **Usage:**
 ```bash
-# Run the CDP test client
-node fixtures/inspector-client/inspector_cdp_test_client.js
+# Open in any modern web browser
+open fixtures/inspector-client/inspector_websocket_test.html
+# or
+firefox fixtures/inspector-client/inspector_websocket_test.html
 ```
 
 **Features:**
-- Tests all supported CDP domains (Runtime, MyExample)
-- Validates CDP message format compliance
-- Tests error handling for unknown domains/methods
-- Provides detailed test results and validation
-- Demonstrates proper CDP usage patterns
+- 🧪 **Comprehensive Test Suite** - Run all CDP tests with one click
+- 📊 **Real-time Statistics** - Track messages, tests, and connection time
+- 🎯 **Domain-specific Testing** - Test Runtime, Example, and error handling separately
+- 📤 **Custom Message Sender** - Send custom CDP messages with validation
+- 🔗 **Template Library** - Quick access to common CDP message templates
+- 📋 **Interactive Message Log** - Real-time message display with formatting
+- ⚡ **No Dependencies** - Pure HTML/CSS/JavaScript, runs in any browser
 
 ### 2. Node.js Basic Client (`inspector_websocket_client.js`)
 
@@ -45,26 +51,7 @@ node fixtures/inspector-client/inspector_websocket_client.js
 - Sends sample CDP messages
 - Works with both old echo mode and new CDP mode
 
-### 3. Browser Test Page (`inspector_websocket_test.html`)
-
-An interactive HTML page for testing WebSocket connections from a browser.
-
-**Usage:**
-```bash
-# Open in any modern web browser
-open fixtures/inspector-client/inspector_websocket_test.html
-# or
-firefox fixtures/inspector-client/inspector_websocket_test.html
-```
-
-**Features:**
-- Interactive WebSocket connection management
-- Send custom JSON messages
-- Predefined CDP message templates
-- Real-time message display
-- Connection status monitoring
-
-## Chrome DevTools Protocol Support ⭐ NEW
+## Chrome DevTools Protocol Support ⭐ UPDATED
 
 The JSAR Inspector now implements basic Chrome DevTools Protocol (CDP) support, enabling standard debugging tools to connect and interact with the runtime.
 
@@ -75,10 +62,10 @@ The JSAR Inspector now implements basic Chrome DevTools Protocol (CDP) support, 
 - **Runtime.disable** - Disable runtime domain  
 - **Runtime.getVersion** - Get JavaScript runtime version info
 
-#### MyExample Domain (for testing)
-- **MyExample.ping** - Simple connectivity test
-- **MyExample.echo** - Echo back parameters
-- **MyExample.getInfo** - Get domain information
+#### Example Domain (renamed from MyExample)
+- **Example.ping** - Simple connectivity test
+- **Example.echo** - Echo back parameters
+- **Example.getInfo** - Get domain information
 
 ### Example CDP Messages
 
@@ -104,7 +91,7 @@ The JSAR Inspector now implements basic Chrome DevTools Protocol (CDP) support, 
 ```json
 {
   "id": 3,
-  "method": "MyExample.ping",
+  "method": "Example.ping",
   "params": {}
 }
 ```
@@ -121,7 +108,14 @@ List debug targets:
 curl http://localhost:9423/json/list
 ```
 
-## Connection Limits
+## WebSocket Connection Requirements ⭐ UPDATED
+
+The inspector now enforces strict path validation for WebSocket upgrades:
+
+- ✅ **Allowed:** `ws://localhost:9423/devtools/inspector/1`
+- ✅ **Allowed:** `ws://localhost:9423/devtools/inspector/main`
+- ❌ **Rejected:** `ws://localhost:9423/` (old generic endpoint)
+- ❌ **Rejected:** `ws://localhost:9423/debug` (unsupported path)
 
 The inspector enforces a maximum of 5 concurrent WebSocket connections. Additional connection attempts will receive an HTTP 503 Service Unavailable response.
 
@@ -133,10 +127,15 @@ The inspector enforces a maximum of 5 concurrent WebSocket connections. Addition
 - Verify inspector is enabled
 - Check the correct port (default: 9423)
 
+**WebSocket Upgrade Failed:**
+- Ensure URL follows pattern: `/devtools/inspector/:client`
+- Check that the client ID is not empty
+- Verify the connection limit hasn't been reached
+
 **CDP Messages Not Working:**
 - Verify message format: `{id, method, params}`
 - Check supported domains in `/json/protocol`
-- Use the CDP test client for validation
+- Use the browser test client for comprehensive validation
 
 **Connection Limit Reached:**
 - Close existing connections
@@ -162,5 +161,7 @@ The WebSocket implementation serves as the transport layer for Chrome DevTools P
 - ✅ Extensible architecture for new domains
 - ✅ Protocol discovery and introspection
 - ✅ Comprehensive logging for debugging
+- ✅ **Path-based WebSocket validation** ⭐ NEW
+- ✅ **Browser-based testing interface** ⭐ NEW
 
 For technical details, see `docs/cdp_support.md`.
