@@ -72,15 +72,6 @@ namespace builtin_scene::materials
      */
     TextureUpdateStatus updateTexture(WebContent &content);
 
-    /**
-     * Update spatial textures for stereo rendering.
-     *
-     * @param imageComponent The Image2d component containing the spatial image data.
-     * @param content The WebContent to update the material with.
-     * @returns The status of the texture update.
-     */
-    TextureUpdateStatus updateSpatialTexture(std::shared_ptr<builtin_scene::Image2d> imageComponent, WebContent &content);
-
   public:
     float width() const
     {

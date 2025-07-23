@@ -135,7 +135,6 @@ namespace builtin_scene
 
     // Resources
     app.addResource(Resource::Make<WebXRExperience>());
-    app.addResource(Resource::Make<XRRenderingContext>());
 
     // Systems
     app.addSystem(SchedulerLabel::kStartup, System::Make<WebXRExperienceStartupSystem>());

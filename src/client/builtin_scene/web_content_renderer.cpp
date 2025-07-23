@@ -660,24 +660,21 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
-      // Check if this is a spatial image
+      // Check if this is a spatial image and set the spatial flag
       auto imageComponent = getComponent<Image2d>(entity);
       if (imageComponent != nullptr && imageComponent->isSpatial())
       {
-        // Handle spatial image texture updates
         content.setSpatial(true);
-        auto status = webContentMaterial->updateSpatialTexture(imageComponent, content);
-        if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
-          content.setDirty(false);
       }
       else
       {
-        // Handle regular texture update
         content.setSpatial(false);
-        auto status = webContentMaterial->updateTexture(content);
-        if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
-          content.setDirty(false);
       }
+      
+      // Use the same texture update method for both spatial and non-spatial images
+      auto status = webContentMaterial->updateTexture(content);
+      if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+        content.setDirty(false);
     }
   }
 }

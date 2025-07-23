@@ -16,23 +16,7 @@
 
 namespace builtin_scene
 {
-  /**
-   * Resource to track the current XR rendering context (which eye is being rendered).
-   */
-  class XRRenderingContext : public ecs::Resource
-  {
-  public:
-    XRRenderingContext() : current_view_index_(-1) {}
 
-    inline int currentViewIndex() const { return current_view_index_; }
-    inline void setCurrentViewIndex(int viewIndex) { current_view_index_ = viewIndex; }
-    inline bool isLeftEye() const { return current_view_index_ == 0; }
-    inline bool isRightEye() const { return current_view_index_ == 1; }
-    inline bool isStereoMode() const { return current_view_index_ >= 0; }
-
-  private:
-    int current_view_index_; // -1 = non-XR, 0 = left eye, 1 = right eye
-  };
 
   class WebXRExperience : public ecs::Resource
   {
