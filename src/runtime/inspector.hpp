@@ -50,6 +50,9 @@ public:
   // Client lifecycle management
   void onClientConnected(TrInspectorClient &client);
   void onClientDisconnected(TrInspectorClient &client);
+  
+  // Command buffer execution notification
+  void onCommandBufferExecuted(const std::string &commandBufferData);
 
 private:
   std::unique_ptr<TrInspectorServer> server_;

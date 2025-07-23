@@ -71,6 +71,22 @@ bool TrConstellation::initialize()
 
 #ifdef TR_ENABLE_INSPECTOR
     inspector->initialize();
+    
+    // Set up command buffer execution callback to notify inspector
+    if (renderer && inspector) {
+      renderer->setCommandBufferExecutionCallback([this](const std::string& commandBufferData) {
+        if (inspector) {
+          // Get the Universal Rendering Server domain from the inspector
+          // This is a bit of a hack, but we need to access the domain directly
+          auto inspectorPtr = inspector.get();
+          if (inspectorPtr && inspectorPtr->constellation && inspectorPtr->constellation->renderer) {
+            // The domain will be accessed through the CDP handler in the inspector
+            // For now, we'll add a method to the inspector to forward this event
+            inspectorPtr->onCommandBufferExecuted(commandBufferData);
+          }
+        }
+      });
+    }
 #endif
   }
   initialized = true;

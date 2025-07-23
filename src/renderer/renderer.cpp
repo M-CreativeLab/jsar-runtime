@@ -350,23 +350,38 @@ namespace renderer
     auto xr_device = constellation->xrDevice.get();
     assert(xr_device != nullptr);
 
+    bool result = false;
     if (xr_device->enabled()) [[likely]]
     {
       if (xr_device->isRenderedAsMultipass())
       {
         xr::MultiPassFrame device_frame(xr_device, 0);
-        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
+        result = rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
       else
       {
         xr::SinglePassFrame device_frame(xr_device, 0);
-        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
+        result = rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
     }
     else
     {
-      return rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
+      result = rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
+    
+    // Notify callback if command buffers were executed successfully
+    if (result && commandBufferExecutionCallback_)
+    {
+      // Create a summary of the executed command buffers
+      std::string commandBufferInfo = "Executed " + std::to_string(list.size()) + " command buffers";
+      if (content_renderer)
+      {
+        commandBufferInfo += " for content " + std::to_string(content_renderer->contentId);
+      }
+      commandBufferExecutionCallback_(commandBufferInfo);
+    }
+    
+    return result;
   }
 
   void TrRenderer::calcFps()

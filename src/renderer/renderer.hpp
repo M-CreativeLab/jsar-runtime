@@ -6,6 +6,7 @@
 #include <shared_mutex>
 #include <atomic>
 #include <memory>
+#include <functional>
 
 #include <common/classes.hpp>
 #include <common/viewport.hpp>
@@ -48,6 +49,10 @@ namespace renderer
 
     using ContentRendererReference = std::shared_ptr<TrContentRenderer>;
     using ContentRenderersList = std::vector<ContentRendererReference>;
+
+  public:
+    // Callback for command buffer execution events
+    using CommandBufferExecutionCallback = std::function<void(const std::string&)>;
 
   private:
     static inline std::shared_ptr<TrRenderer> Instance_ = nullptr;
@@ -155,6 +160,16 @@ namespace renderer
     {
       commandBufferChanServer->removeClient(client);
     }
+    
+    /**
+     * Set a callback to be notified when command buffers are executed.
+     * This is used by the inspector to dispatch command buffer events.
+     */
+    void setCommandBufferExecutionCallback(CommandBufferExecutionCallback callback)
+    {
+      commandBufferExecutionCallback_ = callback;
+    }
+    
     void setRHI(TrRenderHardwareInterface *);
     TrRenderHardwareInterface *getRHI();
     /**
@@ -279,5 +294,6 @@ namespace renderer
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
     std::unique_ptr<ipc::TrOneShotServer<TrCommandBufferMessage>> commandBufferChanServer = nullptr;
+    CommandBufferExecutionCallback commandBufferExecutionCallback_ = nullptr;
   };
 }

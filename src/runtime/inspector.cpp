@@ -411,3 +411,11 @@ void TrInspector::onClientDisconnected(TrInspectorClient &client)
     universalRenderingServerDomain_->removeInspectorClient(client.clientId());
   }
 }
+
+void TrInspector::onCommandBufferExecuted(const std::string &commandBufferData)
+{
+  if (universalRenderingServerDomain_)
+  {
+    universalRenderingServerDomain_->onCommandBufferExecuted(commandBufferData);
+  }
+}
