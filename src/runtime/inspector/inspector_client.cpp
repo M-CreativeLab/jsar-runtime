@@ -253,6 +253,16 @@ void TrInspectorClient::send(const string &data)
 
 void TrInspectorClient::end()
 {
+  // Notify inspector of client disconnection if this was a WebSocket connection
+  if (connectionType_ == ConnectionType::WEBSOCKET)
+  {
+    auto inspector = inspector_.lock();
+    if (inspector)
+    {
+      inspector->onClientDisconnected(*this);
+    }
+  }
+  
   ::shutdown(fd_, SHUT_RDWR);
   ::close(fd_);
   fd_ = -1;
@@ -451,6 +461,13 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     buffer_.clear(); // Clear HTTP parsing buffer
 
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket connection upgraded successfully");
+    
+    // Notify inspector of client connection
+    if (inspector)
+    {
+      inspector->onClientConnected(*this);
+    }
+    
     return true;
   }
 

@@ -30,7 +30,11 @@ void TrInspector::initialize()
   // Register CDP domains
   cdpHandler_->registerDomain("Runtime", make_unique<CdpRuntimeDomain>(constellation));
   cdpHandler_->registerDomain("Example", make_unique<CdpMyExampleDomain>());
-  cdpHandler_->registerDomain("JSAR.UniversalRenderingServer", make_unique<CdpJsarUniversalRenderingServerDomain>(constellation));
+  
+  // Create and store reference to UniversalRenderingServer domain for client management
+  auto universalRenderingServerDomain = make_unique<CdpJsarUniversalRenderingServerDomain>(constellation);
+  universalRenderingServerDomain_ = universalRenderingServerDomain.get();
+  cdpHandler_->registerDomain("JSAR.UniversalRenderingServer", move(universalRenderingServerDomain));
 
   DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
 }
@@ -385,5 +389,25 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
   {
     DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
     client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");
+  }
+}
+
+void TrInspector::onClientConnected(TrInspectorClient &client)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Client connected: %s", client.clientId().c_str());
+  
+  if (universalRenderingServerDomain_)
+  {
+    universalRenderingServerDomain_->setInspectorClient(client.clientId(), &client);
+  }
+}
+
+void TrInspector::onClientDisconnected(TrInspectorClient &client)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
+  
+  if (universalRenderingServerDomain_)
+  {
+    universalRenderingServerDomain_->removeInspectorClient(client.clientId());
   }
 }

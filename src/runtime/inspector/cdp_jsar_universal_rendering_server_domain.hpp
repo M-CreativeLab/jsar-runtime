@@ -1,8 +1,12 @@
 #pragma once
 
 #include "./cdp_handler.hpp"
+#include <string>
+#include <set>
+#include <map>
 
 class TrConstellation;
+class TrInspectorClient;
 
 namespace renderer
 {
@@ -23,6 +27,11 @@ public:
   std::string getDomainDescription() const override;
   std::vector<CdpCommand> getCommands() const override;
 
+  // Public methods for inspector integration
+  void setInspectorClient(const std::string &clientId, TrInspectorClient *client);
+  void removeInspectorClient(const std::string &clientId);
+  void onCommandBufferExecuted(const std::string &commandBufferData);
+
 private:
   TrConstellation *constellation_;
   renderer::TrRenderer *getRenderer() const;
@@ -38,6 +47,14 @@ private:
   std::string getRendererInfo(const CdpMessage &message);
   std::string getContentRenderers(const CdpMessage &message);
 
-  // Command buffer debugging methods
-  std::string getCommandBuffers(const CdpMessage &message);
+  // Command buffer dispatching methods (replacing getCommandBuffers)
+  std::string enableCommandBufferDispatching(const CdpMessage &message, const std::string &clientId);
+  std::string disableCommandBufferDispatching(const CdpMessage &message, const std::string &clientId);
+
+  // Command buffer dispatching
+  void sendCommandBufferEvent(const std::string &commandBufferData);
+
+private:
+  std::set<std::string> commandBufferClients_; // Clients subscribed to command buffer events
+  std::map<std::string, TrInspectorClient*> inspectorClients_; // Client ID to inspector client mapping
 };

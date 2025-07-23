@@ -215,6 +215,37 @@
       float: right;
       margin-bottom: 10px;
     }
+    .rendering-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 15px 0;
+    }
+    .control-group {
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: white;
+    }
+    .control-group h4 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 16px;
+    }
+    .info-display {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #e9ecef;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .info-display:empty {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -258,7 +289,49 @@
         <button onclick="runAllTests()" id="runAllBtn" disabled class="success">Run All Tests</button>
         <button onclick="runRuntimeTests()" id="runRuntimeBtn" disabled>Runtime Domain Tests</button>
         <button onclick="runExampleTests()" id="runExampleBtn" disabled>Example Domain Tests</button>
+        <button onclick="runUniversalRenderingTests()" id="runUniversalRenderingBtn" disabled class="success">Universal Rendering Tests</button>
         <button onclick="runErrorTests()" id="runErrorBtn" disabled class="danger">Error Handling Tests</button>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h3>🎮 JSAR Universal Rendering Server Controls</h3>
+      <p>Debug and control the unified rendering backend:</p>
+      
+      <div class="rendering-controls">
+        <div class="control-group">
+          <h4>Tracing</h4>
+          <div class="test-buttons">
+            <button onclick="enableTracing()" id="enableTracingBtn" disabled class="success">Enable Tracing</button>
+            <button onclick="disableTracing()" id="disableTracingBtn" disabled class="danger">Disable Tracing</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h4>Frame Rate Control</h4>
+          <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+            <input type="number" id="frameRateInput" value="60" min="30" max="120" placeholder="FPS">
+            <button onclick="setFrameRate()" id="setFrameRateBtn" disabled>Set Frame Rate</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h4>Renderer Information</h4>
+          <div class="test-buttons">
+            <button onclick="getRendererInfo()" id="getRendererInfoBtn" disabled>Get Renderer Info</button>
+            <button onclick="getContentRenderers()" id="getContentRenderersBtn" disabled>Get Content Renderers</button>
+          </div>
+          <div id="rendererInfoDisplay" class="info-display"></div>
+        </div>
+
+        <div class="control-group">
+          <h4>Command Buffer Dispatching</h4>
+          <div class="test-buttons">
+            <button onclick="enableCommandBufferDispatching()" id="enableCmdBufBtn" disabled class="success">Enable Command Buffer Events</button>
+            <button onclick="disableCommandBufferDispatching()" id="disableCmdBufBtn" disabled class="danger">Disable Command Buffer Events</button>
+          </div>
+          <div id="commandBufferStatus" class="info-display"></div>
+        </div>
       </div>
     </div>
     
@@ -298,10 +371,23 @@
     const runAllBtn = document.getElementById('runAllBtn');
     const runRuntimeBtn = document.getElementById('runRuntimeBtn');
     const runExampleBtn = document.getElementById('runExampleBtn');
+    const runUniversalRenderingBtn = document.getElementById('runUniversalRenderingBtn');
     const runErrorBtn = document.getElementById('runErrorBtn');
     const messagesEl = document.getElementById('messages');
     const urlInput = document.getElementById('url');
     const messageInput = document.getElementById('messageInput');
+    
+    // Universal Rendering Server controls
+    const enableTracingBtn = document.getElementById('enableTracingBtn');
+    const disableTracingBtn = document.getElementById('disableTracingBtn');
+    const setFrameRateBtn = document.getElementById('setFrameRateBtn');
+    const frameRateInput = document.getElementById('frameRateInput');
+    const getRendererInfoBtn = document.getElementById('getRendererInfoBtn');
+    const getContentRenderersBtn = document.getElementById('getContentRenderersBtn');
+    const enableCmdBufBtn = document.getElementById('enableCmdBufBtn');
+    const disableCmdBufBtn = document.getElementById('disableCmdBufBtn');
+    const rendererInfoDisplay = document.getElementById('rendererInfoDisplay');
+    const commandBufferStatus = document.getElementById('commandBufferStatus');
     
     // Set default message
     loadTemplate('runtime.enable');
@@ -345,6 +431,47 @@
           expectSuccess: true
         }
       ],
+      universalRendering: [
+        {
+          name: 'Enable Tracing',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.enableTracing', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Get Renderer Info',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.getRendererInfo', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Set Frame Rate',
+          message: {
+            id: 0,
+            method: 'JSAR.UniversalRenderingServer.setClientFrameRate',
+            params: { frameRate: 75 }
+          },
+          expectSuccess: true
+        },
+        {
+          name: 'Get Content Renderers',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.getContentRenderers', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Enable Command Buffer Dispatching',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.enableCommandBufferDispatching', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Disable Command Buffer Dispatching',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.disableCommandBufferDispatching', params: {} },
+          expectSuccess: true
+        },
+        {
+          name: 'Disable Tracing',
+          message: { id: 0, method: 'JSAR.UniversalRenderingServer.disableTracing', params: {} },
+          expectSuccess: true
+        }
+      ],
       errors: [
         {
           name: 'Unknown Domain',
@@ -375,7 +502,17 @@
           runAllBtn.disabled = false;
           runRuntimeBtn.disabled = false;
           runExampleBtn.disabled = false;
+          runUniversalRenderingBtn.disabled = false;
           runErrorBtn.disabled = false;
+          
+          // Enable Universal Rendering Server controls
+          enableTracingBtn.disabled = false;
+          disableTracingBtn.disabled = false;
+          setFrameRateBtn.disabled = false;
+          getRendererInfoBtn.disabled = false;
+          getContentRenderersBtn.disabled = false;
+          enableCmdBufBtn.disabled = false;
+          disableCmdBufBtn.disabled = false;
           
           connectionStartTime = Date.now();
           startConnectionTimer();
@@ -402,7 +539,17 @@
           runAllBtn.disabled = true;
           runRuntimeBtn.disabled = true;
           runExampleBtn.disabled = true;
+          runUniversalRenderingBtn.disabled = true;
           runErrorBtn.disabled = true;
+          
+          // Disable Universal Rendering Server controls
+          enableTracingBtn.disabled = true;
+          disableTracingBtn.disabled = true;
+          setFrameRateBtn.disabled = true;
+          getRendererInfoBtn.disabled = true;
+          getContentRenderersBtn.disabled = true;
+          enableCmdBufBtn.disabled = true;
+          disableCmdBufBtn.disabled = true;
           
           stopConnectionTimer();
           addMessage(`Connection closed (code: ${event.code})`, 'system');
@@ -491,7 +638,7 @@
     
     function runAllTests() {
       currentTestSuite = {
-        tests: [...testSuites.runtime, ...testSuites.example, ...testSuites.errors],
+        tests: [...testSuites.runtime, ...testSuites.example, ...testSuites.universalRendering, ...testSuites.errors],
         currentIndex: 0,
         results: []
       };
@@ -526,6 +673,16 @@
         results: []
       };
       addMessage('⚠️ Starting error handling tests...', 'system');
+      runNextTest();
+    }
+    
+    function runUniversalRenderingTests() {
+      currentTestSuite = {
+        tests: testSuites.universalRendering,
+        currentIndex: 0,
+        results: []
+      };
+      addMessage('🎮 Starting Universal Rendering Server tests...', 'system');
       runNextTest();
     }
     
@@ -689,6 +846,147 @@
     
     // Initialize stats
     updateStats();
+    
+    // Universal Rendering Server Control Functions
+    function enableTracing() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.enableTracing',
+        params: {}
+      };
+      sendMessage(message);
+    }
+    
+    function disableTracing() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.disableTracing',
+        params: {}
+      };
+      sendMessage(message);
+    }
+    
+    function setFrameRate() {
+      const frameRate = parseInt(frameRateInput.value);
+      if (isNaN(frameRate) || frameRate < 30 || frameRate > 120) {
+        addMessage('Invalid frame rate. Please enter a value between 30 and 120.', 'error');
+        return;
+      }
+      
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.setClientFrameRate',
+        params: { frameRate: frameRate }
+      };
+      sendMessage(message);
+    }
+    
+    function getRendererInfo() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.getRendererInfo',
+        params: {}
+      };
+      sendMessage(message);
+      
+      // Store message ID to handle response specially
+      rendererInfoMessageId = message.id;
+    }
+    
+    function getContentRenderers() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.getContentRenderers',
+        params: {}
+      };
+      sendMessage(message);
+      
+      // Store message ID to handle response specially
+      contentRenderersMessageId = message.id;
+    }
+    
+    function enableCommandBufferDispatching() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.enableCommandBufferDispatching',
+        params: {}
+      };
+      sendMessage(message);
+      commandBufferStatus.textContent = 'Command buffer dispatching enabled. Waiting for events...';
+    }
+    
+    function disableCommandBufferDispatching() {
+      const message = {
+        id: messageId++,
+        method: 'JSAR.UniversalRenderingServer.disableCommandBufferDispatching',
+        params: {}
+      };
+      sendMessage(message);
+      commandBufferStatus.textContent = 'Command buffer dispatching disabled.';
+    }
+    
+    // Special handling for renderer info responses
+    let rendererInfoMessageId = null;
+    let contentRenderersMessageId = null;
+    
+    // Enhanced message handling for Universal Rendering Server responses
+    const originalAddMessage = addMessage;
+    addMessage = function(text, type) {
+      // Handle command buffer events
+      if (type === 'received') {
+        try {
+          const parsed = JSON.parse(text);
+          
+          // Handle command buffer events
+          if (parsed.method === 'JSAR.UniversalRenderingServer.commandBufferExecuted') {
+            const timestamp = new Date(parsed.params.timestamp).toLocaleTimeString();
+            commandBufferStatus.innerHTML += `<div><strong>[${timestamp}]</strong> Command buffer executed</div>`;
+            commandBufferStatus.scrollTop = commandBufferStatus.scrollHeight;
+          }
+          
+          // Handle renderer info responses
+          if (parsed.id === rendererInfoMessageId && parsed.result) {
+            const info = parsed.result;
+            rendererInfoDisplay.innerHTML = `
+              <div><strong>FPS:</strong> ${info.fps}</div>
+              <div><strong>Client Frame Rate:</strong> ${info.clientFrameRate}</div>
+              <div><strong>Uptime:</strong> ${info.uptime}s</div>
+              <div><strong>Tracing:</strong> ${info.tracingEnabled ? 'Enabled' : 'Disabled'}</div>
+              <div><strong>Stencil Clear Disabled:</strong> ${info.stencilClearDisabled}</div>
+              <div><strong>Double Wide Framebuffer:</strong> ${info.useDoubleWideFramebuffer}</div>
+              <div><strong>Command Buffer Port:</strong> ${info.commandBufferPort}</div>
+            `;
+            rendererInfoMessageId = null;
+          }
+          
+          // Handle content renderers responses
+          if (parsed.id === contentRenderersMessageId && parsed.result) {
+            const renderers = parsed.result.contentRenderers;
+            if (renderers.length === 0) {
+              rendererInfoDisplay.innerHTML += '<div><strong>No content renderers found</strong></div>';
+            } else {
+              rendererInfoDisplay.innerHTML += '<div><strong>Content Renderers:</strong></div>';
+              renderers.forEach((renderer, index) => {
+                rendererInfoDisplay.innerHTML += `
+                  <div style="margin-left: 15px;">
+                    <strong>Renderer ${index + 1}:</strong><br>
+                    Content ID: ${renderer.contentId}<br>
+                    Context ID: ${renderer.contextId}<br>
+                    PID: ${renderer.contentPid || 'N/A'}<br>
+                    URL: ${renderer.url || 'N/A'}
+                  </div>
+                `;
+              });
+            }
+            contentRenderersMessageId = null;
+          }
+        } catch (e) {
+          // Not JSON or different format, ignore
+        }
+      }
+      
+      originalAddMessage(text, type);
+    };
     
     console.log('JSAR Inspector CDP Test Client loaded');
     console.log('Use the interface above to test CDP functionality');

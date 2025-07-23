@@ -3,7 +3,9 @@
 #include "../../common/debug.hpp"
 #include "../../renderer/renderer.hpp"
 #include "../../renderer/content_renderer.hpp"
+#include "./inspector_client.hpp"
 #include <rapidjson/document.h>
+#include <chrono>
 
 using namespace std;
 
@@ -37,9 +39,13 @@ string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
   {
     return getContentRenderers(message);
   }
-  else if (method == "getCommandBuffers")
+  else if (method == "enableCommandBufferDispatching")
   {
-    return getCommandBuffers(message);
+    return enableCommandBufferDispatching(message, clientId);
+  }
+  else if (method == "disableCommandBufferDispatching")
+  {
+    return disableCommandBufferDispatching(message, clientId);
   }
   else
   {
@@ -208,9 +214,9 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
   return CdpResponse::success(message.id, result);
 }
 
-string CdpJsarUniversalRenderingServerDomain::getCommandBuffers(const CdpMessage &message)
+string CdpJsarUniversalRenderingServerDomain::enableCommandBufferDispatching(const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Getting command buffers");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Enabling command buffer dispatching for client: %s", clientId.c_str());
 
   auto *renderer = getRenderer();
   if (!renderer)
@@ -218,25 +224,84 @@ string CdpJsarUniversalRenderingServerDomain::getCommandBuffers(const CdpMessage
     return CdpResponse::error(message.id, -32000, "Renderer not available");
   }
 
+  // Add client to command buffer subscribers
+  commandBufferClients_.insert(clientId);
+
   rapidjson::Document result;
   result.SetObject();
   auto &allocator = result.GetAllocator();
 
-  // Add command buffer channel information
-  result.AddMember("commandBufferPort", rapidjson::Value().SetUint(renderer->getCommandBufferChanPort()), allocator);
-  
-  rapidjson::Value commandBufferInfo;
-  commandBufferInfo.SetObject();
-  commandBufferInfo.AddMember("description", 
-    rapidjson::Value().SetString("Command buffers can be inspected by connecting to the command buffer channel port", allocator), 
-    allocator);
-  commandBufferInfo.AddMember("note", 
-    rapidjson::Value().SetString("Use the commandBufferPort to establish IPC connection for detailed command buffer inspection", allocator), 
-    allocator);
-
-  result.AddMember("commandBuffers", commandBufferInfo, allocator);
+  result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("subscribedClients", rapidjson::Value().SetUint(commandBufferClients_.size()), allocator);
 
   return CdpResponse::success(message.id, result);
+}
+
+string CdpJsarUniversalRenderingServerDomain::disableCommandBufferDispatching(const CdpMessage &message, const string &clientId)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Disabling command buffer dispatching for client: %s", clientId.c_str());
+
+  // Remove client from command buffer subscribers
+  commandBufferClients_.erase(clientId);
+
+  rapidjson::Document result;
+  result.SetObject();
+  auto &allocator = result.GetAllocator();
+
+  result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(false), allocator);
+  result.AddMember("subscribedClients", rapidjson::Value().SetUint(commandBufferClients_.size()), allocator);
+
+  return CdpResponse::success(message.id, result);
+}
+
+void CdpJsarUniversalRenderingServerDomain::setInspectorClient(const string &clientId, TrInspectorClient *client)
+{
+  inspectorClients_[clientId] = client;
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client registered: %s", clientId.c_str());
+}
+
+void CdpJsarUniversalRenderingServerDomain::removeInspectorClient(const string &clientId)
+{
+  inspectorClients_.erase(clientId);
+  commandBufferClients_.erase(clientId); // Also remove from command buffer subscribers
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client removed: %s", clientId.c_str());
+}
+
+void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const string &commandBufferData)
+{
+  if (!commandBufferClients_.empty())
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Dispatching command buffer to %zu clients", commandBufferClients_.size());
+    sendCommandBufferEvent(commandBufferData);
+  }
+}
+
+void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string &commandBufferData)
+{
+  rapidjson::Document params;
+  params.SetObject();
+  auto &allocator = params.GetAllocator();
+
+  params.AddMember("timestamp", rapidjson::Value().SetUint64(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()), allocator);
+  params.AddMember("commandBufferData", rapidjson::Value().SetString(commandBufferData.c_str(), allocator), allocator);
+
+  string eventMessage = CdpResponse::event("JSAR.UniversalRenderingServer.commandBufferExecuted", params);
+
+  // Send to all subscribed clients
+  for (const auto &clientId : commandBufferClients_)
+  {
+    auto clientIt = inspectorClients_.find(clientId);
+    if (clientIt != inspectorClients_.end() && clientIt->second)
+    {
+      if (clientIt->second->isWebSocket())
+      {
+        clientIt->second->sendWebSocketMessage(eventMessage);
+        DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Command buffer event sent to client: %s", clientId.c_str());
+      }
+    }
+  }
 }
 
 string CdpJsarUniversalRenderingServerDomain::getDomainName() const
@@ -257,6 +322,7 @@ vector<CdpCommand> CdpJsarUniversalRenderingServerDomain::getCommands() const
     {"setClientFrameRate", "Control the client-side FPS in TrRenderer. Requires frameRate parameter.", nullptr},
     {"getRendererInfo", "Get current renderer state information including FPS, tracing status, and configuration.", nullptr},
     {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr},
-    {"getCommandBuffers", "Get command buffer debugging information and inspection details.", nullptr}
+    {"enableCommandBufferDispatching", "Enable command buffer event dispatching to this CDP client.", nullptr},
+    {"disableCommandBufferDispatching", "Disable command buffer event dispatching to this CDP client.", nullptr}
   };
 }
