@@ -5,6 +5,9 @@
 #include <cassert>
 #include <cstring>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <common/debug.hpp>
 #include <client/per_process.hpp>
 #include <client/graphics/webgl_context.hpp>
@@ -179,6 +182,9 @@ namespace builtin_scene::model_renderer
 
     DEBUG(LOG_TAG, "Rendering 3DGS model with %zu splats", splats.size());
     
+    // Get camera position for depth sorting
+    glm::vec3 cameraPos = getCameraPosition();
+    
     // Convert Model3d splat format to material format
     std::vector<materials::GaussianSplattingMaterial::GaussianSplat> materialSplats;
     materialSplats.reserve(splats.size());
@@ -194,7 +200,17 @@ namespace builtin_scene::model_renderer
       materialSplats.push_back(ms);
     }
     
-    // Update material with splats data
+    // Sort splats by depth (back to front for proper alpha blending)
+    DEBUG(LOG_TAG, "Sorting %zu splats by depth", materialSplats.size());
+    std::sort(materialSplats.begin(), materialSplats.end(), 
+      [&cameraPos](const materials::GaussianSplattingMaterial::GaussianSplat &a, 
+                   const materials::GaussianSplattingMaterial::GaussianSplat &b) {
+        float distA = glm::distance2(a.position, cameraPos);
+        float distB = glm::distance2(b.position, cameraPos);
+        return distA > distB; // Back to front sorting
+      });
+    
+    // Update material with sorted splats data
     gaussianMaterial_->updateSplats(materialSplats);
     
     // TODO: Actually render using the material and mesh system
@@ -225,6 +241,14 @@ namespace builtin_scene::model_renderer
     materialInitialized_ = true;
     DEBUG(LOG_TAG, "Gaussian Splatting material initialized successfully");
     return true;
+  }
+
+  glm::vec3 RenderGaussianSplattingSystem::getCameraPosition()
+  {
+    // Get camera position from the renderer or scene
+    // For now, return a default position (origin)
+    // TODO: Get actual camera position from the scene
+    return glm::vec3(0.0f, 0.0f, 0.0f);
   }
 
   void RenderGLTFSystem::onExecute()
