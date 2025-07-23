@@ -138,8 +138,8 @@ impl CSSParser {
   }
 
   pub fn new_from_url(document_url: &str) -> Self {
-    style_config::set_bool("layout.flexbox.enabled", true);
-    style_config::set_bool("layout.grid.enabled", true);
+    stylo_config::set_bool("layout.flexbox.enabled", true);
+    stylo_config::set_bool("layout.grid.enabled", true);
 
     let url_data = Url::parse(document_url).unwrap().into();
     Self { url_data }

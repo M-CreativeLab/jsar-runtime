@@ -137,7 +137,7 @@ namespace builtin_scene::web_renderer
                                     srcRect,
                                     dstRect,
                                     SkSamplingOptions(),
-                                    nullptr,
+                                    &fillPaint.value(),
                                     SkCanvas::kStrict_SrcRectConstraint);
             }
             canvas->restore();
