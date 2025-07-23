@@ -5,6 +5,53 @@
 
 using namespace client_cssom::values;
 
+TEST_CASE("BackgroundClip parsing and conversion", "[css-background-clip]")
+{
+  SECTION("Parse border-box")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE(clip.parse("border-box"));
+    REQUIRE(clip.isBorderBox());
+    REQUIRE(clip.toCss() == "border-box");
+  }
+
+  SECTION("Parse padding-box")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE(clip.parse("padding-box"));
+    REQUIRE(clip.isPaddingBox());
+    REQUIRE(clip.toCss() == "padding-box");
+  }
+
+  SECTION("Parse content-box")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE(clip.parse("content-box"));
+    REQUIRE(clip.isContentBox());
+    REQUIRE(clip.toCss() == "content-box");
+  }
+
+  SECTION("Parse text")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE(clip.parse("text"));
+    REQUIRE(clip.isText());
+    REQUIRE(clip.toCss() == "text");
+  }
+
+  SECTION("Parse invalid value")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE_FALSE(clip.parse("invalid-value"));
+  }
+
+  SECTION("Default value")
+  {
+    specified::BackgroundClip clip;
+    REQUIRE(clip.isBorderBox());
+  }
+}
+
 TEST_CASE("BackgroundOrigin parsing and conversion", "[css-background-origin]")
 {
   SECTION("Parse padding-box")

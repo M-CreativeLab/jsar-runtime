@@ -236,7 +236,7 @@ namespace builtin_scene::web_renderer
     if (textComponent == nullptr || textComponent->content.empty())
       return textPath;
 
-    // Create paragraph to get text bounds
+    // Create paragraph to get better text bounds
     auto clientContext = TrClientContextPerProcess::Get();
     auto fontCollection = clientContext->getFontCacheManager();
     auto paragraphStyle = content.paragraphStyle();
@@ -249,19 +249,22 @@ namespace builtin_scene::web_renderer
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
 
-    // Create a simple approximation of text bounds for now
-    // This is a basic implementation - in a full implementation, we'd need 
-    // to properly extract text paths from the paragraph
+    // Try to get more accurate text bounds from the paragraph
     const auto &fragment = content.fragment();
     if (!fragment.has_value())
       return textPath;
-      
-    float contentWidth = fragment->contentWidth();
-    float contentHeight = fragment->contentHeight();
     
-    // For now, create a simple rectangular path representing text bounds
-    // TODO: In a more complete implementation, this should extract actual glyph paths
-    textPath.addRect(SkRect::MakeWH(contentWidth, contentHeight));
+    // Get actual text metrics from the paragraph
+    float textHeight = paragraph->getHeight();
+    float textWidth = paragraph->getMaxIntrinsicWidth();
+    
+    // Use the actual text dimensions but limit to content area
+    float actualWidth = std::min(textWidth, fragment->contentWidth());
+    float actualHeight = std::min(textHeight, fragment->contentHeight());
+    
+    // Create a more accurate rectangular approximation of text bounds
+    // This is still a simplified approach, but better than using full content area
+    textPath.addRect(SkRect::MakeWH(actualWidth, actualHeight));
     
     return textPath;
   }
@@ -324,6 +327,8 @@ namespace builtin_scene::web_renderer
           canvas->restore();
           textureRequired = true; // Text clipping requires texture
         }
+        // If textPath is empty (no text), don't draw the background at all
+        // This matches the expected behavior of background-clip: text with no text content
       }
       else
       {
@@ -367,6 +372,11 @@ namespace builtin_scene::web_renderer
                 {
                   canvas->clipPath(textPath, true);
                 }
+                else
+                {
+                  // If no text path, clip to empty area (no background will be visible)
+                  canvas->clipRect(SkRect::MakeEmpty());
+                }
               }
               else
               {
@@ -407,6 +417,7 @@ namespace builtin_scene::web_renderer
               canvas->drawRRect(roundedRect, fillPaint.value());
               canvas->restore();
             }
+            // If textPath is empty (no text), don't draw the background at all
           }
           else
           {
