@@ -52,7 +52,7 @@ namespace renderer
 
   public:
     // Callback for command buffer execution events
-    using CommandBufferExecutionCallback = std::function<void(const std::string&)>;
+    using CommandBufferExecutionCallback = std::function<void(const std::vector<commandbuffers::TrCommandBufferBase*>&, const renderer::TrContentRenderer*)>;
 
   private:
     static inline std::shared_ptr<TrRenderer> Instance_ = nullptr;

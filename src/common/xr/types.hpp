@@ -51,7 +51,7 @@ namespace xr
     }
 
   public:
-    inline bool isValid()
+    inline bool isValid() const
     {
       return sessionId > 0 && viewIndex >= 0;
     }

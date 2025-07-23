@@ -948,7 +948,7 @@
                   displayContent += `<td style="padding: 2px 4px;" title="${cmd.typeName}">${cmd.typeName.replace('COMMAND_BUFFER_', '').replace('_REQ', '').replace('_RES', '')}</td>`;
                   displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.id}</td>`;
                   displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.contextId}</td>`;
-                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.xrRenderingInfo ? `Eye:${cmd.xrRenderingInfo.eyeId} Frame:${cmd.xrRenderingInfo.frameId}` : '-'}</td>`;
+                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.xrRenderingInfo ? `Session:${cmd.xrRenderingInfo.sessionId} Stereo:${cmd.xrRenderingInfo.stereoId} View:${cmd.xrRenderingInfo.viewIndex}` : '-'}</td>`;
                   displayContent += `</tr>`;
                 });
                 

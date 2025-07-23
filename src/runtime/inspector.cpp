@@ -412,10 +412,10 @@ void TrInspector::onClientDisconnected(TrInspectorClient &client)
   }
 }
 
-void TrInspector::onCommandBufferExecuted(const std::string &commandBufferData)
+void TrInspector::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   if (universalRenderingServerDomain_)
   {
-    universalRenderingServerDomain_->onCommandBufferExecuted(commandBufferData);
+    universalRenderingServerDomain_->onCommandBufferExecuted(commandBuffers, contentRenderer);
   }
 }

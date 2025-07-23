@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <rapidjson/document.h>
 
 #include "./shared.hpp"
 #include "../xr/types.hpp"
@@ -70,6 +71,39 @@ namespace commandbuffers
     virtual std::string toString(const char *prefix = "") const
     {
       return "";
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object.
+     * This method provides structured data for debugging and inspection tools.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object representing the command buffer
+     */
+    virtual rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const
+    {
+      rapidjson::Value cmdInfo(rapidjson::kObjectType);
+      
+      // Basic command buffer information
+      cmdInfo.AddMember("id", rapidjson::Value().SetUint(id), allocator);
+      cmdInfo.AddMember("contextId", rapidjson::Value().SetUint(contextId), allocator);
+      cmdInfo.AddMember("type", rapidjson::Value().SetInt(static_cast<int>(type)), allocator);
+      
+      // Command type name for human readability
+      std::string typeName = commandTypeToStr(type);
+      cmdInfo.AddMember("typeName", rapidjson::Value().SetString(typeName.c_str(), allocator), allocator);
+      
+      // XR rendering info if available
+      if (renderingInfo.isValid())
+      {
+        rapidjson::Value xrInfo(rapidjson::kObjectType);
+        xrInfo.AddMember("sessionId", rapidjson::Value().SetUint(renderingInfo.sessionId), allocator);
+        xrInfo.AddMember("stereoId", rapidjson::Value().SetUint(renderingInfo.stereoId), allocator);
+        xrInfo.AddMember("viewIndex", rapidjson::Value().SetInt(renderingInfo.viewIndex), allocator);
+        cmdInfo.AddMember("xrRenderingInfo", xrInfo, allocator);
+      }
+      
+      return cmdInfo;
     }
 
   public:

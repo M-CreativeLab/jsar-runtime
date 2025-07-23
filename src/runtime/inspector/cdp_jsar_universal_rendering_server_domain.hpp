@@ -30,7 +30,7 @@ public:
   // Public methods for inspector integration
   void setInspectorClient(const std::string &clientId, TrInspectorClient *client);
   void removeInspectorClient(const std::string &clientId);
-  void onCommandBufferExecuted(const std::string &commandBufferData);
+  void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
 
 private:
   TrConstellation *constellation_;
@@ -48,7 +48,8 @@ private:
   std::string getContentRenderers(const CdpMessage &message);
 
   // Command buffer dispatching
-  void sendCommandBufferEvent(const std::string &commandBufferData);
+  void sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
+  std::string serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
 
 private:
   std::set<std::string> commandBufferClients_; // Clients subscribed to command buffer events

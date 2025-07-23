@@ -52,7 +52,7 @@ public:
   void onClientDisconnected(TrInspectorClient &client);
   
   // Command buffer execution notification
-  void onCommandBufferExecuted(const std::string &commandBufferData);
+  void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
 
 private:
   std::unique_ptr<TrInspectorServer> server_;

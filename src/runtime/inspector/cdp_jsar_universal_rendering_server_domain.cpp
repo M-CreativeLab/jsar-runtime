@@ -227,16 +227,16 @@ void CdpJsarUniversalRenderingServerDomain::removeInspectorClient(const string &
   DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client removed: %s", clientId.c_str());
 }
 
-void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const string &commandBufferData)
+void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   if (!commandBufferClients_.empty())
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Dispatching command buffer to %zu clients", commandBufferClients_.size());
-    sendCommandBufferEvent(commandBufferData);
+    sendCommandBufferEvent(commandBuffers, contentRenderer);
   }
 }
 
-void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string &commandBufferData)
+void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   rapidjson::Document params;
   params.SetObject();
@@ -244,9 +244,12 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string 
 
   params.AddMember("timestamp", rapidjson::Value().SetUint64(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()), allocator);
   
-  // Parse the incoming JSON command buffer data and include it as structured data
+  // Serialize the command buffers to structured JSON data
+  string commandBufferDataStr = serializeCommandBuffers(commandBuffers, contentRenderer);
+  
+  // Parse the serialized JSON and include it as structured data
   rapidjson::Document commandBufferJson;
-  rapidjson::ParseResult parseResult = commandBufferJson.Parse(commandBufferData.c_str());
+  rapidjson::ParseResult parseResult = commandBufferJson.Parse(commandBufferDataStr.c_str());
   
   if (parseResult)
   {
@@ -258,7 +261,7 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string 
   else
   {
     // Fallback to string if parsing fails
-    params.AddMember("commandBufferData", rapidjson::Value().SetString(commandBufferData.c_str(), allocator), allocator);
+    params.AddMember("commandBufferData", rapidjson::Value().SetString(commandBufferDataStr.c_str(), allocator), allocator);
     params.AddMember("parseError", rapidjson::Value().SetBool(true), allocator);
   }
 
@@ -277,6 +280,45 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string 
       }
     }
   }
+}
+
+string CdpJsarUniversalRenderingServerDomain::serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+{
+  rapidjson::Document commandBufferData;
+  commandBufferData.SetObject();
+  auto &allocator = commandBufferData.GetAllocator();
+  
+  // Add metadata
+  commandBufferData.AddMember("totalCount", rapidjson::Value().SetUint(commandBuffers.size()), allocator);
+  if (contentRenderer)
+  {
+    commandBufferData.AddMember("contentId", rapidjson::Value().SetUint(contentRenderer->contentId), allocator);
+  }
+  
+  // Add detailed information for each command buffer using their toJson() method
+  rapidjson::Value commandBuffersArray(rapidjson::kArrayType);
+  for (size_t i = 0; i < commandBuffers.size(); ++i)
+  {
+    auto *cmdBuffer = commandBuffers[i];
+    if (cmdBuffer)
+    {
+      rapidjson::Value cmdInfo = cmdBuffer->toJson(allocator);
+      
+      // Add sequence index
+      cmdInfo.AddMember("sequenceIndex", rapidjson::Value().SetUint(i), allocator);
+      
+      commandBuffersArray.PushBack(cmdInfo, allocator);
+    }
+  }
+  
+  commandBufferData.AddMember("commandBuffers", commandBuffersArray, allocator);
+  
+  // Convert to string
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  commandBufferData.Accept(writer);
+  
+  return buffer.GetString();
 }
 
 string CdpJsarUniversalRenderingServerDomain::getDomainName() const
