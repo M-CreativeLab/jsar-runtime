@@ -419,16 +419,117 @@ namespace client_cssom::css_parser
   {
     specified::GradientItem colorStop;
 
-    // For now, create simple color stops
-    // TODO: Implement proper color parsing and position parsing
-    colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
-
-    // Skip color name tokens for now
-    if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)
+    if (!hasNext())
     {
-      advance();
+      // Default to transparent if no color available
+      colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
+      specified::Color color;
+      color.parse("transparent");
+      colorStop.value = specified::GradientItem::SimpleColorStop{color};
+      return colorStop;
     }
 
+    // Parse color - collect tokens that represent the color
+    std::string colorString;
+    const auto &token = currentToken();
+
+    if (token.type == css_value_tokenizer::TokenType::kIdentifier)
+    {
+      // Named color or keyword
+      colorString = token.value;
+      advance();
+    }
+    else if (token.type == css_value_tokenizer::TokenType::kFunction)
+    {
+      // Color function like rgb(), rgba(), hsl(), etc.
+      colorString = token.value + "(";
+      advance();
+      
+      // Collect function content until closing parenthesis
+      int parenDepth = 1;
+      while (hasNext() && parenDepth > 0)
+      {
+        const auto &funcToken = currentToken();
+        if (funcToken.type == css_value_tokenizer::TokenType::kLeftParen)
+        {
+          parenDepth++;
+        }
+        else if (funcToken.type == css_value_tokenizer::TokenType::kRightParen)
+        {
+          parenDepth--;
+        }
+        
+        if (parenDepth > 0)
+        {
+          colorString += funcToken.value;
+          if (funcToken.type == css_value_tokenizer::TokenType::kComma)
+          {
+            colorString += ", ";
+          }
+          else if (funcToken.type == css_value_tokenizer::TokenType::kWhitespace)
+          {
+            colorString += " ";
+          }
+        }
+        else
+        {
+          colorString += ")";
+        }
+        advance();
+      }
+    }
+    else
+    {
+      // Unsupported color format, default to transparent
+      colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
+      specified::Color color;
+      color.parse("transparent");
+      colorStop.value = specified::GradientItem::SimpleColorStop{color};
+      return colorStop;
+    }
+
+    // Parse the color using the Color class
+    specified::Color color;
+    if (!color.parse(colorString))
+    {
+      // If parsing fails, default to transparent
+      color.parse("transparent");
+    }
+
+    skipWhitespace();
+
+    // Check if there's a position following the color
+    if (hasNext())
+    {
+      const auto &posToken = currentToken();
+      if (posToken.type == css_value_tokenizer::TokenType::kPercentage ||
+          posToken.type == css_value_tokenizer::TokenType::kDimension)
+      {
+        // Complex color stop with position
+        std::string positionString = posToken.value;
+        if (posToken.type == css_value_tokenizer::TokenType::kPercentage)
+        {
+          positionString += "%";
+        }
+        else if (posToken.type == css_value_tokenizer::TokenType::kDimension)
+        {
+          positionString += posToken.unit;
+        }
+        
+        specified::LengthPercentage position;
+        if (position.parse(positionString))
+        {
+          colorStop.type = generics::GenericGradientItemBase::kComplexColorStop;
+          colorStop.value = specified::GradientItem::ComplexColorStop{color, position};
+          advance();
+          return colorStop;
+        }
+      }
+    }
+
+    // Simple color stop without position
+    colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
+    colorStop.value = specified::GradientItem::SimpleColorStop{color};
     return colorStop;
   }
 
