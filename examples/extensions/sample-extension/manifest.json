@@ -1,0 +1,11 @@
+{
+  "name": "Sample Extension",
+  "version": "1.0.0",
+  "description": "A sample extension for JSAR demonstrating basic functionality",
+  "manifest_version": 3,
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "permissions": ["storage"]
+}

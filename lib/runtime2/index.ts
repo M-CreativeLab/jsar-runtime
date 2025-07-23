@@ -12,6 +12,9 @@ import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
 import { Threepio } from './threepio';
 
+// extensions
+import { ExtensionManager } from '../extensions';
+
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
 });
@@ -67,6 +70,7 @@ export class TransmuteRuntime2 extends EventTarget {
   #resourceLoader: ResourceLoaderOnTransmute = new ResourceLoaderOnTransmute();
   #browsingContext: Transmute.BrowsingContext;
   #threepio: Threepio;
+  #extensionManager: ExtensionManager;
 
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
@@ -90,6 +94,13 @@ export class TransmuteRuntime2 extends EventTarget {
       browsingContext.setResourceLoader(this.#resourceLoader);
       this.#browsingContext = browsingContext;
       this.#threepio = new Threepio(browsingContext);
+    }
+    {
+      /**
+       * Initialize the ExtensionManager
+       */
+      this.#extensionManager = new ExtensionManager();
+      this.#setupExtensionEventHandlers();
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -202,5 +213,77 @@ export class TransmuteRuntime2 extends EventTarget {
       await evaluateXSML(this.gl, codeOrUrl, urlBase);
     }
     console.info(`Content(#${this.id}): the document is loaded successfully.`);
+  }
+
+  // Extension Management Methods
+
+  /**
+   * Get the extension manager instance
+   */
+  get extensionManager(): ExtensionManager {
+    return this.#extensionManager;
+  }
+
+  /**
+   * Load an extension from a directory
+   */
+  async loadExtension(extensionPath: string, options?: { enabled?: boolean }): Promise<void> {
+    try {
+      await this.#extensionManager.loadExtension(extensionPath, options);
+      console.info(`[Runtime:${this.id}] Extension loaded from: ${extensionPath}`);
+    } catch (error) {
+      console.error(`[Runtime:${this.id}] Failed to load extension from ${extensionPath}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load extensions from a directory containing multiple extensions
+   */
+  async loadExtensionsFromDirectory(extensionsDir: string): Promise<void> {
+    try {
+      const extensions = await this.#extensionManager.loadExtensionsFromDirectory(extensionsDir);
+      console.info(`[Runtime:${this.id}] Loaded ${extensions.length} extensions from: ${extensionsDir}`);
+    } catch (error) {
+      console.error(`[Runtime:${this.id}] Failed to load extensions from ${extensionsDir}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Unload all extensions (cleanup)
+   */
+  async unloadAllExtensions(): Promise<void> {
+    try {
+      await this.#extensionManager.unloadAllExtensions();
+    } catch (error) {
+      console.error(`[Runtime:${this.id}] Failed to unload extensions:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Setup extension event handlers
+   */
+  #setupExtensionEventHandlers(): void {
+    this.#extensionManager.onExtensionEvent('extensionLoaded', (event) => {
+      console.info(`[Runtime:${this.id}] Extension loaded: ${event.extensionId}`);
+    });
+
+    this.#extensionManager.onExtensionEvent('extensionEnabled', (event) => {
+      console.info(`[Runtime:${this.id}] Extension enabled: ${event.extensionId}`);
+    });
+
+    this.#extensionManager.onExtensionEvent('extensionDisabled', (event) => {
+      console.info(`[Runtime:${this.id}] Extension disabled: ${event.extensionId}`);
+    });
+
+    this.#extensionManager.onExtensionEvent('extensionUnloaded', (event) => {
+      console.info(`[Runtime:${this.id}] Extension unloaded: ${event.extensionId}`);
+    });
+
+    this.#extensionManager.onExtensionEvent('extensionError', (event) => {
+      console.error(`[Runtime:${this.id}] Extension error in ${event.extensionId}:`, event.data);
+    });
   }
 }
