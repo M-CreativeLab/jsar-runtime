@@ -311,39 +311,14 @@ namespace dom
       }
       else
       {
-        // Fall back to test data if parsing fails
-        DEBUG("HTMLModelElement", "PLY parsing failed, using test data");
-        std::vector<model_renderer::GaussianSplat> testSplats;
-        
-        // Create a few test splats
-        for (int i = 0; i < 3; ++i) {
-          model_renderer::GaussianSplat splat;
-          splat.position[0] = static_cast<float>(i) * 2.0f - 2.0f;
-          splat.position[1] = 0.0f;
-          splat.position[2] = 0.0f;
-          splat.color[0] = i == 0 ? 1.0f : 0.0f;
-          splat.color[1] = i == 1 ? 1.0f : 0.0f;
-          splat.color[2] = i == 2 ? 1.0f : 0.0f;
-          splat.opacity = 0.8f;
-          splat.scale[0] = 0.5f;
-          splat.scale[1] = 0.5f;
-          splat.scale[2] = 0.5f;
-          splat.rotation[0] = 0.0f;
-          splat.rotation[1] = 0.0f;
-          splat.rotation[2] = 0.0f;
-          splat.rotation[3] = 1.0f;
-          
-          testSplats.push_back(splat);
-        }
-        
-        model.setSplats(testSplats);
-        model.setLoaded(true);
+        DEBUG("HTMLModelElement", "PLY parsing failed");
+        // Model loading failed - do not set as loaded
       }
     }
     else
     {
       // TODO: Implement GLTF/GLB parsing
-      DEBUG("HTMLModelElement", "GLTF/GLB parsing not yet implemented");
+      std::cerr << "GLTF/GLB parsing not yet implemented" << std::endl;
       model.setLoaded(true); // Mark as loaded even if not parsed
     }
 
