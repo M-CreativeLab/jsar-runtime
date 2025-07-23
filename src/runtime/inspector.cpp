@@ -13,34 +13,15 @@
 #include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./embedder.hpp"
-#include "./inspector/cdp_runtime_domain.hpp"
-#include "./inspector/cdp_myexample_domain.hpp"
-#include "./inspector/cdp_jsar_universal_rendering_server_domain.hpp"
+#include "./inspector/cdp_handler.hpp"
 
 using namespace std;
 using namespace std::placeholders;
 
 void TrInspector::initialize()
 {
-  server_ = make_unique<TrInspectorServer>(shared_from_this());
-
-  // Initialize CDP handler
-  cdpHandler_ = make_unique<CdpHandler>();
-
-  // Register CDP domain factories (not instances - instances are created per client)
-  cdpHandler_->registerDomainFactory("Runtime", [this](const std::string &clientId) {
-    return make_unique<CdpRuntimeDomain>(constellation);
-  });
-  
-  cdpHandler_->registerDomainFactory("Example", [](const std::string &clientId) {
-    return make_unique<CdpMyExampleDomain>();
-  });
-  
-  cdpHandler_->registerDomainFactory("JSAR.UniversalRenderingServer", [this](const std::string &clientId) {
-    return make_unique<CdpJsarUniversalRenderingServerDomain>(constellation, clientId);
-  });
-
-  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with CDP support");
+  server_ = std::make_unique<TrInspectorServer>(shared_from_this());
+  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized");
 }
 
 void TrInspector::tick()
@@ -301,11 +282,9 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
   rapidjson::Value domains;
   domains.SetArray();
 
-  // Use CDP handler to populate protocol definitions from registered domains
-  if (cdpHandler_)
-  {
-    cdpHandler_->addProtocolDefinitions(domains, allocator);
-  }
+  // Create a temporary CDP handler to get protocol definitions
+  auto tempHandler = std::make_unique<CdpHandler>(constellation, "temp", nullptr);
+  tempHandler->addProtocolDefinitions(domains, allocator);
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);
   json.AddMember("domains", domains, allocator);
@@ -376,16 +355,17 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
 
-  if (!cdpHandler_)
+  auto cdpHandler = client.getCdpHandler();
+  if (!cdpHandler)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP handler not initialized, falling back to echo");
+    DEBUG(LOG_TAG_INSPECTOR, "CDP handler not initialized for client, falling back to echo");
     client.sendWebSocketMessage("Echo: " + message);
     return;
   }
 
   try
   {
-    string response = cdpHandler_->processMessage(message, client.clientId());
+    string response = cdpHandler->processMessage(message);
     DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
     client.sendWebSocketMessage(response);
   }
@@ -399,29 +379,9 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
 void TrInspector::onClientConnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client connected: %s", client.clientId().c_str());
-  
-  // Create domain instances for this client
-  if (cdpHandler_)
-  {
-    cdpHandler_->onClientConnected(client.clientId());
-    
-    // Set inspector client reference for JSAR.UniversalRenderingServer domain
-    auto* domain = cdpHandler_->getDomainInstance<CdpJsarUniversalRenderingServerDomain>(
-      client.clientId(), "JSAR.UniversalRenderingServer");
-    if (domain)
-    {
-      domain->setInspectorClient(&client);
-    }
-  }
 }
 
 void TrInspector::onClientDisconnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
-  
-  // Destroy domain instances for this client
-  if (cdpHandler_)
-  {
-    cdpHandler_->onClientDisconnected(client.clientId());
-  }
 }

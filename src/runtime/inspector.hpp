@@ -8,7 +8,6 @@
 #include "./constellation.hpp"
 #include "./inspector/inspector_server.hpp"
 #include "./inspector/inspector_client.hpp"
-#include "./inspector/cdp_handler.hpp"
 
 class CdpJsarUniversalRenderingServerDomain;
 
@@ -53,6 +52,4 @@ public:
 
 private:
   std::unique_ptr<TrInspectorServer> server_;
-  std::unique_ptr<CdpHandler> cdpHandler_;
-};
 };

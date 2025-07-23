@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <rapidjson/document.h>
 
+// Forward declarations
+class TrConstellation;
 class TrInspectorClient;
 
 // CDP (Chrome DevTools Protocol) Message Structure
@@ -55,49 +57,39 @@ public:
   }
 };
 
-// CDP Handler - Main coordinator for CDP message processing
+// Forward declarations
+class TrConstellation;
+class TrInspectorClient;
+
+// CDP Handler - Per-client coordinator for CDP message processing
 class CdpHandler
 {
 public:
-  CdpHandler();
+  CdpHandler(TrConstellation* constellation, const std::string& clientId, TrInspectorClient* inspectorClient);
   ~CdpHandler();
 
   // Process incoming CDP message and return response
-  std::string processMessage(const std::string &message, const std::string &clientId = "");
+  std::string processMessage(const std::string &message);
 
-  // Register a domain factory function - called to create domain instances per client
-  void registerDomainFactory(const std::string &domain, std::function<std::unique_ptr<CdpDomainHandler>(const std::string &clientId)> factory);
-
-  // Get protocol definitions from a sample instance of each registered domain
+  // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
-  // Client lifecycle management
-  void onClientConnected(const std::string &clientId);
-  void onClientDisconnected(const std::string &clientId);
-
-  // Get a specific domain instance for a client
+  // Get a specific domain instance
   template<typename T>
-  T* getDomainInstance(const std::string &clientId, const std::string &domainName)
+  T* getDomainInstance(const std::string &domainName) const
   {
-    auto clientIt = clientDomains_.find(clientId);
-    if (clientIt == clientDomains_.end())
+    auto it = domains_.find(domainName);
+    if (it == domains_.end())
     {
       return nullptr;
     }
     
-    auto domainIt = clientIt->second.find(domainName);
-    if (domainIt == clientIt->second.end())
-    {
-      return nullptr;
-    }
-    
-    return dynamic_cast<T*>(domainIt->second.get());
+    return dynamic_cast<T*>(it->second.get());
   }
 
 private:
-  std::unordered_map<std::string, std::function<std::unique_ptr<CdpDomainHandler>(const std::string &clientId)>> domainFactories_;
-  std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>>> clientDomains_; // clientId -> domainName -> handler
-
+  std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
+  
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);
 };

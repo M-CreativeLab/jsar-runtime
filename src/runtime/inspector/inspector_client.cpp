@@ -21,7 +21,9 @@
 #include <iomanip>
 
 #include "./inspector_client.hpp"
+#include "./cdp_handler.hpp"
 #include "../inspector.hpp"
+#include "../constellation.hpp"
 
 using namespace std;
 
@@ -426,6 +428,13 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     // Store the client ID for later use
     clientId_ = clientId;
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested for client '%s'", clientId.c_str());
+
+    // Initialize CDP handler for this client
+    if (inspector && inspector->constellation)
+    {
+      cdpHandler_ = std::make_unique<CdpHandler>(inspector->constellation, clientId_, this);
+      DEBUG(LOG_TAG_INSPECTOR, "CDP Handler initialized for client '%s'", clientId.c_str());
+    }
 
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();

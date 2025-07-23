@@ -1,5 +1,9 @@
 #include "./cdp_handler.hpp"
 #include "../../common/debug.hpp"
+#include "./cdp_runtime_domain.hpp"
+#include "./cdp_myexample_domain.hpp"
+#include "./cdp_jsar_universal_rendering_server_domain.hpp"
+#include "../constellation.hpp"
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
@@ -109,14 +113,29 @@ string CdpResponse::event(const string &method, const rapidjson::Value &params)
 }
 
 // CdpHandler implementation
-CdpHandler::CdpHandler()
+CdpHandler::CdpHandler(TrConstellation* constellation, const std::string& clientId, TrInspectorClient* inspectorClient)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
+  
+  // Create domain instances directly
+  domains_["Runtime"] = std::make_unique<CdpRuntimeDomain>(constellation);
+  domains_["Example"] = std::make_unique<CdpMyExampleDomain>();
+  domains_["JSAR.UniversalRenderingServer"] = std::make_unique<CdpJsarUniversalRenderingServerDomain>(constellation, clientId);
+  
+  // Set inspector client reference for JSAR.UniversalRenderingServer domain
+  auto* jsarDomain = dynamic_cast<CdpJsarUniversalRenderingServerDomain*>(domains_["JSAR.UniversalRenderingServer"].get());
+  if (jsarDomain)
+  {
+    jsarDomain->setInspectorClient(inspectorClient);
+  }
 }
 
-CdpHandler::~CdpHandler() = default;
+CdpHandler::~CdpHandler()
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler destroyed");
+}
 
-string CdpHandler::processMessage(const string &message, const string &clientId)
+string CdpHandler::processMessage(const string &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Processing message: %s", message.c_str());
 
@@ -130,27 +149,19 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
   string domain = extractDomain(cdpMessage->method);
   string methodName = extractMethodName(cdpMessage->method);
 
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%d, Client=%s", domain.c_str(), methodName.c_str(), cdpMessage->id, clientId.c_str());
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%d", domain.c_str(), methodName.c_str(), cdpMessage->id);
 
-  // Find client's domain instances
-  auto clientIt = clientDomains_.find(clientId);
-  if (clientIt == clientDomains_.end())
+  // Find domain handler
+  auto domainIt = domains_.find(domain);
+  if (domainIt == domains_.end())
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: No domains for client: %s", clientId.c_str());
-    return CdpResponse::error(cdpMessage->id, -32601, "Client not found");
-  }
-
-  // Find domain handler for this client
-  auto domainIt = clientIt->second.find(domain);
-  if (domainIt == clientIt->second.end())
-  {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: Unknown domain: %s for client: %s", domain.c_str(), clientId.c_str());
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Unknown domain: %s", domain.c_str());
     return CdpResponse::error(cdpMessage->id, -32601, "Method not found");
   }
 
   try
   {
-    return domainIt->second->handleMethod(methodName, *cdpMessage, clientId);
+    return domainIt->second->handleMethod(methodName, *cdpMessage, ""); // clientId not needed anymore
   }
   catch (const exception &e)
   {
@@ -159,29 +170,44 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
   }
 }
 
-void CdpHandler::registerDomainFactory(const string &domain, std::function<std::unique_ptr<CdpDomainHandler>(const std::string &clientId)> factory)
+void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Registering domain factory: %s", domain.c_str());
-  domainFactories_[domain] = factory;
-}
-
-void CdpHandler::onClientConnected(const string &clientId)
-{
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Creating domain instances for client: %s", clientId.c_str());
-  
-  // Create domain instances for this client
-  for (const auto &[domainName, factory] : domainFactories_)
+  // Get protocol definitions from all registered domains
+  for (const auto &[domainName, domainHandler] : domains_)
   {
-    auto domainInstance = factory(clientId);
-    clientDomains_[clientId][domainName] = move(domainInstance);
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: Created domain instance: %s for client: %s", domainName.c_str(), clientId.c_str());
-  }
-}
+    // Create domain object
+    rapidjson::Value domainObj;
+    domainObj.SetObject();
 
-void CdpHandler::onClientDisconnected(const string &clientId)
-{
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Destroying domain instances for client: %s", clientId.c_str());
-  clientDomains_.erase(clientId);
+    // Add domain name and description
+    domainObj.AddMember("domain",
+                        rapidjson::Value().SetString(domainHandler->getDomainName().c_str(), allocator),
+                        allocator);
+    domainObj.AddMember("description",
+                        rapidjson::Value().SetString(domainHandler->getDomainDescription().c_str(), allocator),
+                        allocator);
+
+    // Add commands
+    rapidjson::Value commands;
+    commands.SetArray();
+
+    auto domainCommands = domainHandler->getCommands();
+    for (const auto &cmd : domainCommands)
+    {
+      rapidjson::Value cmdObj;
+      cmdObj.SetObject();
+      cmdObj.AddMember("name",
+                       rapidjson::Value().SetString(cmd.name.c_str(), allocator),
+                       allocator);
+      cmdObj.AddMember("description",
+                       rapidjson::Value().SetString(cmd.description.c_str(), allocator),
+                       allocator);
+      commands.PushBack(cmdObj, allocator);
+    }
+
+    domainObj.AddMember("commands", commands, allocator);
+    domains.PushBack(domainObj, allocator);
+  }
 }
 
 string CdpHandler::extractDomain(const string &method)
@@ -202,46 +228,4 @@ string CdpHandler::extractMethodName(const string &method)
     return ""; // No method name
   }
   return method.substr(dotPos + 1);
-}
-
-void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
-{
-  // Create temporary instances of each domain to get protocol definitions
-  for (const auto &[domainName, factory] : domainFactories_)
-  {
-    auto sampleInstance = factory("sample"); // Use temporary client ID for protocol definition
-    
-    // Create domain object
-    rapidjson::Value domainObj;
-    domainObj.SetObject();
-
-    // Add domain name and description
-    domainObj.AddMember("domain",
-                        rapidjson::Value().SetString(sampleInstance->getDomainName().c_str(), allocator),
-                        allocator);
-    domainObj.AddMember("description",
-                        rapidjson::Value().SetString(sampleInstance->getDomainDescription().c_str(), allocator),
-                        allocator);
-
-    // Add commands
-    rapidjson::Value commands;
-    commands.SetArray();
-
-    auto domainCommands = sampleInstance->getCommands();
-    for (const auto &cmd : domainCommands)
-    {
-      rapidjson::Value cmdObj;
-      cmdObj.SetObject();
-      cmdObj.AddMember("name",
-                       rapidjson::Value().SetString(cmd.name.c_str(), allocator),
-                       allocator);
-      cmdObj.AddMember("description",
-                       rapidjson::Value().SetString(cmd.description.c_str(), allocator),
-                       allocator);
-      commands.PushBack(cmdObj, allocator);
-    }
-
-    domainObj.AddMember("commands", commands, allocator);
-    domains.PushBack(domainObj, allocator);
-  }
 }
