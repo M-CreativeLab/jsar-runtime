@@ -14,6 +14,7 @@
 #include "common/analytics/perf_fs.hpp"
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
+#include "extension/extensions.hpp"
 
 class TrEmbedder;
 class TrContentRuntime;
@@ -296,6 +297,10 @@ public:
    * The performance file system for the host.
    */
   std::shared_ptr<TrHostPerformanceFileSystem> perfFs;
+  /**
+   * The extension manager for managing Chrome Extension-like extensions.
+   */
+  std::shared_ptr<jsar::extensions::ExtensionManager> extensionManager;
 
 #ifdef TR_ENABLE_INSPECTOR
   /**

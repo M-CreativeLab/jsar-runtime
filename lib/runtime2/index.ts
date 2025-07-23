@@ -12,8 +12,6 @@ import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
 import { Threepio } from './threepio';
 
-
-
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
 });

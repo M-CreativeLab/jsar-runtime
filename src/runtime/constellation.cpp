@@ -31,6 +31,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = TrRenderer::Make(this);
   xrDevice = xr::Device::Make(this);
+  extensionManager = std::make_shared<jsar::extensions::ExtensionManager>();
 
 #ifdef TR_ENABLE_INSPECTOR
   inspector = std::make_shared<TrInspector>(this);
