@@ -7,6 +7,7 @@
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
+#include "./xr.hpp"
 
 namespace builtin_scene
 {
@@ -509,6 +510,27 @@ namespace builtin_scene
 
         auto textureRect = webContentComponent->textureRect();
         int texturePad = webContentComponent->texturePad();
+        
+        // Handle spatial images by selecting appropriate texture based on XR context
+        if (webContentComponent->isSpatial())
+        {
+          auto xrContext = getResource<XRRenderingContext>();
+          if (xrContext != nullptr && xrContext->isStereoMode())
+          {
+            // In stereo mode, use eye-specific texture
+            if (xrContext->isLeftEye())
+            {
+              textureRect = webContentComponent->leftEyeTextureRect();
+            }
+            else if (xrContext->isRightEye())
+            {
+              textureRect = webContentComponent->rightEyeTextureRect();
+            }
+            // else keep the default textureRect (fallback)
+          }
+          // In non-stereo mode, use the default texture (full image)
+        }
+        
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);

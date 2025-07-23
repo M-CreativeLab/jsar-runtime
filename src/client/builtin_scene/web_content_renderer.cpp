@@ -591,39 +591,7 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    // Get the appropriate image based on spatial mode and current rendering context
-    sk_sp<SkImage> skImage;
-    if (imageComponent->isSpatial())
-    {
-      auto xrContext = getResource<XRRenderingContext>();
-      if (xrContext != nullptr && xrContext->isStereoMode())
-      {
-        // Use eye-specific portion of spatial image
-        if (xrContext->isLeftEye())
-        {
-          skImage = imageComponent->getLeftEyeImage();
-        }
-        else if (xrContext->isRightEye())
-        {
-          skImage = imageComponent->getRightEyeImage();
-        }
-        else
-        {
-          skImage = imageComponent->image(); // fallback to full image
-        }
-      }
-      else
-      {
-        // Not in stereo mode, use full image
-        skImage = imageComponent->image();
-      }
-    }
-    else
-    {
-      // Non-spatial image, use as-is
-      skImage = imageComponent->image();
-    }
-
+    sk_sp<SkImage> skImage = imageComponent->image();
     if (skImage == nullptr)
     {
       // Disable using texture if the image is failed to load.
@@ -692,10 +660,24 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
-      auto status = webContentMaterial->updateTexture(content);
-      // Mark the content as clean if the texture is no need to update or updated successfully.
-      if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
-        content.setDirty(false);
+      // Check if this is a spatial image
+      auto imageComponent = getComponent<Image2d>(entity);
+      if (imageComponent != nullptr && imageComponent->isSpatial())
+      {
+        // Handle spatial image texture updates
+        content.setSpatial(true);
+        auto status = webContentMaterial->updateSpatialTexture(imageComponent, content);
+        if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+          content.setDirty(false);
+      }
+      else
+      {
+        // Handle regular texture update
+        content.setSpatial(false);
+        auto status = webContentMaterial->updateTexture(content);
+        if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+          content.setDirty(false);
+      }
     }
   }
 }
