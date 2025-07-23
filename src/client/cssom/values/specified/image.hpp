@@ -12,6 +12,7 @@
 
 namespace client_cssom::values::specified
 {
+  using GradientItem = generics::GenericGradientItem<specified::Color, specified::LengthPercentage>;
   using GradientBase = generics::GenericGradient<specified::NoCalcLength,
                                                  specified::LengthPercentage,
                                                  specified::Color>;

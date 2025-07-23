@@ -31,6 +31,8 @@ namespace builtin_scene::web_renderer
   using namespace std;
   using namespace skia::textlayout;
   using namespace client_cssom;
+  using namespace client_cssom::values;
+
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
@@ -63,6 +65,10 @@ namespace builtin_scene::web_renderer
       render(item.first, *item.second);
   }
 
+  // Create a gradient shader based on the computed image and rounded rectangle.
+  sk_sp<SkShader> createGradientShader(const computed::Image &, const SkRRect &);
+
+  // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
   optional<SkPaint> drawBackground(SkCanvas *canvas,
                                    SkRRect &originalRRect,
                                    const client_layout::Fragment &fragment,
@@ -156,7 +162,7 @@ namespace builtin_scene::web_renderer
       {
         // Create gradient shader using the new helper method
         sk_sp<SkShader> shader = createGradientShader(image, originalRRect);
-        
+
         // Apply the shader if successfully created
         if (shader)
         {
@@ -172,8 +178,7 @@ namespace builtin_scene::web_renderer
   }
 
   // Helper method to convert LengthPercentage to position (0.0 to 1.0)
-  float lengthPercentageToPosition(const client_cssom::values::computed::LengthPercentage& lengthPercentage, 
-                                  float totalLength)
+  float lengthPercentageToPosition(const computed::LengthPercentage &lengthPercentage, float totalLength)
   {
     if (lengthPercentage.isPercentage())
     {
@@ -192,23 +197,22 @@ namespace builtin_scene::web_renderer
   }
 
   // Extract colors and positions from gradient items
-  void extractGradientStops(const std::vector<client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>>& items,
-                           float totalLength,
-                           std::vector<SkColor4f>& colors,
-                           std::vector<SkScalar>& positions)
+  void extractGradientStops(const vector<computed::GradientItem> &items,
+                            float totalLength,
+                            vector<SkColor4f> &colors,
+                            vector<SkScalar> &positions)
   {
     colors.clear();
     positions.clear();
 
     float lastHintPosition = 0.0f;
-    
-    for (const auto& item : items)
+    for (const auto &item : items)
     {
-      if (item.type == client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::kSimpleColorStop)
+      if (item.type == computed::GradientItem::kSimpleColorStop)
       {
-        const auto& colorStop = std::get<typename client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::SimpleColorStop>(item.value);
+        const auto &colorStop = get<typename computed::GradientItem::SimpleColorStop>(item.value);
         colors.push_back(SkColor4f::FromColor(colorStop.color.resolveToAbsoluteColor()));
-        
+
         // For simple color stops, distribute positions evenly if not already set
         if (positions.empty())
           positions.push_back(0.0f);
@@ -217,28 +221,28 @@ namespace builtin_scene::web_renderer
         else
           positions.push_back((float)positions.size() / (colors.size() - 1));
       }
-      else if (item.type == client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::kComplexColorStop)
+      else if (item.type == computed::GradientItem::kComplexColorStop)
       {
-        const auto& colorStop = std::get<typename client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::ComplexColorStop>(item.value);
+        const auto &colorStop = get<typename computed::GradientItem::ComplexColorStop>(item.value);
         colors.push_back(SkColor4f::FromColor(colorStop.color.resolveToAbsoluteColor()));
-        
+
         // Convert length_percentage to position (0.0 to 1.0)
         float position = lengthPercentageToPosition(colorStop.length_percentage, totalLength);
         positions.push_back(position);
       }
-      else if (item.type == client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::kInterpolationHint)
+      else if (item.type == computed::GradientItem::kInterpolationHint)
       {
-        const auto& hint = std::get<typename client_cssom::values::generics::GenericGradientItem<client_cssom::values::computed::Color, client_cssom::values::computed::LengthPercentage>::InterpolationHint>(item.value);
-        
+        const auto &hint = get<typename computed::GradientItem::InterpolationHint>(item.value);
+
         // InterpolationHint affects the transition between the previous and next color stops
         // Store the hint position to potentially adjust gradient transitions
         lastHintPosition = lengthPercentageToPosition(hint.length_percentage, totalLength);
-        
+
         // Note: Skia doesn't directly support interpolation hints, but we store the position
         // for potential future enhancement of gradient interpolation
       }
     }
-    
+
     // Handle fallback cases
     if (colors.empty())
     {
@@ -253,7 +257,7 @@ namespace builtin_scene::web_renderer
       positions.push_back(0.0f);
       positions.push_back(1.0f);
     }
-    else if (positions.size() != colors.size()) 
+    else if (positions.size() != colors.size())
     {
       positions.clear();
       for (size_t i = 0; i < colors.size(); ++i)
@@ -264,130 +268,129 @@ namespace builtin_scene::web_renderer
   }
 
   // Create a linear gradient shader
-  sk_sp<SkShader> createLinearGradientShader(const client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::LinearGradient* linearGradient,
-                                            const SkRRect& originalRRect,
-                                            SkTileMode tileMode)
+  sk_sp<SkShader> createLinearGradientShader(const computed::Gradient::LinearGradient *linearGradient,
+                                             const SkRRect &originalRRect,
+                                             SkTileMode tileMode)
   {
     // Calculate gradient direction points based on LineDirection
     SkPoint pts[2];
-    const SkRect& rect = originalRRect.rect();
-    
+    const SkRect &rect = originalRRect.rect();
+
     switch (linearGradient->direction)
     {
-      case client_cssom::values::generics::LineDirection::kToRight:
-        pts[0] = SkPoint::Make(rect.fLeft, rect.centerY());
-        pts[1] = SkPoint::Make(rect.fRight, rect.centerY());
-        break;
-      case client_cssom::values::generics::LineDirection::kToLeft:
-        pts[0] = SkPoint::Make(rect.fRight, rect.centerY());
-        pts[1] = SkPoint::Make(rect.fLeft, rect.centerY());
-        break;
-      case client_cssom::values::generics::LineDirection::kToBottom:
-        pts[0] = SkPoint::Make(rect.centerX(), rect.fTop);
-        pts[1] = SkPoint::Make(rect.centerX(), rect.fBottom);
-        break;
-      case client_cssom::values::generics::LineDirection::kToTop:
-        pts[0] = SkPoint::Make(rect.centerX(), rect.fBottom);
-        pts[1] = SkPoint::Make(rect.centerX(), rect.fTop);
-        break;
-      case client_cssom::values::generics::LineDirection::kToBottomRight:
-        pts[0] = SkPoint::Make(rect.fLeft, rect.fTop);
-        pts[1] = SkPoint::Make(rect.fRight, rect.fBottom);
-        break;
-      case client_cssom::values::generics::LineDirection::kToBottomLeft:
-        pts[0] = SkPoint::Make(rect.fRight, rect.fTop);
-        pts[1] = SkPoint::Make(rect.fLeft, rect.fBottom);
-        break;
-      case client_cssom::values::generics::LineDirection::kToTopRight:
-        pts[0] = SkPoint::Make(rect.fLeft, rect.fBottom);
-        pts[1] = SkPoint::Make(rect.fRight, rect.fTop);
-        break;
-      case client_cssom::values::generics::LineDirection::kToTopLeft:
-        pts[0] = SkPoint::Make(rect.fRight, rect.fBottom);
-        pts[1] = SkPoint::Make(rect.fLeft, rect.fTop);
-        break;
-      default:
-        // Default to left-to-right
-        pts[0] = SkPoint::Make(rect.fLeft, rect.centerY());
-        pts[1] = SkPoint::Make(rect.fRight, rect.centerY());
-        break;
+    case generics::LineDirection::kToRight:
+      pts[0] = SkPoint::Make(rect.fLeft, rect.centerY());
+      pts[1] = SkPoint::Make(rect.fRight, rect.centerY());
+      break;
+    case generics::LineDirection::kToLeft:
+      pts[0] = SkPoint::Make(rect.fRight, rect.centerY());
+      pts[1] = SkPoint::Make(rect.fLeft, rect.centerY());
+      break;
+    case generics::LineDirection::kToBottom:
+      pts[0] = SkPoint::Make(rect.centerX(), rect.fTop);
+      pts[1] = SkPoint::Make(rect.centerX(), rect.fBottom);
+      break;
+    case generics::LineDirection::kToTop:
+      pts[0] = SkPoint::Make(rect.centerX(), rect.fBottom);
+      pts[1] = SkPoint::Make(rect.centerX(), rect.fTop);
+      break;
+    case generics::LineDirection::kToBottomRight:
+      pts[0] = SkPoint::Make(rect.fLeft, rect.fTop);
+      pts[1] = SkPoint::Make(rect.fRight, rect.fBottom);
+      break;
+    case generics::LineDirection::kToBottomLeft:
+      pts[0] = SkPoint::Make(rect.fRight, rect.fTop);
+      pts[1] = SkPoint::Make(rect.fLeft, rect.fBottom);
+      break;
+    case generics::LineDirection::kToTopRight:
+      pts[0] = SkPoint::Make(rect.fLeft, rect.fBottom);
+      pts[1] = SkPoint::Make(rect.fRight, rect.fTop);
+      break;
+    case generics::LineDirection::kToTopLeft:
+      pts[0] = SkPoint::Make(rect.fRight, rect.fBottom);
+      pts[1] = SkPoint::Make(rect.fLeft, rect.fTop);
+      break;
+    default:
+      // Default to left-to-right
+      pts[0] = SkPoint::Make(rect.fLeft, rect.centerY());
+      pts[1] = SkPoint::Make(rect.fRight, rect.centerY());
+      break;
     }
-    
+
     // Calculate the total length for position conversion
-    float totalLength = std::sqrt(std::pow(pts[1].fX - pts[0].fX, 2) + std::pow(pts[1].fY - pts[0].fY, 2));
-    
+    float totalLength = sqrt(pow(pts[1].fX - pts[0].fX, 2) + pow(pts[1].fY - pts[0].fY, 2));
+
     // Extract colors and positions from gradient items
-    std::vector<SkColor4f> colors;
-    std::vector<SkScalar> positions;
+    vector<SkColor4f> colors;
+    vector<SkScalar> positions;
     extractGradientStops(linearGradient->items, totalLength, colors, positions);
-    
+
     return SkGradientShader::MakeLinear(pts,
-                                       colors.data(),
-                                       SkColorSpace::MakeSRGB(),
-                                       positions.data(),
-                                       colors.size(),
-                                       tileMode);
+                                        colors.data(),
+                                        SkColorSpace::MakeSRGB(),
+                                        positions.data(),
+                                        colors.size(),
+                                        tileMode);
   }
 
   // Create a radial gradient shader
-  sk_sp<SkShader> createRadialGradientShader(const client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::RadialGradient* radialGradient,
-                                            const SkRRect& originalRRect,
-                                            SkTileMode tileMode)
+  sk_sp<SkShader> createRadialGradientShader(const computed::Gradient::RadialGradient *radialGradient,
+                                             const SkRRect &originalRRect,
+                                             SkTileMode tileMode)
   {
-    const SkRect& rect = originalRRect.rect();
+    const SkRect &rect = originalRRect.rect();
     SkPoint center = SkPoint::Make(rect.centerX(), rect.centerY());
-    
+
     // Calculate radius based on size and shape
     SkScalar radius;
     switch (radialGradient->size)
     {
-      case client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::RadialGradient::kClosestSide:
-        radius = std::min(rect.width(), rect.height()) / 2.0f;
-        break;
-      case client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::RadialGradient::kFarthestSide:
-        radius = std::max(rect.width(), rect.height()) / 2.0f;
-        break;
-      case client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::RadialGradient::kClosestCorner:
-        radius = std::sqrt(std::pow(std::min(rect.width(), rect.height()) / 2.0f, 2) * 2);
-        break;
-      case client_cssom::values::generics::GenericGradient<client_cssom::values::computed::Length, client_cssom::values::computed::LengthPercentage, client_cssom::values::computed::Color>::RadialGradient::kFarthestCorner:
-      default:
-        radius = std::sqrt(std::pow(rect.width() / 2.0f, 2) + std::pow(rect.height() / 2.0f, 2));
-        break;
+    case generics::RadialGradientSize::kClosestSide:
+      radius = min(rect.width(), rect.height()) / 2.0f;
+      break;
+    case generics::RadialGradientSize::kFarthestSide:
+      radius = max(rect.width(), rect.height()) / 2.0f;
+      break;
+    case generics::RadialGradientSize::kClosestCorner:
+      radius = sqrt(pow(min(rect.width(), rect.height()) / 2.0f, 2) * 2);
+      break;
+    case generics::RadialGradientSize::kFarthestCorner:
+    default:
+      radius = sqrt(pow(rect.width() / 2.0f, 2) + pow(rect.height() / 2.0f, 2));
+      break;
     }
-    
+
     // Extract colors and positions from gradient items
-    std::vector<SkColor4f> colors;
-    std::vector<SkScalar> positions;
+    vector<SkColor4f> colors;
+    vector<SkScalar> positions;
     extractGradientStops(radialGradient->items, radius, colors, positions);
-    
+
     return SkGradientShader::MakeRadial(center,
-                                       radius,
-                                       colors.data(),
-                                       SkColorSpace::MakeSRGB(),
-                                       positions.data(),
-                                       colors.size(),
-                                       tileMode);
+                                        radius,
+                                        colors.data(),
+                                        SkColorSpace::MakeSRGB(),
+                                        positions.data(),
+                                        colors.size(),
+                                        tileMode);
   }
 
   // Create a gradient shader from computed image value
-  sk_sp<SkShader> createGradientShader(const client_cssom::values::computed::Image &image, 
-                                       const SkRRect &originalRRect)
+  sk_sp<SkShader> createGradientShader(const computed::Image &image, const SkRRect &originalRRect)
   {
     if (!image.isGradient())
       return nullptr;
 
     SkTileMode tileMode = image.isGradientRepeating() ? SkTileMode::kRepeat : SkTileMode::kClamp;
-    
+
     // Handle linear gradient
-    const auto* linearGradient = image.getLinearGradient();
+    const auto *linearGradient = image.getLinearGradient();
     if (linearGradient)
     {
       return createLinearGradientShader(linearGradient, originalRRect, tileMode);
     }
-    
-    // Handle radial gradient  
-    const auto* radialGradient = image.getRadialGradient();
+
+    // Handle radial gradient
+    const auto *radialGradient = image.getRadialGradient();
     if (radialGradient)
     {
       return createRadialGradientShader(radialGradient, originalRRect, tileMode);

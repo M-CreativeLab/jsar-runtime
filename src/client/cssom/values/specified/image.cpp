@@ -57,15 +57,15 @@ namespace client_cssom::values::specified
     return computed_img;
   }
 
-  std::string Image::gradientToCss(const Gradient &gradient) const
+  string Image::gradientToCss(const Gradient &gradient) const
   {
     // Enhanced gradient serialization with proper CSS output
-    if (std::holds_alternative<generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::LinearGradient>(gradient.gradient_type))
+    if (holds_alternative<Gradient::LinearGradient>(gradient.gradient_type))
     {
-      const auto &linearGrad = std::get<generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::LinearGradient>(gradient.gradient_type);
-      std::string functionName = gradient.repeating ? "repeating-linear-gradient" : "linear-gradient";
+      const auto &linearGrad = std::get<Gradient::LinearGradient>(gradient.gradient_type);
+      string functionName = gradient.repeating ? "repeating-linear-gradient" : "linear-gradient";
 
-      std::string direction;
+      string direction;
       switch (linearGrad.direction)
       {
       case generics::LineDirection::kToRight:
@@ -95,7 +95,7 @@ namespace client_cssom::values::specified
       }
 
       // TODO: Add proper color stop serialization
-      std::string colorStops = "red, blue"; // Placeholder
+      string colorStops = "red, blue"; // Placeholder
       if (!linearGrad.items.empty())
       {
         // Serialize actual color stops when color parsing is implemented
@@ -103,38 +103,37 @@ namespace client_cssom::values::specified
 
       return functionName + "(" + direction + ", " + colorStops + ")";
     }
-    else if (std::holds_alternative<generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient>(gradient.gradient_type))
+    else if (holds_alternative<Gradient::RadialGradient>(gradient.gradient_type))
     {
-      const auto &radialGrad = std::get<generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient>(gradient.gradient_type);
-      std::string functionName = gradient.repeating ? "repeating-radial-gradient" : "radial-gradient";
+      const auto &radialGrad = std::get<Gradient::RadialGradient>(gradient.gradient_type);
+      string functionName = gradient.repeating ? "repeating-radial-gradient" : "radial-gradient";
+      string shape = (radialGrad.shape == generics::RadialGradientShape::kCircle) ? "circle" : "ellipse";
 
-      std::string shape = (radialGrad.shape == generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient::Shape::kCircle) ? "circle" : "ellipse";
-
-      std::string size;
+      string size;
       switch (radialGrad.size)
       {
-      case generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient::Size::kClosestSide:
+      case generics::RadialGradientSize::kClosestSide:
         size = "closest-side";
         break;
-      case generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient::Size::kClosestCorner:
+      case generics::RadialGradientSize::kClosestCorner:
         size = "closest-corner";
         break;
-      case generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient::Size::kFarthestSide:
+      case generics::RadialGradientSize::kFarthestSide:
         size = "farthest-side";
         break;
-      case generics::GenericGradient<NoCalcLength, LengthPercentage, Color>::RadialGradient::Size::kFarthestCorner:
+      case generics::RadialGradientSize::kFarthestCorner:
         size = "farthest-corner";
         break;
       }
 
       // TODO: Add proper color stop serialization
-      std::string colorStops = "red, blue"; // Placeholder
+      string colorStops = "red, blue"; // Placeholder
       if (!radialGrad.items.empty())
       {
         // Serialize actual color stops when color parsing is implemented
       }
 
-      std::string shapeSize = shape;
+      string shapeSize = shape;
       if (!size.empty())
       {
         shapeSize += " " + size;
@@ -167,14 +166,14 @@ namespace client_cssom::values::specified
         computed::Gradient::LinearGradient::GradientItem computed_item;
         computed_item.type = item.type;
         
-        if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kSimpleColorStop)
+        if (item.type == generics::GenericGradientItemBase::kSimpleColorStop)
         {
           const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::SimpleColorStop>(item.value);
           typename computed::Gradient::LinearGradient::GradientItem::SimpleColorStop computed_stop;
           computed_stop.color = color_stop.color.toComputedValue(context);
           computed_item.value = computed_stop;
         }
-        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kComplexColorStop)
+        else if (item.type == generics::GenericGradientItemBase::kComplexColorStop)
         {
           const auto &color_stop = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::ComplexColorStop>(item.value);
           typename computed::Gradient::LinearGradient::GradientItem::ComplexColorStop computed_stop;
@@ -182,7 +181,7 @@ namespace client_cssom::values::specified
           computed_stop.length_percentage = color_stop.length_percentage.toComputedValue(context);
           computed_item.value = computed_stop;
         }
-        else if (item.type == generics::GenericGradientItem<Color, LengthPercentage>::kInterpolationHint)
+        else if (item.type == generics::GenericGradientItemBase::kInterpolationHint)
         {
           const auto &hint = std::get<typename generics::GenericGradientItem<Color, LengthPercentage>::InterpolationHint>(item.value);
           typename computed::Gradient::LinearGradient::GradientItem::InterpolationHint computed_hint;

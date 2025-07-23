@@ -301,9 +301,9 @@ namespace client_cssom::css_parser
       return specified::Image::None();
     }
 
-    generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient radialGrad;
-    radialGrad.shape = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Shape::kEllipse;
-    radialGrad.size = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Size::kFarthestCorner;
+    specified::Gradient::RadialGradient radialGrad;
+    radialGrad.shape = generics::RadialGradientShape::kEllipse;
+    radialGrad.size = generics::RadialGradientSize::kFarthestCorner;
 
     skipWhitespace();
 
@@ -344,37 +344,37 @@ namespace client_cssom::css_parser
 
       if (keyword == "circle")
       {
-        radial.shape = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Shape::kCircle;
+        radial.shape = generics::RadialGradientShape::kCircle;
         advance();
         modified = true;
       }
       else if (keyword == "ellipse")
       {
-        radial.shape = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Shape::kEllipse;
+        radial.shape = generics::RadialGradientShape::kEllipse;
         advance();
         modified = true;
       }
       else if (keyword == "closest-side")
       {
-        radial.size = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Size::kClosestSide;
+        radial.size = generics::RadialGradientSize::kClosestSide;
         advance();
         modified = true;
       }
       else if (keyword == "closest-corner")
       {
-        radial.size = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Size::kClosestCorner;
+        radial.size = generics::RadialGradientSize::kClosestCorner;
         advance();
         modified = true;
       }
       else if (keyword == "farthest-side")
       {
-        radial.size = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Size::kFarthestSide;
+        radial.size = generics::RadialGradientSize::kFarthestSide;
         advance();
         modified = true;
       }
       else if (keyword == "farthest-corner")
       {
-        radial.size = generics::GenericGradient<specified::NoCalcLength, specified::LengthPercentage, specified::Color>::RadialGradient::Size::kFarthestCorner;
+        radial.size = generics::RadialGradientSize::kFarthestCorner;
         advance();
         modified = true;
       }
@@ -389,9 +389,9 @@ namespace client_cssom::css_parser
     return modified;
   }
 
-  vector<generics::GenericGradientItem<specified::Color, specified::LengthPercentage>> CSSImageParser::parseColorStops()
+  vector<specified::GradientItem> CSSImageParser::parseColorStops()
   {
-    vector<generics::GenericGradientItem<specified::Color, specified::LengthPercentage>> colorStops;
+    vector<specified::GradientItem> colorStops;
 
     while (hasNext())
     {
@@ -415,13 +415,13 @@ namespace client_cssom::css_parser
     return colorStops;
   }
 
-  generics::GenericGradientItem<specified::Color, specified::LengthPercentage> CSSImageParser::parseColorStop()
+  specified::GradientItem CSSImageParser::parseColorStop()
   {
-    generics::GenericGradientItem<specified::Color, specified::LengthPercentage> colorStop;
+    specified::GradientItem colorStop;
 
     // For now, create simple color stops
     // TODO: Implement proper color parsing and position parsing
-    colorStop.type = generics::GenericGradientItem<specified::Color, specified::LengthPercentage>::kSimpleColorStop;
+    colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
 
     // Skip color name tokens for now
     if (hasNext() && currentToken().type == css_value_tokenizer::TokenType::kIdentifier)

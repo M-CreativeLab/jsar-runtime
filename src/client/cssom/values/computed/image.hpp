@@ -8,11 +8,14 @@
 
 namespace client_cssom::values::computed
 {
-  class Gradient : public generics::GenericGradient<
-                     computed::Length,
-                     computed::LengthPercentage,
-                     computed::Color>
+  using GradientItem = generics::GenericGradientItem<computed::Color, computed::LengthPercentage>;
+  using GradientBase = generics::GenericGradient<computed::Length,
+                                                 computed::LengthPercentage,
+                                                 computed::Color>;
+
+  class Gradient : public GradientBase
   {
+    using GradientBase::GenericGradient;
   };
 
   class Image : public generics::GenericImage<Gradient, UrlOrNone>
@@ -26,6 +29,10 @@ namespace client_cssom::values::computed
   public:
     // Default constructor creates a 'none' image
     Image() = default;
+    Image(const Gradient &gradient)
+    {
+      emplace<Gradient>(std::move(gradient));
+    }
 
     // Copy constructor
     Image(const Image &) = default;
@@ -57,14 +64,14 @@ namespace client_cssom::values::computed
     std::string getUrl() const;
 
     // Get gradient data if it's a gradient, otherwise return nullptr
-    const Gradient* getGradient() const;
-    
+    const Gradient *getGradient() const;
+
     // Get linear gradient data if it's a linear gradient, otherwise return nullptr
-    const typename Gradient::LinearGradient* getLinearGradient() const;
-    
+    const typename Gradient::LinearGradient *getLinearGradient() const;
+
     // Get radial gradient data if it's a radial gradient, otherwise return nullptr
-    const typename Gradient::RadialGradient* getRadialGradient() const;
-    
+    const typename Gradient::RadialGradient *getRadialGradient() const;
+
     // Check if gradient is repeating (only valid if isGradient() is true)
     bool isGradientRepeating() const;
 

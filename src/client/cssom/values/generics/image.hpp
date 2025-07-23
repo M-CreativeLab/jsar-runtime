@@ -18,8 +18,21 @@ namespace client_cssom::values::generics
     kToBottomRight
   };
 
-  template <typename Color, typename LP>
-  class GenericGradientItem
+  enum class RadialGradientShape
+  {
+    kCircle,
+    kEllipse
+  };
+
+  enum class RadialGradientSize
+  {
+    kClosestSide,
+    kClosestCorner,
+    kFarthestSide,
+    kFarthestCorner
+  };
+
+  class GenericGradientItemBase
   {
   public:
     enum ItemType
@@ -29,7 +42,17 @@ namespace client_cssom::values::generics
       kInterpolationHint,
     };
 
-  private:
+  public:
+    virtual ~GenericGradientItemBase() = default;
+
+  public:
+    ItemType type;
+  };
+
+  template <typename Color, typename LP>
+  class GenericGradientItem : public GenericGradientItemBase
+  {
+  public:
     struct SimpleColorStop
     {
       Color color;
@@ -43,10 +66,11 @@ namespace client_cssom::values::generics
     {
       LP length_percentage; // Length or percentage for the hint position.
     };
+
+  private:
     using ItemValue = std::variant<SimpleColorStop, ComplexColorStop, InterpolationHint>;
 
   public:
-    ItemType type;
     ItemValue value;
   };
 
@@ -57,29 +81,20 @@ namespace client_cssom::values::generics
     class LinearGradient
     {
     public:
+      using GradientItem = GenericGradientItem<Color, LP>;
+
       LineDirection direction = LineDirection::kToRight;
-      std::vector<GenericGradientItem<Color, LP>> items;
+      std::vector<GradientItem> items;
     };
 
     class RadialGradient
     {
     public:
-      enum Shape
-      {
-        kCircle,
-        kEllipse
-      };
-      enum Size
-      {
-        kClosestSide,
-        kClosestCorner,
-        kFarthestSide,
-        kFarthestCorner
-      };
+      using GradientItem = GenericGradientItem<Color, LP>;
 
-      Shape shape = Shape::kEllipse;
-      Size size = Size::kFarthestCorner;
-      std::vector<GenericGradientItem<Color, LP>> items;
+      RadialGradientShape shape = RadialGradientShape::kEllipse;
+      RadialGradientSize size = RadialGradientSize::kFarthestCorner;
+      std::vector<GradientItem> items;
     };
 
     // TODO(yorkie): add conic gradient when needed.
