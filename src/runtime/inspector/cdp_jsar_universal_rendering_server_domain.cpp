@@ -243,7 +243,24 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const string 
   auto &allocator = params.GetAllocator();
 
   params.AddMember("timestamp", rapidjson::Value().SetUint64(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()), allocator);
-  params.AddMember("commandBufferData", rapidjson::Value().SetString(commandBufferData.c_str(), allocator), allocator);
+  
+  // Parse the incoming JSON command buffer data and include it as structured data
+  rapidjson::Document commandBufferJson;
+  rapidjson::ParseResult parseResult = commandBufferJson.Parse(commandBufferData.c_str());
+  
+  if (parseResult)
+  {
+    // Copy the parsed command buffer data into the params
+    rapidjson::Value commandBufferDataValue;
+    commandBufferDataValue.CopyFrom(commandBufferJson, allocator);
+    params.AddMember("commandBufferData", commandBufferDataValue, allocator);
+  }
+  else
+  {
+    // Fallback to string if parsing fails
+    params.AddMember("commandBufferData", rapidjson::Value().SetString(commandBufferData.c_str(), allocator), allocator);
+    params.AddMember("parseError", rapidjson::Value().SetBool(true), allocator);
+  }
 
   string eventMessage = CdpResponse::event("JSAR.UniversalRenderingServer.commandBufferExecuted", params);
 

@@ -6,6 +6,9 @@
 #include "runtime/constellation.hpp"
 #include "runtime/content_manager.hpp"
 #include "./content_renderer.hpp"
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 
 namespace renderer
 {
@@ -372,13 +375,59 @@ namespace renderer
     // Notify callback if command buffers were executed successfully
     if (result && commandBufferExecutionCallback_)
     {
-      // Create a summary of the executed command buffers
-      std::string commandBufferInfo = "Executed " + std::to_string(list.size()) + " command buffers";
+      // Create structured JSON data for the executed command buffers
+      rapidjson::Document commandBufferData;
+      commandBufferData.SetObject();
+      auto &allocator = commandBufferData.GetAllocator();
+      
+      // Add metadata
+      commandBufferData.AddMember("totalCount", rapidjson::Value().SetUint(list.size()), allocator);
       if (content_renderer)
       {
-        commandBufferInfo += " for content " + std::to_string(content_renderer->contentId);
+        commandBufferData.AddMember("contentId", rapidjson::Value().SetUint(content_renderer->contentId), allocator);
       }
-      commandBufferExecutionCallback_(commandBufferInfo);
+      
+      // Add detailed information for each command buffer
+      rapidjson::Value commandBuffers(rapidjson::kArrayType);
+      for (size_t i = 0; i < list.size(); ++i)
+      {
+        auto *cmdBuffer = list[i];
+        if (cmdBuffer)
+        {
+          rapidjson::Value cmdInfo(rapidjson::kObjectType);
+          
+          // Basic command buffer information
+          cmdInfo.AddMember("sequenceIndex", rapidjson::Value().SetUint(i), allocator);
+          cmdInfo.AddMember("id", rapidjson::Value().SetUint(cmdBuffer->id), allocator);
+          cmdInfo.AddMember("contextId", rapidjson::Value().SetUint(cmdBuffer->contextId), allocator);
+          
+          // Command type and human-readable name
+          cmdInfo.AddMember("type", rapidjson::Value().SetInt(static_cast<int>(cmdBuffer->type)), allocator);
+          
+          std::string typeName = commandbuffers::commandTypeToStr(cmdBuffer->type);
+          cmdInfo.AddMember("typeName", rapidjson::Value().SetString(typeName.c_str(), allocator), allocator);
+          
+          // Add XR rendering info if available
+          if (cmdBuffer->renderingInfo.hasRenderingInfo)
+          {
+            rapidjson::Value xrInfo(rapidjson::kObjectType);
+            xrInfo.AddMember("eyeId", rapidjson::Value().SetUint(cmdBuffer->renderingInfo.eyeId), allocator);
+            xrInfo.AddMember("frameId", rapidjson::Value().SetUint64(cmdBuffer->renderingInfo.frameId), allocator);
+            cmdInfo.AddMember("xrRenderingInfo", xrInfo, allocator);
+          }
+          
+          commandBuffers.PushBack(cmdInfo, allocator);
+        }
+      }
+      
+      commandBufferData.AddMember("commandBuffers", commandBuffers, allocator);
+      
+      // Convert to string and send
+      rapidjson::StringBuffer buffer;
+      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+      commandBufferData.Accept(writer);
+      
+      commandBufferExecutionCallback_(buffer.GetString());
     }
     
     return result;

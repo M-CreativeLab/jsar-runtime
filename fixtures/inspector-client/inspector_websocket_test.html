@@ -215,6 +215,34 @@
       float: right;
       margin-bottom: 10px;
     }
+    .command-buffer-event {
+      margin: 8px 0;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 3px solid #28a745;
+    }
+    .command-buffer-details {
+      margin-top: 8px;
+      font-size: 0.9em;
+    }
+    .command-buffer-details table {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+    .command-buffer-details th {
+      background: #e9ecef;
+      padding: 4px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8em;
+    }
+    .command-buffer-details td {
+      padding: 2px 4px;
+      vertical-align: top;
+    }
+    .command-buffer-details tr:hover {
+      background: #f1f3f4;
+    }
     .rendering-controls {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -898,7 +926,45 @@
           // Handle command buffer events
           if (parsed.method === 'JSAR.UniversalRenderingServer.commandBufferExecuted') {
             const timestamp = new Date(parsed.params.timestamp).toLocaleTimeString();
-            commandBufferStatus.innerHTML += `<div><strong>[${timestamp}]</strong> Command buffer executed</div>`;
+            const cmdData = parsed.params.commandBufferData;
+            
+            let displayContent = `<div class="command-buffer-event"><strong>[${timestamp}]</strong> `;
+            
+            if (cmdData && typeof cmdData === 'object' && !cmdData.parseError) {
+              // Structured command buffer data
+              displayContent += `Executed ${cmdData.totalCount} command buffers`;
+              if (cmdData.contentId !== undefined) {
+                displayContent += ` for content ${cmdData.contentId}`;
+              }
+              displayContent += `<div class="command-buffer-details">`;
+              
+              if (cmdData.commandBuffers && cmdData.commandBuffers.length > 0) {
+                displayContent += `<table style="width: 100%; margin-top: 5px; font-size: 0.9em; border-collapse: collapse;">`;
+                displayContent += `<thead><tr style="background: #f0f0f0;"><th>Seq</th><th>Type</th><th>ID</th><th>Context</th><th>XR Info</th></tr></thead><tbody>`;
+                
+                cmdData.commandBuffers.forEach(cmd => {
+                  displayContent += `<tr style="border-bottom: 1px solid #ddd;">`;
+                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.sequenceIndex}</td>`;
+                  displayContent += `<td style="padding: 2px 4px;" title="${cmd.typeName}">${cmd.typeName.replace('COMMAND_BUFFER_', '').replace('_REQ', '').replace('_RES', '')}</td>`;
+                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.id}</td>`;
+                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.contextId}</td>`;
+                  displayContent += `<td style="padding: 2px 4px; text-align: center;">${cmd.xrRenderingInfo ? `Eye:${cmd.xrRenderingInfo.eyeId} Frame:${cmd.xrRenderingInfo.frameId}` : '-'}</td>`;
+                  displayContent += `</tr>`;
+                });
+                
+                displayContent += `</tbody></table>`;
+              }
+              displayContent += `</div>`;
+            } else {
+              // Fallback for simple string data
+              displayContent += `Command buffer executed`;
+              if (cmdData && typeof cmdData === 'string') {
+                displayContent += `: ${cmdData}`;
+              }
+            }
+            
+            displayContent += `</div>`;
+            commandBufferStatus.innerHTML += displayContent;
             commandBufferStatus.scrollTop = commandBufferStatus.scrollHeight;
           }
           
