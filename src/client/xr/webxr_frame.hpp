@@ -112,6 +112,10 @@ namespace client_xr
     {
       return session_;
     }
+    inline int currentViewIndex()
+    {
+      return frameRequestData_ ? frameRequestData_->viewIndex : -1;
+    }
 
   public:
     void startFrame();

@@ -197,6 +197,13 @@ namespace builtin_scene
     assert(xrExperience != nullptr);
     xrExperience->updateCurrentFrame(time, frame);
 
+    // Update the XR rendering context with the current view index
+    auto xrContext = getResource<XRRenderingContext>();
+    if (xrContext != nullptr && frame != nullptr)
+    {
+      xrContext->setCurrentViewIndex(frame->currentViewIndex());
+    }
+
     // Trigger the ECS update().
     ecs::App::update();
   }
