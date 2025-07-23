@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Background Origin and Repeat Test</title>
+  <style>
+    body {
+      background-color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .test-container {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #666;
+      font-size: 18px;
+      margin: 15px 0 10px 0;
+    }
+
+    /* Background Origin Tests */
+    .bg-origin-border-box {
+      width: 200px;
+      height: 150px;
+      border: 20px solid rgba(255, 0, 0, 0.3);
+      padding: 20px;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-origin: border-box;
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    .bg-origin-padding-box {
+      width: 200px;
+      height: 150px;
+      border: 20px solid rgba(0, 255, 0, 0.3);
+      padding: 20px;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-origin: padding-box;
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    .bg-origin-content-box {
+      width: 200px;
+      height: 150px;
+      border: 20px solid rgba(0, 0, 255, 0.3);
+      padding: 20px;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-origin: content-box;
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    /* Background Repeat Tests */
+    .bg-repeat {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-repeat: repeat;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    .bg-repeat-x {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-repeat: repeat-x;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    .bg-repeat-y {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-repeat: repeat-y;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    .bg-no-repeat {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+      margin: 10px;
+    }
+
+    /* Combined Tests */
+    .combined-test {
+      width: 300px;
+      height: 200px;
+      border: 15px solid rgba(255, 165, 0, 0.5);
+      padding: 25px;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-origin: content-box;
+      background-repeat: repeat-x;
+      background-size: 40px 40px;
+      margin: 10px;
+    }
+
+    .test-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .test-description {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 5px;
+      width: 200px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Background Origin and Repeat Properties Test</h1>
+
+  <div class="test-container">
+    <h2>Background Origin Tests</h2>
+    <p>These tests demonstrate how background-origin affects where the background image is positioned:</p>
+    
+    <div class="test-row">
+      <div>
+        <div class="bg-origin-border-box"></div>
+        <div class="test-description">background-origin: border-box<br>(red border)</div>
+      </div>
+      <div>
+        <div class="bg-origin-padding-box"></div>
+        <div class="test-description">background-origin: padding-box<br>(green border)</div>
+      </div>
+      <div>
+        <div class="bg-origin-content-box"></div>
+        <div class="test-description">background-origin: content-box<br>(blue border)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Background Repeat Tests</h2>
+    <p>These tests demonstrate different background-repeat values:</p>
+    
+    <div class="test-row">
+      <div>
+        <div class="bg-repeat"></div>
+        <div class="test-description">background-repeat: repeat</div>
+      </div>
+      <div>
+        <div class="bg-repeat-x"></div>
+        <div class="test-description">background-repeat: repeat-x</div>
+      </div>
+      <div>
+        <div class="bg-repeat-y"></div>
+        <div class="test-description">background-repeat: repeat-y</div>
+      </div>
+      <div>
+        <div class="bg-no-repeat"></div>
+        <div class="test-description">background-repeat: no-repeat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Combined Test</h2>
+    <p>This test combines both properties:</p>
+    
+    <div class="test-row">
+      <div>
+        <div class="combined-test"></div>
+        <div class="test-description">background-origin: content-box<br>background-repeat: repeat-x<br>(orange border shows content vs border area)</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

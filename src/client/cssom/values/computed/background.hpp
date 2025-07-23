@@ -7,6 +7,8 @@ namespace client_cssom::values::specified
 {
   class BackgroundBlendMode;
   class BackgroundClip;
+  class BackgroundOrigin;
+  class BackgroundRepeat;
 }
 
 namespace client_cssom::values::computed
@@ -61,5 +63,15 @@ namespace client_cssom::values::computed
   class BackgroundClip : public generics::GenericBackgroundClip<BackgroundClip>
   {
     using generics::GenericBackgroundClip<BackgroundClip>::GenericBackgroundClip;
+  };
+
+  class BackgroundOrigin : public generics::GenericBackgroundOrigin<BackgroundOrigin>
+  {
+    using generics::GenericBackgroundOrigin<BackgroundOrigin>::GenericBackgroundOrigin;
+  };
+
+  class BackgroundRepeat : public generics::GenericBackgroundRepeat<BackgroundRepeat>
+  {
+    using generics::GenericBackgroundRepeat<BackgroundRepeat>::GenericBackgroundRepeat;
   };
 }

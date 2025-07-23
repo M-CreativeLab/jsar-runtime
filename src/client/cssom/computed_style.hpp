@@ -392,6 +392,14 @@ namespace client_cssom
     {
       return background_clip_;
     }
+    inline const values::computed::BackgroundOrigin &backgroundOrigin() const
+    {
+      return background_origin_;
+    }
+    inline const values::computed::BackgroundRepeat &backgroundRepeat() const
+    {
+      return background_repeat_;
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -525,6 +533,8 @@ namespace client_cssom
     values::computed::Image background_image_ = values::computed::Image::None();
     values::computed::BackgroundBlendMode background_blend_mode_ = values::computed::BackgroundBlendMode::Normal();
     values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
+    values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
+    values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
 
     // 3D Transforms
     values::computed::Transform transform_;
