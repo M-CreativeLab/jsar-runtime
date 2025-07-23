@@ -1,5 +1,5 @@
 #include "./cdp_myexample_domain.hpp"
-#include "../common/debug.hpp"
+#include "../../common/debug.hpp"
 #include <rapidjson/document.h>
 
 using namespace std;
@@ -9,9 +9,9 @@ CdpMyExampleDomain::CdpMyExampleDomain()
   DEBUG(LOG_TAG_INSPECTOR, "CDP: MyExample domain initialized");
 }
 
-string CdpMyExampleDomain::handleMethod(const string &method, const CdpMessage &message)
+string CdpMyExampleDomain::handleMethod(const string &method, const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: Handling method: %s", method.c_str());
+  DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: Handling method: %s for client: %s", method.c_str(), clientId.c_str());
 
   if (method == "ping")
   {

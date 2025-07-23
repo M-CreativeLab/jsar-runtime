@@ -1,7 +1,7 @@
 #include "./cdp_runtime_domain.hpp"
 #include "../constellation.hpp"
 #include "../embedder.hpp"
-#include "../common/debug.hpp"
+#include "../../common/debug.hpp"
 #include <rapidjson/document.h>
 
 using namespace std;
@@ -12,9 +12,9 @@ CdpRuntimeDomain::CdpRuntimeDomain(TrConstellation *constellation)
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Runtime domain initialized");
 }
 
-string CdpRuntimeDomain::handleMethod(const string &method, const CdpMessage &message)
+string CdpRuntimeDomain::handleMethod(const string &method, const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Handling method: %s", method.c_str());
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Handling method: %s for client: %s", method.c_str(), clientId.c_str());
 
   if (method == "enable")
   {

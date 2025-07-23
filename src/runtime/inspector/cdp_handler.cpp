@@ -1,5 +1,5 @@
 #include "./cdp_handler.hpp"
-#include "../common/debug.hpp"
+#include "../../common/debug.hpp"
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
@@ -142,7 +142,7 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
 
   try
   {
-    return it->second->handleMethod(methodName, *cdpMessage);
+    return it->second->handleMethod(methodName, *cdpMessage, clientId);
   }
   catch (const exception &e)
   {

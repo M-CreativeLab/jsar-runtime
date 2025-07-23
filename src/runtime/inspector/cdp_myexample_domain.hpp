@@ -8,7 +8,7 @@ class CdpMyExampleDomain : public CdpDomainHandler
 public:
   CdpMyExampleDomain();
 
-  std::string handleMethod(const std::string &method, const CdpMessage &message) override;
+  std::string handleMethod(const std::string &method, const CdpMessage &message, const std::string &clientId) override;
   
   // New declarative interface
   std::string getDomainName() const override;

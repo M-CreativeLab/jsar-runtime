@@ -42,7 +42,7 @@ public:
   virtual ~CdpDomainHandler() = default;
   
   // Handle a method call for this domain
-  virtual std::string handleMethod(const std::string &method, const CdpMessage &message) = 0;
+  virtual std::string handleMethod(const std::string &method, const CdpMessage &message, const std::string &clientId) = 0;
   
   // Get domain metadata
   virtual std::string getDomainName() const = 0;
