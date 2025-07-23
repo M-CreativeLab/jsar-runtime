@@ -392,7 +392,8 @@ namespace builtin_scene::web_renderer
     {
       return createRadialGradientShader(radialGradient, originalRRect, tileMode);
     }
-    
+
+    // TODO: Implement conic gradient support
     return nullptr;
   }
 
