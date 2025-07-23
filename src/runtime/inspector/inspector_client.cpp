@@ -403,7 +403,7 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
       sendHttpErrorResponse(404, "WebSocket upgrades only supported on /devtools/inspector/:client");
       return true; // We handled the request, even though we rejected it
     }
-    
+
     // Extract client ID from URL
     string clientId = url_.substr(20); // Skip "/devtools/inspector/"
     if (clientId.empty())
@@ -412,12 +412,11 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
       sendHttpErrorResponse(400, "Missing client ID in WebSocket URL");
       return true;
     }
-    
+
     // Store the client ID for later use
     clientId_ = clientId;
-    
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested for client '%s'", clientId.c_str());
-    
+
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();
     if (inspector == nullptr)

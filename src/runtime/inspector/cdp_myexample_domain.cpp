@@ -9,7 +9,7 @@ CdpMyExampleDomain::CdpMyExampleDomain()
   DEBUG(LOG_TAG_INSPECTOR, "CDP: MyExample domain initialized");
 }
 
-std::string CdpMyExampleDomain::handleMethod(const std::string &method, const CdpMessage &message)
+string CdpMyExampleDomain::handleMethod(const string &method, const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: Handling method: %s", method.c_str());
 
@@ -32,7 +32,7 @@ std::string CdpMyExampleDomain::handleMethod(const std::string &method, const Cd
   }
 }
 
-std::string CdpMyExampleDomain::ping(const CdpMessage &message)
+string CdpMyExampleDomain::ping(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: Ping called");
 
@@ -46,7 +46,7 @@ std::string CdpMyExampleDomain::ping(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpMyExampleDomain::echo(const CdpMessage &message)
+string CdpMyExampleDomain::echo(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: Echo called");
 
@@ -62,7 +62,7 @@ std::string CdpMyExampleDomain::echo(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpMyExampleDomain::getInfo(const CdpMessage &message)
+string CdpMyExampleDomain::getInfo(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP MyExample: GetInfo called");
 
@@ -85,17 +85,17 @@ std::string CdpMyExampleDomain::getInfo(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpMyExampleDomain::getDomainName() const
+string CdpMyExampleDomain::getDomainName() const
 {
   return "Example";
 }
 
-std::string CdpMyExampleDomain::getDomainDescription() const
+string CdpMyExampleDomain::getDomainDescription() const
 {
   return "Sample domain for testing CDP connectivity and method invocation.";
 }
 
-std::vector<CdpCommand> CdpMyExampleDomain::getCommands() const
+vector<CdpCommand> CdpMyExampleDomain::getCommands() const
 {
   return {
     {"ping", "Simple ping command that responds with pong.", nullptr},

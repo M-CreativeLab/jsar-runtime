@@ -48,7 +48,7 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
 }
 
 // CdpResponse implementation
-std::string CdpResponse::success(int id, const rapidjson::Value &result)
+string CdpResponse::success(int id, const rapidjson::Value &result)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -67,7 +67,7 @@ std::string CdpResponse::success(int id, const rapidjson::Value &result)
   return buffer.GetString();
 }
 
-std::string CdpResponse::error(int id, int code, const std::string &message)
+string CdpResponse::error(int id, int code, const string &message)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -89,7 +89,7 @@ std::string CdpResponse::error(int id, int code, const std::string &message)
   return buffer.GetString();
 }
 
-std::string CdpResponse::event(const std::string &method, const rapidjson::Value &params)
+string CdpResponse::event(const string &method, const rapidjson::Value &params)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -116,7 +116,7 @@ CdpHandler::CdpHandler()
 
 CdpHandler::~CdpHandler() = default;
 
-std::string CdpHandler::processMessage(const std::string &message, const std::string &clientId)
+string CdpHandler::processMessage(const string &message, const string &clientId)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Processing message: %s", message.c_str());
 
@@ -151,13 +151,13 @@ std::string CdpHandler::processMessage(const std::string &message, const std::st
   }
 }
 
-void CdpHandler::registerDomain(const std::string &domain, std::unique_ptr<CdpDomainHandler> handler)
+void CdpHandler::registerDomain(const string &domain, unique_ptr<CdpDomainHandler> handler)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Registering domain: %s", domain.c_str());
   domains_[domain] = move(handler);
 }
 
-std::string CdpHandler::extractDomain(const std::string &method)
+string CdpHandler::extractDomain(const string &method)
 {
   size_t dotPos = method.find('.');
   if (dotPos == string::npos)
@@ -167,7 +167,7 @@ std::string CdpHandler::extractDomain(const std::string &method)
   return method.substr(0, dotPos);
 }
 
-std::string CdpHandler::extractMethodName(const std::string &method)
+string CdpHandler::extractMethodName(const string &method)
 {
   size_t dotPos = method.find('.');
   if (dotPos == string::npos)

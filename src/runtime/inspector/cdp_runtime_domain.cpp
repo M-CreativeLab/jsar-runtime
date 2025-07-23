@@ -12,7 +12,7 @@ CdpRuntimeDomain::CdpRuntimeDomain(TrConstellation *constellation)
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Runtime domain initialized");
 }
 
-std::string CdpRuntimeDomain::handleMethod(const std::string &method, const CdpMessage &message)
+string CdpRuntimeDomain::handleMethod(const string &method, const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Handling method: %s", method.c_str());
 
@@ -39,7 +39,7 @@ std::string CdpRuntimeDomain::handleMethod(const std::string &method, const CdpM
   }
 }
 
-std::string CdpRuntimeDomain::enable(const CdpMessage &message)
+string CdpRuntimeDomain::enable(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Enabling runtime domain");
 
@@ -50,7 +50,7 @@ std::string CdpRuntimeDomain::enable(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpRuntimeDomain::disable(const CdpMessage &message)
+string CdpRuntimeDomain::disable(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Disabling runtime domain");
 
@@ -61,12 +61,12 @@ std::string CdpRuntimeDomain::disable(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpRuntimeDomain::getVersion(const CdpMessage &message)
+string CdpRuntimeDomain::getVersion(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Getting version");
 
   auto embedder = constellation_->getEmbedder();
-  std::string version = embedder->getVersion();
+  string version = embedder->getVersion();
 
   rapidjson::Document result;
   result.SetObject();
@@ -80,7 +80,7 @@ std::string CdpRuntimeDomain::getVersion(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpRuntimeDomain::evaluate(const CdpMessage &message)
+string CdpRuntimeDomain::evaluate(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Runtime: Evaluate method called (not implemented)");
 
@@ -99,17 +99,17 @@ std::string CdpRuntimeDomain::evaluate(const CdpMessage &message)
   return CdpResponse::success(message.id, result);
 }
 
-std::string CdpRuntimeDomain::getDomainName() const
+string CdpRuntimeDomain::getDomainName() const
 {
   return "Runtime";
 }
 
-std::string CdpRuntimeDomain::getDomainDescription() const
+string CdpRuntimeDomain::getDomainDescription() const
 {
   return "Runtime domain exposes JavaScript runtime by means of remote evaluation and mirror objects.";
 }
 
-std::vector<CdpCommand> CdpRuntimeDomain::getCommands() const
+vector<CdpCommand> CdpRuntimeDomain::getCommands() const
 {
   return {
     {"enable", "Enables reporting of execution contexts creation.", nullptr},
