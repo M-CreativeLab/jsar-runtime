@@ -324,6 +324,8 @@ namespace builtin_scene::web_renderer
     vector<SkColor4f> colors;
     vector<SkScalar> positions;
     extractGradientStops(linearGradient->items, totalLength, colors, positions);
+    cout << "Extracted " << colors.size() << " colors and "
+         << positions.size() << " positions." << endl;
 
     return SkGradientShader::MakeLinear(pts,
                                         colors.data(),

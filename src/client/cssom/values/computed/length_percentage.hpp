@@ -10,7 +10,8 @@
 
 namespace client_cssom::values::computed
 {
-  class LengthPercentage : public ToLayoutValue<crates::layout2::styles::LengthPercentage>, public ToCss
+  class LengthPercentage : public ToLayoutValue<crates::layout2::styles::LengthPercentage>,
+                           public ToCss
   {
   private:
     enum Tag : uint8_t
@@ -165,7 +166,7 @@ namespace client_cssom::values::computed
       return std::nullopt;
     }
 
-    crates::layout2::styles::LengthPercentage toLayoutValue() const
+    crates::layout2::styles::LengthPercentage toLayoutValue() const override
     {
       if (isLength())
         return crates::layout2::styles::LengthPercentage::Length(getLength().px());
