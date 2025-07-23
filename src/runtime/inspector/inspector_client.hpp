@@ -36,6 +36,10 @@ public:
   {
     return url_;
   }
+  const std::string clientId() const
+  {
+    return clientId_;
+  }
   const http::HeaderFields &headers() const
   {
     return headers_;
@@ -89,6 +93,7 @@ private:
   bool shouldClose_ = false;
   std::vector<char> buffer_;
   std::string url_;
+  std::string clientId_;
   std::string methodStr_;
   HTTPMethod method_;
   std::string currentHeaderField_;

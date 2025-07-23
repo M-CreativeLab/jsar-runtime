@@ -1,15 +1,13 @@
-file(GLOB TR_CORE_SOURCE
+file(GLOB_RECURSE TR_CORE_SOURCE
     "src/analytics/*.cpp"
-    "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
-    "src/renderer/gles/*.cpp"
     "src/xr/*.cpp"
 )
 
 if(NOT TR_ENABLE_INSPECTOR)
     list(FILTER TR_CORE_SOURCE EXCLUDE REGEX ".*/src/runtime/inspector\\.cpp$")
-    list(FILTER TR_CORE_SOURCE EXCLUDE REGEX ".*/src/runtime/inspector_[^/]*\\.cpp$")
+    list(FILTER TR_CORE_SOURCE EXCLUDE REGEX ".*/src/runtime/inspector/.*\\.cpp$")
 endif()
 
 if(APPLE)
