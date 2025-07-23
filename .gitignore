@@ -45,9 +45,7 @@ node_modules
 !/thirdparty/**/*.dll
 !/thirdparty/**/*.lib
 !/thirdparty/**/*.exe
-/build/output
-/build/external
-/build/targets/*
+/build/
 /src/proto/*
 !/src/proto/*.proto
 *.apk
@@ -57,4 +55,3 @@ node_modules
 .res_cache
 
 # Build artifacts
-./build/cmake/
