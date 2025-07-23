@@ -40,14 +40,6 @@ namespace builtin_scene::model_renderer
      */
     static bool parse(const std::vector<char> &data, std::vector<GaussianSplat> &splats);
 
-    /**
-     * Parse a PLY file from file path and extract Gaussian splats.
-     * @param filePath Path to the PLY file
-     * @param splats Output vector to store parsed splats
-     * @return true if parsing was successful, false otherwise
-     */
-    static bool parseFile(const std::string &filePath, std::vector<GaussianSplat> &splats);
-
   private:
     /**
      * Parse PLY header and extract element and property information.

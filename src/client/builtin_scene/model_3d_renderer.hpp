@@ -46,14 +46,6 @@ namespace builtin_scene::model_renderer
     
     // File format detection
     Model3d::ModelType detectModelType(const std::string &src, const std::string &typeHint = "");
-    
-    // Loaders for different formats
-    bool loadGLTFModel(const std::string &filePath, Model3d &model);
-    bool loadGaussianSplattingModel(const std::string &filePath, Model3d &model);
-    
-    // 3DGS specific loaders
-    bool loadGSplatFile(const std::string &filePath, std::vector<GaussianSplat> &splats);
-    bool loadPlyFile(const std::string &filePath, std::vector<GaussianSplat> &splats);
   };
 
   /**

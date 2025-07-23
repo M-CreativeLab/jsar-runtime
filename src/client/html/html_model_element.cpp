@@ -319,7 +319,7 @@ namespace dom
     {
       // TODO: Implement GLTF/GLB parsing
       std::cerr << "GLTF/GLB parsing not yet implemented" << std::endl;
-      model.setLoaded(true); // Mark as loaded even if not parsed
+      // Model loading failed - do not set as loaded
     }
 
     is_src_model_decoded_ = true;

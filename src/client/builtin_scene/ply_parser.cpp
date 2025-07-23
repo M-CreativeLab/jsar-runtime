@@ -66,26 +66,6 @@ namespace builtin_scene::model_renderer
     return true;
   }
 
-  bool PlyParser::parseFile(const std::string &filePath, std::vector<GaussianSplat> &splats)
-  {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file.is_open()) {
-      DEBUG(LOG_TAG, "Failed to open PLY file: %s", filePath.c_str());
-      return false;
-    }
-    
-    // Read file into buffer
-    file.seekg(0, std::ios::end);
-    size_t fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-    
-    std::vector<char> data(fileSize);
-    file.read(data.data(), fileSize);
-    file.close();
-    
-    return parse(data, splats);
-  }
-
   bool PlyParser::parseHeader(const std::vector<std::string> &lines, 
                              size_t &headerEndIndex, 
                              std::vector<PlyElement> &elements)
