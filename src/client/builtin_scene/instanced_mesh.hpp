@@ -29,13 +29,19 @@ namespace builtin_scene
         , texUvOffset(0.0f, 0.0f)
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
+        , texUvOffsetRight(0.0f, 0.0f)
+        , texUvScaleRight(1.0f, 1.0f)
+        , texLayerIndexRight(0)
     {
     }
     glm::mat4 transform;   /** 16 */
     glm::vec4 color;       /** 20 */
-    glm::vec2 texUvOffset; /** 22 */
-    glm::vec2 texUvScale;  /** 24 */
-    uint32_t texLayerIndex;
+    glm::vec2 texUvOffset; /** 22 - Left eye texture coordinates */
+    glm::vec2 texUvScale;  /** 24 - Left eye texture coordinates */
+    uint32_t texLayerIndex; /** Left eye texture layer */
+    glm::vec2 texUvOffsetRight; /** 26 - Right eye texture coordinates */
+    glm::vec2 texUvScaleRight;  /** 28 - Right eye texture coordinates */
+    uint32_t texLayerIndexRight; /** Right eye texture layer */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -45,6 +51,9 @@ namespace builtin_scene
          << "  texUvOffset=" << math3d::to_string(data.texUvOffset) << std::endl
          << "  texUvScale=" << math3d::to_string(data.texUvScale) << std::endl
          << "  texLayerIndex=" << data.texLayerIndex << std::endl
+         << "  texUvOffsetRight=" << math3d::to_string(data.texUvOffsetRight) << std::endl
+         << "  texUvScaleRight=" << math3d::to_string(data.texUvScaleRight) << std::endl
+         << "  texLayerIndexRight=" << data.texLayerIndexRight << std::endl
          << ")";
       return os;
     }
@@ -58,7 +67,8 @@ namespace builtin_scene
     // If the instance own texture to draw.
     inline bool ownTexture() const
     {
-      return texUvScale.x > 0.0f || texUvScale.y > 0.0f;
+      return (texUvScale.x > 0.0f || texUvScale.y > 0.0f) || 
+             (texUvScaleRight.x > 0.0f || texUvScaleRight.y > 0.0f);
     }
   };
 
@@ -80,6 +90,13 @@ namespace builtin_scene
                     std::array<float, 2> uvScale,
                     uint32_t layerIndex,
                     bool &hasChanged);
+    void setSpatialTexture(std::array<float, 2> uvOffsetLeft,
+                          std::array<float, 2> uvScaleLeft,
+                          uint32_t layerIndexLeft,
+                          std::array<float, 2> uvOffsetRight,
+                          std::array<float, 2> uvScaleRight,
+                          uint32_t layerIndexRight,
+                          bool &hasChanged);
     void disableTexture(bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
@@ -203,12 +220,15 @@ namespace builtin_scene
     friend class RenderSystem;
 
   public:
-    static constexpr size_t STRIDE = sizeof(float) * 24 + sizeof(uint32_t) * 1;
+    static constexpr size_t STRIDE = sizeof(float) * 30 + sizeof(uint32_t) * 2;
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {"instanceTransform",
                                                                   "instanceColor",
                                                                   "instanceTexUvOffset",
                                                                   "instanceTexUvScale",
-                                                                  "instanceLayerIndex"};
+                                                                  "instanceLayerIndex",
+                                                                  "instanceTexUvOffsetRight",
+                                                                  "instanceTexUvScaleRight",
+                                                                  "instanceLayerIndexRight"};
 
   public:
     InstancedMeshBase() = default;

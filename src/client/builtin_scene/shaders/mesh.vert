@@ -42,6 +42,9 @@ in vec4 instanceColor;
 in vec2 instanceTexUvOffset;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
+in vec2 instanceTexUvOffsetRight;
+in vec2 instanceTexUvScaleRight;
+in uint instanceLayerIndexRight;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
 #endif
@@ -102,12 +105,34 @@ void main() {
 
   // Instance Texture
 #ifdef USE_INSTANCE_TEXTURE
+#ifdef MULTIVIEW
+  // In multiview, select texture coordinates based on VIEW_ID
+  if (VIEW_ID == 0u) {
+    // Left eye
+    uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
+    vInstanceLayerIndex = float(instanceLayerIndex);
+    
+    float threshold = 1e-5;
+    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
+                              step(threshold, abs(instanceTexUvScale.y));
+  } else {
+    // Right eye
+    uvs = instanceTexUvOffsetRight + instanceTexUvScaleRight * uvs;
+    vInstanceLayerIndex = float(instanceLayerIndexRight);
+    
+    float threshold = 1e-5;
+    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScaleRight.x)) *
+                              step(threshold, abs(instanceTexUvScaleRight.y));
+  }
+#else
+  // Non-multiview: use left eye coordinates (backward compatibility)
   uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
   vInstanceLayerIndex = float(instanceLayerIndex);
 
   float threshold = 1e-5;
   vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
                             step(threshold, abs(instanceTexUvScale.y));
+#endif
 #endif
 #endif
 

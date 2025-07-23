@@ -112,6 +112,13 @@ namespace client_xr
     {
       return session_;
     }
+    /**
+     * Returns the current view index from the frame request data.
+     * @return -1 for non-XR mode, 0 for left eye, 1 for right eye
+     * @note In multiview rendering, this method may not return meaningful values
+     *       since both eyes are rendered simultaneously. Use with caution in
+     *       multiview contexts.
+     */
     inline int currentViewIndex()
     {
       return frameRequestData_ ? frameRequestData_->viewIndex : -1;

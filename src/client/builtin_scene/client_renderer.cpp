@@ -7,7 +7,6 @@
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
-#include "./xr.hpp"
 
 namespace builtin_scene
 {
@@ -511,33 +510,44 @@ namespace builtin_scene
         auto textureRect = webContentComponent->textureRect();
         int texturePad = webContentComponent->texturePad();
         
-        // Handle spatial images by selecting appropriate texture based on XR context
-        if (webContentComponent->isSpatial())
-        {
-          auto xrContext = getResource<XRRenderingContext>();
-          if (xrContext != nullptr && xrContext->isStereoMode())
-          {
-            // In stereo mode, use eye-specific texture
-            if (xrContext->isLeftEye())
-            {
-              textureRect = webContentComponent->leftEyeTextureRect();
-            }
-            else if (xrContext->isRightEye())
-            {
-              textureRect = webContentComponent->rightEyeTextureRect();
-            }
-            // else keep the default textureRect (fallback)
-          }
-          // In non-stereo mode, use the default texture (full image)
-        }
-        
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
-          instance.setTexture(textureRect->getUvOffset(texturePad),
-                              textureRect->getUvScale(texturePad),
-                              textureRect->layer,
-                              hasChanged);
+          
+          // Handle spatial images by setting both left and right eye texture coordinates
+          if (webContentComponent->isSpatial())
+          {
+            auto leftTextureRect = webContentComponent->leftEyeTextureRect();
+            auto rightTextureRect = webContentComponent->rightEyeTextureRect();
+            
+            if (leftTextureRect != nullptr && rightTextureRect != nullptr)
+            {
+              instance.setSpatialTexture(
+                leftTextureRect->getUvOffset(texturePad),
+                leftTextureRect->getUvScale(texturePad),
+                leftTextureRect->layer,
+                rightTextureRect->getUvOffset(texturePad),
+                rightTextureRect->getUvScale(texturePad),
+                rightTextureRect->layer,
+                hasChanged);
+            }
+            else
+            {
+              // Fallback to regular texture if spatial textures are not available
+              instance.setTexture(textureRect->getUvOffset(texturePad),
+                                  textureRect->getUvScale(texturePad),
+                                  textureRect->layer,
+                                  hasChanged);
+            }
+          }
+          else
+          {
+            // Regular (non-spatial) image
+            instance.setTexture(textureRect->getUvOffset(texturePad),
+                                textureRect->getUvScale(texturePad),
+                                textureRect->layer,
+                                hasChanged);
+          }
         }
         else
         {
