@@ -22,7 +22,7 @@ class ExtendedJSARRuntime {
     // Extension directories to auto-load from
     const extensionDirs = options.extensionDirs || [
       './extensions',           // User extensions
-      './examples/extensions'   // Sample extensions
+      './fixtures/extensions'   // Sample extensions
     ];
     
     // Load extensions from specified directories
@@ -47,7 +47,7 @@ class ExtendedJSARRuntime {
     
     // Show how to load a specific extension
     console.log('   📦 Loading specific extension...');
-    // await this.loadExtension('./examples/extensions/sample-extension');
+    // await this.loadExtension('./fixtures/extensions/sample-extension');
     
     // Show how to get extension status
     console.log('   📊 Extension status:');
@@ -82,7 +82,7 @@ async function demonstrateExtensionUsage() {
   try {
     // Initialize runtime with extension support
     await runtime.initialize({
-      extensionDirs: ['./examples/extensions']
+      extensionDirs: ['./fixtures/extensions']
     });
     
     // Demonstrate extension management
@@ -106,7 +106,7 @@ async function demonstrateExtensionUsage() {
     
     console.log('\n📚 Documentation:');
     console.log('   • See docs/extensions.md for detailed usage');
-    console.log('   • See examples/extensions/sample-extension/ for example');
+    console.log('   • See fixtures/extensions/sample-extension/ for example');
     console.log('   • See lib/extensions/ for implementation');
     
     // Cleanup

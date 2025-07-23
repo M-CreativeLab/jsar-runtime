@@ -12,7 +12,7 @@ async function testExtensionSystem() {
   console.log('🚀 Testing JSAR Extension System...\n');
   
   const extensionManager = new ExtensionManager();
-  const sampleExtensionPath = path.join(__dirname, '../examples/extensions/sample-extension');
+  const sampleExtensionPath = path.join(__dirname, '../fixtures/extensions/sample-extension');
   
   try {
     console.log('📦 Loading sample extension...');

@@ -16,13 +16,13 @@ The extension system is implemented in C++ and inspired by Chrome Extension arch
 
 ### Core Components
 
-1. **Extension** (`src/extensions/extension.hpp/.cpp`)
+1. **Extension** (`src/client/extensions/extension.hpp/.cpp`)
    - Represents an individual extension
    - Manages extension lifecycle (loading, enabling, disabling, unloading)
    - Executes background scripts (stub implementation)
    - Provides extension API context
 
-2. **ExtensionManager** (`src/extensions/extension_manager.hpp/.cpp`)
+2. **ExtensionManager** (`src/client/extensions/extension_manager.hpp/.cpp`)
    - Manages multiple extensions
    - Handles extension loading from directories
    - Provides batch operations
@@ -196,7 +196,7 @@ Extensions have access to a limited Chrome Extension-compatible API:
 
 ### Sample Extension
 
-See `examples/extensions/sample-extension/` for a complete example extension that demonstrates:
+See `fixtures/extensions/sample-extension/` for a complete example extension that demonstrates:
 
 - Basic manifest.json structure
 - Background script execution

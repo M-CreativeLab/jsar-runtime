@@ -34,7 +34,7 @@ async function validateExtensionSystem() {
 
     // Test 2: Check sample extension
     console.log('\n📦 Checking sample extension...');
-    const sampleExtensionPath = path.join(__dirname, '../examples/extensions/sample-extension');
+    const sampleExtensionPath = path.join(__dirname, '../fixtures/extensions/sample-extension');
     const manifestPath = path.join(sampleExtensionPath, 'manifest.json');
     const backgroundPath = path.join(sampleExtensionPath, 'background.js');
     

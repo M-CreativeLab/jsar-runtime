@@ -44,7 +44,7 @@ This document summarizes the successful migration of the JSAR Extension System f
 
 ### Documentation & Examples (Updated)
 - `docs/extensions.md` - Updated documentation for C++ implementation
-- `examples/extensions/sample-extension/` - Sample extension (unchanged)
+- `fixtures/extensions/sample-extension/` - Sample extension (unchanged)
 - `examples/extension-integration.js` - Integration example
 - `tests/validate-extension-system.js` - Updated validation script for C++
 
@@ -184,7 +184,7 @@ Current implementation provides basic functionality. For production:
 ## 📚 Documentation
 
 - **User Guide**: `docs/extensions.md`
-- **Sample Extension**: `examples/extensions/sample-extension/`
+- **Sample Extension**: `fixtures/extensions/sample-extension/`
 - **Integration Example**: `examples/extension-integration.js`
 - **API Reference**: TypeScript definitions in `lib/extensions/types.ts`
 
