@@ -22,13 +22,18 @@ namespace renderer
   bool TrGaussianSplattingRenderer::loadModel(const std::string &filepath)
   {
     // Determine file type from extension
-    if (filepath.ends_with(".gsplat"))
+    size_t dotPos = filepath.find_last_of('.');
+    if (dotPos != std::string::npos)
     {
-      return loadGSplatFile(filepath);
-    }
-    else if (filepath.ends_with(".ply"))
-    {
-      return loadPlyFile(filepath);
+      std::string ext = filepath.substr(dotPos);
+      if (ext == ".gsplat")
+      {
+        return loadGSplatFile(filepath);
+      }
+      else if (ext == ".ply")
+      {
+        return loadPlyFile(filepath);
+      }
     }
     
     std::cerr << "Unsupported 3DGS file format: " << filepath << std::endl;

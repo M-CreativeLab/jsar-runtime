@@ -75,7 +75,8 @@ namespace dom
       else
       {
         // Auto-detect from file extension
-        is3DGS = (src_.ends_with(".gsplat") || src_.ends_with(".ply"));
+        std::string ext = src_.substr(src_.find_last_of('.'));
+        is3DGS = (ext == ".gsplat" || ext == ".ply");
       }
       
       if (is3DGS)
