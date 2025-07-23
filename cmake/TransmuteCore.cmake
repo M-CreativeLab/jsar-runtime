@@ -3,7 +3,7 @@ file(GLOB_RECURSE TR_CORE_SOURCE
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
     "src/xr/*.cpp"
-    "src/client/extensions/*.cpp"
+    "src/runtime/extension/*.cpp"
 )
 
 if(NOT TR_ENABLE_INSPECTOR)

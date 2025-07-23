@@ -11,34 +11,42 @@ namespace jsar {
 namespace extensions {
 
 /**
- * ExtensionManager manages the lifecycle of all extensions
- * Inspired by Chrome Extension management
+ * Central manager for extension operations in the JSAR runtime
+ * Handles loading, unloading, and lifecycle management of extensions
+ * Browser-scoped concept managing extension processes
  */
 class ExtensionManager {
 public:
   ExtensionManager();
   ~ExtensionManager();
 
-  // Extension management
+  // Extension lifecycle management
   bool loadExtension(const std::string& extension_path, const ExtensionLoadOptions& options = ExtensionLoadOptions());
-  bool loadExtensionsFromDirectory(const std::string& extensions_dir);
+  bool unloadExtension(const std::string& extension_id);
   bool enableExtension(const std::string& extension_id);
   bool disableExtension(const std::string& extension_id);
-  bool unloadExtension(const std::string& extension_id);
+  
+  // Batch operations
+  bool loadExtensionsFromDirectory(const std::string& extensions_dir, const ExtensionLoadOptions& options = ExtensionLoadOptions());
   bool unloadAllExtensions();
-
-  // Extension access
-  std::vector<std::shared_ptr<Extension>> getExtensions() const;
+  
+  // Content script management
+  bool injectContentScriptsForUrl(const std::string& url);
+  std::vector<ContentScriptContext> getAllMatchingContentScripts(const std::string& url) const;
+  
+  // Query methods
   std::shared_ptr<Extension> getExtension(const std::string& extension_id) const;
-  bool hasExtension(const std::string& extension_id) const;
-  std::unordered_map<std::string, ExtensionState> getExtensionStates() const;
+  std::vector<std::shared_ptr<Extension>> getAllExtensions() const;
   std::vector<std::shared_ptr<Extension>> getExtensionsByState(ExtensionState state) const;
-
+  bool hasExtension(const std::string& extension_id) const;
+  
+  // Statistics
+  size_t getExtensionCount() const { return extensions_.size(); }
+  size_t getActiveBackgroundProcessCount() const;
+  
   // Event system
   void addEventListener(const std::string& event_type, ExtensionEventCallback callback);
-  void removeEventListener(const std::string& event_type); 
-  void emit(const std::string& event_type, const std::string& extension_id, 
-            const std::unordered_map<std::string, std::string>& data = {});
+  void removeEventListener(const std::string& event_type);
 
 private:
   std::unordered_map<std::string, std::shared_ptr<Extension>> extensions_;
@@ -47,6 +55,7 @@ private:
 
   // Internal methods
   void setupExtensionEventForwarding(std::shared_ptr<Extension> extension);
+  void forwardExtensionEvent(const ExtensionEvent& event);
   bool isValidExtensionDirectory(const std::string& path) const;
 };
 

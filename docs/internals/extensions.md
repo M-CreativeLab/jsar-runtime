@@ -1,267 +1,207 @@
 # JSAR Extension System (C++)
 
-The JSAR Extension System provides Chrome Extension-like functionality for the JSAR runtime, allowing developers to create and load extensions that can execute scripts and extend the runtime's capabilities.
+The JSAR Extension System provides Chrome Extension-like functionality for the JSAR runtime, implementing a browser-scoped extension architecture with proper process separation between background scripts and content scripts.
 
 ## Overview
 
-The extension system is implemented in C++ and inspired by Chrome Extension architecture and provides:
+The extension system is implemented in C++ following Chrome Extension architecture and provides:
 
-- Extension loading and unloading
-- Background script execution
-- Extension lifecycle management
-- Event-driven architecture
-- Manifest-based configuration
+- Extension loading and unloading with process separation
+- Background script execution in dedicated processes (forked)
+- Content script injection into page renderer processes
+- Extension lifecycle management with proper state handling
+- Event-driven architecture for extension communication
+- Manifest-based configuration supporting content_scripts
 
 ## Architecture
 
 ### Core Components
 
-1. **Extension** (`src/client/extensions/extension.hpp/.cpp`)
+1. **Extension** (`src/runtime/extension/extension.hpp/.cpp`)
    - Represents an individual extension
    - Manages extension lifecycle (loading, enabling, disabling, unloading)
-   - Executes background scripts (stub implementation)
-   - Provides extension API context
+   - Forks background processes for background script execution
+   - Handles content script injection based on URL patterns
+   - Provides extension API context with Chrome APIs
 
-2. **ExtensionManager** (`src/client/extensions/extension_manager.hpp/.cpp`)
-   - Manages multiple extensions
+2. **ExtensionManager** (`src/runtime/extension/extension_manager.hpp/.cpp`)
+   - Browser-scoped manager for all extensions
    - Handles extension loading from directories
-   - Provides batch operations
-   - Emits extension lifecycle events
+   - Coordinates content script injection across all extensions
+   - Manages background process lifecycle
+   - Provides batch operations and statistics
 
-3. **Types** (`lib/extensions/types.ts`)
-   - Extension manifest interface
-   - Extension state enumeration
+3. **Types** (`src/runtime/extension/extension_types.hpp`)
+   - Extension manifest interface compatible with Chrome Extension v3
+   - Extension state enumeration and process information
+   - Content script configuration and injection context
    - Event and API type definitions
+
+### Process Architecture
+
+Following Chrome Extension patterns:
+
+| Component           | Execution Context               | Capabilities                                | Lifecycle                  |
+|---------------------|----------------------------------|---------------------------------------------|----------------------------|
+| **Background Script** | Extension Process (forked)     | Full Chrome API access                      | Persistent process per extension |
+| **Content Script**   | Page's Renderer Process         | DOM access + limited Chrome APIs            | Tied to page lifecycle     |
 
 ### Integration
 
-The extension system integrates with the main JSAR runtime through the `TransmuteRuntime2` class, which includes:
+The extension system integrates with the JSAR runtime at the browser level in `src/runtime/extension/`:
 
-- Extension manager instance
-- Extension loading methods
-- Event handling for extension lifecycle
-- Cleanup on runtime shutdown
+- Extension manager manages all extension processes
+- Background scripts fork dedicated processes with full API access
+- Content scripts inject into page renderer processes on URL matches
+- Event handling for extension lifecycle and communication
 
 ## Extension Structure
 
-Extensions follow a directory-based structure similar to Chrome Extensions:
+Extensions follow Chrome Extension v3 directory structure:
 
 ```
 my-extension/
-├── manifest.json          # Extension metadata and configuration
-├── background.js          # Background script (optional)
-└── README.md             # Documentation (optional)
+├── manifest.json         # Extension metadata and configuration
+├── background.js         # Background script (executed in dedicated process)
+└── content.js           # Content script (injected into pages)
 ```
 
 ### Manifest Format
 
-The `manifest.json` file defines extension metadata:
-
+**manifest.json** supports Chrome Extension v3 features:
 ```json
 {
   "name": "My Extension",
-  "version": "1.0.0",
-  "description": "Description of my extension",
+  "version": "1.0.0", 
   "manifest_version": 3,
+  "description": "Extension description",
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
-  "permissions": ["storage"]
+  "content_scripts": [{
+    "matches": ["https://*.example.com/*", "http://localhost/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle",
+    "all_frames": false
+  }],
+  "permissions": ["tabs", "storage"]
 }
 ```
 
-### Required Fields
+### Content Script Injection
 
-- `name`: Extension name
-- `version`: Extension version (semver format)
-- `manifest_version`: Manifest format version (use 3)
-
-### Optional Fields
-
-- `description`: Human-readable description
-- `background`: Background script configuration
-  - `scripts`: Array of background script files
-  - `persistent`: Whether the background script should persist
-- `permissions`: Array of permissions (for future use)
-
-## Usage
-
-### Loading Extensions
-
-#### Load Single Extension
-
-```typescript
-import { TransmuteRuntime2 } from './runtime2';
-
-const runtime = new TransmuteRuntime2(gl, runtimeId);
-
-// Load a single extension (currently uses C++ stub)
-await runtime.loadExtension('/path/to/extension');
+#### 1. Declarative Injection (via manifest.json)
+```json
+"content_scripts": [{
+  "matches": ["https://*.example.com/*"],
+  "js": ["content.js"],
+  "run_at": "document_idle",  // Options: document_start/end/idle
+  "all_frames": false         // Inject into subframes?
+}]
 ```
 
-#### Load Multiple Extensions
+Trigger Conditions:
+- URL matches pattern using regex-based matching
+- Initial load or full page navigation
+- Executed at specified timing (document_start/end/idle)
 
-```typescript
-// Load all extensions from a directory (currently uses C++ stub)
-await runtime.loadExtensionsFromDirectory('/path/to/extensions');
+#### 2. Programmatic Injection (Future)
+
+```cpp
+// Future API for dynamic injection
+chrome.scripting.executeScript({
+  target: {tabId: tab.id},
+  files: ['dynamic.js'],
+  injectImmediately: true
+});
 ```
 
-### Extension Manager API
+### Background Script Execution
 
-```typescript
-// Currently using C++ stub implementation
-// Direct C++ ExtensionManager access will be available via bindings
+Background scripts execute in dedicated forked processes:
 
-const runtime = new TransmuteRuntime2(gl, runtimeId);
-const extensionManager = runtime.extensionManager;
-
-// Load extension (C++ implementation)
-await extensionManager.loadExtension('/path/to/extension');
-
-// Load multiple extensions (C++ implementation)
-await extensionManager.loadExtensionsFromDirectory('/path/to/extensions');
-
-// Unload all extensions (C++ implementation)
-await extensionManager.unloadAllExtensions();
-```
-
-### Extension Lifecycle (C++ Implementation)
-
-Extensions go through the following states:
-
-1. **LOADING** - Extension is being loaded and manifest parsed
-2. **LOADED** - Extension is loaded but not yet enabled
-3. **RUNNING** - Extension is active and background scripts executed
-4. **DISABLED** - Extension is loaded but temporarily disabled
-5. **ERROR** - Extension encountered an error
-6. **UNLOADED** - Extension has been completely unloaded
-
-### Background Scripts
-
-Background scripts are executed when an extension is loaded. They have access to a basic extension API:
-
+**background.js:**
 ```javascript
-// background.js
-console.log('Extension loaded!');
+// Extension loaded in dedicated process - full Chrome API access available
+console.log('Extension loaded in background process!');
+console.log('Process ID:', process.pid);
 
-// Access extension information
-if (chrome && chrome.extension) {
-  console.log('Extension ID:', chrome.extension.id);
-  console.log('Extension manifest:', chrome.extension.manifest);
+// Environment variables available:
+console.log('Extension ID:', process.env.EXTENSION_ID);
+console.log('Extension name:', process.env.EXTENSION_NAME);
+console.log('Extension version:', process.env.EXTENSION_VERSION);
+
+// TODO: Full Chrome APIs will be available
+// if (chrome && chrome.extension) {
+//   console.log('Extension ID:', chrome.extension.id);
+// }
+## Usage Example
+
+```cpp
+#include "src/runtime/extension/extension_manager.hpp"
+
+// Initialize extension manager (browser-scoped)
+auto extension_manager = std::make_unique<jsar::extensions::ExtensionManager>();
+
+// Load single extension
+bool loaded = extension_manager->loadExtension("/path/to/extension");
+
+// Load all extensions from directory
+bool batch_loaded = extension_manager->loadExtensionsFromDirectory("/path/to/extensions");
+
+// Inject content scripts for a URL (called when page loads)
+bool injected = extension_manager->injectContentScriptsForUrl("https://example.com/page");
+
+// Extension lifecycle management
+auto extension = extension_manager->getExtension("extension-id");
+if (extension) {
+  extension->enable();   // Start background processes
+  extension->disable();  // Stop background processes
 }
 
-// Access runtime APIs
-if (chrome && chrome.runtime) {
-  chrome.runtime.onStartup.addListener(() => {
-    console.log('Extension startup event triggered');
-  });
-  
-  const iconUrl = chrome.runtime.getURL('icon.png');
-  console.log('Extension icon URL:', iconUrl);
-}
+// Statistics
+size_t active_processes = extension_manager->getActiveBackgroundProcessCount();
+size_t total_extensions = extension_manager->getExtensionCount();
 ```
 
-### Event Handling
+## Security & Performance
 
-Listen for extension lifecycle events:
+- **Process Isolation**: Background scripts run in separate forked processes
+- **Isolated World**: Content scripts run in separate JS context (to be implemented)
+- **Limited API Access**: Content scripts have restricted Chrome API access
+- **URL Pattern Matching**: Content scripts only inject on matching URLs
+- **Process Management**: Automatic cleanup of background processes on extension unload
 
-```typescript
-extensionManager.onExtensionEvent('extensionLoaded', (event) => {
-  console.log('Extension loaded:', event.extensionId);
-});
+## Implementation Status
 
-extensionManager.onExtensionEvent('extensionError', (event) => {
-  console.error('Extension error:', event.extensionId, event.data);
-});
-```
+### Completed ✅
+- Extension manifest parsing with content_scripts support
+- Background script process forking with environment setup
+- Content script URL pattern matching and injection framework
+- Extension lifecycle management with proper process cleanup
+- Browser-scoped extension manager architecture
 
-## Extension API
+### In Progress 🚧
+- JavaScript execution context for background processes
+- Content script injection into actual page renderer processes
+- Chrome Extension API implementation (chrome.tabs, chrome.storage, etc.)
+- Message passing between background and content scripts
 
-Extensions have access to a limited Chrome Extension-compatible API:
-
-### chrome.extension
-
-- `id` - Extension identifier
-- `manifest` - Extension manifest object
-- `state` - Current extension state
-
-### chrome.runtime
-
-- `getURL(path)` - Get URL for extension resource
-- `onStartup` - Startup event listener
-- `onInstalled` - Installation event listener
-
-## Examples
-
-### Sample Extension
-
-See `fixtures/extensions/sample-extension/` for a complete example extension that demonstrates:
-
-- Basic manifest.json structure
-- Background script execution
-- Extension API usage
-- Console logging
-
-### Testing
-
-Test the extension system:
-
-```bash
-# Run the test script
-node tests/test-extension-system.js
-```
-
-## Future Enhancements
-
-The extension system is designed to be extensible. Future enhancements may include:
-
-- Content scripts for page injection
-- Message passing between extensions and runtime
-- Storage APIs for extension data
+### Future 🔮
 - Popup and options pages
-- More Chrome Extension APIs
-- Extension packaging and distribution
-- Security sandboxing
-- Permission system implementation
+- Advanced permission systems
+- Extension store and auto-updates
+- Developer tools integration
 
-## Security Considerations
+## Implementation Summary
 
-Currently, the extension system provides basic script execution without sandboxing. In a production environment, consider:
+The extension system now follows Chrome Extension architecture with proper process separation:
 
-- Script sandboxing and isolation
-- Permission validation
-- Resource access control
-- Extension signature verification
-- Secure extension storage
+1. **Extension implementation moved to `src/runtime/extension`** (browser-scoped concept)
+2. **Background scripts fork dedicated processes** for execution with full API access
+3. **Content scripts inject into page renderer processes** based on URL matching
+4. **Proper security isolation** between extension and content contexts
+5. **Complete lifecycle management** with process cleanup and state tracking
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Extension fails to load**
-   - Check manifest.json syntax
-   - Verify required fields are present
-   - Check file permissions
-
-2. **Background script errors**
-   - Check JavaScript syntax
-   - Verify API usage
-   - Check console output for error details
-
-3. **Extension state issues**
-   - Ensure proper lifecycle management
-   - Check for unhandled promise rejections
-   - Verify extension cleanup
-
-### Debug Output
-
-The extension system provides detailed console logging:
-
-```
-[ExtensionManager] Loading extension from: /path/to/extension
-[Extension:extension-id] Executed background script: background.js
-[Runtime:123] Extension loaded: extension-id
-```
-
-Enable debug logging by checking the console output when loading and managing extensions.
+This provides a solid foundation for Chrome Extension compatibility while maintaining security and performance through process separation.

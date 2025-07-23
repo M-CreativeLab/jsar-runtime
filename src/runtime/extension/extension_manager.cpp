@@ -48,9 +48,6 @@ bool ExtensionManager::loadExtension(const std::string& extension_path, const Ex
       }
     }
     
-    // Emit extension loaded event
-    emit("extensionLoaded", extension_id, {{"path", extension_path}});
-    
     std::cout << "[ExtensionManager] Extension '" << extension_id << "' loaded successfully" << std::endl;
     return true;
     
@@ -60,7 +57,7 @@ bool ExtensionManager::loadExtension(const std::string& extension_path, const Ex
   }
 }
 
-bool ExtensionManager::loadExtensionsFromDirectory(const std::string& extensions_dir) {
+bool ExtensionManager::loadExtensionsFromDirectory(const std::string& extensions_dir, const ExtensionLoadOptions& options) {
   try {
     if (!std::filesystem::exists(extensions_dir) || !std::filesystem::is_directory(extensions_dir)) {
       std::cerr << "[ExtensionManager] Extensions directory does not exist: " << extensions_dir << std::endl;
@@ -75,7 +72,7 @@ bool ExtensionManager::loadExtensionsFromDirectory(const std::string& extensions
         
         if (isValidExtensionDirectory(extension_path)) {
           try {
-            if (loadExtension(extension_path)) {
+            if (loadExtension(extension_path, options)) {
               loaded_count++;
             }
           } catch (const std::exception& e) {
@@ -110,7 +107,6 @@ bool ExtensionManager::enableExtension(const std::string& extension_id) {
     return false;
   }
   
-  emit("extensionEnabled", extension_id);
   return true;
 }
 
@@ -125,7 +121,6 @@ bool ExtensionManager::disableExtension(const std::string& extension_id) {
     return false;
   }
   
-  emit("extensionDisabled", extension_id);
   return true;
 }
 
@@ -144,8 +139,6 @@ bool ExtensionManager::unloadExtension(const std::string& extension_id) {
     // Remove from maps
     extensions_.erase(extension_id);
     extension_paths_.erase(extension_id);
-    
-    emit("extensionUnloaded", extension_id);
     
     std::cout << "[ExtensionManager] Extension '" << extension_id << "' unloaded successfully" << std::endl;
     return true;
@@ -178,14 +171,6 @@ bool ExtensionManager::unloadAllExtensions() {
   return all_success;
 }
 
-std::vector<std::shared_ptr<Extension>> ExtensionManager::getExtensions() const {
-  std::vector<std::shared_ptr<Extension>> result;
-  for (const auto& pair : extensions_) {
-    result.push_back(pair.second);
-  }
-  return result;
-}
-
 std::shared_ptr<Extension> ExtensionManager::getExtension(const std::string& extension_id) const {
   auto it = extensions_.find(extension_id);
   return (it != extensions_.end()) ? it->second : nullptr;
@@ -193,14 +178,6 @@ std::shared_ptr<Extension> ExtensionManager::getExtension(const std::string& ext
 
 bool ExtensionManager::hasExtension(const std::string& extension_id) const {
   return extensions_.find(extension_id) != extensions_.end();
-}
-
-std::unordered_map<std::string, ExtensionState> ExtensionManager::getExtensionStates() const {
-  std::unordered_map<std::string, ExtensionState> states;
-  for (const auto& pair : extensions_) {
-    states[pair.first] = pair.second->getState();
-  }
-  return states;
 }
 
 std::vector<std::shared_ptr<Extension>> ExtensionManager::getExtensionsByState(ExtensionState state) const {
@@ -221,31 +198,72 @@ void ExtensionManager::removeEventListener(const std::string& event_type) {
   event_listeners_.erase(event_type);
 }
 
-void ExtensionManager::emit(const std::string& event_type, const std::string& extension_id, 
-                           const std::unordered_map<std::string, std::string>& data) {
-  auto it = event_listeners_.find(event_type);
-  if (it != event_listeners_.end()) {
-    ExtensionEvent event(event_type, extension_id);
-    event.data = data;
-    it->second(event);
-  }
-}
-
 void ExtensionManager::setupExtensionEventForwarding(std::shared_ptr<Extension> extension) {
   const std::vector<std::string> event_types = {
     "loaded", "enabled", "disabled", "unloaded", "error", "stateChanged"
   };
   
   for (const auto& event_type : event_types) {
-    extension->addEventListener(event_type, [this, event_type](const ExtensionEvent& event) {
-      // Convert extension event to manager event
-      std::string manager_event_type = "extension" + event_type;
-      if (!event_type.empty()) {
-        manager_event_type[9] = std::toupper(manager_event_type[9]); // Capitalize first letter after "extension"
-      }
-      
-      emit(manager_event_type, event.extension_id, event.data);
+    extension->addEventListener(event_type, [this](const ExtensionEvent& event) {
+      forwardExtensionEvent(event);
     });
+  }
+}
+
+bool ExtensionManager::injectContentScriptsForUrl(const std::string& url) {
+  std::cout << "[ExtensionManager] Injecting content scripts for URL: " << url << std::endl;
+  
+  bool any_injected = false;
+  for (const auto& pair : extensions_) {
+    auto extension = pair.second;
+    if (extension->getState() == ExtensionState::RUNNING) {
+      auto matching_scripts = extension->getMatchingContentScripts(url);
+      for (const auto& script_context : matching_scripts) {
+        if (extension->injectContentScript(url, script_context)) {
+          any_injected = true;
+        }
+      }
+    }
+  }
+  
+  return any_injected;
+}
+
+std::vector<ContentScriptContext> ExtensionManager::getAllMatchingContentScripts(const std::string& url) const {
+  std::vector<ContentScriptContext> all_scripts;
+  
+  for (const auto& pair : extensions_) {
+    auto extension = pair.second;
+    if (extension->getState() == ExtensionState::RUNNING) {
+      auto matching_scripts = extension->getMatchingContentScripts(url);
+      all_scripts.insert(all_scripts.end(), matching_scripts.begin(), matching_scripts.end());
+    }
+  }
+  
+  return all_scripts;
+}
+
+std::vector<std::shared_ptr<Extension>> ExtensionManager::getAllExtensions() const {
+  std::vector<std::shared_ptr<Extension>> result;
+  for (const auto& pair : extensions_) {
+    result.push_back(pair.second);
+  }
+  return result;
+}
+
+size_t ExtensionManager::getActiveBackgroundProcessCount() const {
+  size_t count = 0;
+  for (const auto& pair : extensions_) {
+    count += pair.second->getActiveBackgroundProcesses().size();
+  }
+  return count;
+}
+
+void ExtensionManager::forwardExtensionEvent(const ExtensionEvent& event) {
+  // Forward extension events to manager listeners
+  auto it = event_listeners_.find(event.type);
+  if (it != event_listeners_.end()) {
+    it->second(event);
   }
 }
 

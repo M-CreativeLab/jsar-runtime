@@ -5,13 +5,14 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <sys/types.h>
 
 namespace jsar {
 namespace extensions {
 
 /**
  * Individual extension class managing the lifecycle of a single extension
- * Inspired by Chrome Extension architecture
+ * Inspired by Chrome Extension architecture with process separation
  */
 class Extension {
 public:
@@ -29,6 +30,14 @@ public:
   bool enable();
   bool disable();
   bool unload();
+
+  // Content script injection methods
+  bool injectContentScript(const std::string& url, const ContentScriptContext& context);
+  std::vector<ContentScriptContext> getMatchingContentScripts(const std::string& url) const;
+  
+  // Background process management
+  bool killBackgroundProcesses();
+  std::vector<BackgroundProcess> getActiveBackgroundProcesses() const;
 
   // Event system
   void addEventListener(const std::string& event_type, ExtensionEventCallback callback);
@@ -48,6 +57,11 @@ private:
   bool parseManifest(const std::string& manifest_path, ExtensionManifest& manifest);
   void setState(ExtensionState new_state);
   std::string createExtensionId(const std::string& name) const;
+  
+  // Process management
+  pid_t forkBackgroundProcess(const std::string& script_path);
+  bool urlMatchesPattern(const std::string& url, const std::string& pattern) const;
+  bool parseContentScripts(const void* content_scripts_array, ExtensionManifest& manifest);
 };
 
 } // namespace extensions

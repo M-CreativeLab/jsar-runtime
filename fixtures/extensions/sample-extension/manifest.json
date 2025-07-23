@@ -1,11 +1,17 @@
 {
   "name": "Sample Extension",
   "version": "1.0.0",
-  "description": "A sample extension for JSAR demonstrating basic functionality",
+  "description": "A sample extension for JSAR demonstrating background and content scripts",
   "manifest_version": 3,
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
-  "permissions": ["storage"]
+  "content_scripts": [{
+    "matches": ["https://*.example.com/*", "http://localhost/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle",
+    "all_frames": false
+  }],
+  "permissions": ["storage", "tabs"]
 }
