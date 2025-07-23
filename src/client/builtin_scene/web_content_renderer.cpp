@@ -85,6 +85,77 @@ namespace builtin_scene::web_renderer
     return borderBox;
   }
 
+  // Helper function to get clipping area based on background-clip value
+  SkRRect getBackgroundClippingArea(const SkRRect &roundedRect,
+                                    const client_layout::Fragment &fragment,
+                                    const ComputedStyle &style)
+  {
+    const SkRect &borderBox = roundedRect.rect();
+    SkRRect clippingArea = roundedRect; // Start with border-box
+
+    if (style.backgroundClip().isPaddingBox())
+    {
+      // For padding-box, subtract border widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      SkRect paddingRect = SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft,
+        borderBox.fTop + borderTop,
+        borderBox.fRight - borderRight,
+        borderBox.fBottom - borderBottom);
+
+      // Adjust radii for the padding box
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+      {
+        SkVector originalRadius = roundedRect.radii(static_cast<SkRRect::Corner>(i));
+        // Reduce radii by border width (but don't go below 0)
+        float borderReduction = (i == 0 || i == 3) ? borderLeft : borderRight; // Simplified
+        radii[i] = SkVector{std::max(0.0f, originalRadius.x() - borderReduction),
+                            std::max(0.0f, originalRadius.y() - borderReduction)};
+      }
+      clippingArea.setRectRadii(paddingRect, radii);
+    }
+    else if (style.backgroundClip().isContentBox())
+    {
+      // For content-box, subtract border and padding widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      float paddingTop = fragment.padding().top();
+      float paddingRight = fragment.padding().right();
+      float paddingBottom = fragment.padding().bottom();
+      float paddingLeft = fragment.padding().left();
+
+      SkRect contentRect = SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft + paddingLeft,
+        borderBox.fTop + borderTop + paddingTop,
+        borderBox.fRight - borderRight - paddingRight,
+        borderBox.fBottom - borderBottom - paddingBottom);
+
+      // Adjust radii for the content box
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+      {
+        SkVector originalRadius = roundedRect.radii(static_cast<SkRRect::Corner>(i));
+        // Reduce radii by border and padding width (but don't go below 0)
+        float totalReduction = (i == 0 || i == 3) ? (borderLeft + paddingLeft) : (borderRight + paddingRight); // Simplified
+        radii[i] = SkVector{std::max(0.0f, originalRadius.x() - totalReduction),
+                            std::max(0.0f, originalRadius.y() - totalReduction)};
+      }
+      clippingArea.setRectRadii(contentRect, radii);
+    }
+    // For border-box (default) and text, return the original rounded rect
+    // Text clipping is handled separately with createTextPath()
+
+    return clippingArea;
+  }
+
   // Helper function to draw background image with repeat pattern
   void drawBackgroundImage(SkCanvas *canvas,
                            const sk_sp<SkImage> &image,
@@ -223,14 +294,13 @@ namespace builtin_scene::web_renderer
   sk_sp<SkShader> createGradientShader(const computed::Image &, const SkRRect &);
 
   // Helper function to create text path for background-clip: text
-  SkPath createTextPath(ecs::EntityId entity, const WebContent &content, 
-                        web_renderer::RenderBaseSystem* renderSystem)
+  SkPath createTextPath(ecs::EntityId entity, const WebContent &content, web_renderer::RenderBaseSystem *renderSystem)
   {
     SkPath textPath;
-    
+
     if (!renderSystem)
       return textPath;
-    
+
     // Get the text component
     auto textComponent = renderSystem->getComponent<Text2d>(entity);
     if (textComponent == nullptr || textComponent->content.empty())
@@ -253,19 +323,19 @@ namespace builtin_scene::web_renderer
     const auto &fragment = content.fragment();
     if (!fragment.has_value())
       return textPath;
-    
+
     // Get actual text metrics from the paragraph
     float textHeight = paragraph->getHeight();
     float textWidth = paragraph->getMaxIntrinsicWidth();
-    
+
     // Use the actual text dimensions but limit to content area
     float actualWidth = std::min(textWidth, fragment->contentWidth());
     float actualHeight = std::min(textHeight, fragment->contentHeight());
-    
+
     // Create a more accurate rectangular approximation of text bounds
     // This is still a simplified approach, but better than using full content area
     textPath.addRect(SkRect::MakeWH(actualWidth, actualHeight));
-    
+
     return textPath;
   }
 
@@ -275,9 +345,9 @@ namespace builtin_scene::web_renderer
                                    const client_layout::Fragment &fragment,
                                    const client_cssom::ComputedStyle &style,
                                    bool &textureRequired,
-                                   ecs::EntityId entity = ecs::EntityId(), 
+                                   ecs::EntityId entity = ecs::EntityId(),
                                    const WebContent *content = nullptr,
-                                   web_renderer::RenderBaseSystem* renderSystem = nullptr)
+                                   web_renderer::RenderBaseSystem *renderSystem = nullptr)
   {
     optional<SkPaint> fillPaint = nullopt;
 
@@ -332,7 +402,21 @@ namespace builtin_scene::web_renderer
       }
       else
       {
-        canvas->drawRRect(roundedRect, fillPaint.value());
+        // Handle other background-clip values: border-box, padding-box, content-box
+        SkRRect clippingArea = getBackgroundClippingArea(roundedRect, fragment, style);
+        if (!style.backgroundClip().isBorderBox())
+        {
+          // For padding-box and content-box, use clipping
+          canvas->save();
+          canvas->clipRRect(clippingArea, true);
+          canvas->drawRRect(roundedRect, fillPaint.value());
+          canvas->restore();
+        }
+        else
+        {
+          // For border-box (default), draw normally
+          canvas->drawRRect(roundedRect, fillPaint.value());
+        }
       }
     }
 
@@ -380,7 +464,9 @@ namespace builtin_scene::web_renderer
               }
               else
               {
-                canvas->clipRRect(roundedRect, true);
+                // Handle other background-clip values: border-box, padding-box, content-box
+                SkRRect clippingArea = getBackgroundClippingArea(roundedRect, fragment, style);
+                canvas->clipRRect(clippingArea, true);
               }
 
               // Get the background positioning area based on background-origin
@@ -405,7 +491,7 @@ namespace builtin_scene::web_renderer
         if (shader)
         {
           fillPaint->setShader(shader);
-          
+
           // Handle background-clip: text
           if (style.backgroundClip().isText() && entity.isValid() && content && renderSystem)
           {
@@ -421,7 +507,21 @@ namespace builtin_scene::web_renderer
           }
           else
           {
-            canvas->drawRRect(roundedRect, fillPaint.value());
+            // Handle other background-clip values: border-box, padding-box, content-box
+            SkRRect clippingArea = getBackgroundClippingArea(roundedRect, fragment, style);
+            if (!style.backgroundClip().isBorderBox())
+            {
+              // For padding-box and content-box, use clipping
+              canvas->save();
+              canvas->clipRRect(clippingArea, true);
+              canvas->drawRRect(roundedRect, fillPaint.value());
+              canvas->restore();
+            }
+            else
+            {
+              // For border-box (default), draw normally
+              canvas->drawRRect(roundedRect, fillPaint.value());
+            }
           }
           textureRequired = true;
         }
