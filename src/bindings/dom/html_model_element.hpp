@@ -26,6 +26,8 @@ namespace dombinding
     void AutoplaySetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value LoadingGetter(const Napi::CallbackInfo &info);
     void LoadingSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value CompleteGetter(const Napi::CallbackInfo &info);
+    Napi::Value LoadMethod(const Napi::CallbackInfo &info);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

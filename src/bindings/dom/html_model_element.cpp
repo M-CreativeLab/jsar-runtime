@@ -21,6 +21,8 @@ namespace dombinding
         T::InstanceAccessor("type", &T::TypeGetter, &T::TypeSetter),
         T::InstanceAccessor("autoplay", &T::AutoplayGetter, &T::AutoplaySetter),
         T::InstanceAccessor("loading", &T::LoadingGetter, &T::LoadingSetter),
+        T::InstanceAccessor("complete", &T::CompleteGetter, nullptr),
+        T::InstanceMethod("load", &T::LoadMethod),
       });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -82,11 +84,23 @@ namespace dombinding
   Napi::Value HTMLModelElement::LoadingGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return Napi::String::New(env, this->node->loading());
+    return Napi::String::New(env, this->node->loadingString());
   }
 
   void HTMLModelElement::LoadingSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
-    this->node->setLoading(value.As<Napi::String>().Utf8Value());
+    this->node->setLoadingString(value.As<Napi::String>().Utf8Value());
+  }
+
+  Napi::Value HTMLModelElement::CompleteGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    return Napi::Boolean::New(env, this->node->complete);
+  }
+
+  Napi::Value HTMLModelElement::LoadMethod(const Napi::CallbackInfo &info)
+  {
+    this->node->loadModel();
+    return info.Env().Undefined();
   }
 }

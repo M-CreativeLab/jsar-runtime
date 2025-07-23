@@ -63,37 +63,20 @@ namespace builtin_scene::model_renderer
   {
   public:
     RenderGaussianSplattingSystem();
-    ~RenderGaussianSplattingSystem();
+    ~RenderGaussianSplattingSystem() = default;
 
     void onExecute() override;
 
   private:
     void render(ecs::EntityId entity, WebContent &content) override;
     
-    // WebGL rendering
-    bool initializeWebGL();
-    void shutdownWebGL();
+    // Initialize material for 3DGS rendering
+    bool initializeMaterial();
     
-    // 3DGS rendering pipeline
-    void renderGaussianSplats(const std::vector<GaussianSplat> &splats, 
-                             WebContent &content);
-    void sortSplats(std::vector<GaussianSplat> &splats, const float viewMatrix[16]);
+    // Material for gaussian splatting
+    std::shared_ptr<materials::GaussianSplattingMaterial> gaussianMaterial_;
     
-    // Shader management
-    bool createShaderProgram();
-    void destroyShaderProgram();
-    
-    // WebGL resources (using proper graphics API)
-    std::shared_ptr<client_graphics::WebGLProgram> shaderProgram_;
-    std::shared_ptr<client_graphics::WebGLShader> vertexShader_;
-    std::shared_ptr<client_graphics::WebGLShader> fragmentShader_;
-    std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
-    std::shared_ptr<client_graphics::WebGLBuffer> vbo_;
-    
-    // Access to WebGL context
-    std::weak_ptr<client_graphics::WebGL2Context> glContext_;
-    
-    bool webglInitialized_ = false;
+    bool materialInitialized_ = false;
   };
 
   /**

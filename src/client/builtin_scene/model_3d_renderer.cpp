@@ -12,6 +12,7 @@
 #include "./model_3d_renderer.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
+#include "./ply_parser.hpp"
 
 namespace builtin_scene::model_renderer
 {
@@ -20,20 +21,7 @@ namespace builtin_scene::model_renderer
 
   static const char *LOG_TAG = "Model3DRenderer";
 
-  // Helper function to read shader source from file
-  string readShaderFile(const string &filename)
-  {
-    string fullPath = "src/client/builtin_scene/shaders/" + filename;
-    ifstream file(fullPath);
-    if (!file.is_open()) {
-      DEBUG(LOG_TAG, "Failed to open shader file: %s", fullPath.c_str());
-      return "";
-    }
-    
-    stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-  }
+
 
   void InitSystem::onExecute()
   {
@@ -43,46 +31,14 @@ namespace builtin_scene::model_renderer
 
   void LoadModelSystem::onExecute()
   {
-    auto list = queryEntitiesWithComponent<Model3d>([](const Model3d &model) -> bool {
-      return !model.isLoaded() && !model.src().empty();
-    });
-
-    if (list.size() == 0)
-      return;
-
-    for (auto &item : list) {
-      auto webContent = getComponent<WebContent>(item.first);
-      if (webContent != nullptr) {
-        render(item.first, *webContent);
-      }
-    }
+    // Model loading is now handled by HTMLModelElement
+    // This system is no longer needed, but kept for backward compatibility
+    DEBUG(LOG_TAG, "LoadModelSystem is deprecated - model loading moved to HTMLModelElement");
   }
 
   void LoadModelSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    auto model = getComponent<Model3d>(entity);
-    if (!model || model->isLoaded()) {
-      return;
-    }
-
-    const string &src = model->src();
-    DEBUG(LOG_TAG, "Loading 3D model: %s", src.c_str());
-
-    // Load based on model type
-    if (model->isGaussianSplatting()) {
-      if (loadGaussianSplattingModel(src, *model)) {
-        DEBUG(LOG_TAG, "Successfully loaded 3DGS model with %zu splats", model->getSplatCount());
-        content.setDirty(true);
-      } else {
-        DEBUG(LOG_TAG, "Failed to load 3DGS model: %s", src.c_str());
-      }
-    } else {
-      if (loadGLTFModel(src, *model)) {
-        DEBUG(LOG_TAG, "Successfully loaded GLTF model: %s", src.c_str());
-      } else {
-        DEBUG(LOG_TAG, "Failed to load GLTF model: %s", src.c_str());
-      }
-    }
+    // No longer needed - HTMLModelElement handles loading
   }
 
   Model3d::ModelType LoadModelSystem::detectModelType(const string &src, const string &typeHint)
@@ -172,61 +128,24 @@ namespace builtin_scene::model_renderer
 
   bool LoadModelSystem::loadPlyFile(const string &filePath, vector<GaussianSplat> &splats)
   {
-    // TODO: Implement actual .ply file parsing
-    // For now, create some test data
-    DEBUG(LOG_TAG, "Creating test PLY data for: %s", filePath.c_str());
+    DEBUG(LOG_TAG, "Loading PLY file: %s", filePath.c_str());
     
-    // Create a few test splats
-    for (int i = 0; i < 3; ++i) {
-      GaussianSplat splat;
-      splat.position[0] = i * 0.5f;
-      splat.position[1] = 0.0f;
-      splat.position[2] = 0.0f;
-      splat.color[0] = (i == 0) ? 1.0f : 0.0f;
-      splat.color[1] = (i == 1) ? 1.0f : 0.0f;
-      splat.color[2] = (i == 2) ? 1.0f : 0.0f;
-      splat.opacity = 0.8f;
-      splat.scale[0] = 0.5f;
-      splat.scale[1] = 0.5f;
-      splat.scale[2] = 0.5f;
-      splat.rotation[0] = 0.0f;
-      splat.rotation[1] = 0.0f;
-      splat.rotation[2] = 0.0f;
-      splat.rotation[3] = 1.0f;
-      
-      splats.push_back(splat);
-    }
-    return true;
+    // Use the PLY parser to load the file
+    return PlyParser::parseFile(filePath, splats);
   }
 
   RenderGaussianSplattingSystem::RenderGaussianSplattingSystem()
       : RenderBaseSystem()
-      , webglInitialized_(false)
+      , materialInitialized_(false)
   {
-  }
-
-  RenderGaussianSplattingSystem::~RenderGaussianSplattingSystem()
-  {
-    shutdownWebGL();
   }
 
   void RenderGaussianSplattingSystem::onExecute()
   {
-    // Get the renderer resource to access WebGL context
-    auto renderer = getResource<Renderer>();
-    if (!renderer) {
-      DEBUG(LOG_TAG, "Renderer resource not available");
-      return;
-    }
-
-    // Cache the WebGL context
-    if (glContext_.expired()) {
-      glContext_ = renderer->glContext();
-    }
-
-    if (!webglInitialized_) {
-      if (!initializeWebGL()) {
-        DEBUG(LOG_TAG, "Failed to initialize WebGL for 3DGS rendering");
+    // Initialize material on first use
+    if (!materialInitialized_) {
+      if (!initializeMaterial()) {
+        DEBUG(LOG_TAG, "Failed to initialize Gaussian Splatting material");
         return;
       }
     }
@@ -259,246 +178,53 @@ namespace builtin_scene::model_renderer
     }
 
     DEBUG(LOG_TAG, "Rendering 3DGS model with %zu splats", splats.size());
-    renderGaussianSplats(splats, content);
+    
+    // Convert Model3d splat format to material format
+    std::vector<materials::GaussianSplattingMaterial::GaussianSplat> materialSplats;
+    materialSplats.reserve(splats.size());
+    
+    for (const auto &splat : splats) {
+      materials::GaussianSplattingMaterial::GaussianSplat ms;
+      ms.position = glm::vec3(splat.position[0], splat.position[1], splat.position[2]);
+      ms.color = glm::vec3(splat.color[0], splat.color[1], splat.color[2]);
+      ms.opacity = splat.opacity;
+      ms.scale = glm::vec3(splat.scale[0], splat.scale[1], splat.scale[2]);
+      ms.rotation = glm::vec4(splat.rotation[0], splat.rotation[1], 
+                              splat.rotation[2], splat.rotation[3]);
+      materialSplats.push_back(ms);
+    }
+    
+    // Update material with splats data
+    gaussianMaterial_->updateSplats(materialSplats);
+    
+    // TODO: Actually render using the material and mesh system
+    // This would typically involve creating/updating a mesh and rendering it
+    // with the gaussian splatting material
   }
 
-  bool RenderGaussianSplattingSystem::initializeWebGL()
+  bool RenderGaussianSplattingSystem::initializeMaterial()
   {
-    DEBUG(LOG_TAG, "Initializing WebGL for 3DGS rendering");
+    DEBUG(LOG_TAG, "Initializing Gaussian Splatting material");
     
-    auto glContext = glContext_.lock();
+    gaussianMaterial_ = std::make_shared<materials::GaussianSplattingMaterial>();
+    
+    // Get the renderer to access the WebGL context
+    auto renderer = getResource<Renderer>();
+    if (!renderer) {
+      DEBUG(LOG_TAG, "Renderer resource not available");
+      return false;
+    }
+    
+    auto glContext = renderer->glContext();
     if (!glContext) {
-      DEBUG(LOG_TAG, "WebGL context is not available");
+      DEBUG(LOG_TAG, "WebGL context not available");
       return false;
     }
     
-    // Create shader program
-    if (!createShaderProgram()) {
-      DEBUG(LOG_TAG, "Failed to create shader program");
-      return false;
-    }
-
-    // Create vertex array and buffer using WebGL API
-    vao_ = glContext->createVertexArray();
-    vbo_ = glContext->createBuffer();
-
-    webglInitialized_ = true;
-    DEBUG(LOG_TAG, "WebGL initialization successful");
+    // The material will be initialized when first used
+    materialInitialized_ = true;
+    DEBUG(LOG_TAG, "Gaussian Splatting material initialized successfully");
     return true;
-  }
-
-  void RenderGaussianSplattingSystem::shutdownWebGL()
-  {
-    if (!webglInitialized_) {
-      return;
-    }
-
-    auto glContext = glContext_.lock();
-    if (glContext) {
-      destroyShaderProgram();
-      
-      if (vao_) {
-        glContext->deleteVertexArray(vao_);
-        vao_.reset();
-      }
-      
-      if (vbo_) {
-        glContext->deleteBuffer(vbo_);
-        vbo_.reset();
-      }
-    }
-
-    webglInitialized_ = false;
-    DEBUG(LOG_TAG, "WebGL shutdown complete");
-  }
-
-  bool RenderGaussianSplattingSystem::createShaderProgram()
-  {
-    auto glContext = glContext_.lock();
-    if (!glContext) {
-      DEBUG(LOG_TAG, "WebGL context is not available");
-      return false;
-    }
-
-    // Read shader sources from files
-    string vertexSource = readShaderFile("gaussian_splatting.vert");
-    string fragmentSource = readShaderFile("gaussian_splatting.frag");
-    
-    if (vertexSource.empty() || fragmentSource.empty()) {
-      DEBUG(LOG_TAG, "Failed to read shader files");
-      return false;
-    }
-
-    try {
-      // Create and compile vertex shader
-      vertexShader_ = glContext->createShader(WebGLShaderType::kVertexShader);
-      glContext->shaderSource(vertexShader_, vertexSource);
-      glContext->compileShader(vertexShader_);
-      
-      // Check compilation status
-      bool compiled = glContext->getShaderParameter(vertexShader_, WEBGL_COMPILE_STATUS);
-      if (!compiled) {
-        string infoLog = glContext->getShaderInfoLog(vertexShader_);
-        DEBUG(LOG_TAG, "Vertex shader compilation failed: %s", infoLog.c_str());
-        return false;
-      }
-
-      // Create and compile fragment shader
-      fragmentShader_ = glContext->createShader(WebGLShaderType::kFragmentShader);
-      glContext->shaderSource(fragmentShader_, fragmentSource);
-      glContext->compileShader(fragmentShader_);
-      
-      compiled = glContext->getShaderParameter(fragmentShader_, WEBGL_COMPILE_STATUS);
-      if (!compiled) {
-        string infoLog = glContext->getShaderInfoLog(fragmentShader_);
-        DEBUG(LOG_TAG, "Fragment shader compilation failed: %s", infoLog.c_str());
-        return false;
-      }
-
-      // Create and link shader program
-      shaderProgram_ = glContext->createProgram();
-      glContext->attachShader(shaderProgram_, vertexShader_);
-      glContext->attachShader(shaderProgram_, fragmentShader_);
-      glContext->linkProgram(shaderProgram_);
-
-      bool linked = glContext->getProgramParameter(shaderProgram_, WEBGL_LINK_STATUS);
-      if (!linked) {
-        string infoLog = glContext->getProgramInfoLog(shaderProgram_);
-        DEBUG(LOG_TAG, "Shader program linking failed: %s", infoLog.c_str());
-        return false;
-      }
-
-      DEBUG(LOG_TAG, "Shader program created successfully");
-      return true;
-    } catch (const exception &e) {
-      DEBUG(LOG_TAG, "Exception during shader creation: %s", e.what());
-      return false;
-    }
-  }
-
-  void RenderGaussianSplattingSystem::destroyShaderProgram()
-  {
-    auto glContext = glContext_.lock();
-    if (!glContext) {
-      return;
-    }
-
-    if (shaderProgram_) {
-      glContext->deleteProgram(shaderProgram_);
-      shaderProgram_.reset();
-    }
-    if (vertexShader_) {
-      glContext->deleteShader(vertexShader_);
-      vertexShader_.reset();
-    }
-    if (fragmentShader_) {
-      glContext->deleteShader(fragmentShader_);
-      fragmentShader_.reset();
-    }
-  }
-
-  void RenderGaussianSplattingSystem::renderGaussianSplats(const vector<GaussianSplat> &splats, WebContent &content)
-  {
-    auto glContext = glContext_.lock();
-    if (!glContext || !shaderProgram_) {
-      return;
-    }
-
-    // Use the shader program
-    glContext->useProgram(shaderProgram_);
-
-    // TODO: Set up MVP matrices properly
-    float identityMatrix[16] = {
-      1.0f, 0.0f, 0.0f, 0.0f,
-      0.0f, 1.0f, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 0.0f, 1.0f
-    };
-
-    auto mvpLocation = glContext->getUniformLocation(shaderProgram_, "u_mvpMatrix");
-    auto viewLocation = glContext->getUniformLocation(shaderProgram_, "u_viewMatrix");
-    
-    if (mvpLocation) {
-      glContext->uniformMatrix4fv(mvpLocation, false, identityMatrix);
-    }
-    if (viewLocation) {
-      glContext->uniformMatrix4fv(viewLocation, false, identityMatrix);
-    }
-
-    // Bind vertex array and buffer
-    glContext->bindVertexArray(vao_);
-    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, vbo_);
-
-    // Upload splat data
-    glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer, 
-                         splats.size() * sizeof(GaussianSplat), 
-                         splats.data(), 
-                         WebGLBufferUsage::kDynamicDraw);
-
-    // Set up vertex attributes
-    auto positionLocation = glContext->getAttribLocation(shaderProgram_, "a_position");
-    auto colorLocation = glContext->getAttribLocation(shaderProgram_, "a_color");
-    auto opacityLocation = glContext->getAttribLocation(shaderProgram_, "a_opacity");
-    auto scaleLocation = glContext->getAttribLocation(shaderProgram_, "a_scale");
-    auto rotationLocation = glContext->getAttribLocation(shaderProgram_, "a_rotation");
-
-    size_t stride = sizeof(GaussianSplat);
-    
-    if (positionLocation >= 0) {
-      glContext->enableVertexAttribArray(positionLocation);
-      glContext->vertexAttribPointer(positionLocation, 3, WebGLDataType::kFloat, false, stride, 
-                                    offsetof(GaussianSplat, position));
-    }
-    
-    if (colorLocation >= 0) {
-      glContext->enableVertexAttribArray(colorLocation);
-      glContext->vertexAttribPointer(colorLocation, 3, WebGLDataType::kFloat, false, stride, 
-                                    offsetof(GaussianSplat, color));
-    }
-    
-    if (opacityLocation >= 0) {
-      glContext->enableVertexAttribArray(opacityLocation);
-      glContext->vertexAttribPointer(opacityLocation, 1, WebGLDataType::kFloat, false, stride, 
-                                    offsetof(GaussianSplat, opacity));
-    }
-    
-    if (scaleLocation >= 0) {
-      glContext->enableVertexAttribArray(scaleLocation);
-      glContext->vertexAttribPointer(scaleLocation, 3, WebGLDataType::kFloat, false, stride, 
-                                    offsetof(GaussianSplat, scale));
-    }
-    
-    if (rotationLocation >= 0) {
-      glContext->enableVertexAttribArray(rotationLocation);
-      glContext->vertexAttribPointer(rotationLocation, 4, WebGLDataType::kFloat, false, stride, 
-                                    offsetof(GaussianSplat, rotation));
-    }
-
-    // Enable blending for transparency
-    glContext->enable(WEBGL_BLEND);
-    glContext->blendFunc(WebGLBlendFactor::kSrcAlpha, WebGLBlendFactor::kOneMinusSrcAlpha);
-
-    // Render as points (will be expanded to quads in shader)
-    glContext->drawArrays(WebGLDrawMode::kPoints, 0, static_cast<int>(splats.size()));
-
-    // Clean up
-    glContext->bindVertexArray(nullptr);
-    glContext->useProgram(nullptr);
-    glContext->disable(WEBGL_BLEND);
-
-    // Mark content as using texture
-    content.setTextureUsing(true);
-  }
-
-  void RenderGaussianSplattingSystem::sortSplats(vector<GaussianSplat> &splats, const float viewMatrix[16])
-  {
-    // TODO: Implement depth-based sorting for correct alpha blending
-    // This would typically involve:
-    // 1. Transform splat positions to view space
-    // 2. Sort by depth (back to front for alpha blending)
-    // 3. Update the splats vector with sorted order
-    
-    DEBUG(LOG_TAG, "Sorting %zu splats (placeholder implementation)", splats.size());
   }
 
   void RenderGLTFSystem::onExecute()
