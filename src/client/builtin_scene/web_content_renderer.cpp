@@ -43,10 +43,10 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundOrigin().isPaddingBox())
     {
       // For padding-box, subtract border widths
-      float borderTop = style.borderTopWidth().value();
-      float borderRight = style.borderRightWidth().value();
-      float borderBottom = style.borderBottomWidth().value();
-      float borderLeft = style.borderLeftWidth().value();
+      float borderTop = style.borderWidth().top().value();
+      float borderRight = style.borderWidth().right().value();
+      float borderBottom = style.borderWidth().bottom().value();
+      float borderLeft = style.borderWidth().left().value();
       
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft,
@@ -58,15 +58,15 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundOrigin().isContentBox())
     {
       // For content-box, subtract border and padding widths
-      float borderTop = style.borderTopWidth().value();
-      float borderRight = style.borderRightWidth().value();
-      float borderBottom = style.borderBottomWidth().value();
-      float borderLeft = style.borderLeftWidth().value();
+      float borderTop = style.borderWidth().top().value();
+      float borderRight = style.borderWidth().right().value();
+      float borderBottom = style.borderWidth().bottom().value();
+      float borderLeft = style.borderWidth().left().value();
       
-      float paddingTop = style.paddingTop().value();
-      float paddingRight = style.paddingRight().value();
-      float paddingBottom = style.paddingBottom().value();
-      float paddingLeft = style.paddingLeft().value();
+      float paddingTop = style.padding().top().value();
+      float paddingRight = style.padding().right().value();
+      float paddingBottom = style.padding().bottom().value();
+      float paddingLeft = style.padding().left().value();
       
       return SkRect::MakeLTRB(
         borderBox.fLeft + borderLeft + paddingLeft,
