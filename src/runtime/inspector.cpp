@@ -214,7 +214,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     string id = to_string(content->id);
     string title = "jsar[" + id + "]";
     string url = requestInit.url;
-    string debuggerUrl = "ws://localhost:" + to_string(requestInit.inspectorPort()) + "/devtools/inspector/" + id;
+    string debuggerUrl = "ws://localhost:9423/devtools/inspector/" + id;
     string devtoolsFrontendUrl = "devtools://devtools/inspector/devtools.html?ws=" + debuggerUrl;
 
     // Make sure the URL is a valid file URL if it's an absolute path

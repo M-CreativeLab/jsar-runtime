@@ -119,6 +119,9 @@ void TrInspectorClient::tick()
       {
         DEBUG(LOG_TAG_ERROR,
               "Received HPE_PAUSED_UPGRADE but the connection type is not WEBSOCKET, this should not happen.");
+        DEBUG(LOG_TAG_ERROR, "%s %s HTTP/1.1", methodStr_.c_str(), url_.c_str());
+        DEBUG(LOG_TAG_ERROR, "%s", buffer_.data());
+
         shouldClose_ = true;
         return;
       }
@@ -369,14 +372,15 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     string lowerKey = header.first;
     transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
 
-    if (lowerKey == "upgrade" && header.second == "websocket")
+    string lowerValue = header.second;
+    transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
+
+    if (lowerKey == "upgrade" && lowerValue == "websocket")
     {
       hasUpgrade = true;
     }
     else if (lowerKey == "connection")
     {
-      string lowerValue = header.second;
-      transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
       if (lowerValue.find("upgrade") != string::npos)
       {
         hasConnection = true;

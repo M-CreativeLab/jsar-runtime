@@ -1,9 +1,7 @@
-file(GLOB TR_CORE_SOURCE
+file(GLOB_RECURSE TR_CORE_SOURCE
     "src/analytics/*.cpp"
-    "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
-    "src/renderer/gles/*.cpp"
     "src/xr/*.cpp"
 )
 
