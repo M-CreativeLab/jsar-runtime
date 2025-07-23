@@ -32,7 +32,9 @@ namespace builtin_scene::web_renderer
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
   // Helper function to calculate background positioning area based on background-origin
-  SkRect getBackgroundPositioningArea(const SkRRect &roundedRect, const client_layout::Fragment &fragment, const ComputedStyle &style)
+  SkRect getBackgroundPositioningArea(const SkRRect &roundedRect,
+                                      const client_layout::Fragment &fragment,
+                                      const ComputedStyle &style)
   {
     const SkRect &borderBox = roundedRect.rect();
 
@@ -79,7 +81,11 @@ namespace builtin_scene::web_renderer
   }
 
   // Helper function to draw background image with repeat pattern
-  void drawBackgroundImage(SkCanvas *canvas, const sk_sp<SkImage> &image, const SkRect &positioningArea, const ComputedStyle &style, const SkPaint &paint)
+  void drawBackgroundImage(SkCanvas *canvas,
+                           const sk_sp<SkImage> &image,
+                           const SkRect &positioningArea,
+                           const ComputedStyle &style,
+                           const SkPaint &paint)
   {
     if (!image)
       return;
@@ -279,8 +285,6 @@ namespace builtin_scene::web_renderer
 
               // Get the background positioning area based on background-origin
               SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
-
-              // Use the new helper function to draw background with repeat support
               drawBackgroundImage(canvas, bitmap.asImage(), positioningArea, style, fillPaint.value());
             }
             canvas->restore();
