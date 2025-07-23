@@ -36,9 +36,9 @@ private:
   TrConstellation *constellation_;
   renderer::TrRenderer *getRenderer() const;
 
-  // Tracing control methods
-  std::string enableTracing(const CdpMessage &message);
-  std::string disableTracing(const CdpMessage &message);
+  // Tracing control methods (also controls command buffer dispatching)
+  std::string enableTracing(const CdpMessage &message, const std::string &clientId);
+  std::string disableTracing(const CdpMessage &message, const std::string &clientId);
 
   // Frame rate control methods
   std::string setClientFrameRate(const CdpMessage &message);
@@ -46,10 +46,6 @@ private:
   // Renderer inspection methods
   std::string getRendererInfo(const CdpMessage &message);
   std::string getContentRenderers(const CdpMessage &message);
-
-  // Command buffer dispatching methods (replacing getCommandBuffers)
-  std::string enableCommandBufferDispatching(const CdpMessage &message, const std::string &clientId);
-  std::string disableCommandBufferDispatching(const CdpMessage &message, const std::string &clientId);
 
   // Command buffer dispatching
   void sendCommandBufferEvent(const std::string &commandBufferData);

@@ -300,7 +300,7 @@
       
       <div class="rendering-controls">
         <div class="control-group">
-          <h4>Tracing</h4>
+          <h4>Tracing & Command Buffer Dispatching</h4>
           <div class="test-buttons">
             <button onclick="enableTracing()" id="enableTracingBtn" disabled class="success">Enable Tracing</button>
             <button onclick="disableTracing()" id="disableTracingBtn" disabled class="danger">Disable Tracing</button>
@@ -322,14 +322,6 @@
             <button onclick="getContentRenderers()" id="getContentRenderersBtn" disabled>Get Content Renderers</button>
           </div>
           <div id="rendererInfoDisplay" class="info-display"></div>
-        </div>
-
-        <div class="control-group">
-          <h4>Command Buffer Dispatching</h4>
-          <div class="test-buttons">
-            <button onclick="enableCommandBufferDispatching()" id="enableCmdBufBtn" disabled class="success">Enable Command Buffer Events</button>
-            <button onclick="disableCommandBufferDispatching()" id="disableCmdBufBtn" disabled class="danger">Disable Command Buffer Events</button>
-          </div>
           <div id="commandBufferStatus" class="info-display"></div>
         </div>
       </div>
@@ -384,8 +376,6 @@
     const frameRateInput = document.getElementById('frameRateInput');
     const getRendererInfoBtn = document.getElementById('getRendererInfoBtn');
     const getContentRenderersBtn = document.getElementById('getContentRenderersBtn');
-    const enableCmdBufBtn = document.getElementById('enableCmdBufBtn');
-    const disableCmdBufBtn = document.getElementById('disableCmdBufBtn');
     const rendererInfoDisplay = document.getElementById('rendererInfoDisplay');
     const commandBufferStatus = document.getElementById('commandBufferStatus');
     
@@ -457,16 +447,6 @@
           expectSuccess: true
         },
         {
-          name: 'Enable Command Buffer Dispatching',
-          message: { id: 0, method: 'JSAR.UniversalRenderingServer.enableCommandBufferDispatching', params: {} },
-          expectSuccess: true
-        },
-        {
-          name: 'Disable Command Buffer Dispatching',
-          message: { id: 0, method: 'JSAR.UniversalRenderingServer.disableCommandBufferDispatching', params: {} },
-          expectSuccess: true
-        },
-        {
           name: 'Disable Tracing',
           message: { id: 0, method: 'JSAR.UniversalRenderingServer.disableTracing', params: {} },
           expectSuccess: true
@@ -511,8 +491,6 @@
           setFrameRateBtn.disabled = false;
           getRendererInfoBtn.disabled = false;
           getContentRenderersBtn.disabled = false;
-          enableCmdBufBtn.disabled = false;
-          disableCmdBufBtn.disabled = false;
           
           connectionStartTime = Date.now();
           startConnectionTimer();
@@ -548,8 +526,6 @@
           setFrameRateBtn.disabled = true;
           getRendererInfoBtn.disabled = true;
           getContentRenderersBtn.disabled = true;
-          enableCmdBufBtn.disabled = true;
-          disableCmdBufBtn.disabled = true;
           
           stopConnectionTimer();
           addMessage(`Connection closed (code: ${event.code})`, 'system');
@@ -855,6 +831,7 @@
         params: {}
       };
       sendMessage(message);
+      commandBufferStatus.textContent = 'Tracing enabled. Command buffer dispatching enabled. Waiting for events...';
     }
     
     function disableTracing() {
@@ -864,6 +841,7 @@
         params: {}
       };
       sendMessage(message);
+      commandBufferStatus.textContent = 'Tracing disabled. Command buffer dispatching disabled.';
     }
     
     function setFrameRate() {
@@ -903,26 +881,6 @@
       
       // Store message ID to handle response specially
       contentRenderersMessageId = message.id;
-    }
-    
-    function enableCommandBufferDispatching() {
-      const message = {
-        id: messageId++,
-        method: 'JSAR.UniversalRenderingServer.enableCommandBufferDispatching',
-        params: {}
-      };
-      sendMessage(message);
-      commandBufferStatus.textContent = 'Command buffer dispatching enabled. Waiting for events...';
-    }
-    
-    function disableCommandBufferDispatching() {
-      const message = {
-        id: messageId++,
-        method: 'JSAR.UniversalRenderingServer.disableCommandBufferDispatching',
-        params: {}
-      };
-      sendMessage(message);
-      commandBufferStatus.textContent = 'Command buffer dispatching disabled.';
     }
     
     // Special handling for renderer info responses

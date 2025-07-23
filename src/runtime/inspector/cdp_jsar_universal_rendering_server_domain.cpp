@@ -21,11 +21,11 @@ string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
 
   if (method == "enableTracing")
   {
-    return enableTracing(message);
+    return enableTracing(message, clientId);
   }
   else if (method == "disableTracing")
   {
-    return disableTracing(message);
+    return disableTracing(message, clientId);
   }
   else if (method == "setClientFrameRate")
   {
@@ -38,14 +38,6 @@ string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
   else if (method == "getContentRenderers")
   {
     return getContentRenderers(message);
-  }
-  else if (method == "enableCommandBufferDispatching")
-  {
-    return enableCommandBufferDispatching(message, clientId);
-  }
-  else if (method == "disableCommandBufferDispatching")
-  {
-    return disableCommandBufferDispatching(message, clientId);
   }
   else
   {
@@ -63,9 +55,9 @@ renderer::TrRenderer *CdpJsarUniversalRenderingServerDomain::getRenderer() const
   return constellation_->renderer.get();
 }
 
-string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &message)
+string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Enabling tracing");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Enabling tracing and command buffer dispatching for client: %s", clientId.c_str());
 
   auto *renderer = getRenderer();
   if (!renderer)
@@ -75,19 +67,23 @@ string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &me
 
   renderer->enableTracing();
 
+  // Also enable command buffer dispatching for this client
+  commandBufferClients_.insert(clientId);
+
   rapidjson::Document result;
   result.SetObject();
   auto &allocator = result.GetAllocator();
 
   result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
   result.AddMember("tracingEnabled", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(true), allocator);
 
   return CdpResponse::success(message.id, result);
 }
 
-string CdpJsarUniversalRenderingServerDomain::disableTracing(const CdpMessage &message)
+string CdpJsarUniversalRenderingServerDomain::disableTracing(const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Disabling tracing");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Disabling tracing and command buffer dispatching for client: %s", clientId.c_str());
 
   auto *renderer = getRenderer();
   if (!renderer)
@@ -97,12 +93,16 @@ string CdpJsarUniversalRenderingServerDomain::disableTracing(const CdpMessage &m
 
   renderer->isTracingEnabled = false;
 
+  // Also disable command buffer dispatching for this client
+  commandBufferClients_.erase(clientId);
+
   rapidjson::Document result;
   result.SetObject();
   auto &allocator = result.GetAllocator();
 
   result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
   result.AddMember("tracingEnabled", rapidjson::Value().SetBool(false), allocator);
+  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(false), allocator);
 
   return CdpResponse::success(message.id, result);
 }
@@ -214,48 +214,6 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
   return CdpResponse::success(message.id, result);
 }
 
-string CdpJsarUniversalRenderingServerDomain::enableCommandBufferDispatching(const CdpMessage &message, const string &clientId)
-{
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Enabling command buffer dispatching for client: %s", clientId.c_str());
-
-  auto *renderer = getRenderer();
-  if (!renderer)
-  {
-    return CdpResponse::error(message.id, -32000, "Renderer not available");
-  }
-
-  // Add client to command buffer subscribers
-  commandBufferClients_.insert(clientId);
-
-  rapidjson::Document result;
-  result.SetObject();
-  auto &allocator = result.GetAllocator();
-
-  result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
-  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(true), allocator);
-  result.AddMember("subscribedClients", rapidjson::Value().SetUint(commandBufferClients_.size()), allocator);
-
-  return CdpResponse::success(message.id, result);
-}
-
-string CdpJsarUniversalRenderingServerDomain::disableCommandBufferDispatching(const CdpMessage &message, const string &clientId)
-{
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Disabling command buffer dispatching for client: %s", clientId.c_str());
-
-  // Remove client from command buffer subscribers
-  commandBufferClients_.erase(clientId);
-
-  rapidjson::Document result;
-  result.SetObject();
-  auto &allocator = result.GetAllocator();
-
-  result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
-  result.AddMember("commandBufferDispatchingEnabled", rapidjson::Value().SetBool(false), allocator);
-  result.AddMember("subscribedClients", rapidjson::Value().SetUint(commandBufferClients_.size()), allocator);
-
-  return CdpResponse::success(message.id, result);
-}
-
 void CdpJsarUniversalRenderingServerDomain::setInspectorClient(const string &clientId, TrInspectorClient *client)
 {
   inspectorClients_[clientId] = client;
@@ -317,12 +275,10 @@ string CdpJsarUniversalRenderingServerDomain::getDomainDescription() const
 vector<CdpCommand> CdpJsarUniversalRenderingServerDomain::getCommands() const
 {
   return {
-    {"enableTracing", "Enable tracing in TrRenderer.", nullptr},
-    {"disableTracing", "Disable tracing in TrRenderer.", nullptr},
+    {"enableTracing", "Enable tracing in TrRenderer and command buffer event dispatching to this CDP client.", nullptr},
+    {"disableTracing", "Disable tracing in TrRenderer and command buffer event dispatching to this CDP client.", nullptr},
     {"setClientFrameRate", "Control the client-side FPS in TrRenderer. Requires frameRate parameter.", nullptr},
     {"getRendererInfo", "Get current renderer state information including FPS, tracing status, and configuration.", nullptr},
-    {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr},
-    {"enableCommandBufferDispatching", "Enable command buffer event dispatching to this CDP client.", nullptr},
-    {"disableCommandBufferDispatching", "Disable command buffer event dispatching to this CDP client.", nullptr}
+    {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr}
   };
 }
