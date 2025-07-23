@@ -6,6 +6,8 @@
 #include "./ecs.hpp"
 #include "./web_content.hpp"
 #include "./model_3d.hpp"
+#include "./client_renderer.hpp"
+#include "../graphics/webgl_context.hpp"
 
 namespace builtin_scene::model_renderer
 {
@@ -57,11 +59,11 @@ namespace builtin_scene::model_renderer
    * System to render 3D Gaussian Splatting models using WebGL.
    * This is the core client-side renderer for 3DGS content.
    */
-  class Render3DGSSystem : public RenderBaseSystem
+  class RenderGaussianSplattingSystem : public RenderBaseSystem
   {
   public:
-    Render3DGSSystem();
-    ~Render3DGSSystem();
+    RenderGaussianSplattingSystem();
+    ~RenderGaussianSplattingSystem();
 
     void onExecute() override;
 
@@ -81,12 +83,15 @@ namespace builtin_scene::model_renderer
     bool createShaderProgram();
     void destroyShaderProgram();
     
-    // WebGL resources
-    unsigned int shaderProgram_ = 0;
-    unsigned int vertexShader_ = 0;
-    unsigned int fragmentShader_ = 0;
-    unsigned int vao_ = 0;
-    unsigned int vbo_ = 0;
+    // WebGL resources (using proper graphics API)
+    std::shared_ptr<client_graphics::WebGLProgram> shaderProgram_;
+    std::shared_ptr<client_graphics::WebGLShader> vertexShader_;
+    std::shared_ptr<client_graphics::WebGLShader> fragmentShader_;
+    std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
+    std::shared_ptr<client_graphics::WebGLBuffer> vbo_;
+    
+    // Access to WebGL context
+    std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     
     bool webglInitialized_ = false;
   };
@@ -140,7 +145,7 @@ namespace builtin_scene::model_renderer
       app.addSystem(SchedulerLabel::kPostStartup, initModel);
 
       auto loadModel = System::Make<LoadModelSystem>();
-      auto render3DGS = System::Make<Render3DGSSystem>();
+      auto render3DGS = System::Make<RenderGaussianSplattingSystem>();
       auto renderGLTF = System::Make<RenderGLTFSystem>();
       auto updateTexture = System::Make<UpdateTextureSystem>();
 
