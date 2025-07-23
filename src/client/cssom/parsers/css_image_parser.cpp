@@ -423,8 +423,8 @@ namespace client_cssom::css_parser
     {
       // Default to transparent if no color available
       colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
-      specified::Color color;
-      color.parse("transparent");
+
+      specified::Color color = Parse::ParseSingleValue<specified::Color>("transparent");
       colorStop.value = specified::GradientItem::SimpleColorStop{color};
       return colorStop;
     }
@@ -444,7 +444,7 @@ namespace client_cssom::css_parser
       // Color function like rgb(), rgba(), hsl(), etc.
       colorString = token.value + "(";
       advance();
-      
+
       // Collect function content until closing parenthesis
       int parenDepth = 1;
       while (hasNext() && parenDepth > 0)
@@ -458,7 +458,7 @@ namespace client_cssom::css_parser
         {
           parenDepth--;
         }
-        
+
         if (parenDepth > 0)
         {
           colorString += funcToken.value;
@@ -482,19 +482,14 @@ namespace client_cssom::css_parser
     {
       // Unsupported color format, default to transparent
       colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
-      specified::Color color;
-      color.parse("transparent");
+
+      specified::Color color = Parse::ParseSingleValue<specified::Color>("transparent");
       colorStop.value = specified::GradientItem::SimpleColorStop{color};
       return colorStop;
     }
 
     // Parse the color using the Color class
-    specified::Color color;
-    if (!color.parse(colorString))
-    {
-      // If parsing fails, default to transparent
-      color.parse("transparent");
-    }
+    specified::Color color = Parse::ParseSingleValue<specified::Color>(colorString);
 
     skipWhitespace();
 
@@ -515,15 +510,12 @@ namespace client_cssom::css_parser
         {
           positionString += posToken.unit;
         }
-        
-        specified::LengthPercentage position;
-        if (position.parse(positionString))
-        {
-          colorStop.type = generics::GenericGradientItemBase::kComplexColorStop;
-          colorStop.value = specified::GradientItem::ComplexColorStop{color, position};
-          advance();
-          return colorStop;
-        }
+
+        specified::LengthPercentage position = Parse::ParseSingleValue<specified::LengthPercentage>(positionString);
+        colorStop.type = generics::GenericGradientItemBase::kComplexColorStop;
+        colorStop.value = specified::GradientItem::ComplexColorStop{color, position};
+        advance();
+        return colorStop;
       }
     }
 
