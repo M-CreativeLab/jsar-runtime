@@ -86,9 +86,9 @@ namespace client_layout
       // Update spatial information from the HTML element
       assert(dom::Node::Is<dom::HTMLImageElement>(node()));
       auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
-      imageComponent.setSpatial(imageElement.isSpatial());
-
+      
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
+      webContent.setSpatialized(imageElement.isSpatial());
       webContent.setDirty(true); // Mark the content as dirty to update the texture.
     };
     useSceneWithCallback(setBitmap);
@@ -102,7 +102,7 @@ namespace client_layout
     {
       assert(dom::Node::Is<dom::HTMLImageElement>(node()));
       auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
-      scene.addComponent(entity, Image2d(imageElement.getSrc(), nullptr, imageElement.isSpatial()));
+      scene.addComponent(entity, Image2d(imageElement.getSrc(), nullptr));
     };
     useSceneWithCallback(addImageComponent);
   }

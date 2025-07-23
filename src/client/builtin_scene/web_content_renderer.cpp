@@ -662,15 +662,6 @@ namespace builtin_scene::web_renderer
     {
       // Check if this is a spatial image and set the spatial flag
       auto imageComponent = getComponent<Image2d>(entity);
-      if (imageComponent != nullptr && imageComponent->isSpatial())
-      {
-        content.setSpatial(true);
-      }
-      else
-      {
-        content.setSpatial(false);
-      }
-      
       // Use the same texture update method for both spatial and non-spatial images
       auto status = webContentMaterial->updateTexture(content);
       if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)

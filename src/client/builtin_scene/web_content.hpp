@@ -182,13 +182,13 @@ namespace builtin_scene
     }
 
     // Spatial image support
-    inline bool isSpatial() const
+    inline bool isSpatialized() const
     {
       return is_spatialized_;
     }
-    inline void setSpatial(bool spatial)
+    inline void setSpatialized(bool v)
     {
-      is_spatialized_ = spatial;
+      is_spatialized_ = v;
     }
 
     // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
