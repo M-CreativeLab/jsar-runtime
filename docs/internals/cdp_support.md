@@ -19,6 +19,7 @@ The JSAR Runtime inspector now supports basic Chrome DevTools Protocol (CDP) fun
 
 - **`CdpRuntimeDomain`** - Runtime domain with JavaScript runtime methods
 - **`CdpMyExampleDomain`** - Example domain for testing connectivity
+- **`CdpJsarUniversalRenderingServerDomain`** - Universal Rendering Server domain for debugging and controlling the unified rendering backend
 
 ## Supported Domains
 
@@ -236,3 +237,77 @@ The implementation is compatible with:
 - Standard CDP clients
 - WebSocket-based debugging tools
 - JSON-RPC 2.0 message format
+
+## JSAR.UniversalRenderingServer Domain
+
+The JSAR.UniversalRenderingServer domain provides debugging and control for the unified rendering backend located in `src/renderer`.
+
+### Methods
+
+- **`JSAR.UniversalRenderingServer.enableTracing`** - Enable tracing in TrRenderer
+- **`JSAR.UniversalRenderingServer.disableTracing`** - Disable tracing in TrRenderer
+- **`JSAR.UniversalRenderingServer.setClientFrameRate`** - Control the client-side FPS (requires frameRate parameter)
+- **`JSAR.UniversalRenderingServer.getRendererInfo`** - Get current renderer state information
+- **`JSAR.UniversalRenderingServer.getContentRenderers`** - Get list of all content renderer instances for debugging
+- **`JSAR.UniversalRenderingServer.getCommandBuffers`** - Get command buffer debugging information and inspection details
+
+### Example Usage
+
+```javascript
+// Enable tracing
+{
+  "id": 10,
+  "method": "JSAR.UniversalRenderingServer.enableTracing",
+  "params": {}
+}
+
+// Response
+{
+  "id": 10,
+  "result": {
+    "success": true,
+    "tracingEnabled": true
+  }
+}
+
+// Set client frame rate
+{
+  "id": 11,
+  "method": "JSAR.UniversalRenderingServer.setClientFrameRate",
+  "params": {
+    "frameRate": 75
+  }
+}
+
+// Response
+{
+  "id": 11,
+  "result": {
+    "success": true,
+    "frameRate": 75
+  }
+}
+
+// Get renderer information
+{
+  "id": 12,
+  "method": "JSAR.UniversalRenderingServer.getRendererInfo",
+  "params": {}
+}
+
+// Response
+{
+  "id": 12,
+  "result": {
+    "tracingEnabled": true,
+    "fps": 60,
+    "clientFrameRate": 75,
+    "uptime": 123,
+    "stencilClearDisabled": false,
+    "hostContextSummaryEnabled": false,
+    "appContextSummaryEnabled": false,
+    "useDoubleWideFramebuffer": false,
+    "commandBufferPort": 9424
+  }
+}
+```
