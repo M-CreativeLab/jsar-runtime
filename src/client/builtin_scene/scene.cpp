@@ -2,6 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
+#include "./model_3d_renderer.hpp"
 
 namespace builtin_scene
 {
@@ -68,6 +69,7 @@ namespace builtin_scene
 
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
+    addPlugin<model_renderer::Model3dPlugin>();
     addPlugin<WebXRPlugin>();
     addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
   }

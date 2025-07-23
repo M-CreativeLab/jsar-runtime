@@ -1,10 +1,61 @@
 #include "./html_model_element.hpp"
 #include <client/dom/document.hpp>
-#include <renderer/renderer.hpp>
+#include <client/builtin_scene/model_3d.hpp>
+#include <client/builtin_scene/web_content.hpp>
+#include <client/layout/layout_object.hpp>
 #include <common/debug.hpp>
 
 namespace dom
 {
+  using namespace builtin_scene;
+
+  void HTMLModelElement::createdCallback(bool from_scripting)
+  {
+    HTMLElement::createdCallback(from_scripting);
+
+    // Initialize attributes from HTML
+    if (hasAttribute("src"))
+      setSrc(getAttribute("src"));
+    if (hasAttribute("type"))
+      setType(getAttribute("type"));
+    if (hasAttribute("autoplay"))
+      setAutoplay(getAttribute("autoplay") == "true" || hasAttribute("autoplay"));
+    if (hasAttribute("loading"))
+      setLoading(getAttribute("loading"));
+
+    loading_ = from_scripting ? "eager" : "lazy";
+  }
+
+  void HTMLModelElement::connectedCallback()
+  {
+    HTMLElement::connectedCallback();
+    
+    // Create the Model3d component for this element
+    createModelComponent();
+  }
+
+  void HTMLModelElement::attributeChangedCallback(const std::string &name, const std::string &oldValue, const std::string &newValue)
+  {
+    HTMLElement::attributeChangedCallback(name, oldValue, newValue);
+
+    if (name == "src")
+    {
+      setSrc(newValue);
+    }
+    else if (name == "type")
+    {
+      setType(newValue);
+    }
+    else if (name == "autoplay")
+    {
+      setAutoplay(newValue == "true" || !newValue.empty());
+    }
+    else if (name == "loading")
+    {
+      setLoading(newValue);
+    }
+  }
+
   std::string HTMLModelElement::src() const
   {
     return src_;
@@ -12,12 +63,15 @@ namespace dom
 
   void HTMLModelElement::setSrc(const std::string &src)
   {
+    if (src_ == src)
+      return;
+      
     src_ = src;
     
-    // Load the 3DGS model when src changes
+    // Update the Model3d component when src changes
     if (!src.empty())
     {
-      loadModel();
+      updateModelComponent();
     }
   }
 
@@ -29,6 +83,7 @@ namespace dom
   void HTMLModelElement::setType(const std::string &type)
   {
     type_ = type;
+    updateModelComponent();
   }
 
   bool HTMLModelElement::autoplay() const
@@ -54,45 +109,95 @@ namespace dom
     }
   }
 
-  void HTMLModelElement::loadModel()
+  void HTMLModelElement::createModelComponent()
   {
-    if (src_.empty())
+    // Get the layout object for this element
+    auto layoutObject = getLayoutObject();
+    if (!layoutObject)
       return;
 
-    // Get the renderer and load the model
-    auto &renderer = renderer::TrRenderer::GetRendererRef();
-    auto *gaussianRenderer = renderer.getGaussianSplattingRenderer();
+    // Create Model3d component with detected type
+    Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
+    auto model3d = std::make_shared<Model3d>(src_, modelType);
     
-    if (gaussianRenderer)
+    // Add the component to the ECS entity associated with this element
+    // This follows the same pattern as HTMLImageElement
+    auto entityId = layoutObject->getEntityId();
+    if (entityId != ecs::INVALID_ENTITY_ID)
     {
-      // Check if this is a 3DGS model based on file extension or type hint
-      bool is3DGS = false;
+      auto &ecs = builtin_scene::ecs::ECS::getInstance();
+      ecs.addComponent(entityId, model3d);
       
-      if (type_.has_value())
+      DEBUG("HTMLModelElement", "Created Model3d component for entity %u with type %d", 
+            entityId, static_cast<int>(modelType));
+    }
+  }
+
+  void HTMLModelElement::updateModelComponent()
+  {
+    auto layoutObject = getLayoutObject();
+    if (!layoutObject)
+      return;
+
+    auto entityId = layoutObject->getEntityId();
+    if (entityId == ecs::INVALID_ENTITY_ID)
+      return;
+
+    auto &ecs = builtin_scene::ecs::ECS::getInstance();
+    auto model3d = ecs.getComponent<Model3d>(entityId);
+    
+    if (!model3d)
+    {
+      // Create new component if it doesn't exist
+      createModelComponent();
+      return;
+    }
+
+    // Update existing component with new source and type
+    Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
+    *model3d = Model3d(src_, modelType);
+    
+    // Mark associated WebContent as dirty to trigger re-rendering
+    auto webContent = ecs.getComponent<WebContent>(entityId);
+    if (webContent)
+    {
+      webContent->setDirty(true);
+    }
+
+    DEBUG("HTMLModelElement", "Updated Model3d component for entity %u", entityId);
+  }
+
+  Model3d::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
+  {
+    if (!typeHint.empty())
+    {
+      if (typeHint == "3dgs" || typeHint == "gaussian-splatting")
       {
-        is3DGS = (type_.value() == "3dgs" || type_.value() == "gaussian-splatting");
-      }
-      else
-      {
-        // Auto-detect from file extension
-        std::string ext = src_.substr(src_.find_last_of('.'));
-        is3DGS = (ext == ".gsplat" || ext == ".ply");
-      }
-      
-      if (is3DGS)
-      {
-        if (!gaussianRenderer->loadModel(src_))
-        {
-          // TODO: Dispatch error event
-          DEBUG(LOG_TAG_RENDERER, "Failed to load 3DGS model: %s", src_.c_str());
-        }
-      }
-      else
-      {
-        // Fall back to existing mesh/GLTF loading system
-        // TODO: Integrate with existing model loading
-        DEBUG(LOG_TAG_RENDERER, "Non-3DGS model loading not yet implemented: %s", src_.c_str());
+        return Model3d::ModelType::GaussianSplatting;
       }
     }
+
+    // Auto-detect from file extension
+    size_t dotPos = src.find_last_of('.');
+    if (dotPos != std::string::npos)
+    {
+      std::string ext = src.substr(dotPos + 1);
+      std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+      
+      if (ext == "gsplat" || ext == "ply")
+      {
+        return Model3d::ModelType::GaussianSplatting;
+      }
+      else if (ext == "gltf")
+      {
+        return Model3d::ModelType::GLTF;
+      }
+      else if (ext == "glb")
+      {
+        return Model3d::ModelType::GLB;
+      }
+    }
+
+    return Model3d::ModelType::Unknown;
   }
 }

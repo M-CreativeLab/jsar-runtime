@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
 #include <assert.h>
-#include <common/debug.hpp>
 #include "renderer.hpp"
 #include "render_api.hpp"
 #include "runtime/constellation.hpp"
@@ -44,26 +43,12 @@ namespace renderer
       return;
     glHostContext = new ContextGLHost();
 
-    // Initialize 3D Gaussian Splatting renderer
-    gaussianSplattingRenderer = std::make_unique<TrGaussianSplattingRenderer>();
-    if (!gaussianSplattingRenderer->initializeGL())
-    {
-      DEBUG(LOG_TAG_RENDERER, "Failed to initialize 3DGS renderer");
-    }
-
     assert(watcherRunning == false);
     startWatchers();
   }
 
   void TrRenderer::shutdown()
   {
-    // Shutdown 3DGS renderer
-    if (gaussianSplattingRenderer)
-    {
-      gaussianSplattingRenderer->shutdownGL();
-      gaussianSplattingRenderer.reset();
-    }
-
     stopWatchers();
   }
 
@@ -141,29 +126,6 @@ namespace renderer
       return; // Skip if api is not ready.
 
     // TODO(yorkie): support the transparents render pass.
-
-    // 3DGS rendering pass - must happen after transparents due to alpha blending requirements
-    if (gaussianSplattingRenderer && gaussianSplattingRenderer->getSplatCount() > 0)
-    {
-      perfCounter.record("  renderer.3dgs.start");
-      
-      // TODO: Get actual view and projection matrices from the rendering context
-      float identityMatrix[16] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-      };
-      
-      // Sort splats in background thread (concurrent processing)
-      // TODO: Implement actual background sorting thread
-      gaussianSplattingRenderer->sortSplats(identityMatrix);
-      
-      // Render all 3DGS models globally
-      gaussianSplattingRenderer->render(identityMatrix, identityMatrix);
-      
-      perfCounter.record("  renderer.3dgs.end");
-    }
   }
 
   void TrRenderer::onBeforeRendering()

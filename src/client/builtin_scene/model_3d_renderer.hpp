@@ -1,0 +1,156 @@
+#pragma once
+
+#include <memory>
+#include <string>
+#include <vector>
+#include "./ecs.hpp"
+#include "./web_content.hpp"
+#include "./model_3d.hpp"
+
+namespace builtin_scene::model_renderer
+{
+  /**
+   * System to initialize 3D model rendering infrastructure.
+   * Similar to InitSystem in web_content_renderer.cpp
+   */
+  class InitSystem : public ecs::System
+  {
+  public:
+    void onExecute() override;
+  };
+
+  /**
+   * Base system for 3D model rendering operations.
+   * Follows the same pattern as RenderBaseSystem in web_content_renderer.cpp
+   */
+  class RenderBaseSystem : public ecs::System
+  {
+  protected:
+    void render(ecs::EntityId entity, WebContent &content);
+  };
+
+  /**
+   * System to load 3D model files (GLTF, GLB, 3DGS formats).
+   * Handles asynchronous loading and file format detection.
+   */
+  class LoadModelSystem : public RenderBaseSystem
+  {
+  public:
+    void onExecute() override;
+
+  private:
+    void render(ecs::EntityId entity, WebContent &content) override;
+    
+    // File format detection
+    Model3d::ModelType detectModelType(const std::string &src, const std::string &typeHint = "");
+    
+    // Loaders for different formats
+    bool loadGLTFModel(const std::string &filePath, Model3d &model);
+    bool loadGaussianSplattingModel(const std::string &filePath, Model3d &model);
+    
+    // 3DGS specific loaders
+    bool loadGSplatFile(const std::string &filePath, std::vector<GaussianSplat> &splats);
+    bool loadPlyFile(const std::string &filePath, std::vector<GaussianSplat> &splats);
+  };
+
+  /**
+   * System to render 3D Gaussian Splatting models using WebGL.
+   * This is the core client-side renderer for 3DGS content.
+   */
+  class Render3DGSSystem : public RenderBaseSystem
+  {
+  public:
+    Render3DGSSystem();
+    ~Render3DGSSystem();
+
+    void onExecute() override;
+
+  private:
+    void render(ecs::EntityId entity, WebContent &content) override;
+    
+    // WebGL rendering
+    bool initializeWebGL();
+    void shutdownWebGL();
+    
+    // 3DGS rendering pipeline
+    void renderGaussianSplats(const std::vector<GaussianSplat> &splats, 
+                             WebContent &content);
+    void sortSplats(std::vector<GaussianSplat> &splats, const float viewMatrix[16]);
+    
+    // Shader management
+    bool createShaderProgram();
+    void destroyShaderProgram();
+    
+    // WebGL resources
+    unsigned int shaderProgram_ = 0;
+    unsigned int vertexShader_ = 0;
+    unsigned int fragmentShader_ = 0;
+    unsigned int vao_ = 0;
+    unsigned int vbo_ = 0;
+    
+    bool webglInitialized_ = false;
+  };
+
+  /**
+   * System to render traditional 3D models (GLTF/GLB).
+   * Placeholder for future GLTF rendering implementation.
+   */
+  class RenderGLTFSystem : public RenderBaseSystem
+  {
+  public:
+    void onExecute() override;
+
+  private:
+    void render(ecs::EntityId entity, WebContent &content) override;
+  };
+
+  /**
+   * System to update WebGL textures for 3D models.
+   * Similar to UpdateTextureSystem in web_content_renderer.cpp
+   */
+  class UpdateTextureSystem : public RenderBaseSystem
+  {
+  public:
+    void onExecute() override;
+
+  private:
+    void render(ecs::EntityId entity, WebContent &content) override;
+  };
+
+  /**
+   * Plugin for 3D model rendering systems.
+   * This plugin registers all the systems needed for 3D model rendering,
+   * following the same pattern as WebContentPlugin.
+   */
+  class Model3dPlugin final : public ecs::Plugin
+  {
+  public:
+    using ecs::Plugin::Plugin;
+
+  protected:
+    void build(ecs::App &app) override
+    {
+      using namespace ecs;
+
+      // Register the Model3d component
+      app.registerComponent<Model3d>();
+
+      // Register systems in rendering order
+      auto initModel = System::Make<InitSystem>();
+      app.addSystem(SchedulerLabel::kPostStartup, initModel);
+
+      auto loadModel = System::Make<LoadModelSystem>();
+      auto render3DGS = System::Make<Render3DGSSystem>();
+      auto renderGLTF = System::Make<RenderGLTFSystem>();
+      auto updateTexture = System::Make<UpdateTextureSystem>();
+
+      // Chain systems for proper execution order
+      loadModel
+        ->chain(render3DGS)
+        ->chain(renderGLTF)
+        ->chain(updateTexture);
+      
+      app.addSystem(SchedulerLabel::kUpdate, loadModel);
+    }
+  };
+}

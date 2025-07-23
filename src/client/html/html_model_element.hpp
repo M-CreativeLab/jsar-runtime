@@ -3,6 +3,7 @@
 #include <string>
 #include <optional>
 #include <client/html/html_element.hpp>
+#include <client/builtin_scene/model_3d.hpp>
 
 namespace dom
 {
@@ -11,7 +12,7 @@ namespace dom
    * the layout and presentation of <model> elements used for 3D model rendering.
    *
    * This element supports various 3D model formats including:
-   * - GLTF/GLB models (existing support)
+   * - GLTF/GLB models
    * - 3DGS (3D Gaussian Splatting) models (.gsplat, .ply)
    */
   class HTMLModelElement : public HTMLElement
@@ -21,6 +22,11 @@ namespace dom
   public:
     HTMLModelElement(const HTMLModelElement &) = delete;
     HTMLModelElement &operator=(const HTMLModelElement &) = delete;
+
+    // HTMLElement lifecycle callbacks
+    void createdCallback(bool from_scripting) override;
+    void connectedCallback() override;
+    void attributeChangedCallback(const std::string &name, const std::string &oldValue, const std::string &newValue) override;
 
     /**
      * Get the source URL of the 3D model file.
@@ -77,8 +83,18 @@ namespace dom
     std::string loading_ = "auto";
 
     /**
-     * Internal method to load the 3D model based on current src and type.
+     * Create the Model3d component for this HTML element.
      */
-    void loadModel();
+    void createModelComponent();
+
+    /**
+     * Update the existing Model3d component with new attributes.
+     */
+    void updateModelComponent();
+
+    /**
+     * Detect the model type from source URL and type hint.
+     */
+    builtin_scene::Model3d::ModelType detectModelType(const std::string &src, const std::string &typeHint);
   };
 }
