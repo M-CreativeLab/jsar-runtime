@@ -32,7 +32,7 @@ struct CdpCommand
 {
   std::string name;
   std::string description;
-  std::function<std::string(const CdpMessage&)> handler;
+  std::function<std::string(const CdpMessage &)> handler;
 };
 
 // Base CDP Domain Handler
@@ -40,17 +40,19 @@ class CdpDomainHandler
 {
 public:
   virtual ~CdpDomainHandler() = default;
-  
+
   // Handle a method call for this domain
   virtual std::string handleMethod(const std::string &method, const CdpMessage &message, const std::string &clientId) = 0;
-  
+
   // Get domain metadata
   virtual std::string getDomainName() const = 0;
   virtual std::string getDomainDescription() const = 0;
   virtual std::vector<CdpCommand> getCommands() const = 0;
-  
+
   // Legacy method - kept for backward compatibility but will be removed
-  virtual void addProtocolDefinition(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator) {}
+  virtual void addProtocolDefinition(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
+  {
+  }
 };
 
 // CDP Handler - Main coordinator for CDP message processing
