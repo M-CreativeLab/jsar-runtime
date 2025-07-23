@@ -76,7 +76,7 @@ namespace client_cssom::values::generics
   };
 
   template <typename L, typename LP, typename Color>
-  class GenericGradient
+  class GenericGradient : public ToCss
   {
   public:
     class LinearGradient
@@ -123,6 +123,125 @@ namespace client_cssom::values::generics
         : gradient_type(LinearGradient{})
     {
     }
+
+    // CSS serialization implementation
+    std::string toCss() const override
+    {
+      if (std::holds_alternative<LinearGradient>(gradient_type))
+      {
+        const auto &linearGrad = std::get<LinearGradient>(gradient_type);
+        std::string functionName = repeating ? "repeating-linear-gradient" : "linear-gradient";
+
+        std::string direction;
+        switch (linearGrad.direction)
+        {
+        case LineDirection::kToRight:
+          direction = "to right";
+          break;
+        case LineDirection::kToLeft:
+          direction = "to left";
+          break;
+        case LineDirection::kToTop:
+          direction = "to top";
+          break;
+        case LineDirection::kToBottom:
+          direction = "to bottom";
+          break;
+        case LineDirection::kToTopLeft:
+          direction = "to top left";
+          break;
+        case LineDirection::kToTopRight:
+          direction = "to top right";
+          break;
+        case LineDirection::kToBottomLeft:
+          direction = "to bottom left";
+          break;
+        case LineDirection::kToBottomRight:
+          direction = "to bottom right";
+          break;
+        }
+
+        // Serialize color stops
+        std::string colorStops = serializeColorStops(linearGrad.items);
+        if (colorStops.empty())
+        {
+          colorStops = "transparent, transparent"; // Fallback
+        }
+
+        return functionName + "(" + direction + ", " + colorStops + ")";
+      }
+      else if (std::holds_alternative<RadialGradient>(gradient_type))
+      {
+        const auto &radialGrad = std::get<RadialGradient>(gradient_type);
+        std::string functionName = repeating ? "repeating-radial-gradient" : "radial-gradient";
+        std::string shape = (radialGrad.shape == RadialGradientShape::kCircle) ? "circle" : "ellipse";
+
+        std::string size;
+        switch (radialGrad.size)
+        {
+        case RadialGradientSize::kClosestSide:
+          size = "closest-side";
+          break;
+        case RadialGradientSize::kClosestCorner:
+          size = "closest-corner";
+          break;
+        case RadialGradientSize::kFarthestSide:
+          size = "farthest-side";
+          break;
+        case RadialGradientSize::kFarthestCorner:
+          size = "farthest-corner";
+          break;
+        }
+
+        // Serialize color stops
+        std::string colorStops = serializeColorStops(radialGrad.items);
+        if (colorStops.empty())
+        {
+          colorStops = "transparent, transparent"; // Fallback
+        }
+
+        std::string shapeSize = shape;
+        if (!size.empty())
+        {
+          shapeSize += " " + size;
+        }
+
+        return functionName + "(" + shapeSize + ", " + colorStops + ")";
+      }
+
+      return "none";
+    }
+
+  private:
+    // Helper method to serialize color stops
+    template<typename ItemVector>
+    std::string serializeColorStops(const ItemVector& items) const
+    {
+      std::string colorStops;
+      for (size_t i = 0; i < items.size(); ++i)
+      {
+        if (i > 0)
+          colorStops += ", ";
+        
+        const auto &item = items[i];
+        if (item.type == GenericGradientItemBase::kSimpleColorStop)
+        {
+          const auto &colorStop = std::get<typename GenericGradientItem<Color, LP>::SimpleColorStop>(item.value);
+          colorStops += colorStop.color.toCss();
+        }
+        else if (item.type == GenericGradientItemBase::kComplexColorStop)
+        {
+          const auto &colorStop = std::get<typename GenericGradientItem<Color, LP>::ComplexColorStop>(item.value);
+          colorStops += colorStop.color.toCss() + " " + colorStop.length_percentage.toCss();
+        }
+        else if (item.type == GenericGradientItemBase::kInterpolationHint)
+        {
+          const auto &hint = std::get<typename GenericGradientItem<Color, LP>::InterpolationHint>(item.value);
+          colorStops += hint.length_percentage.toCss();
+        }
+      }
+      return colorStops;
+    }
   };
 
   template <typename G, typename ImageUrl>
@@ -147,9 +266,9 @@ namespace client_cssom::values::generics
       }
       else if (std::holds_alternative<G>(*this))
       {
-        // For gradients, we need a way to serialize them
-        // This is a basic implementation - derived classes can override for more specific behavior
-        return "gradient()"; // Placeholder - should be overridden by specific implementations
+        // Call the gradient's toCss() method
+        const auto &gradient = std::get<G>(*this);
+        return gradient.toCss();
       }
       return "none";
     }
