@@ -297,4 +297,175 @@ namespace client_cssom::values::generics
   protected:
     Tag tag_;
   };
+
+  template <typename T>
+  class GenericBackgroundOrigin : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kPaddingBox = 0,
+      kBorderBox,
+      kContentBox,
+    };
+
+  public:
+    static T PaddingBox()
+    {
+      return T(kPaddingBox);
+    }
+    static T BorderBox()
+    {
+      return T(kBorderBox);
+    }
+    static T ContentBox()
+    {
+      return T(kContentBox);
+    }
+
+  public:
+    GenericBackgroundOrigin()
+        : tag_(kPaddingBox)
+    {
+    }
+
+  protected:
+    GenericBackgroundOrigin(Tag tag)
+        : tag_(tag)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kPaddingBox:
+        return "padding-box";
+      case kBorderBox:
+        return "border-box";
+      case kContentBox:
+        return "content-box";
+      }
+      return "";
+    }
+
+    inline bool isPaddingBox() const
+    {
+      return tag_ == kPaddingBox;
+    }
+    inline bool isBorderBox() const
+    {
+      return tag_ == kBorderBox;
+    }
+    inline bool isContentBox() const
+    {
+      return tag_ == kContentBox;
+    }
+
+  protected:
+    Tag tag_;
+  };
+
+  template <typename T>
+  class GenericBackgroundRepeat : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kRepeat = 0,
+      kRepeatX,
+      kRepeatY,
+      kNoRepeat,
+      kSpace,
+      kRound,
+    };
+
+  public:
+    static T Repeat()
+    {
+      return T(kRepeat);
+    }
+    static T RepeatX()
+    {
+      return T(kRepeatX);
+    }
+    static T RepeatY()
+    {
+      return T(kRepeatY);
+    }
+    static T NoRepeat()
+    {
+      return T(kNoRepeat);
+    }
+    static T Space()
+    {
+      return T(kSpace);
+    }
+    static T Round()
+    {
+      return T(kRound);
+    }
+
+  public:
+    GenericBackgroundRepeat()
+        : tag_(kRepeat)
+    {
+    }
+
+  protected:
+    GenericBackgroundRepeat(Tag tag)
+        : tag_(tag)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kRepeat:
+        return "repeat";
+      case kRepeatX:
+        return "repeat-x";
+      case kRepeatY:
+        return "repeat-y";
+      case kNoRepeat:
+        return "no-repeat";
+      case kSpace:
+        return "space";
+      case kRound:
+        return "round";
+      }
+      return "";
+    }
+
+    inline bool isRepeat() const
+    {
+      return tag_ == kRepeat;
+    }
+    inline bool isRepeatX() const
+    {
+      return tag_ == kRepeatX;
+    }
+    inline bool isRepeatY() const
+    {
+      return tag_ == kRepeatY;
+    }
+    inline bool isNoRepeat() const
+    {
+      return tag_ == kNoRepeat;
+    }
+    inline bool isSpace() const
+    {
+      return tag_ == kSpace;
+    }
+    inline bool isRound() const
+    {
+      return tag_ == kRound;
+    }
+
+  protected:
+    Tag tag_;
+  };
 }

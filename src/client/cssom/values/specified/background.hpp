@@ -132,4 +132,88 @@ namespace client_cssom::values::specified
       return computed::BackgroundClip::BorderBox();
     }
   };
+
+  class BackgroundOrigin : public generics::GenericBackgroundOrigin<BackgroundOrigin>,
+                           public Parse,
+                           public ToComputedValue<computed::BackgroundOrigin>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundOrigin<BackgroundOrigin>::GenericBackgroundOrigin;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "padding-box")
+        tag_ = kPaddingBox;
+      else if (input == "border-box")
+        tag_ = kBorderBox;
+      else if (input == "content-box")
+        tag_ = kContentBox;
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundOrigin toComputedValue(computed::Context &) const override
+    {
+      if (isPaddingBox())
+        return computed::BackgroundOrigin::PaddingBox();
+      else if (isBorderBox())
+        return computed::BackgroundOrigin::BorderBox();
+      else if (isContentBox())
+        return computed::BackgroundOrigin::ContentBox();
+
+      // Default to PaddingBox if none match
+      return computed::BackgroundOrigin::PaddingBox();
+    }
+  };
+
+  class BackgroundRepeat : public generics::GenericBackgroundRepeat<BackgroundRepeat>,
+                           public Parse,
+                           public ToComputedValue<computed::BackgroundRepeat>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundRepeat<BackgroundRepeat>::GenericBackgroundRepeat;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "repeat")
+        tag_ = kRepeat;
+      else if (input == "repeat-x")
+        tag_ = kRepeatX;
+      else if (input == "repeat-y")
+        tag_ = kRepeatY;
+      else if (input == "no-repeat")
+        tag_ = kNoRepeat;
+      else if (input == "space")
+        tag_ = kSpace;
+      else if (input == "round")
+        tag_ = kRound;
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundRepeat toComputedValue(computed::Context &) const override
+    {
+      if (isRepeat())
+        return computed::BackgroundRepeat::Repeat();
+      else if (isRepeatX())
+        return computed::BackgroundRepeat::RepeatX();
+      else if (isRepeatY())
+        return computed::BackgroundRepeat::RepeatY();
+      else if (isNoRepeat())
+        return computed::BackgroundRepeat::NoRepeat();
+      else if (isSpace())
+        return computed::BackgroundRepeat::Space();
+      else if (isRound())
+        return computed::BackgroundRepeat::Round();
+
+      // Default to Repeat if none match
+      return computed::BackgroundRepeat::Repeat();
+    }
+  };
 }
