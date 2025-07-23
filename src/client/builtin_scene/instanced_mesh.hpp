@@ -27,17 +27,17 @@ namespace builtin_scene
         : transform(1.0f)
         , color(1.0f, 1.0f, 1.0f, 0.0f)
         , texUvOffset(0.0f, 0.0f)
+        , texUvOffsetR(0.0f, 0.0f)
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
-        , texUvOffsetR(0.0f, 0.0f)
     {
     }
-    glm::mat4 transform;   /** 16 */
-    glm::vec4 color;       /** 20 */
-    glm::vec2 texUvOffset; /** 22 - Left eye texture coordinates */
-    glm::vec2 texUvScale;  /** 24 - Shared texture scale for both eyes */
+    glm::mat4 transform;    /** 16 */
+    glm::vec4 color;        /** 20 */
+    glm::vec2 texUvOffset;  /** 22 - Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR; /** 24 - Right eye texture coordinates */
+    glm::vec2 texUvScale;   /** 26 - Shared texture scale for both eyes */
     uint32_t texLayerIndex; /** Shared texture layer for both eyes */
-    glm::vec2 texUvOffsetR; /** 26 - Right eye texture coordinates */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -84,10 +84,10 @@ namespace builtin_scene
                     uint32_t layerIndex,
                     bool &hasChanged);
     void setSpatialTexture(std::array<float, 2> uvOffsetLeft,
-                          std::array<float, 2> uvScale,
-                          uint32_t layerIndex,
-                          std::array<float, 2> uvOffsetRight,
-                          bool &hasChanged);
+                           std::array<float, 2> uvScale,
+                           uint32_t layerIndex,
+                           std::array<float, 2> uvOffsetRight,
+                           bool &hasChanged);
     void disableTexture(bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \

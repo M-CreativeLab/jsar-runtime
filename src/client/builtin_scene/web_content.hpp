@@ -180,25 +180,17 @@ namespace builtin_scene
     {
       return *texture_;
     }
-    
+
     // Spatial image support
     inline bool isSpatial() const
     {
-      return is_spatial_;
+      return is_spatialized_;
     }
     inline void setSpatial(bool spatial)
     {
-      is_spatial_ = spatial;
+      is_spatialized_ = spatial;
     }
-    
-    inline std::shared_ptr<Texture> leftEyeTextureRect() const
-    {
-      return is_spatial_ ? left_eye_texture_ : texture_;
-    }
-    inline std::shared_ptr<Texture> rightEyeTextureRect() const
-    {
-      return is_spatial_ ? right_eye_texture_ : texture_;
-    }
+
     // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
     inline int texturePad() const
     {
@@ -212,14 +204,7 @@ namespace builtin_scene
      * @returns The texture or `nullptr` if the texture is not used.
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
-    
-    /**
-     * Init or resize spatial textures for stereo rendering.
-     *
-     * @param textureAtlas The texture atlas to create or resize the textures.
-     * @returns True if both textures were successfully initialized/resized.
-     */
-    bool resizeOrInitSpatialTextures(TextureAtlas &textureAtlas);
+
     inline void setEnabled(bool enabled)
     {
       enabled_ = enabled;
@@ -285,8 +270,6 @@ namespace builtin_scene
     glm::vec4 background_color_;
 
     std::shared_ptr<Texture> texture_;
-    std::shared_ptr<Texture> left_eye_texture_;  // For spatial images
-    std::shared_ptr<Texture> right_eye_texture_; // For spatial images
     float device_pixel_ratio_ = 1.0f;
     int texture_pad_ = 2;
     bool enabled_ = true;
@@ -294,7 +277,7 @@ namespace builtin_scene
     bool is_opaque_ = false;
     bool is_visible_ = true;
     bool is_dirty_ = true;
-    bool is_spatial_ = false;
+    bool is_spatialized_ = false;
   };
 
   class WebContentContext : public ecs::Resource

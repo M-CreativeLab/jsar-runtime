@@ -509,34 +509,30 @@ namespace builtin_scene
 
         auto textureRect = webContentComponent->textureRect();
         int texturePad = webContentComponent->texturePad();
-        
+
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
-          
-          // Handle spatial images by setting both left and right eye texture coordinates
+
+          // For spatial images, the texture atlas system handles left/right eye regions
+          // via instance data coordinates set in setSpatialTexture method
           if (webContentComponent->isSpatial())
           {
-            auto leftTextureRect = webContentComponent->leftEyeTextureRect();
-            auto rightTextureRect = webContentComponent->rightEyeTextureRect();
-            
-            if (leftTextureRect != nullptr && rightTextureRect != nullptr)
-            {
-              instance.setSpatialTexture(
-                leftTextureRect->getUvOffset(texturePad),
-                leftTextureRect->getUvScale(texturePad),
-                leftTextureRect->layer,
-                rightTextureRect->getUvOffset(texturePad),
-                hasChanged);
-            }
-            else
-            {
-              // Fallback to regular texture if spatial textures are not available
-              instance.setTexture(textureRect->getUvOffset(texturePad),
-                                  textureRect->getUvScale(texturePad),
-                                  textureRect->layer,
-                                  hasChanged);
-            }
+            // Calculate left and right eye texture coordinates for spatial images
+            auto uvOffset = textureRect->getUvOffset(texturePad);
+            auto uvScale = textureRect->getUvScale(texturePad);
+
+            // Left eye uses left half, right eye uses right half
+            glm::vec2 leftUvOffset = uvOffset;
+            glm::vec2 rightUvOffset = glm::vec2(uvOffset.x + uvScale.x * 0.5f, uvOffset.y);
+            glm::vec2 halfUvScale = glm::vec2(uvScale.x * 0.5f, uvScale.y);
+
+            instance.setSpatialTexture(
+              leftUvOffset,
+              halfUvScale,
+              textureRect->layer,
+              rightUvOffset,
+              hasChanged);
           }
           else
           {

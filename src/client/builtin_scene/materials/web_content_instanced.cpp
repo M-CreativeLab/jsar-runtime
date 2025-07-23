@@ -11,8 +11,6 @@
 #include "../image.hpp"
 #include "./web_content_instanced.hpp"
 
-#include "./web_content_instanced.hpp"
-
 namespace builtin_scene::materials
 {
   using namespace std;

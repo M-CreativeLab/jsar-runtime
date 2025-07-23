@@ -229,67 +229,6 @@ namespace builtin_scene
     return texture_;
   }
 
-  bool WebContent::resizeOrInitSpatialTextures(TextureAtlas &textureAtlas)
-  {
-    if (!is_texture_using_)
-    {
-      // Remove textures from atlas if not used
-      if (left_eye_texture_ != nullptr)
-      {
-        textureAtlas.removeTexture(*left_eye_texture_);
-        left_eye_texture_ = nullptr;
-      }
-      if (right_eye_texture_ != nullptr)
-      {
-        textureAtlas.removeTexture(*right_eye_texture_);
-        right_eye_texture_ = nullptr;
-      }
-      return false;
-    }
-
-    float w = physicalWidth();
-    float h = physicalHeight();
-    
-    // For spatial images, each eye texture is half the width
-    float halfWidth = w / 2.0f;
-
-    // Initialize or resize left eye texture
-    if (left_eye_texture_ == nullptr)
-      left_eye_texture_ = textureAtlas.addTexture(halfWidth, h, true);
-    else
-      left_eye_texture_ = textureAtlas.resizeTexture(left_eye_texture_, halfWidth, h, true);
-
-    // Initialize or resize right eye texture
-    if (right_eye_texture_ == nullptr)
-      right_eye_texture_ = textureAtlas.addTexture(halfWidth, h, true);
-    else
-      right_eye_texture_ = textureAtlas.resizeTexture(right_eye_texture_, halfWidth, h, true);
-
-    if (left_eye_texture_ == nullptr || right_eye_texture_ == nullptr) [[unlikely]]
-    {
-      cerr << "Failed to resize or initialize spatial textures for WebContent: " << name_ << endl
-           << "  expected size per eye: " << halfWidth << "x" << h << endl
-           << "  device pixel ratio: " << device_pixel_ratio_ << endl;
-      
-      // Clean up any partially allocated textures
-      if (left_eye_texture_ != nullptr)
-      {
-        textureAtlas.removeTexture(*left_eye_texture_);
-        left_eye_texture_ = nullptr;
-      }
-      if (right_eye_texture_ != nullptr)
-      {
-        textureAtlas.removeTexture(*right_eye_texture_);
-        right_eye_texture_ = nullptr;
-      }
-      
-      assert(false && "Failed to resize or initialize spatial textures.");
-      return false;
-    }
-    
-    return true;
-  }
-
   skia::textlayout::TextStyle WebContent::textStyle() const
   {
     const WebContentTextStyle &sourceTextStyle = content_style_.textStyle;

@@ -11,11 +11,6 @@
 #include "../ecs.hpp"
 #include "./color.hpp"
 
-namespace builtin_scene
-{
-  class Image2d; // Forward declaration
-}
-
 namespace builtin_scene::materials
 {
   class WebContentInstancedMaterial final : public Material

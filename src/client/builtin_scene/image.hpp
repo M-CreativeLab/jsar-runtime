@@ -14,14 +14,14 @@ namespace builtin_scene
     Image2d(std::string src, std::shared_ptr<SkBitmap> bitmap)
         : src(src)
         , bitmap(bitmap)
-        , is_spatial_(false)
+        , is_spatialized_(false)
     {
     }
 
     Image2d(std::string src, std::shared_ptr<SkBitmap> bitmap, bool is_spatial)
         : src(src)
         , bitmap(bitmap)
-        , is_spatial_(is_spatial)
+        , is_spatialized_(is_spatial)
     {
     }
 
@@ -46,12 +46,12 @@ namespace builtin_scene
 
     inline bool isSpatial() const
     {
-      return is_spatial_;
+      return is_spatialized_;
     }
 
     inline void setSpatial(bool is_spatial)
     {
-      is_spatial_ = is_spatial;
+      is_spatialized_ = is_spatial;
     }
 
   public:
@@ -60,6 +60,6 @@ namespace builtin_scene
 
   private:
     bool visible_ = true;
-    bool is_spatial_ = false;
+    bool is_spatialized_ = false;
   };
 }
