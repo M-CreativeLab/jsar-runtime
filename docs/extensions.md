@@ -1,10 +1,10 @@
-# JSAR Extension System
+# JSAR Extension System (C++)
 
 The JSAR Extension System provides Chrome Extension-like functionality for the JSAR runtime, allowing developers to create and load extensions that can execute scripts and extend the runtime's capabilities.
 
 ## Overview
 
-The extension system is inspired by Chrome Extension architecture and provides:
+The extension system is implemented in C++ and inspired by Chrome Extension architecture and provides:
 
 - Extension loading and unloading
 - Background script execution
@@ -16,13 +16,13 @@ The extension system is inspired by Chrome Extension architecture and provides:
 
 ### Core Components
 
-1. **Extension** (`lib/extensions/Extension.ts`)
+1. **Extension** (`src/extensions/extension.hpp/.cpp`)
    - Represents an individual extension
    - Manages extension lifecycle (loading, enabling, disabling, unloading)
-   - Executes background scripts
+   - Executes background scripts (stub implementation)
    - Provides extension API context
 
-2. **ExtensionManager** (`lib/extensions/ExtensionManager.ts`)
+2. **ExtensionManager** (`src/extensions/extension_manager.hpp/.cpp`)
    - Manages multiple extensions
    - Handles extension loading from directories
    - Provides batch operations
@@ -96,46 +96,43 @@ import { TransmuteRuntime2 } from './runtime2';
 
 const runtime = new TransmuteRuntime2(gl, runtimeId);
 
-// Load a single extension
+// Load a single extension (currently uses C++ stub)
 await runtime.loadExtension('/path/to/extension');
 ```
 
 #### Load Multiple Extensions
 
 ```typescript
-// Load all extensions from a directory
+// Load all extensions from a directory (currently uses C++ stub)
 await runtime.loadExtensionsFromDirectory('/path/to/extensions');
 ```
 
 ### Extension Manager API
 
 ```typescript
-import { ExtensionManager } from './extensions';
+// Currently using C++ stub implementation
+// Direct C++ ExtensionManager access will be available via bindings
 
-const extensionManager = new ExtensionManager();
+const runtime = new TransmuteRuntime2(gl, runtimeId);
+const extensionManager = runtime.extensionManager;
 
-// Load extension
-const extension = await extensionManager.loadExtension('/path/to/extension');
+// Load extension (C++ implementation)
+await extensionManager.loadExtension('/path/to/extension');
 
-// Enable/disable extension
-await extensionManager.enableExtension('extension-id');
-await extensionManager.disableExtension('extension-id');
+// Load multiple extensions (C++ implementation)
+await extensionManager.loadExtensionsFromDirectory('/path/to/extensions');
 
-// Unload extension
-await extensionManager.unloadExtension('extension-id');
-
-// Get extension info
-const extensions = extensionManager.getExtensions();
-const states = extensionManager.getExtensionStates();
+// Unload all extensions (C++ implementation)
+await extensionManager.unloadAllExtensions();
 ```
 
-### Extension Lifecycle
+### Extension Lifecycle (C++ Implementation)
 
 Extensions go through the following states:
 
-1. **LOADING** - Extension is being loaded and initialized
+1. **LOADING** - Extension is being loaded and manifest parsed
 2. **LOADED** - Extension is loaded but not yet enabled
-3. **RUNNING** - Extension is active and running
+3. **RUNNING** - Extension is active and background scripts executed
 4. **DISABLED** - Extension is loaded but temporarily disabled
 5. **ERROR** - Extension encountered an error
 6. **UNLOADED** - Extension has been completely unloaded

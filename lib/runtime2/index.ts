@@ -12,8 +12,9 @@ import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
 import { Threepio } from './threepio';
 
-// extensions
-import { ExtensionManager } from '../extensions';
+// extensions - C++ implementation
+// TODO: Add proper C++ bindings for extension system
+import { ExtensionManager, ExtensionLoadOptions } from './extensions-stub';
 
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
@@ -227,7 +228,7 @@ export class TransmuteRuntime2 extends EventTarget {
   /**
    * Load an extension from a directory
    */
-  async loadExtension(extensionPath: string, options?: { enabled?: boolean }): Promise<void> {
+  async loadExtension(extensionPath: string, options?: ExtensionLoadOptions): Promise<void> {
     try {
       await this.#extensionManager.loadExtension(extensionPath, options);
       console.info(`[Runtime:${this.id}] Extension loaded from: ${extensionPath}`);
@@ -242,8 +243,8 @@ export class TransmuteRuntime2 extends EventTarget {
    */
   async loadExtensionsFromDirectory(extensionsDir: string): Promise<void> {
     try {
-      const extensions = await this.#extensionManager.loadExtensionsFromDirectory(extensionsDir);
-      console.info(`[Runtime:${this.id}] Loaded ${extensions.length} extensions from: ${extensionsDir}`);
+      await this.#extensionManager.loadExtensionsFromDirectory(extensionsDir);
+      console.info(`[Runtime:${this.id}] Loaded extensions from: ${extensionsDir}`);
     } catch (error) {
       console.error(`[Runtime:${this.id}] Failed to load extensions from ${extensionsDir}:`, error);
       throw error;

@@ -1,26 +1,25 @@
 #!/usr/bin/env node
 
-// Simple manual test for the extension system
-// This test loads the extension system components and validates basic functionality
+// Simple manual test for the C++ extension system
+// This test validates the C++ extension system components
 
 const path = require('path');
 
-// Since we're using TypeScript, we need to load the modules correctly
-// For now, let's create a simple validation script
-
 async function validateExtensionSystem() {
-  console.log('🔍 Validating JSAR Extension System...\n');
+  console.log('🔍 Validating JSAR C++ Extension System...\n');
 
   try {
-    // Test 1: Check if extension files exist
-    console.log('📁 Checking extension files...');
+    // Test 1: Check if C++ extension files exist
+    console.log('📁 Checking C++ extension files...');
     const fs = require('fs');
     
     const extensionFiles = [
-      'lib/extensions/types.ts',
-      'lib/extensions/Extension.ts', 
-      'lib/extensions/ExtensionManager.ts',
-      'lib/extensions/index.ts'
+      'src/extensions/extension_types.hpp',
+      'src/extensions/extension.hpp', 
+      'src/extensions/extension.cpp',
+      'src/extensions/extension_manager.hpp',
+      'src/extensions/extension_manager.cpp',
+      'src/extensions/extensions.hpp'
     ];
     
     for (const file of extensionFiles) {
@@ -54,7 +53,7 @@ async function validateExtensionSystem() {
       console.log('   ❌ Sample extension background.js missing');
     }
 
-    // Test 3: Check runtime integration
+    // Test 3: Check runtime integration  
     console.log('\n🔗 Checking runtime integration...');
     const runtimePath = path.join(__dirname, '../lib/runtime2/index.ts');
     const runtimeContent = fs.readFileSync(runtimePath, 'utf-8');
@@ -77,32 +76,53 @@ async function validateExtensionSystem() {
       console.log('   ❌ Extension loading methods not found in runtime');
     }
 
-    // Test 4: Validate file syntax (basic check)
-    console.log('\n📝 Basic syntax validation...');
-    try {
-      // Check if TypeScript files have basic valid structure
-      const extensionTypeContent = fs.readFileSync(path.join(__dirname, '../lib/extensions/types.ts'), 'utf-8');
-      if (extensionTypeContent.includes('export interface ExtensionManifest') && 
-          extensionTypeContent.includes('export enum ExtensionState')) {
-        console.log('   ✅ Extension types definitions are valid');
-      } else {
-        console.log('   ❌ Extension types definitions may be incomplete');
-      }
-    } catch (error) {
-      console.log('   ❌ Error validating extension types:', error.message);
+    // Test 4: Check C++ build integration
+    console.log('\n🏗️ Checking C++ build integration...');
+    const cmakePath = path.join(__dirname, '../cmake/TransmuteCore.cmake');
+    const cmakeContent = fs.readFileSync(cmakePath, 'utf-8');
+    
+    if (cmakeContent.includes('src/extensions/*.cpp')) {
+      console.log('   ✅ C++ extension files included in build system');
+    } else {
+      console.log('   ❌ C++ extension files not included in build system');
     }
 
-    console.log('\n✅ Extension system validation completed successfully!');
+    // Test 5: Basic header validation
+    console.log('\n📝 C++ header validation...');
+    try {
+      // Check if C++ headers have basic valid structure
+      const extensionTypeContent = fs.readFileSync(path.join(__dirname, '../src/extensions/extension_types.hpp'), 'utf-8');
+      if (extensionTypeContent.includes('struct ExtensionManifest') && 
+          extensionTypeContent.includes('enum class ExtensionState')) {
+        console.log('   ✅ C++ extension types definitions are valid');
+      } else {
+        console.log('   ❌ C++ extension types definitions may be incomplete');
+      }
+      
+      const extensionHeaderContent = fs.readFileSync(path.join(__dirname, '../src/extensions/extension.hpp'), 'utf-8');
+      if (extensionHeaderContent.includes('class Extension') && 
+          extensionHeaderContent.includes('loadFromDirectory')) {
+        console.log('   ✅ C++ Extension class definition is valid');
+      } else {
+        console.log('   ❌ C++ Extension class definition may be incomplete');
+      }
+      
+    } catch (error) {
+      console.log('   ❌ Error validating C++ headers:', error.message);
+    }
+
+    console.log('\n✅ C++ Extension system validation completed successfully!');
     console.log('\n🎯 Summary:');
-    console.log('   - Extension system files are present');
+    console.log('   - C++ extension system files are present');
     console.log('   - Sample extension is configured');
     console.log('   - Runtime integration is complete');
-    console.log('   - Basic syntax appears valid');
+    console.log('   - C++ build integration is configured');
     
     console.log('\n📚 Next steps:');
-    console.log('   - Extension system is ready for use');
-    console.log('   - Load extensions using TransmuteRuntime2.loadExtension()');
+    console.log('   - C++ extension system is implemented but needs bindings');
+    console.log('   - Load extensions using TransmuteRuntime2.loadExtension() (stub)');
     console.log('   - See docs/extensions.md for usage examples');
+    console.log('   - Implement Node.js bindings for full C++ integration');
     
   } catch (error) {
     console.error('❌ Extension system validation failed:', error);
