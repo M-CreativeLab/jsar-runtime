@@ -578,11 +578,11 @@
 
         entry.innerHTML = `
           <div class="command-header">
-            <span class="command-type ${typeClass}">${command.type || 'UNKNOWN'}</span>
+            <span class="command-type ${typeClass}">${command.typeName}(${command.type || 'UNKNOWN'})</span>
             <span class="command-timestamp">${timestamp}</span>
           </div>
           <div class="command-details">
-            <span class="command-param">ID:</span> <span class="command-value">${command.commandId || 'N/A'}</span> |
+            <span class="command-param">ID:</span> <span class="command-value">${command.id || 'N/A'}</span> |
             <span class="command-param">Context:</span> <span class="command-value">${command.contextId || 'N/A'}</span>
             ${command.xrInfo ? `| <span class="command-param">XR Session:</span> <span class="command-value">${command.xrInfo.sessionId}</span>` : ''}
           </div>
