@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
 #include <skia/include/core/SkRRect.h>
@@ -10,6 +11,7 @@
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
+
 #include <client/layout/fragment.hpp>
 #include <client/canvas/image_codec.hpp>
 #include <client/cssom/computed_style.hpp>
@@ -702,74 +704,95 @@ namespace builtin_scene::web_renderer
     if (textContent.empty())
       return nullopt;
 
+    // Try to get the font and text style for path creation
+    const auto &fragment = content.fragment();
+    if (!fragment.has_value())
+      return nullopt;
+
     SkPath textPath;
+    auto clientContext = TrClientContextPerProcess::Get();
 
     // Create paragraph to get text layout
-    auto clientContext = TrClientContextPerProcess::Get();
-    auto fontCollection = clientContext->getFontCacheManager();
+    sk_sp<FontCollection> fontCollection = clientContext->getFontCacheManager();
     auto paragraphStyle = content.paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection);
     paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
     paragraphBuilder->addText(textContent.c_str(), textContent.size());
     paragraphBuilder->pop();
 
-    auto layoutWidth = round(content.fragment()->contentWidth()) + 1.0f;
+    float layoutWidth = round(content.fragment()->contentWidth()) + 1.0f;
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
 
-    // Try to get the font and text style for path creation
-    const auto &fragment = content.fragment();
-    if (!fragment.has_value())
-      return textPath;
+    // Get the font from the text style
+    const auto &textStyle = paragraphStyle.getTextStyle();
+    sk_sp<SkTypeface> typeface = nullptr;
 
-    // Get the text style to create font-based paths
-    auto textStyle = paragraphStyle.getTextStyle();
-    auto typeface = textStyle.getTypeface();
-    auto fontSize = textStyle.getFontSize();
-    
-    if (!typeface) {
-      // Fallback to rectangular approximation if no typeface available
-      float textHeight = paragraph->getHeight();
-      float textWidth = paragraph->getMaxIntrinsicWidth();
-      float actualWidth = std::min(textWidth, fragment->contentWidth());
-      float actualHeight = std::min(textHeight, fragment->contentHeight());
-      textPath.addRect(SkRect::MakeWH(actualWidth, actualHeight));
-      return textPath;
-    }
-
-    // Create font for glyph path extraction
-    SkFont font(typeface, fontSize);
-    
-    // Convert text to glyph IDs
-    std::vector<SkGlyphID> glyphs;
-    auto glyphCount = font.textToGlyphs(textContent.data(), textContent.size(), 
-                                       SkTextEncoding::kUTF8, nullptr, 0);
-    if (glyphCount > 0) {
-      glyphs.resize(glyphCount);
-      font.textToGlyphs(textContent.data(), textContent.size(), 
-                       SkTextEncoding::kUTF8, glyphs.data(), glyphCount);
-    }
-
-    // Get glyph paths and positions
-    SkScalar y = fontSize; // Start at baseline
-    SkScalar x = 0;
-    
-    for (auto glyphId : glyphs) {
-      SkPath glyphPath;
-      if (font.getPath(glyphId, &glyphPath)) {
-        // Transform the glyph path to the correct position
-        SkMatrix transform = SkMatrix::Translate(x, y);
-        glyphPath.transform(transform);
-        textPath.addPath(glyphPath);
+    // Try to get typeface from font families
+    if (textStyle.getFontFamilies().size() > 0)
+    {
+      auto typefaces = fontCollection->findTypefaces(textStyle.getFontFamilies(), textStyle.getFontStyle());
+      if (!typefaces.empty())
+      {
+        // Use the first matching typeface
+        typeface = typefaces[0];
       }
-      
-      // Advance to next glyph position
-      SkScalar advance;
-      font.getWidths(&glyphId, 1, &advance);
-      x += advance;
     }
 
-    return textPath;
+    if (!typeface)
+    {
+      // Fallback to default typeface
+      typeface = fontCollection->defaultFallback();
+    }
+
+    if (typeface)
+    {
+      SkFont font(typeface, textStyle.getFontSize());
+
+      // Convert text to glyphs
+      std::vector<SkGlyphID> glyphs(textContent.size());
+      int glyphCount = font.textToGlyphs(textContent.c_str(),
+                                         textContent.size(),
+                                         SkTextEncoding::kUTF8,
+                                         glyphs.data(),
+                                         glyphs.size());
+
+      if (glyphCount > 0)
+      {
+        glyphs.resize(glyphCount);
+
+        // Get glyph positions (simplified positioning)
+        std::vector<SkPoint> positions(glyphCount);
+        std::vector<SkScalar> widths(glyphCount);
+        font.getWidths(glyphs.data(), glyphCount, widths.data());
+
+        float x = 0;
+        float y = textStyle.getFontSize(); // Use font size as baseline
+
+        for (int i = 0; i < glyphCount; ++i)
+        {
+          positions[i] = SkPoint::Make(x, y);
+          x += widths[i];
+        }
+
+        // Get paths for each glyph and add to textPath
+        for (int i = 0; i < glyphCount; ++i)
+        {
+          SkPath glyphPath;
+          if (font.getPath(glyphs[i], &glyphPath))
+          {
+            // Transform glyph path to its position
+            SkMatrix transform = SkMatrix::Translate(positions[i].x(), positions[i].y());
+            glyphPath.transform(transform);
+            textPath.addPath(glyphPath);
+          }
+        }
+      }
+    }
+
+    return textPath.isEmpty()
+             ? nullopt
+             : optional<SkPath>(textPath);
   }
 
   // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
