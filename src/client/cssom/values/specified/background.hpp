@@ -216,4 +216,84 @@ namespace client_cssom::values::specified
       return computed::BackgroundRepeat::Repeat();
     }
   };
+
+  class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>,
+                         public Parse,
+                         public ToComputedValue<computed::BackgroundSize>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "auto")
+        tag_ = kAuto;
+      else if (input == "cover")
+        tag_ = kCover;
+      else if (input == "contain")
+        tag_ = kContain;
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundSize toComputedValue(computed::Context &) const override
+    {
+      if (isAuto())
+        return computed::BackgroundSize::Auto();
+      else if (isCover())
+        return computed::BackgroundSize::Cover();
+      else if (isContain())
+        return computed::BackgroundSize::Contain();
+
+      // Default to Auto if none match
+      return computed::BackgroundSize::Auto();
+    }
+  };
+
+  class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>,
+                             public Parse,
+                             public ToComputedValue<computed::BackgroundPosition>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "left")
+        tag_ = kLeft;
+      else if (input == "center")
+        tag_ = kCenter;
+      else if (input == "right")
+        tag_ = kRight;
+      else if (input == "top")
+        tag_ = kTop;
+      else if (input == "bottom")
+        tag_ = kBottom;
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundPosition toComputedValue(computed::Context &) const override
+    {
+      if (isLeft())
+        return computed::BackgroundPosition::Left();
+      else if (isCenter())
+        return computed::BackgroundPosition::Center();
+      else if (isRight())
+        return computed::BackgroundPosition::Right();
+      else if (isTop())
+        return computed::BackgroundPosition::Top();
+      else if (isBottom())
+        return computed::BackgroundPosition::Bottom();
+
+      // Default to Center if none match
+      return computed::BackgroundPosition::Center();
+    }
+  };
 }

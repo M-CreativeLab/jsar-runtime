@@ -468,4 +468,178 @@ namespace client_cssom::values::generics
   protected:
     Tag tag_;
   };
+
+  template <typename T>
+  class GenericBackgroundSize : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kAuto = 0,
+      kCover,
+      kContain,
+      kLengthPercentage,
+    };
+
+  public:
+    static T Auto()
+    {
+      return T(kAuto);
+    }
+    static T Cover()
+    {
+      return T(kCover);
+    }
+    static T Contain()
+    {
+      return T(kContain);
+    }
+
+  public:
+    GenericBackgroundSize()
+        : tag_(kAuto)
+    {
+    }
+
+  protected:
+    GenericBackgroundSize(Tag tag)
+        : tag_(tag)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kAuto:
+        return "auto";
+      case kCover:
+        return "cover";
+      case kContain:
+        return "contain";
+      case kLengthPercentage:
+        return ""; // Will be overridden by derived classes
+      }
+      return "";
+    }
+
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isCover() const
+    {
+      return tag_ == kCover;
+    }
+    inline bool isContain() const
+    {
+      return tag_ == kContain;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
+
+  protected:
+    Tag tag_;
+  };
+
+  template <typename T>
+  class GenericBackgroundPosition : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kLeft = 0,
+      kCenter,
+      kRight,
+      kTop,
+      kBottom,
+      kLengthPercentage,
+    };
+
+  public:
+    static T Left()
+    {
+      return T(kLeft);
+    }
+    static T Center()
+    {
+      return T(kCenter);
+    }
+    static T Right()
+    {
+      return T(kRight);
+    }
+    static T Top()
+    {
+      return T(kTop);
+    }
+    static T Bottom()
+    {
+      return T(kBottom);
+    }
+
+  public:
+    GenericBackgroundPosition()
+        : tag_(kCenter)
+    {
+    }
+
+  protected:
+    GenericBackgroundPosition(Tag tag)
+        : tag_(tag)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kLeft:
+        return "left";
+      case kCenter:
+        return "center";
+      case kRight:
+        return "right";
+      case kTop:
+        return "top";
+      case kBottom:
+        return "bottom";
+      case kLengthPercentage:
+        return ""; // Will be overridden by derived classes
+      }
+      return "";
+    }
+
+    inline bool isLeft() const
+    {
+      return tag_ == kLeft;
+    }
+    inline bool isCenter() const
+    {
+      return tag_ == kCenter;
+    }
+    inline bool isRight() const
+    {
+      return tag_ == kRight;
+    }
+    inline bool isTop() const
+    {
+      return tag_ == kTop;
+    }
+    inline bool isBottom() const
+    {
+      return tag_ == kBottom;
+    }
+    inline bool isLengthPercentage() const
+    {
+      return tag_ == kLengthPercentage;
+    }
+
+  protected:
+    Tag tag_;
+  };
 }

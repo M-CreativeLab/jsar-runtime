@@ -400,6 +400,14 @@ namespace client_cssom
     {
       return background_repeat_;
     }
+    inline const values::computed::BackgroundSize &backgroundSize() const
+    {
+      return background_size_;
+    }
+    inline const values::computed::BackgroundPosition &backgroundPosition() const
+    {
+      return background_position_;
+    }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -535,6 +543,8 @@ namespace client_cssom
     values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
     values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
     values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
+    values::computed::BackgroundSize background_size_ = values::computed::BackgroundSize::Auto();
+    values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Center();
 
     // 3D Transforms
     values::computed::Transform transform_;
