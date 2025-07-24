@@ -25,9 +25,24 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
   }
 
   // Extract id (optional for events)
-  if (doc.HasMember("id") && doc["id"].IsInt())
+  if (doc.HasMember("id"))
   {
-    message->id = doc["id"].GetInt();
+    if (doc["id"].IsInt64())
+    {
+      message->id = doc["id"].GetInt64();
+    }
+    else if (doc["id"].IsInt())
+    {
+      message->id = doc["id"].GetInt();
+    }
+    else if (doc["id"].IsUint64())
+    {
+      message->id = static_cast<int64_t>(doc["id"].GetUint64());
+    }
+    else if (doc["id"].IsUint())
+    {
+      message->id = static_cast<int64_t>(doc["id"].GetUint());
+    }
   }
 
   // Extract method (required)
@@ -52,7 +67,7 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
 }
 
 // CdpResponse implementation
-string CdpResponse::success(int id, const rapidjson::Value &result)
+string CdpResponse::success(int64_t id, const rapidjson::Value &result)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -71,7 +86,7 @@ string CdpResponse::success(int id, const rapidjson::Value &result)
   return buffer.GetString();
 }
 
-string CdpResponse::error(int id, int code, const string &message)
+string CdpResponse::error(int64_t id, int code, const string &message)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -149,7 +164,7 @@ string CdpHandler::processMessage(const string &message)
   string domain = extractDomain(cdpMessage->method);
   string methodName = extractMethodName(cdpMessage->method);
 
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%d", domain.c_str(), methodName.c_str(), cdpMessage->id);
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%lld", domain.c_str(), methodName.c_str(), (long long)cdpMessage->id);
 
   // Find domain handler
   auto domainIt = domains_.find(domain);

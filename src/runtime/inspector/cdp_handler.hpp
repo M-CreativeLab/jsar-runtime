@@ -13,7 +13,7 @@ class TrInspectorClient;
 // CDP (Chrome DevTools Protocol) Message Structure
 struct CdpMessage
 {
-  int id = -1;
+  int64_t id = -1;
   std::string method;
   rapidjson::Value params;
 
@@ -24,8 +24,8 @@ struct CdpMessage
 class CdpResponse
 {
 public:
-  static std::string success(int id, const rapidjson::Value &result);
-  static std::string error(int id, int code, const std::string &message);
+  static std::string success(int64_t id, const rapidjson::Value &result);
+  static std::string error(int64_t id, int code, const std::string &message);
   static std::string event(const std::string &method, const rapidjson::Value &params);
 };
 

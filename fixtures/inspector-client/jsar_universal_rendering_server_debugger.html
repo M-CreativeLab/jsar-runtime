@@ -355,6 +355,7 @@
         this.tracingStartTime = null;
         this.commandBuffer = [];
         this.maxCommands = 1000; // Limit for performance
+        this.messageIdCounter = 1; // Auto-increment counter for CDP message IDs
         
         this.initializeElements();
         this.setupEventListeners();
@@ -680,7 +681,7 @@
       sendCommand(method, params, callback) {
         if (!this.isConnected || !this.ws) return;
 
-        const id = Date.now();
+        const id = this.messageIdCounter++;
         const message = { id, method, params };
         
         if (callback) {
