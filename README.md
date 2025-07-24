@@ -14,6 +14,12 @@
   [![GitHub License](https://img.shields.io/github/license/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/blob/main/LICENSE)
 </div>
 
+## 📰 Latest News
+
+**New!** Read our latest blog posts about JSAR's development:
+- 🎨 [The Spatial Web Revolution: CSS Gradients & Latest Features](/docs/blog-spatial-web-revolution.md)
+- 📰 [July 2025 Community Update: Recent Developments](/docs/community-update-july-2025.md)
+
 # Table of Contents
 
 1. [Introduction](#introduction)
