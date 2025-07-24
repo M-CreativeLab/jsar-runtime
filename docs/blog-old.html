@@ -500,7 +500,6 @@
     /* Blog-specific styles */
     .blog-post-card {
       transition: all 0.3s ease;
-      cursor: pointer;
     }
 
     .blog-post-card:hover {
@@ -542,140 +541,79 @@
       background-color: var(--bg-secondary);
       color: var(--accent-color);
     }
-
-    /* Blog content styles */
-    .blog-content {
-      display: none;
-      margin-top: 2rem;
-      padding: 2rem;
-      background: var(--bg-primary);
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-color);
-      animation: fadeIn 0.3s ease-in;
-    }
-
-    .blog-content.expanded {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .close-btn {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      transition: all 0.2s ease;
-    }
-
-    .close-btn:hover {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
-    }
-
-    /* Blog content typography */
-    .blog-content h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--text-primary);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-    }
-
-    .blog-content h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-top: 3rem;
-      margin-bottom: 1.5rem;
-      line-height: 1.3;
-    }
-
-    .blog-content h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      line-height: 1.4;
-    }
-
-    .blog-content p {
-      font-size: 1.125rem;
-      line-height: 1.8;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-    }
-
-    .blog-content ul {
-      margin-bottom: 1.5rem;
-      padding-left: 1.5rem;
-    }
-
-    .blog-content li {
-      font-size: 1.125rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .blog-content code {
-      background: var(--bg-secondary);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.875rem;
-      font-family: ui-monospace, monospace;
-      border: 1px solid var(--border-color);
-    }
-
-    .blog-content pre {
-      background: var(--bg-secondary);
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      overflow-x: auto;
-      margin: 1.5rem 0;
-      border: 1px solid var(--border-color);
-    }
-
-    .blog-content pre code {
-      background: none;
-      padding: 0;
-      border: none;
-      font-size: 0.875rem;
-    }
-
-    .blog-content strong {
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .blog-content em {
-      font-style: italic;
-      color: var(--text-secondary);
-    }
-
-    .blog-content a {
-      color: var(--accent-color);
-      text-decoration: underline;
-      text-decoration-color: transparent;
-      transition: text-decoration-color 0.2s;
-    }
-
-    .blog-content a:hover {
-      text-decoration-color: var(--accent-color);
-    }
   </style>
 </head>
 <body class="min-h-screen" data-theme="light">
   <!-- Navigation -->
-  <div id="navbar-container"></div>
+  <nav class="bg-primary border-b border-color shadow-sm fixed top-0 left-0 z-50 backdrop-blur-sm bg-opacity-95" style="width: 100vw;">
+    <div class="py-0" style="max-width: 1280px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; position: relative;">
+      <div class="flex items-center" style="width: 100%; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+        <!-- Left side: Logo and version -->
+        <div class="flex items-center gap-6">
+          <div class="text-2xl font-bold">
+            <a href="index.html" class="bg-clip-text text-transparent bg-gradient-to-r from-accent-color to-bg-gradient-end" style="background: linear-gradient(135deg, var(--accent-color), var(--bg-gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none;">
+              <span class="hidden sm:inline">YODAOS JSAR</span>
+              <span class="sm:hidden">JSAR</span>
+            </a>
+          </div>
+          <div class="version-badge latest">v0.8.2</div>
+        </div>
+        
+        <!-- Center: Desktop Navigation -->
+        <div class="desktop-nav flex items-center gap-5 mx-auto">
+          <a href="index.html#features" class="nav-link">Features</a>
+          <a href="index.html#documentation" class="nav-link">Documentation</a>
+          <a href="blog.html" class="nav-link" style="color: var(--accent-color);">Blog</a>
+          <a href="index.html#changelog" class="nav-link">Changelog</a>
+          <a href="browser-compat-data.html" class="nav-link">Compatibility</a>
+          <a href="https://github.com/M-CreativeLab/jsar-runtime" class="btn btn-secondary mr-4 my-2" target="_blank" style="padding: 0.4rem 0.8rem;">
+            <span>GitHub</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+          </a>
+        </div>
+        
+        <!-- Right side: Theme Toggle Button -->
+        <div class="flex items-center">
+          <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Mobile Menu Toggle -->
+        <div class="flex items-center gap-4 md:hidden">
+          <!-- Theme Toggle Button for Mobile -->
+          <button id="theme-toggle-mobile" class="theme-toggle-btn" aria-label="Toggle theme">
+            <svg id="sun-icon-mobile" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg id="moon-icon-mobile" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+          <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+            <span id="menu-icon">☰</span>
+          </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobile-menu">
+          <a href="index.html#features">Features</a>
+          <a href="index.html#documentation">Documentation</a>
+          <a href="blog.html">Blog</a>
+          <a href="index.html#changelog">Changelog</a>
+          <a href="browser-compat-data.html">Compatibility</a>
+          <a href="https://github.com/M-CreativeLab/jsar-runtime" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </nav>
 
   <!-- Header Section -->
   <section class="py-20 bg-gradient" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 50%, rgba(51, 65, 85, 0.92) 100%); color: white; padding-top: 6rem;">
@@ -701,16 +639,16 @@
     <div class="container">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
         <!-- The Spatial Web Revolution Post -->
-        <article class="feature-card blog-post-card rounded-xl p-8" data-blog="spatial-web-revolution">
+        <article class="feature-card blog-post-card rounded-xl p-8">
           <div class="flex items-center gap-4 mb-4">
             <div class="date-badge">December 2024</div>
             <div class="topic-tag">Technical Deep Dive</div>
           </div>
           
           <h2 class="text-3xl font-bold text-primary mb-4">
-            <span class="hover:text-accent transition-colors" style="cursor: pointer;">
+            <a href="blogs/blog-spatial-web-revolution.md" class="hover:text-accent transition-colors" style="text-decoration: none;">
               The Spatial Web Revolution: How JSAR is Bridging Web and XR
-            </span>
+            </a>
           </h2>
           
           <p class="text-lg text-secondary mb-6">
@@ -744,37 +682,28 @@
           </div>
           
           <div class="flex items-center justify-between">
-            <button class="btn btn-primary expand-btn">
+            <a href="blogs/blog-spatial-web-revolution.md" class="btn btn-primary">
               <span>Read More</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14"/>
                 <path d="m12 5 7 7-7 7"/>
               </svg>
-            </button>
+            </a>
             <span class="text-sm text-tertiary">8 min read</span>
-          </div>
-
-          <!-- Expandable content -->
-          <div class="blog-content" id="spatial-web-revolution-content">
-            <div class="flex justify-between items-center mb-6">
-              <h1>The Spatial Web Revolution: How JSAR is Bridging Web and XR</h1>
-              <button class="close-btn">Close</button>
-            </div>
-            <div id="spatial-web-revolution-text">Loading...</div>
           </div>
         </article>
 
         <!-- Community Update Post -->
-        <article class="feature-card blog-post-card rounded-xl p-8" data-blog="community-update">
+        <article class="feature-card blog-post-card rounded-xl p-8">
           <div class="flex items-center gap-4 mb-4">
             <div class="date-badge">July 2025</div>
             <div class="topic-tag">Community Update</div>
           </div>
           
           <h2 class="text-3xl font-bold text-primary mb-4">
-            <span class="hover:text-accent transition-colors" style="cursor: pointer;">
+            <a href="blogs/community-update-july-2025.md" class="hover:text-accent transition-colors" style="text-decoration: none;">
               Community Update - July 2025
-            </span>
+            </a>
           </h2>
           
           <p class="text-lg text-secondary mb-6">
@@ -808,23 +737,14 @@
           </div>
           
           <div class="flex items-center justify-between">
-            <button class="btn btn-primary expand-btn">
+            <a href="blogs/community-update-july-2025.md" class="btn btn-primary">
               <span>Read More</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14"/>
                 <path d="m12 5 7 7-7 7"/>
               </svg>
-            </button>
+            </a>
             <span class="text-sm text-tertiary">5 min read</span>
-          </div>
-
-          <!-- Expandable content -->
-          <div class="blog-content" id="community-update-content">
-            <div class="flex justify-between items-center mb-6">
-              <h1>Community Update - July 2025</h1>
-              <button class="close-btn">Close</button>
-            </div>
-            <div id="community-update-text">Loading...</div>
           </div>
         </article>
       </div>
@@ -878,102 +798,155 @@
   </section>
 
   <!-- Footer -->
-  <div id="footer-container"></div>
-
-  <script type="module">
-    import { initSharedComponents, parseMarkdown } from './shared/common.js';
-
-    // Initialize shared components (navbar and footer)
-    document.addEventListener('DOMContentLoaded', () => {
-      initSharedComponents();
-      initBlogExpansion();
-    });
-
-    // Blog expansion functionality
-    function initBlogExpansion() {
-      const blogCards = document.querySelectorAll('.blog-post-card');
-      
-      blogCards.forEach(card => {
-        const expandBtn = card.querySelector('.expand-btn');
-        const contentDiv = card.querySelector('.blog-content');
-        const closeBtn = card.querySelector('.close-btn');
-        const blogType = card.dataset.blog;
+  <footer class="py-12 border-t border-color">
+    <div class="container">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="text-2xl font-bold text-accent">JSAR</div>
+            <div class="version-badge">v0.8.2</div>
+          </div>
+          <p class="text-secondary">
+            Revolutionary Browser Engine Library designed for The Spatial Web.
+          </p>
+        </div>
         
-        expandBtn.addEventListener('click', async () => {
-          if (contentDiv.classList.contains('expanded')) {
-            contentDiv.classList.remove('expanded');
-            expandBtn.innerHTML = `
-              <span>Read More</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 5 7 7-7 7"/>
-              </svg>
-            `;
-          } else {
-            await expandBlogPost(blogType, contentDiv);
-            contentDiv.classList.add('expanded');
-            expandBtn.innerHTML = `
-              <span>Collapse</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 19-7-7 7-7"/>
-              </svg>
-            `;
-            
-            // Scroll to the expanded content
-            setTimeout(() => {
-              contentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-          }
-        });
+        <div>
+          <h4 class="font-semibold text-primary mb-4">Resources</h4>
+          <div class="space-y-2">
+            <a href="manual/introduction.mdx" class="block text-secondary hover:text-accent transition-colors">Documentation</a>
+            <a href="browser-compat-data.html" class="block text-secondary hover:text-accent transition-colors">API Compatibility</a>
+            <a href="changelogs/alpha.md" class="block text-secondary hover:text-accent transition-colors">Changelog</a>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime" class="block text-secondary hover:text-accent transition-colors" target="_blank">GitHub Repository</a>
+          </div>
+        </div>
         
-        closeBtn.addEventListener('click', () => {
-          contentDiv.classList.remove('expanded');
-          expandBtn.innerHTML = `
-            <span>Read More</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/>
-              <path d="m12 5 7 7-7 7"/>
-            </svg>
-          `;
-        });
-      });
-    }
-
-    // Load and display blog content
-    async function expandBlogPost(blogType, contentDiv) {
-      const textContainer = contentDiv.querySelector(`#${blogType}-text`);
+        <div>
+          <h4 class="font-semibold text-primary mb-4">Community</h4>
+          <div class="space-y-2">
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/issues" class="block text-secondary hover:text-accent transition-colors" target="_blank">Report Issues</a>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/discussions" class="block text-secondary hover:text-accent transition-colors" target="_blank">Discussions</a>
+            <a href="contributing/coding_style_guides.md" class="block text-secondary hover:text-accent transition-colors">Contributing</a>
+          </div>
+        </div>
+      </div>
       
-      if (textContainer.innerHTML === 'Loading...') {
-        try {
-          let filename;
-          if (blogType === 'spatial-web-revolution') {
-            filename = 'blog-spatial-web-revolution.md';
-          } else if (blogType === 'community-update') {
-            filename = 'community-update-july-2025.md';
+      <div class="border-t border-color mt-8 pt-8 text-center">
+        <p class="text-tertiary text-sm">
+          © 2024 M-CreativeLab. Licensed under the Apache 2.0 License.
+        </p>
+        <p class="text-tertiary text-xs mt-2">
+          <em>Want to contribute a blog post? Check out our <a href="contributing/" class="text-accent hover:underline">contributing guidelines</a> for more information.</em>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Theme Toggle Functionality
+    function initThemeToggle() {
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      const sunIconMobile = document.getElementById('sun-icon-mobile');
+      const moonIconMobile = document.getElementById('moon-icon-mobile');
+      const body = document.body;
+      
+      // Check for saved theme preference or default to 'light'
+      const currentTheme = localStorage.getItem('theme') || 'light';
+      body.setAttribute('data-theme', currentTheme);
+      
+      // Update icon based on current theme
+      updateThemeIcon(currentTheme);
+      
+      function updateThemeIcon(theme) {
+        if (theme === 'dark') {
+          // Desktop icons
+          if (sunIcon && moonIcon) {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
           }
-          
-          const response = await fetch(`blogs/${filename}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          // Mobile icons
+          if (sunIconMobile && moonIconMobile) {
+            sunIconMobile.style.display = 'none';
+            moonIconMobile.style.display = 'block';
           }
-          
-          const markdownText = await response.text();
-          const htmlContent = parseMarkdown(markdownText);
-          textContainer.innerHTML = htmlContent;
-        } catch (error) {
-          console.error('Failed to load blog content:', error);
-          textContainer.innerHTML = `
-            <p class="text-error">Failed to load blog content. Please try again later.</p>
-            <p class="text-secondary mt-4">
-              You can also view the original content at 
-              <a href="blogs/${blogType === 'spatial-web-revolution' ? 'blog-spatial-web-revolution.md' : 'community-update-july-2025.md'}" 
-                 class="text-accent hover:underline" target="_blank">this link</a>.
-            </p>
-          `;
+        } else {
+          // Desktop icons
+          if (sunIcon && moonIcon) {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+          }
+          // Mobile icons
+          if (sunIconMobile && moonIconMobile) {
+            sunIconMobile.style.display = 'block';
+            moonIconMobile.style.display = 'none';
+          }
         }
       }
+      
+      function toggleTheme() {
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+      }
+      
+      // Add event listeners to both buttons
+      if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+      }
+      if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', toggleTheme);
+      }
     }
+    
+    // Mobile Menu Functionality
+    function initMobileMenu() {
+      const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      
+      if (mobileMenuToggle && mobileMenu) {
+        mobileMenuToggle.addEventListener('click', () => {
+          const isActive = mobileMenu.classList.contains('active');
+          
+          if (isActive) {
+            mobileMenu.classList.remove('active');
+            menuIcon.textContent = '☰';
+          } else {
+            mobileMenu.classList.add('active');
+            menuIcon.textContent = '✕';
+          }
+        });
+        
+        // Close mobile menu when clicking on a link
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            mobileMenu.classList.remove('active');
+            menuIcon.textContent = '☰';
+          });
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (event) => {
+          if (!mobileMenuToggle.contains(event.target) && !mobileMenu.contains(event.target)) {
+            mobileMenu.classList.remove('active');
+            menuIcon.textContent = '☰';
+          }
+        });
+      }
+    }
+    
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      initThemeToggle();
+      initMobileMenu();
+    });
   </script>
 </body>
 </html>
