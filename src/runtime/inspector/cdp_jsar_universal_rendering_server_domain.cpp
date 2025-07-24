@@ -255,20 +255,12 @@ void CdpJsarUniversalRenderingServerDomain::setInspectorClient(TrInspectorClient
 
 void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Command buffer callback triggered for client: %s, tracingEnabled: %s, inspectorClient: %p, bufferCount: %zu", 
-    clientId_.c_str(), tracingEnabled_ ? "true" : "false", inspectorClient_, commandBuffers.size());
-  
   if (tracingEnabled_ && inspectorClient_)
-  {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Dispatching command buffer to client: %s", clientId_.c_str());
     sendCommandBufferEvent(commandBuffers, contentRenderer);
-  }
 }
 
 void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Preparing to send command buffer event for client: %s", clientId_.c_str());
-  
   rapidjson::Document params;
   params.SetObject();
   auto &allocator = params.GetAllocator();
@@ -277,8 +269,6 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::ve
   
   // Serialize the command buffers to structured JSON data
   string commandBufferDataStr = serializeCommandBuffers(commandBuffers, contentRenderer);
-  
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Serialized command buffer data: %s", commandBufferDataStr.c_str());
   
   // Parse the serialized JSON and include it as structured data
   rapidjson::Document commandBufferJson;
@@ -300,13 +290,10 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::ve
 
   string eventMessage = CdpResponse::event("JSAR.UniversalRenderingServer.commandBufferExecuted", params);
 
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Event message prepared: %s", eventMessage.c_str());
-
   // Send to this client's inspector client
   if (inspectorClient_ && inspectorClient_->isWebSocket())
   {
     inspectorClient_->sendWebSocketMessage(eventMessage);
-    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Command buffer event sent to client: %s", clientId_.c_str());
   }
   else
   {

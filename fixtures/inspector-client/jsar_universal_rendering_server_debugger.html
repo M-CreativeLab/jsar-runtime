@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,13 +11,15 @@
       padding: 0;
       box-sizing: border-box;
     }
-    body { 
+
+    body {
       font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
       background: #1a1a1a;
       color: #ffffff;
       overflow: hidden;
       font-size: 12px;
     }
+
     .header {
       background: #2d2d2d;
       padding: 8px 16px;
@@ -26,16 +29,19 @@
       justify-content: space-between;
       height: 40px;
     }
+
     .header h1 {
       font-size: 14px;
       font-weight: 600;
       color: #ffffff;
     }
+
     .header-controls {
       display: flex;
       align-items: center;
       gap: 12px;
     }
+
     .status-indicator {
       width: 8px;
       height: 8px;
@@ -43,9 +49,11 @@
       background: #dc3545;
       transition: background-color 0.3s;
     }
+
     .status-indicator.connected {
       background: #28a745;
     }
+
     .control-bar {
       background: #2d2d2d;
       padding: 8px 16px;
@@ -55,6 +63,7 @@
       gap: 16px;
       height: 36px;
     }
+
     .btn {
       background: #404040;
       border: 1px solid #555;
@@ -66,24 +75,29 @@
       transition: all 0.2s;
       font-family: inherit;
     }
+
     .btn:hover:not(:disabled) {
       background: #4a4a4a;
       border-color: #666;
     }
+
     .btn:disabled {
       background: #333;
       color: #666;
       cursor: not-allowed;
     }
+
     .btn.active {
       background: #007acc;
       border-color: #007acc;
     }
+
     .fps-control {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .fps-input {
       background: #404040;
       border: 1px solid #555;
@@ -94,10 +108,12 @@
       font-size: 11px;
       font-family: inherit;
     }
+
     .main-content {
       display: flex;
       height: calc(100vh - 76px);
     }
+
     .sidebar {
       width: 250px;
       background: #252525;
@@ -105,11 +121,13 @@
       display: flex;
       flex-direction: column;
     }
+
     .sidebar-section {
       border-bottom: 1px solid #404040;
       overflow-y: auto;
       flex: 1;
     }
+
     .sidebar-header {
       background: #2d2d2d;
       padding: 8px 12px;
@@ -118,27 +136,33 @@
       color: #cccccc;
       border-bottom: 1px solid #404040;
     }
+
     .sidebar-content {
       padding: 8px;
       font-size: 10px;
     }
+
     .stat-row {
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
     }
+
     .stat-label {
       color: #999;
     }
+
     .stat-value {
       color: #ffffff;
       font-weight: 500;
     }
+
     .command-buffer-viewer {
       flex: 1;
       display: flex;
       flex-direction: column;
     }
+
     .viewer-header {
       background: #2d2d2d;
       padding: 8px 16px;
@@ -148,87 +172,114 @@
       justify-content: space-between;
       height: 32px;
     }
+
     .viewer-title {
       font-size: 11px;
       font-weight: 600;
       color: #ffffff;
     }
+
     .viewer-stats {
       font-size: 10px;
       color: #999;
     }
+
     .command-list {
       flex: 1;
       overflow-y: auto;
       background: #1a1a1a;
     }
+
     .command-entry {
       padding: 6px 16px;
       border-bottom: 1px solid #333;
       font-size: 10px;
       transition: background-color 0.1s;
     }
+
     .command-entry:hover {
       background: #2a2a2a;
     }
+
     .command-entry.new {
       background: #1a4d1a;
       animation: flash 0.5s ease-out;
     }
+
     @keyframes flash {
-      0% { background: #2d5a2d; }
-      100% { background: #1a4d1a; }
+      0% {
+        background: #2d5a2d;
+      }
+
+      100% {
+        background: #1a4d1a;
+      }
     }
+
     .command-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 3px;
     }
+
     .command-type {
       color: #61dafb;
       font-weight: 600;
     }
+
     .command-timestamp {
       color: #666;
       font-size: 9px;
     }
+
     .command-details {
       color: #cccccc;
       line-height: 1.3;
     }
+
     .command-param {
       color: #ffd700;
     }
+
     .command-value {
       color: #98fb98;
     }
+
     .gl-command {
       color: #ff6b6b;
     }
+
     .webgl-command {
       color: #4ecdc4;
     }
+
     .xr-command {
       color: #ff9f43;
     }
+
     .scrollbar-thin {
       scrollbar-width: thin;
       scrollbar-color: #555 #2d2d2d;
     }
+
     .scrollbar-thin::-webkit-scrollbar {
       width: 8px;
     }
+
     .scrollbar-thin::-webkit-scrollbar-track {
       background: #2d2d2d;
     }
+
     .scrollbar-thin::-webkit-scrollbar-thumb {
       background: #555;
       border-radius: 4px;
     }
+
     .scrollbar-thin::-webkit-scrollbar-thumb:hover {
       background: #666;
     }
+
     .empty-state {
       flex: 1;
       display: flex;
@@ -240,6 +291,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="header">
     <h1>JSAR GPU Profiler</h1>
@@ -252,13 +304,13 @@
   <div class="control-bar">
     <button class="btn" id="connectBtn">Connect</button>
     <button class="btn" id="tracingBtn" disabled>Start Tracing</button>
-    
+
     <div class="fps-control">
       <label>Target FPS:</label>
       <input type="number" class="fps-input" id="fpsInput" value="60" min="1" max="144" disabled>
       <button class="btn" id="setFpsBtn" disabled>Set</button>
     </div>
-    
+
     <button class="btn" id="clearBtn">Clear</button>
     <button class="btn" id="exportBtn" disabled>Export</button>
   </div>
@@ -328,7 +380,7 @@
       <div class="viewer-header">
         <div class="viewer-title">Command Buffer Trace</div>
         <div class="viewer-stats">
-          <span id="commandCount">0 commands</span> | 
+          <span id="commandCount">0 commands</span> |
           <span id="frameCount">0 frames</span> |
           <span id="tracingTime">0.0s</span>
         </div>
@@ -356,7 +408,7 @@
         this.commandBuffer = [];
         this.maxCommands = 1000; // Limit for performance
         this.messageIdCounter = 1; // Auto-increment counter for CDP message IDs
-        
+
         this.initializeElements();
         this.setupEventListeners();
         this.updateUI();
@@ -391,7 +443,7 @@
         this.elements.setFpsBtn.addEventListener('click', () => this.setFrameRate());
         this.elements.clearBtn.addEventListener('click', () => this.clearCommands());
         this.elements.exportBtn.addEventListener('click', () => this.exportTrace());
-        
+
         this.elements.fpsInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') this.setFrameRate();
         });
@@ -411,7 +463,7 @@
       connect() {
         try {
           this.ws = new WebSocket('ws://localhost:9423/devtools/inspector/1');
-          
+
           this.ws.onopen = () => {
             this.isConnected = true;
             this.updateUI();
@@ -463,11 +515,12 @@
       handleCommandBufferEvent(params) {
         if (!this.isTracing) return;
 
-        const commands = params.commandBuffers || [];
+        const { commandBufferData = {} } = params || {};
+        const commands = commandBufferData.commandBuffers || [];
         commands.forEach(cmd => {
           this.addCommandToTrace(cmd);
         });
-        
+
         this.frameCount++;
         this.updateCommandStats();
       }
@@ -481,18 +534,18 @@
         command.timestamp = Date.now();
         command.index = this.commandCount++;
         this.commandBuffer.push(command);
-        
+
         this.renderCommand(command);
       }
 
       renderCommand(command) {
         const entry = document.createElement('div');
         entry.className = 'command-entry new';
-        
+
         const typeClass = this.getCommandTypeClass(command.type);
-        const timestamp = new Date(command.timestamp).toLocaleTimeString('en-US', { 
-          hour12: false, 
-          millisecond: true 
+        const timestamp = new Date(command.timestamp).toLocaleTimeString('en-US', {
+          hour12: false,
+          millisecond: true
         });
 
         entry.innerHTML = `
@@ -514,10 +567,10 @@
         }
 
         this.elements.commandList.appendChild(entry);
-        
+
         // Auto-scroll to bottom
         this.elements.commandList.scrollTop = this.elements.commandList.scrollHeight;
-        
+
         // Remove flash animation after delay
         setTimeout(() => entry.classList.remove('new'), 500);
       }
@@ -575,7 +628,7 @@
 
         this.sendCommand('JSAR.UniversalRenderingServer.getContentRenderers', {}, (response) => {
           if (response.result) {
-            this.updateContentRenderers(response.result.renderers || []);
+            this.updateContentRenderers(response.result.contentRenderers || []);
           }
         });
       }
@@ -594,7 +647,7 @@
 
         this.elements.contentRenderers.innerHTML = renderers.map(renderer => `
           <div class="stat-row">
-            <span class="stat-label">PID ${renderer.pid}:</span>
+            <span class="stat-label">PID ${renderer.contentPid}:</span>
             <span class="stat-value">${renderer.contentId}</span>
           </div>
         `).join('');
@@ -639,7 +692,7 @@
         this.elements.commandCount.textContent = `${this.commandCount} commands`;
         this.elements.frameCount.textContent = `${this.frameCount} frames`;
         this.elements.totalCommands.textContent = this.commandCount.toString();
-        
+
         // Calculate command rate
         if (this.tracingStartTime) {
           const duration = (Date.now() - this.tracingStartTime) / 1000;
@@ -683,12 +736,12 @@
 
         const id = this.messageIdCounter++;
         const message = { id, method, params };
-        
+
         if (callback) {
           this.pendingCallbacks = this.pendingCallbacks || {};
           this.pendingCallbacks[id] = callback;
         }
-        
+
         this.ws.send(JSON.stringify(message));
       }
 
@@ -704,4 +757,5 @@
     new JSARGPUProfiler();
   </script>
 </body>
+
 </html>

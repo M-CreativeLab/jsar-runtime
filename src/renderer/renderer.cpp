@@ -385,17 +385,17 @@ namespace renderer
     {
       result = rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
-    
+
     // Notify callbacks if command buffers were executed successfully
-    if (result && !commandBufferExecutionCallbacks_.empty())
+    if (!commandBufferExecutionCallbacks_.empty())
     {
       std::lock_guard<std::mutex> lock(callbacksMutex_);
-      for (const auto& [callbackId, callback] : commandBufferExecutionCallbacks_)
+      for (const auto &[callbackId, callback] : commandBufferExecutionCallbacks_)
       {
         callback(list, content_renderer);
       }
     }
-    
+
     return result;
   }
 
