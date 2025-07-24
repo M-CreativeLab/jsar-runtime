@@ -704,7 +704,7 @@ namespace builtin_scene::web_renderer
 
     SkPath textPath;
 
-    // Create paragraph to get better text bounds
+    // Create paragraph to get text layout
     auto clientContext = TrClientContextPerProcess::Get();
     auto fontCollection = clientContext->getFontCacheManager();
     auto paragraphStyle = content.paragraphStyle();
@@ -717,22 +717,58 @@ namespace builtin_scene::web_renderer
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
 
-    // Try to get more accurate text bounds from the paragraph
+    // Try to get the font and text style for path creation
     const auto &fragment = content.fragment();
     if (!fragment.has_value())
       return textPath;
 
-    // Get actual text metrics from the paragraph
-    float textHeight = paragraph->getHeight();
-    float textWidth = paragraph->getMaxIntrinsicWidth();
+    // Get the text style to create font-based paths
+    auto textStyle = paragraphStyle.getTextStyle();
+    auto typeface = textStyle.getTypeface();
+    auto fontSize = textStyle.getFontSize();
+    
+    if (!typeface) {
+      // Fallback to rectangular approximation if no typeface available
+      float textHeight = paragraph->getHeight();
+      float textWidth = paragraph->getMaxIntrinsicWidth();
+      float actualWidth = std::min(textWidth, fragment->contentWidth());
+      float actualHeight = std::min(textHeight, fragment->contentHeight());
+      textPath.addRect(SkRect::MakeWH(actualWidth, actualHeight));
+      return textPath;
+    }
 
-    // Use the actual text dimensions but limit to content area
-    float actualWidth = std::min(textWidth, fragment->contentWidth());
-    float actualHeight = std::min(textHeight, fragment->contentHeight());
+    // Create font for glyph path extraction
+    SkFont font(typeface, fontSize);
+    
+    // Convert text to glyph IDs
+    std::vector<SkGlyphID> glyphs;
+    auto glyphCount = font.textToGlyphs(textContent.data(), textContent.size(), 
+                                       SkTextEncoding::kUTF8, nullptr, 0);
+    if (glyphCount > 0) {
+      glyphs.resize(glyphCount);
+      font.textToGlyphs(textContent.data(), textContent.size(), 
+                       SkTextEncoding::kUTF8, glyphs.data(), glyphCount);
+    }
 
-    // Create a more accurate rectangular approximation of text bounds
-    // This is still a simplified approach, but better than using full content area
-    textPath.addRect(SkRect::MakeWH(actualWidth, actualHeight));
+    // Get glyph paths and positions
+    SkScalar y = fontSize; // Start at baseline
+    SkScalar x = 0;
+    
+    for (auto glyphId : glyphs) {
+      SkPath glyphPath;
+      if (font.getPath(glyphId, &glyphPath)) {
+        // Transform the glyph path to the correct position
+        SkMatrix transform = SkMatrix::Translate(x, y);
+        glyphPath.transform(transform);
+        textPath.addPath(glyphPath);
+      }
+      
+      // Advance to next glyph position
+      SkScalar advance;
+      font.getWidths(&glyphId, 1, &advance);
+      x += advance;
+    }
+
     return textPath;
   }
 

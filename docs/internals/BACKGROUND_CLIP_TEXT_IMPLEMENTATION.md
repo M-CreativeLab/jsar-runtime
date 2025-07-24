@@ -25,15 +25,18 @@ The `background-clip: text` property allows background colors, gradients, and im
 
 #### Text Path Creation
 ```cpp
-SkPath createTextPath(ecs::EntityId entity, const WebContent &content, 
-                      web_renderer::RenderBaseSystem* renderSystem)
+optional<SkPath> createTextPath(const std::string &textContent,
+                               const WebContent &content)
 ```
 
 The `createTextPath` function:
-1. Retrieves the text content from the Text2d component
-2. Uses Skia's paragraph layout system to get accurate text metrics
-3. Creates a rectangular clipping path based on actual text dimensions
-4. Handles edge cases like empty text content
+1. Creates a paragraph to get text layout using Skia's paragraph system
+2. Extracts the font typeface and size from the text style
+3. Converts text to glyph IDs using the font's text-to-glyph conversion
+4. Creates actual glyph paths from font shapes using `font.getPath()`
+5. Positions each glyph correctly and adds it to the final text path
+6. Falls back to rectangular approximation if font/typeface is unavailable
+7. Handles edge cases like empty text content
 
 #### Background Rendering
 The `drawBackground` function was enhanced to:
@@ -94,15 +97,18 @@ Open `fixtures/html/background-clip-text-test.html` in a JSAR-enabled browser to
 
 ### Current Limitations
 
-1. **Text Path Approximation**: The current implementation uses rectangular bounds based on paragraph metrics rather than extracting individual glyph paths. This provides good visual results while being computationally efficient.
+1. **Fallback Behavior**: When font typeface is unavailable, the implementation falls back to rectangular bounds approximation. This ensures robustness while maintaining good visual results in most cases.
 
 2. **Texture Requirements**: Elements with `background-clip: text` require texture rendering, which is the correct behavior but may impact performance for many such elements.
 
+3. **Single-line Optimization**: The current glyph positioning is optimized for single-line text. Multi-line text may need additional layout calculations for precise glyph positioning.
+
 ### Future Enhancements
 
-1. **Glyph-level Clipping**: For pixel-perfect results, could extract individual glyph paths from the paragraph
-2. **Subpixel Positioning**: More precise text positioning and metrics
-3. **Performance Optimizations**: Caching of text paths for repeated renders
+1. **Multi-line Text Layout**: Improve glyph positioning for multi-line text by using paragraph line metrics and proper baseline calculations
+2. **Advanced Typography Features**: Support for kerning, ligatures, and other advanced typography features
+3. **Performance Optimizations**: Caching of glyph paths for repeated renders, especially for static text content
+4. **Text Shaping**: Integration with text shaping engines for complex scripts and languages
 
 ### Browser Compatibility
 
