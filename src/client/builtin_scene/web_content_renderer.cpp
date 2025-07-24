@@ -750,7 +750,7 @@ namespace builtin_scene::web_renderer
       SkFont font(typeface, textStyle.getFontSize());
 
       // Convert text to glyphs
-      std::vector<SkGlyphID> glyphs(textContent.size());
+      vector<SkGlyphID> glyphs(textContent.size());
       int glyphCount = font.textToGlyphs(textContent.c_str(),
                                          textContent.size(),
                                          SkTextEncoding::kUTF8,
@@ -762,16 +762,16 @@ namespace builtin_scene::web_renderer
         glyphs.resize(glyphCount);
 
         // Get glyph positions with proper fragment positioning
-        std::vector<SkPoint> positions(glyphCount);
-        std::vector<SkScalar> widths(glyphCount);
+        vector<SkPoint> positions(glyphCount);
+        vector<SkScalar> widths(glyphCount);
         font.getWidths(glyphs.data(), glyphCount, widths.data());
 
         // Calculate the text offset within the fragment
         // Text should be positioned in the content area (inside border and padding)
-        const auto &fragmentBorder = content.fragment()->border();
-        const auto &fragmentPadding = content.fragment()->padding();
-        float textOffsetX = fragmentBorder.left() + fragmentPadding.left();
-        float textOffsetY = fragmentBorder.top() + fragmentPadding.top() + textStyle.getFontSize(); // Use font size as baseline offset
+        const auto &borderBox = content.fragment()->border();
+        const auto &paddingBox = content.fragment()->padding();
+        float textOffsetX = borderBox.left() + paddingBox.left();
+        float textOffsetY = borderBox.top() + paddingBox.top() + textStyle.getFontSize();
 
         float x = textOffsetX;
         float y = textOffsetY;

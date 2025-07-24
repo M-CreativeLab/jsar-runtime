@@ -90,7 +90,12 @@ namespace client_layout::geometry
   public:
     friend std::ostream &operator<<(std::ostream &os, const Rect<T> &style)
     {
-      os << "(" << style.top_ << ", " << style.right_ << ", " << style.bottom_ << ", " << style.left_ << ")";
+      os << "("
+         << "top=" << style.top_ << ", "
+         << "right=" << style.right_ << ", "
+         << "bottom=" << style.bottom_ << ", "
+         << "left=" << style.left_
+         << ")";
       return os;
     }
 
