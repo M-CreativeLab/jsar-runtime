@@ -771,7 +771,8 @@ namespace builtin_scene::web_renderer
         const auto &borderBox = content.fragment()->border();
         const auto &paddingBox = content.fragment()->padding();
         float textOffsetX = borderBox.left() + paddingBox.left();
-        float textOffsetY = borderBox.top() + paddingBox.top() + textStyle.getFontSize();
+        float textOffsetY = borderBox.top() + paddingBox.top() +
+                            paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
 
         float x = textOffsetX;
         float y = textOffsetY;
