@@ -1287,11 +1287,28 @@
   <div id="footer-container"></div>
 
   <script type="module">
-    import { initSharedComponents } from './shared/common.js';
+    import { createNavbar } from './shared/navbar.js';
+    import { createFooter } from './shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from './shared/common.js';
 
     // Initialize shared components first
     document.addEventListener('DOMContentLoaded', () => {
-      initSharedComponents();
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+      
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+      
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
       initParallax();
       loadLatestVersion();
       loadChangelog();

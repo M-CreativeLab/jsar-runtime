@@ -543,134 +543,7 @@
       color: var(--accent-color);
     }
 
-    /* Blog content styles */
-    .blog-content {
-      display: none;
-      margin-top: 2rem;
-      padding: 2rem;
-      background: var(--bg-primary);
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-color);
-      animation: fadeIn 0.3s ease-in;
-    }
 
-    .blog-content.expanded {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .close-btn {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      transition: all 0.2s ease;
-    }
-
-    .close-btn:hover {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
-    }
-
-    /* Blog content typography */
-    .blog-content h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: var(--text-primary);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-    }
-
-    .blog-content h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-top: 3rem;
-      margin-bottom: 1.5rem;
-      line-height: 1.3;
-    }
-
-    .blog-content h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      line-height: 1.4;
-    }
-
-    .blog-content p {
-      font-size: 1.125rem;
-      line-height: 1.8;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-    }
-
-    .blog-content ul {
-      margin-bottom: 1.5rem;
-      padding-left: 1.5rem;
-    }
-
-    .blog-content li {
-      font-size: 1.125rem;
-      line-height: 1.7;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .blog-content code {
-      background: var(--bg-secondary);
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.875rem;
-      font-family: ui-monospace, monospace;
-      border: 1px solid var(--border-color);
-    }
-
-    .blog-content pre {
-      background: var(--bg-secondary);
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      overflow-x: auto;
-      margin: 1.5rem 0;
-      border: 1px solid var(--border-color);
-    }
-
-    .blog-content pre code {
-      background: none;
-      padding: 0;
-      border: none;
-      font-size: 0.875rem;
-    }
-
-    .blog-content strong {
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .blog-content em {
-      font-style: italic;
-      color: var(--text-secondary);
-    }
-
-    .blog-content a {
-      color: var(--accent-color);
-      text-decoration: underline;
-      text-decoration-color: transparent;
-      transition: text-decoration-color 0.2s;
-    }
-
-    .blog-content a:hover {
-      text-decoration-color: var(--accent-color);
-    }
   </style>
 </head>
 <body class="min-h-screen" data-theme="light">
@@ -701,7 +574,7 @@
     <div class="container">
       <div class="flex flex-col gap-12">
         <!-- The Spatial Web Revolution Post -->
-        <article class="feature-card blog-post-card rounded-xl p-8" data-blog="spatial-web-revolution">
+        <article class="feature-card blog-post-card rounded-xl p-8">
           <div class="flex items-center gap-4 mb-4">
             <div class="date-badge">December 2024</div>
             <div class="topic-tag">Technical Deep Dive</div>
@@ -744,28 +617,18 @@
           </div>
           
           <div class="flex items-center justify-between">
-            <button class="btn btn-primary expand-btn">
-              <span>Read More</span>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/blogs/blog-spatial-web-revolution.md" class="btn btn-primary" target="_blank">
+              <span>READ MORE</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 5 7 7-7 7"/>
+                <path d="M7 17L17 7"/>
+                <path d="M7 7h10v10"/>
               </svg>
-            </button>
-            <span class="text-sm text-tertiary">8 min read</span>
-          </div>
-
-          <!-- Expandable content -->
-          <div class="blog-content" id="spatial-web-revolution-content">
-            <div class="flex justify-between items-center mb-6">
-              <h1>The Spatial Web Revolution: How JSAR is Bridging Web and XR</h1>
-              <button class="close-btn">Close</button>
-            </div>
-            <div id="spatial-web-revolution-text">Loading...</div>
+            </a>
           </div>
         </article>
 
         <!-- Community Update Post -->
-        <article class="feature-card blog-post-card rounded-xl p-8" data-blog="community-update">
+        <article class="feature-card blog-post-card rounded-xl p-8">
           <div class="flex items-center gap-4 mb-4">
             <div class="date-badge">July 2025</div>
             <div class="topic-tag">Community Update</div>
@@ -808,23 +671,13 @@
           </div>
           
           <div class="flex items-center justify-between">
-            <button class="btn btn-primary expand-btn">
-              <span>Read More</span>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/blogs/community-update-july-2025.md" class="btn btn-primary" target="_blank">
+              <span>READ MORE</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 5 7 7-7 7"/>
+                <path d="M7 17L17 7"/>
+                <path d="M7 7h10v10"/>
               </svg>
-            </button>
-            <span class="text-sm text-tertiary">5 min read</span>
-          </div>
-
-          <!-- Expandable content -->
-          <div class="blog-content" id="community-update-content">
-            <div class="flex justify-between items-center mb-6">
-              <h1>Community Update - July 2025</h1>
-              <button class="close-btn">Close</button>
-            </div>
-            <div id="community-update-text">Loading...</div>
+            </a>
           </div>
         </article>
       </div>
@@ -881,99 +734,28 @@
   <div id="footer-container"></div>
 
   <script type="module">
-    import { initSharedComponents, parseMarkdown } from './shared/common.js';
+    import { createNavbar } from './shared/navbar.js';
+    import { createFooter } from './shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from './shared/common.js';
 
     // Initialize shared components (navbar and footer)
     document.addEventListener('DOMContentLoaded', () => {
-      initSharedComponents();
-      initBlogExpansion();
-    });
-
-    // Blog expansion functionality
-    function initBlogExpansion() {
-      const blogCards = document.querySelectorAll('.blog-post-card');
-      
-      blogCards.forEach(card => {
-        const expandBtn = card.querySelector('.expand-btn');
-        const contentDiv = card.querySelector('.blog-content');
-        const closeBtn = card.querySelector('.close-btn');
-        const blogType = card.dataset.blog;
-        
-        expandBtn.addEventListener('click', async () => {
-          if (contentDiv.classList.contains('expanded')) {
-            contentDiv.classList.remove('expanded');
-            expandBtn.innerHTML = `
-              <span>Read More</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 5 7 7-7 7"/>
-              </svg>
-            `;
-          } else {
-            await expandBlogPost(blogType, contentDiv);
-            contentDiv.classList.add('expanded');
-            expandBtn.innerHTML = `
-              <span>Collapse</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="m12 19-7-7 7-7"/>
-              </svg>
-            `;
-            
-            // Scroll to the expanded content
-            setTimeout(() => {
-              contentDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-          }
-        });
-        
-        closeBtn.addEventListener('click', () => {
-          contentDiv.classList.remove('expanded');
-          expandBtn.innerHTML = `
-            <span>Read More</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14"/>
-              <path d="m12 5 7 7-7 7"/>
-            </svg>
-          `;
-        });
-      });
-    }
-
-    // Load and display blog content
-    async function expandBlogPost(blogType, contentDiv) {
-      const textContainer = contentDiv.querySelector(`#${blogType}-text`);
-      
-      if (textContainer.innerHTML === 'Loading...') {
-        try {
-          let filename;
-          if (blogType === 'spatial-web-revolution') {
-            filename = 'blog-spatial-web-revolution.md';
-          } else if (blogType === 'community-update') {
-            filename = 'community-update-july-2025.md';
-          }
-          
-          const response = await fetch(`blogs/${filename}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const markdownText = await response.text();
-          const htmlContent = parseMarkdown(markdownText);
-          textContainer.innerHTML = htmlContent;
-        } catch (error) {
-          console.error('Failed to load blog content:', error);
-          textContainer.innerHTML = `
-            <p class="text-error">Failed to load blog content. Please try again later.</p>
-            <p class="text-secondary mt-4">
-              You can also view the original content at 
-              <a href="blogs/${blogType === 'spatial-web-revolution' ? 'blog-spatial-web-revolution.md' : 'community-update-july-2025.md'}" 
-                 class="text-accent hover:underline" target="_blank">this link</a>.
-            </p>
-          `;
-        }
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
       }
-    }
+      
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+      
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+    });
   </script>
 </body>
 </html>
