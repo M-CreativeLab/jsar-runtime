@@ -110,7 +110,20 @@ void TrInspectorClient::tick()
 
   if (connectionType_ == ConnectionType::WEBSOCKET)
   {
-    handleWebSocketFrame();
+    // Process all complete WebSocket frames available in the buffer
+    // Keep processing until no more complete frames are available
+    while (!shouldClose_ && buffer_.size() >= 2)
+    {
+      size_t bufferSizeBefore = buffer_.size();
+      handleWebSocketFrame();
+      
+      // If buffer size didn't change, we don't have a complete frame
+      // or encountered an error, so break the loop
+      if (buffer_.size() == bufferSizeBefore)
+      {
+        break;
+      }
+    }
   }
   else if (connectionType_ == ConnectionType::HTTP)
   {
