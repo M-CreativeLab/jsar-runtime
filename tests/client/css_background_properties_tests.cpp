@@ -528,6 +528,129 @@ TEST_CASE("Advanced BackgroundPosition parsing", "[css-background-position-advan
   }
 }
 
+TEST_CASE("Multiple BackgroundSize parsing", "[css-multiple-background-size]")
+{
+  SECTION("Parse single value")
+  {
+    specified::MultipleBackgroundSize sizes;
+    REQUIRE(sizes.parse("auto"));
+    REQUIRE(sizes.size() == 1);
+    REQUIRE(sizes[0].isAuto());
+    REQUIRE(sizes.toCss() == "auto");
+  }
+
+  SECTION("Parse multiple values")
+  {
+    specified::MultipleBackgroundSize sizes;
+    REQUIRE(sizes.parse("auto, 50%, 100px"));
+    REQUIRE(sizes.size() == 3);
+    REQUIRE(sizes[0].isAuto());
+    REQUIRE(sizes[1].isLengthPercentage());
+    REQUIRE(sizes[2].isLengthPercentage());
+    REQUIRE(sizes.toCss() == "auto, 50%, 100px");
+  }
+
+  SECTION("Parse multiple values with two-value syntax")
+  {
+    specified::MultipleBackgroundSize sizes;
+    REQUIRE(sizes.parse("50%, 25%, 25%"));
+    REQUIRE(sizes.size() == 3);
+    REQUIRE(sizes.toCss() == "50%, 25%, 25%");
+  }
+
+  SECTION("Parse mixed syntax")
+  {
+    specified::MultipleBackgroundSize sizes;
+    REQUIRE(sizes.parse("6px, auto, contain"));
+    REQUIRE(sizes.size() == 3);
+    REQUIRE(sizes[0].isLengthPercentage());
+    REQUIRE(sizes[1].isAuto());
+    REQUIRE(sizes[2].isContain());
+    REQUIRE(sizes.toCss() == "6px, auto, contain");
+  }
+
+  SECTION("Parse invalid values")
+  {
+    specified::MultipleBackgroundSize sizes;
+    REQUIRE_FALSE(sizes.parse(""));
+    REQUIRE_FALSE(sizes.parse("auto, invalid"));
+  }
+}
+
+TEST_CASE("Multiple BackgroundPosition parsing", "[css-multiple-background-position]")
+{
+  SECTION("Parse single value")
+  {
+    specified::MultipleBackgroundPosition positions;
+    REQUIRE(positions.parse("center"));
+    REQUIRE(positions.size() == 1);
+    REQUIRE(positions[0].isCenter());
+    REQUIRE(positions.toCss() == "center");
+  }
+
+  SECTION("Parse multiple values")
+  {
+    specified::MultipleBackgroundPosition positions;
+    REQUIRE(positions.parse("0 0, center"));
+    REQUIRE(positions.size() == 2);
+    REQUIRE(positions[0].isLengthPercentagePair());
+    REQUIRE(positions[1].isCenter());
+    REQUIRE(positions.toCss() == "0px 0px, center");
+  }
+
+  SECTION("Parse complex multiple values")
+  {
+    specified::MultipleBackgroundPosition positions;
+    REQUIRE(positions.parse("top left, 50% 75%, bottom right"));
+    REQUIRE(positions.size() == 3);
+    REQUIRE(positions[0].isLengthPercentagePair());
+    REQUIRE(positions[1].isLengthPercentagePair());
+    REQUIRE(positions[2].isLengthPercentagePair());
+  }
+
+  SECTION("Parse invalid values")
+  {
+    specified::MultipleBackgroundPosition positions;
+    REQUIRE_FALSE(positions.parse(""));
+    REQUIRE_FALSE(positions.parse("center, invalid"));
+  }
+}
+
+TEST_CASE("Edge offset BackgroundPosition parsing", "[css-background-position-edge-offset]")
+{
+  SECTION("Parse four-value edge offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("bottom 10px right 20px"));
+    REQUIRE(position.isEdgeOffset());
+    REQUIRE(position.toCss() == "20px 10px"); // Simplified output
+  }
+
+  SECTION("Parse alternative four-value edge offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("right 3em bottom 10px"));
+    REQUIRE(position.isEdgeOffset());
+    REQUIRE(position.toCss() == "3em 10px"); // Simplified output
+  }
+
+  SECTION("Parse top left edge offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("top 5px left 15px"));
+    REQUIRE(position.isEdgeOffset());
+    REQUIRE(position.toCss() == "15px 5px"); // Simplified output
+  }
+
+  SECTION("Parse invalid edge offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("bottom 10px invalid 20px"));
+    REQUIRE_FALSE(position.parse("bottom right 20px"));  // Missing offset
+    REQUIRE_FALSE(position.parse("bottom 10px 20px"));   // Missing keyword
+  }
+}
+
 TEST_CASE("BackgroundSize edge cases", "[css-background-size-edge]")
 {
   SECTION("Parse multiple valid values")

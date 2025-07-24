@@ -8,6 +8,89 @@
 
 namespace client_cssom::values::specified
 {
+  // Helper class to handle multiple background values
+  template<typename T>
+  class MultipleBackgroundValues : public Parse, public ToCss
+  {
+  protected:
+    std::vector<T> values_;
+
+  public:
+    MultipleBackgroundValues() = default;
+
+    // Helper function to split comma-separated values
+    static std::vector<std::string> splitCommaValues(const std::string &input)
+    {
+      std::vector<std::string> values;
+      std::stringstream ss(input);
+      std::string value;
+      
+      while (std::getline(ss, value, ','))
+      {
+        // Trim whitespace
+        size_t start = value.find_first_not_of(" \t");
+        size_t end = value.find_last_not_of(" \t");
+        if (start != std::string::npos && end != std::string::npos)
+        {
+          values.push_back(value.substr(start, end - start + 1));
+        }
+        else if (start != std::string::npos)
+        {
+          values.push_back(value.substr(start));
+        }
+      }
+      
+      return values;
+    }
+
+    bool parse(const std::string &input) override
+    {
+      if (input.empty())
+        return false;
+
+      auto commaValues = splitCommaValues(input);
+      values_.clear();
+
+      for (const auto &valueStr : commaValues)
+      {
+        T value;
+        if (value.parse(valueStr))
+        {
+          values_.push_back(value);
+        }
+        else
+        {
+          return false; // Failed to parse one of the values
+        }
+      }
+
+      return !values_.empty();
+    }
+
+    std::string toCss() const override
+    {
+      if (values_.empty())
+        return "";
+
+      std::string result;
+      for (size_t i = 0; i < values_.size(); ++i)
+      {
+        if (i > 0)
+          result += ", ";
+        result += values_[i].toCss();
+      }
+      return result;
+    }
+
+    const std::vector<T>& getValues() const { return values_; }
+    size_t size() const { return values_.size(); }
+    bool empty() const { return values_.empty(); }
+    const T& operator[](size_t index) const { return values_[index]; }
+  };
+}
+
+namespace client_cssom::values::specified
+{
   class BackgroundBlendMode : public generics::GenericBackgroundBlendMode<BackgroundBlendMode>,
                               public Parse,
                               public ToComputedValue<computed::BackgroundBlendMode>
@@ -398,6 +481,24 @@ namespace client_cssom::values::specified
     const std::optional<LengthPercentage>& getHeight() const { return height_; }
   };
 
+  // Multiple background-size values support (comma-separated)
+  class MultipleBackgroundSize : public MultipleBackgroundValues<BackgroundSize>,
+                                 public ToComputedValue<computed::MultipleBackgroundSize>
+  {
+  public:
+    using MultipleBackgroundValues<BackgroundSize>::MultipleBackgroundValues;
+
+    computed::MultipleBackgroundSize toComputedValue(computed::Context &context) const override
+    {
+      std::vector<computed::BackgroundSize> computedValues;
+      for (const auto &value : values_)
+      {
+        computedValues.push_back(value.toComputedValue(context));
+      }
+      return computed::MultipleBackgroundSize(computedValues);
+    }
+  };
+
   class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>,
                              public Parse,
                              public ToComputedValue<computed::BackgroundPosition>
@@ -542,9 +643,68 @@ namespace client_cssom::values::specified
           tag_ = kLengthPercentagePair;
           return true;
         }
+        else if (values.size() == 4)
+        {
+          // Four values: edge offset syntax like "bottom 10px right 20px"
+          return parseEdgeOffset(input);
+        }
         
         return false;
       }
+    }
+
+    // Helper to parse edge offset syntax like "bottom 10px right 20px"
+    bool parseEdgeOffset(const std::string &input)
+    {
+      auto values = BackgroundSize::splitValues(input);
+      
+      if (values.size() == 4)
+      {
+        // Four values: e.g., "bottom 10px right 20px" or "right 20px bottom 10px"
+        std::string vKeyword, hKeyword;
+        LengthPercentage vOffset, hOffset;
+        bool foundVertical = false, foundHorizontal = false;
+        
+        // Find vertical keyword and offset
+        for (size_t i = 0; i < 3; i += 2)
+        {
+          if ((values[i] == "top" || values[i] == "bottom") && 
+              i + 1 < values.size() && LengthPercentage::IsLengthOrPercentage(values[i + 1]))
+          {
+            vKeyword = values[i];
+            if (!vOffset.parse(values[i + 1]))
+              return false;
+            foundVertical = true;
+            break;
+          }
+        }
+        
+        // Find horizontal keyword and offset  
+        for (size_t i = 0; i < 3; i += 2)
+        {
+          if ((values[i] == "left" || values[i] == "right") && 
+              i + 1 < values.size() && LengthPercentage::IsLengthOrPercentage(values[i + 1]))
+          {
+            hKeyword = values[i];
+            if (!hOffset.parse(values[i + 1]))
+              return false;
+            foundHorizontal = true;
+            break;
+          }
+        }
+        
+        if (!foundVertical || !foundHorizontal)
+          return false;
+        
+        // Convert to standard x,y coordinates - simplified for now
+        x_ = hOffset;
+        y_ = vOffset;
+        
+        tag_ = kEdgeOffset;
+        return true;
+      }
+      
+      return false;
     }
 
     std::string toCss() const override
@@ -565,6 +725,8 @@ namespace client_cssom::values::specified
         return x_.toCss();
       case kLengthPercentagePair:
         return x_.toCss() + " " + (y_ ? y_->toCss() : "center");
+      case kEdgeOffset:
+        return x_.toCss() + " " + (y_ ? y_->toCss() : "center"); // Simplified representation
       }
       return "";
     }
@@ -581,7 +743,7 @@ namespace client_cssom::values::specified
         return computed::BackgroundPosition::Top();
       else if (isBottom())
         return computed::BackgroundPosition::Bottom();
-      else if (isLengthPercentage() || isLengthPercentagePair())
+      else if (isLengthPercentage() || isLengthPercentagePair() || isEdgeOffset())
       {
         // For now, create a computed value that holds the length/percentage data
         return computed::BackgroundPosition::LengthPercentage(x_.toComputedValue(context), 
@@ -595,5 +757,23 @@ namespace client_cssom::values::specified
     // Getters for the length/percentage values
     const LengthPercentage& getX() const { return x_; }
     const std::optional<LengthPercentage>& getY() const { return y_; }
+  };
+
+  // Multiple background-position values support (comma-separated)
+  class MultipleBackgroundPosition : public MultipleBackgroundValues<BackgroundPosition>,
+                                     public ToComputedValue<computed::MultipleBackgroundPosition>
+  {
+  public:
+    using MultipleBackgroundValues<BackgroundPosition>::MultipleBackgroundValues;
+
+    computed::MultipleBackgroundPosition toComputedValue(computed::Context &context) const override
+    {
+      std::vector<computed::BackgroundPosition> computedValues;
+      for (const auto &value : values_)
+      {
+        computedValues.push_back(value.toComputedValue(context));
+      }
+      return computed::MultipleBackgroundPosition(computedValues);
+    }
   };
 }

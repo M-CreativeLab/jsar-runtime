@@ -124,6 +124,37 @@ namespace client_cssom::values::computed
     const std::optional<computed::LengthPercentage>& getHeight() const { return height_; }
   };
 
+  // Multiple background-size values support
+  class MultipleBackgroundSize : public ToCss
+  {
+  private:
+    std::vector<BackgroundSize> values_;
+
+  public:
+    MultipleBackgroundSize() = default;
+    MultipleBackgroundSize(const std::vector<BackgroundSize> &values) : values_(values) {}
+
+    std::string toCss() const override
+    {
+      if (values_.empty())
+        return "";
+
+      std::string result;
+      for (size_t i = 0; i < values_.size(); ++i)
+      {
+        if (i > 0)
+          result += ", ";
+        result += values_[i].toCss();
+      }
+      return result;
+    }
+
+    const std::vector<BackgroundSize>& getValues() const { return values_; }
+    size_t size() const { return values_.size(); }
+    bool empty() const { return values_.empty(); }
+    const BackgroundSize& operator[](size_t index) const { return values_[index]; }
+  };
+
   class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>
   {
   private:
@@ -171,5 +202,36 @@ namespace client_cssom::values::computed
     // Getters for rendering
     const computed::LengthPercentage& getX() const { return x_; }
     const std::optional<computed::LengthPercentage>& getY() const { return y_; }
+  };
+
+  // Multiple background-position values support
+  class MultipleBackgroundPosition : public ToCss
+  {
+  private:
+    std::vector<BackgroundPosition> values_;
+
+  public:
+    MultipleBackgroundPosition() = default;
+    MultipleBackgroundPosition(const std::vector<BackgroundPosition> &values) : values_(values) {}
+
+    std::string toCss() const override
+    {
+      if (values_.empty())
+        return "";
+
+      std::string result;
+      for (size_t i = 0; i < values_.size(); ++i)
+      {
+        if (i > 0)
+          result += ", ";
+        result += values_[i].toCss();
+      }
+      return result;
+    }
+
+    const std::vector<BackgroundPosition>& getValues() const { return values_; }
+    size_t size() const { return values_.size(); }
+    bool empty() const { return values_.empty(); }
+    const BackgroundPosition& operator[](size_t index) const { return values_[index]; }
   };
 }
