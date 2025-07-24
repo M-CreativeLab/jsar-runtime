@@ -281,7 +281,7 @@
           <button onclick="disableTracing()" id="disableTracingBtn" disabled class="danger">Disable Tracing</button>
         </div>
         <div id="commandBufferStatus" style="margin-top: 10px; font-style: italic; color: #6c757d;">
-          Not connected
+          Not connected | Events received: <span id="commandBufferEventCount">0</span>
         </div>
       </div>
 
@@ -324,6 +324,7 @@
     let ws = null;
     let messageId = 1;
     let connectionStartTime = null;
+    let commandBufferEventCount = 0;
 
     // DOM elements
     const connectBtn = document.getElementById('connectBtn');
@@ -453,11 +454,14 @@
     }
 
     function handleMessage(data) {
+      console.log('WebSocket message received:', data);
       try {
         const parsed = JSON.parse(data);
+        console.log('Parsed WebSocket message:', parsed);
         
         // Handle command buffer events
         if (parsed.method === 'JSAR.UniversalRenderingServer.commandBufferExecuted') {
+          console.log('Command buffer event received:', parsed.params);
           handleCommandBufferEvent(parsed.params);
         }
         
@@ -470,11 +474,16 @@
           }
         }
       } catch (e) {
+        console.log('Failed to parse WebSocket message:', e, data);
         // Not JSON or not a structured response, ignore
       }
     }
 
     function handleCommandBufferEvent(params) {
+      console.log('Handling command buffer event with params:', params);
+      commandBufferEventCount++;
+      document.getElementById('commandBufferEventCount').textContent = commandBufferEventCount;
+      
       const timestamp = new Date(params.timestamp).toLocaleTimeString();
       const cmdData = params.commandBufferData;
       
@@ -580,7 +589,7 @@
         params: {}
       };
       sendMessage(message);
-      commandBufferStatus.textContent = 'Tracing enabled. Command buffer dispatching enabled. Waiting for events...';
+      commandBufferStatus.innerHTML = 'Tracing enabled. Command buffer dispatching enabled. Waiting for events... | Events received: <span id="commandBufferEventCount">0</span>';
     }
 
     function disableTracing() {
@@ -590,7 +599,7 @@
         params: {}
       };
       sendMessage(message);
-      commandBufferStatus.textContent = 'Tracing disabled. Command buffer dispatching disabled.';
+      commandBufferStatus.innerHTML = 'Tracing disabled. Command buffer dispatching disabled. | Events received: <span id="commandBufferEventCount">' + commandBufferEventCount + '</span>';
     }
 
     function setFrameRate() {
