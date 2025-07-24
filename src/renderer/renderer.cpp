@@ -389,21 +389,11 @@ namespace renderer
     // Notify callbacks if command buffers were executed successfully
     if (result && !commandBufferExecutionCallbacks_.empty())
     {
-      DEBUG(LOG_TAG_INSPECTOR, "TrRenderer: Command buffers executed successfully, notifying %zu callbacks", commandBufferExecutionCallbacks_.size());
       std::lock_guard<std::mutex> lock(callbacksMutex_);
       for (const auto& [callbackId, callback] : commandBufferExecutionCallbacks_)
       {
-        DEBUG(LOG_TAG_INSPECTOR, "TrRenderer: Calling callback ID %d", callbackId);
         callback(list, content_renderer);
       }
-    }
-    else if (!result)
-    {
-      DEBUG(LOG_TAG_INSPECTOR, "TrRenderer: Command buffer execution failed, not notifying callbacks");
-    }
-    else
-    {
-      DEBUG(LOG_TAG_INSPECTOR, "TrRenderer: No command buffer callbacks registered");
     }
     
     return result;
