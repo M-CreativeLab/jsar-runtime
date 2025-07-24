@@ -570,7 +570,7 @@
         const entry = document.createElement('div');
         entry.className = 'command-entry new';
 
-        const typeClass = this.getCommandTypeClass(command.type);
+        const typeClass = this.getCommandTypeClass(command.typeName);
         const timestamp = new Date(command.timestamp).toLocaleTimeString('en-US', {
           hour12: false,
           millisecond: true
