@@ -247,3 +247,110 @@ TEST_CASE("BackgroundPosition parsing and conversion", "[css-background-position
     REQUIRE(position.isCenter());
   }
 }
+
+TEST_CASE("BackgroundSize and BackgroundPosition computed values", "[css-background-computed]")
+{
+  computed::Context context; // Assuming a default context
+  
+  SECTION("BackgroundSize computed values")
+  {
+    specified::BackgroundSize size;
+    
+    size.parse("auto");
+    computed::BackgroundSize computedAuto = size.toComputedValue(context);
+    REQUIRE(computedAuto.isAuto());
+    
+    size.parse("cover");
+    computed::BackgroundSize computedCover = size.toComputedValue(context);
+    REQUIRE(computedCover.isCover());
+    
+    size.parse("contain");
+    computed::BackgroundSize computedContain = size.toComputedValue(context);
+    REQUIRE(computedContain.isContain());
+  }
+  
+  SECTION("BackgroundPosition computed values")
+  {
+    specified::BackgroundPosition position;
+    
+    position.parse("left");
+    computed::BackgroundPosition computedLeft = position.toComputedValue(context);
+    REQUIRE(computedLeft.isLeft());
+    
+    position.parse("center");
+    computed::BackgroundPosition computedCenter = position.toComputedValue(context);
+    REQUIRE(computedCenter.isCenter());
+    
+    position.parse("right");
+    computed::BackgroundPosition computedRight = position.toComputedValue(context);
+    REQUIRE(computedRight.isRight());
+    
+    position.parse("top");
+    computed::BackgroundPosition computedTop = position.toComputedValue(context);
+    REQUIRE(computedTop.isTop());
+    
+    position.parse("bottom");
+    computed::BackgroundPosition computedBottom = position.toComputedValue(context);
+    REQUIRE(computedBottom.isBottom());
+  }
+}
+
+TEST_CASE("BackgroundSize edge cases", "[css-background-size-edge]")
+{
+  SECTION("Parse multiple invalid values")
+  {
+    specified::BackgroundSize size;
+    REQUIRE_FALSE(size.parse(""));
+    REQUIRE_FALSE(size.parse("100px"));  // Not yet supported
+    REQUIRE_FALSE(size.parse("50%"));    // Not yet supported
+    REQUIRE_FALSE(size.parse("auto auto")); // Two values not yet supported
+    REQUIRE_FALSE(size.parse("invalid"));
+  }
+  
+  SECTION("CSS serialization roundtrip")
+  {
+    specified::BackgroundSize size;
+    
+    size.parse("auto");
+    REQUIRE(size.toCss() == "auto");
+    
+    size.parse("cover");
+    REQUIRE(size.toCss() == "cover");
+    
+    size.parse("contain");
+    REQUIRE(size.toCss() == "contain");
+  }
+}
+
+TEST_CASE("BackgroundPosition edge cases", "[css-background-position-edge]")
+{
+  SECTION("Parse multiple invalid values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse(""));
+    REQUIRE_FALSE(position.parse("100px"));  // Not yet supported
+    REQUIRE_FALSE(position.parse("50%"));    // Not yet supported
+    REQUIRE_FALSE(position.parse("left top")); // Two values not yet supported
+    REQUIRE_FALSE(position.parse("invalid"));
+  }
+  
+  SECTION("CSS serialization roundtrip")
+  {
+    specified::BackgroundPosition position;
+    
+    position.parse("left");
+    REQUIRE(position.toCss() == "left");
+    
+    position.parse("center");
+    REQUIRE(position.toCss() == "center");
+    
+    position.parse("right");
+    REQUIRE(position.toCss() == "right");
+    
+    position.parse("top");
+    REQUIRE(position.toCss() == "top");
+    
+    position.parse("bottom");
+    REQUIRE(position.toCss() == "bottom");
+  }
+}
