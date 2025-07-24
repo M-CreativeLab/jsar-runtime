@@ -12,7 +12,7 @@
 using namespace std;
 
 CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const string &clientId)
-    : constellation_(constellation), clientId_(clientId)
+    : constellation_(constellation), clientId_(clientId), lastEventTime_(std::chrono::steady_clock::now())
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain initialized for client: %s", clientId_.c_str());
 }
@@ -48,6 +48,10 @@ string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
   else if (method == "setClientFrameRate")
   {
     return setClientFrameRate(message);
+  }
+  else if (method == "setEventThrottle")
+  {
+    return setEventThrottle(message);
   }
   else if (method == "getRendererInfo")
   {
@@ -175,6 +179,43 @@ string CdpJsarUniversalRenderingServerDomain::setClientFrameRate(const CdpMessag
   return CdpResponse::success(message.id, result);
 }
 
+string CdpJsarUniversalRenderingServerDomain::setEventThrottle(const CdpMessage &message)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Setting event throttle");
+
+  // Extract throttle interval from params
+  if (!message.params.IsObject() || !message.params.HasMember("intervalMs"))
+  {
+    return CdpResponse::error(message.id, -32602, "Missing required parameter: intervalMs");
+  }
+
+  const auto &intervalValue = message.params["intervalMs"];
+  if (!intervalValue.IsUint())
+  {
+    return CdpResponse::error(message.id, -32602, "Parameter intervalMs must be a positive integer");
+  }
+
+  uint32_t intervalMs = intervalValue.GetUint();
+  
+  // Enforce reasonable limits: 10ms to 10000ms (100 events/sec to 0.1 events/sec)
+  if (intervalMs < 10 || intervalMs > 10000)
+  {
+    return CdpResponse::error(message.id, -32602, "Parameter intervalMs must be between 10 and 10000");
+  }
+
+  eventThrottleMs_ = intervalMs;
+
+  rapidjson::Document result;
+  result.SetObject();
+  auto &allocator = result.GetAllocator();
+
+  result.AddMember("success", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("intervalMs", rapidjson::Value().SetUint(eventThrottleMs_), allocator);
+  result.AddMember("maxEventsPerSecond", rapidjson::Value().SetDouble(1000.0 / eventThrottleMs_), allocator);
+
+  return CdpResponse::success(message.id, result);
+}
+
 string CdpJsarUniversalRenderingServerDomain::getRendererInfo(const CdpMessage &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Getting renderer info");
@@ -198,6 +239,13 @@ string CdpJsarUniversalRenderingServerDomain::getRendererInfo(const CdpMessage &
   result.AddMember("appContextSummaryEnabled", rapidjson::Value().SetBool(renderer->isAppContextSummaryEnabled), allocator);
   result.AddMember("useDoubleWideFramebuffer", rapidjson::Value().SetBool(renderer->useDoubleWideFramebuffer), allocator);
   result.AddMember("commandBufferPort", rapidjson::Value().SetUint(renderer->getCommandBufferChanPort()), allocator);
+  
+  // Add event throttling statistics
+  result.AddMember("eventThrottleMs", rapidjson::Value().SetUint(eventThrottleMs_), allocator);
+  result.AddMember("totalEventsReceived", rapidjson::Value().SetUint64(totalEventsReceived_), allocator);
+  result.AddMember("totalEventsSent", rapidjson::Value().SetUint64(totalEventsSent_), allocator);
+  double dropRate = totalEventsReceived_ > 0 ? (1.0 - (double)totalEventsSent_ / totalEventsReceived_) * 100.0 : 0.0;
+  result.AddMember("eventDropRate", rapidjson::Value().SetDouble(dropRate), allocator);
 
   return CdpResponse::success(message.id, result);
 }
@@ -255,8 +303,22 @@ void CdpJsarUniversalRenderingServerDomain::setInspectorClient(TrInspectorClient
 
 void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
+  totalEventsReceived_++;
+  
   if (tracingEnabled_ && inspectorClient_)
-    sendCommandBufferEvent(commandBuffers, contentRenderer);
+  {
+    // Check throttling - only send if enough time has passed
+    auto now = std::chrono::steady_clock::now();
+    auto timeSinceLastEvent = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEventTime_).count();
+    
+    if (timeSinceLastEvent >= static_cast<int64_t>(eventThrottleMs_))
+    {
+      sendCommandBufferEvent(commandBuffers, contentRenderer);
+      lastEventTime_ = now;
+      totalEventsSent_++;
+    }
+    // Events are dropped if throttling condition isn't met
+  }
 }
 
 void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
@@ -357,6 +419,7 @@ vector<CdpCommand> CdpJsarUniversalRenderingServerDomain::getCommands() const
     {"enableTracing", "Enable tracing in TrRenderer and command buffer event dispatching to this CDP client.", nullptr},
     {"disableTracing", "Disable tracing in TrRenderer and command buffer event dispatching to this CDP client.", nullptr},
     {"setClientFrameRate", "Control the client-side FPS in TrRenderer. Requires frameRate parameter.", nullptr},
+    {"setEventThrottle", "Control the command buffer event throttling rate. Requires intervalMs parameter (10-10000ms).", nullptr},
     {"getRendererInfo", "Get current renderer state information including FPS, tracing status, and configuration.", nullptr},
     {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr}
   };

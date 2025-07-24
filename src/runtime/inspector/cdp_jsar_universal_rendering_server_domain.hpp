@@ -3,6 +3,7 @@
 #include <string>
 #include <set>
 #include <map>
+#include <chrono>
 #include <common/command_buffers/base.hpp>
 
 #include "./cdp_handler.hpp"
@@ -43,11 +44,20 @@ private:
   bool tracingEnabled_ = false;
   TrInspectorClient *inspectorClient_ = nullptr;
   
+  // Event throttling for performance
+  std::chrono::steady_clock::time_point lastEventTime_;
+  uint32_t eventThrottleMs_ = 100; // Default: max 10 events per second
+  uint64_t totalEventsReceived_ = 0;
+  uint64_t totalEventsSent_ = 0;
+  
   renderer::TrRenderer *getRenderer() const;
 
   // Tracing control methods (also controls command buffer dispatching)
   std::string enableTracing(const CdpMessage &message, const std::string &clientId);
   std::string disableTracing(const CdpMessage &message, const std::string &clientId);
+
+  // Event throttling configuration
+  std::string setEventThrottle(const CdpMessage &message);
 
   // Frame rate control methods
   std::string setClientFrameRate(const CdpMessage &message);

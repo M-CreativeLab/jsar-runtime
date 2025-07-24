@@ -311,6 +311,12 @@
       <button class="btn" id="setFpsBtn" disabled>Set</button>
     </div>
 
+    <div class="fps-control">
+      <label>Event Rate (ms):</label>
+      <input type="number" class="fps-input" id="throttleInput" value="100" min="10" max="10000" disabled>
+      <button class="btn" id="setThrottleBtn" disabled>Set</button>
+    </div>
+
     <button class="btn" id="clearBtn">Clear</button>
     <button class="btn" id="exportBtn" disabled>Export</button>
   </div>
@@ -336,6 +342,18 @@
           <div class="stat-row">
             <span class="stat-label">Commands/s:</span>
             <span class="stat-value" id="commandRate">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Event Rate:</span>
+            <span class="stat-value" id="eventRate">10.0/s (100ms)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Event Stats:</span>
+            <span class="stat-value" id="eventStats">Sent: 0, Received: 0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Drop Rate:</span>
+            <span class="stat-value" id="eventDropRate">0.0%</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">Total Commands:</span>
@@ -422,6 +440,8 @@
           tracingBtn: document.getElementById('tracingBtn'),
           fpsInput: document.getElementById('fpsInput'),
           setFpsBtn: document.getElementById('setFpsBtn'),
+          throttleInput: document.getElementById('throttleInput'),
+          setThrottleBtn: document.getElementById('setThrottleBtn'),
           clearBtn: document.getElementById('clearBtn'),
           exportBtn: document.getElementById('exportBtn'),
           commandList: document.getElementById('commandList'),
@@ -432,6 +452,9 @@
           rendererFps: document.getElementById('rendererFps'),
           rendererUptime: document.getElementById('rendererUptime'),
           commandRate: document.getElementById('commandRate'),
+          eventRate: document.getElementById('eventRate'),
+          eventStats: document.getElementById('eventStats'),
+          eventDropRate: document.getElementById('eventDropRate'),
           totalCommands: document.getElementById('totalCommands'),
           contentRenderers: document.getElementById('contentRenderers')
         };
@@ -441,11 +464,16 @@
         this.elements.connectBtn.addEventListener('click', () => this.toggleConnection());
         this.elements.tracingBtn.addEventListener('click', () => this.toggleTracing());
         this.elements.setFpsBtn.addEventListener('click', () => this.setFrameRate());
+        this.elements.setThrottleBtn.addEventListener('click', () => this.setEventThrottle());
         this.elements.clearBtn.addEventListener('click', () => this.clearCommands());
         this.elements.exportBtn.addEventListener('click', () => this.exportTrace());
 
         this.elements.fpsInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') this.setFrameRate();
+        });
+        
+        this.elements.throttleInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') this.setEventThrottle();
         });
 
         // Update tracing time periodically
@@ -619,6 +647,13 @@
         }
       }
 
+      setEventThrottle() {
+        const intervalMs = parseInt(this.elements.throttleInput.value);
+        if (intervalMs >= 10 && intervalMs <= 10000) {
+          this.sendCommand('JSAR.UniversalRenderingServer.setEventThrottle', { intervalMs: intervalMs });
+        }
+      }
+
       refreshRendererInfo() {
         this.sendCommand('JSAR.UniversalRenderingServer.getRendererInfo', {}, (response) => {
           if (response.result) {
@@ -635,8 +670,22 @@
 
       updateRendererInfo(info) {
         this.elements.rendererStatus.textContent = info.tracingEnabled ? 'Tracing' : 'Ready';
-        this.elements.rendererFps.textContent = `${info.currentFps || 0}`;
+        this.elements.rendererFps.textContent = `${info.fps || 0}`;
         this.elements.rendererUptime.textContent = `${info.uptime || 0}s`;
+        
+        // Update throttling statistics if available
+        if (info.eventThrottleMs !== undefined) {
+          const eventsPerSec = (1000 / info.eventThrottleMs).toFixed(1);
+          this.elements.eventRate.textContent = `${eventsPerSec}/s (${info.eventThrottleMs}ms)`;
+          
+          if (info.totalEventsReceived !== undefined && info.totalEventsSent !== undefined) {
+            this.elements.eventStats.textContent = `Sent: ${info.totalEventsSent}, Received: ${info.totalEventsReceived}`;
+            
+            if (info.eventDropRate !== undefined) {
+              this.elements.eventDropRate.textContent = `${info.eventDropRate.toFixed(1)}%`;
+            }
+          }
+        }
       }
 
       updateContentRenderers(renderers) {
@@ -723,6 +772,8 @@
         this.elements.tracingBtn.className = `btn ${this.isTracing ? 'active' : ''}`;
         this.elements.fpsInput.disabled = !connected;
         this.elements.setFpsBtn.disabled = !connected;
+        this.elements.throttleInput.disabled = !connected;
+        this.elements.setThrottleBtn.disabled = !connected;
         this.elements.exportBtn.disabled = this.commandBuffer.length === 0;
 
         // Refresh renderer info if connected
