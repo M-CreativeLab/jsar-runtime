@@ -13,6 +13,7 @@
 #include <client/per_process.hpp>
 
 #include "./ecs-inl.hpp"
+#include "./text.hpp"
 #include "./texture_altas.hpp"
 
 namespace builtin_scene
@@ -365,6 +366,80 @@ namespace builtin_scene
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
+
+    private:
+      // The clipping area for the background, it can be a path or a rounded rectangle.
+      class ClippingArea : public std::variant<std::monostate, SkPath, SkRRect>
+      {
+      public:
+        ClippingArea() = default;
+        ClippingArea(const SkPath &path)
+            : std::variant<std::monostate, SkPath, SkRRect>(path)
+        {
+        }
+        ClippingArea(const SkRRect &rrect)
+            : std::variant<std::monostate, SkPath, SkRRect>(rrect)
+        {
+        }
+
+        inline bool isEmpty() const
+        {
+          return std::holds_alternative<std::monostate>(*this);
+        }
+        inline bool isPath() const
+        {
+          return std::holds_alternative<SkPath>(*this);
+        }
+        inline bool isRRect() const
+        {
+          return std::holds_alternative<SkRRect>(*this);
+        }
+
+        inline const SkPath &path() const
+        {
+          return std::get<SkPath>(*this);
+        }
+        inline const SkRRect &roundedRect() const
+        {
+          return std::get<SkRRect>(*this);
+        }
+
+        friend std::ostream &operator<<(std::ostream &os, const ClippingArea &area)
+        {
+          if (area.isEmpty())
+            os << "ClippingArea()";
+          else if (area.isPath())
+            os << "ClippingArea(Path)";
+          else if (area.isRRect())
+          {
+            auto &rrect = area.roundedRect();
+            os << "ClippingArea(" << rrect.width() << "," << rrect.height() << ")";
+          }
+          return os;
+        }
+      };
+
+      // Helper methods for drawing and clipping.
+      SkRRect getBackgroundClippingArea(const SkRRect &,
+                                        const client_layout::Fragment &,
+                                        const client_cssom::ComputedStyle &);
+      std::optional<SkPath> createTextPath(const std::string &textContent, const WebContent &);
+
+      // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
+      std::optional<SkPaint> drawBackground(SkCanvas *,
+                                            SkRRect &originalRRect,
+                                            ClippingArea &,
+                                            const client_layout::Fragment &,
+                                            const client_cssom::ComputedStyle &,
+                                            bool &textureRequired);
+      // Draw the rounded rectangle with the given paint, using the clipping area if provided.
+      void drawRRect(SkCanvas *, const SkRRect &, const SkPaint &, const ClippingArea &);
+      // Draw the image in the positioning area with the given paint.
+      void drawImage(SkCanvas *,
+                     const sk_sp<SkImage> &,
+                     const SkRect &positioningArea,
+                     const SkPaint &,
+                     const client_cssom::ComputedStyle &);
     };
 
     class RenderImageSystem final : public RenderBaseSystem

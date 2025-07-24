@@ -1,231 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Clip Text Test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f0f0f0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Background Clip Text Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
 
-        .test-container {
-            margin: 20px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-        }
+    .test-container {
+      margin: 20px 0;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+    }
 
-        /* Test 1: Basic background-clip: text with solid color */
-        .text-clip-solid {
-            font-size: 48px;
-            font-weight: bold;
-            background-color: #ff6b6b;
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-align: center;
-            margin: 10px 0;
-        }
+    /* Test 1: Basic background-clip: text with solid color */
+    .text-clip-solid {
+      font-size: 48px;
+      font-weight: bold;
+      background-color: #ff6b6b;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin: 10px 0;
+    }
 
-        /* Test 2: background-clip: text with linear gradient */
-        .text-clip-gradient {
-            font-size: 48px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-align: center;
-            margin: 10px 0;
-        }
+    /* Test 2: background-clip: text with linear gradient */
+    .text-clip-gradient {
+      font-size: 48px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin: 10px 0;
+    }
 
-        /* Test 3: background-clip: text with radial gradient */
-        .text-clip-radial {
-            font-size: 48px;
-            font-weight: bold;
-            background: radial-gradient(circle, #ff6b6b, #4ecdc4);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-align: center;
-            margin: 10px 0;
-        }
+    /* Test 3: background-clip: text with radial gradient */
+    .text-clip-radial {
+      font-size: 48px;
+      font-weight: bold;
+      background: radial-gradient(circle, #ff6b6b, #4ecdc4);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin: 10px 0;
+    }
 
-        /* Test 4: Empty text with background-clip: text (should show no background) */
-        .text-clip-empty {
-            font-size: 48px;
-            font-weight: bold;
-            background-color: #ff6b6b;
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-align: center;
-            margin: 10px 0;
-            height: 60px; /* Give it some height to see if background appears */
-            border: 1px dashed #ccc; /* Visual indicator of the element bounds */
-        }
+    /* Test 4: Empty text with background-clip: text (should show no background) */
+    .text-clip-empty {
+      font-size: 48px;
+      font-weight: bold;
+      background-color: #ff6b6b;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin: 10px 0;
+      height: 60px;
+      /* Give it some height to see if background appears */
+      border: 1px dashed #ccc;
+      /* Visual indicator of the element bounds */
+    }
 
-        /* Test 5: Multiple lines with background-clip: text */
-        .text-clip-multiline {
-            font-size: 24px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f7b731);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            text-align: center;
-            margin: 10px 0;
-            line-height: 1.2;
-        }
+    /* Test 5: Multiple lines with background-clip: text */
+    .text-clip-multiline {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f7b731);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin: 10px 0;
+      line-height: 1.2;
+    }
 
-        /* Test 6: Regular text for comparison */
-        .text-normal {
-            font-size: 48px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-            margin: 10px 0;
-        }
+    /* Test 6: Regular text for comparison */
+    .text-normal {
+      font-size: 48px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+      margin: 10px 0;
+    }
 
-        /* Test 7: Other background-clip values for comparison */
-        .text-clip-border-box {
-            font-size: 24px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            background-clip: border-box;
-            color: white;
-            padding: 10px;
-            border: 3px solid transparent;
-            margin: 10px 0;
-        }
+    /* Test 7: Other background-clip values for comparison */
+    .text-clip-border-box {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      background-clip: border-box;
+      color: white;
+      padding: 10px;
+      border: 3px solid transparent;
+      margin: 10px 0;
+    }
 
-        .text-clip-padding-box {
-            font-size: 24px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            background-clip: padding-box;
-            color: white;
-            padding: 10px;
-            border: 3px solid #333;
-            margin: 10px 0;
-        }
+    .text-clip-padding-box {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      background-clip: padding-box;
+      color: white;
+      padding: 10px;
+      border: 3px solid #333;
+      margin: 10px 0;
+    }
 
-        .text-clip-content-box {
-            font-size: 24px;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            background-clip: content-box;
-            color: white;
-            padding: 10px;
-            border: 3px solid #333;
-            margin: 10px 0;
-        }
+    .text-clip-content-box {
+      font-size: 24px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      background-clip: content-box;
+      color: white;
+      padding: 10px;
+      border: 3px solid #333;
+      margin: 10px 0;
+    }
 
-        .test-description {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
+    .test-description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
 
-        .expected-result {
-            font-size: 12px;
-            color: #999;
-            font-style: italic;
-            margin-top: 5px;
-        }
-    </style>
+    .expected-result {
+      font-size: 12px;
+      color: #999;
+      font-style: italic;
+      margin-top: 5px;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Background Clip Text Test</h1>
-    <p>This page tests the implementation of <code>background-clip: text</code> property with various scenarios.</p>
+  <h1>Background Clip Text Test</h1>
+  <p>This page tests the implementation of <code>background-clip: text</code> property with various scenarios.</p>
 
-    <div class="test-container">
-        <div class="test-description">Test 1: Solid color background with text clipping</div>
-        <div class="text-clip-solid">SOLID COLOR TEXT</div>
-        <div class="expected-result">Expected: Red color should only be visible within the text glyphs, text should appear filled with red</div>
+  <div class="test-container">
+    <div class="test-description">Test 1: Solid color background with text clipping</div>
+    <div class="text-clip-solid">SOLID COLOR TEXT</div>
+    <div class="expected-result">Expected: Red color should only be visible within the text glyphs, text should
+      appear filled with red</div>
+  </div>
+
+  <div class="test-container">
+    <div class="test-description">Test 2: Linear gradient background with text clipping</div>
+    <div class="text-clip-gradient">GRADIENT TEXT</div>
+    <div class="expected-result">Expected: Gradient should only be visible within the text glyphs, creating a
+      colorful text effect</div>
+  </div>
+
+  <div class="test-container">
+    <div class="test-description">Test 3: Radial gradient background with text clipping</div>
+    <div class="text-clip-radial">RADIAL GRADIENT</div>
+    <div class="expected-result">Expected: Radial gradient should only be visible within the text glyphs</div>
+  </div>
+
+  <div class="test-container">
+    <div class="test-description">Test 4: Empty text with background-clip: text (edge case)</div>
+    <div class="text-clip-empty"></div>
+    <div class="expected-result">Expected: No background should be visible since there's no text content to clip to
     </div>
+  </div>
 
-    <div class="test-container">
-        <div class="test-description">Test 2: Linear gradient background with text clipping</div>
-        <div class="text-clip-gradient">GRADIENT TEXT</div>
-        <div class="expected-result">Expected: Gradient should only be visible within the text glyphs, creating a colorful text effect</div>
-    </div>
+  <div class="test-container">
+    <div class="test-description">Test 5: Multiple lines with background-clip: text</div>
+    <div class="text-clip-multiline">This is a multi-line text example<br>with background-clip: text applied<br>to
+      test line breaks and wrapping</div>
+    <div class="expected-result">Expected: Gradient should be visible across all lines of text</div>
+  </div>
 
-    <div class="test-container">
-        <div class="test-description">Test 3: Radial gradient background with text clipping</div>
-        <div class="text-clip-radial">RADIAL GRADIENT</div>
-        <div class="expected-result">Expected: Radial gradient should only be visible within the text glyphs</div>
-    </div>
+  <div class="test-container">
+    <div class="test-description">Test 6: Normal text for comparison</div>
+    <div class="text-normal">NORMAL TEXT</div>
+    <div class="expected-result">Expected: Regular dark text, no background clipping</div>
+  </div>
 
-    <div class="test-container">
-        <div class="test-description">Test 4: Empty text with background-clip: text (edge case)</div>
-        <div class="text-clip-empty"></div>
-        <div class="expected-result">Expected: No background should be visible since there's no text content to clip to</div>
-    </div>
+  <div class="test-container">
+    <div class="test-description">Test 7: border-box clipping (should show background behind text)</div>
+    <div class="text-clip-border-box">Border Box Clipping</div>
+    <div class="expected-result">Expected: Background visible in entire element area including borders</div>
+  </div>
 
-    <div class="test-container">
-        <div class="test-description">Test 5: Multiple lines with background-clip: text</div>
-        <div class="text-clip-multiline">This is a multi-line text example<br>with background-clip: text applied<br>to test line breaks and wrapping</div>
-        <div class="expected-result">Expected: Gradient should be visible across all lines of text</div>
-    </div>
+  <div class="test-container">
+    <div class="test-description">Test 8: padding-box clipping (should show background behind text)</div>
+    <div class="text-clip-padding-box">Padding Box Clipping</div>
+    <div class="expected-result">Expected: Background visible in padding and content area, not in borders</div>
+  </div>
 
-    <div class="test-container">
-        <div class="test-description">Test 6: Normal text for comparison</div>
-        <div class="text-normal">NORMAL TEXT</div>
-        <div class="expected-result">Expected: Regular dark text, no background clipping</div>
-    </div>
-
-    <div class="test-container">
-        <div class="test-description">Test 7: border-box clipping (should show background behind text)</div>
-        <div class="text-clip-border-box">Border Box Clipping</div>
-        <div class="expected-result">Expected: Background visible in entire element area including borders</div>
-    </div>
-
-    <div class="test-container">
-        <div class="test-description">Test 8: padding-box clipping (should show background behind text)</div>
-        <div class="text-clip-padding-box">Padding Box Clipping</div>
-        <div class="expected-result">Expected: Background visible in padding and content area, not in borders</div>
-    </div>
-
-    <div class="test-container">
-        <div class="test-description">Test 9: content-box clipping (should show background behind text)</div>
-        <div class="text-clip-content-box">Content Box Clipping</div>
-        <div class="expected-result">Expected: Background visible only in content area, not in padding or borders</div>
-    </div>
-
-    <script>
-        // Simple test to verify the page loaded
-        console.log("Background clip text test page loaded");
-        
-        // Log which elements have background-clip: text
-        const textClipElements = document.querySelectorAll('[style*="background-clip: text"], .text-clip-solid, .text-clip-gradient, .text-clip-radial, .text-clip-empty, .text-clip-multiline');
-        console.log(`Found ${textClipElements.length} elements with background-clip: text`);
-        
-        textClipElements.forEach((element, index) => {
-            const computedStyle = window.getComputedStyle(element);
-            console.log(`Element ${index + 1}:`, {
-                className: element.className,
-                textContent: element.textContent.substring(0, 20) + (element.textContent.length > 20 ? '...' : ''),
-                backgroundClip: computedStyle.backgroundClip || computedStyle.webkitBackgroundClip,
-                backgroundColor: computedStyle.backgroundColor,
-                backgroundImage: computedStyle.backgroundImage,
-                color: computedStyle.color
-            });
-        });
-
-        // Test that background-clip parsing works
-        const testElement = document.createElement('div');
-        testElement.style.backgroundClip = 'text';
-        document.body.appendChild(testElement);
-        const computedStyle = window.getComputedStyle(testElement);
-        console.log('Background-clip parsing test:', {
-            set: 'text',
-            computed: computedStyle.backgroundClip || computedStyle.webkitBackgroundClip
-        });
-        document.body.removeChild(testElement);
-    </script>
+  <div class="test-container">
+    <div class="test-description">Test 9: content-box clipping (should show background behind text)</div>
+    <div class="text-clip-content-box">Content Box Clipping</div>
+    <div class="expected-result">Expected: Background visible only in content area, not in padding or borders</div>
+  </div>
 </body>
+
 </html>
