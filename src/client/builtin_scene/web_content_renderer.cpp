@@ -86,6 +86,81 @@ namespace builtin_scene::web_renderer
     return borderBox;
   }
 
+  // Helper function to calculate background image size based on background-size
+  SkSize calculateBackgroundImageSize(const sk_sp<SkImage> &image,
+                                     const SkRect &positioningArea,
+                                     const ComputedStyle &style)
+  {
+    if (!image)
+      return SkSize::MakeEmpty();
+
+    float originalWidth = static_cast<float>(image->width());
+    float originalHeight = static_cast<float>(image->height());
+    
+    if (style.backgroundSize().isAuto())
+    {
+      // Auto: use the image's natural size
+      return SkSize::Make(originalWidth, originalHeight);
+    }
+    else if (style.backgroundSize().isCover())
+    {
+      // Cover: scale image to cover the entire background area
+      float scaleX = positioningArea.width() / originalWidth;
+      float scaleY = positioningArea.height() / originalHeight;
+      float scale = std::max(scaleX, scaleY);
+      return SkSize::Make(originalWidth * scale, originalHeight * scale);
+    }
+    else if (style.backgroundSize().isContain())
+    {
+      // Contain: scale image to fit entirely within the background area
+      float scaleX = positioningArea.width() / originalWidth;
+      float scaleY = positioningArea.height() / originalHeight;
+      float scale = std::min(scaleX, scaleY);
+      return SkSize::Make(originalWidth * scale, originalHeight * scale);
+    }
+
+    // Default to auto
+    return SkSize::Make(originalWidth, originalHeight);
+  }
+
+  // Helper function to calculate background image position based on background-position
+  SkPoint calculateBackgroundImagePosition(const SkSize &imageSize,
+                                          const SkRect &positioningArea,
+                                          const ComputedStyle &style)
+  {
+    float x, y;
+
+    // Handle horizontal positioning
+    if (style.backgroundPosition().isLeft())
+    {
+      x = positioningArea.fLeft;
+    }
+    else if (style.backgroundPosition().isRight())
+    {
+      x = positioningArea.fRight - imageSize.width();
+    }
+    else // center or other values default to center
+    {
+      x = positioningArea.fLeft + (positioningArea.width() - imageSize.width()) / 2.0f;
+    }
+
+    // Handle vertical positioning
+    if (style.backgroundPosition().isTop())
+    {
+      y = positioningArea.fTop;
+    }
+    else if (style.backgroundPosition().isBottom())
+    {
+      y = positioningArea.fBottom - imageSize.height();
+    }
+    else // center or other values default to center
+    {
+      y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f;
+    }
+
+    return SkPoint::Make(x, y);
+  }
+
   // Helper function to draw background image with repeat pattern
 
   void InitSystem::onExecute()
@@ -951,23 +1026,26 @@ namespace builtin_scene::web_renderer
     if (!image)
       return;
 
-    float imageWidth = static_cast<float>(image->width());
-    float imageHeight = static_cast<float>(image->height());
+    // Calculate background image size based on background-size property
+    SkSize imageSize = calculateBackgroundImageSize(image, positioningArea, style);
+    
+    // Calculate background image position based on background-position property
+    SkPoint imagePosition = calculateBackgroundImagePosition(imageSize, positioningArea, style);
 
     if (style.backgroundRepeat().isRepeat())
     {
       // Repeat both horizontally and vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      for (float y = imagePosition.fY; y < positioningArea.fBottom; y += imageSize.height())
       {
-        for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+        for (float x = imagePosition.fX; x < positioningArea.fRight; x += imageSize.width())
         {
-          SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
+          SkRect destRect = SkRect::MakeXYWH(x, y, imageSize.width(), imageSize.height());
           // Clip to positioning area
           if (destRect.intersect(positioningArea))
           {
             SkRect srcRect = SkRect::MakeWH(
-              destRect.width() * imageWidth / imageWidth,
-              destRect.height() * imageHeight / imageHeight);
+              destRect.width() * static_cast<float>(image->width()) / imageSize.width(),
+              destRect.height() * static_cast<float>(image->height()) / imageSize.height());
             canvas->drawImageRect(image,
                                   srcRect,
                                   destRect,
@@ -981,14 +1059,14 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundRepeat().isRepeatX())
     {
       // Repeat only horizontally
-      for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+      for (float x = imagePosition.fX; x < positioningArea.fRight; x += imageSize.width())
       {
-        SkRect destRect = SkRect::MakeXYWH(x, positioningArea.fTop, imageWidth, imageHeight);
+        SkRect destRect = SkRect::MakeXYWH(x, imagePosition.fY, imageSize.width(), imageSize.height());
         if (destRect.intersect(positioningArea))
         {
           SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
+            destRect.width() * static_cast<float>(image->width()) / imageSize.width(),
+            destRect.height() * static_cast<float>(image->height()) / imageSize.height());
           canvas->drawImageRect(image,
                                 srcRect,
                                 destRect,
@@ -1001,14 +1079,14 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundRepeat().isRepeatY())
     {
       // Repeat only vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      for (float y = imagePosition.fY; y < positioningArea.fBottom; y += imageSize.height())
       {
-        SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, y, imageWidth, imageHeight);
+        SkRect destRect = SkRect::MakeXYWH(imagePosition.fX, y, imageSize.width(), imageSize.height());
         if (destRect.intersect(positioningArea))
         {
           SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
+            destRect.width() * static_cast<float>(image->width()) / imageSize.width(),
+            destRect.height() * static_cast<float>(image->height()) / imageSize.height());
           canvas->drawImageRect(image,
                                 srcRect,
                                 destRect,
@@ -1020,13 +1098,13 @@ namespace builtin_scene::web_renderer
     }
     else if (style.backgroundRepeat().isNoRepeat())
     {
-      // No repeat - draw once at the positioning area origin
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      // No repeat - draw once at the calculated position and size
+      SkRect destRect = SkRect::MakeXYWH(imagePosition.fX, imagePosition.fY, imageSize.width(), imageSize.height());
       if (destRect.intersect(positioningArea))
       {
         SkRect srcRect = SkRect::MakeWH(
-          destRect.width() * imageWidth / imageWidth,
-          destRect.height() * imageHeight / imageHeight);
+          destRect.width() * static_cast<float>(image->width()) / imageSize.width(),
+          destRect.height() * static_cast<float>(image->height()) / imageSize.height());
         canvas->drawImageRect(image,
                               srcRect,
                               destRect,
@@ -1038,7 +1116,7 @@ namespace builtin_scene::web_renderer
     else
     {
       // Default to no repeat for unsupported values (space, round)
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      SkRect destRect = SkRect::MakeXYWH(imagePosition.fX, imagePosition.fY, imageSize.width(), imageSize.height());
       if (destRect.intersect(positioningArea))
       {
         canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);
