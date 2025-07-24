@@ -212,7 +212,7 @@ void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Do
 
 string CdpHandler::extractDomain(const string &method)
 {
-  size_t dotPos = method.find('.');
+  size_t dotPos = method.rfind('.');
   if (dotPos == string::npos)
   {
     return method; // No domain separator, treat whole string as domain
@@ -222,7 +222,7 @@ string CdpHandler::extractDomain(const string &method)
 
 string CdpHandler::extractMethodName(const string &method)
 {
-  size_t dotPos = method.find('.');
+  size_t dotPos = method.rfind('.');
   if (dotPos == string::npos)
   {
     return ""; // No method name
