@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
 #include <skia/include/core/SkRRect.h>
@@ -10,6 +11,7 @@
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
+
 #include <client/layout/fragment.hpp>
 #include <client/canvas/image_codec.hpp>
 #include <client/cssom/computed_style.hpp>
@@ -23,7 +25,6 @@
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./web_content.hpp"
-#include "./text.hpp"
 #include "./image.hpp"
 
 namespace builtin_scene::web_renderer
@@ -86,109 +87,6 @@ namespace builtin_scene::web_renderer
   }
 
   // Helper function to draw background image with repeat pattern
-  void drawBackgroundImage(SkCanvas *canvas,
-                           const sk_sp<SkImage> &image,
-                           const SkRect &positioningArea,
-                           const ComputedStyle &style,
-                           const SkPaint &paint)
-  {
-    if (!image)
-      return;
-
-    float imageWidth = static_cast<float>(image->width());
-    float imageHeight = static_cast<float>(image->height());
-
-    if (style.backgroundRepeat().isRepeat())
-    {
-      // Repeat both horizontally and vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
-      {
-        for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
-        {
-          SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
-          // Clip to positioning area
-          if (destRect.intersect(positioningArea))
-          {
-            SkRect srcRect = SkRect::MakeWH(
-              destRect.width() * imageWidth / imageWidth,
-              destRect.height() * imageHeight / imageHeight);
-            canvas->drawImageRect(image,
-                                  srcRect,
-                                  destRect,
-                                  SkSamplingOptions(),
-                                  &paint,
-                                  SkCanvas::kStrict_SrcRectConstraint);
-          }
-        }
-      }
-    }
-    else if (style.backgroundRepeat().isRepeatX())
-    {
-      // Repeat only horizontally
-      for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
-      {
-        SkRect destRect = SkRect::MakeXYWH(x, positioningArea.fTop, imageWidth, imageHeight);
-        if (destRect.intersect(positioningArea))
-        {
-          SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
-          canvas->drawImageRect(image,
-                                srcRect,
-                                destRect,
-                                SkSamplingOptions(),
-                                &paint,
-                                SkCanvas::kStrict_SrcRectConstraint);
-        }
-      }
-    }
-    else if (style.backgroundRepeat().isRepeatY())
-    {
-      // Repeat only vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
-      {
-        SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, y, imageWidth, imageHeight);
-        if (destRect.intersect(positioningArea))
-        {
-          SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
-          canvas->drawImageRect(image,
-                                srcRect,
-                                destRect,
-                                SkSamplingOptions(),
-                                &paint,
-                                SkCanvas::kStrict_SrcRectConstraint);
-        }
-      }
-    }
-    else if (style.backgroundRepeat().isNoRepeat())
-    {
-      // No repeat - draw once at the positioning area origin
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
-      if (destRect.intersect(positioningArea))
-      {
-        SkRect srcRect = SkRect::MakeWH(
-          destRect.width() * imageWidth / imageWidth,
-          destRect.height() * imageHeight / imageHeight);
-        canvas->drawImageRect(image,
-                              srcRect,
-                              destRect,
-                              SkSamplingOptions(),
-                              &paint,
-                              SkCanvas::kStrict_SrcRectConstraint);
-      }
-    }
-    else
-    {
-      // Default to no repeat for unsupported values (space, round)
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
-      if (destRect.intersect(positioningArea))
-      {
-        canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);
-      }
-    }
-  }
 
   void InitSystem::onExecute()
   {
@@ -221,111 +119,6 @@ namespace builtin_scene::web_renderer
 
   // Create a gradient shader based on the computed image and rounded rectangle.
   sk_sp<SkShader> createGradientShader(const computed::Image &, const SkRRect &);
-
-  // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
-  optional<SkPaint> drawBackground(SkCanvas *canvas,
-                                   SkRRect &originalRRect,
-                                   const client_layout::Fragment &fragment,
-                                   const client_cssom::ComputedStyle &style,
-                                   bool &textureRequired)
-  {
-    optional<SkPaint> fillPaint = nullopt;
-
-    // Mark the texture as not required by default.
-    textureRequired = false;
-
-    // TODO(yorkie): Skip if there is no color or image?
-    SkRRect roundedRect;
-    {
-      // The offset factor is used to adjust the rectangle size for the background, this is to ensure that there are no
-      // gaps between the background and the border.
-      static float offsetFactor = 0.8;
-      const SkRect &originalRect = originalRRect.rect();
-      float insetTop = fragment.border().top() * offsetFactor;
-      float insetRight = fragment.border().right() * offsetFactor;
-      float insetBottom = fragment.border().bottom() * offsetFactor;
-      float insetLeft = fragment.border().left() * offsetFactor;
-
-      SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
-                                     originalRect.fTop + insetTop,
-                                     originalRect.width() - insetLeft - insetRight,
-                                     originalRect.height() - insetTop - insetBottom);
-      SkVector radii[4];
-      for (int i = 0; i < 4; i++)
-        radii[i] = originalRRect.radii(static_cast<SkRRect::Corner>(i));
-      roundedRect.setRectRadii(rect, radii);
-    }
-
-    if (style.hasBackgroundColor())
-    {
-      auto color = style.backgroundColor().resolveToAbsoluteColor();
-
-      fillPaint = make_optional<SkPaint>();
-      fillPaint->setColor(color);
-      fillPaint->setAntiAlias(true);
-      fillPaint->setStyle(SkPaint::kFill_Style);
-      canvas->drawRRect(roundedRect, fillPaint.value());
-    }
-
-    if (style.hasBackgroundImage())
-    {
-      // Init the fill paint if it hasn't been set yet.
-      if (!fillPaint.has_value())
-        fillPaint = make_optional<SkPaint>();
-
-      // Reset the fill paint properties.
-      fillPaint->setColor(SK_ColorBLACK);
-      fillPaint->setAntiAlias(true);
-      fillPaint->setStyle(SkPaint::kFill_Style);
-
-      // Set the blend mode for the paint if the background blend mode is not normal.
-      if (!style.backgroundBlendMode().isNormal())
-        fillPaint->setBlendMode(style.backgroundBlendMode());
-
-      const auto &image = style.backgroundImage();
-      if (image.isUrl())
-      {
-        if (image.isUrlImageLoaded())
-        {
-          SkBitmap bitmap;
-          // TODO(yorkie): support decoding this async?
-          if (canvas::ImageCodec::Decode(image.getUrlImageData(),
-                                         bitmap,
-                                         image.getUrl()))
-          {
-            canvas->save();
-            {
-              canvas->clipRRect(roundedRect, true);
-
-              // Get the background positioning area based on background-origin
-              SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
-              drawBackgroundImage(canvas, bitmap.asImage(), positioningArea, style, fillPaint.value());
-            }
-            canvas->restore();
-            textureRequired = true;
-          }
-        }
-        else
-        {
-          // NOTE(yorkie): If the image is not loaded yet, just wait for the image to be loaded.
-        }
-      }
-      else if (image.isGradient())
-      {
-        // Create gradient shader using the new helper method
-        sk_sp<SkShader> shader = createGradientShader(image, originalRRect);
-
-        // Apply the shader if successfully created
-        if (shader)
-        {
-          fillPaint->setShader(shader);
-          canvas->drawRRect(roundedRect, fillPaint.value());
-          textureRequired = true;
-        }
-      }
-    }
-    return fillPaint;
-  }
 
   // Helper method to convert LengthPercentage to position (0.0 to 1.0)
   float lengthPercentageToPosition(const computed::LengthPercentage &lengthPercentage, float totalLength)
@@ -782,8 +575,38 @@ namespace builtin_scene::web_renderer
     SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
+    ClippingArea clipInfo;
+    if (style.backgroundClip().isText())
+    {
+      // Get the text content from the children of this entity.
+      string textContent;
+      auto childrenComponent = getComponentChecked<hierarchy::Children>(entity);
+      for (const auto &childEntity : childrenComponent.children())
+      {
+        auto textComponent = getComponent<Text2d>(childEntity);
+        if (textComponent != nullptr)
+          textContent += textComponent->content;
+      }
+
+      auto textPath = createTextPath(textContent, content);
+      if (textPath.has_value())
+        clipInfo = ClippingArea(textPath.value());
+      else
+        clipInfo = ClippingArea(SkRRect::MakeEmpty()); // No text path, use empty clipping area.
+    }
+    else if (!style.backgroundClip().isBorderBox())
+    {
+      SkRRect clippingArea = getBackgroundClippingArea(roundedRect, fragment.value(), style);
+      clipInfo = ClippingArea(clippingArea);
+    }
+
     bool textureRequired = false;
-    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style, textureRequired);
+    auto backgroundPaint = drawBackground(canvas,
+                                          roundedRect,
+                                          clipInfo,
+                                          fragment.value(),
+                                          style,
+                                          textureRequired);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
@@ -802,6 +625,425 @@ namespace builtin_scene::web_renderer
     }
     if (drawBorders(canvas, roundedRect, fragment.value(), style))
       content.setTextureUsing(true); // enable texture when there are borders.
+  }
+
+  SkRRect RenderBackgroundSystem::getBackgroundClippingArea(const SkRRect &roundedRect,
+                                                            const client_layout::Fragment &fragment,
+                                                            const ComputedStyle &style)
+  {
+    const SkRect &borderBox = roundedRect.rect();
+    SkRRect clippingArea = roundedRect; // Start with border-box
+
+    if (style.backgroundClip().isPaddingBox())
+    {
+      // For padding-box, subtract border widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      SkRect paddingRect = SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft,
+        borderBox.fTop + borderTop,
+        borderBox.fRight - borderRight,
+        borderBox.fBottom - borderBottom);
+
+      // Adjust radii for the padding box
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+      {
+        SkVector originalRadius = roundedRect.radii(static_cast<SkRRect::Corner>(i));
+        // Reduce radii by border width (but don't go below 0)
+        float borderReduction = (i == 0 || i == 3) ? borderLeft : borderRight; // Simplified
+        radii[i] = SkVector{std::max(0.0f, originalRadius.x() - borderReduction),
+                            std::max(0.0f, originalRadius.y() - borderReduction)};
+      }
+      clippingArea.setRectRadii(paddingRect, radii);
+    }
+    else if (style.backgroundClip().isContentBox())
+    {
+      // For content-box, subtract border and padding widths
+      float borderTop = fragment.border().top();
+      float borderRight = fragment.border().right();
+      float borderBottom = fragment.border().bottom();
+      float borderLeft = fragment.border().left();
+
+      float paddingTop = fragment.padding().top();
+      float paddingRight = fragment.padding().right();
+      float paddingBottom = fragment.padding().bottom();
+      float paddingLeft = fragment.padding().left();
+
+      SkRect contentRect = SkRect::MakeLTRB(
+        borderBox.fLeft + borderLeft + paddingLeft,
+        borderBox.fTop + borderTop + paddingTop,
+        borderBox.fRight - borderRight - paddingRight,
+        borderBox.fBottom - borderBottom - paddingBottom);
+
+      // Adjust radii for the content box
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+      {
+        SkVector originalRadius = roundedRect.radii(static_cast<SkRRect::Corner>(i));
+        // Reduce radii by border and padding width (but don't go below 0)
+        float totalReduction = (i == 0 || i == 3) ? (borderLeft + paddingLeft) : (borderRight + paddingRight); // Simplified
+        radii[i] = SkVector{std::max(0.0f, originalRadius.x() - totalReduction),
+                            std::max(0.0f, originalRadius.y() - totalReduction)};
+      }
+      clippingArea.setRectRadii(contentRect, radii);
+    }
+
+    // For border-box (default) and text, return the original rounded rect
+    return clippingArea;
+  }
+
+  optional<SkPath> RenderBackgroundSystem::createTextPath(const std::string &textContent,
+                                                          const WebContent &content)
+  {
+    if (textContent.empty())
+      return nullopt;
+
+    // Try to get the font and text style for path creation
+    const auto &fragment = content.fragment();
+    if (!fragment.has_value())
+      return nullopt;
+
+    SkPath textPath;
+    auto clientContext = TrClientContextPerProcess::Get();
+
+    // Create paragraph to get text layout
+    sk_sp<FontCollection> fontCollection = clientContext->getFontCacheManager();
+    auto paragraphStyle = content.paragraphStyle();
+    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection);
+    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+    paragraphBuilder->addText(textContent.c_str(), textContent.size());
+    paragraphBuilder->pop();
+
+    float layoutWidth = round(content.fragment()->contentWidth()) + 1.0f;
+    auto paragraph = paragraphBuilder->Build();
+    paragraph->layout(layoutWidth);
+
+    // Get the font from the text style
+    const auto &textStyle = paragraphStyle.getTextStyle();
+    sk_sp<SkTypeface> typeface = nullptr;
+
+    // Try to get typeface from font families
+    if (textStyle.getFontFamilies().size() > 0)
+    {
+      auto typefaces = fontCollection->findTypefaces(textStyle.getFontFamilies(), textStyle.getFontStyle());
+      if (!typefaces.empty())
+      {
+        // Use the first matching typeface
+        typeface = typefaces[0];
+      }
+    }
+
+    if (!typeface)
+    {
+      // Fallback to default typeface
+      typeface = fontCollection->defaultFallback();
+    }
+
+    if (typeface)
+    {
+      SkFont font(typeface, textStyle.getFontSize());
+
+      // Convert text to glyphs
+      vector<SkGlyphID> glyphs(textContent.size());
+      int glyphCount = font.textToGlyphs(textContent.c_str(),
+                                         textContent.size(),
+                                         SkTextEncoding::kUTF8,
+                                         glyphs.data(),
+                                         glyphs.size());
+
+      if (glyphCount > 0)
+      {
+        glyphs.resize(glyphCount);
+
+        // Get glyph positions with proper fragment positioning
+        vector<SkPoint> positions(glyphCount);
+        vector<SkScalar> widths(glyphCount);
+        font.getWidths(glyphs.data(), glyphCount, widths.data());
+
+        // Calculate the text offset within the fragment
+        // Text should be positioned in the content area (inside border and padding)
+        const auto &borderBox = content.fragment()->border();
+        const auto &paddingBox = content.fragment()->padding();
+        float textOffsetX = borderBox.left() + paddingBox.left();
+        float textOffsetY = borderBox.top() + paddingBox.top() +
+                            paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
+
+        float x = textOffsetX;
+        float y = textOffsetY;
+
+        for (int i = 0; i < glyphCount; ++i)
+        {
+          positions[i] = SkPoint::Make(x, y);
+          x += widths[i];
+        }
+
+        // Get paths for each glyph and add to textPath
+        for (int i = 0; i < glyphCount; ++i)
+        {
+          SkPath glyphPath;
+          if (font.getPath(glyphs[i], &glyphPath))
+          {
+            // Transform glyph path to its position
+            SkMatrix transform = SkMatrix::Translate(positions[i].x(), positions[i].y());
+            glyphPath.transform(transform);
+            textPath.addPath(glyphPath);
+          }
+        }
+      }
+    }
+
+    return textPath.isEmpty()
+             ? nullopt
+             : optional<SkPath>(textPath);
+  }
+
+  // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
+  optional<SkPaint> RenderBackgroundSystem::drawBackground(SkCanvas *canvas,
+                                                           SkRRect &originalRRect,
+                                                           ClippingArea &clipInfo,
+                                                           const client_layout::Fragment &fragment,
+                                                           const client_cssom::ComputedStyle &style,
+                                                           bool &textureRequired)
+  {
+    optional<SkPaint> fillPaint = nullopt;
+
+    // Mark the texture as not required by default.
+    textureRequired = false;
+
+    // If we have a clip path or rounded rect, we need to use texture.
+    if (!clipInfo.isEmpty())
+      textureRequired = true;
+
+    // TODO(yorkie): Skip if there is no color or image?
+    SkRRect roundedRect;
+    {
+      // The offset factor is used to adjust the rectangle size for the background, this is to ensure that there are no
+      // gaps between the background and the border.
+      static float offsetFactor = 0.8;
+      const SkRect &originalRect = originalRRect.rect();
+      float insetTop = fragment.border().top() * offsetFactor;
+      float insetRight = fragment.border().right() * offsetFactor;
+      float insetBottom = fragment.border().bottom() * offsetFactor;
+      float insetLeft = fragment.border().left() * offsetFactor;
+
+      SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
+                                     originalRect.fTop + insetTop,
+                                     originalRect.width() - insetLeft - insetRight,
+                                     originalRect.height() - insetTop - insetBottom);
+      SkVector radii[4];
+      for (int i = 0; i < 4; i++)
+        radii[i] = originalRRect.radii(static_cast<SkRRect::Corner>(i));
+      roundedRect.setRectRadii(rect, radii);
+    }
+
+    if (style.hasBackgroundColor())
+    {
+      auto color = style.backgroundColor().resolveToAbsoluteColor();
+
+      fillPaint = make_optional<SkPaint>();
+      fillPaint->setColor(color);
+      fillPaint->setAntiAlias(true);
+      fillPaint->setStyle(SkPaint::kFill_Style);
+      drawRRect(canvas,
+                roundedRect,
+                fillPaint.value(),
+                clipInfo);
+    }
+
+    if (style.hasBackgroundImage())
+    {
+      // Init the fill paint if it hasn't been set yet.
+      if (!fillPaint.has_value())
+        fillPaint = make_optional<SkPaint>();
+
+      // Reset the fill paint properties.
+      fillPaint->setColor(SK_ColorBLACK);
+      fillPaint->setAntiAlias(true);
+      fillPaint->setStyle(SkPaint::kFill_Style);
+
+      // Set the blend mode for the paint if the background blend mode is not normal.
+      if (!style.backgroundBlendMode().isNormal())
+        fillPaint->setBlendMode(style.backgroundBlendMode());
+
+      const auto &image = style.backgroundImage();
+      if (image.isUrl())
+      {
+        if (image.isUrlImageLoaded())
+        {
+          SkBitmap bitmap;
+          // TODO(yorkie): support decoding this async?
+          if (canvas::ImageCodec::Decode(image.getUrlImageData(),
+                                         bitmap,
+                                         image.getUrl()))
+          {
+            canvas->save();
+            {
+              // Handle the clipping area if specified.
+              if (clipInfo.isPath())
+                canvas->clipPath(clipInfo.path(), true);
+              else if (clipInfo.isRRect())
+                canvas->clipRRect(clipInfo.roundedRect(), true);
+
+              // Get the background positioning area based on background-origin
+              SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
+              drawImage(canvas, bitmap.asImage(), positioningArea, fillPaint.value(), style);
+            }
+            canvas->restore();
+            textureRequired = true;
+          }
+        }
+        else
+        {
+          // NOTE(yorkie): If the image is not loaded yet, just wait for the image to be loaded.
+        }
+      }
+      else if (image.isGradient())
+      {
+        // Create gradient shader using the new helper method
+        sk_sp<SkShader> shader = createGradientShader(image, originalRRect);
+
+        // Apply the shader if successfully created
+        if (shader)
+        {
+          fillPaint->setShader(shader);
+          drawRRect(canvas,
+                    roundedRect,
+                    fillPaint.value(),
+                    clipInfo);
+          textureRequired = true;
+        }
+      }
+    }
+    return fillPaint;
+  }
+
+  void RenderBackgroundSystem::drawRRect(SkCanvas *canvas,
+                                         const SkRRect &roundedRect,
+                                         const SkPaint &paint,
+                                         const ClippingArea &clipInfo)
+  {
+    if (clipInfo.isEmpty())
+    {
+      canvas->drawRRect(roundedRect, paint);
+    }
+    else
+    {
+      canvas->save();
+      if (clipInfo.isPath())
+        canvas->clipPath(clipInfo.path(), true);
+      else if (clipInfo.isRRect())
+        canvas->clipRRect(clipInfo.roundedRect(), true);
+      canvas->drawRRect(roundedRect, paint);
+      canvas->restore();
+    }
+  }
+
+  void RenderBackgroundSystem::drawImage(SkCanvas *canvas,
+                                         const sk_sp<SkImage> &image,
+                                         const SkRect &positioningArea,
+                                         const SkPaint &paint,
+                                         const ComputedStyle &style)
+  {
+    if (!image)
+      return;
+
+    float imageWidth = static_cast<float>(image->width());
+    float imageHeight = static_cast<float>(image->height());
+
+    if (style.backgroundRepeat().isRepeat())
+    {
+      // Repeat both horizontally and vertically
+      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      {
+        for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+        {
+          SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
+          // Clip to positioning area
+          if (destRect.intersect(positioningArea))
+          {
+            SkRect srcRect = SkRect::MakeWH(
+              destRect.width() * imageWidth / imageWidth,
+              destRect.height() * imageHeight / imageHeight);
+            canvas->drawImageRect(image,
+                                  srcRect,
+                                  destRect,
+                                  SkSamplingOptions(),
+                                  &paint,
+                                  SkCanvas::kStrict_SrcRectConstraint);
+          }
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isRepeatX())
+    {
+      // Repeat only horizontally
+      for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+      {
+        SkRect destRect = SkRect::MakeXYWH(x, positioningArea.fTop, imageWidth, imageHeight);
+        if (destRect.intersect(positioningArea))
+        {
+          SkRect srcRect = SkRect::MakeWH(
+            destRect.width() * imageWidth / imageWidth,
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isRepeatY())
+    {
+      // Repeat only vertically
+      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      {
+        SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, y, imageWidth, imageHeight);
+        if (destRect.intersect(positioningArea))
+        {
+          SkRect srcRect = SkRect::MakeWH(
+            destRect.width() * imageWidth / imageWidth,
+            destRect.height() * imageHeight / imageHeight);
+          canvas->drawImageRect(image,
+                                srcRect,
+                                destRect,
+                                SkSamplingOptions(),
+                                &paint,
+                                SkCanvas::kStrict_SrcRectConstraint);
+        }
+      }
+    }
+    else if (style.backgroundRepeat().isNoRepeat())
+    {
+      // No repeat - draw once at the positioning area origin
+      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      if (destRect.intersect(positioningArea))
+      {
+        SkRect srcRect = SkRect::MakeWH(
+          destRect.width() * imageWidth / imageWidth,
+          destRect.height() * imageHeight / imageHeight);
+        canvas->drawImageRect(image,
+                              srcRect,
+                              destRect,
+                              SkSamplingOptions(),
+                              &paint,
+                              SkCanvas::kStrict_SrcRectConstraint);
+      }
+    }
+    else
+    {
+      // Default to no repeat for unsupported values (space, round)
+      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      if (destRect.intersect(positioningArea))
+      {
+        canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);
+      }
+    }
   }
 
   void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)

@@ -2100,7 +2100,7 @@ checksum = "9f6280af86e5f559536da57a45ebc84948833b3bee313a7dd25232e09c878a52"
 [[package]]
 name = "selectors"
 version = "0.29.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "bitflags 2.9.1",
  "cssparser",
@@ -2165,7 +2165,7 @@ dependencies = [
 [[package]]
 name = "servo_arc"
 version = "0.4.1"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "serde",
  "stable_deref_trait",
@@ -2330,7 +2330,7 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 [[package]]
 name = "stylo"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "app_units",
  "arrayvec",
@@ -2387,7 +2387,7 @@ dependencies = [
 [[package]]
 name = "stylo_atoms"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "string_cache",
  "string_cache_codegen",
@@ -2396,12 +2396,12 @@ dependencies = [
 [[package]]
 name = "stylo_config"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 
 [[package]]
 name = "stylo_derive"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2413,7 +2413,7 @@ dependencies = [
 [[package]]
 name = "stylo_dom"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "bitflags 2.9.1",
  "stylo_malloc_size_of",
@@ -2422,7 +2422,7 @@ dependencies = [
 [[package]]
 name = "stylo_malloc_size_of"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "app_units",
  "cssparser",
@@ -2439,12 +2439,12 @@ dependencies = [
 [[package]]
 name = "stylo_static_prefs"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 
 [[package]]
 name = "stylo_traits"
 version = "0.4.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "app_units",
  "bitflags 2.9.1",
@@ -3004,7 +3004,7 @@ dependencies = [
 [[package]]
 name = "to_shmem"
 version = "0.2.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "cssparser",
  "servo_arc",
@@ -3017,7 +3017,7 @@ dependencies = [
 [[package]]
 name = "to_shmem_derive"
 version = "0.1.0"
-source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#6f36478dd2bdd5b82c35d70dee67fe6948e319ee"
+source = "git+https://github.com/m-creativelab/stylo?branch=2025-06-03-jsar-20250723#803f2d7f70bd7703e5901806a3ae9cc95ffa26ab"
 dependencies = [
  "darling",
  "proc-macro2",
