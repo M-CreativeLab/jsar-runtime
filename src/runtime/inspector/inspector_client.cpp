@@ -264,7 +264,7 @@ void TrInspectorClient::end()
       inspector->onClientDisconnected(*this);
     }
   }
-  
+
   ::shutdown(fd_, SHUT_RDWR);
   ::close(fd_);
   fd_ = -1;
@@ -429,18 +429,17 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     clientId_ = clientId;
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket upgrade requested for client '%s'", clientId.c_str());
 
-    // Initialize CDP handler for this client
-    if (inspector && inspector->constellation)
-    {
-      cdpHandler_ = std::make_unique<CdpHandler>(inspector->constellation, clientId_, this);
-      DEBUG(LOG_TAG_INSPECTOR, "CDP Handler initialized for client '%s'", clientId.c_str());
-    }
-
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();
-    if (inspector == nullptr)
+    if (inspector == nullptr || inspector->constellation == nullptr)
     {
       return false;
+    }
+    else
+    {
+      // Initialize CDP handler for this client
+      cdpHandler_ = std::make_unique<CdpHandler>(inspector->constellation, clientId_, this);
+      DEBUG(LOG_TAG_INSPECTOR, "CDP Handler initialized for client '%s'", clientId.c_str());
     }
 
     if (!inspector->canAcceptWebSocketConnection())
@@ -470,13 +469,13 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     buffer_.clear(); // Clear HTTP parsing buffer
 
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket connection upgraded successfully");
-    
+
     // Notify inspector of client connection
     if (inspector)
     {
       inspector->onClientConnected(*this);
     }
-    
+
     return true;
   }
 

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "./cdp_handler.hpp"
 #include <string>
 #include <set>
 #include <map>
+#include <common/command_buffers/base.hpp>
+
+#include "./cdp_handler.hpp"
 
 class TrConstellation;
 class TrInspectorClient;
@@ -57,5 +59,4 @@ private:
   // Command buffer dispatching
   void sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
   std::string serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
-};
 };

@@ -7,6 +7,8 @@
 #include <rapidjson/document.h>
 #include <chrono>
 
+#include <runtime/content.hpp>
+
 using namespace std;
 
 CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const string &clientId)
@@ -230,10 +232,10 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
     auto content = contentRenderer.getContent();
     if (content)
     {
-      rendererInfo.AddMember("contentPid", rapidjson::Value().SetInt(content->getPid()), allocator);
+      rendererInfo.AddMember("contentPid", rapidjson::Value().SetInt(content->pid), allocator);
       
       rapidjson::Value urlValue;
-      urlValue.SetString(content->getUrl().c_str(), allocator);
+      urlValue.SetString(content->requestInit.url.c_str(), allocator);
       rendererInfo.AddMember("url", urlValue, allocator);
     }
 
