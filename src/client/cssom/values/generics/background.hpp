@@ -479,6 +479,7 @@ namespace client_cssom::values::generics
       kCover,
       kContain,
       kLengthPercentage,
+      kLengthPercentagePair,
     };
 
   public:
@@ -519,6 +520,7 @@ namespace client_cssom::values::generics
       case kContain:
         return "contain";
       case kLengthPercentage:
+      case kLengthPercentagePair:
         return ""; // Will be overridden by derived classes
       }
       return "";
@@ -540,6 +542,10 @@ namespace client_cssom::values::generics
     {
       return tag_ == kLengthPercentage;
     }
+    inline bool isLengthPercentagePair() const
+    {
+      return tag_ == kLengthPercentagePair;
+    }
 
   protected:
     Tag tag_;
@@ -557,6 +563,8 @@ namespace client_cssom::values::generics
       kTop,
       kBottom,
       kLengthPercentage,
+      kLengthPercentagePair,
+      kEdgeOffset,
     };
 
   public:
@@ -609,6 +617,8 @@ namespace client_cssom::values::generics
       case kBottom:
         return "bottom";
       case kLengthPercentage:
+      case kLengthPercentagePair:
+      case kEdgeOffset:
         return ""; // Will be overridden by derived classes
       }
       return "";
@@ -637,6 +647,14 @@ namespace client_cssom::values::generics
     inline bool isLengthPercentage() const
     {
       return tag_ == kLengthPercentage;
+    }
+    inline bool isLengthPercentagePair() const
+    {
+      return tag_ == kLengthPercentagePair;
+    }
+    inline bool isEdgeOffset() const
+    {
+      return tag_ == kEdgeOffset;
     }
 
   protected:

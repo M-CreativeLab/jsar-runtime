@@ -1,7 +1,9 @@
 #pragma once
 
 #include <client/cssom/values/generics/background.hpp>
+#include <client/cssom/values/computed/length_percentage.hpp>
 #include <skia/include/core/SkBlendMode.h>
+#include <optional>
 
 namespace client_cssom::values::specified
 {
@@ -79,11 +81,95 @@ namespace client_cssom::values::computed
 
   class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>
   {
+  private:
+    LengthPercentage width_;
+    std::optional<LengthPercentage> height_;
+
+  public:
     using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
+
+    // Constructor for length/percentage values
+    BackgroundSize(const LengthPercentage &width, const std::optional<LengthPercentage> &height = std::nullopt)
+        : generics::GenericBackgroundSize<BackgroundSize>(height ? kLengthPercentagePair : kLengthPercentage)
+        , width_(width)
+        , height_(height)
+    {
+    }
+
+    static BackgroundSize LengthPercentage(const computed::LengthPercentage &width, const std::optional<computed::LengthPercentage> &height = std::nullopt)
+    {
+      return BackgroundSize(width, height);
+    }
+
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kAuto:
+        return "auto";
+      case kCover:
+        return "cover";
+      case kContain:
+        return "contain";
+      case kLengthPercentage:
+        return width_.toCss();
+      case kLengthPercentagePair:
+        return width_.toCss() + " " + (height_ ? height_->toCss() : "auto");
+      }
+      return "";
+    }
+
+    // Getters for rendering
+    const computed::LengthPercentage& getWidth() const { return width_; }
+    const std::optional<computed::LengthPercentage>& getHeight() const { return height_; }
   };
 
   class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>
   {
+  private:
+    LengthPercentage x_;
+    std::optional<LengthPercentage> y_;
+
+  public:
     using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
+
+    // Constructor for length/percentage values
+    BackgroundPosition(const LengthPercentage &x, const std::optional<LengthPercentage> &y = std::nullopt)
+        : generics::GenericBackgroundPosition<BackgroundPosition>(y ? kLengthPercentagePair : kLengthPercentage)
+        , x_(x)
+        , y_(y)
+    {
+    }
+
+    static BackgroundPosition LengthPercentage(const computed::LengthPercentage &x, const std::optional<computed::LengthPercentage> &y = std::nullopt)
+    {
+      return BackgroundPosition(x, y);
+    }
+
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kLeft:
+        return "left";
+      case kCenter:
+        return "center";
+      case kRight:
+        return "right";
+      case kTop:
+        return "top";
+      case kBottom:
+        return "bottom";
+      case kLengthPercentage:
+        return x_.toCss();
+      case kLengthPercentagePair:
+        return x_.toCss() + " " + (y_ ? y_->toCss() : "center");
+      }
+      return "";
+    }
+
+    // Getters for rendering
+    const computed::LengthPercentage& getX() const { return x_; }
+    const std::optional<computed::LengthPercentage>& getY() const { return y_; }
   };
 }

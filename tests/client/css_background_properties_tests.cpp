@@ -180,6 +180,54 @@ TEST_CASE("BackgroundSize parsing and conversion", "[css-background-size]")
     REQUIRE(size.toCss() == "contain");
   }
 
+  SECTION("Parse length values")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("100px"));
+    REQUIRE(size.isLengthPercentage());
+    REQUIRE(size.toCss() == "100px");
+  }
+
+  SECTION("Parse percentage values")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("50%"));
+    REQUIRE(size.isLengthPercentage());
+    REQUIRE(size.toCss() == "50%");
+  }
+
+  SECTION("Parse em values")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("3.2em"));
+    REQUIRE(size.isLengthPercentage());
+    REQUIRE(size.toCss() == "3.2em");
+  }
+
+  SECTION("Parse two-value syntax")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("50% auto"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "50% auto");
+  }
+
+  SECTION("Parse two-value syntax with lengths")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("3em 25%"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "3em 25%");
+  }
+
+  SECTION("Parse two-value syntax with auto")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("auto 6px"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "auto 6px");
+  }
+
   SECTION("Parse invalid value")
   {
     specified::BackgroundSize size;
@@ -235,6 +283,70 @@ TEST_CASE("BackgroundPosition parsing and conversion", "[css-background-position
     REQUIRE(position.toCss() == "bottom");
   }
 
+  SECTION("Parse percentage values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("25%"));
+    REQUIRE(position.isLengthPercentage());
+    REQUIRE(position.toCss() == "25%");
+  }
+
+  SECTION("Parse length values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("10px"));
+    REQUIRE(position.isLengthPercentage());
+    REQUIRE(position.toCss() == "10px");
+  }
+
+  SECTION("Parse em values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("1em"));
+    REQUIRE(position.isLengthPercentage());
+    REQUIRE(position.toCss() == "1em");
+  }
+
+  SECTION("Parse two-value percentage syntax")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("25% 75%"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "25% 75%");
+  }
+
+  SECTION("Parse two-value length syntax")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("0 0"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "0px 0px");
+  }
+
+  SECTION("Parse mixed keyword and length")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("center 10px"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "50% 10px");
+  }
+
+  SECTION("Parse cm values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("1cm 2cm"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "1cm 2cm");
+  }
+
+  SECTION("Parse ch values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("10ch 8em"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "10ch 8em");
+  }
+
   SECTION("Parse invalid value")
   {
     specified::BackgroundPosition position;
@@ -267,6 +379,19 @@ TEST_CASE("BackgroundSize and BackgroundPosition computed values", "[css-backgro
     size.parse("contain");
     computed::BackgroundSize computedContain = size.toComputedValue(context);
     REQUIRE(computedContain.isContain());
+    
+    // Test length/percentage values
+    size.parse("100px");
+    computed::BackgroundSize computedLength = size.toComputedValue(context);
+    REQUIRE(computedLength.isLengthPercentage());
+    
+    size.parse("50%");
+    computed::BackgroundSize computedPercent = size.toComputedValue(context);
+    REQUIRE(computedPercent.isLengthPercentage());
+    
+    size.parse("100px 50%");
+    computed::BackgroundSize computedPair = size.toComputedValue(context);
+    REQUIRE(computedPair.isLengthPercentagePair());
   }
   
   SECTION("BackgroundPosition computed values")
@@ -292,19 +417,144 @@ TEST_CASE("BackgroundSize and BackgroundPosition computed values", "[css-backgro
     position.parse("bottom");
     computed::BackgroundPosition computedBottom = position.toComputedValue(context);
     REQUIRE(computedBottom.isBottom());
+    
+    // Test length/percentage values
+    position.parse("25%");
+    computed::BackgroundPosition computedPercent = position.toComputedValue(context);
+    REQUIRE(computedPercent.isLengthPercentage());
+    
+    position.parse("10px");
+    computed::BackgroundPosition computedLength = position.toComputedValue(context);
+    REQUIRE(computedLength.isLengthPercentage());
+    
+    position.parse("25% 75%");
+    computed::BackgroundPosition computedPair = position.toComputedValue(context);
+    REQUIRE(computedPair.isLengthPercentagePair());
+  }
+}
+
+TEST_CASE("Advanced BackgroundSize parsing", "[css-background-size-advanced]")
+{
+  SECTION("Various length units")
+  {
+    specified::BackgroundSize size;
+    
+    REQUIRE(size.parse("12px"));
+    REQUIRE(size.isLengthPercentage());
+    
+    REQUIRE(size.parse("3.2em"));
+    REQUIRE(size.isLengthPercentage());
+    
+    REQUIRE(size.parse("1cm"));
+    REQUIRE(size.isLengthPercentage());
+    
+    REQUIRE(size.parse("10ch"));
+    REQUIRE(size.isLengthPercentage());
+  }
+  
+  SECTION("Mixed two-value syntax")
+  {
+    specified::BackgroundSize size;
+    
+    REQUIRE(size.parse("50% auto"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "50% auto");
+    
+    REQUIRE(size.parse("3em 25%"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "3em 25%");
+    
+    REQUIRE(size.parse("auto 6px"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "auto 6px");
+    
+    REQUIRE(size.parse("auto auto"));
+    REQUIRE(size.isLengthPercentagePair());
+    REQUIRE(size.toCss() == "auto auto");
+  }
+}
+
+TEST_CASE("Advanced BackgroundPosition parsing", "[css-background-position-advanced]")
+{
+  SECTION("Various length units")
+  {
+    specified::BackgroundPosition position;
+    
+    REQUIRE(position.parse("0"));
+    REQUIRE(position.isLengthPercentage());
+    
+    REQUIRE(position.parse("1cm"));
+    REQUIRE(position.isLengthPercentage());
+    
+    REQUIRE(position.parse("10ch"));
+    REQUIRE(position.isLengthPercentage());
+    
+    REQUIRE(position.parse("8em"));
+    REQUIRE(position.isLengthPercentage());
+  }
+  
+  SECTION("Two-value combinations")
+  {
+    specified::BackgroundPosition position;
+    
+    REQUIRE(position.parse("0 0"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "0px 0px");
+    
+    REQUIRE(position.parse("1cm 2cm"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "1cm 2cm");
+    
+    REQUIRE(position.parse("10ch 8em"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "10ch 8em");
+  }
+  
+  SECTION("Keyword to percentage conversion")
+  {
+    specified::BackgroundPosition position;
+    
+    REQUIRE(position.parse("left center"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "0% 50%");
+    
+    REQUIRE(position.parse("right bottom"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "100% 100%");
+    
+    REQUIRE(position.parse("center top"));
+    REQUIRE(position.isLengthPercentagePair());
+    REQUIRE(position.toCss() == "50% 0%");
   }
 }
 
 TEST_CASE("BackgroundSize edge cases", "[css-background-size-edge]")
 {
-  SECTION("Parse multiple invalid values")
+  SECTION("Parse multiple valid values")
+  {
+    specified::BackgroundSize size;
+    
+    // Single length values
+    REQUIRE(size.parse("100px"));
+    REQUIRE(size.isLengthPercentage());
+    
+    REQUIRE(size.parse("50%"));
+    REQUIRE(size.isLengthPercentage());
+    
+    // Two-value syntax
+    REQUIRE(size.parse("auto auto"));
+    REQUIRE(size.isLengthPercentagePair());
+    
+    REQUIRE(size.parse("100px 50%"));
+    REQUIRE(size.isLengthPercentagePair());
+  }
+  
+  SECTION("Parse invalid values")
   {
     specified::BackgroundSize size;
     REQUIRE_FALSE(size.parse(""));
-    REQUIRE_FALSE(size.parse("100px"));  // Not yet supported
-    REQUIRE_FALSE(size.parse("50%"));    // Not yet supported
-    REQUIRE_FALSE(size.parse("auto auto")); // Two values not yet supported
     REQUIRE_FALSE(size.parse("invalid"));
+    REQUIRE_FALSE(size.parse("100px 50% 25%")); // Too many values
   }
   
   SECTION("CSS serialization roundtrip")
@@ -319,19 +569,48 @@ TEST_CASE("BackgroundSize edge cases", "[css-background-size-edge]")
     
     size.parse("contain");
     REQUIRE(size.toCss() == "contain");
+    
+    size.parse("100px");
+    REQUIRE(size.toCss() == "100px");
+    
+    size.parse("50%");
+    REQUIRE(size.toCss() == "50%");
+    
+    size.parse("auto auto");
+    REQUIRE(size.toCss() == "auto auto");
   }
 }
 
 TEST_CASE("BackgroundPosition edge cases", "[css-background-position-edge]")
 {
-  SECTION("Parse multiple invalid values")
+  SECTION("Parse multiple valid values")
+  {
+    specified::BackgroundPosition position;
+    
+    // Single values
+    REQUIRE(position.parse("100px"));
+    REQUIRE(position.isLengthPercentage());
+    
+    REQUIRE(position.parse("50%"));
+    REQUIRE(position.isLengthPercentage());
+    
+    // Two-value syntax
+    REQUIRE(position.parse("left top"));
+    REQUIRE(position.isLengthPercentagePair());
+    
+    REQUIRE(position.parse("center center"));
+    REQUIRE(position.isLengthPercentagePair());
+    
+    REQUIRE(position.parse("100px 50%"));
+    REQUIRE(position.isLengthPercentagePair());
+  }
+  
+  SECTION("Parse invalid values")
   {
     specified::BackgroundPosition position;
     REQUIRE_FALSE(position.parse(""));
-    REQUIRE_FALSE(position.parse("100px"));  // Not yet supported
-    REQUIRE_FALSE(position.parse("50%"));    // Not yet supported
-    REQUIRE_FALSE(position.parse("left top")); // Two values not yet supported
     REQUIRE_FALSE(position.parse("invalid"));
+    REQUIRE_FALSE(position.parse("left top center")); // Too many values
   }
   
   SECTION("CSS serialization roundtrip")
@@ -352,5 +631,11 @@ TEST_CASE("BackgroundPosition edge cases", "[css-background-position-edge]")
     
     position.parse("bottom");
     REQUIRE(position.toCss() == "bottom");
+    
+    position.parse("50%");
+    REQUIRE(position.toCss() == "50%");
+    
+    position.parse("25% 75%");
+    REQUIRE(position.toCss() == "25% 75%");
   }
 }
