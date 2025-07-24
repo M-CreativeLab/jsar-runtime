@@ -599,8 +599,6 @@ namespace builtin_scene::web_renderer
       SkRRect clippingArea = getBackgroundClippingArea(roundedRect, fragment.value(), style);
       clipInfo = ClippingArea(clippingArea);
     }
-    cout << "Clipping area: " << clipInfo << endl
-         << "background-clip: " << style.backgroundClip().toCss() << endl;
 
     bool textureRequired = false;
     auto backgroundPaint = drawBackground(canvas,
