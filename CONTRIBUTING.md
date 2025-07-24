@@ -99,6 +99,8 @@ JSAR Runtime follows specific style guides for different languages. Please refer
 
 ### Code Formatting
 
+**Indentation Standard**: Use 2 spaces for indentation across all source files. This is enforced by the automated formatting tools and configured in the project's formatting configuration files.
+
 The project includes automated formatting tools:
 
 - **TypeScript/JavaScript**: ESLint
