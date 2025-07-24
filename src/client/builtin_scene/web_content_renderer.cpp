@@ -761,13 +761,20 @@ namespace builtin_scene::web_renderer
       {
         glyphs.resize(glyphCount);
 
-        // Get glyph positions (simplified positioning)
+        // Get glyph positions with proper fragment positioning
         std::vector<SkPoint> positions(glyphCount);
         std::vector<SkScalar> widths(glyphCount);
         font.getWidths(glyphs.data(), glyphCount, widths.data());
 
-        float x = 0;
-        float y = textStyle.getFontSize(); // Use font size as baseline
+        // Calculate the text offset within the fragment
+        // Text should be positioned in the content area (inside border and padding)
+        const auto &fragmentBorder = content.fragment()->border();
+        const auto &fragmentPadding = content.fragment()->padding();
+        float textOffsetX = fragmentBorder.left() + fragmentPadding.left();
+        float textOffsetY = fragmentBorder.top() + fragmentPadding.top() + textStyle.getFontSize(); // Use font size as baseline offset
+
+        float x = textOffsetX;
+        float y = textOffsetY;
 
         for (int i = 0; i < glyphCount; ++i)
         {
