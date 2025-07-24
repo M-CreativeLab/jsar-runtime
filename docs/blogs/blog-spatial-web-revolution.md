@@ -218,21 +218,21 @@ make android   # Android
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        .spatial-ui {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            border-radius: 10px;
-            transform: translate3d(0, 0, 1px);
-        }
-    </style>
+  <style>
+    .spatial-ui {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 10px;
+      transform: translate3d(0, 0, 1px);
+    }
+  </style>
 </head>
 <body>
-    <div class="spatial-ui">
-        <h1>Hello Spatial Web!</h1>
-        <p>This HTML content is rendered in 3D space.</p>
-        <button onclick="rotateElement()">Rotate Me</button>
-    </div>
+  <div class="spatial-ui">
+    <h1>Hello Spatial Web!</h1>
+    <p>This HTML content is rendered in 3D space.</p>
+    <button onclick="rotateElement()">Rotate Me</button>
+  </div>
     
     <script>
         function rotateElement() {
@@ -253,9 +253,15 @@ As we look toward the future, JSAR represents more than just a development tool 
 ### What's Next?
 
 Our roadmap includes:
-- **WebGPU Support**: Next-generation graphics APIs for maximum performance
-- **Enhanced Web Components**: Native support for custom elements in spatial contexts  
-- **Advanced WebXR Features**: Hand tracking, eye tracking, and environment understanding
+- **WebGPU Support**: Next-generation graphics APIs for maximum performance (Issue #18)
+- **Enhanced CSS Support**: Background properties, attribute selectors, and advanced layouts (Issues #71, #111)
+- **3D Geometry Elements**: Native `<box>` and `<sphere>` elements with PBR materials (Issue #74)
+- **Model-Viewer Integration**: Support for GLTF models with animations (Issue #67)  
+- **Network Improvements**: Online/offline events and optimized HTTP/HTTPS client (Issues #113, #109)
+- **Advanced Transform Support**: Full rotation and scale transforms (Issue #115)
+- **Chrome Extension System**: Extensible runtime architecture (Issue #132)
+- **AI Integration**: Prompt API specification for intelligent spatial experiences (Issue #76)
+- **Developer Experience**: Enhanced debugging tools and Chrome DevTools Protocol domains (Issues #73, #126)
 
 ## Join the Spatial Web Revolution
 

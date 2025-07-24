@@ -70,19 +70,19 @@ Create your first spatial web app:
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        .hello-world {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 20px;
-            border-radius: 10px;
-            transform: rotateY(15deg) translate3d(0, 0, 2px);
-        }
-    </style>
+  <style>
+    .hello-world {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 20px;
+      border-radius: 10px;
+      transform: rotateY(15deg) translate3d(0, 0, 2px);
+    }
+  </style>
 </head>
 <body>
-    <div class="hello-world">
-        <h1>Hello Spatial Web!</h1>
-        <p>This HTML content lives in 3D space.</p>
+  <div class="hello-world">
+    <h1>Hello Spatial Web!</h1>
+    <p>This HTML content lives in 3D space.</p>
     </div>
 </body>
 </html>

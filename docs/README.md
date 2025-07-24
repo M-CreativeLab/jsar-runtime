@@ -35,7 +35,6 @@ New to JSAR? Start here:
 - [Unity Integration](./manual/runtime/integrate-runtime-with-unity.mdx)
 - [WebXR Development](./manual/features/)
 - [Three.js Support](./manual/features/)
-- [Babylon.js Integration](./manual/features/)
 
 ## 📊 Browser Compatibility
 
