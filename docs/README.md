@@ -13,9 +13,8 @@ Welcome to the JSAR Runtime documentation! This folder contains comprehensive do
 
 ### Recent Community Updates
 
-- **[The Spatial Web Revolution](./blog-spatial-web-revolution.md)** - Deep dive into JSAR's role in bringing web technologies to spatial computing
-- **[Community Update - July 2025](./community-update-july-2025.md)** - Latest features including CSS gradient support and rendering improvements
-- **[社区更新 - 2025年7月](./community-update-july-2025-zh.md)** - 最新功能包括CSS渐变支持和渲染改进（中文版）
+- **[The Spatial Web Revolution](./blogs/blog-spatial-web-revolution.md)** - Deep dive into JSAR's role in bringing web technologies to spatial computing
+- **[Community Update - July 2025](./blogs/community-update-july-2025.md)** - Latest features including CSS gradient support and rendering improvements
 
 ## 🚀 Quick Start
 

@@ -45,7 +45,7 @@ This code now works seamlessly in 3D space, allowing designers to create beautif
 
 - **Advanced CSS Parser**: Extending our CSS engine to handle complex gradient syntax
 - **GPU Optimization**: Ensuring gradients render efficiently in 3D contexts
-- **Cross-Platform Compatibility**: Supporting gradients across OpenGL ES3, OpenGL, Metal, and D3D11 backends
+- **Cross-Platform Compatibility**: Supporting gradients across OpenGL ES3 and OpenGL backends
 
 ### Rendering Pipeline Revolution
 
@@ -124,16 +124,16 @@ Existing 3D web applications work seamlessly:
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://threejs.org/build/three.min.js"></script>
+  <script src="https://threejs.org/build/three.min.js"></script>
 </head>
 <body>
-    <canvas id="spatial-scene"></canvas>
-    <script>
-        // Standard Three.js code works in JSAR
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        // ... your existing Three.js application
-    </script>
+  <canvas id="spatial-scene"></canvas>
+  <script>
+    // Standard Three.js code works in JSAR
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // ... your existing Three.js application
+  </script>
 </body>
 </html>
 ```
@@ -256,7 +256,6 @@ Our roadmap includes:
 - **WebGPU Support**: Next-generation graphics APIs for maximum performance
 - **Enhanced Web Components**: Native support for custom elements in spatial contexts  
 - **Advanced WebXR Features**: Hand tracking, eye tracking, and environment understanding
-- **Unreal Engine Loader**: Expanding beyond Unity to support Epic's engine
 
 ## Join the Spatial Web Revolution
 
@@ -278,5 +277,4 @@ The future of computing is spatial, and with JSAR, that future is built on the w
 **Links:**
 - [GitHub Repository](https://github.com/M-CreativeLab/jsar-runtime)
 - [Documentation](https://deepwiki.com/m-creativelab/jsar-runtime)  
-- [Unity Loader](https://github.com/M-CreativeLab/jsar-loader-unity)
 - [Release Notes](https://github.com/M-CreativeLab/jsar-runtime/releases)
