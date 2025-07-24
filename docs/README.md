@@ -33,8 +33,6 @@ New to JSAR? Start here:
 ## 🎯 Integration Guides
 
 - [Unity Integration](./manual/runtime/integrate-runtime-with-unity.mdx)
-- [WebXR Development](./manual/features/)
-- [Three.js Support](./manual/features/)
 
 ## 📊 Browser Compatibility
 
