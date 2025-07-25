@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas 2D API Extended Features</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .demo-section {
+      margin-bottom: 40px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .demo-section h2 {
+      color: #444;
+      margin-top: 0;
+      border-bottom: 2px solid #007acc;
+      padding-bottom: 10px;
+    }
+
+    canvas {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: block;
+      margin: 10px auto;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 15px;
+      font-style: italic;
+    }
+
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0 5px;
+    }
+
+    button:hover {
+      background: #005c99;
+    }
+
+    .info {
+      background: #e7f3ff;
+      border-left: 4px solid #007acc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas 2D API Extended Features Demo</h1>
+  <p class="info">This demo showcases the new Canvas 2D API methods and properties added to JSAR Runtime, including strokeRect, strokeText, ellipse, rect, line dash properties, shadow effects, resetTransform, and clipping.</p>
+
+  <!-- Drawing Methods Section -->
+  <div class="demo-section">
+    <h2>New Drawing Methods</h2>
+    <div class="description">Demonstrating strokeRect() and strokeText() methods</div>
+    <canvas id="drawing-canvas" width="600" height="200"></canvas>
+    <div class="controls">
+      <button onclick="redrawDrawingDemo()">Redraw with Random Colors</button>
+    </div>
+  </div>
+
+  <!-- Path Methods Section -->
+  <div class="demo-section">
+    <h2>New Path Methods</h2>
+    <div class="description">Demonstrating ellipse() and rect() methods</div>
+    <canvas id="path-canvas" width="600" height="250"></canvas>
+    <div class="controls">
+      <button onclick="animatePathDemo()">Animate Paths</button>
+    </div>
+  </div>
+
+  <!-- Line Properties Section -->
+  <div class="demo-section">
+    <h2>Line Properties</h2>
+    <div class="description">Demonstrating getLineDash(), setLineDash(), lineDashOffset, and miterLimit</div>
+    <canvas id="line-canvas" width="600" height="200"></canvas>
+    <div class="controls">
+      <button onclick="cycleDashPatterns()">Cycle Dash Patterns</button>
+      <button onclick="animateDashOffset()">Animate Dash Offset</button>
+    </div>
+  </div>
+
+  <!-- Shadow Effects Section -->
+  <div class="demo-section">
+    <h2>Shadow Effects</h2>
+    <div class="description">Demonstrating shadowBlur, shadowColor, shadowOffsetX, and shadowOffsetY</div>
+    <canvas id="shadow-canvas" width="600" height="250"></canvas>
+    <div class="controls">
+      <button onclick="changeShadowEffects()">Change Shadow Effects</button>
+    </div>
+  </div>
+
+  <!-- Transform and Clipping Section -->
+  <div class="demo-section">
+    <h2>Transform and Clipping</h2>
+    <div class="description">Demonstrating resetTransform() and clip() methods</div>
+    <canvas id="transform-canvas" width="600" height="250"></canvas>
+    <div class="controls">
+      <button onclick="demonstrateClipping()">Demonstrate Clipping</button>
+      <button onclick="demonstrateResetTransform()">Reset Transform Demo</button>
+    </div>
+  </div>
+
+  <script>
+    // Global variables for animations
+    let animationFrame;
+    let dashOffset = 0;
+    let pathAnimation = 0;
+
+    // Drawing Methods Demo
+    function setupDrawingDemo() {
+      const canvas = document.getElementById('drawing-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      redrawDrawingDemo();
+    }
+
+    function redrawDrawingDemo() {
+      const canvas = document.getElementById('drawing-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // strokeRect examples
+      ctx.strokeStyle = `hsl(${Math.random() * 360}, 70%, 50%)`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(50, 50, 120, 80);
+      
+      ctx.strokeStyle = `hsl(${Math.random() * 360}, 70%, 50%)`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(200, 50, 100, 80);
+      
+      // strokeText examples
+      ctx.font = '24px Arial';
+      ctx.strokeStyle = `hsl(${Math.random() * 360}, 70%, 50%)`;
+      ctx.lineWidth = 1;
+      ctx.strokeText('strokeText Demo', 350, 80);
+      
+      ctx.font = '16px Arial';
+      ctx.strokeStyle = `hsl(${Math.random() * 360}, 70%, 50%)`;
+      ctx.strokeText('New Canvas API!', 380, 110);
+    }
+
+    // Path Methods Demo
+    function setupPathDemo() {
+      const canvas = document.getElementById('path-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      drawPathDemo(ctx, 0);
+    }
+
+    function drawPathDemo(ctx, animation) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Ellipse examples
+      ctx.beginPath();
+      ctx.ellipse(150, 100, 80 + Math.sin(animation) * 20, 50, Math.PI/4, 0, Math.PI * 2, false);
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.ellipse(150, 100, 40, 60, -Math.PI/4 + animation * 0.5, 0, Math.PI * 1.5, false);
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Rect examples in path
+      ctx.beginPath();
+      ctx.rect(300, 50, 100 + Math.sin(animation) * 20, 80);
+      ctx.rect(320, 70, 60, 40);
+      ctx.strokeStyle = '#45b7d1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Combined path
+      ctx.beginPath();
+      ctx.rect(450, 80, 80, 60);
+      ctx.ellipse(490, 110, 30, 20, 0, 0, Math.PI * 2, false);
+      ctx.strokeStyle = '#96ceb4';
+      ctx.fillStyle = 'rgba(150, 206, 180, 0.3)';
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    function animatePathDemo() {
+      function animate() {
+        const canvas = document.getElementById('path-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        pathAnimation += 0.05;
+        drawPathDemo(ctx, pathAnimation);
+        
+        animationFrame = requestAnimationFrame(animate);
+      }
+      
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      animate();
+      
+      // Stop animation after 5 seconds
+      setTimeout(() => {
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+        }
+      }, 5000);
+    }
+
+    // Line Properties Demo
+    function setupLineDemo() {
+      const canvas = document.getElementById('line-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      drawLineDemo(ctx);
+    }
+
+    function drawLineDemo(ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Different dash patterns
+      const dashPatterns = [
+        [5, 5],
+        [10, 5, 5, 5],
+        [15, 3, 3, 3],
+        [20, 10, 5, 10, 5, 10]
+      ];
+      
+      dashPatterns.forEach((pattern, index) => {
+        ctx.beginPath();
+        ctx.setLineDash(pattern);
+        ctx.lineDashOffset = dashOffset;
+        ctx.moveTo(50, 50 + index * 30);
+        ctx.lineTo(250, 50 + index * 30);
+        ctx.strokeStyle = `hsl(${index * 60}, 70%, 50%)`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // Display the pattern
+        ctx.setLineDash([]);
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#333';
+        ctx.fillText(`[${pattern.join(', ')}]`, 260, 55 + index * 30);
+      });
+      
+      // Miter limit demonstration
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.miterLimit = 2;
+      ctx.lineJoin = 'miter';
+      ctx.lineWidth = 15;
+      ctx.moveTo(400, 50);
+      ctx.lineTo(450, 100);
+      ctx.lineTo(500, 50);
+      ctx.strokeStyle = '#e74c3c';
+      ctx.stroke();
+      
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#333';
+      ctx.fillText('miterLimit: 2', 420, 130);
+      
+      // Show current dash for first pattern
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#007acc';
+      ctx.fillText(`lineDashOffset: ${dashOffset.toFixed(1)}`, 50, 30);
+      
+      // Display getLineDash result
+      ctx.setLineDash(dashPatterns[0]);
+      const currentDash = ctx.getLineDash();
+      ctx.fillText(`getLineDash(): [${currentDash.join(', ')}]`, 300, 30);
+    }
+
+    function cycleDashPatterns() {
+      setupLineDemo();
+    }
+
+    function animateDashOffset() {
+      function animate() {
+        const canvas = document.getElementById('line-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        dashOffset += 0.5;
+        drawLineDemo(ctx);
+        
+        animationFrame = requestAnimationFrame(animate);
+      }
+      
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      animate();
+      
+      // Stop animation after 5 seconds
+      setTimeout(() => {
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+        }
+      }, 5000);
+    }
+
+    // Shadow Effects Demo
+    function setupShadowDemo() {
+      const canvas = document.getElementById('shadow-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      drawShadowDemo(ctx);
+    }
+
+    function drawShadowDemo(ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Basic shadow
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowOffsetX = 5;
+      ctx.shadowOffsetY = 5;
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(50, 50, 100, 60);
+      
+      // Colored shadow
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(231, 76, 60, 0.7)';
+      ctx.shadowOffsetX = -8;
+      ctx.shadowOffsetY = 8;
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(200, 50, 100, 60);
+      
+      // Text with shadow
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = 'rgba(155, 89, 182, 0.8)';
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      ctx.font = '24px Arial';
+      ctx.fillStyle = '#34495e';
+      ctx.fillText('Shadow Text', 350, 80);
+      
+      // Large blur shadow
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = 'rgba(52, 152, 219, 0.4)';
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = '#f39c12';
+      ctx.beginPath();
+      ctx.arc(150, 180, 40, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // No shadow for labels
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#333';
+      ctx.fillText('shadowBlur: 10\nshadowOffsetX: 5\nshadowOffsetY: 5', 50, 130);
+      ctx.fillText('shadowBlur: 15\nshadowOffsetX: -8\nshadowOffsetY: 8', 200, 130);
+      ctx.fillText('shadowBlur: 5\nshadowOffsetX: 2\nshadowOffsetY: 2', 350, 100);
+      ctx.fillText('shadowBlur: 25\nshadowOffsetX: 0\nshadowOffsetY: 0', 100, 170);
+    }
+
+    function changeShadowEffects() {
+      const canvas = document.getElementById('shadow-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Random shadow effects
+      const colors = ['red', 'blue', 'green', 'purple', 'orange', 'pink'];
+      
+      for (let i = 0; i < 6; i++) {
+        ctx.shadowBlur = Math.random() * 20 + 5;
+        ctx.shadowColor = colors[i];
+        ctx.shadowOffsetX = (Math.random() - 0.5) * 20;
+        ctx.shadowOffsetY = (Math.random() - 0.5) * 20;
+        ctx.fillStyle = `hsl(${i * 60}, 70%, 60%)`;
+        ctx.fillRect(50 + i * 90, 100, 70, 50);
+      }
+      
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+    }
+
+    // Transform and Clipping Demo
+    function setupTransformDemo() {
+      const canvas = document.getElementById('transform-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      drawTransformDemo(ctx);
+    }
+
+    function drawTransformDemo(ctx) {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Show current transform state
+      ctx.fillStyle = '#333';
+      ctx.font = '14px Arial';
+      ctx.fillText('Click buttons to see resetTransform() and clip() in action', 50, 30);
+      
+      // Basic shapes for demonstration
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(100, 60, 80, 60);
+      
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      ctx.arc(250, 90, 40, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(350, 60, 80, 60);
+    }
+
+    function demonstrateResetTransform() {
+      const canvas = document.getElementById('transform-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Apply some transformations
+      ctx.translate(100, 100);
+      ctx.rotate(Math.PI / 4);
+      ctx.scale(1.5, 0.8);
+      
+      // Draw in transformed space
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(0, 0, 60, 40);
+      ctx.fillStyle = '#333';
+      ctx.font = '12px Arial';
+      ctx.fillText('Transformed', 5, 55);
+      
+      // Reset transform and draw again
+      ctx.resetTransform();
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(300, 100, 60, 40);
+      ctx.fillStyle = '#333';
+      ctx.fillText('After resetTransform()', 300, 155);
+      
+      ctx.fillText('Red: transformed space', 50, 30);
+      ctx.fillText('Green: after resetTransform()', 50, 50);
+    }
+
+    function demonstrateClipping() {
+      const canvas = document.getElementById('transform-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      
+      // Save the context
+      ctx.save();
+      
+      // Create a clipping path
+      ctx.beginPath();
+      ctx.arc(200, 125, 60, 0, Math.PI * 2);
+      ctx.clip();
+      
+      // Draw some shapes that will be clipped
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(150, 75, 100, 100);
+      
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(170, 95, 60, 60);
+      
+      ctx.fillStyle = '#f39c12';
+      ctx.beginPath();
+      ctx.arc(220, 105, 25, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Restore context
+      ctx.restore();
+      
+      // Draw outside clipping area
+      ctx.fillStyle = '#2ecc71';
+      ctx.fillRect(350, 100, 80, 50);
+      
+      ctx.fillStyle = '#333';
+      ctx.font = '12px Arial';
+      ctx.fillText('Shapes clipped to circle', 140, 50);
+      ctx.fillText('Not clipped', 360, 90);
+    }
+
+    // Initialize all demos when page loads
+    window.onload = function() {
+      setupDrawingDemo();
+      setupPathDemo();
+      setupLineDemo();
+      setupShadowDemo();
+      setupTransformDemo();
+      
+      console.log('Canvas 2D API Extended Features Demo loaded!');
+      console.log('This demo showcases the following new Canvas 2D API features:');
+      console.log('- strokeRect() and strokeText() methods');
+      console.log('- ellipse() and rect() path methods');
+      console.log('- getLineDash(), lineDashOffset, and miterLimit properties');
+      console.log('- shadow properties: shadowBlur, shadowColor, shadowOffsetX, shadowOffsetY');
+      console.log('- resetTransform() method');
+      console.log('- clip() method');
+    };
+  </script>
+</body>
+</html>
