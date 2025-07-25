@@ -198,6 +198,38 @@ namespace canvasbinding
   }
 
   template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::StrokeRect(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "4 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    auto x = info[0].ToNumber().FloatValue();
+    auto y = info[1].ToNumber().FloatValue();
+    auto width = info[2].ToNumber().FloatValue();
+    auto height = info[3].ToNumber().FloatValue();
+    contextImpl->strokeRect(x, y, width, height);
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::StrokeText(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto textStr = info[0].ToString().Utf8Value();
+    auto x = info[1].ToNumber().Int32Value();
+    auto y = info[2].ToNumber().Int32Value();
+    contextImpl->strokeText(textStr, x, y);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename CanvasType>
   Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ClearRect(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -249,6 +281,23 @@ namespace canvasbinding
     }
     contextImpl->setLineDash(segments);
     return env.Undefined();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::GetLineDash(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto lineDash = contextImpl->getLineDash();
+    auto jsArray = Napi::Array::New(env, lineDash.size());
+    
+    for (size_t i = 0; i < lineDash.size(); i++)
+    {
+      jsArray.Set(i, Napi::Number::New(env, lineDash[i]));
+    }
+    
+    return jsArray;
   }
 
   template <typename ObjectType, typename CanvasType>
@@ -397,6 +446,58 @@ namespace canvasbinding
   }
 
   template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::Ellipse(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 7)
+    {
+      Napi::TypeError::New(env, "At least 7 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    auto x = info[0].ToNumber().FloatValue();
+    auto y = info[1].ToNumber().FloatValue();
+    auto radiusX = info[2].ToNumber().FloatValue();
+    auto radiusY = info[3].ToNumber().FloatValue();
+    auto rotation = info[4].ToNumber().FloatValue();
+    auto startAngle = info[5].ToNumber().FloatValue();
+    auto endAngle = info[6].ToNumber().FloatValue();
+    bool ccw = false;
+    if (info.Length() >= 8 && info[7].IsBoolean())
+      ccw = info[7].ToBoolean().Value();
+
+    try
+    {
+      contextImpl->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, ccw);
+    }
+    catch (std::exception &e)
+    {
+      Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    }
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::Rect(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "4 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    auto x = info[0].ToNumber().FloatValue();
+    auto y = info[1].ToNumber().FloatValue();
+    auto width = info[2].ToNumber().FloatValue();
+    auto height = info[3].ToNumber().FloatValue();
+    contextImpl->rect(x, y, width, height);
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename CanvasType>
   Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::MeasureText(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -541,6 +642,16 @@ namespace canvasbinding
     auto tx = info[0].ToNumber().FloatValue();
     auto ty = info[1].ToNumber().FloatValue();
     contextImpl->translate(tx, ty);
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ResetTransform(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    
+    contextImpl->resetTransform();
     return env.Null();
   }
 
@@ -995,4 +1106,133 @@ namespace canvasbinding
     contextImpl->restore();
     return env.Undefined();
   }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::Clip(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    
+    contextImpl->clip();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::LineDashOffsetGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, contextImpl->getLineDashOffset());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::LineDashOffsetSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set lineDashOffset").ThrowAsJavaScriptException();
+      return;
+    }
+    contextImpl->setLineDashOffset(value.ToNumber().FloatValue());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::MiterLimitGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, contextImpl->getMiterLimit());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::MiterLimitSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set miterLimit").ThrowAsJavaScriptException();
+      return;
+    }
+    auto limit = value.ToNumber().FloatValue();
+    if (!contextImpl->setMiterLimit(limit))
+      Napi::TypeError::New(info.Env(), "Invalid value for miterLimit")
+        .ThrowAsJavaScriptException();
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowBlurGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, contextImpl->getShadowBlur());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowBlurSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set shadowBlur").ThrowAsJavaScriptException();
+      return;
+    }
+    contextImpl->setShadowBlur(value.ToNumber().FloatValue());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowColorGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::String::New(env, contextImpl->getShadowColor());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowColorSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set shadowColor").ThrowAsJavaScriptException();
+      return;
+    }
+    auto colorStr = value.ToString().Utf8Value();
+    contextImpl->setShadowColor(colorStr);
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowOffsetXGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, contextImpl->getShadowOffsetX());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowOffsetXSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set shadowOffsetX").ThrowAsJavaScriptException();
+      return;
+    }
+    contextImpl->setShadowOffsetX(value.ToNumber().FloatValue());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowOffsetYGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, contextImpl->getShadowOffsetY());
+  }
+
+  template <typename ObjectType, typename CanvasType>
+  void CanvasRenderingContext2DBase<ObjectType, CanvasType>::ShadowOffsetYSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set shadowOffsetY").ThrowAsJavaScriptException();
+      return;
+    }
+    contextImpl->setShadowOffsetY(value.ToNumber().FloatValue());
+  }
+}
 }

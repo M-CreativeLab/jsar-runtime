@@ -684,7 +684,7 @@ namespace canvas
   {
     if (currentPath == nullptr)
       beginPath();
-    ellipseToSkPath(currentPath, x, y, radiusX, radiusY, rotation, startAngle, endAngle, ccw);
+    Path2D::Ellipse(currentPath, x, y, radiusX, radiusY, rotation, startAngle, endAngle, ccw);
   }
 
   template <typename CanvasType>
