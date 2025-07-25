@@ -29,6 +29,27 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with detailed buffer creation information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer creation details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add buffer creation specific details
+      rapidjson::Value bufferDetails(rapidjson::kObjectType);
+      bufferDetails.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      bufferDetails.AddMember("operation", rapidjson::Value().SetString("create", allocator), allocator);
+      
+      cmdInfo.AddMember("bufferDetails", bufferDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     uint32_t clientId;
   };
@@ -54,6 +75,27 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << buffer << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed buffer deletion information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer deletion details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add buffer deletion specific details
+      rapidjson::Value bufferDetails(rapidjson::kObjectType);
+      bufferDetails.AddMember("bufferId", rapidjson::Value().SetUint(buffer), allocator);
+      bufferDetails.AddMember("operation", rapidjson::Value().SetString("delete", allocator), allocator);
+      
+      cmdInfo.AddMember("bufferDetails", bufferDetails, allocator);
+      
+      return cmdInfo;
     }
 
   public:
@@ -86,6 +128,32 @@ namespace commandbuffers
          << buffer
          << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed buffer binding information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer binding details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add buffer binding specific details
+      rapidjson::Value bufferDetails(rapidjson::kObjectType);
+      bufferDetails.AddMember("target", rapidjson::Value().SetUint(target), allocator);
+      bufferDetails.AddMember("bufferId", rapidjson::Value().SetUint(buffer), allocator);
+      bufferDetails.AddMember("operation", rapidjson::Value().SetString("bind", allocator), allocator);
+      
+      // Add human-readable target name
+      std::string targetName = WebGLHelper::WebGLEnumToString(target);
+      bufferDetails.AddMember("targetName", rapidjson::Value().SetString(targetName.c_str(), allocator), allocator);
+      
+      cmdInfo.AddMember("bufferDetails", bufferDetails, allocator);
+      
+      return cmdInfo;
     }
 
   public:
@@ -163,6 +231,36 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with detailed buffer data information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer data details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add buffer data specific details
+      rapidjson::Value bufferDetails(rapidjson::kObjectType);
+      bufferDetails.AddMember("target", rapidjson::Value().SetUint(target), allocator);
+      bufferDetails.AddMember("dataSize", rapidjson::Value().SetUint(dataSize), allocator);
+      bufferDetails.AddMember("usage", rapidjson::Value().SetUint(usage), allocator);
+      bufferDetails.AddMember("operation", rapidjson::Value().SetString("bufferData", allocator), allocator);
+      bufferDetails.AddMember("hasData", rapidjson::Value().SetBool(data != nullptr), allocator);
+      
+      // Add human-readable enum names
+      std::string targetName = WebGLHelper::WebGLEnumToString(target);
+      std::string usageName = WebGLHelper::WebGLEnumToString(usage);
+      bufferDetails.AddMember("targetName", rapidjson::Value().SetString(targetName.c_str(), allocator), allocator);
+      bufferDetails.AddMember("usageName", rapidjson::Value().SetString(usageName.c_str(), allocator), allocator);
+      
+      cmdInfo.AddMember("bufferDetails", bufferDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     uint32_t target;
     uint32_t dataSize;
@@ -234,6 +332,34 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with detailed buffer sub data information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer sub data details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add buffer sub data specific details
+      rapidjson::Value bufferDetails(rapidjson::kObjectType);
+      bufferDetails.AddMember("target", rapidjson::Value().SetUint(target), allocator);
+      bufferDetails.AddMember("offset", rapidjson::Value().SetUint(offset), allocator);
+      bufferDetails.AddMember("dataSize", rapidjson::Value().SetUint(dataSize), allocator);
+      bufferDetails.AddMember("operation", rapidjson::Value().SetString("bufferSubData", allocator), allocator);
+      bufferDetails.AddMember("hasData", rapidjson::Value().SetBool(data != nullptr), allocator);
+      
+      // Add human-readable target name
+      std::string targetName = WebGLHelper::WebGLEnumToString(target);
+      bufferDetails.AddMember("targetName", rapidjson::Value().SetString(targetName.c_str(), allocator), allocator);
+      
+      cmdInfo.AddMember("bufferDetails", bufferDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     uint32_t target;
     uint32_t offset;
@@ -262,6 +388,27 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed framebuffer creation information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus framebuffer creation details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add framebuffer creation specific details
+      rapidjson::Value framebufferDetails(rapidjson::kObjectType);
+      framebufferDetails.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      framebufferDetails.AddMember("operation", rapidjson::Value().SetString("create", allocator), allocator);
+      
+      cmdInfo.AddMember("framebufferDetails", framebufferDetails, allocator);
+      
+      return cmdInfo;
     }
 
   public:
@@ -328,6 +475,29 @@ namespace commandbuffers
         : ss << framebuffer;
       ss << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed framebuffer binding information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus framebuffer binding details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add framebuffer binding specific details
+      rapidjson::Value framebufferDetails(rapidjson::kObjectType);
+      framebufferDetails.AddMember("target", rapidjson::Value().SetUint(target), allocator);
+      framebufferDetails.AddMember("framebufferId", rapidjson::Value().SetInt(framebuffer), allocator);
+      framebufferDetails.AddMember("operation", rapidjson::Value().SetString("bind", allocator), allocator);
+      framebufferDetails.AddMember("isBindToDefault", rapidjson::Value().SetBool(isBindToDefault()), allocator);
+      
+      cmdInfo.AddMember("framebufferDetails", framebufferDetails, allocator);
+      
+      return cmdInfo;
     }
 
   public:
