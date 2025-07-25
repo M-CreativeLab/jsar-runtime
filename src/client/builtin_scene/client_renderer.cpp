@@ -265,6 +265,9 @@ namespace builtin_scene
                                                 WEBGL_UNSIGNED_INT,
                                                 0,
                                                 transparentInstances.count());
+
+                // Restore the color mask state
+                glContext.colorMask(true, true, true, true);
               }
             }
             transparentInstances.afterInstancedDraw(glContext);

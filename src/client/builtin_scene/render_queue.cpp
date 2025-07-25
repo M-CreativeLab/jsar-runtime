@@ -1,7 +1,10 @@
+#include <common/math_utils.hpp>
 #include "./render_queue.hpp"
 
 namespace builtin_scene
 {
+  using namespace transmute::common;
+
   bool RenderQueue::operator<(const RenderQueue &other) const
   {
     // Priority is determined by:
@@ -9,7 +12,7 @@ namespace builtin_scene
     //   2. zIndex: Logical stacking order
     //   3. base: Base queue number
     //
-    if (translateZ != other.translateZ)
+    if (!math_utils::ApproximatelyEqual(translateZ, other.translateZ))
       return translateZ < other.translateZ;
     if (zIndex != other.zIndex)
       return zIndex < other.zIndex;
@@ -20,12 +23,14 @@ namespace builtin_scene
   {
     return !(*this < other) && !(*this == other);
   }
+
   bool RenderQueue::operator==(const RenderQueue &other) const
   {
     return base == other.base &&
            zIndex == other.zIndex &&
-           translateZ == other.translateZ;
+           math_utils::ApproximatelyEqual(translateZ, other.translateZ);
   }
+
   bool RenderQueue::operator!=(const RenderQueue &other) const
   {
     return !(*this == other);
