@@ -130,6 +130,19 @@
       flex-direction: column;
     }
 
+    .detail-sidebar {
+      width: 300px;
+      background: #252525;
+      border-left: 1px solid #404040;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .detail-sidebar.open {
+      display: flex;
+    }
+
     .sidebar-section {
       border-bottom: 1px solid #404040;
       overflow-y: auto;
@@ -203,10 +216,16 @@
       border-bottom: 1px solid #333;
       font-size: 10px;
       transition: background-color 0.1s;
+      cursor: pointer;
     }
 
     .command-entry:hover {
       background: #2a2a2a;
+    }
+
+    .command-entry.selected {
+      background: #0d47a1;
+      border-left: 3px solid #2196f3;
     }
 
     .command-entry.new {
@@ -244,6 +263,16 @@
     .command-details {
       color: #cccccc;
       line-height: 1.3;
+    }
+
+    .command-params {
+      color: #ffd700;
+      margin-top: 2px;
+      font-size: 9px;
+    }
+
+    .param-value {
+      color: #98fb98;
     }
 
     .command-param {
@@ -432,6 +461,15 @@
         </div>
       </div>
     </div>
+
+    <div class="detail-sidebar scrollbar-thin" id="detailSidebar">
+      <div class="sidebar-header">Command Details</div>
+      <div class="sidebar-content" id="detailContent">
+        <div style="color: #666; text-align: center; padding: 20px;">
+          Click a command to view details
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -478,8 +516,12 @@
           eventStats: document.getElementById('eventStats'),
           eventDropRate: document.getElementById('eventDropRate'),
           totalCommands: document.getElementById('totalCommands'),
-          contentRenderers: document.getElementById('contentRenderers')
+          contentRenderers: document.getElementById('contentRenderers'),
+          detailSidebar: document.getElementById('detailSidebar'),
+          detailContent: document.getElementById('detailContent')
         };
+
+        this.selectedCommand = null;
       }
 
       setupEventListeners() {
@@ -595,12 +637,19 @@
       renderCommand(command) {
         const entry = document.createElement('div');
         entry.className = 'command-entry new';
+        entry.dataset.commandIndex = command.index;
 
         const typeClass = this.getCommandTypeClass(command.typeName);
         const timestamp = new Date(command.timestamp).toLocaleTimeString('en-US', {
           hour12: false,
           millisecond: true
         });
+
+        // Format parameters for display
+        let paramStr = '';
+        if (command.parameters && Array.isArray(command.parameters) && command.parameters.length > 0) {
+          paramStr = `<div class="command-params">Parameters: [${command.parameters.map(p => `<span class="param-value">${p}</span>`).join(', ')}]</div>`;
+        }
 
         entry.innerHTML = `
           <div class="command-header">
@@ -609,10 +658,14 @@
           </div>
           <div class="command-details">
             <span class="command-param">ID:</span> <span class="command-value">${command.id || 'N/A'}</span> |
-            <span class="command-param">Context:</span> <span class="command-value">${command.contextId || 'N/A'}</span>
-            ${command.xrInfo ? `| <span class="command-param">XR Session:</span> <span class="command-value">${command.xrInfo.sessionId}</span>` : ''}
+            <span class="command-param">Context:</span> <span class="command-value">${command.context?.contextId || 'N/A'}</span>
+            ${command.context?.xrRenderingInfo ? `| <span class="command-param">XR Session:</span> <span class="command-value">${command.context.xrRenderingInfo.sessionId}</span>` : ''}
           </div>
+          ${paramStr}
         `;
+
+        // Add click handler
+        entry.addEventListener('click', () => this.selectCommand(command, entry));
 
         // Remove empty state if present
         const emptyState = this.elements.commandList.querySelector('.empty-state');
@@ -636,6 +689,109 @@
         if (typeStr.includes('uniform') || typeStr.includes('texture')) return 'webgl-command';
         if (typeStr.includes('xr') || typeStr.includes('stereo')) return 'xr-command';
         return '';
+      }
+
+      selectCommand(command, entryElement) {
+        // Remove previous selection
+        const previousSelected = this.elements.commandList.querySelector('.command-entry.selected');
+        if (previousSelected) {
+          previousSelected.classList.remove('selected');
+        }
+
+        // Select new entry
+        entryElement.classList.add('selected');
+        this.selectedCommand = command;
+
+        // Show detail sidebar
+        this.showCommandDetails(command);
+      }
+
+      showCommandDetails(command) {
+        this.elements.detailSidebar.classList.add('open');
+
+        // Format parameters with more detail
+        let parametersHtml = '';
+        if (command.parameters && Array.isArray(command.parameters)) {
+          parametersHtml = `
+            <div class="stat-row" style="margin-bottom: 8px;">
+              <span class="stat-label">Parameters:</span>
+            </div>
+            ${command.parameters.map((param, index) => `
+              <div style="margin-left: 12px; margin-bottom: 2px;">
+                <span class="stat-label">[${index}]:</span> 
+                <span class="stat-value">${this.formatParameterValue(param)}</span>
+              </div>
+            `).join('')}
+          `;
+        }
+
+        // Format context information
+        let contextHtml = '';
+        if (command.context) {
+          contextHtml = `
+            <div class="stat-row" style="margin-bottom: 8px; margin-top: 12px;">
+              <span class="stat-label">Context:</span>
+            </div>
+            <div style="margin-left: 12px;">
+              <div class="stat-row">
+                <span class="stat-label">Context ID:</span>
+                <span class="stat-value">${command.context.contextId || 'N/A'}</span>
+              </div>
+              ${command.context.xrRenderingInfo ? `
+                <div class="stat-row">
+                  <span class="stat-label">XR Session:</span>
+                  <span class="stat-value">${command.context.xrRenderingInfo.sessionId}</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">XR Eye:</span>
+                  <span class="stat-value">${command.context.xrRenderingInfo.eye}</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        const timestamp = new Date(command.timestamp).toLocaleString();
+
+        this.elements.detailContent.innerHTML = `
+          <div class="stat-row">
+            <span class="stat-label">Command ID:</span>
+            <span class="stat-value">${command.id || 'N/A'}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Type:</span>
+            <span class="stat-value">${command.type || 'UNKNOWN'}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Type Name:</span>
+            <span class="stat-value">${command.typeName || 'UNKNOWN'}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Timestamp:</span>
+            <span class="stat-value">${timestamp}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Index:</span>
+            <span class="stat-value">${command.index}</span>
+          </div>
+          ${parametersHtml}
+          ${contextHtml}
+        `;
+      }
+
+      formatParameterValue(value) {
+        if (typeof value === 'number') {
+          return value.toString();
+        } else if (typeof value === 'string') {
+          return `"${value}"`;
+        } else if (typeof value === 'boolean') {
+          return value ? 'true' : 'false';
+        } else if (value === null) {
+          return 'null';
+        } else if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        return String(value);
       }
 
       toggleTracing() {
@@ -732,6 +888,11 @@
         this.commandBuffer = [];
         this.commandCount = 0;
         this.frameCount = 0;
+        this.selectedCommand = null;
+        
+        // Hide detail sidebar
+        this.elements.detailSidebar.classList.remove('open');
+        
         this.elements.commandList.innerHTML = `
           <div class="empty-state">
             <div>
