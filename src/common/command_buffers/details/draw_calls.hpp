@@ -37,26 +37,22 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed draw arrays information.
+     * Serialize the command buffer to a JSON object with draw arrays information.
      * This is crucial for GPU profiling as draw calls are major performance points.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus draw arrays details
+     * @returns A JSON object containing base command info plus draw arrays parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add draw arrays specific details
-      rapidjson::Value drawDetails(rapidjson::kObjectType);
-      drawDetails.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      drawDetails.AddMember("first", rapidjson::Value().SetInt(first), allocator);
-      drawDetails.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      drawDetails.AddMember("operation", rapidjson::Value().SetString("drawArrays", allocator), allocator);
-      drawDetails.AddMember("primitiveCount", rapidjson::Value().SetInt(count), allocator);
-      
-      cmdInfo.AddMember("drawDetails", drawDetails, allocator);
+      // Add draw arrays parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
+      parameters.AddMember("first", rapidjson::Value().SetInt(first), allocator);
+      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
       
       return cmdInfo;
     }
@@ -101,28 +97,23 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed instanced draw arrays information.
+     * Serialize the command buffer to a JSON object with instanced draw arrays information.
      * This is crucial for GPU profiling as instanced draw calls can have significant performance impact.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus instanced draw arrays details
+     * @returns A JSON object containing base command info plus instanced draw arrays parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add instanced draw arrays specific details
-      rapidjson::Value drawDetails(rapidjson::kObjectType);
-      drawDetails.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      drawDetails.AddMember("first", rapidjson::Value().SetInt(first), allocator);
-      drawDetails.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      drawDetails.AddMember("instanceCount", rapidjson::Value().SetInt(instanceCount), allocator);
-      drawDetails.AddMember("operation", rapidjson::Value().SetString("drawArraysInstanced", allocator), allocator);
-      drawDetails.AddMember("primitiveCount", rapidjson::Value().SetInt(count), allocator);
-      drawDetails.AddMember("totalPrimitives", rapidjson::Value().SetInt(count * instanceCount), allocator);
-      
-      cmdInfo.AddMember("drawDetails", drawDetails, allocator);
+      // Add instanced draw arrays parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
+      parameters.AddMember("first", rapidjson::Value().SetInt(first), allocator);
+      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
+      parameters.AddMember("instanceCount", rapidjson::Value().SetInt(instanceCount), allocator);
       
       return cmdInfo;
     }
@@ -169,31 +160,23 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed draw elements information.
+     * Serialize the command buffer to a JSON object with draw elements information.
      * This is crucial for GPU profiling as indexed draw calls show different performance characteristics.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus draw elements details
+     * @returns A JSON object containing base command info plus draw elements parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add draw elements specific details
-      rapidjson::Value drawDetails(rapidjson::kObjectType);
-      drawDetails.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      drawDetails.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      drawDetails.AddMember("indicesType", rapidjson::Value().SetInt(indicesType), allocator);
-      drawDetails.AddMember("indicesOffset", rapidjson::Value().SetInt(indicesOffset), allocator);
-      drawDetails.AddMember("operation", rapidjson::Value().SetString("drawElements", allocator), allocator);
-      drawDetails.AddMember("primitiveCount", rapidjson::Value().SetInt(count), allocator);
-      
-      // Add human-readable mode name
-      std::string modeName = WebGLHelper::WebGLEnumToString(mode);
-      drawDetails.AddMember("modeName", rapidjson::Value().SetString(modeName.c_str(), allocator), allocator);
-      
-      cmdInfo.AddMember("drawDetails", drawDetails, allocator);
+      // Add draw elements parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
+      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
+      parameters.AddMember("indicesType", rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.AddMember("indicesOffset", rapidjson::Value().SetInt(indicesOffset), allocator);
       
       return cmdInfo;
     }
@@ -240,6 +223,29 @@ namespace commandbuffers
          << "offset=" << indicesOffset << ", "
          << "instances=" << instanceCount << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with instanced draw elements information.
+     * This is crucial for GPU profiling as instanced indexed draws have complex performance characteristics.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus instanced draw elements parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add instanced draw elements parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
+      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
+      parameters.AddMember("indicesType", rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.AddMember("indicesOffset", rapidjson::Value().SetInt(indicesOffset), allocator);
+      parameters.AddMember("instanceCount", rapidjson::Value().SetInt(instanceCount), allocator);
+      
+      return cmdInfo;
     }
 
   public:

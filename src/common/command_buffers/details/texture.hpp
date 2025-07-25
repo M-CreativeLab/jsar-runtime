@@ -29,23 +29,20 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed texture creation information.
+     * Serialize the command buffer to a JSON object with texture creation information.
      * Texture creation is critical for understanding GPU memory usage and rendering pipeline.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus texture creation details
+     * @returns A JSON object containing base command info plus texture creation parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add texture creation specific details
-      rapidjson::Value textureDetails(rapidjson::kObjectType);
-      textureDetails.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
-      textureDetails.AddMember("operation", rapidjson::Value().SetString("create", allocator), allocator);
-      
-      cmdInfo.AddMember("textureDetails", textureDetails, allocator);
+      // Add texture creation parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
       
       return cmdInfo;
     }
@@ -78,22 +75,19 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed texture deletion information.
+     * Serialize the command buffer to a JSON object with texture deletion information.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus texture deletion details
+     * @returns A JSON object containing base command info plus texture deletion parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add texture deletion specific details
-      rapidjson::Value textureDetails(rapidjson::kObjectType);
-      textureDetails.AddMember("textureId", rapidjson::Value().SetUint(texture), allocator);
-      textureDetails.AddMember("operation", rapidjson::Value().SetString("delete", allocator), allocator);
-      
-      cmdInfo.AddMember("textureDetails", textureDetails, allocator);
+      // Add texture deletion parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("texture", rapidjson::Value().SetUint(texture), allocator);
       
       return cmdInfo;
     }

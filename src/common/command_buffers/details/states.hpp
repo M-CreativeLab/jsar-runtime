@@ -40,27 +40,23 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed viewport setup information.
+     * Serialize the command buffer to a JSON object with viewport setup information.
      * Viewport commands are critical for understanding rendering output dimensions and clipping.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus viewport details
+     * @returns A JSON object containing base command info plus viewport parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add viewport specific details
-      rapidjson::Value viewportDetails(rapidjson::kObjectType);
-      viewportDetails.AddMember("x", rapidjson::Value().SetInt(x), allocator);
-      viewportDetails.AddMember("y", rapidjson::Value().SetInt(y), allocator);
-      viewportDetails.AddMember("width", rapidjson::Value().SetInt(width), allocator);
-      viewportDetails.AddMember("height", rapidjson::Value().SetInt(height), allocator);
-      viewportDetails.AddMember("operation", rapidjson::Value().SetString("setViewport", allocator), allocator);
-      viewportDetails.AddMember("aspectRatio", rapidjson::Value().SetDouble(height > 0 ? (double)width / height : 0.0), allocator);
-      
-      cmdInfo.AddMember("viewportDetails", viewportDetails, allocator);
+      // Add viewport parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("x", rapidjson::Value().SetInt(x), allocator);
+      parameters.AddMember("y", rapidjson::Value().SetInt(y), allocator);
+      parameters.AddMember("width", rapidjson::Value().SetInt(width), allocator);
+      parameters.AddMember("height", rapidjson::Value().SetInt(height), allocator);
       
       return cmdInfo;
     }
@@ -107,27 +103,23 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed scissor test setup information.
+     * Serialize the command buffer to a JSON object with scissor test setup information.
      * Scissor commands control pixel-level clipping and are important for rendering optimization.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus scissor details
+     * @returns A JSON object containing base command info plus scissor parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add scissor specific details
-      rapidjson::Value scissorDetails(rapidjson::kObjectType);
-      scissorDetails.AddMember("x", rapidjson::Value().SetInt(x), allocator);
-      scissorDetails.AddMember("y", rapidjson::Value().SetInt(y), allocator);
-      scissorDetails.AddMember("width", rapidjson::Value().SetInt(width), allocator);
-      scissorDetails.AddMember("height", rapidjson::Value().SetInt(height), allocator);
-      scissorDetails.AddMember("operation", rapidjson::Value().SetString("setScissor", allocator), allocator);
-      scissorDetails.AddMember("area", rapidjson::Value().SetInt(width * height), allocator);
-      
-      cmdInfo.AddMember("scissorDetails", scissorDetails, allocator);
+      // Add scissor parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("x", rapidjson::Value().SetInt(x), allocator);
+      parameters.AddMember("y", rapidjson::Value().SetInt(y), allocator);
+      parameters.AddMember("width", rapidjson::Value().SetInt(width), allocator);
+      parameters.AddMember("height", rapidjson::Value().SetInt(height), allocator);
       
       return cmdInfo;
     }

@@ -29,30 +29,20 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed clear operation information.
+     * Serialize the command buffer to a JSON object with clear operation information.
      * Clear operations are important for understanding frame rendering pipeline.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus clear operation details
+     * @returns A JSON object containing base command info plus clear operation parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add clear operation specific details
-      rapidjson::Value clearDetails(rapidjson::kObjectType);
-      clearDetails.AddMember("mask", rapidjson::Value().SetInt(mask), allocator);
-      clearDetails.AddMember("operation", rapidjson::Value().SetString("clear", allocator), allocator);
-      
-      // Decode the clear mask for better understanding
-      rapidjson::Value maskComponents(rapidjson::kArrayType);
-      if (mask & 0x4000) maskComponents.PushBack(rapidjson::Value().SetString("COLOR_BUFFER_BIT", allocator), allocator);
-      if (mask & 0x0100) maskComponents.PushBack(rapidjson::Value().SetString("DEPTH_BUFFER_BIT", allocator), allocator);
-      if (mask & 0x0400) maskComponents.PushBack(rapidjson::Value().SetString("STENCIL_BUFFER_BIT", allocator), allocator);
-      clearDetails.AddMember("maskComponents", maskComponents, allocator);
-      
-      cmdInfo.AddMember("clearDetails", clearDetails, allocator);
+      // Add clear operation parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("mask", rapidjson::Value().SetInt(mask), allocator);
       
       return cmdInfo;
     }
@@ -96,32 +86,23 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed clear color information.
+     * Serialize the command buffer to a JSON object with clear color information.
      * Clear color is important for understanding the rendering background setup.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus clear color details
+     * @returns A JSON object containing base command info plus clear color parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add clear color specific details
-      rapidjson::Value clearDetails(rapidjson::kObjectType);
-      clearDetails.AddMember("r", rapidjson::Value().SetFloat(r), allocator);
-      clearDetails.AddMember("g", rapidjson::Value().SetFloat(g), allocator);
-      clearDetails.AddMember("b", rapidjson::Value().SetFloat(b), allocator);
-      clearDetails.AddMember("a", rapidjson::Value().SetFloat(a), allocator);
-      clearDetails.AddMember("operation", rapidjson::Value().SetString("clearColor", allocator), allocator);
-      
-      // Add color as hex string for easier reading
-      char hexColor[32];
-      snprintf(hexColor, sizeof(hexColor), "#%02X%02X%02X%02X", 
-               (int)(r * 255), (int)(g * 255), (int)(b * 255), (int)(a * 255));
-      clearDetails.AddMember("colorHex", rapidjson::Value().SetString(hexColor, allocator), allocator);
-      
-      cmdInfo.AddMember("clearDetails", clearDetails, allocator);
+      // Add clear color parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("r", rapidjson::Value().SetFloat(r), allocator);
+      parameters.AddMember("g", rapidjson::Value().SetFloat(g), allocator);
+      parameters.AddMember("b", rapidjson::Value().SetFloat(b), allocator);
+      parameters.AddMember("a", rapidjson::Value().SetFloat(a), allocator);
       
       return cmdInfo;
     }

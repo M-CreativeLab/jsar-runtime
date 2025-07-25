@@ -72,25 +72,22 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed uniform block binding information.
+     * Serialize the command buffer to a JSON object with uniform block binding information.
      * Uniform block binding is crucial for understanding shader data binding and GPU state setup.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus uniform block binding details
+     * @returns A JSON object containing base command info plus uniform block binding parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add uniform block binding specific details
-      rapidjson::Value uniformDetails(rapidjson::kObjectType);
-      uniformDetails.AddMember("programId", rapidjson::Value().SetUint(program), allocator);
-      uniformDetails.AddMember("uniformBlockIndex", rapidjson::Value().SetUint(uniformBlockIndex), allocator);
-      uniformDetails.AddMember("uniformBlockBinding", rapidjson::Value().SetUint(uniformBlockBinding), allocator);
-      uniformDetails.AddMember("operation", rapidjson::Value().SetString("uniformBlockBinding", allocator), allocator);
-      
-      cmdInfo.AddMember("uniformDetails", uniformDetails, allocator);
+      // Add uniform block binding parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("program", rapidjson::Value().SetUint(program), allocator);
+      parameters.AddMember("uniformBlockIndex", rapidjson::Value().SetUint(uniformBlockIndex), allocator);
+      parameters.AddMember("uniformBlockBinding", rapidjson::Value().SetUint(uniformBlockBinding), allocator);
       
       return cmdInfo;
     }

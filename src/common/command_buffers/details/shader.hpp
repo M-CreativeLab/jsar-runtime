@@ -35,24 +35,21 @@ namespace commandbuffers
     }
 
     /**
-     * Serialize the command buffer to a JSON object with detailed shader attachment information.
+     * Serialize the command buffer to a JSON object with shader attachment information.
      * Shader attachment is crucial for understanding program linking and shader pipeline setup.
      * 
      * @param allocator The JSON allocator to use for creating the JSON object
-     * @returns A JSON object containing base command info plus shader attachment details
+     * @returns A JSON object containing base command info plus shader attachment parameters
      */
     rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
     {
-      // Get base command information
+      // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add shader attachment specific details
-      rapidjson::Value shaderDetails(rapidjson::kObjectType);
-      shaderDetails.AddMember("programId", rapidjson::Value().SetUint(program), allocator);
-      shaderDetails.AddMember("shaderId", rapidjson::Value().SetUint(shader), allocator);
-      shaderDetails.AddMember("operation", rapidjson::Value().SetString("attachShader", allocator), allocator);
-      
-      cmdInfo.AddMember("shaderDetails", shaderDetails, allocator);
+      // Add shader attachment parameters to the parameters object
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.AddMember("program", rapidjson::Value().SetUint(program), allocator);
+      parameters.AddMember("shader", rapidjson::Value().SetUint(shader), allocator);
       
       return cmdInfo;
     }
