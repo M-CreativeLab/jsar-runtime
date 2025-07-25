@@ -21,6 +21,35 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed texture creation information.
+     * Texture creation is critical for understanding GPU memory usage and rendering pipeline.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus texture creation details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add texture creation specific details
+      rapidjson::Value textureDetails(rapidjson::kObjectType);
+      textureDetails.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      textureDetails.AddMember("operation", rapidjson::Value().SetString("create", allocator), allocator);
+      
+      cmdInfo.AddMember("textureDetails", textureDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     int clientId;
   };
@@ -39,6 +68,34 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , texture(that.texture)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << texture << ")";
+      return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed texture deletion information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus texture deletion details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add texture deletion specific details
+      rapidjson::Value textureDetails(rapidjson::kObjectType);
+      textureDetails.AddMember("textureId", rapidjson::Value().SetUint(texture), allocator);
+      textureDetails.AddMember("operation", rapidjson::Value().SetString("delete", allocator), allocator);
+      
+      cmdInfo.AddMember("textureDetails", textureDetails, allocator);
+      
+      return cmdInfo;
     }
 
   public:

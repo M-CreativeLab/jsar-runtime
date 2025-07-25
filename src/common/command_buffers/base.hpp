@@ -77,6 +77,20 @@ namespace commandbuffers
      * Serialize the command buffer to a JSON object.
      * This method provides structured data for debugging and inspection tools.
      * 
+     * ## JSON Structure
+     * The base implementation provides:
+     * - `id`: Command buffer unique identifier
+     * - `contextId`: WebGL context identifier  
+     * - `type`: Numeric command type (see CommandBufferType enum)
+     * - `typeName`: Human-readable command type name
+     * - `xrRenderingInfo`: XR session information (if applicable)
+     *   - `sessionId`: XR session identifier
+     *   - `stereoId`: Stereo rendering identifier
+     *   - `viewIndex`: Eye/view index for XR rendering
+     * 
+     * Derived classes should call this base method and add command-specific details
+     * in appropriately named nested objects (e.g., "drawDetails", "bufferDetails").
+     * 
      * @param allocator The JSON allocator to use for creating the JSON object
      * @returns A JSON object representing the command buffer
      */
