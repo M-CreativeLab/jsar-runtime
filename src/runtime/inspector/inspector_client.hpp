@@ -6,6 +6,7 @@
 #include <rapidjson/document.h>
 
 class TrInspector;
+class CdpHandler;
 class TrInspectorClient
 {
   friend class TrInspectorServer;
@@ -43,6 +44,10 @@ public:
   const http::HeaderFields &headers() const
   {
     return headers_;
+  }
+  CdpHandler *getCdpHandler() const
+  {
+    return cdpHandler_.get();
   }
 
 public:
@@ -90,6 +95,7 @@ private:
 private:
   int fd_ = -1;
   std::weak_ptr<TrInspector> inspector_;
+  std::unique_ptr<CdpHandler> cdpHandler_;
   bool shouldClose_ = false;
   std::vector<char> buffer_;
   std::string url_;

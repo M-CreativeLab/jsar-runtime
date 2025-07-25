@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSAR vGPU Profiler</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      background: #1a1a1a;
+      color: #ffffff;
+      overflow: hidden;
+      font-size: 12px;
+    }
+
+    .header {
+      background: #2d2d2d;
+      padding: 8px 16px;
+      border-bottom: 1px solid #404040;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #dc3545;
+      transition: background-color 0.3s;
+    }
+
+    .status-indicator.connected {
+      background: #28a745;
+    }
+
+    .control-bar {
+      background: #2d2d2d;
+      padding: 8px 16px;
+      border-bottom: 1px solid #404040;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 36px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: auto;
+    }
+
+    .btn {
+      background: #404040;
+      border: 1px solid #555;
+      color: #ffffff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #4a4a4a;
+      border-color: #666;
+    }
+
+    .btn:disabled {
+      background: #333;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .btn.active {
+      background: #007acc;
+      border-color: #007acc;
+    }
+
+    .fps-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fps-input {
+      background: #404040;
+      border: 1px solid #555;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: 60px;
+      font-size: 11px;
+      font-family: inherit;
+    }
+
+    .main-content {
+      display: flex;
+      height: calc(100vh - 76px);
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #252525;
+      border-right: 1px solid #404040;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      border-bottom: 1px solid #404040;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .sidebar-header {
+      background: #2d2d2d;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cccccc;
+      border-bottom: 1px solid #404040;
+    }
+
+    .sidebar-content {
+      padding: 8px;
+      font-size: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: #999;
+    }
+
+    .stat-value {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .command-buffer-viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .viewer-header {
+      background: #2d2d2d;
+      padding: 8px 16px;
+      border-bottom: 1px solid #404040;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 32px;
+    }
+
+    .viewer-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .viewer-stats {
+      font-size: 10px;
+      color: #999;
+    }
+
+    .command-list {
+      flex: 1;
+      overflow-y: auto;
+      background: #1a1a1a;
+    }
+
+    .command-entry {
+      padding: 6px 16px;
+      border-bottom: 1px solid #333;
+      font-size: 10px;
+      transition: background-color 0.1s;
+    }
+
+    .command-entry:hover {
+      background: #2a2a2a;
+    }
+
+    .command-entry.new {
+      background: #1a4d1a;
+      animation: flash 0.5s ease-out;
+    }
+
+    @keyframes flash {
+      0% {
+        background: #2d5a2d;
+      }
+
+      100% {
+        background: #1a4d1a;
+      }
+    }
+
+    .command-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+
+    .command-type {
+      color: #61dafb;
+      font-weight: 600;
+    }
+
+    .command-timestamp {
+      color: #666;
+      font-size: 9px;
+    }
+
+    .command-details {
+      color: #cccccc;
+      line-height: 1.3;
+    }
+
+    .command-param {
+      color: #ffd700;
+    }
+
+    .command-value {
+      color: #98fb98;
+    }
+
+    .gl-command {
+      color: #ff6b6b;
+    }
+
+    .webgl-command {
+      color: #4ecdc4;
+    }
+
+    .xr-command {
+      color: #ff9f43;
+    }
+
+    .scrollbar-thin {
+      scrollbar-width: thin;
+      scrollbar-color: #555 #2d2d2d;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #2d2d2d;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>JSAR vGPU Profiler</h1>
+    <div class="header-controls">
+      <div class="status-indicator" id="statusIndicator"></div>
+      <span id="connectionStatus">Disconnected</span>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <div class="control-group">
+      <div class="fps-control">
+        <label>Host:</label>
+        <input type="text" class="fps-input" id="hostInput" value="localhost" style="width: 80px;">
+        <label>Port:</label>
+        <input type="number" class="fps-input" id="portInput" value="9423" min="1" max="65535" style="width: 70px;">
+      </div>
+      <button class="btn" id="connectBtn">Connect</button>
+    </div>
+
+
+    <div class="control-group">
+      <button class="btn" id="tracingBtn" disabled>Start Tracing</button>
+
+      <div class="fps-control">
+        <label>Target FPS:</label>
+        <input type="number" class="fps-input" id="fpsInput" value="60" min="1" max="144" disabled>
+        <button class="btn" id="setFpsBtn" disabled>Set</button>
+      </div>
+
+      <div class="fps-control">
+        <label>Event Rate (ms):</label>
+        <input type="number" class="fps-input" id="throttleInput" value="100" min="10" max="10000" disabled>
+        <button class="btn" id="setThrottleBtn" disabled>Set</button>
+      </div>
+
+      <button class="btn" id="clearBtn">Clear</button>
+      <button class="btn" id="exportBtn" disabled>Export</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="sidebar">
+      <!-- Renderer Info Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Renderer Info</div>
+        <div class="sidebar-content scrollbar-thin">
+          <div class="stat-row">
+            <span class="stat-label">Status:</span>
+            <span class="stat-value" id="rendererStatus">Unknown</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">FPS:</span>
+            <span class="stat-value" id="rendererFps">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Uptime:</span>
+            <span class="stat-value" id="rendererUptime">0s</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Commands/s:</span>
+            <span class="stat-value" id="commandRate">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Event Rate:</span>
+            <span class="stat-value" id="eventRate">10.0/s (100ms)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Event Stats:</span>
+            <span class="stat-value" id="eventStats">Sent: 0, Received: 0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Drop Rate:</span>
+            <span class="stat-value" id="eventDropRate">0.0%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Total Commands:</span>
+            <span class="stat-value" id="totalCommands">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU Resources Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">GPU Resources</div>
+        <div class="sidebar-content scrollbar-thin">
+          <div class="stat-row">
+            <span class="stat-label">Active Programs:</span>
+            <span class="stat-value" id="activePrograms">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Active Textures:</span>
+            <span class="stat-value" id="activeTextures">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Active Buffers:</span>
+            <span class="stat-value" id="activeBuffers">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Active VAOs:</span>
+            <span class="stat-value" id="activeVaos">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Renderers Section -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Content Renderers</div>
+        <div class="sidebar-content scrollbar-thin" id="contentRenderers">
+          No renderers detected
+        </div>
+      </div>
+    </div>
+
+    <div class="command-buffer-viewer">
+      <div class="viewer-header">
+        <div class="viewer-title">Command Buffer Trace</div>
+        <div class="viewer-stats">
+          <span id="commandCount">0 commands</span> |
+          <span id="frameCount">0 frames</span> |
+          <span id="tracingTime">0.0s</span>
+        </div>
+      </div>
+      <div class="command-list scrollbar-thin" id="commandList">
+        <div class="empty-state">
+          <div>
+            <div>No command buffer trace data</div>
+            <div style="margin-top: 4px; font-size: 10px;">Enable tracing to see real-time GPU commands</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class JSARGPUProfiler {
+      constructor() {
+        this.ws = null;
+        this.isConnected = false;
+        this.isTracing = false;
+        this.commandCount = 0;
+        this.frameCount = 0;
+        this.tracingStartTime = null;
+        this.commandBuffer = [];
+        this.maxCommands = 1000; // Limit for performance
+        this.messageIdCounter = 1; // Auto-increment counter for CDP message IDs
+
+        this.initializeElements();
+        this.setupEventListeners();
+        this.updateUI();
+      }
+
+      initializeElements() {
+        this.elements = {
+          statusIndicator: document.getElementById('statusIndicator'),
+          connectionStatus: document.getElementById('connectionStatus'),
+          hostInput: document.getElementById('hostInput'),
+          portInput: document.getElementById('portInput'),
+          connectBtn: document.getElementById('connectBtn'),
+          tracingBtn: document.getElementById('tracingBtn'),
+          fpsInput: document.getElementById('fpsInput'),
+          setFpsBtn: document.getElementById('setFpsBtn'),
+          throttleInput: document.getElementById('throttleInput'),
+          setThrottleBtn: document.getElementById('setThrottleBtn'),
+          clearBtn: document.getElementById('clearBtn'),
+          exportBtn: document.getElementById('exportBtn'),
+          commandList: document.getElementById('commandList'),
+          commandCount: document.getElementById('commandCount'),
+          frameCount: document.getElementById('frameCount'),
+          tracingTime: document.getElementById('tracingTime'),
+          rendererStatus: document.getElementById('rendererStatus'),
+          rendererFps: document.getElementById('rendererFps'),
+          rendererUptime: document.getElementById('rendererUptime'),
+          commandRate: document.getElementById('commandRate'),
+          eventRate: document.getElementById('eventRate'),
+          eventStats: document.getElementById('eventStats'),
+          eventDropRate: document.getElementById('eventDropRate'),
+          totalCommands: document.getElementById('totalCommands'),
+          contentRenderers: document.getElementById('contentRenderers')
+        };
+      }
+
+      setupEventListeners() {
+        this.elements.connectBtn.addEventListener('click', () => this.toggleConnection());
+        this.elements.tracingBtn.addEventListener('click', () => this.toggleTracing());
+        this.elements.setFpsBtn.addEventListener('click', () => this.setFrameRate());
+        this.elements.setThrottleBtn.addEventListener('click', () => this.setEventThrottle());
+        this.elements.clearBtn.addEventListener('click', () => this.clearCommands());
+        this.elements.exportBtn.addEventListener('click', () => this.exportTrace());
+
+        this.elements.fpsInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') this.setFrameRate();
+        });
+
+        this.elements.throttleInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') this.setEventThrottle();
+        });
+
+        // Update tracing time periodically
+        setInterval(() => this.updateTracingTime(), 100);
+      }
+
+      toggleConnection() {
+        if (this.isConnected) {
+          this.disconnect();
+        } else {
+          this.connect();
+        }
+      }
+
+      connect() {
+        try {
+          const host = this.elements.hostInput.value.trim() || 'localhost';
+          const port = parseInt(this.elements.portInput.value) || 9423;
+          const wsUrl = `ws://${host}:${port}/devtools/inspector/1`;
+
+          this.ws = new WebSocket(wsUrl);
+
+          this.ws.onopen = () => {
+            this.isConnected = true;
+            this.updateUI();
+            this.refreshRendererInfo();
+          };
+
+          this.ws.onclose = () => {
+            this.isConnected = false;
+            this.isTracing = false;
+            this.updateUI();
+          };
+
+          this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.isConnected = false;
+            this.updateUI();
+          };
+
+          this.ws.onmessage = (event) => {
+            this.handleMessage(JSON.parse(event.data));
+          };
+
+        } catch (error) {
+          console.error('Failed to connect:', error);
+          this.isConnected = false;
+          this.updateUI();
+        }
+      }
+
+      disconnect() {
+        if (this.ws) {
+          this.ws.close();
+          this.ws = null;
+        }
+        this.isConnected = false;
+        this.isTracing = false;
+        this.updateUI();
+      }
+
+      handleMessage(data) {
+        if (data.method === 'JSAR.UniversalRenderingServer.commandBufferExecuted') {
+          this.handleCommandBufferEvent(data.params);
+        } else if (data.id) {
+          // Handle CDP responses
+          this.handleCDPResponse(data);
+        }
+      }
+
+      handleCommandBufferEvent(params) {
+        if (!this.isTracing) return;
+
+        const { commandBufferData = {} } = params || {};
+        const commands = commandBufferData.commandBuffers || [];
+        commands.forEach(cmd => {
+          this.addCommandToTrace(cmd);
+        });
+
+        this.frameCount++;
+        this.updateCommandStats();
+      }
+
+      addCommandToTrace(command) {
+        // Trim buffer if too large
+        if (this.commandBuffer.length >= this.maxCommands) {
+          this.commandBuffer.shift();
+        }
+
+        command.timestamp = Date.now();
+        command.index = this.commandCount++;
+        this.commandBuffer.push(command);
+
+        this.renderCommand(command);
+      }
+
+      renderCommand(command) {
+        const entry = document.createElement('div');
+        entry.className = 'command-entry new';
+
+        const typeClass = this.getCommandTypeClass(command.typeName);
+        const timestamp = new Date(command.timestamp).toLocaleTimeString('en-US', {
+          hour12: false,
+          millisecond: true
+        });
+
+        entry.innerHTML = `
+          <div class="command-header">
+            <span class="command-type ${typeClass}">${command.typeName}(${command.type || 'UNKNOWN'})</span>
+            <span class="command-timestamp">${timestamp}</span>
+          </div>
+          <div class="command-details">
+            <span class="command-param">ID:</span> <span class="command-value">${command.id || 'N/A'}</span> |
+            <span class="command-param">Context:</span> <span class="command-value">${command.contextId || 'N/A'}</span>
+            ${command.xrInfo ? `| <span class="command-param">XR Session:</span> <span class="command-value">${command.xrInfo.sessionId}</span>` : ''}
+          </div>
+        `;
+
+        // Remove empty state if present
+        const emptyState = this.elements.commandList.querySelector('.empty-state');
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        this.elements.commandList.appendChild(entry);
+
+        // Auto-scroll to bottom
+        this.elements.commandList.scrollTop = this.elements.commandList.scrollHeight;
+
+        // Remove flash animation after delay
+        setTimeout(() => entry.classList.remove('new'), 500);
+      }
+
+      getCommandTypeClass(type) {
+        if (!type) return '';
+        const typeStr = type.toString().toLowerCase();
+        if (typeStr.includes('draw') || typeStr.includes('clear')) return 'gl-command';
+        if (typeStr.includes('uniform') || typeStr.includes('texture')) return 'webgl-command';
+        if (typeStr.includes('xr') || typeStr.includes('stereo')) return 'xr-command';
+        return '';
+      }
+
+      toggleTracing() {
+        if (this.isTracing) {
+          this.stopTracing();
+        } else {
+          this.startTracing();
+        }
+      }
+
+      startTracing() {
+        this.sendCommand('JSAR.UniversalRenderingServer.enableTracing', {}, (response) => {
+          if (!response.error) {
+            this.isTracing = true;
+            this.tracingStartTime = Date.now();
+            this.updateUI();
+          }
+        });
+      }
+
+      stopTracing() {
+        this.sendCommand('JSAR.UniversalRenderingServer.disableTracing', {}, (response) => {
+          if (!response.error) {
+            this.isTracing = false;
+            this.tracingStartTime = null;
+            this.updateUI();
+          }
+        });
+      }
+
+      setFrameRate() {
+        const fps = parseInt(this.elements.fpsInput.value);
+        if (fps >= 1 && fps <= 144) {
+          this.sendCommand('JSAR.UniversalRenderingServer.setClientFrameRate', { frameRate: fps });
+        }
+      }
+
+      setEventThrottle() {
+        const intervalMs = parseInt(this.elements.throttleInput.value);
+        if (intervalMs >= 10 && intervalMs <= 10000) {
+          this.sendCommand('JSAR.UniversalRenderingServer.setEventThrottle', { intervalMs: intervalMs });
+        }
+      }
+
+      refreshRendererInfo() {
+        this.sendCommand('JSAR.UniversalRenderingServer.getRendererInfo', {}, (response) => {
+          if (response.result) {
+            this.updateRendererInfo(response.result);
+          }
+        });
+
+        this.sendCommand('JSAR.UniversalRenderingServer.getContentRenderers', {}, (response) => {
+          if (response.result) {
+            this.updateContentRenderers(response.result.contentRenderers || []);
+          }
+        });
+      }
+
+      updateRendererInfo(info) {
+        this.elements.rendererStatus.textContent = info.tracingEnabled ? 'Tracing' : 'Ready';
+        this.elements.rendererFps.textContent = `${info.fps || 0}`;
+        this.elements.rendererUptime.textContent = `${info.uptime || 0}s`;
+
+        // Update throttling statistics if available
+        if (info.eventThrottleMs !== undefined) {
+          const eventsPerSec = (1000 / info.eventThrottleMs).toFixed(1);
+          this.elements.eventRate.textContent = `${eventsPerSec}/s (${info.eventThrottleMs}ms)`;
+
+          if (info.totalEventsReceived !== undefined && info.totalEventsSent !== undefined) {
+            this.elements.eventStats.textContent = `Sent: ${info.totalEventsSent}, Received: ${info.totalEventsReceived}`;
+
+            if (info.eventDropRate !== undefined) {
+              this.elements.eventDropRate.textContent = `${info.eventDropRate.toFixed(1)}%`;
+            }
+          }
+        }
+      }
+
+      updateContentRenderers(renderers) {
+        if (renderers.length === 0) {
+          this.elements.contentRenderers.textContent = 'No renderers detected';
+          return;
+        }
+
+        this.elements.contentRenderers.innerHTML = renderers.map(renderer => `
+          <div class="stat-row">
+            <span class="stat-label">PID ${renderer.contentPid}:</span>
+            <span class="stat-value">${renderer.contentId}</span>
+          </div>
+        `).join('');
+      }
+
+      clearCommands() {
+        this.commandBuffer = [];
+        this.commandCount = 0;
+        this.frameCount = 0;
+        this.elements.commandList.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <div>Command buffer trace cleared</div>
+              <div style="margin-top: 4px; font-size: 10px;">${this.isTracing ? 'New commands will appear here' : 'Enable tracing to see GPU commands'}</div>
+            </div>
+          </div>
+        `;
+        this.updateCommandStats();
+      }
+
+      exportTrace() {
+        const data = {
+          metadata: {
+            exportTime: new Date().toISOString(),
+            commandCount: this.commandCount,
+            frameCount: this.frameCount,
+            tracingDuration: this.tracingStartTime ? (Date.now() - this.tracingStartTime) / 1000 : 0
+          },
+          commands: this.commandBuffer
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `jsar-gpu-trace-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      updateCommandStats() {
+        this.elements.commandCount.textContent = `${this.commandCount} commands`;
+        this.elements.frameCount.textContent = `${this.frameCount} frames`;
+        this.elements.totalCommands.textContent = this.commandCount.toString();
+
+        // Calculate command rate
+        if (this.tracingStartTime) {
+          const duration = (Date.now() - this.tracingStartTime) / 1000;
+          const rate = duration > 0 ? Math.round(this.commandCount / duration) : 0;
+          this.elements.commandRate.textContent = rate.toString();
+        }
+      }
+
+      updateTracingTime() {
+        if (this.tracingStartTime) {
+          const duration = (Date.now() - this.tracingStartTime) / 1000;
+          this.elements.tracingTime.textContent = `${duration.toFixed(1)}s`;
+        } else {
+          this.elements.tracingTime.textContent = '0.0s';
+        }
+      }
+
+      updateUI() {
+        // Connection status
+        this.elements.statusIndicator.className = `status-indicator ${this.isConnected ? 'connected' : ''}`;
+        this.elements.connectionStatus.textContent = this.isConnected ? 'Connected' : 'Disconnected';
+        this.elements.connectBtn.textContent = this.isConnected ? 'Disconnect' : 'Connect';
+
+        // Disable host/port inputs when connected
+        this.elements.hostInput.disabled = this.isConnected;
+        this.elements.portInput.disabled = this.isConnected;
+
+        // Controls
+        const connected = this.isConnected;
+        this.elements.tracingBtn.disabled = !connected;
+        this.elements.tracingBtn.textContent = this.isTracing ? 'Stop Tracing' : 'Start Tracing';
+        this.elements.tracingBtn.className = `btn ${this.isTracing ? 'active' : ''}`;
+        this.elements.fpsInput.disabled = !connected;
+        this.elements.setFpsBtn.disabled = !connected;
+        this.elements.throttleInput.disabled = !connected;
+        this.elements.setThrottleBtn.disabled = !connected;
+        this.elements.exportBtn.disabled = this.commandBuffer.length === 0;
+
+        // Refresh renderer info if connected
+        if (connected) {
+          this.refreshRendererInfo();
+        }
+      }
+
+      sendCommand(method, params, callback) {
+        if (!this.isConnected || !this.ws) return;
+
+        const id = this.messageIdCounter++;
+        const message = { id, method, params };
+
+        if (callback) {
+          this.pendingCallbacks = this.pendingCallbacks || {};
+          this.pendingCallbacks[id] = callback;
+        }
+
+        this.ws.send(JSON.stringify(message));
+      }
+
+      handleCDPResponse(response) {
+        if (this.pendingCallbacks && this.pendingCallbacks[response.id]) {
+          this.pendingCallbacks[response.id](response);
+          delete this.pendingCallbacks[response.id];
+        }
+      }
+    }
+
+    // Initialize the profiler
+    new JSARGPUProfiler();
+  </script>
+</body>
+
+</html>
