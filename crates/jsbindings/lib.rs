@@ -1,7 +1,6 @@
 #![allow(unused_variables)]
 #![allow(clippy::uninlined_format_args)]
 #![allow(deprecated)]
-#![feature(concat_idents)]
 
 extern crate ctor;
 extern crate jsar_jsbinding_macro;

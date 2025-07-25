@@ -1,4 +1,4 @@
-use std::{cell::RefCell, ops::BitOr, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use paste::paste;
 use style::values::{

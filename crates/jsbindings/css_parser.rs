@@ -10,7 +10,6 @@ use style::{
   shared_lock::SharedRwLock as StyleSharedRwLock,
   stylesheets::{AllowImportRules, CssRuleType, Origin, Stylesheet, UrlExtraData},
   values::computed as StyleComputedValues,
-  values::generics as StyleGenericsValues,
   values::specified as StyleSpecifiedValues,
 };
 use style_traits::{ParsingMode, ToCss};
@@ -359,7 +358,6 @@ impl CSSParser {
     &self,
     input: &str,
   ) -> anyhow::Result<StyleSpecifiedValues::ImplicitGridTracks> {
-    use StyleGenericsValues::grid::{GenericTrackBreadth, GenericTrackSize};
     use StyleSpecifiedValues::ImplicitGridTracks;
 
     let mut input = cssparser::ParserInput::new(input);
@@ -1564,7 +1562,6 @@ fn parse_grid_template_component(
 mod tests {
   #[allow(unused_imports)]
   use super::*;
-  use style::properties as StyloProperties;
 
   #[test]
   fn test_parse_color() {
@@ -1783,5 +1780,92 @@ mod tests {
         println!("div.container[data-role=main]: failed to parse");
       }
     }
+  }
+
+  #[test]
+  fn test_attribute_selectors() {
+    use crate::css_parser::ffi::{SelectorComponentType, AttributeSelectorOperator};
+    
+    let parser = CSSParser::default();
+
+    // Test [attr] - attribute existence
+    let s = parser.parse_selectors("[data-test]").unwrap();
+    assert_eq!(s.len(), 1);
+    let selector = s.item(0).unwrap();
+    let components = selector.components;
+    assert_eq!(components.len(), 1);
+    let component = components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeExists);
+    assert_eq!(component.attribute_name, Some("data-test".to_string()));
+    assert_eq!(component.attribute_value, None);
+
+    // Test [attr=val] - exact match
+    let s = parser.parse_selectors("[data-test=\"value\"]").unwrap();
+    assert_eq!(s.len(), 1);
+    let selector = s.item(0).unwrap();
+    let components = selector.components;
+    assert_eq!(components.len(), 1);
+    let component = components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_name, Some("data-test".to_string()));
+    assert_eq!(component.attribute_value, Some("\"value\"".to_string()));
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Equal));
+
+    // Test [attr~=val] - whitespace-separated token match
+    let s = parser.parse_selectors("[class~=\"active\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Includes));
+
+    // Test [attr|=val] - dash-separated match
+    let s = parser.parse_selectors("[lang|=\"en\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::DashMatch));
+
+    // Test [attr^=val] - prefix match
+    let s = parser.parse_selectors("[data-url^=\"https\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Prefix));
+
+    // Test [attr$=val] - suffix match
+    let s = parser.parse_selectors("[src$=\".jpg\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Suffix));
+
+    // Test [attr*=val] - substring match
+    let s = parser.parse_selectors("[title*=\"example\"]").unwrap();
+    let selector = s.item(0).unwrap();
+    let component = selector.components.item(0).unwrap();
+    assert_eq!(component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(component.attribute_operator, Some(AttributeSelectorOperator::Substring));
+
+    // Test complex selector with multiple components including attribute
+    let s = parser.parse_selectors("div.container[data-role=\"main\"]").unwrap();
+    let components = s.item(0).unwrap().components;
+    assert_eq!(components.len(), 3);
+    
+    // div
+    let div_component = components.item(0).unwrap();
+    assert_eq!(div_component.tag, SelectorComponentType::LocalName);
+    assert_eq!(div_component.name, Some("div".to_string()));
+    
+    // .container
+    let class_component = components.item(1).unwrap();
+    assert_eq!(class_component.tag, SelectorComponentType::Class);
+    assert_eq!(class_component.name, Some("container".to_string()));
+    
+    // [data-role="main"]
+    let attr_component = components.item(2).unwrap();
+    assert_eq!(attr_component.tag, SelectorComponentType::AttributeValue);
+    assert_eq!(attr_component.attribute_name, Some("data-role".to_string()));
+    assert_eq!(attr_component.attribute_value, Some("\"main\"".to_string()));
+    assert_eq!(attr_component.attribute_operator, Some(AttributeSelectorOperator::Equal));
   }
 }
