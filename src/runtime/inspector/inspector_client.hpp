@@ -45,7 +45,7 @@ public:
   {
     return headers_;
   }
-  CdpHandler* getCdpHandler() const
+  CdpHandler *getCdpHandler() const
   {
     return cdpHandler_.get();
   }

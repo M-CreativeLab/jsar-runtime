@@ -60,8 +60,16 @@
       border-bottom: 1px solid #404040;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
       height: 36px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: auto;
     }
 
     .btn {
@@ -302,29 +310,35 @@
   </div>
 
   <div class="control-bar">
-    <div class="fps-control">
-      <label>Host:</label>
-      <input type="text" class="fps-input" id="hostInput" value="localhost" style="width: 120px;">
-      <label>Port:</label>
-      <input type="number" class="fps-input" id="portInput" value="9423" min="1" max="65535" style="width: 70px;">
-    </div>
-    <button class="btn" id="connectBtn">Connect</button>
-    <button class="btn" id="tracingBtn" disabled>Start Tracing</button>
-
-    <div class="fps-control">
-      <label>Target FPS:</label>
-      <input type="number" class="fps-input" id="fpsInput" value="60" min="1" max="144" disabled>
-      <button class="btn" id="setFpsBtn" disabled>Set</button>
+    <div class="control-group">
+      <div class="fps-control">
+        <label>Host:</label>
+        <input type="text" class="fps-input" id="hostInput" value="localhost" style="width: 80px;">
+        <label>Port:</label>
+        <input type="number" class="fps-input" id="portInput" value="9423" min="1" max="65535" style="width: 70px;">
+      </div>
+      <button class="btn" id="connectBtn">Connect</button>
     </div>
 
-    <div class="fps-control">
-      <label>Event Rate (ms):</label>
-      <input type="number" class="fps-input" id="throttleInput" value="100" min="10" max="10000" disabled>
-      <button class="btn" id="setThrottleBtn" disabled>Set</button>
-    </div>
 
-    <button class="btn" id="clearBtn">Clear</button>
-    <button class="btn" id="exportBtn" disabled>Export</button>
+    <div class="control-group">
+      <button class="btn" id="tracingBtn" disabled>Start Tracing</button>
+
+      <div class="fps-control">
+        <label>Target FPS:</label>
+        <input type="number" class="fps-input" id="fpsInput" value="60" min="1" max="144" disabled>
+        <button class="btn" id="setFpsBtn" disabled>Set</button>
+      </div>
+
+      <div class="fps-control">
+        <label>Event Rate (ms):</label>
+        <input type="number" class="fps-input" id="throttleInput" value="100" min="10" max="10000" disabled>
+        <button class="btn" id="setThrottleBtn" disabled>Set</button>
+      </div>
+
+      <button class="btn" id="clearBtn">Clear</button>
+      <button class="btn" id="exportBtn" disabled>Export</button>
+    </div>
   </div>
 
   <div class="main-content">
@@ -479,7 +493,7 @@
         this.elements.fpsInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') this.setFrameRate();
         });
-        
+
         this.elements.throttleInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') this.setEventThrottle();
         });
@@ -501,7 +515,7 @@
           const host = this.elements.hostInput.value.trim() || 'localhost';
           const port = parseInt(this.elements.portInput.value) || 9423;
           const wsUrl = `ws://${host}:${port}/devtools/inspector/1`;
-          
+
           this.ws = new WebSocket(wsUrl);
 
           this.ws.onopen = () => {
@@ -684,15 +698,15 @@
         this.elements.rendererStatus.textContent = info.tracingEnabled ? 'Tracing' : 'Ready';
         this.elements.rendererFps.textContent = `${info.fps || 0}`;
         this.elements.rendererUptime.textContent = `${info.uptime || 0}s`;
-        
+
         // Update throttling statistics if available
         if (info.eventThrottleMs !== undefined) {
           const eventsPerSec = (1000 / info.eventThrottleMs).toFixed(1);
           this.elements.eventRate.textContent = `${eventsPerSec}/s (${info.eventThrottleMs}ms)`;
-          
+
           if (info.totalEventsReceived !== undefined && info.totalEventsSent !== undefined) {
             this.elements.eventStats.textContent = `Sent: ${info.totalEventsSent}, Received: ${info.totalEventsReceived}`;
-            
+
             if (info.eventDropRate !== undefined) {
               this.elements.eventDropRate.textContent = `${info.eventDropRate.toFixed(1)}%`;
             }
