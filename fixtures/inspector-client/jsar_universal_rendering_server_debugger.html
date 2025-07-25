@@ -302,6 +302,12 @@
   </div>
 
   <div class="control-bar">
+    <div class="fps-control">
+      <label>Host:</label>
+      <input type="text" class="fps-input" id="hostInput" value="localhost" style="width: 120px;">
+      <label>Port:</label>
+      <input type="number" class="fps-input" id="portInput" value="9423" min="1" max="65535" style="width: 70px;">
+    </div>
     <button class="btn" id="connectBtn">Connect</button>
     <button class="btn" id="tracingBtn" disabled>Start Tracing</button>
 
@@ -436,6 +442,8 @@
         this.elements = {
           statusIndicator: document.getElementById('statusIndicator'),
           connectionStatus: document.getElementById('connectionStatus'),
+          hostInput: document.getElementById('hostInput'),
+          portInput: document.getElementById('portInput'),
           connectBtn: document.getElementById('connectBtn'),
           tracingBtn: document.getElementById('tracingBtn'),
           fpsInput: document.getElementById('fpsInput'),
@@ -490,7 +498,11 @@
 
       connect() {
         try {
-          this.ws = new WebSocket('ws://localhost:9423/devtools/inspector/1');
+          const host = this.elements.hostInput.value.trim() || 'localhost';
+          const port = parseInt(this.elements.portInput.value) || 9423;
+          const wsUrl = `ws://${host}:${port}/devtools/inspector/1`;
+          
+          this.ws = new WebSocket(wsUrl);
 
           this.ws.onopen = () => {
             this.isConnected = true;
@@ -764,6 +776,10 @@
         this.elements.statusIndicator.className = `status-indicator ${this.isConnected ? 'connected' : ''}`;
         this.elements.connectionStatus.textContent = this.isConnected ? 'Connected' : 'Disconnected';
         this.elements.connectBtn.textContent = this.isConnected ? 'Disconnect' : 'Connect';
+
+        // Disable host/port inputs when connected
+        this.elements.hostInput.disabled = this.isConnected;
+        this.elements.portInput.disabled = this.isConnected;
 
         // Controls
         const connected = this.isConnected;
