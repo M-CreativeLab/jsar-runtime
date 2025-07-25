@@ -307,7 +307,7 @@ namespace client_layout
       auto textNode = dom::Node::As<dom::Text>(node());
       return textNode->adoptedStyleRef();
     }
-    assert(false && "Unrachable");
+    assert(false && "Unreachable");
   }
 
   float LayoutObject::getTranslateZ() const
