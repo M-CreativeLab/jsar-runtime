@@ -585,6 +585,21 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
+  builtin_scene::RenderQueue Element::getRenderQueue() const
+  {
+    auto renderQueue = Node::getRenderQueue();
+    if (adopted_style_ != nullptr) [[likely]]
+    {
+      renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
+
+      // Update the translateZ from the layout box
+      auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
+      if (layoutBox != nullptr) [[likely]]
+        renderQueue.translateZ = layoutBox->getTranslateZ();
+    }
+    return renderQueue;
+  }
+
   bool Element::is(const string expectedTagName)
   {
     string expectedTagNameUpper;

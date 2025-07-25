@@ -97,13 +97,16 @@ namespace builtin_scene::web_renderer
            meshes != nullptr &&
            materials != nullptr);
 
+    // Create mesh and material for web content rendering
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
-    webContentCtx->instancedMeshEntity_ = spawn(
-      hierarchy::Root(true),
-      Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward())),
-             false),
-      MeshMaterial3d(materials->add(material)),
-      Transform::FromXYZ(0.0f, 0.0f, 0.0f));
+    auto mesh = MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward());
+    mesh->writeTransparentsDepthAfterRendering();
+
+    // Spawn the instanced mesh entity which will be used for rendering all web content elements.
+    webContentCtx->instancedMeshEntity_ = spawn(hierarchy::Root(true),
+                                                Mesh3d(meshes->add(mesh), false),
+                                                MeshMaterial3d(materials->add(material)),
+                                                Transform::FromXYZ(0.0f, 0.0f, 0.0f));
   }
 
   void RenderBaseSystem::onExecute()
@@ -613,10 +616,7 @@ namespace builtin_scene::web_renderer
       if (!textureRequired && !drawRoundedRect) // Disable using texture if the background is not rounded.
       {
         content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
-
-        auto fillColor = fillPaint.getColor4f();
-        content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
-        content.setOpaque(fillColor.fA == 1.0f);
+        content.setBackgroundColor(fillPaint.getColor4f());
       }
       else
       {

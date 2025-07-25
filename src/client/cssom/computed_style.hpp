@@ -316,6 +316,14 @@ namespace client_cssom
     {
       return position_type_;
     }
+    inline bool isPositioned() const
+    {
+      return !position_type_.isStatic();
+    }
+    inline int zIndex() const
+    {
+      return z_index_;
+    }
 
     inline Visibility visibility() const
     {
@@ -490,6 +498,7 @@ namespace client_cssom
     // Positional
     values::computed::PositionType position_type_ = values::computed::PositionType::Static();
     values::computed::Inset inset_ = values::computed::Inset::Default();
+    int z_index_ = 0;
 
     // Alignment
     values::computed::AlignContent align_content_ = values::computed::AlignContent::Normal();

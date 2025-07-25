@@ -172,6 +172,10 @@ namespace builtin_scene
     {
       background_color_ = glm::vec4(r, g, b, a);
     }
+    inline void setBackgroundColor(const SkColor4f color)
+    {
+      background_color_ = glm::vec4(color.fR, color.fG, color.fB, color.fA);
+    }
 
     inline std::shared_ptr<Texture> textureRect() const
     {
@@ -215,18 +219,17 @@ namespace builtin_scene
       if (is_texture_using_ != value)
         is_texture_using_ = value;
     }
+
+    // Web content must be transparent objects.
     inline bool isOpaque() const
     {
-      return is_opaque_;
+      return false;
     }
     inline bool isTransparent() const
     {
-      return !is_opaque_;
+      return true;
     }
-    inline void setOpaque(bool b)
-    {
-      is_opaque_ = b;
-    }
+
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
@@ -263,7 +266,6 @@ namespace builtin_scene
     int texture_pad_ = 2;
     bool enabled_ = true;
     bool is_texture_using_ = false;
-    bool is_opaque_ = false;
     bool is_visible_ = true;
     bool is_dirty_ = true;
   };

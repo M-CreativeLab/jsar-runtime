@@ -14,6 +14,7 @@
 #include "./ecs.hpp"
 #include "./meshes/builder.hpp"
 #include "./mesh_base.hpp"
+#include "./render_queue.hpp"
 
 namespace builtin_scene
 {
@@ -99,7 +100,7 @@ namespace builtin_scene
 
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
-    IMPL_SETTER(ZIndex, zIndex_, uint32_t)
+    IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
 
@@ -115,9 +116,9 @@ namespace builtin_scene
 
   private:
     InstanceData data_;
+    RenderQueue renderQueue_;
     bool enabled_ = false;
     bool isOpaque_ = false;
-    uint32_t zIndex_ = 0;
 
   private:
     std::vector<std::weak_ptr<RenderableInstancesList>> holders_;
@@ -262,6 +263,7 @@ namespace builtin_scene
      * Remove the instance with the given entity id.
      */
     bool removeInstance(ecs::EntityId id);
+
     inline RenderableInstancesList &getOpaqueInstancesList() const
     {
       return *opaqueInstances_;
@@ -269,6 +271,22 @@ namespace builtin_scene
     inline RenderableInstancesList &getTransparentInstancesList() const
     {
       return *transparentInstances_;
+    }
+    /**
+     * Whether to dispatch a draw call for writing transparent objects' depth after rendering.
+     * 
+     * It's mostly used for the collision detection of transparent objects such as GUI elements, we do a depth buffer
+     * based collision detection to search for the hit point of the opaque objects and GUI elements, within the flag,
+     * we can write the depth buffer of the transparent objects after rendering them, so that the collision detectior
+     * can read the correct depth value for the GUI elements.
+     */
+    inline bool shouldWriteTranparentsDepthAfterRendering() const
+    {
+      return writeTransparentsDepthAfterRendering_;
+    }
+    inline void writeTransparentsDepthAfterRendering(bool value = true)
+    {
+      writeTransparentsDepthAfterRendering_ = value;
     }
 
   protected:
@@ -304,6 +322,7 @@ namespace builtin_scene
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
+    bool writeTransparentsDepthAfterRendering_ = false;
     bool isDirty_ = true;
   };
 

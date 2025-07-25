@@ -310,6 +310,22 @@ namespace client_layout
     assert(false && "Unrachable");
   }
 
+  float LayoutObject::getTranslateZ() const
+  {
+    auto transformComponent = getSceneComponent<Transform>();
+    if (transformComponent != nullptr && transformComponent->hasPostTransform())
+    {
+      auto &postTransform = transformComponent->postTransformRef();
+      auto accumulatedMatrix = postTransform.accumulatedMatrix();
+      return accumulatedMatrix[3][2]; // Get the Z translation from the accumulated matrix.
+    }
+    else
+    {
+      // Returns zero if no transform found or has no post transform.
+      return 0.0f;
+    }
+  }
+
   const Fragment LayoutObject::computeOrGetFragment(FragmentDifference &diff) const
   {
     Fragment nodeFragment = formattingContext_->liveFragment();

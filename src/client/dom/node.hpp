@@ -9,6 +9,7 @@
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
 #include <client/macros.h>
+#include <client/builtin_scene/render_queue.hpp>
 
 #include "./dom_event_target.hpp"
 #include "./node_list.hpp"
@@ -309,6 +310,12 @@ namespace dom
     virtual bool isRenderable() const
     {
       return renderable.value_or(false);
+    }
+
+    // The render queue of this node.
+    virtual builtin_scene::RenderQueue getRenderQueue() const
+    {
+      return builtin_scene::RenderQueue(depth());
     }
 
     /**
