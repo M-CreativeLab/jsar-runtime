@@ -51,12 +51,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add viewport parameters to the parameters object
+      // Add viewport parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("x", rapidjson::Value().SetInt(x), allocator);
-      parameters.AddMember("y", rapidjson::Value().SetInt(y), allocator);
-      parameters.AddMember("width", rapidjson::Value().SetInt(width), allocator);
-      parameters.AddMember("height", rapidjson::Value().SetInt(height), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(x), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(y), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(width), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(height), allocator);
       
       return cmdInfo;
     }
@@ -114,12 +114,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add scissor parameters to the parameters object
+      // Add scissor parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("x", rapidjson::Value().SetInt(x), allocator);
-      parameters.AddMember("y", rapidjson::Value().SetInt(y), allocator);
-      parameters.AddMember("width", rapidjson::Value().SetInt(width), allocator);
-      parameters.AddMember("height", rapidjson::Value().SetInt(height), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(x), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(y), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(width), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(height), allocator);
       
       return cmdInfo;
     }

@@ -41,9 +41,9 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add program creation parameters to the parameters object
+      // Add program creation parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
       
       return cmdInfo;
     }

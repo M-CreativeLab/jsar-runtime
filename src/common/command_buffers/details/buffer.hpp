@@ -40,9 +40,9 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add buffer creation parameters to the parameters object
+      // Add buffer creation parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
       
       return cmdInfo;
     }
@@ -85,9 +85,9 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add buffer deletion parameters to the parameters object
+      // Add buffer deletion parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("buffer", rapidjson::Value().SetUint(buffer), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(buffer), allocator);
       
       return cmdInfo;
     }
@@ -135,10 +135,10 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add buffer binding parameters to the parameters object
+      // Add buffer binding parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("target", rapidjson::Value().SetUint(target), allocator);
-      parameters.AddMember("buffer", rapidjson::Value().SetUint(buffer), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(buffer), allocator);
       
       return cmdInfo;
     }
@@ -229,12 +229,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add buffer data parameters to the parameters object
+      // Add buffer data parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("target", rapidjson::Value().SetUint(target), allocator);
-      parameters.AddMember("dataSize", rapidjson::Value().SetUint(dataSize), allocator);
-      parameters.AddMember("usage", rapidjson::Value().SetUint(usage), allocator);
-      parameters.AddMember("hasData", rapidjson::Value().SetBool(data != nullptr), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(dataSize), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(data != nullptr), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(usage), allocator);
       
       return cmdInfo;
     }
@@ -321,12 +321,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add buffer sub data parameters to the parameters object
+      // Add buffer sub data parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("target", rapidjson::Value().SetUint(target), allocator);
-      parameters.AddMember("offset", rapidjson::Value().SetUint(offset), allocator);
-      parameters.AddMember("dataSize", rapidjson::Value().SetUint(dataSize), allocator);
-      parameters.AddMember("hasData", rapidjson::Value().SetBool(data != nullptr), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(offset), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(dataSize), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(data != nullptr), allocator);
       
       return cmdInfo;
     }
@@ -372,9 +372,9 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add framebuffer creation parameters to the parameters object
+      // Add framebuffer creation parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
       
       return cmdInfo;
     }
@@ -456,11 +456,11 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add framebuffer binding parameters to the parameters object
+      // Add framebuffer binding parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("target", rapidjson::Value().SetUint(target), allocator);
-      parameters.AddMember("framebuffer", rapidjson::Value().SetInt(framebuffer), allocator);
-      parameters.AddMember("isBindToDefault", rapidjson::Value().SetBool(isBindToDefault()), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(framebuffer), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(isBindToDefault()), allocator);
       
       return cmdInfo;
     }

@@ -108,8 +108,8 @@ namespace commandbuffers
       std::string typeName = commandTypeToStr(type);
       cmdInfo.AddMember("typeName", rapidjson::Value().SetString(typeName.c_str(), allocator), allocator);
 
-      // Create empty parameters object - derived classes will populate this
-      rapidjson::Value parameters(rapidjson::kObjectType);
+      // Create empty parameters array - derived classes will populate this
+      rapidjson::Value parameters(rapidjson::kArrayType);
       cmdInfo.AddMember("parameters", parameters, allocator);
 
       // Create context object with contextId and XR info

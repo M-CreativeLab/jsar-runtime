@@ -83,11 +83,11 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add uniform block binding parameters to the parameters object
+      // Add uniform block binding parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("program", rapidjson::Value().SetUint(program), allocator);
-      parameters.AddMember("uniformBlockIndex", rapidjson::Value().SetUint(uniformBlockIndex), allocator);
-      parameters.AddMember("uniformBlockBinding", rapidjson::Value().SetUint(uniformBlockBinding), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(program), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(uniformBlockIndex), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(uniformBlockBinding), allocator);
       
       return cmdInfo;
     }

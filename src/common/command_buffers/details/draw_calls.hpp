@@ -48,11 +48,11 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add draw arrays parameters to the parameters object
+      // Add draw arrays parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      parameters.AddMember("first", rapidjson::Value().SetInt(first), allocator);
-      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
       
       return cmdInfo;
     }
@@ -108,12 +108,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add instanced draw arrays parameters to the parameters object
+      // Add instanced draw arrays parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      parameters.AddMember("first", rapidjson::Value().SetInt(first), allocator);
-      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      parameters.AddMember("instanceCount", rapidjson::Value().SetInt(instanceCount), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
       
       return cmdInfo;
     }
@@ -171,12 +171,12 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add draw elements parameters to the parameters object
+      // Add draw elements parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      parameters.AddMember("indicesType", rapidjson::Value().SetInt(indicesType), allocator);
-      parameters.AddMember("indicesOffset", rapidjson::Value().SetInt(indicesOffset), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
       
       return cmdInfo;
     }
@@ -237,13 +237,13 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add instanced draw elements parameters to the parameters object
+      // Add instanced draw elements parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("mode", rapidjson::Value().SetInt(mode), allocator);
-      parameters.AddMember("count", rapidjson::Value().SetInt(count), allocator);
-      parameters.AddMember("indicesType", rapidjson::Value().SetInt(indicesType), allocator);
-      parameters.AddMember("indicesOffset", rapidjson::Value().SetInt(indicesOffset), allocator);
-      parameters.AddMember("instanceCount", rapidjson::Value().SetInt(instanceCount), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
       
       return cmdInfo;
     }

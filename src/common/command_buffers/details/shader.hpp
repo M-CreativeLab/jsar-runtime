@@ -46,10 +46,10 @@ namespace commandbuffers
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
       
-      // Add shader attachment parameters to the parameters object
+      // Add shader attachment parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
-      parameters.AddMember("program", rapidjson::Value().SetUint(program), allocator);
-      parameters.AddMember("shader", rapidjson::Value().SetUint(shader), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(program), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(shader), allocator);
       
       return cmdInfo;
     }
