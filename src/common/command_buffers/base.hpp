@@ -83,16 +83,16 @@ namespace commandbuffers
     virtual rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const
     {
       rapidjson::Value cmdInfo(rapidjson::kObjectType);
-      
+
       // Basic command buffer information
       cmdInfo.AddMember("id", rapidjson::Value().SetUint(id), allocator);
       cmdInfo.AddMember("contextId", rapidjson::Value().SetUint(contextId), allocator);
       cmdInfo.AddMember("type", rapidjson::Value().SetInt(static_cast<int>(type)), allocator);
-      
+
       // Command type name for human readability
       std::string typeName = commandTypeToStr(type);
       cmdInfo.AddMember("typeName", rapidjson::Value().SetString(typeName.c_str(), allocator), allocator);
-      
+
       // XR rendering info if available
       if (renderingInfo.isValid())
       {
@@ -102,7 +102,7 @@ namespace commandbuffers
         xrInfo.AddMember("viewIndex", rapidjson::Value().SetInt(renderingInfo.viewIndex), allocator);
         cmdInfo.AddMember("xrRenderingInfo", xrInfo, allocator);
       }
-      
+
       return cmdInfo;
     }
 
