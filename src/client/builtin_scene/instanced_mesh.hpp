@@ -280,7 +280,7 @@ namespace builtin_scene
      * we can write the depth buffer of the transparent objects after rendering them, so that the collision detectior
      * can read the correct depth value for the GUI elements.
      */
-    inline bool shouldWriteTranparentsDepthAfterRendering() const
+    inline bool shouldWriteTransparentsDepthAfterRendering() const
     {
       return writeTransparentsDepthAfterRendering_;
     }
