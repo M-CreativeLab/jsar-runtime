@@ -100,7 +100,7 @@ namespace builtin_scene::web_renderer
     // Create mesh and material for web content rendering
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
     auto mesh = MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward());
-    mesh->writeTransparentsDepthAfterRendering();
+    mesh->enableDepthOnlyPass();
 
     // Spawn the instanced mesh entity which will be used for rendering all web content elements.
     webContentCtx->instancedMeshEntity_ = spawn(hierarchy::Root(true),

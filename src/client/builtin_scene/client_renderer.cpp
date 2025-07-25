@@ -254,8 +254,8 @@ namespace builtin_scene
                                               0,
                                               transparentInstances.count());
 
-              // Draw transparent instances to depth attachment only if the flag is set.
-              if (instancedMesh.shouldWriteTranparentsDepthAfterRendering())
+              // Draw transparent instances to depth attachment if depth-only pass is enabled.
+              if (instancedMesh.isDepthOnlyPassEnabled())
               {
                 glContext.colorMask(false, false, false, false);
                 glContext.depthMask(true);

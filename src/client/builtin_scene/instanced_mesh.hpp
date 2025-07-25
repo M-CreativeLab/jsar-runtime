@@ -272,21 +272,23 @@ namespace builtin_scene
     {
       return *transparentInstances_;
     }
+
     /**
-     * Whether to dispatch a draw call for writing transparent objects' depth after rendering.
+     * Whether to dispatch a depth-only pass for transparent objects which writes the transparent objects' depth
+     * to the depth buffer.
      * 
      * It's mostly used for the collision detection of transparent objects such as GUI elements, we do a depth buffer
      * based collision detection to search for the hit point of the opaque objects and GUI elements, within the flag,
      * we can write the depth buffer of the transparent objects after rendering them, so that the collision detectior
      * can read the correct depth value for the GUI elements.
      */
-    inline bool shouldWriteTransparentsDepthAfterRendering() const
+    inline bool isDepthOnlyPassEnabled() const
     {
-      return writeTransparentsDepthAfterRendering_;
+      return isDepthOnlyPassEnabled_;
     }
-    inline void writeTransparentsDepthAfterRendering(bool value = true)
+    inline void enableDepthOnlyPass(bool value = true)
     {
-      writeTransparentsDepthAfterRendering_ = value;
+      isDepthOnlyPassEnabled_ = value;
     }
 
   protected:
@@ -322,7 +324,7 @@ namespace builtin_scene
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
-    bool writeTransparentsDepthAfterRendering_ = false;
+    bool isDepthOnlyPassEnabled_ = false;
     bool isDirty_ = true;
   };
 
