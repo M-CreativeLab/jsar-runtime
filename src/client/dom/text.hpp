@@ -64,6 +64,8 @@ namespace dom
       return *adoptedStyle_;
     }
 
+    builtin_scene::RenderQueue getRenderQueue() const override final;
+
   private:
     bool isText() const override final
     {

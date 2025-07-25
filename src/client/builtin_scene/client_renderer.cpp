@@ -1,6 +1,7 @@
 #include <array>
 #include <chrono>
 #include <client/dom/node.hpp>
+#include <client/dom/element.hpp>
 #include <client/cssom/units.hpp>
 
 #include "./client_renderer.hpp"
@@ -234,9 +235,6 @@ namespace builtin_scene
           if (transparentInstances.count() > 0)
           {
             WebGLVertexArrayScope vaoScope(glContext_, transparentInstances.vao);
-            glContext.depthMask(false);
-            glContext.enable(WEBGL_BLEND);
-            glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
 
             // Set the base matrix, move the transparent objects +z 0.001
             auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
@@ -245,11 +243,33 @@ namespace builtin_scene
 
             // Draw
             transparentInstances.beforeInstancedDraw(glContext);
-            glContext.drawElementsInstanced(mesh->primitiveTopology(),
-                                            meshIndicesCount,
-                                            WEBGL_UNSIGNED_INT,
-                                            0,
-                                            transparentInstances.count());
+            {
+              // Draw transparent instances to color attachment
+              glContext.depthMask(false);
+              glContext.enable(WEBGL_BLEND);
+              glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+              glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                              meshIndicesCount,
+                                              WEBGL_UNSIGNED_INT,
+                                              0,
+                                              transparentInstances.count());
+
+              // Draw transparent instances to depth attachment if depth-only pass is enabled.
+              if (instancedMesh.isDepthOnlyPassEnabled())
+              {
+                glContext.colorMask(false, false, false, false);
+                glContext.depthMask(true);
+                glContext.disable(WEBGL_BLEND);
+                glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                                meshIndicesCount,
+                                                WEBGL_UNSIGNED_INT,
+                                                0,
+                                                transparentInstances.count());
+
+                // Restore the color mask state
+                glContext.colorMask(true, true, true, true);
+              }
+            }
             transparentInstances.afterInstancedDraw(glContext);
           }
         }
@@ -499,11 +519,11 @@ namespace builtin_scene
           hasChanged = true;
 
         auto elementComponent = getComponent<hierarchy::Element>(id);
-        // Only transparent content needs to update it's z-index
-        if (webContentComponent->isTransparent() && elementComponent != nullptr)
+        if (elementComponent != nullptr &&
+            elementComponent->node != nullptr &&
+            elementComponent->node->isElementOrText())
         {
-          auto index = elementComponent->node->depth(); // FIXME: using the node depth as the z-index currently.
-          if (instance.setZIndex(index))
+          if (instance.setRenderQueue(elementComponent->node->getRenderQueue()))
             hasChanged = true;
         }
 

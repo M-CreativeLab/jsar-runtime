@@ -234,6 +234,9 @@ namespace dom
       return is_focused_;
     }
 
+    // Overrides the `Node::getRenderQueue()` method to return the render queue of the element.
+    virtual builtin_scene::RenderQueue getRenderQueue() const override;
+
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
      *

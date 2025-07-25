@@ -64,7 +64,6 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle;
     defaultStyle.setProperty("width", "auto");
     defaultStyle.setProperty("height", "auto");
-    defaultStyle.setProperty("transform", "translateZ(5px)"); // Avoid the z-fighting issue.
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
   }
 
@@ -99,6 +98,20 @@ namespace dom
 
     data_ = first; // Update the current text node's data
     return make_unique<Text>(second, getOwnerDocumentReference());
+  }
+
+  builtin_scene::RenderQueue Text::getRenderQueue() const
+  {
+    auto renderQueue = Node::getRenderQueue();
+    auto parentElement = getParentElement();
+    if (parentElement != nullptr)
+    {
+      // Text will inherit the parent's render queue properties: zIndex and translateZ.
+      auto parentRenderQueue = parentElement->getRenderQueue();
+      renderQueue.zIndex = parentRenderQueue.zIndex;
+      renderQueue.translateZ = parentRenderQueue.translateZ;
+    }
+    return renderQueue;
   }
 
   void Text::connectedCallback()
