@@ -24,6 +24,11 @@ namespace client_scroll
     void scrollTo(const glm::vec3 &offset);
 
     void updateAfterLayout(const client_layout::Fragment &);
+    
+    // Layer integration methods
+    bool hasScrollableContent() const;
+    glm::vec2 getContentSize() const;
+    glm::vec2 getViewportSize() const;
 
   private:
     glm::vec3 scroll_origin_;

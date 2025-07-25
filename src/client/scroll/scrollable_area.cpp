@@ -62,4 +62,27 @@ namespace client_scroll
     scroll_origin_ = fragment.size();
     overflow_rect_ = fragment.contentSize();
   }
+
+  bool ScrollableArea::hasScrollableContent() const
+  {
+    if (!overflow_rect_.has_value()) {
+      return false;
+    }
+    
+    // Check if content size is larger than viewport size
+    return overflow_rect_->x > scroll_origin_.x || overflow_rect_->y > scroll_origin_.y;
+  }
+
+  glm::vec2 ScrollableArea::getContentSize() const
+  {
+    if (overflow_rect_.has_value()) {
+      return glm::vec2(overflow_rect_->x, overflow_rect_->y);
+    }
+    return glm::vec2(0.0f, 0.0f);
+  }
+
+  glm::vec2 ScrollableArea::getViewportSize() const
+  {
+    return glm::vec2(scroll_origin_.x, scroll_origin_.y);
+  }
 }

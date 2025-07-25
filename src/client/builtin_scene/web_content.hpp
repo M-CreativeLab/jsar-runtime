@@ -26,6 +26,9 @@ namespace builtin_scene
     class RenderImageSystem;
     class RenderTextSystem;
     class UpdateTextureSystem;
+    class MultiLayerInitSystem;
+    class MultiLayerRenderSystem;
+    class MultiLayerContext;
   }
 
   struct WebContentFontStyle
@@ -521,21 +524,28 @@ namespace builtin_scene
       using namespace web_renderer;
 
       app.addResource(Resource::Make<WebContentContext>());
+      app.addResource(Resource::Make<MultiLayerContext>());
       app.registerComponent<WebContent>();
 
       auto initWebContent = System::Make<InitSystem>();
+      auto initMultiLayer = System::Make<MultiLayerInitSystem>();
+      
       app.addSystem(SchedulerLabel::kPostStartup, initWebContent);
+      app.addSystem(SchedulerLabel::kPostStartup, initMultiLayer);
 
       auto renderBackground = System::Make<RenderBackgroundSystem>();
       auto renderImage = System::Make<RenderImageSystem>();
       auto renderText = System::Make<RenderTextSystem>();
       auto updateTexture = System::Make<UpdateTextureSystem>();
+      auto multiLayerRender = System::Make<MultiLayerRenderSystem>();
 
-      renderBackground
+      // Set up the rendering pipeline with multi-layer support
+      multiLayerRender
+        ->chain(renderBackground)
         ->chain(renderImage)
         ->chain(renderText)
         ->chain(updateTexture);
-      app.addSystem(SchedulerLabel::kUpdate, renderBackground);
+      app.addSystem(SchedulerLabel::kUpdate, multiLayerRender);
     }
   };
 }
