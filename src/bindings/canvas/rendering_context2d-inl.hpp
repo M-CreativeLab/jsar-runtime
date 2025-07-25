@@ -34,8 +34,11 @@ namespace canvasbinding
       T::InstanceMethod("fillRect", &T::FillRect),
       T::InstanceMethod("fillText", &T::FillText),
       T::InstanceMethod("stroke", &T::Stroke),
+      T::InstanceMethod("strokeRect", &T::StrokeRect),
+      T::InstanceMethod("strokeText", &T::StrokeText),
       T::InstanceMethod("clearRect", &T::ClearRect),
       T::InstanceMethod("setLineDash", &T::SetLineDash),
+      T::InstanceMethod("getLineDash", &T::GetLineDash),
       // Path methods
       T::InstanceMethod("beginPath", &T::BeginPath),
       T::InstanceMethod("closePath", &T::ClosePath),
@@ -45,6 +48,8 @@ namespace canvasbinding
       T::InstanceMethod("quadraticCurveTo", &T::QuadraticCurveTo),
       T::InstanceMethod("arc", &T::Arc),
       T::InstanceMethod("arcTo", &T::ArcTo),
+      T::InstanceMethod("ellipse", &T::Ellipse),
+      T::InstanceMethod("rect", &T::Rect),
       // Image mthods
       T::InstanceMethod("drawImage", &T::DrawImage),
       T::InstanceMethod("createImageData", &T::CreateImageData),
@@ -58,9 +63,11 @@ namespace canvasbinding
       T::InstanceMethod("scale", &T::Scale),
       T::InstanceMethod("rotate", &T::Rotate),
       T::InstanceMethod("translate", &T::Translate),
+      T::InstanceMethod("resetTransform", &T::ResetTransform),
       // State methods
       T::InstanceMethod("save", &T::Save),
       T::InstanceMethod("restore", &T::Restore),
+      T::InstanceMethod("clip", &T::Clip),
       // Properties
       T::InstanceAccessor("canvas", &T::CanvasGetter, nullptr),
       T::InstanceAccessor("fillStyle", &T::FillStyleGetter, &T::FillStyleSetter),
@@ -89,6 +96,24 @@ namespace canvasbinding
       T::InstanceAccessor("lineJoin",
                           &T::LineJoinGetter,
                           &T::LineJoinSetter),
+      T::InstanceAccessor("lineDashOffset",
+                          &T::LineDashOffsetGetter,
+                          &T::LineDashOffsetSetter),
+      T::InstanceAccessor("miterLimit",
+                          &T::MiterLimitGetter,
+                          &T::MiterLimitSetter),
+      T::InstanceAccessor("shadowBlur",
+                          &T::ShadowBlurGetter,
+                          &T::ShadowBlurSetter),
+      T::InstanceAccessor("shadowColor",
+                          &T::ShadowColorGetter,
+                          &T::ShadowColorSetter),
+      T::InstanceAccessor("shadowOffsetX",
+                          &T::ShadowOffsetXGetter,
+                          &T::ShadowOffsetXSetter),
+      T::InstanceAccessor("shadowOffsetY",
+                          &T::ShadowOffsetYGetter,
+                          &T::ShadowOffsetYSetter),
     };
   }
 

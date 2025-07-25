@@ -87,14 +87,29 @@ namespace canvas
     bool setLineCap(const std::string &str);
     std::string getLineJoin();
     bool setLineJoin(const std::string &str);
+    float getLineDashOffset();
+    bool setLineDashOffset(float offset);
+    float getMiterLimit();
+    bool setMiterLimit(float limit);
+    float getShadowBlur();
+    bool setShadowBlur(float blur);
+    std::string getShadowColor();
+    bool setShadowColor(const std::string &color);
+    float getShadowOffsetX();
+    bool setShadowOffsetX(float offsetX);
+    float getShadowOffsetY();
+    bool setShadowOffsetY(float offsetY);
 
   public:
     void fill();
     void fillRect(float x, float y, float width, float height);
     void fillText(const std::string &text, float x, float y);
     void stroke();
+    void strokeRect(float x, float y, float width, float height);
+    void strokeText(const std::string &text, float x, float y);
     void clearRect(float x, float y, float width, float height);
     void setLineDash(const std::vector<float> &segments);
+    std::vector<float> getLineDash();
     void beginPath();
     void closePath();
     void moveTo(float x, float y);
@@ -103,9 +118,12 @@ namespace canvas
     void quadraticCurveTo(float cpx, float cpy, float x, float y);
     void arc(float x, float y, float radius, float startAngle, float endAngle, bool ccw);
     void arcTo(float x1, float y1, float x2, float y2, float radius);
+    void ellipse(float x, float y, float radiusX, float radiusY, float rotation, float startAngle, float endAngle, bool ccw);
+    void rect(float x, float y, float width, float height);
     TextMetrics measureText(const std::string &text);
     void transform(float a, float b, float c, float d, float e, float f);
     void setTransform(float a, float b, float c, float d, float e, float f);
+    void resetTransform();
     void scale(float sx, float sy);
     void rotate(float angle);
     void translate(float tx, float ty);
@@ -132,6 +150,7 @@ namespace canvas
                       float dirtyY,
                       float dirtyWidth,
                       float dirtyHeight);
+    void clip();
     void save();
     void restore();
 
@@ -177,6 +196,8 @@ namespace canvas
     glm::vec2 shadowOffset = glm::vec2(0.0f);
     float globalAlpha = 1.0f;
     float strokeWidth = 1.0f;
+    float lineDashOffset = 0.0f;
+    float miterLimit = 10.0f;
     SkBlendMode globalCompositeOperation = SkBlendMode::kSrcOver;
     std::vector<float> lineDash;
   };

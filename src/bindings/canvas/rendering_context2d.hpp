@@ -95,6 +95,27 @@ namespace canvasbinding
     void LineCapSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value LineJoinGetter(const Napi::CallbackInfo &info);
     void LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value LineDashOffsetGetter(const Napi::CallbackInfo &info);
+    void LineDashOffsetSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value MiterLimitGetter(const Napi::CallbackInfo &info);
+    void MiterLimitSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value ShadowBlurGetter(const Napi::CallbackInfo &info);
+    void ShadowBlurSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value ShadowColorGetter(const Napi::CallbackInfo &info);
+    void ShadowColorSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value ShadowOffsetXGetter(const Napi::CallbackInfo &info);
+    void ShadowOffsetXSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value ShadowOffsetYGetter(const Napi::CallbackInfo &info);
+    void ShadowOffsetYSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+
+  private: // Additional methods
+    Napi::Value StrokeRect(const Napi::CallbackInfo &info);
+    Napi::Value StrokeText(const Napi::CallbackInfo &info);
+    Napi::Value GetLineDash(const Napi::CallbackInfo &info);
+    Napi::Value Ellipse(const Napi::CallbackInfo &info);
+    Napi::Value Rect(const Napi::CallbackInfo &info);
+    Napi::Value ResetTransform(const Napi::CallbackInfo &info);
+    Napi::Value Clip(const Napi::CallbackInfo &info);
 
   private:
     Napi::ObjectReference canvasRef;

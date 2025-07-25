@@ -1,6 +1,7 @@
 #include <skia/include/core/SkFontMetrics.h>
 #include <skia/include/core/SkColorSpace.h>
 #include <skia/include/effects/SkDashPathEffect.h>
+#include <cstdio>
 
 #include <crates/bindings.hpp>
 #include <common/font/parser.hpp>
@@ -307,6 +308,107 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getLineDashOffset()
+  {
+    return lineDashOffset;
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setLineDashOffset(float offset)
+  {
+    lineDashOffset = offset;
+    return true;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getMiterLimit()
+  {
+    return miterLimit;
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setMiterLimit(float limit)
+  {
+    if (limit > 0)
+    {
+      miterLimit = limit;
+      skPaint->setStrokeMiter(limit);
+      return true;
+    }
+    return false;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getShadowBlur()
+  {
+    return shadowBlur;
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setShadowBlur(float blur)
+  {
+    shadowBlur = blur;
+    return true;
+  }
+
+  template <typename CanvasType>
+  std::string CanvasRenderingContext2D<CanvasType>::getShadowColor()
+  {
+    // Convert SkColor to CSS color string
+    uint8_t a = SkColorGetA(shadowColor);
+    uint8_t r = SkColorGetR(shadowColor);
+    uint8_t g = SkColorGetG(shadowColor);
+    uint8_t b = SkColorGetB(shadowColor);
+    
+    if (a == 255)
+    {
+      char buffer[8];
+      snprintf(buffer, sizeof(buffer), "#%02x%02x%02x", r, g, b);
+      return std::string(buffer);
+    }
+    else
+    {
+      char buffer[32];
+      snprintf(buffer, sizeof(buffer), "rgba(%d, %d, %d, %.3f)", r, g, b, a / 255.0f);
+      return std::string(buffer);
+    }
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setShadowColor(const std::string &color)
+  {
+    auto colorValue = crates::css2::parsing::parseColor(color);
+    shadowColor = SkColorSetARGB(colorValue.a(), colorValue.r(), colorValue.g(), colorValue.b());
+    return true;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getShadowOffsetX()
+  {
+    return shadowOffset.x;
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setShadowOffsetX(float offsetX)
+  {
+    shadowOffset.x = offsetX;
+    return true;
+  }
+
+  template <typename CanvasType>
+  float CanvasRenderingContext2D<CanvasType>::getShadowOffsetY()
+  {
+    return shadowOffset.y;
+  }
+
+  template <typename CanvasType>
+  bool CanvasRenderingContext2D<CanvasType>::setShadowOffsetY(float offsetY)
+  {
+    shadowOffset.y = offsetY;
+    return true;
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::fill()
   {
     if (TR_UNLIKELY(skCanvas == nullptr))
@@ -410,6 +512,67 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::strokeRect(float x, float y, float width, float height)
+  {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    auto strokePaint = getStrokePaint();
+    // TODO: shadow painting
+    skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), strokePaint);
+    this->notifyCanvasUpdated();
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::strokeText(const std::string &text, float x, float y)
+  {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    auto strokePaint = getStrokePaint();
+    auto textBlob = SkTextBlob::MakeFromString(text.c_str(), *skFont);
+
+    /**
+     * Adjust text's position based on `textAlign` and `textBaseline`.
+     */
+    auto textMetrics = measureText(text);
+    switch (textAlign)
+    {
+    case TextAlign::Center:
+      x -= textMetrics.width / 2;
+      break;
+    case TextAlign::Right:
+      x -= textMetrics.width;
+      break;
+    case TextAlign::Start:
+    case TextAlign::End:
+    case TextAlign::Left:
+    default:
+      break;
+    }
+
+    switch (textBaseline)
+    {
+    case TextBaseline::Top:
+      y -= textMetrics.actualBoundingBoxAscent;
+      break;
+    case TextBaseline::Middle:
+      y -= (textMetrics.actualBoundingBoxAscent - textMetrics.actualBoundingBoxDescent) / 2;
+      break;
+    case TextBaseline::Bottom:
+      y -= textMetrics.actualBoundingBoxDescent;
+      break;
+    case TextBaseline::Hanging:
+    case TextBaseline::Alphabetic:
+    case TextBaseline::Ideographic:
+    default:
+      break;
+    }
+    skCanvas->drawTextBlob(textBlob, x, y, strokePaint);
+    this->notifyCanvasUpdated();
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::clearRect(float x, float y, float width, float height)
   {
     skPaint->setStyle(SkPaint::kFill_Style);
@@ -441,6 +604,12 @@ namespace canvas
       for (size_t i = 0; i < count; i++)
         lineDash[i] = segments[i];
     }
+  }
+
+  template <typename CanvasType>
+  std::vector<float> CanvasRenderingContext2D<CanvasType>::getLineDash()
+  {
+    return lineDash;
   }
 
   template <typename CanvasType>
@@ -511,6 +680,22 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::ellipse(float x, float y, float radiusX, float radiusY, float rotation, float startAngle, float endAngle, bool ccw)
+  {
+    if (currentPath == nullptr)
+      beginPath();
+    ellipseToSkPath(currentPath, x, y, radiusX, radiusY, rotation, startAngle, endAngle, ccw);
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::rect(float x, float y, float width, float height)
+  {
+    if (currentPath == nullptr)
+      beginPath();
+    currentPath->addRect(SkRect::MakeXYWH(x, y, width, height));
+  }
+
+  template <typename CanvasType>
   TextMetrics CanvasRenderingContext2D<CanvasType>::measureText(const std::string &text)
   {
     TextMetrics textMetrics;
@@ -561,6 +746,13 @@ namespace canvas
       skCanvas->resetMatrix();
       skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
     }
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::resetTransform()
+  {
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->resetMatrix();
   }
 
   template <typename CanvasType>
@@ -768,6 +960,18 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::clip()
+  {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    if (currentPath != nullptr)
+    {
+      skCanvas->clipPath(*currentPath);
+    }
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::save()
   {
     if (TR_UNLIKELY(skCanvas == nullptr))
@@ -826,7 +1030,7 @@ namespace canvas
 
     if (lineDash.size())
     {
-      auto effect = SkDashPathEffect::Make(lineDash.data(), lineDash.size(), 0);
+      auto effect = SkDashPathEffect::Make(lineDash.data(), lineDash.size(), lineDashOffset);
       paint.setPathEffect(effect);
     }
     return paint;
@@ -835,7 +1039,20 @@ namespace canvas
   template <typename CanvasType>
   SkPaint *CanvasRenderingContext2D<CanvasType>::getShadowPaint(SkPaint &basePaint)
   {
-    return nullptr;
+    // Only create shadow paint if there's actually a shadow to render
+    if (shadowBlur <= 0 && shadowOffset.x == 0 && shadowOffset.y == 0)
+      return nullptr;
+      
+    if (SkColorGetA(shadowColor) == 0)
+      return nullptr;
+
+    SkPaint *shadowPaint = new SkPaint(basePaint);
+    shadowPaint->setColor(shadowColor);
+    
+    // TODO: Implement proper shadow blur using SkImageFilter
+    // For now, we'll just offset the shadow
+    
+    return shadowPaint;
   }
 
   template <typename CanvasType>
