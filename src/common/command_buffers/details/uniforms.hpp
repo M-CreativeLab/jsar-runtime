@@ -61,6 +61,40 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
+         << program << ", "
+         << uniformBlockIndex << ", "
+         << uniformBlockBinding << ")";
+      return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed uniform block binding information.
+     * Uniform block binding is crucial for understanding shader data binding and GPU state setup.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus uniform block binding details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add uniform block binding specific details
+      rapidjson::Value uniformDetails(rapidjson::kObjectType);
+      uniformDetails.AddMember("programId", rapidjson::Value().SetUint(program), allocator);
+      uniformDetails.AddMember("uniformBlockIndex", rapidjson::Value().SetUint(uniformBlockIndex), allocator);
+      uniformDetails.AddMember("uniformBlockBinding", rapidjson::Value().SetUint(uniformBlockBinding), allocator);
+      uniformDetails.AddMember("operation", rapidjson::Value().SetString("uniformBlockBinding", allocator), allocator);
+      
+      cmdInfo.AddMember("uniformDetails", uniformDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     uint32_t program;
     uint32_t uniformBlockIndex;

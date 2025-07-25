@@ -29,6 +29,28 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with detailed program creation information.
+     * Program creation is critical for shader pipeline setup and GPU state management.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus program creation details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+      
+      // Add program creation specific details
+      rapidjson::Value programDetails(rapidjson::kObjectType);
+      programDetails.AddMember("clientId", rapidjson::Value().SetUint(clientId), allocator);
+      programDetails.AddMember("operation", rapidjson::Value().SetString("create", allocator), allocator);
+      
+      cmdInfo.AddMember("programDetails", programDetails, allocator);
+      
+      return cmdInfo;
+    }
+
   public:
     uint32_t clientId;
   };
