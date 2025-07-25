@@ -351,45 +351,6 @@ JSAR 提供了一个专门的 GPU 调试工具，用于实时监控和调试渲�
 - **时间戳**: 命令执行的精确时间
 - **上下文信息**: 相关的程序、着色器、纹理、VAO、缓冲区等
 
-### 高级用法
-
-#### 通过 WebSocket API 直接控制
-
-也可以直接通过 WebSocket 连接发送 CDP 命令：
-
-```javascript
-// 连接到 Inspector
-const ws = new WebSocket('ws://localhost:9423/devtools/inspector/1');
-
-// 启用追踪
-ws.send(JSON.stringify({
-  "id": 1,
-  "method": "JSAR.UniversalRenderingServer.enableTracing",
-  "params": {}
-}));
-
-// 设置帧率为 75 FPS
-ws.send(JSON.stringify({
-  "id": 2,
-  "method": "JSAR.UniversalRenderingServer.setClientFrameRate",
-  "params": {"frameRate": 75}
-}));
-
-// 获取渲染器信息
-ws.send(JSON.stringify({
-  "id": 3,
-  "method": "JSAR.UniversalRenderingServer.getRendererInfo",
-  "params": {}
-}));
-
-// 设置事件节流为每秒 20 个事件
-ws.send(JSON.stringify({
-  "id": 4,
-  "method": "JSAR.UniversalRenderingServer.setEventThrottle",
-  "params": {"eventsPerSecond": 20}
-}));
-```
-
 #### 可用的 CDP 方法
 
 | 方法名称 | 参数 | 描述 |
@@ -418,9 +379,3 @@ ws.send(JSON.stringify({
 - 调整事件节流频率到适当水平（推荐 1-10 events/sec）
 - 不需要调试时及时禁用追踪功能
 - 关闭调试工具窗口以释放资源
-
-### 注意事项
-
-- GPU 调试工具主要用于开发和调试阶段，不建议在生产环境中长时间运行
-- 启用追踪会对性能产生一定影响，建议根据需要调整事件频率
-- 调试工具需要现代浏览器支持 WebSocket 和 ES6+ 特性
