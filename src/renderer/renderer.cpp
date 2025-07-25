@@ -332,7 +332,7 @@ namespace renderer
   {
     watcherRunning = true;
     commandBufferClientWatcher = make_unique<thread>([this]()
-                                                          {
+                                                     {
       SET_THREAD_NAME("TrCBWatcher");
       while (watcherRunning)
       {

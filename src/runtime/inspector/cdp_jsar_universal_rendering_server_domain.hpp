@@ -32,8 +32,9 @@ public:
   std::vector<CdpCommand> getCommands() const override;
 
   // Public methods for command buffer callbacks
-  void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
-  
+  void onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                               const renderer::TrContentRenderer *contentRenderer);
+
   // Set the inspector client for this domain instance
   void setInspectorClient(TrInspectorClient *client);
 
@@ -43,13 +44,13 @@ private:
   int callbackId_ = -1; // Callback ID for unregistering
   bool tracingEnabled_ = false;
   TrInspectorClient *inspectorClient_ = nullptr;
-  
+
   // Event throttling for performance
   std::chrono::steady_clock::time_point lastEventTime_;
   uint32_t eventThrottleMs_ = 100; // Default: max 10 events per second
   uint64_t totalEventsReceived_ = 0;
   uint64_t totalEventsSent_ = 0;
-  
+
   renderer::TrRenderer *getRenderer() const;
 
   // Tracing control methods (also controls command buffer dispatching)
@@ -67,6 +68,8 @@ private:
   std::string getContentRenderers(const CdpMessage &message);
 
   // Command buffer dispatching
-  void sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
-  std::string serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer);
+  void sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                              const renderer::TrContentRenderer *contentRenderer);
+  std::string serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                                      const renderer::TrContentRenderer *contentRenderer);
 };

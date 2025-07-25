@@ -61,7 +61,7 @@ public:
 class CdpHandler
 {
 public:
-  CdpHandler(TrConstellation* constellation, const std::string& clientId, TrInspectorClient* inspectorClient);
+  CdpHandler(TrConstellation *constellation, const std::string &clientId, TrInspectorClient *inspectorClient);
   ~CdpHandler();
 
   // Process incoming CDP message and return response
@@ -72,7 +72,7 @@ public:
 
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
-  
+
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);
 };

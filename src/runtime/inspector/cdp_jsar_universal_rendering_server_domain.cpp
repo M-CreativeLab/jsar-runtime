@@ -11,7 +11,8 @@
 
 using namespace std;
 
-CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const string &clientId)
+CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation,
+                                                                             const string &clientId)
     : constellation_(constellation)
     , clientId_(clientId)
     , lastEventTime_(chrono::steady_clock::now())
@@ -35,9 +36,14 @@ CdpJsarUniversalRenderingServerDomain::~CdpJsarUniversalRenderingServerDomain()
   }
 }
 
-string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method, const CdpMessage &message, const string &clientId)
+string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
+                                                           const CdpMessage &message,
+                                                           const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Handling method: %s for client: %s", method.c_str(), clientId.c_str());
+  DEBUG(LOG_TAG_INSPECTOR,
+        "CDP JSAR.UniversalRenderingServer: Handling method: %s for client: %s",
+        method.c_str(),
+        clientId.c_str());
 
   if (method == "enableTracing")
   {
@@ -79,7 +85,9 @@ renderer::TrRenderer *CdpJsarUniversalRenderingServerDomain::getRenderer() const
 
 string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Enabling tracing and command buffer dispatching for client: %s", clientId.c_str());
+  DEBUG(LOG_TAG_INSPECTOR,
+        "CDP JSAR.UniversalRenderingServer: Enabling tracing and command buffer dispatching for client: %s",
+        clientId.c_str());
 
   auto *renderer = getRenderer();
   if (!renderer)
@@ -94,11 +102,15 @@ string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &me
   if (callbackId_ == -1)
   {
     callbackId_ = renderer->registerCommandBufferExecutionCallback(
-      [this](const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+      [this](const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+             const renderer::TrContentRenderer *contentRenderer)
       {
         this->onCommandBufferExecuted(commandBuffers, contentRenderer);
       });
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: Registered command buffer callback (ID: %d) for client: %s", callbackId_, clientId_.c_str());
+    DEBUG(LOG_TAG_INSPECTOR,
+          "CDP: Registered command buffer callback (ID: %d) for client: %s",
+          callbackId_,
+          clientId_.c_str());
   }
 
   rapidjson::Document result;
