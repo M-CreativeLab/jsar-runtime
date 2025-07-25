@@ -9,8 +9,6 @@
 #include "./inspector/inspector_server.hpp"
 #include "./inspector/inspector_client.hpp"
 
-class CdpJsarUniversalRenderingServerDomain;
-
 class TrInspector final : public std::enable_shared_from_this<TrInspector>
 {
   friend class TrInspectorClient;

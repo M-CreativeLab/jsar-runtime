@@ -20,10 +20,11 @@
 #include <array>
 #include <iomanip>
 
+#include <runtime/constellation.hpp>
+#include <runtime/inspector.hpp>
+
 #include "./inspector_client.hpp"
 #include "./cdp_handler.hpp"
-#include "../inspector.hpp"
-#include "../constellation.hpp"
 
 using namespace std;
 
@@ -116,7 +117,7 @@ void TrInspectorClient::tick()
     {
       size_t bufferSizeBefore = buffer_.size();
       handleWebSocketFrame();
-      
+
       // If buffer size didn't change, we don't have a complete frame
       // or encountered an error, so break the loop
       if (buffer_.size() == bufferSizeBefore)
@@ -451,7 +452,7 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     else
     {
       // Initialize CDP handler for this client
-      cdpHandler_ = std::make_unique<CdpHandler>(inspector->constellation, clientId_, this);
+      cdpHandler_ = make_unique<CdpHandler>(inspector->constellation, clientId_, this);
       DEBUG(LOG_TAG_INSPECTOR, "CDP Handler initialized for client '%s'", clientId.c_str());
     }
 

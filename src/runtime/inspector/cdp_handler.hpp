@@ -57,10 +57,6 @@ public:
   }
 };
 
-// Forward declarations
-class TrConstellation;
-class TrInspectorClient;
-
 // CDP Handler - Per-client coordinator for CDP message processing
 class CdpHandler
 {
@@ -73,19 +69,6 @@ public:
 
   // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
-
-  // Get a specific domain instance
-  template<typename T>
-  T* getDomainInstance(const std::string &domainName) const
-  {
-    auto it = domains_.find(domainName);
-    if (it == domains_.end())
-    {
-      return nullptr;
-    }
-    
-    return dynamic_cast<T*>(it->second.get());
-  }
 
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;

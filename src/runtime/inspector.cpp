@@ -20,7 +20,7 @@ using namespace std::placeholders;
 
 void TrInspector::initialize()
 {
-  server_ = std::make_unique<TrInspectorServer>(shared_from_this());
+  server_ = make_unique<TrInspectorServer>(shared_from_this());
   DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized");
 }
 
@@ -46,29 +46,29 @@ void TrInspector::onRequest(TrInspectorClient &requestClient)
   map<string, string> params;
   if (requestUrl == "/json/version")
   {
-    handleRequest(std::bind(&TrInspector::getVersion, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getVersion, this, _1), requestClient);
   }
   else if (requestUrl == "/contents" ||
            requestUrl == "/json" ||
            requestUrl == "/json/list")
   {
-    handleRequest(std::bind(&TrInspector::getContents, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getContents, this, _1), requestClient);
   }
   else if (requestUrl == "/json/protocol")
   {
-    handleRequest(std::bind(&TrInspector::getProtocol, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getProtocol, this, _1), requestClient);
   }
   else if (requestUrl == "/json/statistics")
   {
-    handleRequest(std::bind(&TrInspector::getStatistics, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getStatistics, this, _1), requestClient);
   }
   else if (matchRoute(requestUrl, "/:id/logs/stdout", params))
   {
-    handleRequest(std::bind(&TrInspector::printContentLog, this, params["id"], "out"), requestClient);
+    handleRequest(bind(&TrInspector::printContentLog, this, params["id"], "out"), requestClient);
   }
   else if (matchRoute(requestUrl, "/:id/logs/stderr", params))
   {
-    handleRequest(std::bind(&TrInspector::printContentLog, this, params["id"], "err"), requestClient);
+    handleRequest(bind(&TrInspector::printContentLog, this, params["id"], "err"), requestClient);
   }
   else
   {
@@ -140,14 +140,14 @@ vector<string> TrInspector::splitPath(const string &path)
   return segments;
 }
 
-void TrInspector::handleRequest(std::function<std::string()> handler, TrInspectorClient &requestClient)
+void TrInspector::handleRequest(function<string()> handler, TrInspectorClient &requestClient)
 {
   try
   {
     string responseText = handler();
     requestClient.respond(200, responseText);
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
     requestClient.respond(500, "Internal Server Error: " + string(e.what()));
   }
@@ -167,7 +167,7 @@ void TrInspector::handleRequest(function<bool(rapidjson::Document &)> handler, T
     else
       throw runtime_error("Failed to handle the request");
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
     requestClient.respond(500, "Internal Server Error: " + string(e.what()));
   }
@@ -283,7 +283,7 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
   domains.SetArray();
 
   // Create a temporary CDP handler to get protocol definitions
-  auto tempHandler = std::make_unique<CdpHandler>(constellation, "temp", nullptr);
+  auto tempHandler = make_unique<CdpHandler>(constellation, "temp", nullptr);
   tempHandler->addProtocolDefinitions(domains, allocator);
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);
@@ -369,7 +369,7 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
     DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
     client.sendWebSocketMessage(response);
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
     DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
     client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");

@@ -298,8 +298,9 @@ namespace renderer
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
     std::unique_ptr<ipc::TrOneShotServer<TrCommandBufferMessage>> commandBufferChanServer = nullptr;
-    std::unordered_map<int, CommandBufferExecutionCallback> commandBufferExecutionCallbacks_;
+
+    std::unordered_map<int, CommandBufferExecutionCallback> onExecutedCallbacks_;
     int nextCallbackId_ = 1;
-    std::mutex callbacksMutex_;
+    mutable std::shared_mutex callbacksMutex_;
   };
 }

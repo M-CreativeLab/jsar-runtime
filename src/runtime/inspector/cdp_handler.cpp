@@ -1,12 +1,13 @@
-#include "./cdp_handler.hpp"
-#include "../../common/debug.hpp"
-#include "./cdp_runtime_domain.hpp"
-#include "./cdp_myexample_domain.hpp"
-#include "./cdp_jsar_universal_rendering_server_domain.hpp"
-#include "../constellation.hpp"
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
+#include <common/debug.hpp>
+#include <runtime/constellation.hpp>
+
+#include "./cdp_handler.hpp"
+#include "./cdp_runtime_domain.hpp"
+#include "./cdp_myexample_domain.hpp"
+#include "./cdp_jsar_universal_rendering_server_domain.hpp"
 
 using namespace std;
 
@@ -28,21 +29,15 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
   if (doc.HasMember("id"))
   {
     if (doc["id"].IsInt64())
-    {
       message->id = doc["id"].GetInt64();
-    }
     else if (doc["id"].IsInt())
-    {
       message->id = doc["id"].GetInt();
-    }
     else if (doc["id"].IsUint64())
-    {
       message->id = static_cast<int64_t>(doc["id"].GetUint64());
-    }
     else if (doc["id"].IsUint())
-    {
       message->id = static_cast<int64_t>(doc["id"].GetUint());
-    }
+    else if (doc["id"].IsString())
+      message->id = stoll(doc["id"].GetString());
   }
 
   // Extract method (required)
@@ -128,17 +123,18 @@ string CdpResponse::event(const string &method, const rapidjson::Value &params)
 }
 
 // CdpHandler implementation
-CdpHandler::CdpHandler(TrConstellation* constellation, const std::string& clientId, TrInspectorClient* inspectorClient)
+CdpHandler::CdpHandler(TrConstellation *constellation, const string &clientId, TrInspectorClient *inspectorClient)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
-  
+
   // Create domain instances directly
-  domains_["Runtime"] = std::make_unique<CdpRuntimeDomain>(constellation);
-  domains_["Example"] = std::make_unique<CdpMyExampleDomain>();
-  domains_["JSAR.UniversalRenderingServer"] = std::make_unique<CdpJsarUniversalRenderingServerDomain>(constellation, clientId);
-  
+  domains_["Runtime"] = make_unique<CdpRuntimeDomain>(constellation);
+  domains_["Example"] = make_unique<CdpMyExampleDomain>();
+  domains_["JSAR.UniversalRenderingServer"] = make_unique<CdpJsarUniversalRenderingServerDomain>(constellation,
+                                                                                                 clientId);
+
   // Set inspector client reference for JSAR.UniversalRenderingServer domain
-  auto* jsarDomain = dynamic_cast<CdpJsarUniversalRenderingServerDomain*>(domains_["JSAR.UniversalRenderingServer"].get());
+  auto *jsarDomain = dynamic_cast<CdpJsarUniversalRenderingServerDomain *>(domains_["JSAR.UniversalRenderingServer"].get());
   if (jsarDomain)
   {
     jsarDomain->setInspectorClient(inspectorClient);

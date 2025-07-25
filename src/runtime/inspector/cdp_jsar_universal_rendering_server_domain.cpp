@@ -1,18 +1,20 @@
-#include "./cdp_jsar_universal_rendering_server_domain.hpp"
-#include "../constellation.hpp"
-#include "../../common/debug.hpp"
-#include "../../renderer/renderer.hpp"
-#include "../../renderer/content_renderer.hpp"
-#include "./inspector_client.hpp"
-#include <rapidjson/document.h>
 #include <chrono>
-
+#include <rapidjson/document.h>
+#include <common/debug.hpp>
 #include <runtime/content.hpp>
+#include <runtime/constellation.hpp>
+#include <renderer/renderer.hpp>
+#include <renderer/content_renderer.hpp>
+
+#include "./cdp_jsar_universal_rendering_server_domain.hpp"
+#include "./inspector_client.hpp"
 
 using namespace std;
 
 CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrConstellation *constellation, const string &clientId)
-    : constellation_(constellation), clientId_(clientId), lastEventTime_(std::chrono::steady_clock::now())
+    : constellation_(constellation)
+    , clientId_(clientId)
+    , lastEventTime_(chrono::steady_clock::now())
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain initialized for client: %s", clientId_.c_str());
 }
@@ -20,7 +22,7 @@ CdpJsarUniversalRenderingServerDomain::CdpJsarUniversalRenderingServerDomain(TrC
 CdpJsarUniversalRenderingServerDomain::~CdpJsarUniversalRenderingServerDomain()
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: JSAR.UniversalRenderingServer domain destroying for client: %s", clientId_.c_str());
-  
+
   // Unregister callback if it was registered
   if (callbackId_ != -1)
   {
@@ -71,9 +73,7 @@ string CdpJsarUniversalRenderingServerDomain::handleMethod(const string &method,
 renderer::TrRenderer *CdpJsarUniversalRenderingServerDomain::getRenderer() const
 {
   if (!constellation_ || !constellation_->renderer)
-  {
     return nullptr;
-  }
   return constellation_->renderer.get();
 }
 
@@ -94,10 +94,10 @@ string CdpJsarUniversalRenderingServerDomain::enableTracing(const CdpMessage &me
   if (callbackId_ == -1)
   {
     callbackId_ = renderer->registerCommandBufferExecutionCallback(
-      [this](const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer) {
+      [this](const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+      {
         this->onCommandBufferExecuted(commandBuffers, contentRenderer);
-      }
-    );
+      });
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Registered command buffer callback (ID: %d) for client: %s", callbackId_, clientId_.c_str());
   }
 
@@ -196,7 +196,7 @@ string CdpJsarUniversalRenderingServerDomain::setEventThrottle(const CdpMessage 
   }
 
   uint32_t intervalMs = intervalValue.GetUint();
-  
+
   // Enforce reasonable limits: 10ms to 10000ms (100 events/sec to 0.1 events/sec)
   if (intervalMs < 10 || intervalMs > 10000)
   {
@@ -239,7 +239,7 @@ string CdpJsarUniversalRenderingServerDomain::getRendererInfo(const CdpMessage &
   result.AddMember("appContextSummaryEnabled", rapidjson::Value().SetBool(renderer->isAppContextSummaryEnabled), allocator);
   result.AddMember("useDoubleWideFramebuffer", rapidjson::Value().SetBool(renderer->useDoubleWideFramebuffer), allocator);
   result.AddMember("commandBufferPort", rapidjson::Value().SetUint(renderer->getCommandBufferChanPort()), allocator);
-  
+
   // Add event throttling statistics
   result.AddMember("eventThrottleMs", rapidjson::Value().SetUint(eventThrottleMs_), allocator);
   result.AddMember("totalEventsReceived", rapidjson::Value().SetUint64(totalEventsReceived_), allocator);
@@ -268,7 +268,8 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
   renderers.SetArray();
 
   // Iterate through all content renderers and collect their information
-  renderer->iterateContentRenderers([&](const renderer::TrContentRenderer &contentRenderer) {
+  renderer->iterateContentRenderers([&](const renderer::TrContentRenderer &contentRenderer)
+                                    {
     rapidjson::Value rendererInfo;
     rendererInfo.SetObject();
 
@@ -287,8 +288,7 @@ string CdpJsarUniversalRenderingServerDomain::getContentRenderers(const CdpMessa
       rendererInfo.AddMember("url", urlValue, allocator);
     }
 
-    renderers.PushBack(rendererInfo, allocator);
-  });
+    renderers.PushBack(rendererInfo, allocator); });
 
   result.AddMember("contentRenderers", renderers, allocator);
 
@@ -301,16 +301,16 @@ void CdpJsarUniversalRenderingServerDomain::setInspectorClient(TrInspectorClient
   DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Inspector client set for client: %s", clientId_.c_str());
 }
 
-void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   totalEventsReceived_++;
-  
+
   if (tracingEnabled_ && inspectorClient_)
   {
     // Check throttling - only send if enough time has passed
-    auto now = std::chrono::steady_clock::now();
-    auto timeSinceLastEvent = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEventTime_).count();
-    
+    auto now = chrono::steady_clock::now();
+    auto timeSinceLastEvent = chrono::duration_cast<chrono::milliseconds>(now - lastEventTime_).count();
+
     if (timeSinceLastEvent >= static_cast<int64_t>(eventThrottleMs_))
     {
       sendCommandBufferEvent(commandBuffers, contentRenderer);
@@ -321,21 +321,21 @@ void CdpJsarUniversalRenderingServerDomain::onCommandBufferExecuted(const std::v
   }
 }
 
-void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   rapidjson::Document params;
   params.SetObject();
   auto &allocator = params.GetAllocator();
 
   params.AddMember("timestamp", rapidjson::Value().SetUint64(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count()), allocator);
-  
+
   // Serialize the command buffers to structured JSON data
   string commandBufferDataStr = serializeCommandBuffers(commandBuffers, contentRenderer);
-  
+
   // Parse the serialized JSON and include it as structured data
   rapidjson::Document commandBufferJson;
   rapidjson::ParseResult parseResult = commandBufferJson.Parse(commandBufferDataStr.c_str());
-  
+
   if (parseResult)
   {
     // Copy the parsed command buffer data into the params
@@ -359,24 +359,23 @@ void CdpJsarUniversalRenderingServerDomain::sendCommandBufferEvent(const std::ve
   }
   else
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Failed to send - inspectorClient: %p, isWebSocket: %s", 
-      inspectorClient_, inspectorClient_ ? (inspectorClient_->isWebSocket() ? "true" : "false") : "null");
+    DEBUG(LOG_TAG_INSPECTOR, "CDP JSAR.UniversalRenderingServer: Failed to send - inspectorClient: %p, isWebSocket: %s", inspectorClient_, inspectorClient_ ? (inspectorClient_->isWebSocket() ? "true" : "false") : "null");
   }
 }
 
-string CdpJsarUniversalRenderingServerDomain::serializeCommandBuffers(const std::vector<commandbuffers::TrCommandBufferBase*> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
+string CdpJsarUniversalRenderingServerDomain::serializeCommandBuffers(const vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, const renderer::TrContentRenderer *contentRenderer)
 {
   rapidjson::Document commandBufferData;
   commandBufferData.SetObject();
   auto &allocator = commandBufferData.GetAllocator();
-  
+
   // Add metadata
   commandBufferData.AddMember("totalCount", rapidjson::Value().SetUint(commandBuffers.size()), allocator);
   if (contentRenderer)
   {
     commandBufferData.AddMember("contentId", rapidjson::Value().SetUint(contentRenderer->contentId), allocator);
   }
-  
+
   // Add detailed information for each command buffer using their toJson() method
   rapidjson::Value commandBuffersArray(rapidjson::kArrayType);
   for (size_t i = 0; i < commandBuffers.size(); ++i)
@@ -385,21 +384,21 @@ string CdpJsarUniversalRenderingServerDomain::serializeCommandBuffers(const std:
     if (cmdBuffer)
     {
       rapidjson::Value cmdInfo = cmdBuffer->toJson(allocator);
-      
+
       // Add sequence index
       cmdInfo.AddMember("sequenceIndex", rapidjson::Value().SetUint(i), allocator);
-      
+
       commandBuffersArray.PushBack(cmdInfo, allocator);
     }
   }
-  
+
   commandBufferData.AddMember("commandBuffers", commandBuffersArray, allocator);
-  
+
   // Convert to string
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   commandBufferData.Accept(writer);
-  
+
   return buffer.GetString();
 }
 
@@ -421,6 +420,5 @@ vector<CdpCommand> CdpJsarUniversalRenderingServerDomain::getCommands() const
     {"setClientFrameRate", "Control the client-side FPS in TrRenderer. Requires frameRate parameter.", nullptr},
     {"setEventThrottle", "Control the command buffer event throttling rate. Requires intervalMs parameter (10-10000ms).", nullptr},
     {"getRendererInfo", "Get current renderer state information including FPS, tracing status, and configuration.", nullptr},
-    {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr}
-  };
+    {"getContentRenderers", "Get list of all content renderer instances for debugging.", nullptr}};
 }

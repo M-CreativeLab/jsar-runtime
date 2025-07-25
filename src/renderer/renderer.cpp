@@ -1,14 +1,12 @@
 #include <iostream>
 #include <sstream>
 #include <assert.h>
-#include "renderer.hpp"
-#include "render_api.hpp"
-#include "runtime/constellation.hpp"
-#include "runtime/content_manager.hpp"
+#include <runtime/constellation.hpp>
+#include <runtime/content_manager.hpp>
+
+#include "./renderer.hpp"
+#include "./render_api.hpp"
 #include "./content_renderer.hpp"
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
 
 namespace renderer
 {
@@ -18,7 +16,7 @@ namespace renderer
   TrRenderer::TrRenderer(TrConstellation *constellation)
       : constellation(constellation)
       , rhi(nullptr)
-      , commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
+      , commandBufferChanServer(make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
   }
 
@@ -36,7 +34,7 @@ namespace renderer
     contentRenderers.clear();
 
     ostringstream threadIdStrStream;
-    threadIdStrStream << std::this_thread::get_id();
+    threadIdStrStream << this_thread::get_id();
     DEBUG(LOG_TAG_RENDERER, "Renderer(%p) is destroyed at %s", this, threadIdStrStream.str().c_str());
   }
 
@@ -77,16 +75,16 @@ namespace renderer
 
   int TrRenderer::registerCommandBufferExecutionCallback(CommandBufferExecutionCallback callback)
   {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
+    unique_lock<shared_mutex> lock(callbacksMutex_);
     int callbackId = nextCallbackId_++;
-    commandBufferExecutionCallbacks_[callbackId] = callback;
+    onExecutedCallbacks_[callbackId] = callback;
     return callbackId;
   }
 
   void TrRenderer::unregisterCommandBufferExecutionCallback(int callbackId)
   {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
-    commandBufferExecutionCallbacks_.erase(callbackId);
+    unique_lock<shared_mutex> lock(callbacksMutex_);
+    onExecutedCallbacks_.erase(callbackId);
   }
 
   void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
@@ -94,7 +92,7 @@ namespace renderer
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    tickingTimepoint = std::chrono::high_resolution_clock::now();
+    tickingTimepoint = chrono::high_resolution_clock::now();
     calcFps();
 
     shared_lock<shared_mutex> lock(contentRendererMutex);
@@ -171,7 +169,7 @@ namespace renderer
     glHostContext->restore();
   }
 
-  bool TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId)
+  bool TrRenderer::addContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId)
   {
     if (rhi == nullptr) [[unlikely]]
       return false;
@@ -201,7 +199,7 @@ namespace renderer
     return nullptr;
   }
 
-  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(std::shared_ptr<TrContentRuntime> content)
+  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(shared_ptr<TrContentRuntime> content)
   {
     TrRenderer::ContentRenderersList list;
     if (TR_UNLIKELY(content == nullptr))
@@ -333,7 +331,7 @@ namespace renderer
   void TrRenderer::startWatchers()
   {
     watcherRunning = true;
-    commandBufferClientWatcher = std::make_unique<thread>([this]()
+    commandBufferClientWatcher = make_unique<thread>([this]()
                                                           {
       SET_THREAD_NAME("TrCBWatcher");
       while (watcherRunning)
@@ -387,13 +385,11 @@ namespace renderer
     }
 
     // Notify callbacks if command buffers were executed successfully
-    if (!commandBufferExecutionCallbacks_.empty())
+    if (!onExecutedCallbacks_.empty())
     {
-      std::lock_guard<std::mutex> lock(callbacksMutex_);
-      for (const auto &[callbackId, callback] : commandBufferExecutionCallbacks_)
-      {
+      shared_lock<shared_mutex> lock(callbacksMutex_);
+      for (const auto &[callbackId, callback] : onExecutedCallbacks_)
         callback(list, content_renderer);
-      }
     }
 
     return result;
