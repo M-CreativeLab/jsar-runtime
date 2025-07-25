@@ -514,34 +514,23 @@ namespace builtin_scene
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
 
+          // Calculate left and right eye texture coordinates for spatial images
+          Instance::TextureOffset uvOffset = textureRect->getUvOffset(texturePad);
+          Instance::TextureOffset uvOffsetR = uvOffset;
+          Instance::TextureScale uvScale = textureRect->getUvScale(texturePad);
+
           // For spatial images, the texture atlas system handles left/right eye regions
           // via instance data coordinates set in setSpatialTexture method
-          if (webContentComponent->isSpatial())
+          if (webContentComponent->isSpatialized())
           {
-            // Calculate left and right eye texture coordinates for spatial images
-            auto uvOffset = textureRect->getUvOffset(texturePad);
-            auto uvScale = textureRect->getUvScale(texturePad);
-
-            // Left eye uses left half, right eye uses right half
-            glm::vec2 leftUvOffset = uvOffset;
-            glm::vec2 rightUvOffset = glm::vec2(uvOffset.x + uvScale.x * 0.5f, uvOffset.y);
-            glm::vec2 halfUvScale = glm::vec2(uvScale.x * 0.5f, uvScale.y);
-
-            instance.setSpatialTexture(
-              leftUvOffset,
-              halfUvScale,
-              textureRect->layer,
-              rightUvOffset,
-              hasChanged);
+            uvOffsetR.setForRight(uvScale);
+            uvScale.setHalfWidth();
           }
-          else
-          {
-            // Regular (non-spatial) image
-            instance.setTexture(textureRect->getUvOffset(texturePad),
-                                textureRect->getUvScale(texturePad),
-                                textureRect->layer,
-                                hasChanged);
-          }
+          instance.setTexture(uvOffset,
+                              uvOffsetR,
+                              uvScale,
+                              textureRect->layer,
+                              hasChanged);
         }
         else
         {

@@ -54,53 +54,31 @@ namespace builtin_scene
     hasChanged = true;
   }
 
-  void Instance::setTexture(array<float, 2> uvOffset,
-                            array<float, 2> uvScale,
+  void Instance::setTexture(TextureOffset uvOffset,
+                            TextureOffset uvOffsetR,
+                            TextureScale uvScale,
                             uint32_t layerIndex,
                             bool &hasChanged)
   {
-    if (data_.texUvOffset.x == uvOffset[0] &&
-        data_.texUvOffset.y == uvOffset[1] &&
-        data_.texUvScale.x == uvScale[0] &&
-        data_.texUvScale.y == uvScale[1] &&
+    if (data_.texUvOffset == uvOffset &&
+        data_.texUvOffsetR == uvOffsetR &&
+        data_.texUvScale == uvScale &&
         data_.texLayerIndex == layerIndex)
+    {
       return; // Skip if there is no change.
+    }
 
-    data_.texUvOffset = glm::vec2(uvOffset[0], uvOffset[1]);
-    data_.texUvScale = glm::vec2(uvScale[0], uvScale[1]);
+    data_.texUvOffset = uvOffset;
+    data_.texUvOffsetR = uvOffsetR;
+    data_.texUvScale = uvScale;
     data_.texLayerIndex = layerIndex;
-    // Also set right eye coordinates to same values for backward compatibility
-    data_.texUvOffsetR = data_.texUvOffset;
-    notifyHolders();
-    hasChanged = true;
-  }
-
-  void Instance::setSpatialTexture(array<float, 2> uvOffsetLeft,
-                                  array<float, 2> uvScale,
-                                  uint32_t layerIndex,
-                                  array<float, 2> uvOffsetRight,
-                                  bool &hasChanged)
-  {
-    if (data_.texUvOffset.x == uvOffsetLeft[0] &&
-        data_.texUvOffset.y == uvOffsetLeft[1] &&
-        data_.texUvScale.x == uvScale[0] &&
-        data_.texUvScale.y == uvScale[1] &&
-        data_.texLayerIndex == layerIndex &&
-        data_.texUvOffsetR.x == uvOffsetRight[0] &&
-        data_.texUvOffsetR.y == uvOffsetRight[1])
-      return; // Skip if there is no change.
-
-    data_.texUvOffset = glm::vec2(uvOffsetLeft[0], uvOffsetLeft[1]);
-    data_.texUvScale = glm::vec2(uvScale[0], uvScale[1]);
-    data_.texLayerIndex = layerIndex;
-    data_.texUvOffsetR = glm::vec2(uvOffsetRight[0], uvOffsetRight[1]);
     notifyHolders();
     hasChanged = true;
   }
 
   void Instance::disableTexture(bool &hasChanged)
   {
-    setSpatialTexture({0.0f, 0.0f}, {0.0f, 0.0f}, 0, {0.0f, 0.0f}, hasChanged);
+    setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0, hasChanged);
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)

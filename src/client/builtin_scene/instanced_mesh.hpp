@@ -70,6 +70,65 @@ namespace builtin_scene
     friend class InstancedMeshBase;
     friend class RenderableInstancesList;
 
+  private:
+    class TextureCoordBase : public std::array<float, 2>
+    {
+    public:
+      TextureCoordBase()
+          : std::array<float, 2>({0.0f, 0.0f})
+      {
+      }
+      TextureCoordBase(const std::array<float, 2> &array)
+          : std::array<float, 2>(array)
+      {
+      }
+
+    public:
+      inline float u() const
+      {
+        return (*this)[0];
+      }
+      inline float v() const
+      {
+        return (*this)[1];
+      }
+
+      operator glm::vec2() const
+      {
+        return glm::vec2(u(), v());
+      }
+      bool operator==(const TextureCoordBase &other) const
+      {
+        return (u() == other.u() && v() == other.v());
+      }
+      bool operator==(const glm::vec2 &other) const
+      {
+        return (u() == other.x && v() == other.y);
+      }
+    };
+
+  public:
+    class TextureScale : public TextureCoordBase
+    {
+      using TextureCoordBase::TextureCoordBase;
+
+    public:
+      void setHalfWidth()
+      {
+        (*this)[0] *= 0.5f;
+      }
+    };
+    class TextureOffset : public TextureCoordBase
+    {
+      using TextureCoordBase::TextureCoordBase;
+
+    public:
+      void setForRight(const TextureScale &scale)
+      {
+        (*this)[0] += scale.u() * 0.5f; // Offset right eye UVs by half the width
+      }
+    };
+
   public:
     Instance() = default;
 
@@ -79,15 +138,11 @@ namespace builtin_scene
     void translate(float tx, float ty, float tz);
     void scale(float sx, float sy, float sz);
     void setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged);
-    void setTexture(std::array<float, 2> uvOffset,
-                    std::array<float, 2> uvScale,
+    void setTexture(TextureOffset uvOffset,
+                    TextureOffset uvOffsetR,
+                    TextureScale uvScale,
                     uint32_t layerIndex,
                     bool &hasChanged);
-    void setSpatialTexture(std::array<float, 2> uvOffsetLeft,
-                           std::array<float, 2> uvScale,
-                           uint32_t layerIndex,
-                           std::array<float, 2> uvOffsetRight,
-                           bool &hasChanged);
     void disableTexture(bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
