@@ -1,0 +1,114 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>HTMLButtonElement Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .button-container {
+      margin: 10px 0;
+    }
+    .test-results {
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>HTMLButtonElement Test</h1>
+  
+  <div class="button-container">
+    <button id="btn1">Default Button</button>
+  </div>
+  
+  <div class="button-container">
+    <button id="btn2" type="button">Type: button</button>
+  </div>
+  
+  <div class="button-container">
+    <button id="btn3" type="submit">Type: submit</button>
+  </div>
+  
+  <div class="button-container">
+    <button id="btn4" disabled>Disabled Button</button>
+  </div>
+  
+  <div class="button-container">
+    <button id="btn5" name="testButton" value="testValue">Button with name and value</button>
+  </div>
+
+  <div class="test-results" id="results">
+    <h3>Test Results:</h3>
+    <div id="output"></div>
+  </div>
+</body>
+
+<script>
+  function log(message) {
+    const output = document.getElementById('output');
+    output.innerHTML += '<div>' + message + '</div>';
+    console.log(message);
+  }
+
+  // Test button element creation and properties
+  log('=== HTMLButtonElement Tests ===');
+  
+  // Test createElement
+  const createdButton = document.createElement('button');
+  log('✓ document.createElement("button"): ' + (createdButton.constructor.name === 'HTMLButtonElement'));
+  
+  // Test default properties
+  log('✓ Default type: ' + createdButton.type + ' (expected: submit)');
+  log('✓ Default disabled: ' + createdButton.disabled + ' (expected: false)');
+  
+  // Test existing buttons
+  const btn1 = document.getElementById('btn1');
+  log('✓ btn1 type: ' + btn1.type + ' (expected: submit)');
+  log('✓ btn1 disabled: ' + btn1.disabled + ' (expected: false)');
+  
+  const btn2 = document.getElementById('btn2');
+  log('✓ btn2 type: ' + btn2.type + ' (expected: button)');
+  
+  const btn3 = document.getElementById('btn3');
+  log('✓ btn3 type: ' + btn3.type + ' (expected: submit)');
+  
+  const btn4 = document.getElementById('btn4');
+  log('✓ btn4 disabled: ' + btn4.disabled + ' (expected: true)');
+  
+  const btn5 = document.getElementById('btn5');
+  log('✓ btn5 name: ' + btn5.name + ' (expected: testButton)');
+  log('✓ btn5 value: ' + btn5.value + ' (expected: testValue)');
+  
+  // Test property setters
+  btn1.disabled = true;
+  log('✓ Setting btn1.disabled = true: ' + btn1.disabled);
+  
+  btn2.type = 'reset';
+  log('✓ Setting btn2.type = "reset": ' + btn2.type);
+  
+  btn2.name = 'dynamicName';
+  log('✓ Setting btn2.name = "dynamicName": ' + btn2.name);
+  
+  btn2.value = 'dynamicValue';
+  log('✓ Setting btn2.value = "dynamicValue": ' + btn2.value);
+  
+  // Test click event
+  let clickCount = 0;
+  btn1.addEventListener('click', function() {
+    clickCount++;
+    log('✓ Button click event triggered (count: ' + clickCount + ')');
+  });
+  
+  // Programmatically trigger click
+  btn1.click();
+  
+  log('=== All tests completed ===');
+</script>
+
+</html>

@@ -24,6 +24,7 @@
 #define TYPED_ELEMENT_MAP(XX)         \
   XX("audio", HTMLAudioElement)       \
   XX("body", HTMLBodyElement)         \
+  XX("button", HTMLButtonElement)     \
   XX("canvas", HTMLCanvasElement)     \
   XX("div", HTMLDivElement)           \
   XX("head", HTMLHeadElement)         \
