@@ -22,6 +22,7 @@ import {
   WebGL2RenderingContextImpl
 } from './webgl';
 import { WorkerImpl } from './webworkers/worker';
+import { HTMLInputElementImpl } from './dom/HTMLInputElement';
 
 export function loadPolyfills() {
   // Load Web APIs
@@ -129,6 +130,18 @@ export function loadPolyfills() {
   Object.defineProperties(globalThis, {
     'Worker': {
       value: WorkerImpl,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    },
+  });
+
+  /**
+   * HTML Elements
+   */
+  Object.defineProperties(globalThis, {
+    'HTMLInputElement': {
+      value: HTMLInputElementImpl,
       writable: false,
       enumerable: true,
       configurable: false,
