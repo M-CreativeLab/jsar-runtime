@@ -31,13 +31,13 @@ namespace dom
       disabled = !newValue.empty();
       if (disabled)
       {
-        style().setProperty("cursor", "not-allowed");
-        style().setProperty("opacity", "0.65");
+        styleRef()->setProperty("cursor", "not-allowed");
+        styleRef()->setProperty("opacity", "0.65");
       }
       else
       {
-        style().setProperty("cursor", "pointer");
-        style().setProperty("opacity", "1");
+        styleRef()->setProperty("cursor", "pointer");
+        styleRef()->setProperty("opacity", "1");
       }
     }
     else if (name == "type")

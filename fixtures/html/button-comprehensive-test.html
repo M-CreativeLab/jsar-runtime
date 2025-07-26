@@ -1,0 +1,220 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>HTMLButtonElement Comprehensive Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .test-results {
+      background-color: #e8f5e8;
+      border-left: 4px solid #4caf50;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .error {
+      background-color: #ffe8e8;
+      border-left: 4px solid #f44336;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>HTMLButtonElement Comprehensive Test</h1>
+  
+  <div class="test-section">
+    <h2>1. Basic Button Elements</h2>
+    <div class="button-grid">
+      <button id="btn-default">Default Button</button>
+      <button id="btn-submit" type="submit">Submit Button</button>
+      <button id="btn-reset" type="reset">Reset Button</button>
+      <button id="btn-button" type="button">Generic Button</button>
+      <button id="btn-disabled" disabled>Disabled Button</button>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Form-related Buttons</h2>
+    <form id="test-form">
+      <div class="button-grid">
+        <button id="btn-named" name="action" value="save">Named Button</button>
+        <button id="btn-form-ref" form="test-form" name="external" value="external">External Form Button</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Dynamic Button Creation</h2>
+    <div id="dynamic-buttons"></div>
+    <button onclick="createDynamicButton()">Create Dynamic Button</button>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Event Testing</h2>
+    <button id="event-btn">Click Me!</button>
+    <div id="event-log"></div>
+  </div>
+
+  <div class="test-results" id="test-results">
+    <h3>Test Results</h3>
+    <div id="results-output">Running tests...</div>
+  </div>
+</body>
+
+<script>
+  let testsPassed = 0;
+  let testsFailed = 0;
+  
+  function logResult(test, passed, message = '') {
+    const output = document.getElementById('results-output');
+    const status = passed ? '✅' : '❌';
+    const extra = message ? ` - ${message}` : '';
+    output.innerHTML += `<div>${status} ${test}${extra}</div>`;
+    
+    if (passed) {
+      testsPassed++;
+    } else {
+      testsFailed++;
+      document.getElementById('test-results').classList.add('error');
+    }
+    
+    console.log(`${status} ${test}${extra}`);
+  }
+
+  function runTests() {
+    console.log('Starting HTMLButtonElement tests...');
+    
+    // Test 1: Element creation
+    try {
+      const btn = document.createElement('button');
+      logResult('createElement("button")', btn.constructor.name === 'HTMLButtonElement');
+      logResult('Button tagName', btn.tagName === 'BUTTON');
+    } catch (e) {
+      logResult('Element creation', false, e.message);
+    }
+
+    // Test 2: Default properties
+    try {
+      const btn = document.createElement('button');
+      logResult('Default type', btn.type === 'submit');
+      logResult('Default disabled', btn.disabled === false);
+      logResult('Default name', btn.name === '');
+      logResult('Default value', btn.value === '');
+      logResult('Default form', btn.form === '');
+    } catch (e) {
+      logResult('Default properties', false, e.message);
+    }
+
+    // Test 3: Property setters/getters
+    try {
+      const btn = document.createElement('button');
+      
+      btn.type = 'button';
+      logResult('Set type property', btn.type === 'button');
+      
+      btn.disabled = true;
+      logResult('Set disabled property', btn.disabled === true);
+      
+      btn.name = 'testName';
+      logResult('Set name property', btn.name === 'testName');
+      
+      btn.value = 'testValue';
+      logResult('Set value property', btn.value === 'testValue');
+      
+      btn.form = 'testForm';
+      logResult('Set form property', btn.form === 'testForm');
+    } catch (e) {
+      logResult('Property setters', false, e.message);
+    }
+
+    // Test 4: Existing buttons from HTML
+    try {
+      const defaultBtn = document.getElementById('btn-default');
+      logResult('HTML default button type', defaultBtn.type === 'submit');
+      
+      const submitBtn = document.getElementById('btn-submit');
+      logResult('HTML submit button type', submitBtn.type === 'submit');
+      
+      const resetBtn = document.getElementById('btn-reset');
+      logResult('HTML reset button type', resetBtn.type === 'reset');
+      
+      const buttonBtn = document.getElementById('btn-button');
+      logResult('HTML button type', buttonBtn.type === 'button');
+      
+      const disabledBtn = document.getElementById('btn-disabled');
+      logResult('HTML disabled button', disabledBtn.disabled === true);
+      
+      const namedBtn = document.getElementById('btn-named');
+      logResult('HTML named button name', namedBtn.name === 'action');
+      logResult('HTML named button value', namedBtn.value === 'save');
+    } catch (e) {
+      logResult('HTML button properties', false, e.message);
+    }
+
+    // Test 5: Events
+    try {
+      let clickCount = 0;
+      const eventBtn = document.getElementById('event-btn');
+      
+      eventBtn.addEventListener('click', function() {
+        clickCount++;
+        const log = document.getElementById('event-log');
+        log.innerHTML += `<div>Click event ${clickCount} fired</div>`;
+      });
+      
+      // Trigger programmatic click
+      eventBtn.click();
+      
+      // Test if event was fired (basic check)
+      setTimeout(() => {
+        logResult('Click event handling', clickCount > 0, `${clickCount} clicks registered`);
+        
+        // Final summary
+        const total = testsPassed + testsFailed;
+        const summary = `Tests completed: ${testsPassed}/${total} passed`;
+        document.getElementById('results-output').innerHTML += `<div style="margin-top:15px; font-weight:bold;">${summary}</div>`;
+        
+        if (testsFailed === 0) {
+          document.getElementById('test-results').style.backgroundColor = '#e8f5e8';
+        }
+      }, 100);
+      
+    } catch (e) {
+      logResult('Event handling', false, e.message);
+    }
+  }
+
+  function createDynamicButton() {
+    const container = document.getElementById('dynamic-buttons');
+    const btn = document.createElement('button');
+    btn.textContent = `Dynamic Button ${container.children.length + 1}`;
+    btn.type = 'button';
+    btn.onclick = function() {
+      alert(`Dynamic button clicked: ${btn.textContent}`);
+    };
+    container.appendChild(btn);
+  }
+
+  // Run tests when page loads
+  window.addEventListener('load', function() {
+    setTimeout(runTests, 500); // Small delay to ensure everything is loaded
+  });
+</script>
+
+</html>
