@@ -1235,4 +1235,3 @@ namespace canvasbinding
     contextImpl->setShadowOffsetY(value.ToNumber().FloatValue());
   }
 }
-}

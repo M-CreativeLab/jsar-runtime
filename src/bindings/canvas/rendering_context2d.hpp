@@ -65,11 +65,14 @@ namespace canvasbinding
   private: // Transform methods
     Napi::Value Transform(const Napi::CallbackInfo &info);
     Napi::Value SetTransform(const Napi::CallbackInfo &info);
+    Napi::Value ResetTransform(const Napi::CallbackInfo &info);
     Napi::Value Rotate(const Napi::CallbackInfo &info);
     Napi::Value Scale(const Napi::CallbackInfo &info);
     Napi::Value Translate(const Napi::CallbackInfo &info);
 
   private: // State
+    Napi::Value GetLineDash(const Napi::CallbackInfo &info);
+    Napi::Value Clip(const Napi::CallbackInfo &info);
     Napi::Value Save(const Napi::CallbackInfo &info);
     Napi::Value Restore(const Napi::CallbackInfo &info);
 
@@ -107,15 +110,6 @@ namespace canvasbinding
     void ShadowOffsetXSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value ShadowOffsetYGetter(const Napi::CallbackInfo &info);
     void ShadowOffsetYSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
-
-  private: // Additional methods
-    Napi::Value StrokeRect(const Napi::CallbackInfo &info);
-    Napi::Value StrokeText(const Napi::CallbackInfo &info);
-    Napi::Value GetLineDash(const Napi::CallbackInfo &info);
-    Napi::Value Ellipse(const Napi::CallbackInfo &info);
-    Napi::Value Rect(const Napi::CallbackInfo &info);
-    Napi::Value ResetTransform(const Napi::CallbackInfo &info);
-    Napi::Value Clip(const Napi::CallbackInfo &info);
 
   private:
     Napi::ObjectReference canvasRef;
