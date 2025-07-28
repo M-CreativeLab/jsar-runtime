@@ -7,12 +7,14 @@
 #include <vector>
 #include <rapidjson/document.h>
 
+// Forward declarations
+class TrConstellation;
 class TrInspectorClient;
 
 // CDP (Chrome DevTools Protocol) Message Structure
 struct CdpMessage
 {
-  int id = -1;
+  int64_t id = -1;
   std::string method;
   rapidjson::Value params;
 
@@ -23,8 +25,8 @@ struct CdpMessage
 class CdpResponse
 {
 public:
-  static std::string success(int id, const rapidjson::Value &result);
-  static std::string error(int id, int code, const std::string &message);
+  static std::string success(int64_t id, const rapidjson::Value &result);
+  static std::string error(int64_t id, int code, const std::string &message);
   static std::string event(const std::string &method, const rapidjson::Value &params);
 };
 
@@ -56,18 +58,15 @@ public:
   }
 };
 
-// CDP Handler - Main coordinator for CDP message processing
+// CDP Handler - Per-client coordinator for CDP message processing
 class CdpHandler
 {
 public:
-  CdpHandler();
+  CdpHandler(TrConstellation *constellation, const std::string &clientId, TrInspectorClient *inspectorClient);
   ~CdpHandler();
 
   // Process incoming CDP message and return response
-  std::string processMessage(const std::string &message, const std::string &clientId = "");
-
-  // Register a domain handler
-  void registerDomain(const std::string &domain, std::unique_ptr<CdpDomainHandler> handler);
+  std::string processMessage(const std::string &message);
 
   // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);

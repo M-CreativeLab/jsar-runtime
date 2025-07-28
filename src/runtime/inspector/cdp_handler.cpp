@@ -2,7 +2,12 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
 #include <common/debug.hpp>
+#include <runtime/constellation.hpp>
+
 #include "./cdp_handler.hpp"
+#include "./cdp_runtime_domain.hpp"
+#include "./cdp_myexample_domain.hpp"
+#include "./cdp_jsar_universal_rendering_server_domain.hpp"
 
 using namespace std;
 
@@ -21,9 +26,18 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
   }
 
   // Extract id (optional for events)
-  if (doc.HasMember("id") && doc["id"].IsInt())
+  if (doc.HasMember("id"))
   {
-    message->id = doc["id"].GetInt();
+    if (doc["id"].IsInt64())
+      message->id = doc["id"].GetInt64();
+    else if (doc["id"].IsInt())
+      message->id = doc["id"].GetInt();
+    else if (doc["id"].IsUint64())
+      message->id = static_cast<int64_t>(doc["id"].GetUint64());
+    else if (doc["id"].IsUint())
+      message->id = static_cast<int64_t>(doc["id"].GetUint());
+    else if (doc["id"].IsString())
+      message->id = stoll(doc["id"].GetString());
   }
 
   // Extract method (required)
@@ -48,7 +62,7 @@ unique_ptr<CdpMessage> CdpMessage::parse(const string &json)
 }
 
 // CdpResponse implementation
-string CdpResponse::success(int id, const rapidjson::Value &result)
+string CdpResponse::success(int64_t id, const rapidjson::Value &result)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -67,7 +81,7 @@ string CdpResponse::success(int id, const rapidjson::Value &result)
   return buffer.GetString();
 }
 
-string CdpResponse::error(int id, int code, const string &message)
+string CdpResponse::error(int64_t id, int code, const string &message)
 {
   rapidjson::Document response;
   response.SetObject();
@@ -109,14 +123,30 @@ string CdpResponse::event(const string &method, const rapidjson::Value &params)
 }
 
 // CdpHandler implementation
-CdpHandler::CdpHandler()
+CdpHandler::CdpHandler(TrConstellation *constellation, const string &clientId, TrInspectorClient *inspectorClient)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized");
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
+
+  // Create domain instances directly
+  domains_["Runtime"] = make_unique<CdpRuntimeDomain>(constellation);
+  domains_["Example"] = make_unique<CdpMyExampleDomain>();
+  domains_["JSAR.UniversalRenderingServer"] = make_unique<CdpJsarUniversalRenderingServerDomain>(constellation,
+                                                                                                 clientId);
+
+  // Set inspector client reference for JSAR.UniversalRenderingServer domain
+  auto *jsarDomain = dynamic_cast<CdpJsarUniversalRenderingServerDomain *>(domains_["JSAR.UniversalRenderingServer"].get());
+  if (jsarDomain)
+  {
+    jsarDomain->setInspectorClient(inspectorClient);
+  }
 }
 
-CdpHandler::~CdpHandler() = default;
+CdpHandler::~CdpHandler()
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler destroyed");
+}
 
-string CdpHandler::processMessage(const string &message, const string &clientId)
+string CdpHandler::processMessage(const string &message)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Processing message: %s", message.c_str());
 
@@ -130,11 +160,11 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
   string domain = extractDomain(cdpMessage->method);
   string methodName = extractMethodName(cdpMessage->method);
 
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%d", domain.c_str(), methodName.c_str(), cdpMessage->id);
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%lld", domain.c_str(), methodName.c_str(), (long long)cdpMessage->id);
 
   // Find domain handler
-  auto it = domains_.find(domain);
-  if (it == domains_.end())
+  auto domainIt = domains_.find(domain);
+  if (domainIt == domains_.end())
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Unknown domain: %s", domain.c_str());
     return CdpResponse::error(cdpMessage->id, -32601, "Method not found");
@@ -142,7 +172,7 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
 
   try
   {
-    return it->second->handleMethod(methodName, *cdpMessage, clientId);
+    return domainIt->second->handleMethod(methodName, *cdpMessage, ""); // clientId not needed anymore
   }
   catch (const exception &e)
   {
@@ -151,35 +181,10 @@ string CdpHandler::processMessage(const string &message, const string &clientId)
   }
 }
 
-void CdpHandler::registerDomain(const string &domain, unique_ptr<CdpDomainHandler> handler)
-{
-  DEBUG(LOG_TAG_INSPECTOR, "CDP: Registering domain: %s", domain.c_str());
-  domains_[domain] = move(handler);
-}
-
-string CdpHandler::extractDomain(const string &method)
-{
-  size_t dotPos = method.find('.');
-  if (dotPos == string::npos)
-  {
-    return method; // No domain separator, treat whole string as domain
-  }
-  return method.substr(0, dotPos);
-}
-
-string CdpHandler::extractMethodName(const string &method)
-{
-  size_t dotPos = method.find('.');
-  if (dotPos == string::npos)
-  {
-    return ""; // No method name
-  }
-  return method.substr(dotPos + 1);
-}
-
 void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator)
 {
-  for (const auto &[domainName, handler] : domains_)
+  // Get protocol definitions from all registered domains
+  for (const auto &[domainName, domainHandler] : domains_)
   {
     // Create domain object
     rapidjson::Value domainObj;
@@ -187,17 +192,17 @@ void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Do
 
     // Add domain name and description
     domainObj.AddMember("domain",
-                        rapidjson::Value().SetString(handler->getDomainName().c_str(), allocator),
+                        rapidjson::Value().SetString(domainHandler->getDomainName().c_str(), allocator),
                         allocator);
     domainObj.AddMember("description",
-                        rapidjson::Value().SetString(handler->getDomainDescription().c_str(), allocator),
+                        rapidjson::Value().SetString(domainHandler->getDomainDescription().c_str(), allocator),
                         allocator);
 
     // Add commands
     rapidjson::Value commands;
     commands.SetArray();
 
-    auto domainCommands = handler->getCommands();
+    auto domainCommands = domainHandler->getCommands();
     for (const auto &cmd : domainCommands)
     {
       rapidjson::Value cmdObj;
@@ -214,4 +219,24 @@ void CdpHandler::addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Do
     domainObj.AddMember("commands", commands, allocator);
     domains.PushBack(domainObj, allocator);
   }
+}
+
+string CdpHandler::extractDomain(const string &method)
+{
+  size_t dotPos = method.rfind('.');
+  if (dotPos == string::npos)
+  {
+    return method; // No domain separator, treat whole string as domain
+  }
+  return method.substr(0, dotPos);
+}
+
+string CdpHandler::extractMethodName(const string &method)
+{
+  size_t dotPos = method.rfind('.');
+  if (dotPos == string::npos)
+  {
+    return ""; // No method name
+  }
+  return method.substr(dotPos + 1);
 }

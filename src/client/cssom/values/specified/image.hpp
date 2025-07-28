@@ -12,6 +12,7 @@
 
 namespace client_cssom::values::specified
 {
+  using GradientItem = generics::GenericGradientItem<specified::Color, specified::LengthPercentage>;
   using GradientBase = generics::GenericGradient<specified::NoCalcLength,
                                                  specified::LengthPercentage,
                                                  specified::Color>;
@@ -28,7 +29,6 @@ namespace client_cssom::values::specified
 
   class Image : public generics::GenericImage<Gradient, specified::UrlOrNone>,
                 public Parse,
-                public ToCss,
                 public ToComputedValue<computed::Image>
   {
     friend class Parse;
@@ -81,7 +81,7 @@ namespace client_cssom::values::specified
     // Parse implementation using proper CSS tokenizer and parser
     bool parse(const std::string &input) override;
 
-    // CSS serialization
+    // CSS serialization (override to provide gradient-specific behavior)
     std::string toCss() const override;
 
     // Convert to computed value

@@ -170,9 +170,9 @@ namespace builtin_scene
                if (auto bPtr = b.lock(); bPtr != nullptr)
                {
                  if (sortingOrder == SortingOrder::kFrontToBack)
-                   return aPtr->zIndex_ < bPtr->zIndex_;
+                   return aPtr->renderQueue_ < bPtr->renderQueue_;
                  else if (sortingOrder == SortingOrder::kBackToFront)
-                   return aPtr->zIndex_ > bPtr->zIndex_;
+                   return aPtr->renderQueue_ > bPtr->renderQueue_;
                }
              }
              return false; });

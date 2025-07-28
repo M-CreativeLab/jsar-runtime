@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CSS Gradients Example</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+    }
+
+    .gradient-group {
+      display: grid;
+      border: none;
+      box-sizing: border-box;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      width: 100%;
+    }
+
+    /* Grid Items */
+    .gradient-item {
+      padding: 50px;
+      transform: translateZ(10px);
+    }
+
+    .gradient-container {
+      width: 200px;
+      height: 150px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      display: block;
+    }
+
+    .gradient-label {
+      text-align: center;
+      font-size: 25px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .linear-to-right {
+      background: linear-gradient(to right, red, blue);
+    }
+
+    .linear-to-left {
+      background: linear-gradient(to left, red, blue);
+    }
+
+    .linear-to-top {
+      background: linear-gradient(to top, red, blue);
+    }
+
+    .linear-to-bottom {
+      background: linear-gradient(to bottom, red, blue);
+    }
+
+    .linear-diagonal {
+      background: linear-gradient(to bottom right, red, blue);
+    }
+
+    .radial-circle {
+      background: radial-gradient(circle, red, blue);
+    }
+
+    .radial-ellipse {
+      background: radial-gradient(ellipse, red, blue);
+    }
+
+    .radial-closest-side {
+      background: radial-gradient(circle closest-side, red, blue);
+    }
+
+    .radial-farthest-corner {
+      background: radial-gradient(circle farthest-corner, red, blue);
+    }
+
+    .repeating-linear {
+      background: repeating-linear-gradient(to right, red 0%, blue 50%);
+    }
+
+    .repeating-radial {
+      background: repeating-radial-gradient(circle, red 0%, blue 30%);
+    }
+
+    .multi-color {
+      background: linear-gradient(to right, red, yellow, green, blue);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Gradients Test Examples</h1>
+
+  <h2>Linear Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container linear-to-right"></div>
+      <div class="gradient-label">to right</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container linear-to-left"></div>
+      <div class="gradient-label">to left</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container linear-to-top"></div>
+      <div class="gradient-label">to top</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container linear-to-bottom"></div>
+      <div class="gradient-label">to bottom</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container linear-diagonal"></div>
+      <div class="gradient-label">to bottom right</div>
+    </div>
+  </div>
+
+  <h2>Radial Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container radial-circle"></div>
+      <div class="gradient-label">circle</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container radial-ellipse"></div>
+      <div class="gradient-label">ellipse</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container radial-closest-side"></div>
+      <div class="gradient-label">closest-side</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container radial-farthest-corner"></div>
+      <div class="gradient-label">farthest-corner</div>
+    </div>
+  </div>
+
+  <h2>Repeating Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container repeating-linear"></div>
+      <div class="gradient-label">repeating linear</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container repeating-radial"></div>
+      <div class="gradient-label">repeating radial</div>
+    </div>
+  </div>
+
+  <h2>Multi-color Gradient</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container multi-color"></div>
+      <div class="gradient-label">multi-color</div>
+    </div>
+  </div>
+
+</body>
+
+</html>
