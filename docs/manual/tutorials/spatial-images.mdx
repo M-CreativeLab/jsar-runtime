@@ -1,0 +1,315 @@
+# Creating Spatial Images
+
+This tutorial will guide you through creating and displaying spatial (stereo) images in JSAR, allowing you to create immersive 3D visual content using standard HTML.
+
+## Step 1: Prepare Your Stereo Image
+
+First, you need to prepare a side-by-side stereo image. This should be a single image file containing two views:
+- Left half: Content for the left eye
+- Right half: Content for the right eye
+
+The image should have a 2:1 aspect ratio (e.g., 800x400 pixels).
+
+For this tutorial, let's assume you have a stereo image named `landscape-stereo.jpg`.
+
+## Step 2: Create Your HTML File
+
+Create a new HTML file with basic spatial image display:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Spatial Images Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .image-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .spatial-image {
+            border: 3px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spatial Images in JSAR</h1>
+        
+        <div class="image-section">
+            <h2>Regular Image</h2>
+            <img src="regular-photo.jpg" 
+                 style="width: 400px; height: 300px;" 
+                 alt="Regular photo" />
+            <p>This image displays the same content to both eyes</p>
+        </div>
+        
+        <div class="image-section">
+            <h2>Spatial Stereo Image</h2>
+            <img src="landscape-stereo.jpg" 
+                 spatial="stereo" 
+                 class="spatial-image"
+                 style="width: 400px; height: 200px;" 
+                 alt="Stereo landscape" />
+            <p>This image shows different content to each eye, creating a 3D effect</p>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+## Step 3: Add JavaScript Interaction
+
+Let's enhance the example with JavaScript to dynamically create spatial images:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Interactive Spatial Images</title>
+    <style>
+        /* Previous styles... */
+        .gallery {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .gallery img {
+            width: 200px;
+            height: 100px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .gallery img:hover {
+            transform: scale(1.1);
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Spatial Images</h1>
+        
+        <div class="controls">
+            <button onclick="addSpatialImage()">Add Spatial Image</button>
+            <button onclick="toggleSpatialMode()">Toggle Spatial Mode</button>
+        </div>
+        
+        <div class="gallery" id="gallery">
+            <!-- Images will be added here -->
+        </div>
+    </div>
+
+    <script>
+        // Array of sample stereo images
+        const stereoImages = [
+            'landscape-stereo-1.jpg',
+            'landscape-stereo-2.jpg',
+            'landscape-stereo-3.jpg'
+        ];
+        
+        let currentImageIndex = 0;
+        let spatialModeEnabled = true;
+
+        function addSpatialImage() {
+            const gallery = document.getElementById('gallery');
+            const img = document.createElement('img');
+            
+            img.src = stereoImages[currentImageIndex % stereoImages.length];
+            img.className = 'spatial-image';
+            
+            if (spatialModeEnabled) {
+                img.setAttribute('spatial', 'stereo');
+                img.title = 'Spatial stereo image - different content for each eye';
+            } else {
+                img.title = 'Regular image mode';
+            }
+            
+            // Add click handler for image information
+            img.addEventListener('click', function() {
+                const isSpatial = this.getAttribute('spatial') === 'stereo';
+                alert(`Image: ${this.src}\\nSpatial: ${isSpatial ? 'Yes' : 'No'}`);
+            });
+            
+            gallery.appendChild(img);
+            currentImageIndex++;
+        }
+
+        function toggleSpatialMode() {
+            spatialModeEnabled = !spatialModeEnabled;
+            
+            // Update all existing images
+            const images = document.querySelectorAll('#gallery img');
+            images.forEach(img => {
+                if (spatialModeEnabled) {
+                    img.setAttribute('spatial', 'stereo');
+                    img.title = 'Spatial stereo image - different content for each eye';
+                } else {
+                    img.removeAttribute('spatial');
+                    img.title = 'Regular image mode';
+                }
+            });
+            
+            console.log(`Spatial mode: ${spatialModeEnabled ? 'Enabled' : 'Disabled'}`);
+        }
+
+        // Add some initial images
+        window.addEventListener('load', function() {
+            addSpatialImage();
+            addSpatialImage();
+            addSpatialImage();
+        });
+        
+        // Image preloading for better performance
+        function preloadImages() {
+            stereoImages.forEach(src => {
+                const img = new Image();
+                img.src = src;
+            });
+        }
+        
+        preloadImages();
+    </script>
+</body>
+</html>
+```
+
+## Step 4: Understanding the Behavior
+
+### In Stereo Mode (WebXR/Immersive)
+- **Spatial images**: Left half displayed to left eye, right half to right eye
+- **Regular images**: Full image displayed to both eyes (unchanged behavior)
+
+### In Non-Stereo Mode
+- **Spatial images**: Full side-by-side image displayed normally
+- **Regular images**: Normal display (unchanged behavior)
+
+## Step 5: Testing Your Spatial Images
+
+1. **Test in JSAR Environment**: Run your HTML file in the JSAR runtime to see the full spatial effect
+2. **Test in Regular Browser**: Verify that spatial images display as regular images (fallback behavior)
+3. **Test Different Stereo Content**: Try various types of stereo images to understand the effect
+
+## Step 6: Advanced Usage
+
+### Dynamic Spatial Image Creation
+
+```javascript
+// Create and configure spatial images dynamically
+function createSpatialImageFromCanvas() {
+    // Create a canvas with side-by-side content
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    
+    // Draw left eye content (left half)
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, 400, 400);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '48px Arial';
+    ctx.fillText('LEFT', 150, 200);
+    
+    // Draw right eye content (right half)
+    ctx.fillStyle = '#0000ff';
+    ctx.fillRect(400, 0, 400, 400);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('RIGHT', 530, 200);
+    
+    // Convert to image
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL();
+    img.setAttribute('spatial', 'stereo');
+    img.style.width = '400px';
+    img.style.height = '200px';
+    
+    document.body.appendChild(img);
+}
+```
+
+### Spatial Image Gallery
+
+```javascript
+class SpatialImageGallery {
+    constructor(container) {
+        this.container = container;
+        this.images = [];
+    }
+    
+    addImage(src, isSpatial = false) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.width = '300px';
+        img.style.height = isSpatial ? '150px' : '200px';
+        
+        if (isSpatial) {
+            img.setAttribute('spatial', 'stereo');
+        }
+        
+        this.container.appendChild(img);
+        this.images.push(img);
+        
+        return img;
+    }
+    
+    toggleSpatialMode(index) {
+        const img = this.images[index];
+        if (img) {
+            const isSpatial = img.getAttribute('spatial') === 'stereo';
+            if (isSpatial) {
+                img.removeAttribute('spatial');
+                img.style.height = '200px';
+            } else {
+                img.setAttribute('spatial', 'stereo');
+                img.style.height = '150px';
+            }
+        }
+    }
+}
+```
+
+## Step 7: Best Practices
+
+1. **Optimize Image Size**: Spatial images contain twice the visual information, so compress appropriately
+2. **Align Content**: Ensure left and right eye content is vertically aligned
+3. **Test Parallax**: Use appropriate stereo separation for comfortable viewing
+4. **Provide Fallbacks**: Always test how spatial images look in non-stereo mode
+
+## Summary
+
+You've learned how to:
+- Create basic spatial images with the `spatial="stereo"` attribute
+- Add interactive JavaScript functionality
+- Handle dynamic spatial image creation
+- Test and optimize spatial image content
+
+Spatial images in JSAR provide a simple yet powerful way to add 3D depth to your immersive applications using standard HTML elements.

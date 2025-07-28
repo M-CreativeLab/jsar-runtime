@@ -1,8 +1,20 @@
-# Spatial Images in JSAR
+# Images
+
+JSAR provides comprehensive support for displaying images in spatial applications, including advanced features like spatial (stereo) images for immersive 3D experiences.
+
+## Basic Image Usage
+
+You can display images using standard HTML `<img>` elements:
+
+```html
+<img src="photo.jpg" style="width: 300px; height: 200px;" />
+```
+
+## Spatial Images
 
 JSAR supports spatial (stereo) images that can provide different content for the left and right eyes in immersive viewing modes. This is useful for creating 3D stereoscopic content using standard HTML `<img>` elements.
 
-## Usage
+### Usage
 
 To mark an image as spatial, add the `spatial="stereo"` attribute to an `<img>` element:
 
@@ -10,7 +22,7 @@ To mark an image as spatial, add the `spatial="stereo"` attribute to an `<img>` 
 <img src="stereo-image.jpg" spatial="stereo" style="width: 300px; height: 150px;" />
 ```
 
-## Image Format
+### Image Format
 
 Spatial images should be formatted as side-by-side stereo pairs:
 - **Left half**: Content for the left eye
@@ -24,34 +36,7 @@ When displayed in stereo mode:
 When displayed in non-stereo mode:
 - The full image is displayed normally
 
-## Example
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Spatial Images Demo</title>
-</head>
-<body>
-    <h1>Mixed Content Example</h1>
-    
-    <!-- Regular image -->
-    <img src="regular-photo.jpg" style="width: 300px; height: 200px;" />
-    
-    <!-- Spatial stereo image -->
-    <img src="stereo-landscape.jpg" spatial="stereo" style="width: 300px; height: 150px;" />
-    
-    <!-- Multiple spatial images -->
-    <div class="gallery">
-        <img src="stereo-1.jpg" spatial="stereo" />
-        <img src="stereo-2.jpg" spatial="stereo" />
-        <img src="stereo-3.jpg" spatial="stereo" />
-    </div>
-</body>
-</html>
-```
-
-## JavaScript API
+### JavaScript API
 
 You can also create and manipulate spatial images via JavaScript:
 
@@ -76,7 +61,7 @@ if (img.getAttribute('spatial') === 'stereo') {
 }
 ```
 
-## Best Practices
+### Best Practices
 
 1. **Image Dimensions**: Use 2:1 aspect ratio images for best results
 2. **Content Alignment**: Ensure left and right eye content is properly aligned vertically
@@ -86,7 +71,7 @@ if (img.getAttribute('spatial') === 'stereo') {
 
 ## Supported Formats
 
-Spatial images work with all image formats supported by JSAR:
+Images work with all formats supported by JSAR:
 - JPEG
 - PNG
 - WebP
