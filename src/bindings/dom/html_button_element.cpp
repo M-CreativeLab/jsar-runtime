@@ -44,7 +44,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     node->disabled = value.ToBoolean().Value();
-    
+
     // Update the attribute
     if (node->disabled)
     {

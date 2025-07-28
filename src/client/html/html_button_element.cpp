@@ -40,7 +40,7 @@ namespace dom
     }
     else if (name == "name")
     {
-      this->name = newValue;  // Use this-> to avoid conflict with parameter name
+      this->name = newValue; // Use this-> to avoid conflict with parameter name
     }
     else if (name == "value")
     {
