@@ -1,69 +1,61 @@
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Spatial Image Test</title>
 </head>
 
-<body style="background-color: #000; color: #fff; padding: 20px;">
+<body style="background-color: #fff; padding: 20px;">
   <h1>Spatial (Stereo) Image Test</h1>
-  
-  <p>This page demonstrates spatial image support in JSAR. The images below should display differently for each eye when viewed in stereo mode.</p>
-  
+
+  <p>This page demonstrates spatial image support in JSAR. The images below should display differently for each eye when
+    viewed in stereo mode.</p>
+
   <h2>Regular Image (Non-spatial)</h2>
-  <img src="images/regular-test.jpg" style="width: 300px; height: 150px; border: 2px solid #fff;" />
-  
+  <img src="images/sbs-example1.jpg" style="width: 300px; height: 150px; border: 2px solid #fff;" />
+
   <h2>Spatial Image (Side-by-side Stereo)</h2>
-  <img src="images/stereo-test.jpg" spatial="stereo" style="width: 300px; height: 150px; border: 2px solid #0f0;" />
-  
+  <img src="images/sbs-example1.jpg" spatial="stereo" style="width: 300px; height: 150px; border: 2px solid #0f0;" />
+
   <h2>Multiple Spatial Images</h2>
   <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <img src="images/stereo-scene1.jpg" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #f00;" />
-    <img src="images/stereo-scene2.jpg" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #00f;" />
-    <img src="images/stereo-scene3.jpg" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #ff0;" />
+    <img src="images/sbs-example1.jpg" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #f00;" />
+    <img src="images/sbs-example2.png" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #00f;" />
   </div>
-  
-  <h2>Mixed Content</h2>
-  <p>Regular and spatial images can be mixed on the same page:</p>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-    <img src="images/regular1.jpg" style="width: 100%; height: 120px;" />
-    <img src="images/stereo1.jpg" spatial="stereo" style="width: 100%; height: 120px;" />
-    <img src="images/stereo2.jpg" spatial="stereo" style="width: 100%; height: 120px;" />
-    <img src="images/regular2.jpg" style="width: 100%; height: 120px;" />
-  </div>
-  
+
   <h2>JavaScript API Test</h2>
   <div id="js-test">
     <p>Testing spatial images via JavaScript...</p>
   </div>
-  
+
   <script>
     console.log('Testing spatial image support');
-    
+
     // Test creating spatial images via JavaScript
     const spatialImg = document.createElement('img');
-    spatialImg.src = 'images/js-stereo-test.jpg';
+    spatialImg.src = 'images/sbs-example1.jpg';
     spatialImg.setAttribute('spatial', 'stereo');
     spatialImg.style.width = '250px';
     spatialImg.style.height = '125px';
     spatialImg.style.border = '2px solid #0ff';
-    
-    spatialImg.onload = function() {
+
+    spatialImg.onload = function () {
       console.log('Spatial image loaded:', this.src);
       console.log('Spatial attribute:', this.getAttribute('spatial'));
       console.log('Image dimensions:', this.width, 'x', this.height);
     };
-    
-    spatialImg.onerror = function() {
+
+    spatialImg.onerror = function () {
       console.log('Spatial image failed to load:', this.src);
     };
-    
+
     document.getElementById('js-test').appendChild(spatialImg);
-    
+
     // Test Image constructor with spatial attribute
     const constructedImg = new Image();
-    constructedImg.onload = function() {
+    constructedImg.onload = function () {
       console.log('Constructed spatial image loaded');
-      
+
       // Add to page
       this.setAttribute('spatial', 'stereo');
       this.style.width = '150px';
@@ -71,10 +63,11 @@
       this.style.border = '1px solid #f0f';
       this.style.marginTop = '10px';
       this.style.display = 'block';
-      
+
       document.getElementById('js-test').appendChild(this);
     };
-    constructedImg.src = 'images/constructed-stereo.jpg';
+    constructedImg.src = 'images/sbs-example2.png';
   </script>
 </body>
+
 </html>
