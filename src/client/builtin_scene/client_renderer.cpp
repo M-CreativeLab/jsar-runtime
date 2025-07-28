@@ -493,13 +493,14 @@ namespace builtin_scene
     return postMat * baseMatrixInWorldSpace;
   }
 
-  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
+  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent,
+                                                           optional<Renderer::XRRenderTarget> renderTarget)
   {
     if (!meshComponent.isInstancedMesh())
       return;
 
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
-    auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
+    auto updateInstanceData = [this, &renderTarget](ecs::EntityId id, Instance &instance) -> bool
     {
       bool hasChanged = false;
       auto transformComponent = getComponent<Transform>(id);
@@ -529,11 +530,39 @@ namespace builtin_scene
 
         auto textureRect = webContentComponent->textureRect();
         int texturePad = webContentComponent->texturePad();
+
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
-          instance.setTexture(textureRect->getUvOffset(texturePad),
-                              textureRect->getUvScale(texturePad),
+
+          // Calculate left and right eye texture coordinates for spatial images
+          Instance::TextureOffset uvOffset = textureRect->getUvOffset(texturePad);
+          Instance::TextureOffset uvOffsetR = uvOffset;
+          Instance::TextureScale uvScale = textureRect->getUvScale(texturePad);
+
+          // For spatial images, the texture atlas system handles left/right eye regions
+          // via instance data coordinates set in setSpatialTexture method
+          if (webContentComponent->isSpatialized())
+          {
+            assert(renderTarget != nullopt &&
+                   "The render target must be valid for spatialized images.");
+
+            if (renderTarget->isMultiview())
+            {
+              uvOffsetR.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
+            else
+            {
+              auto view = renderTarget->view();
+              if (view != nullptr && view->eye() == client_xr::XREye::kRight)
+                uvOffset.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
+          }
+          instance.setTexture(uvOffset,
+                              uvOffsetR,
+                              uvScale,
                               textureRect->layer,
                               hasChanged);
         }
@@ -641,7 +670,7 @@ namespace builtin_scene
     renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
 
     // Update the instance transformation matrix if it's an instanced mesh
-    tryUpdateInstanceDataForInstancedMesh(*meshComponent);
+    tryUpdateInstanceDataForInstancedMesh(*meshComponent, renderTarget);
 
     // Draw
     shared_ptr<Transform> parentTransform = nullptr;

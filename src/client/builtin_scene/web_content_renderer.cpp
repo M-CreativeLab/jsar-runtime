@@ -26,6 +26,7 @@
 #include "./materials.hpp"
 #include "./web_content.hpp"
 #include "./image.hpp"
+#include "./xr.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -1129,8 +1130,10 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
+      // Check if this is a spatial image and set the spatial flag
+      auto imageComponent = getComponent<Image2d>(entity);
+      // Use the same texture update method for both spatial and non-spatial images
       auto status = webContentMaterial->updateTexture(content);
-      // Mark the content as clean if the texture is no need to update or updated successfully.
       if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
         content.setDirty(false);
     }

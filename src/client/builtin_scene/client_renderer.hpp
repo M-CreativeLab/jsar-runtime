@@ -288,7 +288,8 @@ namespace builtin_scene
      *
      * @param meshComponent The mesh component to update the instance data with.
      */
-    void tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent);
+    void tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent,
+                                               std::optional<Renderer::XRRenderTarget> renderTarget);
     /**
      * Render the scene with the given renderer.
      *

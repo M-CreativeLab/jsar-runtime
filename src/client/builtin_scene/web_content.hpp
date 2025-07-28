@@ -185,6 +185,17 @@ namespace builtin_scene
     {
       return *texture_;
     }
+
+    // Spatial image support
+    inline bool isSpatialized() const
+    {
+      return is_spatialized_;
+    }
+    inline void setSpatialized(bool v)
+    {
+      is_spatialized_ = v;
+    }
+
     // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
     inline int texturePad() const
     {
@@ -198,6 +209,7 @@ namespace builtin_scene
      * @returns The texture or `nullptr` if the texture is not used.
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
+
     inline void setEnabled(bool enabled)
     {
       enabled_ = enabled;
@@ -268,6 +280,7 @@ namespace builtin_scene
     bool is_texture_using_ = false;
     bool is_visible_ = true;
     bool is_dirty_ = true;
+    bool is_spatialized_ = false;
   };
 
   class WebContentContext : public ecs::Resource

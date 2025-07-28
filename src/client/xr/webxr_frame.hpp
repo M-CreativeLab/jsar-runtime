@@ -113,6 +113,7 @@ namespace client_xr
       return session_;
     }
 
+
   public:
     void startFrame();
     void endFrame();

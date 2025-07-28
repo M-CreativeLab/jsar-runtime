@@ -54,20 +54,23 @@ namespace builtin_scene
     hasChanged = true;
   }
 
-  void Instance::setTexture(array<float, 2> uvOffset,
-                            array<float, 2> uvScale,
+  void Instance::setTexture(TextureOffset uvOffset,
+                            TextureOffset uvOffsetR,
+                            TextureScale uvScale,
                             uint32_t layerIndex,
                             bool &hasChanged)
   {
-    if (data_.texUvOffset.x == uvOffset[0] &&
-        data_.texUvOffset.y == uvOffset[1] &&
-        data_.texUvScale.x == uvScale[0] &&
-        data_.texUvScale.y == uvScale[1] &&
+    if (data_.texUvOffset == uvOffset &&
+        data_.texUvOffsetR == uvOffsetR &&
+        data_.texUvScale == uvScale &&
         data_.texLayerIndex == layerIndex)
+    {
       return; // Skip if there is no change.
+    }
 
-    data_.texUvOffset = glm::vec2(uvOffset[0], uvOffset[1]);
-    data_.texUvScale = glm::vec2(uvScale[0], uvScale[1]);
+    data_.texUvOffset = uvOffset;
+    data_.texUvOffsetR = uvOffsetR;
+    data_.texUvScale = uvScale;
     data_.texLayerIndex = layerIndex;
     notifyHolders();
     hasChanged = true;
@@ -75,7 +78,7 @@ namespace builtin_scene
 
   void Instance::disableTexture(bool &hasChanged)
   {
-    setTexture({0.0f, 0.0f}, {0.0f, 0.0f}, 0, hasChanged);
+    setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0, hasChanged);
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
@@ -270,7 +273,8 @@ namespace builtin_scene
         {
           unique_ptr<IVertexAttribute> attrib = nullptr;
           if (name == "instanceTexUvOffset" ||
-              name == "instanceTexUvScale")
+              name == "instanceTexUvScale" ||
+              name == "instanceTexUvOffsetR")
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
           else if (name == "instanceLayerIndex")
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);

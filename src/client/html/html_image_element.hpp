@@ -55,7 +55,10 @@ namespace dom
 
     inline geometry::DOMRect getImageClientRect() const
     {
-      return geometry::DOMRect(0, 0, naturalWidth(), naturalHeight());
+      // For spatial (stereo) images, the layout width should be half of the natural width
+      // since spatial images contain side-by-side stereo pairs
+      int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
+      return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
     }
     bool readPixels(SkPixmap &dst) const override
     {
@@ -175,6 +178,22 @@ namespace dom
     }
 
     /**
+     * @returns The spatial rendering mode of the image (e.g., "stereo" for side-by-side stereo images).
+     */
+    inline std::string spatial() const
+    {
+      return spatial_;
+    }
+
+    /**
+     * @returns True if the image is marked as a spatial (stereo) image.
+     */
+    inline bool isSpatial() const
+    {
+      return spatial_ == "stereo";
+    }
+
+    /**
      * @returns The natural width of the image in pixels.
      */
     inline int naturalWidth() const
@@ -207,5 +226,6 @@ namespace dom
 
     bool is_map_ = false;
     std::string use_map_;
+    std::string spatial_;
   };
 }

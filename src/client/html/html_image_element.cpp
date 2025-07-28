@@ -81,6 +81,10 @@ namespace dom
     {
       use_map_ = newValue;
     }
+    else if (name == "spatial")
+    {
+      spatial_ = newValue;
+    }
   }
 
   void HTMLImageElement::loadImage()
