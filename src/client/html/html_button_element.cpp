@@ -29,16 +29,6 @@ namespace dom
     if (name == "disabled")
     {
       disabled = !newValue.empty();
-      if (disabled)
-      {
-        styleRef()->setProperty("cursor", "not-allowed");
-        styleRef()->setProperty("opacity", "0.65");
-      }
-      else
-      {
-        styleRef()->setProperty("cursor", "pointer");
-        styleRef()->setProperty("opacity", "1");
-      }
     }
     else if (name == "type")
     {
