@@ -723,79 +723,37 @@ namespace builtin_scene::web_renderer
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
 
-    // Get the font from the text style
-    const auto &textStyle = paragraphStyle.getTextStyle();
-    sk_sp<SkTypeface> typeface = nullptr;
+    // Calculate the text offset within the fragment
+    // Text should be positioned in the content area (inside border and padding)
+    const auto &borderBox = content.fragment()->border();
+    const auto &paddingBox = content.fragment()->padding();
+    float textOffsetX = borderBox.left() + paddingBox.left();
+    float textOffsetY = borderBox.top() + paddingBox.top() +
+                        paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
 
-    // Try to get typeface from font families
-    if (textStyle.getFontFamilies().size() > 0)
-    {
-      auto typefaces = fontCollection->findTypefaces(textStyle.getFontFamilies(), textStyle.getFontStyle());
-      if (!typefaces.empty())
-      {
-        // Use the first matching typeface
-        typeface = typefaces[0];
+    // Use the paragraph visitor to extract glyph paths with proper font handling
+    // This approach correctly handles mixed CJK/English text by using the fonts
+    // that the paragraph system has already resolved for each glyph
+    paragraph->visit([&textPath, textOffsetX, textOffsetY](int lineNumber, const Paragraph::VisitorInfo* info) {
+      if (info == nullptr) {
+        // End of line marker, nothing to do
+        return;
       }
-    }
 
-    if (!typeface)
-    {
-      // Fallback to default typeface
-      typeface = fontCollection->defaultFallback();
-    }
-
-    if (typeface)
-    {
-      SkFont font(typeface, textStyle.getFontSize());
-
-      // Convert text to glyphs
-      vector<SkGlyphID> glyphs(textContent.size());
-      int glyphCount = font.textToGlyphs(textContent.c_str(),
-                                         textContent.size(),
-                                         SkTextEncoding::kUTF8,
-                                         glyphs.data(),
-                                         glyphs.size());
-
-      if (glyphCount > 0)
-      {
-        glyphs.resize(glyphCount);
-
-        // Get glyph positions with proper fragment positioning
-        vector<SkPoint> positions(glyphCount);
-        vector<SkScalar> widths(glyphCount);
-        font.getWidths(glyphs.data(), glyphCount, widths.data());
-
-        // Calculate the text offset within the fragment
-        // Text should be positioned in the content area (inside border and padding)
-        const auto &borderBox = content.fragment()->border();
-        const auto &paddingBox = content.fragment()->padding();
-        float textOffsetX = borderBox.left() + paddingBox.left();
-        float textOffsetY = borderBox.top() + paddingBox.top() +
-                            paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
-
-        float x = textOffsetX;
-        float y = textOffsetY;
-
-        for (int i = 0; i < glyphCount; ++i)
-        {
-          positions[i] = SkPoint::Make(x, y);
-          x += widths[i];
-        }
-
-        // Get paths for each glyph and add to textPath
-        for (int i = 0; i < glyphCount; ++i)
-        {
-          SkPath glyphPath;
-          if (font.getPath(glyphs[i], &glyphPath))
-          {
-            // Transform glyph path to its position
-            SkMatrix transform = SkMatrix::Translate(positions[i].x(), positions[i].y());
-            glyphPath.transform(transform);
-            textPath.addPath(glyphPath);
-          }
+      // Extract glyph paths from the properly resolved fonts
+      for (int i = 0; i < info->count; ++i) {
+        SkPath glyphPath;
+        if (info->font.getPath(info->glyphs[i], &glyphPath)) {
+          // Calculate the absolute position including the text offset within the fragment
+          SkMatrix transform = SkMatrix::Translate(
+            info->origin.x() + info->positions[i].x() + textOffsetX,
+            info->origin.y() + info->positions[i].y() + textOffsetY
+          );
+          glyphPath.transform(transform);
+          textPath.addPath(glyphPath);
         }
       }
-    }
+    });
 
     return textPath.isEmpty()
              ? nullopt
