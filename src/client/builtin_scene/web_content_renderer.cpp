@@ -734,7 +734,8 @@ namespace builtin_scene::web_renderer
     // Use the paragraph visitor to extract glyph paths with proper font handling
     // This approach correctly handles mixed CJK/English text by using the fonts
     // that the paragraph system has already resolved for each glyph
-    paragraph->visit([&textPath, textOffsetX, textOffsetY](int lineNumber, const Paragraph::VisitorInfo* info) {
+    paragraph->visit([&textPath, textOffsetX, textOffsetY](int lineNumber, const Paragraph::VisitorInfo *info)
+                     {
       if (info == nullptr) {
         // End of line marker, nothing to do
         return;
@@ -752,8 +753,7 @@ namespace builtin_scene::web_renderer
           glyphPath.transform(transform);
           textPath.addPath(glyphPath);
         }
-      }
-    });
+      } });
 
     return textPath.isEmpty()
              ? nullopt
