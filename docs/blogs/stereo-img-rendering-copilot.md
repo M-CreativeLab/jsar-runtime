@@ -2,7 +2,7 @@
 
 *Published: January 2025*
 
-Recently, I set out to make spatial (stereo) image rendering as simple as possible in JSAR Runtime. My goal: let any web developer create immersive 3D content for XR just by writing HTML. And thanks to GitHub Copilot, this feature shipped faster and cleaner than ever.
+Recently, I set out to make spatial (stereo) image rendering as simple as possible in [JSAR Runtime](https://github.com/M-CreativeLab/jsar-runtime). JSAR (JavaScript Augmented Reality) is a lightweight, web-based spatial computing runtime that enables developers to create XR applications using familiar web technologies like HTML, CSS, and JavaScript. My goal: let any web developer create immersive 3D content for XR just by writing HTML. And thanks to GitHub Copilot, this feature shipped faster and cleaner than ever.
 
 ## The Problem: Stereo Images Are Too Hard for the Web
 
@@ -16,14 +16,35 @@ I wanted a solution where you could just write:
 
 And have the browser engine handle everything—splitting the image for each eye and rendering it correctly in an XR view.
 
+## Final Usage: Stereo Images in JSAR
+
+Once implemented, stereo images work seamlessly within JSAR's spatial web environment. Here's what developers can expect:
+
+### Real-World Application
+```html
+<!-- In a spatial web page -->
+<div class="gallery-space">
+  <img src="vacation-stereo.jpg" spatial="stereo" style="transform: translate3d(2, 1.5, -3);" />
+  <img src="nature-stereo.png" spatial="stereo" style="transform: translate3d(-2, 1.5, -3);" />
+</div>
+```
+
+The images automatically:
+- Split side-by-side content for left/right eyes
+- Integrate with JSAR's 3D positioning system
+- Work with CSS transforms and animations
+- Maintain performance through efficient GPU rendering
+
+This makes creating immersive photo galleries, educational content, or spatial storytelling as simple as writing HTML.
+
 ## The Solution: Engine-Native Stereo Image Support
 
 With this commit ([ff8e2918](https://github.com/M-CreativeLab/jsar-runtime/commit/ff8e2918d166527a0da15104fbcbcf529a9bd6b6)) and [PR #131](https://github.com/M-CreativeLab/jsar-runtime/pull/131), JSAR Runtime now supports the `spatial="stereo"` attribute on `<img>` tags. Here's how we made it work:
 
 ### 1. HTML Attribute Parsing
 
-The first step was to teach the HTML parser to recognize `spatial="stereo"` on `<img>`.
-- When this attribute is detected, the element is marked as a stereo image in the DOM tree.
+The first step was to teach the `HTMLImageElement` to recognize `spatial="stereo"` on `<img>`.
+- When this attribute is detected, the element is marked as a spatialized image in the DOM tree.
 
 ### 2. Layout Logic
 
@@ -36,32 +57,32 @@ Next, we modified the layout engine:
 ### 3. Renderer Changes
 
 The renderer now checks for the spatial flag during draw calls:
-- For stereo images, it issues two draw calls per frame:
+- For stereo images, it issues two draw calls for the whole document per frame:
   - One for the left eye, using the left-half UVs.
   - One for the right eye, using the right-half UVs.
 - The renderer reuses the same GPU texture, applying the correct UVs for each eye—super efficient.
 
 #### Code Snippet (from the commit):
 
-```rust
+```pseudocode
 if img_node.has_spatial_stereo() {
     // Left eye: render left half
-    let left_uv = [0.0, 0.0, 0.5, 1.0];
-    renderer.draw_image(img_node, left_uv, Eye::Left);
+    left_uv = [0.0, 0.0, 0.5, 1.0]
+    renderer.draw_image(img_node, left_uv, Eye.Left)
 
     // Right eye: render right half
-    let right_uv = [0.5, 0.0, 1.0, 1.0];
-    renderer.draw_image(img_node, right_uv, Eye::Right);
+    right_uv = [0.5, 0.0, 1.0, 1.0]
+    renderer.draw_image(img_node, right_uv, Eye.Right)
 } else {
     // Regular image
-    renderer.draw_image(img_node, [0.0, 0.0, 1.0, 1.0], Eye::Mono);
+    renderer.draw_image(img_node, [0.0, 0.0, 1.0, 1.0], Eye.Mono)
 }
 ```
 
 ### 4. Copilot Collaboration
 
 Throughout the implementation, I partnered with GitHub Copilot.
-- **Boilerplate**: Copilot helped scaffold new Rust functions and types for DOM attribute parsing and renderer logic.
+- **Boilerplate**: Copilot helped scaffold new C/C++ methods and types for DOM attribute parsing and renderer logic.
 - **Edge Cases**: When handling image formats and UV calculations, Copilot made suggestions that sped up discovery and debugging.
 - **Refactoring**: Copilot proposed clean ways to branch the rendering code, minimizing duplication.
 
@@ -132,47 +153,22 @@ The stereo image support integrates seamlessly with JSAR's existing DOM architec
 
 JSAR's multi-pass rendering system makes stereo support efficient:
 
-```rust
+```pseudocode
 // Simplified rendering flow
-for eye in [Eye::Left, Eye::Right] {
-    renderer.set_view_matrix(eye.view_matrix());
-    renderer.set_projection_matrix(eye.projection_matrix());
+for eye in [Eye.Left, Eye.Right] {
+    renderer.set_view_matrix(eye.view_matrix())
+    renderer.set_projection_matrix(eye.projection_matrix())
     
     for img_node in scene.stereo_images() {
-        let uv_coords = if eye == Eye::Left {
+        uv_coords = if eye == Eye.Left {
             [0.0, 0.0, 0.5, 1.0]  // Left half
         } else {
             [0.5, 0.0, 1.0, 1.0]  // Right half
-        };
-        renderer.draw_image(img_node, uv_coords, eye);
+        }
+        renderer.draw_image(img_node, uv_coords, eye)
     }
 }
 ```
-
-### Cross-Platform Support
-
-This feature works across all JSAR's supported platforms:
-
-| Platform | Status | Notes |
-|----------|--------|-------|
-| **macOS** | ✅ Production | OpenGL backend |
-| **Android** | ✅ Production | OpenGL ES3 backend |
-| **Windows** | 🚧 In Progress | D3D11 backend |
-| **Unity Integration** | ✅ Production | Via jsar-loader-unity |
-
-## The Future of Spatial HTML
-
-This stereo image feature is just the beginning. Our roadmap includes:
-
-### Coming Soon
-- **Video Support**: `spatial="stereo"` for `<video>` elements
-- **360° Content**: Panoramic image and video support with `spatial="360"`
-- **Depth Maps**: Support for depth-enhanced stereo content
-
-### Experimental Features
-- **AI-Generated Stereo**: Convert mono images to stereo using AI
-- **Eye Tracking**: Adaptive stereo rendering based on eye position
-- **Spatial Audio**: 3D audio that matches visual stereo depth
 
 ## Community and Collaboration
 
@@ -199,7 +195,15 @@ The entire implementation is open source and documented:
 - **Commit**: [ff8e2918](https://github.com/M-CreativeLab/jsar-runtime/commit/ff8e2918d166527a0da15104fbcbcf529a9bd6b6)
 - **Pull Request**: [#131](https://github.com/M-CreativeLab/jsar-runtime/pull/131)
 - **Documentation**: Feature guide in our docs
-- **Examples**: Demo applications in the examples folder
+
+### Example Files
+
+You can find practical examples in our fixtures directory:
+
+- [`spatial-images.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spatial-images.html) - Complete stereo image test cases
+- [`images.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/images.html) - Basic image handling examples
+- [`three-envmap.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-envmap.html) - Environment mapping with spatial content
+- [`webgl.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webgl.html) - WebGL integration examples
 
 ## What's Next?
 
