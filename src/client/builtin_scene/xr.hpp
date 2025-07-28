@@ -16,8 +16,6 @@
 
 namespace builtin_scene
 {
-
-
   class WebXRExperience : public ecs::Resource
   {
     friend class Scene;
