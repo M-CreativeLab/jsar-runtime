@@ -259,6 +259,16 @@ namespace builtin_scene
       is_dirty_ = dirty;
     }
 
+    /**
+     * Get the rounded rectangle representing the border geometry.
+     * 
+     * @returns The SkRRect containing border radius information.
+     */
+    inline const SkRRect& roundedRect() const
+    {
+      return rounded_rect_;
+    }
+
   public:
     skia::textlayout::TextStyle textStyle() const;
     skia::textlayout::StrutStyle structStyle() const;

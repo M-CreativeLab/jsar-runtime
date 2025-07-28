@@ -66,6 +66,20 @@ namespace builtin_scene::materials
      */
     TextureUpdateStatus updateTexture(WebContent &content);
 
+    /**
+     * Enable or disable SDF-based anti-aliasing.
+     *
+     * @param enabled Whether to enable SDF rendering.
+     */
+    void setSdfEnabled(bool enabled);
+
+    /**
+     * Set the anti-aliasing width for SDF rendering.
+     *
+     * @param width The width of the anti-aliasing zone in logical units.
+     */
+    void setSdfAntiAliasWidth(float width);
+
   public:
     float width() const
     {
@@ -92,5 +106,9 @@ namespace builtin_scene::materials
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
     std::unique_ptr<TextureAtlas> textureAtlas_;
+    
+    // SDF rendering parameters
+    bool sdfEnabled_ = true;
+    float sdfAntiAliasWidth_ = 2.0f;  // Default anti-alias width in logical units
   };
 }
