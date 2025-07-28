@@ -8,7 +8,6 @@
 #include <glm/glm.hpp>
 #include <client/macros.h>
 
-#include "../image.hpp"
 #include "./web_content_instanced.hpp"
 
 namespace builtin_scene::materials

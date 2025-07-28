@@ -266,13 +266,13 @@ namespace builtin_scene
     friend class RenderSystem;
 
   public:
-    static constexpr size_t STRIDE = sizeof(float) * 28 + sizeof(uint32_t) * 1;
+    static constexpr size_t STRIDE = sizeof(float) * 26 + sizeof(uint32_t) * 1;
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {"instanceTransform",
                                                                   "instanceColor",
                                                                   "instanceTexUvOffset",
+                                                                  "instanceTexUvOffsetR",
                                                                   "instanceTexUvScale",
-                                                                  "instanceLayerIndex",
-                                                                  "instanceTexUvOffsetR"};
+                                                                  "instanceLayerIndex"};
 
   public:
     InstancedMeshBase() = default;

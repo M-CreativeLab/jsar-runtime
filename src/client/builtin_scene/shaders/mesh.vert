@@ -40,9 +40,10 @@ in vec4 instanceColor;
 #ifdef USE_UVS
 #ifdef USE_INSTANCE_TEXTURE
 in vec2 instanceTexUvOffset;
+in vec2 instanceTexUvOffsetR;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
-in vec2 instanceTexUvOffsetR;
+out vec2 vInstanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
 #endif
@@ -51,7 +52,8 @@ out float vInstanceTextureEnabled;
 out vec4 col;
 flat out int instance_id;
 
-void main() {
+void main()
+{
   // *** POSITION ***
   mat4 local2World = modelMatrix;
 
@@ -64,13 +66,16 @@ void main() {
 
 #ifdef PARTICLES
   worldPosition.xyz +=
-      start_position + start_velocity * time + 0.5 * acceleration * time * time;
+    start_position + start_velocity * time + 0.5 * acceleration * time * time;
 #endif
 
 #ifdef MULTIVIEW
-  if (VIEW_ID == 0u) {
+  if (VIEW_ID == 0u)
+  {
     gl_Position = viewProjection * worldPosition;
-  } else {
+  }
+  else
+  {
     gl_Position = viewProjectionR * worldPosition;
   }
 #else
@@ -103,34 +108,30 @@ void main() {
 
   // Instance Texture
 #ifdef USE_INSTANCE_TEXTURE
+  vInstanceTexUvOffsetR = instanceTexUvOffsetR;
+  vInstanceLayerIndex = float(instanceLayerIndex);
+
 #ifdef MULTIVIEW
   // In multiview, select texture coordinates based on VIEW_ID
-  if (VIEW_ID == 0u) {
+  if (VIEW_ID == 0u)
+  {
     // Left eye
     uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
-    vInstanceLayerIndex = float(instanceLayerIndex);
-    
-    float threshold = 1e-5;
-    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
-                              step(threshold, abs(instanceTexUvScale.y));
-  } else {
+  }
+  else
+  {
     // Right eye
     uvs = instanceTexUvOffsetR + instanceTexUvScale * uvs;
-    vInstanceLayerIndex = float(instanceLayerIndex);
-    
-    float threshold = 1e-5;
-    vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
-                              step(threshold, abs(instanceTexUvScale.y));
   }
 #else
   // Non-multiview: use left eye coordinates (backward compatibility)
   uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
-  vInstanceLayerIndex = float(instanceLayerIndex);
+#endif
 
+  // Set if texture is enabled
   float threshold = 1e-5;
   vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
                             step(threshold, abs(instanceTexUvScale.y));
-#endif
 #endif
 #endif
 

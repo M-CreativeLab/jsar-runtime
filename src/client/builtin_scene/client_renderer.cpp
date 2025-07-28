@@ -473,13 +473,14 @@ namespace builtin_scene
     return postMat * baseMatrixInWorldSpace;
   }
 
-  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
+  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent,
+                                                           optional<Renderer::XRRenderTarget> renderTarget)
   {
     if (!meshComponent.isInstancedMesh())
       return;
 
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
-    auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
+    auto updateInstanceData = [this, &renderTarget](ecs::EntityId id, Instance &instance) -> bool
     {
       bool hasChanged = false;
       auto transformComponent = getComponent<Transform>(id);
@@ -523,8 +524,21 @@ namespace builtin_scene
           // via instance data coordinates set in setSpatialTexture method
           if (webContentComponent->isSpatialized())
           {
-            uvOffsetR.setForRight(uvScale);
-            uvScale.setHalfWidth();
+            assert(renderTarget != nullopt &&
+                   "The render target must be valid for spatialized images.");
+
+            if (renderTarget->isMultiview())
+            {
+              uvOffsetR.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
+            else
+            {
+              auto view = renderTarget->view();
+              if (view != nullptr && view->eye() == client_xr::XREye::kRight)
+                uvOffset.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
           }
           instance.setTexture(uvOffset,
                               uvOffsetR,
@@ -636,7 +650,7 @@ namespace builtin_scene
     renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
 
     // Update the instance transformation matrix if it's an instanced mesh
-    tryUpdateInstanceDataForInstancedMesh(*meshComponent);
+    tryUpdateInstanceDataForInstancedMesh(*meshComponent, renderTarget);
 
     // Draw
     shared_ptr<Transform> parentTransform = nullptr;

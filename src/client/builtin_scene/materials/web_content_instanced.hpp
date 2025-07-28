@@ -8,7 +8,6 @@
 #include "../material_base.hpp"
 #include "../texture_altas.hpp"
 #include "../web_content.hpp"
-#include "../ecs.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials

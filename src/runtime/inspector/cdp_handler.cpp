@@ -1,8 +1,8 @@
-#include "./cdp_handler.hpp"
-#include "../../common/debug.hpp"
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
+#include <common/debug.hpp>
+#include "./cdp_handler.hpp"
 
 using namespace std;
 
