@@ -140,7 +140,7 @@ namespace client_layout
 
     bool shouldVisible = fragment.visibleInViewport(viewRef().viewport);
     if (shouldVisible)
-      Node::AsChecked<dom::HTMLImageElement>(node()).loadImageAsync();
+      Node::AsChecked<dom::HTMLImageElement>(node()).loadImage();
 
     setVisible(shouldVisible);
   }

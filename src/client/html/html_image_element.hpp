@@ -94,15 +94,9 @@ namespace dom
     }
 
     /**
-     * Load the image at the scriting thread, if you want to achieve the loading from other threads, you must use
-     * `loadImageAsync()`.
+     * Load the node's image, containing the image data, decoding it if necessary and rendering it.
      */
     void loadImage();
-
-    /**
-     * Load the image asynchronously, it must be used to schedule the image loading from the non-scripting thread.
-     */
-    void loadImageAsync();
 
   private:
     bool decodeImage(SkBitmap &);

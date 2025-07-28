@@ -60,9 +60,8 @@ namespace dom
     }
 
     // Fetch resource with the given URL asynchronously.
-    void fetchResource(const std::string &url, std::function<void(const void *data, size_t length)> callback);
-    // Fetch resource with the given URL asynchronously in a thread-safe manner.
-    void fetchResourceThreadSafe(const std::string &url, std::function<void(const void *data, size_t length)> callback);
+    void fetchArrayBufferLikeResource(const std::string &url,
+                                      std::function<void(const void *data, size_t length)> callback);
 
   public:
     void createdCallback(bool from_scripting) override;
@@ -81,9 +80,6 @@ namespace dom
       return true;
     }
     void invalidateStyleCache();
-
-    // Process the pending load requests
-    void processLoadRequests();
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
@@ -113,22 +109,5 @@ namespace dom
   private:
     std::unordered_map<std::string, std::string> dataset_;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
-
-  private:
-    struct LoadResourceRequest
-    {
-      std::string url;
-      std::function<void(const void *data, size_t length)> call;
-
-      LoadResourceRequest(const std::string &url,
-                          std::function<void(const void *data, size_t length)> callback)
-          : url(url)
-          , call(std::move(callback))
-      {
-      }
-    };
-    uv_async_t load_async_handle_;
-    std::deque<LoadResourceRequest> load_requests_;
-    std::shared_mutex load_requests_mutex_;
   };
 }
