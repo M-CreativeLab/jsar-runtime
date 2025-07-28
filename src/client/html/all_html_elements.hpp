@@ -1,5 +1,6 @@
 #include "./html_audio_element.hpp"
 #include "./html_body_element.hpp"
+#include "./html_button_element.hpp"
 #include "./html_canvas_element.hpp"
 #include "./html_div_element.hpp"
 #include "./html_head_element.hpp"
