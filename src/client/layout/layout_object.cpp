@@ -815,7 +815,7 @@ namespace client_layout
         };
 
         string imageUrl = image.getUrl();
-        element.fetchResourceThreadSafe(imageUrl, onImageLoaded);
+        element.fetchArrayBufferLikeResource(imageUrl, onImageLoaded);
         image.startLoadingUrlImage();
       }
     }

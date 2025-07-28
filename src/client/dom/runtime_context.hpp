@@ -1,9 +1,13 @@
 #pragma once
 
-#include <functional>
 #include <string>
 #include <memory>
+#include <thread>
+#include <functional>
+#include <deque>
+#include <shared_mutex>
 #include <v8.h>
+#include <node/uv.h>
 
 #include "./dom_parser.hpp"
 #include "./dom_scripting.hpp"
@@ -17,20 +21,44 @@ namespace dom
 
   class RuntimeContext : public std::enable_shared_from_this<RuntimeContext>
   {
+  private:
+    class FetchRequest
+    {
+    public:
+      FetchRequest(const std::string &url,
+                   const std::string &responseType,
+                   const FunctionCallback &successCallback,
+                   const std::optional<FunctionCallback> errorCallback = std::nullopt)
+          : url(url)
+          , responseType(responseType)
+          , success(successCallback)
+          , error(errorCallback)
+      {
+      }
+
+    public:
+      std::string url;
+      std::string responseType;
+
+      // callbacks
+      FunctionCallback success;
+      std::optional<FunctionCallback> error;
+    };
+
   public:
-    RuntimeContext()
-        : isolate(v8::Isolate::GetCurrent())
-    {
-    }
-    virtual ~RuntimeContext()
-    {
-    }
+    RuntimeContext();
+    virtual ~RuntimeContext();
 
   public:
     /**
      * Initialize the fields before using this runtime context.
      */
     virtual void initialize();
+
+    /**
+     * Returns if the current thread is in the scripting thread, when the scripting APIs can be safely called.
+     */
+    bool inScriptingThread() const;
 
     /**
      * Set the base URI value.
@@ -133,8 +161,14 @@ namespace dom
     }
 
   private:
+    void fetchResourceImpl(const string &url,
+                           const string &responseType,
+                           const FunctionCallback &responseCallback,
+                           const optional<FunctionCallback> errorCallback);
+    void execFetchRequests();
+
     // Fetch the resource from the given URL, and return a promise.
-    v8::Local<v8::Value> fetchResourceInternal(const std::string &url, const std::string &responseType);
+    v8::Local<v8::Value> callFetchFunction(const std::string &url, const std::string &responseType);
 
   public:
     std::string baseURI;
@@ -143,5 +177,11 @@ namespace dom
   protected:
     v8::Isolate *isolate;
     v8::Global<v8::Object> resourceLoaderValue;
+
+  private:
+    std::optional<std::thread::id> scripting_thread_ = std::nullopt;
+    std::deque<FetchRequest> pending_fetch_requests_;
+    std::shared_mutex pending_fetch_requests_mutex_;
+    uv_async_t *fetch_async_handle_ = nullptr;
   };
 }

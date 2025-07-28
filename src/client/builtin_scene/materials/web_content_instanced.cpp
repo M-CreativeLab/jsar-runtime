@@ -153,4 +153,5 @@ namespace builtin_scene::materials
     // No matter the texture update is successful or not, we will return the status.
     return TextureUpdateStatus::kSuccess;
   }
+
 } // namespace builtin_scene::materials
