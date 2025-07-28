@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <title>Spatial Image Test</title>
+  <style>
+    p {
+      font-weight: 600;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 
 <body style="background-color: #fff; padding: 20px;">
@@ -12,15 +21,15 @@
     viewed in stereo mode.</p>
 
   <h2>Regular Image (Non-spatial)</h2>
-  <img src="images/sbs-example1.jpg" style="width: 300px; height: 150px; border: 2px solid #fff;" />
+  <img src="images/sbs-example1.jpg" style="height: 150px; border: 2px solid #fff;" />
 
   <h2>Spatial Image (Side-by-side Stereo)</h2>
-  <img src="images/sbs-example1.jpg" spatial="stereo" style="width: 300px; height: 150px; border: 2px solid #0f0;" />
+  <img src="images/sbs-example2.png" spatial="stereo" style="width: 620px; border: 2px solid #0f0;" />
 
   <h2>Multiple Spatial Images</h2>
   <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <img src="images/sbs-example1.jpg" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #f00;" />
-    <img src="images/sbs-example2.png" spatial="stereo" style="width: 200px; height: 100px; border: 1px solid #00f;" />
+    <img src="images/sbs-example1.jpg" spatial="stereo" style="width: 300px; height: 150px; border: 1px solid #f00;" />
+    <img src="images/sbs-example2.png" spatial="stereo" style="width: 300px; height: 150px; border: 1px solid #00f;" />
   </div>
 
   <h2>JavaScript API Test</h2>

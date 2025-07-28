@@ -25,15 +25,17 @@ To mark an image as spatial, add the `spatial="stereo"` attribute to an `<img>` 
 ### Image Format
 
 Spatial images should be formatted as side-by-side stereo pairs:
+
 - **Left half**: Content for the left eye
 - **Right half**: Content for the right eye
-- The image should have a 2:1 aspect ratio (e.g., 400x200 pixels)
 
 When displayed in stereo mode:
+
 - Left eye sees the left half of the image (first 50% horizontally)
 - Right eye sees the right half of the image (second 50% horizontally)
 
 When displayed in non-stereo mode:
+
 - The full image is displayed normally
 
 ### JavaScript API
@@ -50,33 +52,21 @@ document.body.appendChild(spatialImg);
 // Using the Image constructor
 const img = new Image();
 img.onload = function() {
-    this.setAttribute('spatial', 'stereo');
-    document.body.appendChild(this);
+  this.setAttribute('spatial', 'stereo');
+  document.body.appendChild(this);
 };
 img.src = 'another-stereo.jpg';
 
 // Check if an image is spatial
 if (img.getAttribute('spatial') === 'stereo') {
-    console.log('This is a spatial image');
+  console.log('This is a spatial image');
 }
 ```
-
-### Best Practices
-
-1. **Image Dimensions**: Use 2:1 aspect ratio images for best results
-2. **Content Alignment**: Ensure left and right eye content is properly aligned vertically
-3. **Fallback**: Spatial images work gracefully in non-stereo environments (full image is shown)
-4. **File Size**: Consider that spatial images contain two views, so optimize accordingly
-5. **Testing**: Test both in stereo and non-stereo modes to ensure good user experience
 
 ## Supported Formats
 
 Images work with all formats supported by JSAR:
+
 - JPEG
 - PNG
 - WebP
-- Any format supported by the underlying Skia rendering engine
-
-## Browser Compatibility
-
-The `spatial` attribute is a JSAR-specific extension and will be ignored by regular web browsers. This ensures forward compatibility - your spatial images will display as regular images in standard browsers.

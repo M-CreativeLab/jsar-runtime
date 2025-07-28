@@ -234,13 +234,15 @@ namespace builtin_scene
     const WebContentTextStyle &sourceTextStyle = content_style_.textStyle;
     skia::textlayout::TextStyle newTextStyle;
 
-    newTextStyle.setColor(sourceTextStyle.color);
-    if (sourceTextStyle.foregroundColor.has_value())
+    SkPaint foregroundPaint;
     {
-      SkPaint foregroundPaint;
-      foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
-      newTextStyle.setForegroundColor(foregroundPaint);
+      foregroundPaint.setAntiAlias(true);
+      foregroundPaint.setColor(sourceTextStyle.color);
+      if (sourceTextStyle.foregroundColor.has_value())
+        foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
+      newTextStyle.setForegroundPaint(foregroundPaint);
     }
+
     if (sourceTextStyle.backgroundColor.has_value())
     {
       SkPaint backgroundPaint;
