@@ -1,8 +1,12 @@
 # I Added Stereo <img> Rendering to Our Browser Engine — With Copilot
 
-*Published: January 2025*
+*Published: July 2025*
 
-Recently, I set out to make spatial (stereo) image rendering as simple as possible in [JSAR Runtime](https://github.com/M-CreativeLab/jsar-runtime). JSAR (JavaScript Augmented Reality) is a lightweight, web-based spatial computing runtime that enables developers to create XR applications using familiar web technologies like HTML, CSS, and JavaScript. My goal: let any web developer create immersive 3D content for XR just by writing HTML. And thanks to GitHub Copilot, this feature shipped faster and cleaner than ever.
+Recently, I set out to make spatial (stereo) image rendering as simple as possible in [JSAR Runtime](https://github.com/M-CreativeLab/jsar-runtime). 
+
+> JSAR (JavaScript Augmented Reality) is a lightweight, browser engine that enables developers to create XR applications using familiar web technologies like HTML, CSS, and JavaScript.
+
+My goal: let any web developer create immersive 3D content for XR just by writing HTML. And thanks to GitHub Copilot, this feature shipped faster and cleaner than ever.
 
 ## The Problem: Stereo Images Are Too Hard for the Web
 
@@ -24,8 +28,8 @@ Once implemented, stereo images work seamlessly within JSAR's spatial web enviro
 ```html
 <!-- In a spatial web page -->
 <div class="gallery-space">
-  <img src="vacation-stereo.jpg" spatial="stereo" style="transform: translate3d(2, 1.5, -3);" />
-  <img src="nature-stereo.png" spatial="stereo" style="transform: translate3d(-2, 1.5, -3);" />
+  <img src="vacation-stereo.jpg" spatial="stereo" />
+  <img src="nature-stereo.png" spatial="stereo" />
 </div>
 ```
 
@@ -66,16 +70,16 @@ The renderer now checks for the spatial flag during draw calls:
 
 ```pseudocode
 if img_node.has_spatial_stereo() {
-    // Left eye: render left half
-    left_uv = [0.0, 0.0, 0.5, 1.0]
-    renderer.draw_image(img_node, left_uv, Eye.Left)
+  // Left eye: render left half
+  left_uv = [0.0, 0.0, 0.5, 1.0]
+  renderer.draw_image(img_node, left_uv, Eye.Left)
 
-    // Right eye: render right half
-    right_uv = [0.5, 0.0, 1.0, 1.0]
-    renderer.draw_image(img_node, right_uv, Eye.Right)
+  // Right eye: render right half
+  right_uv = [0.5, 0.0, 1.0, 1.0]
+  renderer.draw_image(img_node, right_uv, Eye.Right)
 } else {
-    // Regular image
-    renderer.draw_image(img_node, [0.0, 0.0, 1.0, 1.0], Eye.Mono)
+  // Regular image
+  renderer.draw_image(img_node, [0.0, 0.0, 1.0, 1.0], Eye.Mono)
 }
 ```
 
@@ -108,14 +112,11 @@ Ready to experiment with stereo images in JSAR? Here's a complete example:
       background: linear-gradient(135deg, #667eea, #764ba2);
       padding: 20px;
       border-radius: 10px;
-      transform: translate3d(0, 0, 1px);
     }
-    
     .stereo-image {
       width: 400px;
       height: 200px;
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -156,17 +157,17 @@ JSAR's multi-pass rendering system makes stereo support efficient:
 ```pseudocode
 // Simplified rendering flow
 for eye in [Eye.Left, Eye.Right] {
-    renderer.set_view_matrix(eye.view_matrix())
-    renderer.set_projection_matrix(eye.projection_matrix())
-    
-    for img_node in scene.stereo_images() {
-        uv_coords = if eye == Eye.Left {
-            [0.0, 0.0, 0.5, 1.0]  // Left half
-        } else {
-            [0.5, 0.0, 1.0, 1.0]  // Right half
-        }
-        renderer.draw_image(img_node, uv_coords, eye)
+  renderer.set_view_matrix(eye.view_matrix())
+  renderer.set_projection_matrix(eye.projection_matrix())
+  
+  for img_node in scene.stereo_images() {
+    uv_coords = if eye == Eye.Left {
+      [0.0, 0.0, 0.5, 1.0]  // Left half
+    } else {
+      [0.5, 0.0, 1.0, 1.0]  // Right half
     }
+    renderer.draw_image(img_node, uv_coords, eye)
+  }
 }
 ```
 
@@ -202,8 +203,6 @@ You can find practical examples in our fixtures directory:
 
 - [`spatial-images.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spatial-images.html) - Complete stereo image test cases
 - [`images.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/images.html) - Basic image handling examples
-- [`three-envmap.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-envmap.html) - Environment mapping with spatial content
-- [`webgl.html`](https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webgl.html) - WebGL integration examples
 
 ## What's Next?
 
