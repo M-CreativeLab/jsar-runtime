@@ -19,7 +19,7 @@ namespace dom
   public:
     // Button-specific properties
     bool disabled = false;
-    std::string type = "submit";  // submit, reset, button
+    std::string type = "button";  // submit, reset, button
     std::string form;             // form id
     std::string name;
     std::string value;

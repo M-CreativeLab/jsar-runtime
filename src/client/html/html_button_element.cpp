@@ -32,7 +32,7 @@ namespace dom
     }
     else if (name == "type")
     {
-      type = newValue.empty() ? "submit" : newValue;
+      type = newValue.empty() ? "button" : newValue;
     }
     else if (name == "form")
     {
