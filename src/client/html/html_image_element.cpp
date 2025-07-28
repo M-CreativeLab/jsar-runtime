@@ -95,19 +95,8 @@ namespace dom
       return;
 
     is_src_image_loading = true;
-    fetchResource(getSrc(), [this](const void *data, size_t length)
-                  { this->onImageDataReady(data, length); });
-  }
-
-  void HTMLImageElement::loadImageAsync()
-  {
-    if (is_src_image_loading || is_src_image_loaded_)
-      return;
-
-    // Schedule the image loading on the scripting thread.
-    is_src_image_loading = true;
-    fetchResourceThreadSafe(getSrc(), [this](const void *data, size_t length)
-                            { this->onImageDataReady(data, length); });
+    fetchArrayBufferLikeResource(getSrc(), [this](const void *data, size_t length)
+                                 { this->onImageDataReady(data, length); });
   }
 
   bool HTMLImageElement::decodeImage(SkBitmap &bitmap)
