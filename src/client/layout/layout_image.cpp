@@ -86,7 +86,7 @@ namespace client_layout
       // Update spatial information from the HTML element
       assert(dom::Node::Is<dom::HTMLImageElement>(node()));
       auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
-      
+
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
       webContent.setSpatialized(imageElement.isSpatial());
       webContent.setDirty(true); // Mark the content as dirty to update the texture.
