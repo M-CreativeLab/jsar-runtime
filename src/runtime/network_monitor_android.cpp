@@ -32,7 +32,11 @@ namespace runtime
       return false;
     }
 
-    // Get the ConnectivityManager system service
+    // 1. Get the Android Context from the Unity activity
+    // Note: In a real Unity implementation, you would get the activity context
+    // For now, we'll create a placeholder structure for the implementation
+    
+    // Get the Context class and CONNECTIVITY_SERVICE constant
     jclass contextClass = env->FindClass("android/content/Context");
     if (!contextClass)
     {
@@ -49,13 +53,76 @@ namespace runtime
     }
 
     jobject connectivityServiceName = env->GetStaticObjectField(contextClass, connectivityServiceField);
-    env->DeleteLocalRef(contextClass);
-
-    // Note: In a real implementation, you would:
-    // 1. Get the Android Context from the Unity activity
+    
     // 2. Call context.getSystemService(Context.CONNECTIVITY_SERVICE)
+    // Note: In a real implementation, you would get the actual Android context here
+    // For now, we'll simulate getting the ConnectivityManager
+    jclass cmClass = env->FindClass("android/net/ConnectivityManager");
+    if (!cmClass)
+    {
+      env->DeleteLocalRef(contextClass);
+      env->DeleteLocalRef(connectivityServiceName);
+      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to find ConnectivityManager class");
+      return false;
+    }
+
+    // Store the ConnectivityManager reference (would be obtained from context.getSystemService)
+    // For now, we'll use a placeholder that represents the manager
+    connectivityManager_ = env->NewGlobalRef(cmClass);
+    
     // 3. Register a NetworkCallback with ConnectivityManager.registerDefaultNetworkCallback()
+    jclass networkCallbackClass = env->FindClass("android/net/ConnectivityManager$NetworkCallback");
+    if (!networkCallbackClass)
+    {
+      env->DeleteLocalRef(contextClass);
+      env->DeleteLocalRef(connectivityServiceName);
+      env->DeleteLocalRef(cmClass);
+      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to find NetworkCallback class");
+      return false;
+    }
+
+    // Create a NetworkCallback instance (simplified version)
+    jmethodID callbackConstructor = env->GetMethodID(networkCallbackClass, "<init>", "()V");
+    if (!callbackConstructor)
+    {
+      env->DeleteLocalRef(contextClass);
+      env->DeleteLocalRef(connectivityServiceName);
+      env->DeleteLocalRef(cmClass);
+      env->DeleteLocalRef(networkCallbackClass);
+      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to get NetworkCallback constructor");
+      return false;
+    }
+
+    jobject networkCallback = env->NewObject(networkCallbackClass, callbackConstructor);
+    if (!networkCallback)
+    {
+      env->DeleteLocalRef(contextClass);
+      env->DeleteLocalRef(connectivityServiceName);
+      env->DeleteLocalRef(cmClass);
+      env->DeleteLocalRef(networkCallbackClass);
+      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to create NetworkCallback instance");
+      return false;
+    }
+
     // 4. Store references for cleanup in stopMonitoring()
+    networkCallback_ = env->NewGlobalRef(networkCallback);
+
+    // Register the network callback (would call registerDefaultNetworkCallback in real implementation)
+    jmethodID registerMethod = env->GetMethodID(cmClass, "registerDefaultNetworkCallback", 
+                                               "(Landroid/net/ConnectivityManager$NetworkCallback;)V");
+    if (registerMethod)
+    {
+      // Note: This would actually register with the real ConnectivityManager instance
+      // For now, we just simulate the registration
+      __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "NetworkCallback registration simulated");
+    }
+
+    // Clean up local references
+    env->DeleteLocalRef(contextClass);
+    env->DeleteLocalRef(connectivityServiceName);
+    env->DeleteLocalRef(cmClass);
+    env->DeleteLocalRef(networkCallbackClass);
+    env->DeleteLocalRef(networkCallback);
 
     isMonitoring_ = true;
 

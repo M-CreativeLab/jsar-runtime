@@ -86,7 +86,7 @@ namespace runtime
 #if UNITY_OSX
   /**
    * @class MacOSNetworkMonitor
-   * macOS-specific implementation using SCNetworkReachabilitySetCallback.
+   * Darwin/macOS-specific implementation using SCNetworkReachabilitySetCallback.
    */
   class MacOSNetworkMonitor : public NetworkMonitor
   {
