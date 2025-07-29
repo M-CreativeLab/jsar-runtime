@@ -24,38 +24,61 @@ namespace dom
     assert(ownerDocument != nullptr && "The owner document is not set when creating an element.");
 
     string nodeName = node.name();
-#define XX(tagName, className)                                                 \
-  if (nodeName == tagName)                                                     \
-  {                                                                            \
-    shared_ptr<Element> element = make_shared<className>(node, ownerDocument); \
-    element->createdCallback(false);                                           \
-    return element;                                                            \
-  }
-    TYPED_ELEMENT_MAP(XX)
-#undef XX
+    shared_ptr<Element> newElement = nullptr;
 
-    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(node, ownerDocument);
-    element->createdCallback(false);
-    return dynamic_pointer_cast<Element>(element);
+    try
+    {
+#define XX(tagName, className)                                \
+  if (nodeName == tagName)                                    \
+  {                                                           \
+    newElement = make_shared<className>(node, ownerDocument); \
+  }
+      TYPED_ELEMENT_MAP(XX)
+#undef XX
+    }
+    catch (const exception &e)
+    {
+      cerr << "Failed to create element from node '" << nodeName << "': " << e.what() << endl;
+    }
+
+    if (newElement == nullptr) [[unlikely]]
+    {
+      newElement = make_shared<HTMLElement>(node, ownerDocument);
+      assert(newElement != nullptr &&
+             "Failed to create an element from the node.");
+    }
+    newElement->createdCallback(false);
+    return newElement;
   }
 
   shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument, bool from_scripting)
   {
-#define XX(tagNameStr, className)                                                 \
-  if (tagName == tagNameStr)                                                      \
-  {                                                                               \
-    shared_ptr<Element> element = make_shared<className>(tagName, ownerDocument); \
-    element->namespaceURI = namespaceURI;                                         \
-    element->createdCallback(from_scripting);                                     \
-    return element;                                                               \
+    shared_ptr<Element> newElement = nullptr;
+    try
+    {
+#define XX(tagNameStr, className)                                \
+  if (tagName == tagNameStr)                                     \
+  {                                                              \
+    newElement = make_shared<className>(tagName, ownerDocument); \
   }
-    TYPED_ELEMENT_MAP(XX)
+      TYPED_ELEMENT_MAP(XX)
 #undef XX
+    }
+    catch (const exception &e)
+    {
+      cerr << "Failed to create element from name '"
+           << namespaceURI << "." << tagName << "': " << e.what() << endl;
+    }
 
-    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(tagName, ownerDocument);
-    element->namespaceURI = namespaceURI;
-    element->createdCallback(from_scripting);
-    return dynamic_pointer_cast<Element>(element);
+    if (newElement == nullptr) [[unlikely]]
+    {
+      newElement = make_shared<HTMLElement>(tagName, ownerDocument);
+      assert(newElement != nullptr &&
+             "Failed to create an element from the tag name.");
+    }
+    newElement->namespaceURI = namespaceURI;
+    newElement->createdCallback(from_scripting);
+    return newElement;
   }
 
   shared_ptr<Node> Element::CloneElement(shared_ptr<Node> srcNode)
