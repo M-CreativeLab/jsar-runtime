@@ -81,6 +81,11 @@ class NavigatorImpl implements Navigator {
   get gpu(): GPU {
     throw new TypeError('WebGPU is not supported in this environment');
   }
+
+  /**
+   * The `ml` provides the WebNN (Web Neural Network) API context.
+   */
+  ml?: import('../webnn').ML;
   get webdriver(): boolean {
     return false;
   }
@@ -135,4 +140,13 @@ export function configureGL(gl: WebGLRenderingContext | WebGL2RenderingContext) 
   }
   navigator.gl = gl;
   isGLConfigured = true;
+}
+
+let isMLConfigured = false;
+export function configureML(ml: import('../webnn').ML) {
+  if (isMLConfigured) {
+    throw new TypeError('ML context is already configured on navigator');
+  }
+  navigator.ml = ml;
+  isMLConfigured = true;
 }

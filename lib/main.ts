@@ -6,6 +6,7 @@ import * as Navigator from './navigator';
 import { connectRenderer } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
 import { getXRSystem } from './webxr';
+import { ml } from './webnn';
 import { TransmuteRuntime2 } from './runtime2';
 
 const bootstrapStarted = performance.now();
@@ -62,6 +63,7 @@ bootwait(async function main() {
 
     const gl = env.getHostWebGLRenderingContext();
     Navigator.configureGL(gl);
+    Navigator.configureML(ml);
     reportDocumentEvent(id, 'beforeloading');
 
     /**

@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "types": [
       "node",
+      "jest",
       "nodejs-patch",
       "transmute-webapis",
       "transmute-private"

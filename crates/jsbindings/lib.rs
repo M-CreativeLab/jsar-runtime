@@ -14,6 +14,7 @@ mod layout;
 mod texture_atlas;
 mod typescript_transpiler;
 mod webgl;
+mod webnn;
 
 use cxx::CxxString;
 use url::Url;
