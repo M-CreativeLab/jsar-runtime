@@ -247,7 +247,10 @@ private:
   void recvEvent();
   void recvMediaRequest();
   bool recvXRCommand(int timeout = 0);
+
   bool tryDispatchRequest();
+  void prepareRequest(events_comm::TrDocumentRequest &);
+
   bool tickOnFrame();
   void release();
 
