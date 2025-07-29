@@ -147,6 +147,6 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
     tr_target_install(${EXECUTABLE_NAME})
 endfunction()
 
-if (APPLE)
+if (APPLE OR UNIX)
     tr_add_example(jsar_desktop_opengl "src/examples/desktop_opengl.cpp")
 endif()

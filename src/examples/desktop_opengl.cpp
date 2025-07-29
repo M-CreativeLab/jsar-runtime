@@ -4,11 +4,16 @@
 #include <filesystem>
 #include <memory>
 
+#ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
-
 #include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
 #include <GLFW/glfw3native.h>
+#endif
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -118,7 +123,22 @@ namespace jsar::example
   public:
     void help()
     {
-      printf("Usage: gl-desktop [-w width] [-h height] [url]\n");
+      printf("Usage: jsar_desktop_opengl [options] [url]\n");
+      printf("Options:\n");
+      printf("  -w <width>              Window width (default: 960)\n");
+      printf("  -h <height>             Window height (default: 600)\n");
+      printf("  -n <count>              Number of apps (default: 1)\n");
+      printf("  -s <samples>            MSAA samples (default: 4)\n");
+      printf("  --mono                  Monoscopic XR rendering (default)\n");
+      printf("  --stereo <mode>         Stereo XR rendering mode:\n");
+      printf("                            multipass - Multiple rendering passes\n");
+      printf("                            singlepass - Single rendering pass\n");
+      printf("  --help                  Show this help\n");
+      printf("\n");
+      printf("Examples:\n");
+      printf("  jsar_desktop_opengl --mono\n");
+      printf("  jsar_desktop_opengl --stereo multipass\n");
+      printf("  jsar_desktop_opengl --stereo singlepass\n");
     }
 
     bool init(int argc, char **argv)
@@ -127,39 +147,106 @@ namespace jsar::example
         return false;
 
       int samples = 4;
-      int opt;
-      while ((opt = getopt(argc, argv, "w:h:x:mn:s:")) != -1)
+      
+      // Parse arguments manually to support long options
+      for (int i = 1; i < argc; i++)
       {
-        switch (opt)
+        std::string arg = argv[i];
+        
+        if (arg == "--help")
         {
-        case 'w':
-          width = atoi(optarg);
-          break;
-        case 'h':
-          height = atoi(optarg);
-          break;
-        case 'x':
-          if (strcmp(optarg, "r") == 0)
-            xrEnabled = true;
-          break;
-        case 'm':
-          multiPass = true;
-          break;
-        case 'n':
-          nApps = atoi(optarg);
+          help();
+          return false;
+        }
+        else if (arg == "--mono")
+        {
+          monoMode = true;
+        }
+        else if (arg == "--stereo")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --stereo requires a mode argument (multipass or singlepass)\n");
+            help();
+            return false;
+          }
+          std::string mode = argv[++i];
+          if (mode == "multipass")
+          {
+            monoMode = false;
+            multiPass = true;
+          }
+          else if (mode == "singlepass")
+          {
+            monoMode = false;
+            multiPass = false;
+          }
+          else
+          {
+            printf("Error: Invalid stereo mode '%s'. Use 'multipass' or 'singlepass'\n", mode.c_str());
+            help();
+            return false;
+          }
+        }
+        else if (arg == "-w")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -w requires a width argument\n");
+            help();
+            return false;
+          }
+          width = atoi(argv[++i]);
+        }
+        else if (arg == "-h")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -h requires a height argument\n");
+            help();
+            return false;
+          }
+          height = atoi(argv[++i]);
+        }
+        else if (arg == "-n")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -n requires an app count argument\n");
+            help();
+            return false;
+          }
+          nApps = atoi(argv[++i]);
           if (nApps < 0)
             nApps = 1;
-          break;
-        case 's':
-          samples = atoi(optarg);
+        }
+        else if (arg == "-s")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -s requires a samples argument\n");
+            help();
+            return false;
+          }
+          samples = atoi(argv[++i]);
           if (samples < 0 || samples > 16)
             samples = 4;
-          break;
-        default:
+        }
+        else if (arg[0] != '-')
+        {
+          // This is the URL argument
+          requestUrl = arg;
+        }
+        else
+        {
+          printf("Error: Unknown argument '%s'\n", arg.c_str());
           help();
-          break;
+          return false;
         }
       }
+
+      // XR is now always enabled
+      xrEnabled = true;
 
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -174,11 +261,9 @@ namespace jsar::example
         return false;
       }
 
-      if (xrEnabled)
+      // In stereo mode, double the width for side-by-side rendering
+      if (xrEnabled && !monoMode)
         width *= 2;
-
-      if (optind < argc)
-        requestUrl = string(argv[optind]);
 
       int count;
       GLFWmonitor *glassMonitor = nullptr;
@@ -349,7 +434,7 @@ namespace jsar::example
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        int viewsCount = xrEnabled ? 2 : 1;
+        int viewsCount = (xrEnabled && !monoMode) ? 2 : 1;
         auto drawingViewport = windowCtx_->drawingViewport();
 
         if (embedder_ == nullptr)
@@ -365,7 +450,7 @@ namespace jsar::example
 
           if (multiPass)
           {
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               uint32_t w = drawingViewport.width() / viewsCount;
               uint32_t h = drawingViewport.height();
@@ -415,7 +500,7 @@ namespace jsar::example
             auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
             xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
 
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
               auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
@@ -426,14 +511,6 @@ namespace jsar::example
             embedder_->onOpaquesRenderPass();
             embedder_->onTransparentsRenderPass();
           }
-        }
-        else // Non-XR rendering
-        {
-          glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
-          glGetError(); // Clear the error
-
-          embedder_->onOpaquesRenderPass();
-          embedder_->onTransparentsRenderPass();
         }
 
         embedder_->onAfterRendering();
@@ -491,6 +568,7 @@ namespace jsar::example
     int width = 960;
     int height = 600;
     bool xrEnabled = false;
+    bool monoMode = true;  // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
     int nApps = 1;
