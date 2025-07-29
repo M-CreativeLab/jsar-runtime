@@ -164,6 +164,14 @@ In Web multimedia, there are the following APIs that JSAR would support:
 [`MediaDevices`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices
 [`MediaRecorder`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
 
+### Machine Learning APIs
+
+| API               | Status | Test Suite          |
+| ----------------- | ------ | ------------------- |
+| [WebNN API][]     | Ok     | Jest test suite     |
+
+[WebNN API]: https://www.w3.org/TR/webnn/
+
 ### Canvas
 
 | API                      | Status      | Test Suite |

@@ -150,6 +150,54 @@ export class MLGraphBuilder {
     return new MLOperand(input.type, dimensions);
   }
 
+  // Pooling operations
+  globalAveragePool2d(input: MLOperand): MLOperand {
+    // Global average pooling reduces spatial dimensions to 1x1
+    if (input.dimensions.length === 4) {
+      return new MLOperand(input.type, [input.dimensions[0], input.dimensions[1], 1, 1]);
+    }
+    return new MLOperand(input.type, [...input.dimensions]);
+  }
+
+  // Normalization operations
+  batchNormalization(input: MLOperand, mean: MLOperand, variance: MLOperand, options?: {
+    scale?: MLOperand;
+    bias?: MLOperand;
+    epsilon?: number;
+  }): MLOperand {
+    return new MLOperand(input.type, [...input.dimensions]);
+  }
+
+  // Softmax operation
+  softmax(input: MLOperand, options?: { axis?: number }): MLOperand {
+    return new MLOperand(input.type, [...input.dimensions]);
+  }
+
+  // Element-wise operations
+  pow(input: MLOperand, exponent: MLOperand): MLOperand {
+    return new MLOperand(input.type, [...input.dimensions]);
+  }
+
+  sqrt(input: MLOperand): MLOperand {
+    return new MLOperand(input.type, [...input.dimensions]);
+  }
+
+  // Reduction operations
+  reduceMean(input: MLOperand, options?: { axes?: number[]; keepDimensions?: boolean }): MLOperand {
+    let resultDims = [...input.dimensions];
+    if (options?.axes) {
+      if (options.keepDimensions) {
+        options.axes.forEach(axis => {
+          resultDims[axis] = 1;
+        });
+      } else {
+        // Remove the specified axes
+        resultDims = resultDims.filter((_, index) => !options.axes!.includes(index));
+      }
+    }
+    return new MLOperand(input.type, resultDims);
+  }
+
   // Build the graph
   build(outputs: Record<string, MLOperand>): Promise<MLGraph> {
     return Promise.resolve(new MLGraph(this._context, outputs));

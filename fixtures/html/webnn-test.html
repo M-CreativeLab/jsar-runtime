@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebNN API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebNN API Test Suite</h1>
+    <p>This page tests the WebNN (Web Neural Network) API implementation in JSAR.</p>
+
+    <div class="test-section">
+        <h2>Basic API Availability</h2>
+        <button onclick="testAPIAvailability()">Test API Availability</button>
+        <div id="apiResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Context Creation</h2>
+        <button onclick="testContextCreation()">Test Context Creation</button>
+        <div id="contextResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Graph Building</h2>
+        <button onclick="testGraphBuilding()">Test Graph Building</button>
+        <div id="graphResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Matrix Operations</h2>
+        <button onclick="testMatrixOperations()">Test Matrix Operations</button>
+        <div id="matrixResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Neural Network Operations</h2>
+        <button onclick="testNeuralNetworkOps()">Test Neural Network Operations</button>
+        <div id="nnResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Graph Execution</h2>
+        <button onclick="testGraphExecution()">Test Graph Execution</button>
+        <div id="executionResult" class="test-result"></div>
+    </div>
+
+    <script>
+        function logResult(elementId, success, message) {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${success ? 'success' : 'error'}`;
+            element.innerHTML = message;
+        }
+
+        async function testAPIAvailability() {
+            try {
+                if (typeof navigator.ml !== 'undefined') {
+                    logResult('apiResult', true, '✓ WebNN API is available via navigator.ml');
+                } else {
+                    logResult('apiResult', false, '✗ WebNN API is not available. navigator.ml is undefined.');
+                }
+            } catch (error) {
+                logResult('apiResult', false, `✗ Error checking API availability: ${error.message}`);
+            }
+        }
+
+        async function testContextCreation() {
+            try {
+                if (typeof navigator.ml === 'undefined') {
+                    logResult('contextResult', false, '✗ WebNN API not available');
+                    return;
+                }
+
+                const context = await navigator.ml.createContext({
+                    deviceType: 'cpu'
+                });
+
+                if (context && context.deviceType === 'cpu') {
+                    logResult('contextResult', true, `✓ Successfully created ML context with device type: ${context.deviceType}`);
+                } else {
+                    logResult('contextResult', false, '✗ Failed to create ML context or invalid device type');
+                }
+            } catch (error) {
+                logResult('contextResult', false, `✗ Error creating context: ${error.message}`);
+            }
+        }
+
+        async function testGraphBuilding() {
+            try {
+                if (typeof navigator.ml === 'undefined') {
+                    logResult('graphResult', false, '✗ WebNN API not available');
+                    return;
+                }
+
+                const context = await navigator.ml.createContext();
+                const builder = context.createGraphBuilder();
+
+                const inputA = builder.input('a', {
+                    type: 'float32',
+                    dimensions: [2, 3]
+                });
+
+                const inputB = builder.input('b', {
+                    type: 'float32',
+                    dimensions: [2, 3]
+                });
+
+                const result = builder.add(inputA, inputB);
+
+                if (result && result.type === 'float32' && JSON.stringify(result.dimensions) === JSON.stringify([2, 3])) {
+                    logResult('graphResult', true, `✓ Successfully built graph with add operation. Result dimensions: [${result.dimensions}]`);
+                } else {
+                    logResult('graphResult', false, '✗ Failed to build graph or invalid result dimensions');
+                }
+            } catch (error) {
+                logResult('graphResult', false, `✗ Error building graph: ${error.message}`);
+            }
+        }
+
+        async function testMatrixOperations() {
+            try {
+                if (typeof navigator.ml === 'undefined') {
+                    logResult('matrixResult', false, '✗ WebNN API not available');
+                    return;
+                }
+
+                const context = await navigator.ml.createContext();
+                const builder = context.createGraphBuilder();
+
+                const matrixA = builder.input('a', {
+                    type: 'float32',
+                    dimensions: [2, 3]
+                });
+
+                const matrixB = builder.input('b', {
+                    type: 'float32',
+                    dimensions: [3, 4]
+                });
+
+                const result = builder.matmul(matrixA, matrixB);
+
+                if (result && JSON.stringify(result.dimensions) === JSON.stringify([2, 4])) {
+                    logResult('matrixResult', true, `✓ Matrix multiplication successful. Result dimensions: [${result.dimensions}]`);
+
+                    // Test dimension mismatch error
+                    try {
+                        const invalidB = builder.input('invalid', {
+                            type: 'float32',
+                            dimensions: [5, 6]
+                        });
+                        builder.matmul(matrixA, invalidB);
+                        logResult('matrixResult', false, '✗ Should have thrown dimension mismatch error');
+                    } catch (error) {
+                        if (error.message.includes('dimension mismatch')) {
+                            logResult('matrixResult', true, `✓ Matrix multiplication and error handling working correctly`);
+                        } else {
+                            logResult('matrixResult', false, `✗ Unexpected error: ${error.message}`);
+                        }
+                    }
+                } else {
+                    logResult('matrixResult', false, '✗ Matrix multiplication failed or invalid result dimensions');
+                }
+            } catch (error) {
+                logResult('matrixResult', false, `✗ Error in matrix operations: ${error.message}`);
+            }
+        }
+
+        async function testNeuralNetworkOps() {
+            try {
+                if (typeof navigator.ml === 'undefined') {
+                    logResult('nnResult', false, '✗ WebNN API not available');
+                    return;
+                }
+
+                const context = await navigator.ml.createContext();
+                const builder = context.createGraphBuilder();
+
+                const input = builder.input('input', {
+                    type: 'float32',
+                    dimensions: [1, 10]
+                });
+
+                // Test activation functions
+                const relu = builder.relu(input);
+                const sigmoid = builder.sigmoid(input);
+                const tanh = builder.tanh(input);
+
+                // Test convolution
+                const convInput = builder.input('convInput', {
+                    type: 'float32',
+                    dimensions: [1, 3, 32, 32]  // batch, channels, height, width
+                });
+
+                const filter = builder.input('filter', {
+                    type: 'float32',
+                    dimensions: [16, 3, 3, 3]  // out_channels, in_channels, height, width
+                });
+
+                const conv = builder.conv2d(convInput, filter);
+
+                if (relu && sigmoid && tanh && conv) {
+                    logResult('nnResult', true, '✓ Neural network operations (ReLU, Sigmoid, Tanh, Conv2D) created successfully');
+                } else {
+                    logResult('nnResult', false, '✗ Failed to create neural network operations');
+                }
+            } catch (error) {
+                logResult('nnResult', false, `✗ Error in neural network operations: ${error.message}`);
+            }
+        }
+
+        async function testGraphExecution() {
+            try {
+                if (typeof navigator.ml === 'undefined') {
+                    logResult('executionResult', false, '✗ WebNN API not available');
+                    return;
+                }
+
+                const context = await navigator.ml.createContext();
+                const builder = context.createGraphBuilder();
+
+                const input = builder.input('input', {
+                    type: 'float32',
+                    dimensions: [1, 4]
+                });
+
+                const output = builder.relu(input);
+                const graph = await builder.build({ output });
+
+                // Test computation
+                const inputs = {
+                    input: new Float32Array([1, -2, 3, -4])
+                };
+                const outputs = {
+                    output: new Float32Array(4)
+                };
+
+                const result = await graph.compute(inputs, outputs);
+
+                if (result && result.outputs) {
+                    logResult('executionResult', true, '✓ Graph execution completed successfully');
+                } else {
+                    logResult('executionResult', false, '✗ Graph execution failed');
+                }
+            } catch (error) {
+                logResult('executionResult', false, `✗ Error in graph execution: ${error.message}`);
+            }
+        }
+
+        // Auto-run basic API test on page load
+        window.addEventListener('load', () => {
+            testAPIAvailability();
+        });
+    </script>
+</body>
+</html>

@@ -127,4 +127,55 @@ describe('WebNN API', () => {
     expect(result).toBeDefined();
     expect(result.outputs).toBeDefined();
   });
+
+  test('should handle advanced operations', async () => {
+    const context = await ml.createContext();
+    const builder = context.createGraphBuilder();
+    
+    const input = builder.input('input', {
+      type: MLOperandType.FLOAT32,
+      dimensions: [1, 10, 5, 5]
+    });
+
+    // Test pooling
+    const avgPool = builder.averagePool2d(input, {
+      windowDimensions: [2, 2],
+      strides: [2, 2]
+    });
+    expect(avgPool.dimensions).toEqual([1, 10, 5, 5]);
+
+    // Test global pooling
+    const globalPool = builder.globalAveragePool2d(input);
+    expect(globalPool.dimensions).toEqual([1, 10, 1, 1]);
+
+    // Test softmax
+    const softmax = builder.softmax(input);
+    expect(softmax.dimensions).toEqual([1, 10, 5, 5]);
+
+    // Test reduction
+    const reduced = builder.reduceMean(input, { axes: [2, 3], keepDimensions: true });
+    expect(reduced.dimensions).toEqual([1, 10, 1, 1]);
+  });
+
+  test('should handle tensor shape operations', async () => {
+    const context = await ml.createContext();
+    const builder = context.createGraphBuilder();
+    
+    const input = builder.input('input', {
+      type: MLOperandType.FLOAT32,
+      dimensions: [2, 3, 4]
+    });
+
+    // Test reshape
+    const reshaped = builder.reshape(input, [6, 4]);
+    expect(reshaped.dimensions).toEqual([6, 4]);
+
+    // Test transpose
+    const transposed = builder.transpose(input, { permutation: [2, 0, 1] });
+    expect(transposed.dimensions).toEqual([4, 2, 3]);
+
+    // Test element-wise operations
+    const sqrt = builder.sqrt(input);
+    expect(sqrt.dimensions).toEqual([2, 3, 4]);
+  });
 });
