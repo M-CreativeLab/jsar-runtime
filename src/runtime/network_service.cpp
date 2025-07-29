@@ -62,6 +62,16 @@ namespace runtime
     return instance;
   }
 
+  void NetworkService::registerEventCallback(NetworkEventCallback callback)
+  {
+    eventDispatcher_.registerCallback(callback);
+  }
+
+  void NetworkService::unregisterEventCallback()
+  {
+    eventDispatcher_.unregisterCallback();
+  }
+
   void NetworkService::onNetworkStatusChanged(NetworkStatus status)
   {
     // Only dispatch events if the status actually changed
@@ -69,9 +79,8 @@ namespace runtime
     {
       lastKnownStatus_ = status;
 
-      // Create and dispatch the appropriate network event
-      auto event = NetworkEvent::fromNetworkStatus(status);
-      dispatchEvent(event);
+      // Dispatch the network event
+      eventDispatcher_.dispatchFromNetworkStatus(status);
 
       // Log the network status change for debugging
       const char *statusStr = (status == NetworkStatus::Online) ? "online" : "offline";

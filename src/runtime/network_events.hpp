@@ -4,7 +4,7 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
-#include <common/events_v2/event.hpp>
+#include <functional>
 #include "network_monitor.hpp"
 
 namespace runtime
@@ -20,77 +20,58 @@ namespace runtime
   };
 
   /**
-   * @class NetworkEventDetail
-   * Detail object for network events containing additional context.
+   * @class NetworkEventCallback
+   * Simple callback interface for network status changes.
    */
-  class NetworkEventDetail : public events_comm::TrEventDetailObject
-  {
-  public:
-    NetworkEventDetail() = default;
-    NetworkEventDetail(NetworkStatus status)
-        : networkStatus(status)
-    {
-    }
-
-  public:
-    void serialize(rapidjson::Document &destDoc) override
-    {
-      auto &allocator = destDoc.GetAllocator();
-      destDoc.AddMember("networkStatus",
-                        static_cast<int>(networkStatus),
-                        allocator);
-      destDoc.AddMember("timestamp",
-                        rapidjson::Value(timestamp.c_str(), allocator),
-                        allocator);
-    }
-
-    void deserialize(rapidjson::Document &srcDoc) override
-    {
-      if (srcDoc.HasMember("networkStatus") && srcDoc["networkStatus"].IsInt())
-      {
-        networkStatus = static_cast<NetworkStatus>(srcDoc["networkStatus"].GetInt());
-      }
-      if (srcDoc.HasMember("timestamp") && srcDoc["timestamp"].IsString())
-      {
-        timestamp = srcDoc["timestamp"].GetString();
-      }
-    }
-
-  public:
-    NetworkStatus networkStatus = NetworkStatus::Online;
-    std::string timestamp = "";
-  };
+  using NetworkEventCallback = std::function<void(NetworkEventType eventType, NetworkStatus status, const std::string& timestamp)>;
 
   /**
-   * @class NetworkEvent
-   * Specialized event class for network status changes.
+   * @class NetworkEventDispatcher
+   * Basic event dispatcher for network status changes in runtime.
    */
-  class NetworkEvent : public events_comm::TrEvent<NetworkEventType>
+  class NetworkEventDispatcher
   {
   public:
-    NetworkEvent(NetworkEventType type)
-        : TrEvent<NetworkEventType>(type)
+    NetworkEventDispatcher() = default;
+    ~NetworkEventDispatcher() = default;
+
+    /**
+     * Register a callback for network events.
+     */
+    void registerCallback(NetworkEventCallback callback)
     {
-    }
-    NetworkEvent(NetworkEventType type, const NetworkEventDetail &detail)
-        : TrEvent<NetworkEventType>(type)
-    {
-      detailStorage.setJsonFromInstance(const_cast<NetworkEventDetail &>(detail));
+      callback_ = callback;
     }
 
     /**
-     * Create a network event from a network status.
+     * Unregister the callback.
      */
-    static std::shared_ptr<NetworkEvent> fromNetworkStatus(NetworkStatus status)
+    void unregisterCallback()
+    {
+      callback_ = nullptr;
+    }
+
+    /**
+     * Dispatch a network event.
+     */
+    void dispatchEvent(NetworkEventType eventType, NetworkStatus status)
+    {
+      if (callback_)
+      {
+        std::string timestamp = getCurrentTimestamp();
+        callback_(eventType, status, timestamp);
+      }
+    }
+
+    /**
+     * Create and dispatch a network event from status.
+     */
+    void dispatchFromNetworkStatus(NetworkStatus status)
     {
       NetworkEventType eventType = (status == NetworkStatus::Online)
                                      ? NetworkEventType::Online
                                      : NetworkEventType::Offline;
-
-      NetworkEventDetail detail(status);
-      detail.timestamp = getCurrentTimestamp();
-
-      return std::make_shared<NetworkEvent>(eventType, detail);
+      dispatchEvent(eventType, status);
     }
 
   private:
@@ -102,6 +83,8 @@ namespace runtime
       ss << std::put_time(std::localtime(&time_t), "%Y-%m-%dT%H:%M:%S");
       return ss.str();
     }
+
+    NetworkEventCallback callback_ = nullptr;
   };
 
 } // namespace runtime

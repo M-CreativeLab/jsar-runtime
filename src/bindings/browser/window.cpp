@@ -1,6 +1,5 @@
 #include "./window.hpp"
 #include "./location.hpp"
-#include "./navigator.hpp"
 
 namespace browserbinding
 {
@@ -22,9 +21,6 @@ namespace browserbinding
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.Global().Set("Window", func);
-
-    // Initialize Navigator class
-    Navigator::Init(env);
   }
 
   Napi::Object Window::NewInstance(Napi::Env env, std::string url)
@@ -34,12 +30,6 @@ namespace browserbinding
     auto locationObject = Location::NewInstance(env, url);
     windowObject.Set("location", locationObject);
     windowObject.Set("origin", locationObject.Get("origin"));
-
-    // Create navigator object
-    auto window = Napi::ObjectWrap<Window>::Unwrap(windowObject)->eventTarget;
-    auto navigatorObject = Navigator::NewInstance(env, window);
-    windowObject.Set("navigator", navigatorObject);
-
     return scope.Escape(windowObject).ToObject();
   }
 

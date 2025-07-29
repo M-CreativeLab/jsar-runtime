@@ -4,7 +4,6 @@
 #include <client/cssom/selectors/matching.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
-#include <runtime/network_service.hpp>
 
 #include "./window.hpp"
 
@@ -19,23 +18,6 @@ namespace browser
       : dom::DOMEventTarget()
       , client_context_(client_context)
   {
-    // Set up network event listener
-    auto callback = [this](runtime::NetworkEventType eventType, std::shared_ptr<runtime::NetworkEvent> networkEvent)
-    {
-      onNetworkStatusChanged(eventType, networkEvent);
-    };
-
-    // Add listeners for both online and offline events
-    runtime::NetworkService::getInstance().addEventListener(runtime::NetworkEventType::Online, callback);
-    runtime::NetworkService::getInstance().addEventListener(runtime::NetworkEventType::Offline, callback);
-
-    // Start network monitoring
-    runtime::NetworkService::getInstance().start();
-  }
-
-  Window::~Window()
-  {
-    // Network service cleanup will be handled by the service itself
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
@@ -79,26 +61,5 @@ namespace browser
     auto elementStyle = htmlElement->style();
     computedStyle->update(elementStyle, context); // Override the style from the element's.
     return *computedStyle;
-  }
-
-  void Window::onNetworkStatusChanged(runtime::NetworkEventType eventType, std::shared_ptr<runtime::NetworkEvent> networkEvent)
-  {
-    // Convert runtime network event to DOM network event
-    std::shared_ptr<dom::NetworkEvent> domEvent;
-
-    if (eventType == runtime::NetworkEventType::Online)
-    {
-      domEvent = dom::NetworkEvent::createOnlineEvent();
-    }
-    else if (eventType == runtime::NetworkEventType::Offline)
-    {
-      domEvent = dom::NetworkEvent::createOfflineEvent();
-    }
-
-    if (domEvent)
-    {
-      // Dispatch the DOM event to JavaScript listeners
-      dispatchEvent(domEvent);
-    }
   }
 }

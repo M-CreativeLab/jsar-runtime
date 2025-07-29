@@ -15,8 +15,6 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
-#include <client/dom/events/network_event.hpp>
-#include <runtime/network_service.hpp>
 
 namespace browser
 {
@@ -105,7 +103,6 @@ namespace browser
 
   public:
     Window(TrClientContextPerProcess *clientContext = TrClientContextPerProcess::Get());
-    ~Window();
 
   public:
     inline const std::string &name() const
@@ -241,14 +238,6 @@ namespace browser
     const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
                                                         std::optional<std::string> pseudoElt = std::nullopt) const;
 
-    /**
-     * Returns true if the browser is currently online.
-     */
-    inline bool navigator_onLine() const
-    {
-      return runtime::NetworkService::getInstance().getCurrentStatus() == runtime::NetworkStatus::Online;
-    }
-
   private:
     // Configure the document to the window.
     void configureDocument(std::shared_ptr<dom::Document> document)
@@ -257,9 +246,6 @@ namespace browser
       document_ = document;
       is_document_configured_ = true;
     }
-
-    // Handle network status changes
-    void onNetworkStatusChanged(runtime::NetworkEventType eventType, std::shared_ptr<runtime::NetworkEvent> networkEvent);
 
   private: // Window properties
     std::string name_ = "";
