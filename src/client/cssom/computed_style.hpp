@@ -316,6 +316,14 @@ namespace client_cssom
     {
       return position_type_;
     }
+    inline bool isPositioned() const
+    {
+      return !position_type_.isStatic();
+    }
+    inline int zIndex() const
+    {
+      return z_index_;
+    }
 
     inline Visibility visibility() const
     {
@@ -371,6 +379,34 @@ namespace client_cssom
     inline bool hasBackgroundColor() const
     {
       return bitfields_.HasBackgroundColor();
+    }
+    inline values::computed::Image &backgroundImage()
+    {
+      return background_image_;
+    }
+    inline const values::computed::Image &backgroundImage() const
+    {
+      return background_image_;
+    }
+    inline bool hasBackgroundImage() const
+    {
+      return bitfields_.HasBackgroundImage();
+    }
+    inline const values::computed::BackgroundBlendMode &backgroundBlendMode() const
+    {
+      return background_blend_mode_;
+    }
+    inline const values::computed::BackgroundClip &backgroundClip() const
+    {
+      return background_clip_;
+    }
+    inline const values::computed::BackgroundOrigin &backgroundOrigin() const
+    {
+      return background_origin_;
+    }
+    inline const values::computed::BackgroundRepeat &backgroundRepeat() const
+    {
+      return background_repeat_;
     }
 
     // Visibility utility functions.
@@ -462,6 +498,7 @@ namespace client_cssom
     // Positional
     values::computed::PositionType position_type_ = values::computed::PositionType::Static();
     values::computed::Inset inset_ = values::computed::Inset::Default();
+    int z_index_ = 0;
 
     // Alignment
     values::computed::AlignContent align_content_ = values::computed::AlignContent::Normal();
@@ -499,7 +536,14 @@ namespace client_cssom
 
     // Colors
     values::computed::Color color_ = values::computed::Color::Black();
+
+    // Background
     values::computed::Color background_color_ = values::computed::Color::Transparent();
+    values::computed::Image background_image_ = values::computed::Image::None();
+    values::computed::BackgroundBlendMode background_blend_mode_ = values::computed::BackgroundBlendMode::Normal();
+    values::computed::BackgroundClip background_clip_ = values::computed::BackgroundClip::BorderBox();
+    values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
+    values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
 
     // 3D Transforms
     values::computed::Transform transform_;
@@ -531,12 +575,14 @@ private:                                                \
     public:
       explicit ComputedStyleBitfields()
           : has_transform_(false)
+          , has_background_image_(false)
       {
       }
 
       ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
       ADD_BOOLEAN_BITFIELD(has_color_, HasColor);
       ADD_BOOLEAN_BITFIELD(has_background_color_, HasBackgroundColor);
+      ADD_BOOLEAN_BITFIELD(has_background_image_, HasBackgroundImage);
       ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
       ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
       ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);

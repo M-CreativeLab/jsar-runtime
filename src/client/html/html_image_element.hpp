@@ -55,7 +55,10 @@ namespace dom
 
     inline geometry::DOMRect getImageClientRect() const
     {
-      return geometry::DOMRect(0, 0, naturalWidth(), naturalHeight());
+      // For spatial (stereo) images, the layout width should be half of the natural width
+      // since spatial images contain side-by-side stereo pairs
+      int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
+      return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
     }
     bool readPixels(SkPixmap &dst) const override
     {
@@ -91,22 +94,15 @@ namespace dom
     }
 
     /**
-     * Load the image at the scriting thread, if you want to achieve the loading from other threads, you must use
-     * `loadImageAsync()`.
+     * Load the node's image, containing the image data, decoding it if necessary and rendering it.
      */
     void loadImage();
 
-    /**
-     * Load the image asynchronously, it must be used to schedule the image loading from the non-scripting thread.
-     */
-    void loadImageAsync();
-
   private:
-    void fetchImage(const std::string &src);
     bool decodeImage(SkBitmap &);
     void decodeImageAsync(const SkBitmap &bitmap);
 
-    void onImageDataReady();
+    void onImageDataReady(const void *imageData, size_t imageByteLength);
     void onImageDecoded(const SkBitmap &bitmap);
     void onSizeDidChange();
 
@@ -176,6 +172,22 @@ namespace dom
     }
 
     /**
+     * @returns The spatial rendering mode of the image (e.g., "stereo" for side-by-side stereo images).
+     */
+    inline std::string spatial() const
+    {
+      return spatial_;
+    }
+
+    /**
+     * @returns True if the image is marked as a spatial (stereo) image.
+     */
+    inline bool isSpatial() const
+    {
+      return spatial_ == "stereo";
+    }
+
+    /**
      * @returns The natural width of the image in pixels.
      */
     inline int naturalWidth() const
@@ -192,7 +204,6 @@ namespace dom
     }
 
   private:
-    uv_async_t load_async_handle_;
     uv_work_t decode_work_handle_;
 
     std::optional<int> width_;
@@ -209,5 +220,6 @@ namespace dom
 
     bool is_map_ = false;
     std::string use_map_;
+    std::string spatial_;
   };
 }

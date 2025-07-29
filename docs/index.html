@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSAR - Revolutionary Browser Engine for Spatial Web</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="shared/global.css">
+  <style>
+    /* Index/Hero-specific styles */
+    .hero-section {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 50%, rgba(51, 65, 85, 0.92) 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      transform-style: preserve-3d;
+      padding-top: 5rem;
+    }
+
+    #particles-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      transform-style: preserve-3d;
+    }
+
+    /* Parallax effects */
+    .parallax-section {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    .parallax-item {
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+
+    /* Separate parallax layers to prevent text overlap */
+    .parallax-item[data-depth="0.2"] {
+      z-index: 5;
+    }
+
+    .parallax-item[data-depth="0.1"] {
+      z-index: 4;
+    }
+
+    .parallax-item[data-depth="0.05"] {
+      z-index: 3;
+    }
+
+    .parallax-item[data-depth="0.15"] {
+      z-index: 2;
+    }
+
+    /* Enhanced 3D effects */
+    .logo-text {
+      transform-style: preserve-3d;
+      animation: float3d 6s ease-in-out infinite;
+      text-shadow: 0 0 40px rgba(255, 255, 255, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
+      filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.4));
+    }
+
+    @keyframes float3d {
+
+      0%,
+      100% {
+        transform: translateY(0px) rotateX(0deg) rotateY(0deg) translateZ(0px);
+      }
+
+      25% {
+        transform: translateY(-15px) rotateX(8deg) rotateY(3deg) translateZ(20px);
+      }
+
+      50% {
+        transform: translateY(-8px) rotateX(-3deg) rotateY(-4deg) translateZ(10px);
+      }
+
+      75% {
+        transform: translateY(-20px) rotateX(5deg) rotateY(2deg) translateZ(30px);
+      }
+    }
+
+    /* Enhanced 3D effects for hero text with glass morphism on text only */
+    .hero-content h1 {
+      transform-style: preserve-3d;
+      text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 255, 255, 0.2);
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3)) blur(0.5px);
+      margin: 0 auto 3.5rem auto;
+      max-width: fit-content;
+      -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-content p {
+      transform-style: preserve-3d;
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.2), 0 0 15px rgba(255, 255, 255, 0.1);
+      filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2)) blur(0.3px);
+      margin: 0 auto 3rem auto;
+      -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.2);
+    }
+
+    /* 3D effects for hero buttons specifically with glass morphism */
+    .hero-section .btn {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section .btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .hero-section .btn:hover::after {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-text {
+      font-size: 6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff, #e0e7ff, rgba(255, 255, 255, 0.8));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      /* Subtle shadow effect */
+      text-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        0 4px 16px rgba(0, 0, 0, 0.05);
+      letter-spacing: 0.1em;
+      position: relative;
+      /* Light 3D effect */
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+      /* Transparency and depth */
+      opacity: 0.95;
+      transform: perspective(1000px) rotateX(2deg) translateZ(20px);
+    }
+
+    /* Subtle shadow layer */
+    .logo-text::before {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.02));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transform: translateZ(-5px) translateY(2px) translateX(1px);
+      opacity: 0.1;
+      filter: blur(1px);
+      z-index: -1;
+    }
+
+    .logo-container {
+      margin-bottom: 2rem;
+    }
+
+    /* Glass morphism for hero section buttons */
+    .hero-section .btn-primary {
+      background: rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-section .btn-primary:hover {
+      background: rgba(59, 130, 246, 0.4);
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-section .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-section .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .status-badge {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      letter-spacing: 0.02em;
+      transition: all 0.3s ease;
+    }
+
+    .status-badge::before {
+      content: '';
+      display: inline-block;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+    }
+
+    .status-ok {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-ok::before {
+      background-color: var(--success-color);
+    }
+
+    .status-partial {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning-color);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-partial::before {
+      background-color: var(--warning-color);
+    }
+
+    .status-not-started {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--error-color);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-not-started::before {
+      background-color: var(--error-color);
+    }
+
+    [data-theme="dark"] .status-ok {
+      background-color: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    [data-theme="dark"] .status-partial {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    [data-theme="dark"] .status-not-started {
+      background-color: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Hide desktop navigation and theme toggle on mobile */
+    @media (max-width: 768px) {
+      #desktop-nav {
+        display: none !important;
+      }
+
+      #theme-toggle {
+        display: none !important;
+      }
+
+      /* Mobile navigation layout */
+      nav .py-6>div {
+        justify-content: space-between !important;
+      }
+    }
+
+    /* Hide mobile elements on desktop */
+    @media (min-width: 769px) {
+      #theme-toggle-mobile {
+        display: none !important;
+      }
+
+      .mobile-menu-toggle {
+        display: none !important;
+      }
+    }
+
+    /* Mobile responsive specific to index page */
+    @media (max-width: 768px) {
+      /* Navigation adjustments */
+      .mobile-menu-toggle {
+        display: block;
+      }
+
+      nav .flex.items-center.gap-5 {
+        display: none;
+      }
+
+      nav .flex.items-center.gap-5.mobile-visible {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        padding: 1rem;
+        box-shadow: var(--shadow-lg);
+        gap: 1rem;
+      }
+
+      /* Typography adjustments */
+      .text-xl {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+      }
+
+      .text-lg {
+        font-size: 1rem;
+        line-height: 1.5rem;
+      }
+
+      .logo-text {
+        font-size: 3rem;
+      }
+
+      /* Grid adjustments */
+      .grid-cols-3 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+      }
+
+      /* Button adjustments */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+      }
+
+      /* Card padding adjustments */
+      .feature-card {
+        padding: 1.5rem;
+      }
+
+      .bg-card.rounded-xl.p-8 {
+        padding: 1.5rem;
+      }
+
+      /* Hero section adjustments */
+      .hero-section {
+        padding-top: 6rem;
+        min-height: 90vh;
+      }
+
+      .hero-content {
+        padding: 0 1rem;
+      }
+
+      /* Flex direction adjustments */
+      .flex.items-center.justify-center.gap-10.flex-wrap {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .flex.items-center.justify-center.gap-6 {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+      }
+
+      /* Status badge adjustments */
+      .status-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+      }
+
+      /* Version badge adjustments */
+      .version-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+      }
+    }
+
+    /* Tablet responsive */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      .logo-text {
+        font-size: 4.5rem;
+      }
+    }
+
+    /* Enhanced styles for changelog content */
+    .changelog-item code {
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .changelog-item strong {
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .github-release-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .github-release-link:hover {
+      background-color: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen" data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+
+  <!-- Hero Section -->
+  <section class="hero-section py-12 parallax-section" style="padding-top: 6rem;">
+    <canvas id="particles-canvas"></canvas>
+    <div class="container text-center hero-content">
+      <div class="logo-container parallax-item" data-depth="0.2">
+        <div class="logo-text" data-text="JSAR">JSAR</div>
+      </div>
+      <h1 class="text-2xl font-bold mb-14 parallax-item" data-depth="0.1">
+        <span class="text-white font-extrabold">Spatial Web</span> Browser Engine
+      </h1>
+      <p class="text-2xl mb-12 text-white/90 max-w-4xl mx-auto leading-relaxed parallax-item" data-depth="0.05">
+        Create immersive Web experiences with HTML5, CSS3, and TypeScript.
+      </p>
+      <div class="flex items-center justify-center gap-10 flex-wrap mb-12 parallax-item" data-depth="0.15">
+        <a href="#documentation" class="btn btn-primary">
+          <span>Get Started</span>
+          <span>→</span>
+        </a>
+        <a href="#features" class="btn btn-secondary">
+          <span>Learn More</span>
+        </a>
+      </div>
+      <div class="flex items-center justify-center gap-6 text-base text-white/70 parallax-item" data-depth="0.1"
+        style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 255, 255, 0.1); filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2)) blur(0.2px); -webkit-text-stroke: 0.2px rgba(255, 255, 255, 0.2); padding: 1rem 2rem;">
+        <span class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-green-400 rounded-full"></span>
+          <span id="latest-version">Latest: Loading...</span>
+        </span>
+        <span>•</span>
+        <span>Apache 2.0 Licensed</span>
+        <span>•</span>
+        <span>Open Source</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Features -->
+  <section id="features" class="py-20">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Why Choose JSAR?</h2>
+        <p class="text-xl text-secondary max-w-3xl mx-auto">
+          JSAR is optimized from the ground up for spatialized spaces, bringing Web technologies to the next computing
+          era.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div class="feature-card rounded-xl p-8">
+          <h3 class="text-2xl font-semibold text-primary mb-4">3D-First Design</h3>
+          <p class="text-lg text-secondary">
+            Mix-rendering multiple Web 2D and 3D contents in a single scene with high performance GPU-driven renderer.
+          </p>
+        </div>
+
+        <div class="feature-card rounded-xl p-8">
+          <h3 class="text-2xl font-semibold text-primary mb-4">Web Standards Compliant</h3>
+          <p class="text-lg text-secondary">
+            Supports WebXR, WebGL, DOM, CSSOM, and other modern Web standards for seamless compatibility.
+          </p>
+        </div>
+
+        <div class="feature-card rounded-xl p-8">
+          <h3 class="text-2xl font-semibold text-primary mb-4">High Performance</h3>
+          <p class="text-lg text-secondary">
+            Built-in ECS architecture achieves GPU-driven rendering for elements with TypeScript-native scripting.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technology Overview -->
+  <section class="py-20 bg-secondary">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Technology Stack</h2>
+        <p class="text-xl text-secondary">
+          Comprehensive support for modern web technologies and 3D graphics APIs.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <!-- Scripting & Modules -->
+        <div class="bg-card rounded-xl p-8 border border-color">
+          <h3 class="text-2xl font-semibold text-primary mb-6">Scripting & Modules</h3>
+          <div class="space-y-8">
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">JavaScript</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">TypeScript</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">ECMAScript Module</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">WebAssembly</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Web Worker</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D Graphics -->
+        <div class="bg-card rounded-xl p-8 border border-color">
+          <h3 class="text-2xl font-semibold text-primary mb-6">3D Graphics</h3>
+          <div class="space-y-8">
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">WebGL 1.0</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">WebGL 2.0</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">WebGPU</span>
+              <span class="status-badge status-not-started">Not Started</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WebXR APIs -->
+        <div class="bg-card rounded-xl p-8 border border-color">
+          <h3 class="text-2xl font-semibold text-primary mb-6">WebXR Device APIs</h3>
+          <div class="space-y-8">
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Spaces & Reference Spaces</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Stereo Rendering</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Input Sources</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Hand Tracking</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classic Rendering -->
+        <div class="bg-card rounded-xl p-8 border border-color">
+          <h3 class="text-2xl font-semibold text-primary mb-6">Classic Rendering</h3>
+          <div class="space-y-8">
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">DOM API</span>
+              <span class="status-badge status-partial">Partially</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">HTML5</span>
+              <span class="status-badge status-partial">Partially</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">CSS3</span>
+              <span class="status-badge status-partial">Partially</span>
+            </div>
+            <div class="flex items-center justify-between py-2">
+              <span class="text-lg text-secondary">Canvas 2D</span>
+              <span class="status-badge status-ok">OK</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documentation -->
+  <section id="documentation" class="py-20">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Documentation</h2>
+        <p class="text-xl text-secondary">
+          Comprehensive guides and references to help you get started with JSAR.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">Quick Start</h3>
+            <p class="text-lg text-secondary mb-6">
+              Get started from a beginner's perspective. Learn how to create HTML files, write sample applications, and
+              debug them.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/quick-start.mdx" class="btn btn-primary">Start Learning →</a>
+          </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">Basic Concepts</h3>
+            <p class="text-lg text-secondary mb-6">
+              Dive into core concepts related to 3D basics, embeddable spaces, input sources and spatial HTML.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/basic-concepts.mdx" class="btn btn-primary">Learn Concepts →</a>
+          </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">Features</h3>
+            <p class="text-lg text-secondary mb-6">
+              Detailed guidelines on JSAR features, including TypeScript, Three.js, Babylon.js, and spatial HTML.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/features.mdx" class="btn btn-primary">Explore Features →</a>
+          </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">References</h3>
+            <p class="text-lg text-secondary mb-6">
+              Technical documentation and specifications to help you learn more about JSAR capabilities.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/references.mdx" class="btn btn-primary">View References →</a>
+          </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">Tutorials</h3>
+            <p class="text-lg text-secondary mb-6">
+              Step-by-step tutorials to help you quickly get started with practical JSAR development.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/tutorials.mdx" class="btn btn-primary">Follow Tutorials →</a>
+          </div>
+        </div>
+
+        <div class="bg-card rounded-xl p-8 border border-color hover:border-accent transition-colors relative h-full">
+          <div class="pb-16">
+            <h3 class="text-2xl font-semibold text-primary mb-4">Developer Tools</h3>
+            <p class="text-lg text-secondary mb-6">
+              Learn about tools to develop and debug Web content for JSAR applications.
+            </p>
+          </div>
+          <div class="absolute bottom-4 right-4">
+            <a href="manual/developer-tools.mdx" class="btn btn-primary">Use Tools →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Updates -->
+  <section id="changelog" class="py-20 bg-secondary">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Version History</h2>
+        <p class="text-xl text-secondary">
+          Stay up to date with the latest features and improvements in JSAR.
+        </p>
+      </div>
+
+      <div class="max-w-5xl mx-auto">
+        <!-- Removed Version Filter Tabs as requested -->
+
+        <!-- Loading State -->
+        <div id="changelog-loading" class="text-center py-16">
+          <div class="inline-flex items-center gap-3 text-secondary">
+            <div class="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading changelog...</span>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="changelog-error" class="text-center py-16 hidden">
+          <div class="text-secondary">
+            <p class="mb-4">Failed to load changelog. Please try again later.</p>
+            <a href="changelogs/alpha.md" class="btn btn-secondary">
+              <span>View Full Changelog</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="changelog-content"></div>
+      </div>
+    </div>
+
+
+    <!-- Removed filter JavaScript as requested -->
+  </section>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <script type="module">
+    import { createNavbar } from './shared/navbar.js';
+    import { createFooter } from './shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from './shared/common.js';
+
+    // Initialize shared components first
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+
+      initParallax();
+      loadLatestVersion();
+      loadChangelog();
+    });
+    // Mobile menu functionality is now handled by shared components
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Enhanced Three.js Particle Effects with 3D Geometry
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas || !window.THREE) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      // Create multiple particle systems with different behaviors
+      const particleSystems = [];
+
+      // System 1: Floating particles
+      const createParticleSystem = (count, size, color, speed) => {
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(count * 3);
+        const velocities = new Float32Array(count * 3);
+        const scales = new Float32Array(count);
+
+        for (let i = 0; i < count; i++) {
+          const i3 = i * 3;
+          positions[i3] = (Math.random() - 0.5) * 25;
+          positions[i3 + 1] = (Math.random() - 0.5) * 25;
+          positions[i3 + 2] = (Math.random() - 0.5) * 25;
+
+          velocities[i3] = (Math.random() - 0.5) * speed;
+          velocities[i3 + 1] = (Math.random() - 0.5) * speed;
+          velocities[i3 + 2] = (Math.random() - 0.5) * speed;
+
+          scales[i] = Math.random() * 0.5 + 0.5;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
+
+        const material = new THREE.PointsMaterial({
+          size: size,
+          color: color,
+          transparent: true,
+          opacity: 0.6,
+          blending: THREE.AdditiveBlending,
+          sizeAttenuation: true
+        });
+
+        const mesh = new THREE.Points(geometry, material);
+        return { mesh, velocities, geometry };
+      };
+
+      // Create multiple particle systems
+      particleSystems.push(createParticleSystem(600, 0.008, 0x00d4ff, 0.015));
+      particleSystems.push(createParticleSystem(400, 0.012, 0x8B5CF6, 0.008));
+      particleSystems.push(createParticleSystem(200, 0.015, 0x06FFA5, 0.005));
+
+      particleSystems.forEach(system => {
+        scene.add(system.mesh);
+      });
+
+      // Add 3D geometric shapes
+      const geometries = [];
+
+      // Floating cubes
+      for (let i = 0; i < 15; i++) {
+        const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const material = new THREE.MeshBasicMaterial({
+          color: Math.random() * 0xffffff,
+          transparent: true,
+          opacity: 0.3,
+          wireframe: true
+        });
+        const cube = new THREE.Mesh(geometry, material);
+
+        cube.position.set(
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 20
+        );
+
+        cube.rotation.set(
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI
+        );
+
+        scene.add(cube);
+        geometries.push(cube);
+      }
+
+      // Floating spheres
+      for (let i = 0; i < 10; i++) {
+        const geometry = new THREE.SphereGeometry(0.05, 8, 6);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x3B82F6,
+          transparent: true,
+          opacity: 0.4,
+          wireframe: true
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+
+        sphere.position.set(
+          (Math.random() - 0.5) * 15,
+          (Math.random() - 0.5) * 15,
+          (Math.random() - 0.5) * 15
+        );
+
+        scene.add(sphere);
+        geometries.push(sphere);
+      }
+
+      camera.position.z = 5;
+      let mouseX = 0, mouseY = 0;
+      let targetMouseX = 0, targetMouseY = 0;
+
+      // Enhanced mouse interaction with additional effects
+      let mouseSpeed = 0;
+      let lastMouseX = 0, lastMouseY = 0;
+
+      document.addEventListener('mousemove', (event) => {
+        const newMouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        const newMouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Calculate mouse speed for dynamic effects
+        mouseSpeed = Math.sqrt(
+          Math.pow(newMouseX - lastMouseX, 2) +
+          Math.pow(newMouseY - lastMouseY, 2)
+        );
+
+        targetMouseX = newMouseX;
+        targetMouseY = newMouseY;
+        lastMouseX = newMouseX;
+        lastMouseY = newMouseY;
+      });
+
+      // Mouse click interaction
+      document.addEventListener('click', (event) => {
+        const clickX = (event.clientX / window.innerWidth) * 2 - 1;
+        const clickY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Create ripple effect on click
+        geometries.forEach((geo, index) => {
+          const distance = Math.sqrt(
+            Math.pow(geo.position.x - clickX * 5, 2) +
+            Math.pow(geo.position.y - clickY * 5, 2)
+          );
+
+          if (distance < 3) {
+            // Animate clicked objects
+            geo.userData.clickTime = Date.now();
+            geo.userData.originalScale = geo.scale.x;
+          }
+        });
+      });
+
+      // Smooth mouse following
+      function updateMousePosition() {
+        mouseX += (targetMouseX - mouseX) * 0.1;
+        mouseY += (targetMouseY - mouseY) * 0.1;
+      }
+
+      // Animation
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const time = Date.now() * 0.001;
+
+        // Update mouse position smoothly
+        updateMousePosition();
+
+        // Mouse speed decay
+        mouseSpeed *= 0.95;
+
+        // Update particle systems with mouse interaction
+        particleSystems.forEach((system, index) => {
+          const positions = system.geometry.attributes.position.array;
+          const velocities = system.velocities;
+          const count = positions.length / 3;
+
+          // Mouse influence on particles (enhanced with speed)
+          const mouseInfluence = 0.02 * (index + 1) * (1 + mouseSpeed * 5);
+          const mouseForceX = mouseX * mouseInfluence;
+          const mouseForceY = mouseY * mouseInfluence;
+
+          // Dynamic color based on mouse speed
+          const speedColor = Math.min(1, mouseSpeed * 10);
+          system.mesh.material.opacity = 0.6 + speedColor * 0.4;
+
+          for (let i = 0; i < count; i++) {
+            const i3 = i * 3;
+
+            // Add mouse-based force to particle movement
+            const distanceToMouse = Math.sqrt(
+              Math.pow(positions[i3] - mouseX * 5, 2) +
+              Math.pow(positions[i3 + 1] - mouseY * 5, 2)
+            );
+            const mouseEffect = Math.max(0, 1 - distanceToMouse / 10);
+
+            positions[i3] += velocities[i3] + mouseForceX * mouseEffect;
+            positions[i3 + 1] += velocities[i3 + 1] + Math.sin(time + i * 0.1) * 0.001 + mouseForceY * mouseEffect;
+            positions[i3 + 2] += velocities[i3 + 2];
+
+            // Boundary checks
+            if (Math.abs(positions[i3]) > 12) velocities[i3] *= -1;
+            if (Math.abs(positions[i3 + 1]) > 12) velocities[i3 + 1] *= -1;
+            if (Math.abs(positions[i3 + 2]) > 12) velocities[i3 + 2] *= -1;
+          }
+
+          system.geometry.attributes.position.needsUpdate = true;
+
+          // Rotate particle systems with mouse influence
+          system.mesh.rotation.y += 0.001 * (index + 1) + mouseX * 0.01;
+          system.mesh.rotation.x += 0.0005 * (index + 1) + mouseY * 0.01;
+        });
+
+        // Animate geometric shapes with mouse interaction
+        geometries.forEach((geo, index) => {
+          // Base rotation with mouse speed influence
+          const rotationSpeed = 0.01 + mouseSpeed * 0.1;
+          geo.rotation.x += rotationSpeed + mouseY * 0.02;
+          geo.rotation.y += rotationSpeed + mouseX * 0.02;
+          geo.rotation.z += mouseX * mouseY * 0.01;
+
+          // Mouse-influenced movement
+          geo.position.y += Math.sin(time + index) * 0.002;
+          geo.position.x += Math.sin(mouseX * 2 + time) * 0.001;
+          geo.position.z += Math.cos(mouseY * 2 + time) * 0.001;
+
+          // Handle click effects
+          if (geo.userData.clickTime) {
+            const clickAge = (Date.now() - geo.userData.clickTime) / 1000;
+            if (clickAge < 1) {
+              // Pulse effect for 1 second after click
+              const pulseScale = 1 + Math.sin(clickAge * Math.PI * 4) * 0.3 * (1 - clickAge);
+              geo.scale.setScalar(pulseScale);
+
+              // Color change on click
+              if (geo.material.color) {
+                const hue = (clickAge * 360) % 360;
+                geo.material.color.setHSL(hue / 360, 0.8, 0.6);
+              }
+            } else {
+              // Reset after animation
+              delete geo.userData.clickTime;
+              geo.scale.setScalar(geo.userData.originalScale || 1);
+            }
+          } else {
+            // Normal scale based on mouse distance
+            const mouseDistance = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
+            const scaleEffect = 1 + mouseDistance * 0.1 + mouseSpeed * 0.5;
+            geo.scale.setScalar(scaleEffect);
+
+            // Dynamic color based on mouse position
+            if (geo.material.color) {
+              const hue = ((mouseX + 1) * 180 + (mouseY + 1) * 180 + time * 50) % 360;
+              geo.material.color.setHSL(hue / 360, 0.7, 0.5);
+            }
+          }
+        });
+
+        // Enhanced camera movement based on mouse
+        camera.position.x += (mouseX * 1.2 - camera.position.x) * 0.08;
+        camera.position.y += (mouseY * 1.2 - camera.position.y) * 0.08;
+
+        // Add subtle camera rotation based on mouse with speed influence
+        camera.rotation.z = mouseX * 0.05 + mouseSpeed * 0.2;
+        camera.lookAt(scene.position);
+
+        // Mouse proximity effects for geometric shapes
+        const mouseWorldPos = new THREE.Vector3(mouseX * 5, mouseY * 5, 0);
+        geometries.forEach((geo, index) => {
+          const distance = geo.position.distanceTo(mouseWorldPos);
+          if (distance < 2 && !geo.userData.clickTime) {
+            // Hover effect - glow and slight attraction
+            const proximityFactor = (2 - distance) / 2;
+            if (geo.material.emissive) {
+              geo.material.emissive.setRGB(
+                proximityFactor * 0.3,
+                proximityFactor * 0.2,
+                proximityFactor * 0.5
+              );
+            }
+
+            // Slight attraction to mouse
+            const direction = mouseWorldPos.clone().sub(geo.position).normalize();
+            geo.position.add(direction.multiplyScalar(proximityFactor * 0.01));
+          } else if (!geo.userData.clickTime) {
+            // Reset emissive when not hovering
+            if (geo.material.emissive) {
+              geo.material.emissive.setRGB(0, 0, 0);
+            }
+          }
+        });
+
+        // Add mouse trail effect to particles
+        if (mouseSpeed > 0.01) {
+          particleSystems.forEach((system, index) => {
+            const positions = system.geometry.attributes.position.array;
+            const count = positions.length / 3;
+
+            // Create trail effect by moving some particles towards mouse
+            for (let i = 0; i < Math.min(count, 10); i++) {
+              const i3 = i * 3;
+              const trailStrength = mouseSpeed * 0.1;
+              positions[i3] += (mouseX * 5 - positions[i3]) * trailStrength;
+              positions[i3 + 1] += (mouseY * 5 - positions[i3 + 1]) * trailStrength;
+            }
+
+            system.geometry.attributes.position.needsUpdate = true;
+          });
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Parallax scrolling effect
+    function initParallax() {
+      const parallaxItems = document.querySelectorAll('.parallax-item');
+
+      function updateParallax() {
+        const scrollTop = window.pageYOffset;
+        const windowHeight = window.innerHeight;
+
+        parallaxItems.forEach(item => {
+          const depth = parseFloat(item.dataset.depth) || 0.1;
+          const rect = item.getBoundingClientRect();
+          const elementTop = rect.top + scrollTop;
+          const elementHeight = rect.height;
+
+          // Calculate if element is in viewport
+          if (elementTop < scrollTop + windowHeight && elementTop + elementHeight > scrollTop) {
+            // Reduce parallax intensity to prevent text overlap
+            const yPos = -(scrollTop - elementTop) * depth * 0.3;
+            const rotateX = (scrollTop - elementTop) * depth * 0.02;
+            const rotateY = (scrollTop - elementTop) * depth * 0.01;
+
+            item.style.transform = `translate3d(0, ${yPos}px, 0) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+          }
+        });
+      }
+
+      // Throttled scroll handler
+      let ticking = false;
+      function handleScroll() {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            updateParallax();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }
+
+      window.addEventListener('scroll', handleScroll);
+      updateParallax(); // Initial call
+    }
+
+    // Theme Toggle and Mobile Menu Functionality are now handled by shared components
+
+    // Initialize effects after page load
+    window.addEventListener('load', () => {
+      initParticles();
+      initParallax();
+    });
+
+    // Dynamic Version Loading
+    async function loadLatestVersion() {
+      try {
+        const response = await fetch('https://api.github.com/repos/m-creativelab/jsar-runtime/releases/latest');
+        const data = await response.json();
+        const versionElement = document.getElementById('latest-version');
+        if (versionElement && data.tag_name) {
+          versionElement.textContent = `Latest: ${data.tag_name}`;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch latest version:', error);
+        const versionElement = document.getElementById('latest-version');
+        if (versionElement) {
+          versionElement.textContent = 'Latest: v0.8.2'; // Fallback
+        }
+      }
+    }
+
+    // Dynamic Changelog Loading
+    async function loadChangelog() {
+      const loadingElement = document.getElementById('changelog-loading');
+      const errorElement = document.getElementById('changelog-error');
+      const contentElement = document.getElementById('changelog-content');
+
+      try {
+        const response = await fetch('./changelogs/alpha.md');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const markdownText = await response.text();
+
+        if (markdownText) {
+          // Parse markdown and convert to HTML
+          const htmlContent = parseMarkdownChangelog(markdownText);
+
+          // Hide loading state
+          if (loadingElement) loadingElement.style.display = 'none';
+
+          // Hide error state
+          if (errorElement) errorElement.style.display = 'none';
+
+          // Show content
+          if (contentElement) {
+            contentElement.innerHTML = htmlContent + `
+            <div class="text-center mt-8">
+              <a href="changelogs/alpha.md" class="btn btn-secondary">
+                <span>View Full Changelog</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </a>
+            </div>`;
+          }
+
+          // Reinitialize changelog filter functionality
+          initChangelogFilter();
+        }
+      } catch (error) {
+        console.warn('Failed to load changelog:', error);
+
+        // Hide loading state
+        if (loadingElement) loadingElement.style.display = 'none';
+
+        // Show error state
+        if (errorElement) errorElement.classList.remove('hidden');
+      }
+    }
+
+    // Parse Markdown Changelog to HTML
+    function parseMarkdownChangelog(markdown) {
+      const lines = markdown.split('\n');
+      let html = '';
+      let currentVersion = null;
+      let currentSection = null;
+      let listStack = []; // Stack to track nested lists
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmedLine = line.trim();
+
+        // Skip main title and empty lines
+        if (trimmedLine.startsWith('# JSAR Alpha Changelog') || trimmedLine === '' || (trimmedLine.startsWith('The ') && trimmedLine.includes('alpha version'))) continue;
+
+        // Version headers (## v0.8.2)
+        if (trimmedLine.match(/^## v\d+\.\d+\.\d+/)) {
+          // Close any open lists
+          while (listStack.length > 0) {
+            html += '</ul>';
+            listStack.pop();
+          }
+
+          if (currentVersion) {
+            html += '</div></div>';
+          }
+
+          const version = trimmedLine.replace('## ', '');
+          const isLatest = version === 'v0.8.2';
+          const versionClass = getVersionClass(version);
+          const githubReleaseUrl = `https://github.com/M-CreativeLab/jsar-runtime/releases/tag/amidala-${version}`;
+
+          html += `<div class="changelog-item bg-card rounded-xl p-6 border border-color mb-6 shadow-sm hover:shadow-lg transition-all" data-version="${versionClass}" data-type="${isLatest ? 'latest' : ''}">`;
+          html += `<div class="flex items-center gap-4 mb-4">`;
+          html += `<div class="version-badge ${isLatest ? 'latest' : ''}">${version}</div>`;
+          html += `<a href="${githubReleaseUrl}" target="_blank" class="github-release-link">`;
+          html += `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>`;
+          html += `GitHub Release</a>`;
+          if (isLatest) {
+            html += `<div class="text-sm text-tertiary">Latest Release</div>`;
+          }
+          html += `<div class="text-xs text-tertiary ml-auto">${getVersionDate(version)}</div>`;
+          html += `</div><div>`;
+
+          currentVersion = version;
+          currentSection = null;
+        }
+        // Section headers (### Fixes, ### Improvements, etc.)
+        else if (trimmedLine.startsWith('### ')) {
+          // Close any open lists
+          while (listStack.length > 0) {
+            html += '</ul>';
+            listStack.pop();
+          }
+
+          const sectionTitle = trimmedLine.replace('### ', '');
+          html += `<h3 class="text-lg font-semibold text-primary mb-2 mt-6">${sectionTitle}</h3>`;
+          currentSection = sectionTitle;
+        }
+        // Subsection headers (#### Rendering Enhancements)
+        else if (trimmedLine.startsWith('#### ')) {
+          // Close any open lists
+          while (listStack.length > 0) {
+            html += '</ul>';
+            listStack.pop();
+          }
+
+          const subsectionTitle = trimmedLine.replace('#### ', '');
+          html += `<h4 class="text-base font-medium text-primary mb-2 mt-2">${subsectionTitle}</h4>`;
+        }
+        // List items with various indentation levels
+        else if (trimmedLine.startsWith('- ')) {
+          const indentLevel = getIndentLevel(line);
+          let content = escapeHtml(trimmedLine.replace('- ', ''));
+
+          // Process bold text (**text**)
+          content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+          // Process inline code blocks (`code`)
+          content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+          // Adjust list stack based on indentation
+          adjustListStack(indentLevel);
+
+          // Open new list if needed
+          if (listStack.length === 0 || listStack[listStack.length - 1] < indentLevel) {
+            const listClass = indentLevel === 0 ? 'text-secondary space-y-2' : 'text-secondary space-y-1 mt-2 mb-2';
+            html += `<ul class="${listClass}">`;
+            listStack.push(indentLevel);
+          }
+
+          // Enhanced indentation for nested lists with better spacing
+          let marginClass = '';
+          if (indentLevel === 1) {
+            marginClass = 'ml-6 pl-4';
+          } else if (indentLevel === 2) {
+            marginClass = 'ml-12 pl-6';
+          } else if (indentLevel >= 3) {
+            marginClass = 'ml-20 pl-8';
+          }
+
+          const bulletStyle = indentLevel === 0 ? '•' : indentLevel === 1 ? '-' : '◦';
+          const textSize = indentLevel > 1 ? 'text-sm' : '';
+          const textColor = indentLevel > 1 ? 'text-tertiary' : 'text-secondary';
+
+          html += `<li class="flex items-start gap-2 ${marginClass}">`;
+          html += `<span class="text-accent flex-shrink-0">${bulletStyle}</span>`;
+          html += `<span class="${textSize} ${textColor}">${content}</span>`;
+          html += `</li>`;
+        }
+      }
+
+      // Close any remaining open lists
+      while (listStack.length > 0) {
+        html += '</ul>';
+        listStack.pop();
+      }
+
+      if (currentVersion) {
+        html += '</div></div>';
+      }
+
+      return html;
+
+      // Helper function to get indentation level
+      function getIndentLevel(line) {
+        const match = line.match(/^(\s*)- /);
+        if (!match) return 0;
+        return Math.floor(match[1].length / 2); // Assuming 2 spaces per indent level
+      }
+
+      // Helper function to adjust list stack based on current indentation
+      function adjustListStack(currentLevel) {
+        // Close lists that are deeper than current level
+        while (listStack.length > 0 && listStack[listStack.length - 1] > currentLevel) {
+          html += '</ul>';
+          listStack.pop();
+        }
+      }
+    }
+
+    // HTML Escape function
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Helper functions
+    function getVersionClass(version) {
+      if (version.startsWith('v0.8')) return 'v0.8';
+      if (version.startsWith('v0.7')) return 'v0.7';
+      if (version.startsWith('v0.6')) return 'v0.6';
+      if (version.startsWith('v0.5')) return 'v0.5';
+      if (version.startsWith('v0.4')) return 'v0.4';
+      return 'other';
+    }
+
+    // Removed getSectionEmoji function as requested - no icons in markdown rendering
+
+    function getVersionDate(version) {
+      const dateMap = {
+        'v0.8.2': '2023-12-15',
+        'v0.8.1': '2023-11-30',
+        'v0.8.0': '2023-10-15',
+        'v0.7.2': '2023-09-20',
+        'v0.7.1': '2023-08-15',
+        'v0.7.0': '2023-07-10',
+        'v0.6.0': '2023-06-01'
+      };
+      return dateMap[version] || '2023-01-01';
+    }
+
+    // Removed changelog filter functionality as requested
+
+    // Theme toggle and mobile menu functionality are now handled by shared components
+
+    // Initialize effects after page load
+    window.addEventListener('load', () => {
+      initParticles();
+      initParallax();
+    });
+  </script>
+</body>
+
+</html>

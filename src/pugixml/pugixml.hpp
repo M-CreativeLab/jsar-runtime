@@ -219,6 +219,9 @@ namespace pugi
 	// This flag is off by default.
 	const unsigned int parse_merge_pcdata = 0x4000;
 
+	// This flag determines if unquoted attribute values are allowed (HTML-style parsing). This flag is off by default.
+	const unsigned int parse_unquoted_attributes = 0x8000;
+
 	// The default parsing mode.
 	// Elements, PCDATA and CDATA sections are added to the DOM tree, character/reference entities are expanded,
 	// End-of-Line characters are normalized, attribute values are normalized using CDATA normalization rules.

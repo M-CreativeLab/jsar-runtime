@@ -1,0 +1,84 @@
+{
+  "api": {
+    "Storage": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Storage",
+        "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#the-storage-interface",
+        "support": {
+          "jsar": {
+            "version_added": false
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "getItem": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Storage/getItem",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-getitem",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "setItem": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Storage/setItem",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-setitem",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "removeItem": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Storage/removeItem",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-removeitem",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "clear": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Storage/clear",
+          "spec_url": "https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-clear",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

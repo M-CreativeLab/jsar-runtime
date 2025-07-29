@@ -1,0 +1,22 @@
+{
+  "css": {
+    "properties": {
+      "display": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/CSS/display",
+          "spec_url": "https://www.w3.org/TR/css-display-3/#display-property",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

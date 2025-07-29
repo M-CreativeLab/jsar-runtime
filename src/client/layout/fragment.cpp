@@ -40,8 +40,11 @@ namespace client_layout
     newRect.x() = left() + childFragment.left();
     newRect.y() = top() + childFragment.top();
 
-    // Returns a new fragment.
-    return Fragment(newRect);
+    // Returns a new fragment with the positioned rectangle.
+    Fragment newFragment(newRect);
+    newFragment.border_ = childFragment.border_;
+    newFragment.padding_ = childFragment.padding_;
+    return newFragment;
   }
 
   void Fragment::moveBy(float x, float y, float z)

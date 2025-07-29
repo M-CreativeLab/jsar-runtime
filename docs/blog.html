@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSAR Blog - Technical Insights and Community Updates</title>
+  <link rel="stylesheet" href="shared/global.css">
+  <style>
+    /* Blog-specific styles */
+    .blog-post-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .blog-post-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .date-badge {
+      background: var(--bg-secondary);
+      color: var(--text-tertiary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .topic-tag {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .back-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .back-link:hover {
+      background-color: var(--bg-secondary);
+      color: var(--accent-color);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen" data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+
+  <!-- Header Section -->
+  <section class="py-20 bg-gradient"
+    style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 50%, rgba(51, 65, 85, 0.92) 100%); color: white; padding-top: 6rem;">
+    <div class="container text-center">
+      <div class="mb-6">
+        <a href="index.html" class="back-link" style="color: rgba(255, 255, 255, 0.7);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5" />
+            <path d="m12 19-7-7 7-7" />
+          </svg>
+          Back to Home
+        </a>
+      </div>
+      <h1 class="text-5xl font-bold mb-6" style="color: white;">JSAR Blog</h1>
+      <p class="text-xl mb-8" style="color: rgba(255, 255, 255, 0.9); max-width: 3xl; margin: 0 auto;">
+        Technical insights, community updates, and deep dives into the spatial web revolution
+      </p>
+    </div>
+  </section>
+
+  <!-- Blog Posts -->
+  <section class="py-20">
+    <div class="container">
+      <div class="flex flex-col gap-12">
+        <!-- Latest Posts: sort by date -->
+
+        <!-- Stereo Image Rendering Post -->
+        <article class="feature-card blog-post-card rounded-xl p-8">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="date-badge">January 2025</div>
+            <div class="topic-tag">Technical Deep Dive</div>
+            <div class="topic-tag">AI Collaboration</div>
+          </div>
+
+          <h2 class="text-3xl font-bold text-primary mb-4">
+            <span class="hover:text-accent transition-colors" style="cursor: pointer;">
+              I Added Stereo &lt;img&gt; Rendering to Our Browser Engine — With Copilot
+            </span>
+          </h2>
+
+          <p class="text-lg text-secondary mb-6">
+            A technical journey documenting the implementation of native stereo image rendering support in JSAR Runtime, 
+            highlighting the engineering challenge and collaboration with GitHub Copilot to make spatial computing accessible to web developers.
+          </p>
+
+          <div class="mb-6">
+            <h4 class="font-semibold text-primary mb-3">What's covered:</h4>
+            <ul class="space-y-2 text-secondary">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Native spatial="stereo" attribute implementation
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                HTMLImageElement and renderer modifications
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                GPU-efficient dual eye rendering
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Real-world AI pair programming insights
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Complete implementation examples
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/blogs/stereo-img-rendering-copilot.md"
+              class="btn btn-primary" target="_blank">
+              <span>READ MORE</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- Community Update Post -->
+        <article class="feature-card blog-post-card rounded-xl p-8">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="date-badge">July 2025</div>
+            <div class="topic-tag">Community Update</div>
+          </div>
+
+          <h2 class="text-3xl font-bold text-primary mb-4">
+            <span class="hover:text-accent transition-colors" style="cursor: pointer;">
+              Community Update - July 2025
+            </span>
+          </h2>
+
+          <p class="text-lg text-secondary mb-6">
+            Our latest community update highlighting recent v0.8.x developments, featuring CSS gradient implementation,
+            performance optimizations, and developer experience improvements.
+          </p>
+
+          <div class="mb-6">
+            <h4 class="font-semibold text-primary mb-3">What's new:</h4>
+            <ul class="space-y-2 text-secondary">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-success rounded-full"></span>
+                CSS gradient support (v0.8.2)
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-success rounded-full"></span>
+                Rendering pipeline overhaul (v0.8.0)
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-success rounded-full"></span>
+                Performance optimizations
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-success rounded-full"></span>
+                Getting started guide
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-success rounded-full"></span>
+                Community engagement
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/blogs/community-update-july-2025.md"
+              class="btn btn-primary" target="_blank">
+              <span>READ MORE</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- The Spatial Web Revolution Post -->
+        <article class="feature-card blog-post-card rounded-xl p-8">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="date-badge">December 2024</div>
+            <div class="topic-tag">Technical Deep Dive</div>
+          </div>
+
+          <h2 class="text-3xl font-bold text-primary mb-4">
+            <span class="hover:text-accent transition-colors" style="cursor: pointer;">
+              The Spatial Web Revolution: How JSAR is Bridging Web and XR
+            </span>
+          </h2>
+
+          <p class="text-lg text-secondary mb-6">
+            A comprehensive deep dive into JSAR's role in bringing web technologies to spatial computing. Learn about
+            recent breakthroughs including CSS gradient support, rendering pipeline improvements, and how JSAR is making
+            spatial computing accessible to web developers worldwide.
+          </p>
+
+          <div class="mb-6">
+            <h4 class="font-semibold text-primary mb-3">Topics covered:</h4>
+            <ul class="space-y-2 text-secondary">
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Technical architecture overview
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                ECS and multi-backend rendering
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                WebXR API integration
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Developer experience features
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full"></span>
+                Cross-platform support progress
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/blogs/blog-spatial-web-revolution.md"
+              class="btn btn-primary" target="_blank">
+              <span>READ MORE</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Archive Section -->
+  <section class="py-20 bg-secondary">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Archive</h2>
+        <p class="text-xl text-secondary">
+          All blog posts are organized in the <a href="blogs/" class="text-accent hover:underline">blogs directory</a>
+          for easy browsing.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stay Connected Section -->
+  <section class="py-20">
+    <div class="container">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-primary mb-6">Stay Connected</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div class="feature-card rounded-xl p-6 text-center">
+            <h3 class="text-xl font-semibold text-primary mb-4">Follow Development</h3>
+            <p class="text-secondary mb-4">Stay up to date with the latest development updates and releases</p>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime" class="btn btn-secondary" target="_blank">
+              <span>GitHub Repository</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
+          </div>
+
+          <div class="feature-card rounded-xl p-6 text-center">
+            <h3 class="text-xl font-semibold text-primary mb-4">Join the Community</h3>
+            <p class="text-secondary mb-4">Report issues, request features, and participate in discussions</p>
+            <a href="https://github.com/M-CreativeLab/jsar-runtime/discussions" class="btn btn-secondary"
+              target="_blank">
+              <span>Community Discussions</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7" />
+                <path d="M7 7h10v10" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <script type="module">
+    import { createNavbar } from './shared/navbar.js';
+    import { createFooter } from './shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from './shared/common.js';
+
+    // Initialize shared components (navbar and footer)
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+    });
+  </script>
+</body>
+
+</html>

@@ -2913,6 +2913,84 @@ PUGI_IMPL_NS_BEGIN
 		}
 	};
 
+	PUGI_IMPL_FN char_t* parse_unquoted_attribute(char_t* s, strconv_attribute_t strconv_attribute)
+	{
+		char_t* value_start = s;
+		
+		// Scan until we hit whitespace, quotes, '=', '<', '>', '/', or end of string
+		while (*s && !PUGI_IMPL_IS_CHARTYPE(*s, ct_space) && 
+		       *s != '"' && *s != '\'' && *s != '=' && *s != '<' && *s != '>' && *s != '/')
+		{
+			++s;
+		}
+		
+		// If we didn't find any value, return null
+		if (s == value_start) return NULL;
+		
+		if (*s == 0)
+		{
+			// End of string - already null terminated
+			return s;
+		}
+		else if (PUGI_IMPL_IS_CHARTYPE(*s, ct_space))
+		{
+			// Terminated by whitespace - we need to null-terminate the attribute value
+			// but be careful not to break subsequent whitespace skipping
+			
+			// Check if there are multiple whitespace characters
+			char_t* space_start = s;
+			char_t* space_end = s;
+			while (PUGI_IMPL_IS_CHARTYPE(*space_end, ct_space)) ++space_end;
+			
+			if (space_end > space_start + 1)
+			{
+				// Multiple spaces - safe to null-terminate the first one
+				*space_start = 0;
+				return space_start + 1;
+			}
+			else
+			{
+				// Single space - we need to be more careful
+				// Let's use the memmove approach to insert a null terminator
+				// without consuming the space character
+				
+				// Find the end of the current string
+				char_t* end = space_end;
+				while (*end) end++;
+				
+				// Move everything from the space onwards one position to the right
+				memmove(space_start + 1, space_start, (end - space_start + 1) * sizeof(char_t));
+				
+				// Now we can safely null-terminate at the space position
+				*space_start = 0;
+				
+				// Return position after the null terminator, which now points to the preserved space
+				return space_start + 1;
+			}
+		}
+		else 
+		{
+			// Terminated by delimiter like '>', '/', etc.
+			// We cannot overwrite this character as the main loop needs it
+			// We need to create space for a null terminator
+			// Let's use a simple approach: move everything after the value one position right
+			// to make room for a null terminator
+			
+			// First, find the end of the current string
+			char_t* end = s;
+			while (*end) end++;
+			
+			// Move everything from s onwards one position to the right
+			memmove(s + 1, s, (end - s + 1) * sizeof(char_t));
+			
+			// Now we can safely null-terminate at s
+			*s = 0;
+			
+			// Return position after the null terminator, which now points to the original delimiter
+			return s + 1;
+		}
+	}
+
 	PUGI_IMPL_FN strconv_attribute_t get_strconv_attribute(unsigned int optmask)
 	{
 		PUGI_IMPL_STATIC_ASSERT(parse_escapes == 0x10 && parse_eol == 0x20 && parse_wconv_attribute == 0x40 && parse_wnorm_attribute == 0x80);
@@ -3442,15 +3520,29 @@ PUGI_IMPL_NS_BEGIN
 											// everything else will be detected
 											if (PUGI_IMPL_IS_CHARTYPE(*s, ct_start_symbol)) PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
 										}
+										else if (PUGI_IMPL_OPTSET(parse_unquoted_attributes))
+										{
+											// Handle unquoted attribute values (HTML-style)
+											a->value = s; // Save the offset.
+											
+											s = parse_unquoted_attribute(s, strconv_attribute);
+											
+											if (!s) PUGI_IMPL_THROW_ERROR(status_bad_attribute, a->value);
+											
+											// Check for invalid characters after unquoted value
+											if (PUGI_IMPL_IS_CHARTYPE(*s, ct_start_symbol)) PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
+										}
 										else PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
 									}
-									else	// '<script async'
+									else // '<... #="..." ...>
 									{
 										a->value = a->name;
 
-										// Step back
-										--s;
-										ch = *s;
+										// Step back to the `ch`
+										// It is set to 0 by PUGI_IMPL_ENDSEG() above, so we need to reset the last character to '>' so 
+										// that the next loop iteration will handle it correctly.
+										*(s - 1) = ch;
+										s--;
 									}
 								}
 								else if (*s == '/')
@@ -3472,8 +3564,6 @@ PUGI_IMPL_NS_BEGIN
 								}
 								else if (*s == '>')
 								{
-									++s;
-
 									if (is_void_tag(cursor->name))
 									{
 										PUGI_IMPL_POPNODE();
@@ -3481,7 +3571,7 @@ PUGI_IMPL_NS_BEGIN
 									}
 									else if (is_pcdata_tag(cursor->name))
 									{
-										s = parse_pcdata_tag(s, cursor);
+										s = parse_pcdata_tag(s + 1, cursor);
 
 										if (!*s) break;
 										goto LOC_TAG;

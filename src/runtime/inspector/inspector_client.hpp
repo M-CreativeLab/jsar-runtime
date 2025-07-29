@@ -6,6 +6,7 @@
 #include <rapidjson/document.h>
 
 class TrInspector;
+class CdpHandler;
 class TrInspectorClient
 {
   friend class TrInspectorServer;
@@ -21,6 +22,12 @@ class TrInspectorClient
     HEAD,
   };
 
+  enum class ConnectionType
+  {
+    HTTP,
+    WEBSOCKET
+  };
+
 public:
   TrInspectorClient(int fd, std::shared_ptr<TrInspector> inspector);
   ~TrInspectorClient();
@@ -30,9 +37,17 @@ public:
   {
     return url_;
   }
+  const std::string clientId() const
+  {
+    return clientId_;
+  }
   const http::HeaderFields &headers() const
   {
     return headers_;
+  }
+  CdpHandler *getCdpHandler() const
+  {
+    return cdpHandler_.get();
   }
 
 public:
@@ -40,12 +55,24 @@ public:
   void respond(http::Response response);
   void respond(uint32_t code, const std::string &text);
   void respond(uint32_t code, const rapidjson::Document &json);
+  bool isWebSocket() const
+  {
+    return connectionType_ == ConnectionType::WEBSOCKET;
+  }
+  void sendWebSocketMessage(const std::string &message);
 
 private:
   bool setNonBlocking();
   void recv();
   void send(const std::string &data);
   void end();
+  void sendHttpErrorResponse(uint32_t code, const std::string &message);
+
+  // WebSocket related methods
+  bool tryUpgradeToWebSocket();
+  void handleWebSocketFrame();
+  void sendWebSocketFrame(const std::string &data);
+  std::string generateWebSocketAcceptKey(const std::string &webSocketKey);
 
 private:
   void onUrl(const char *at, size_t length);
@@ -68,9 +95,11 @@ private:
 private:
   int fd_ = -1;
   std::weak_ptr<TrInspector> inspector_;
+  std::unique_ptr<CdpHandler> cdpHandler_;
   bool shouldClose_ = false;
   std::vector<char> buffer_;
   std::string url_;
+  std::string clientId_;
   std::string methodStr_;
   HTTPMethod method_;
   std::string currentHeaderField_;
@@ -78,4 +107,6 @@ private:
   http::HeaderFields headers_;
   llhttp_t httpParser_;
   llhttp_settings_t parsingSettings_;
+  ConnectionType connectionType_ = ConnectionType::HTTP;
+  std::vector<char> websocketBuffer_;
 };

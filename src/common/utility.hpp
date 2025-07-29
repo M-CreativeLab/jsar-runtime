@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <concepts>
+#include <memory>
 #include <unistd.h>
 
 #ifndef TR_UNLIKELY
@@ -191,6 +192,52 @@ inline std::string ToCapitalize(std::string str)
     }
   }
   return str;
+}
+
+/**
+ * Base64 encode a byte array.
+ *
+ * @param input The byte array to encode.
+ * @returns The base64 encoded string.
+ */
+template <size_t N>
+inline std::string Base64Encode(const std::array<uint8_t, N> &input)
+{
+  const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  std::string result;
+
+  for (size_t i = 0; i < input.size(); i += 3)
+  {
+    uint32_t val = 0;
+    int padding = 0;
+
+    for (int j = 0; j < 3; j++)
+    {
+      val <<= 8;
+      if (i + j < input.size())
+      {
+        val |= input[i + j];
+      }
+      else
+      {
+        padding++;
+      }
+    }
+
+    for (int j = 0; j < 4; j++)
+    {
+      if (j < 4 - padding)
+      {
+        result += chars[(val >> (18 - j * 6)) & 0x3F];
+      }
+      else
+      {
+        result += '=';
+      }
+    }
+  }
+
+  return result;
 }
 
 namespace transmute::common

@@ -83,7 +83,12 @@ namespace client_layout
       Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity());
       imageComponent.bitmap = srcBitmap;
 
+      // Update spatial information from the HTML element
+      assert(dom::Node::Is<dom::HTMLImageElement>(node()));
+      auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
+
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
+      webContent.setSpatialized(imageElement.isSpatial());
       webContent.setDirty(true); // Mark the content as dirty to update the texture.
     };
     useSceneWithCallback(setBitmap);
@@ -135,7 +140,7 @@ namespace client_layout
 
     bool shouldVisible = fragment.visibleInViewport(viewRef().viewport);
     if (shouldVisible)
-      Node::AsChecked<dom::HTMLImageElement>(node()).loadImageAsync();
+      Node::AsChecked<dom::HTMLImageElement>(node()).loadImage();
 
     setVisible(shouldVisible);
   }

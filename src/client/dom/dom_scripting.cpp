@@ -121,6 +121,28 @@ namespace dom
     info.GetReturnValue().Set(resultArray);
   }
 
+  void DOMScriptingContext::WindowProxyPropertySetterCallback(
+    v8::Local<v8::Name> property,
+    v8::Local<v8::Value> value,
+    const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    // Get the global object (window object)
+    v8::Local<v8::Object> global = context->Global();
+
+    // Set the property on the global object
+    if (global->Set(context, property, value).IsNothing())
+    {
+      // Handle error case - property couldn't be set
+      return;
+    }
+
+    // Return the value that was set
+    info.GetReturnValue().Set(value);
+  }
+
   void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     auto isolate = info.GetIsolate();
@@ -152,7 +174,7 @@ namespace dom
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
-      std::cerr << "Failed to get the scripting context object" << std::endl;
+      cerr << "Failed to get the scripting context object" << endl;
       return v8::MaybeLocal<v8::Promise>();
     }
 
@@ -186,14 +208,14 @@ namespace dom
       }
       if (dependent == nullptr)
       {
-        std::cerr << "request for '" << specifierStr << "' is from invalid module" << std::endl;
+        cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
         return v8::MaybeLocal<v8::Promise>();
       }
 
       auto moduleUrl = dependent->getUrlBySpecifier(specifierStr);
       if (moduleUrl == "")
       {
-        std::cerr << "Failed to create URL for '" << specifierStr << "'" << std::endl;
+        cerr << "Failed to create URL for '" << specifierStr << "'" << endl;
         return v8::MaybeLocal<v8::Promise>();
       }
 
@@ -265,14 +287,14 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                                  \
-  try                                                                                                                    \
-  {                                                                                                                      \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                         \
-  }                                                                                                                      \
-  catch (const std::exception &e)                                                                                        \
-  {                                                                                                                      \
-    std::cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << std::endl; \
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                        \
+  try                                                                                                          \
+  {                                                                                                            \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                               \
+  }                                                                                                            \
+  catch (const exception &e)                                                                                   \
+  {                                                                                                            \
+    cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << endl; \
   }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \
@@ -503,14 +525,14 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                                    \
-  try                                                                                                                      \
-  {                                                                                                                        \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                           \
-  }                                                                                                                        \
-  catch (const std::exception &e)                                                                                          \
-  {                                                                                                                        \
-    std::cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << std::endl; \
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                          \
+  try                                                                                                            \
+  {                                                                                                              \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                 \
+  }                                                                                                              \
+  catch (const exception &e)                                                                                     \
+  {                                                                                                              \
+    cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << endl; \
   }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \
@@ -598,7 +620,7 @@ namespace dom
     return script;
   }
 
-  bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript)
+  bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const string &source, bool isTypeScript)
   {
     assert(isContextInitialized);
     auto context = v8ContextStore.Get(isolate);
@@ -768,7 +790,7 @@ namespace dom
       }
       else
       {
-        std::cerr << "Failed to load the module: " << module->url << ", the extension is not supported." << std::endl;
+        cerr << "Failed to load the module: " << module->url << ", the extension is not supported." << endl;
       }
     };
     runtimeContext->fetchArrayBufferLikeResource(url, onModuleSourceLoaded);
@@ -802,12 +824,12 @@ namespace dom
         {
           v8::Local<v8::Message> message = tryCatch.Message();
           v8::String::Utf8Value messageUtf8(isolate, message->Get());
-          std::cerr << "Failed to call the event listener: " << listenerName << ", ";
-          std::cerr << "occurred an error: " << *messageUtf8 << std::endl;
+          cerr << "Failed to call the event listener: " << listenerName << ", ";
+          cerr << "occurred an error: " << *messageUtf8 << endl;
         }
         else
         {
-          std::cerr << "Failed to call the event listener: " << listenerName << std::endl;
+          cerr << "Failed to call the event listener: " << listenerName << endl;
         }
       }
     }
@@ -825,7 +847,7 @@ namespace dom
 
     v8::NamedPropertyHandlerConfiguration namedConfig(
       WindowProxyPropertyGetterCallback,
-      nullptr,
+      WindowProxyPropertySetterCallback, // Add the setter callback
       nullptr,
       nullptr,
       WindowProxyPropertyEnumeratorCallback,
@@ -914,9 +936,9 @@ namespace dom
       {
         scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
       }
-      catch (const std::exception &e)
+      catch (const exception &e)
       {
-        std::cerr << "Failed to compile TypeScript: " << e.what() << std::endl;
+        cerr << "Failed to compile TypeScript: " << e.what() << endl;
         return false;
       }
     }
@@ -941,11 +963,11 @@ namespace dom
     }
     else
     {
-      std::cerr << "Failed to compile script" << std::endl;
-      std::cerr << "  URL: " << url << std::endl;
-      std::cerr << "  Source: " << std::endl;
-      std::cerr << scriptSourceString << std::endl;
-      throw std::runtime_error("Failed to compile script(" + url + ")");
+      cerr << "Failed to compile script" << endl;
+      cerr << "  URL: " << url << endl;
+      cerr << "  Source: " << endl;
+      cerr << scriptSourceString << endl;
+      throw runtime_error("Failed to compile script(" + url + ")");
     }
   }
 
@@ -971,15 +993,15 @@ namespace dom
         if (!stackTrace.IsEmpty())
         {
           v8::String::Utf8Value stackTraceUtf8(isolate, stackTrace);
-          std::string stackTraceStr(*stackTraceUtf8, stackTraceUtf8.length());
-          std::cerr << "# " << stackTraceStr << std::endl;
+          string stackTraceStr(*stackTraceUtf8, stackTraceUtf8.length());
+          cerr << "# " << stackTraceStr << endl;
         }
         else
         {
           v8::Local<v8::Message> message = tryCatch.Message();
           v8::String::Utf8Value messageUtf8(isolate, message->Get());
-          std::string messageStr(*messageUtf8, messageUtf8.length());
-          std::cerr << "# Error: " << messageStr << std::endl;
+          string messageStr(*messageUtf8, messageUtf8.length());
+          cerr << "# Error: " << messageStr << endl;
         }
       }
     }
@@ -998,19 +1020,19 @@ namespace dom
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
-      std::cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << std::endl;
+      cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << endl;
       return v8::MaybeLocal<v8::Module>();
     }
 
     auto dependent = scriptingContext->getModuleFromV8(referrer);
     if (dependent == nullptr)
     {
-      std::cerr << "request for '" << specifierStr << "' is from invalid module" << std::endl;
+      cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
       return v8::MaybeLocal<v8::Module>();
     }
     if (dependent->resolveCache.count(specifierStr) != 1)
     {
-      std::cerr << "request for '" << specifierStr << "' is not in cache" << std::endl;
+      cerr << "request for '" << specifierStr << "' is not in cache" << endl;
       return v8::MaybeLocal<v8::Module>();
     }
 
@@ -1087,9 +1109,9 @@ namespace dom
       {
         scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
       }
-      catch (const std::exception &e)
+      catch (const exception &e)
       {
-        std::cerr << "Failed to compile TypeScript: " << e.what() << std::endl;
+        cerr << "Failed to compile TypeScript: " << e.what() << endl;
         return false;
       }
     }
@@ -1109,11 +1131,11 @@ namespace dom
 
     if (!v8::ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
     {
-      std::cerr << "#" << std::endl;
-      std::cerr << "# Occurred module compilation error" << std::endl;
-      std::cerr << "# URL: " << url << std::endl;
-      std::cerr << "#" << std::endl;
-      std::cerr << sourceStr << std::endl;
+      cerr << "#" << endl;
+      cerr << "# Occurred module compilation error" << endl;
+      cerr << "# URL: " << url << endl;
+      cerr << "#" << endl;
+      cerr << sourceStr << endl;
       return false;
     }
     else
@@ -1155,17 +1177,17 @@ namespace dom
 
     if (tryCatch.HasCaught())
     {
-      std::cerr << "#" << std::endl;
-      std::cerr << "# Occurred synthetic module compilation error" << std::endl;
-      std::cerr << "# URL: " << url << std::endl;
+      cerr << "#" << endl;
+      cerr << "# Occurred synthetic module compilation error" << endl;
+      cerr << "# URL: " << url << endl;
       {
         // Print the exception message
         v8::Local<v8::Message> message = tryCatch.Message();
         v8::String::Utf8Value messageUtf8(isolate, message->Get());
-        std::string messageStr(*messageUtf8, messageUtf8.length());
-        std::cerr << "# Error: " << messageStr << std::endl;
+        string messageStr(*messageUtf8, messageUtf8.length());
+        cerr << "# Error: " << messageStr << endl;
       }
-      std::cerr << "#" << std::endl;
+      cerr << "#" << endl;
       return false;
     }
 
@@ -1323,11 +1345,11 @@ namespace dom
       {
         auto stackTraceString = stackTrace->ToString(context).ToLocalChecked();
         v8::String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
-        std::cerr << "#" << std::endl;
-        std::cerr << "# Occurred module instantiation error" << std::endl;
-        std::cerr << "# URL: " << url << std::endl;
-        std::cerr << "# Error:" << *stackTraceUtf8 << std::endl;
-        std::cerr << "#" << std::endl;
+        cerr << "#" << endl;
+        cerr << "# Occurred module instantiation error" << endl;
+        cerr << "# URL: " << url << endl;
+        cerr << "# Error:" << *stackTraceUtf8 << endl;
+        cerr << "#" << endl;
       }
       return false;
     }
@@ -1386,7 +1408,7 @@ namespace dom
       return;
     if (module->GetStatus() != v8::Module::Status::kInstantiated)
     {
-      std::cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << std::endl;
+      cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << endl;
       return;
     }
 
@@ -1406,7 +1428,7 @@ namespace dom
       {
         if (!resultValue->IsPromise())
         {
-          std::cerr << "Failed to execute script: the result is not a promise" << std::endl;
+          cerr << "Failed to execute script: the result is not a promise" << endl;
         }
         else
         {
@@ -1427,7 +1449,7 @@ namespace dom
             v8::Context::Scope contextScope(context);
             v8::HandleScope handleScope(isolate);
             v8::String::Utf8Value message(info.GetIsolate(), info[0]);
-            std::cerr << "Failed to execute script: " << *message << std::endl;
+            cerr << "Failed to execute script: " << *message << endl;
           };
           v8::Local<v8::Function> resolveFunc = v8::Function::New(context, resolveCallback).ToLocalChecked();
           v8::Local<v8::Function> rejectFunc = v8::Function::New(context, rejectCallback).ToLocalChecked();

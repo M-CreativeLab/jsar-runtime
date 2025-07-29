@@ -113,7 +113,6 @@ namespace builtin_scene::materials
       if (surface->peekPixels(&pixmap))
       {
         pixels = (unsigned char *)pixmap.addr();
-        content.setOpaque(pixmap.computeIsOpaque());
 
         // Update the texture format based on the Skia surface color type.
         SkColorType colorType = surface->imageInfo().colorType();
@@ -154,4 +153,5 @@ namespace builtin_scene::materials
     // No matter the texture update is successful or not, we will return the status.
     return TextureUpdateStatus::kSuccess;
   }
+
 } // namespace builtin_scene::materials

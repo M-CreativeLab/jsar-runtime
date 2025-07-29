@@ -1,5 +1,6 @@
 #include <vector>
 #include <client/dom/node.hpp>
+#include <client/dom/browsing_context.hpp>
 #include <client/dom/document-inl.hpp>
 #include <client/html/all_html_elements.hpp>
 
@@ -293,7 +294,7 @@ namespace client_layout
     return nullopt;
   }
 
-  const client_cssom::ComputedStyle &LayoutObject::styleRef() const
+  client_cssom::ComputedStyle &LayoutObject::styleRef() const
   {
     assert(node()->isElementOrText() && "The node must be an element or text node.");
     if (node()->isElement())
@@ -306,7 +307,23 @@ namespace client_layout
       auto textNode = dom::Node::As<dom::Text>(node());
       return textNode->adoptedStyleRef();
     }
-    assert(false && "Unrachable");
+    assert(false && "Unreachable");
+  }
+
+  float LayoutObject::getTranslateZ() const
+  {
+    auto transformComponent = getSceneComponent<Transform>();
+    if (transformComponent != nullptr && transformComponent->hasPostTransform())
+    {
+      auto &postTransform = transformComponent->postTransformRef();
+      auto accumulatedMatrix = postTransform.accumulatedMatrix();
+      return accumulatedMatrix[3][2]; // Get the Z translation from the accumulated matrix.
+    }
+    else
+    {
+      // Returns zero if no transform found or has no post transform.
+      return 0.0f;
+    }
   }
 
   const Fragment LayoutObject::computeOrGetFragment(FragmentDifference &diff) const
@@ -778,5 +795,29 @@ namespace client_layout
 
   void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
+    // Get the `ComputedStyle` reference from the `WebContent`, which might be set at computing layout time.
+    auto &style = getSceneComponent<WebContent>()->style();
+    if (style.hasBackgroundImage())
+    {
+      auto &image = style.backgroundImage();
+      if (image.isUrl())
+      {
+        if (image.isUrlImageLoadingOrLoaded())
+          return; // The image is already loading or loaded.
+
+        const Fragment &fragment = this->fragment();
+        dom::HTMLElement &element = dom::Node::AsChecked<dom::HTMLElement>(node());
+
+        auto onImageLoaded = [this, &image](const void *data, size_t length)
+        {
+          image.setUrlImageData(data, length);
+          getSceneComponent<WebContent>()->setDirty(true);
+        };
+
+        string imageUrl = image.getUrl();
+        element.fetchArrayBufferLikeResource(imageUrl, onImageLoaded);
+        image.startLoadingUrlImage();
+      }
+    }
   }
 }

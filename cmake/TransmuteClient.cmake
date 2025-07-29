@@ -1,19 +1,23 @@
-file(GLOB TR_CLIENT_SOURCE
-    "src/bindings/browser/*.cpp"
-    "src/bindings/canvas/*.cpp"
-    "src/bindings/cssom/*.cpp"
-    "src/bindings/dom/*.cpp"
-    "src/bindings/dom/**/*.cpp"
-    "src/bindings/env/*.cpp"
-    "src/bindings/math3d/*.cpp"
-    "src/bindings/messaging/*.cpp"
-    "src/bindings/renderer/*.cpp"
-    "src/bindings/webgl/*.cpp"
-    "src/bindings/webxr/*.cpp"
-    "src/client/*.cpp"
-    "src/client/**/*.cpp"
-    "src/client/**/**/*.cpp"
+file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
+    "src/bindings/*.cpp"
+    "src/client/animation/*.cpp"
+    "src/client/browser/*.cpp"
+    "src/client/builtin_scene/*.cpp"
+    "src/client/canvas/*.cpp"
+    "src/client/cssom/*.cpp"
+    "src/client/dom/*.cpp"
+    "src/client/graphics/*.cpp"
+    "src/client/html/*.cpp"
+    "src/client/layout/*.cpp"
+    "src/client/media/*.cpp"
+    "src/client/networking/*.cpp"
+    "src/client/scripting_base/*.cpp"
+    "src/client/scroll/*.cpp"
+    "src/client/xr/*.cpp"
     "src/pugixml/*.cpp"
+)
+file(GLOB TR_CLIENT_SOURCE
+    "src/client/*.cpp"
 )
 
 # Add the client shaders header target
@@ -36,24 +40,30 @@ add_custom_target(TransmuteClientShadersHeader ALL
     DEPENDS ${TR_SHADERS_HEADER}
 )
 
-# Add executable target
-add_executable(TransmuteClient
+# Add client library
+add_library(TransmuteClientLibrary STATIC
     ${TR_COMMON_SOURCE}
-    ${TR_CLIENT_SOURCE}
+    ${TR_CLIENT_LIBRARY_SOURCE}
 )
-add_dependencies(TransmuteClient TransmuteClientShadersHeader)
+add_dependencies(TransmuteClientLibrary TransmuteClientShadersHeader)
+
+# Add executable target
+add_executable(TransmuteClient ${TR_CLIENT_SOURCE})
+add_dependencies(TransmuteClient TransmuteClientLibrary)
+target_link_libraries(TransmuteClient PRIVATE TransmuteClientLibrary)
 
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 target_include_directories(TransmuteClient PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
+target_include_directories(TransmuteClientLibrary PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 
 # Link libraries
-tr_target_link_library(TransmuteClient ${TR_CRATE_BUILD_PATH} jsar_jsbindings STATIC)
-tr_target_link_thirdparty_library(TransmuteClient node)
-tr_target_link_skia_library(TransmuteClient)
+tr_target_link_library(TransmuteClientLibrary ${TR_CRATE_BUILD_PATH} jsar_jsbindings STATIC)
+tr_target_link_thirdparty_library(TransmuteClientLibrary node)
+tr_target_link_skia_library(TransmuteClientLibrary)
 
 if(APPLE)
-    target_link_libraries(TransmuteClient PRIVATE "-framework CoreFoundation")
-    target_link_libraries(TransmuteClient PRIVATE "-framework Carbon")
+    target_link_libraries(TransmuteClientLibrary PRIVATE "-framework CoreFoundation")
+    target_link_libraries(TransmuteClientLibrary PRIVATE "-framework Carbon")
 endif()
 
 # Set properties

@@ -45,6 +45,11 @@ namespace dombinding
     return env.Null();
   }
 
+  bool Text::IsInstanceOf(const Napi::Value &value)
+  {
+    return value.IsObject() && value.As<Napi::Object>().InstanceOf(constructor->Value());
+  }
+
   Text::Text(const Napi::CallbackInfo &info)
       : CharacterDataBase(info)
   {

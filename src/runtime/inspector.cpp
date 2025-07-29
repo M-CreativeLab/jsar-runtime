@@ -1,4 +1,11 @@
 #include <memory>
+#include <string>
+#include <map>
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include <rapidjson/document.h>
 #include <renderer/renderer.hpp>
 
@@ -6,6 +13,7 @@
 #include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./embedder.hpp"
+#include "./inspector/cdp_handler.hpp"
 
 using namespace std;
 using namespace std::placeholders;
@@ -13,12 +21,19 @@ using namespace std::placeholders;
 void TrInspector::initialize()
 {
   server_ = make_unique<TrInspectorServer>(shared_from_this());
+  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized");
 }
 
 void TrInspector::tick()
 {
   server_->tryAccept();
   server_->tick();
+}
+
+bool TrInspector::canAcceptWebSocketConnection()
+{
+  const int maxConnections = 5;
+  return server_->countWebSocketClients() < maxConnections;
 }
 
 void TrInspector::onRequest(TrInspectorClient &requestClient)
@@ -28,27 +43,117 @@ void TrInspector::onRequest(TrInspectorClient &requestClient)
   if (requestUrl.size() > 1 && requestUrl.back() == '/')
     requestUrl.pop_back();
 
+  map<string, string> params;
   if (requestUrl == "/json/version")
   {
-    handleRequest(std::bind(&TrInspector::getVersion, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getVersion, this, _1), requestClient);
   }
   else if (requestUrl == "/contents" ||
            requestUrl == "/json" ||
            requestUrl == "/json/list")
   {
-    handleRequest(std::bind(&TrInspector::getContents, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getContents, this, _1), requestClient);
   }
   else if (requestUrl == "/json/protocol")
   {
-    handleRequest(std::bind(&TrInspector::getProtocol, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getProtocol, this, _1), requestClient);
   }
   else if (requestUrl == "/json/statistics")
   {
-    handleRequest(std::bind(&TrInspector::getStatistics, this, _1), requestClient);
+    handleRequest(bind(&TrInspector::getStatistics, this, _1), requestClient);
+  }
+  else if (matchRoute(requestUrl, "/:id/logs/stdout", params))
+  {
+    handleRequest(bind(&TrInspector::printContentLog, this, params["id"], "out"), requestClient);
+  }
+  else if (matchRoute(requestUrl, "/:id/logs/stderr", params))
+  {
+    handleRequest(bind(&TrInspector::printContentLog, this, params["id"], "err"), requestClient);
   }
   else
   {
     requestClient.respond(404, "Not Found");
+  }
+}
+
+bool TrInspector::matchRoute(const string &url, const string &pattern, map<string, string> &params)
+{
+  params.clear();
+
+  // Split URL and pattern into segments
+  vector<string> urlSegments = splitPath(url);
+  vector<string> patternSegments = splitPath(pattern);
+
+  if (urlSegments.size() != patternSegments.size())
+  {
+    return false;
+  }
+
+  for (size_t i = 0; i < urlSegments.size(); ++i)
+  {
+    const string &urlSeg = urlSegments[i];
+    const string &patternSeg = patternSegments[i];
+
+    if (patternSeg.starts_with(":"))
+    {
+      // Parameter segment
+      string paramName = patternSeg.substr(1);
+      params[paramName] = urlSeg;
+    }
+    else if (urlSeg != patternSeg)
+    {
+      // Literal segment doesn't match
+      return false;
+    }
+  }
+
+  return true;
+}
+
+vector<string> TrInspector::splitPath(const string &path)
+{
+  vector<string> segments;
+  if (path.empty() || path == "/")
+  {
+    return segments;
+  }
+
+  size_t start = 1; // Skip leading slash
+  size_t pos = path.find('/', start);
+
+  while (pos != string::npos)
+  {
+    if (pos > start)
+    {
+      segments.push_back(path.substr(start, pos - start));
+    }
+    start = pos + 1;
+    pos = path.find('/', start);
+  }
+
+  // Add the last segment
+  if (start < path.length())
+  {
+    segments.push_back(path.substr(start));
+  }
+
+  return segments;
+}
+
+void TrInspector::handleRequest(function<string()> handler, TrInspectorClient &requestClient)
+{
+  try
+  {
+    string responseText = handler();
+    requestClient.respond(200, responseText);
+  }
+  catch (const exception &e)
+  {
+    requestClient.respond(500, "Internal Server Error: " + string(e.what()));
+  }
+  catch (...)
+  {
+    requestClient.respond(500, "Internal Server Error");
   }
 }
 
@@ -62,7 +167,7 @@ void TrInspector::handleRequest(function<bool(rapidjson::Document &)> handler, T
     else
       throw runtime_error("Failed to handle the request");
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
     requestClient.respond(500, "Internal Server Error: " + string(e.what()));
   }
@@ -100,7 +205,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     string id = to_string(content->id);
     string title = "jsar[" + id + "]";
     string url = requestInit.url;
-    string debuggerUrl = "ws://localhost:" + to_string(requestInit.inspectorPort()) + "/devtools/inspector/" + id;
+    string debuggerUrl = "ws://localhost:9423/devtools/inspector/" + id;
     string devtoolsFrontendUrl = "devtools://devtools/inspector/devtools.html?ws=" + debuggerUrl;
 
     // Make sure the URL is a valid file URL if it's an absolute path
@@ -136,6 +241,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     contentJson.AddMember("pid", content->pid.load(), allocator);
     contentJson.AddMember("used", content->used.load(), allocator);
     {
+      // RequestInit fields
       rapidjson::Value requestInitJson;
       requestInitJson.SetObject();
       requestInitJson.AddMember("url",
@@ -143,6 +249,24 @@ bool TrInspector::getContents(rapidjson::Document &json)
                                 allocator);
       requestInitJson.AddMember("disableCache", requestInit.disableCache, allocator);
       contentJson.AddMember("requestInit", requestInitJson, allocator);
+    }
+    {
+      // Logs fields
+      rapidjson::Value logsJson;
+      logsJson.SetObject();
+
+      // TODO(yorkie): Reading the Host from the request header instead of using "localhost".
+      static const string inspectorHost = "localhost:" + to_string(server_->port);
+      string outPath = "http://" + inspectorHost + "/" + id + "/logs/stdout";
+      string errPath = "http://" + inspectorHost + "/" + id + "/logs/stderr";
+
+      logsJson.AddMember("stdout",
+                         rapidjson::Value().SetString(outPath.c_str(), allocator),
+                         allocator);
+      logsJson.AddMember("stderr",
+                         rapidjson::Value().SetString(errPath.c_str(), allocator),
+                         allocator);
+      contentJson.AddMember("logs", logsJson, allocator);
     }
     json.PushBack(contentJson, allocator);
   }
@@ -157,9 +281,10 @@ bool TrInspector::getProtocol(rapidjson::Document &json)
 
   rapidjson::Value domains;
   domains.SetArray();
-  {
-    // TODO: Add the domains
-  }
+
+  // Create a temporary CDP handler to get protocol definitions
+  auto tempHandler = make_unique<CdpHandler>(constellation, "temp", nullptr);
+  tempHandler->addProtocolDefinitions(domains, allocator);
 
   json.AddMember("version", rapidjson::Value().SetString("1.3", allocator), allocator);
   json.AddMember("domains", domains, allocator);
@@ -203,4 +328,60 @@ bool TrInspector::getStatistics(rapidjson::Document &json)
   json.AddMember("renderers", renderers_list, allocator);
 
   return true;
+}
+
+string TrInspector::printContentLog(const string &contentId, const string &logType)
+{
+  static filesystem::path logsDir = filesystem::path(constellation->options.applicationCacheDirectory) / "logs";
+
+  const auto &content = constellation->contentManager->getContent(stoi(contentId), true);
+  if (content == nullptr)
+    return "No such content";
+
+  filesystem::path logFile = logsDir / (to_string(content->pid.load()) + "." + logType + ".log");
+  if (!filesystem::exists(logFile))
+    return "No log file found for content(" + contentId + ")";
+
+  ifstream file(logFile);
+  if (!file.is_open())
+    return "Failed to open log file for content(" + contentId + ")";
+
+  stringstream buffer;
+  buffer << file.rdbuf();
+  return buffer.str();
+}
+
+void TrInspector::onMessage(TrInspectorClient &client, const string &message)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Received WebSocket message: %s", message.c_str());
+
+  auto cdpHandler = client.getCdpHandler();
+  if (!cdpHandler)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP handler not initialized for client, falling back to echo");
+    client.sendWebSocketMessage("Echo: " + message);
+    return;
+  }
+
+  try
+  {
+    string response = cdpHandler->processMessage(message);
+    DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
+    client.sendWebSocketMessage(response);
+  }
+  catch (const exception &e)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
+    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");
+  }
+}
+
+void TrInspector::onClientConnected(TrInspectorClient &client)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Client connected: %s", client.clientId().c_str());
+}
+
+void TrInspector::onClientDisconnected(TrInspectorClient &client)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
 }

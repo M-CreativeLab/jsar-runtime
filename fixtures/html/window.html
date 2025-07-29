@@ -12,6 +12,11 @@
 
     console.info(window.location, window.origin);
     window.open('http://www.example.com', '_blankClassic');
+
+    window['foo'] = 1;
+  </script>
+  <script>
+    console.info('window.foo', window.foo);
   </script>
 </head>
 

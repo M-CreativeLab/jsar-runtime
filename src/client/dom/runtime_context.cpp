@@ -5,9 +5,47 @@ namespace dom
 {
   using namespace std;
 
+  RuntimeContext::RuntimeContext()
+      : isolate(v8::Isolate::GetCurrent())
+  {
+  }
+
+  RuntimeContext::~RuntimeContext()
+  {
+    if (fetch_async_handle_ != nullptr)
+    {
+      uv_close(reinterpret_cast<uv_handle_t *>(fetch_async_handle_), [](uv_handle_t *handle)
+               { delete handle; });
+      fetch_async_handle_ = nullptr;
+    }
+    pending_fetch_requests_.clear();
+  }
+
   void RuntimeContext::initialize()
   {
     scriptingContext = make_shared<DOMScriptingContext>(getSharedPtr());
+    scripting_thread_ = this_thread::get_id();
+    {
+      fetch_async_handle_ = new uv_async_t;
+      fetch_async_handle_->data = this;
+
+      auto handle_fetch_requests = [](uv_async_t *handle)
+      {
+        auto runtime_context = static_cast<RuntimeContext *>(handle->data);
+        assert(runtime_context != nullptr && "RuntimeContext async handle data is not set correctly.");
+        runtime_context->execFetchRequests();
+      };
+      uv_async_init(TrClientContextPerProcess::Get()->getScriptingEventLoop(),
+                    fetch_async_handle_,
+                    handle_fetch_requests);
+    }
+  }
+
+  bool RuntimeContext::inScriptingThread() const
+  {
+    if (!scripting_thread_.has_value())
+      return false; // Not initialized yet.
+    return this_thread::get_id() == scripting_thread_.value();
   }
 
   void RuntimeContext::setBaseURI(const string newBaseURI)
@@ -44,31 +82,19 @@ namespace dom
                                      const FunctionCallback &responseCallback,
                                      const optional<FunctionCallback> errorCallback)
   {
-    v8::Isolate::Scope isolateScope(isolate);
-    v8::HandleScope handleScope(isolate);
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    v8::Context::Scope contextScope(context);
-
-    v8::Local<v8::Value> promiseValue = fetchResourceInternal(url, responseType);
-    if (!promiseValue->IsPromise())
-      return;
-
-    v8::Local<v8::Promise> fetchPromise = promiseValue.As<v8::Promise>();
-    v8::Local<v8::External> resolveCallbackExternal = v8::External::New(isolate, new FunctionCallback(responseCallback));
-    auto resolve = v8::Function::New(context, ResolveResource, resolveCallbackExternal);
-
-    // Schedule the callbacks
-    if (errorCallback.has_value())
+    if (inScriptingThread())
     {
-      v8::Local<v8::External> rejectCallbackExternal = v8::External::New(isolate, new FunctionCallback(errorCallback.value()));
-      auto reject = v8::Function::New(context, ResolveResource, rejectCallbackExternal);
-      fetchPromise->Then(context, resolve.ToLocalChecked(), reject.ToLocalChecked())
-        .ToLocalChecked();
+      fetchResourceImpl(url, responseType, responseCallback, errorCallback);
+      return;
     }
     else
     {
-      fetchPromise->Then(context, resolve.ToLocalChecked())
-        .ToLocalChecked();
+      unique_lock<shared_mutex> lock(pending_fetch_requests_mutex_);
+      pending_fetch_requests_.emplace_back(url,
+                                           responseType,
+                                           std::move(responseCallback),
+                                           errorCallback);
+      uv_async_send(fetch_async_handle_);
     }
   }
 
@@ -115,7 +141,7 @@ namespace dom
                                                     const BufferResponseCallback &responseCallback,
                                                     const optional<ErrorCallback> errorCallback)
   {
-    auto onResponse = [responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
+    auto onResponse = [url, responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
     {
       auto isolate = info.GetIsolate();
       auto context = isolate->GetCurrentContext();
@@ -184,7 +210,61 @@ namespace dom
     return handleScope.Escape(creatingFetchResult);
   }
 
-  v8::Local<v8::Value> RuntimeContext::fetchResourceInternal(const string &url, const string &responseType)
+  void RuntimeContext::fetchResourceImpl(const string &url,
+                                         const string &responseType,
+                                         const FunctionCallback &responseCallback,
+                                         const optional<FunctionCallback> errorCallback)
+  {
+    assert(inScriptingThread() &&
+           "fetchResourceImpl() must be called in the scripting thread");
+
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope contextScope(context);
+
+    v8::Local<v8::Value> promiseValue = callFetchFunction(url, responseType);
+    if (!promiseValue->IsPromise())
+      return;
+
+    v8::Local<v8::Promise> fetchPromise = promiseValue.As<v8::Promise>();
+    v8::Local<v8::External> resolveCallbackExternal = v8::External::New(isolate, new FunctionCallback(responseCallback));
+    auto resolve = v8::Function::New(context, ResolveResource, resolveCallbackExternal);
+
+    // Schedule the callbacks
+    if (errorCallback.has_value())
+    {
+      v8::Local<v8::External> rejectCallbackExternal = v8::External::New(isolate, new FunctionCallback(errorCallback.value()));
+      auto reject = v8::Function::New(context, ResolveResource, rejectCallbackExternal);
+      fetchPromise->Then(context, resolve.ToLocalChecked(), reject.ToLocalChecked())
+        .ToLocalChecked();
+    }
+    else
+    {
+      fetchPromise->Then(context, resolve.ToLocalChecked())
+        .ToLocalChecked();
+    }
+  }
+
+  void RuntimeContext::execFetchRequests()
+  {
+    unique_lock<shared_mutex> lock(pending_fetch_requests_mutex_);
+    while (!pending_fetch_requests_.empty())
+    {
+      FetchRequest &request = pending_fetch_requests_.front();
+      // If the URL is empty, skip the request.
+      if (!request.url.empty())
+      {
+        fetchResourceImpl(request.url,
+                          request.responseType,
+                          request.success,
+                          request.error);
+      }
+      pending_fetch_requests_.pop_front();
+    }
+  }
+
+  v8::Local<v8::Value> RuntimeContext::callFetchFunction(const string &url, const string &responseType)
   {
     auto context = isolate->GetCurrentContext();
     v8::Isolate::Scope isolateScope(isolate);

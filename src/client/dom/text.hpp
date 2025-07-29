@@ -59,10 +59,12 @@ namespace dom
     {
       return adoptedStyle_ != nullptr;
     }
-    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
+    inline client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       return *adoptedStyle_;
     }
+
+    builtin_scene::RenderQueue getRenderQueue() const override final;
 
   private:
     bool isText() const override final

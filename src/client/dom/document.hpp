@@ -91,9 +91,17 @@ namespace dom
     // Append the stylesheet
     void appendStyleSheet(std::shared_ptr<client_cssom::CSSStyleSheet>);
 
+    // Write
+    void write(const std::string &markup);
+    void writeln(const std::string &markup);
+
   protected:
-    virtual void onDocumentOpened() {};
-    virtual void onStyleSheetsDidChange() {};
+    virtual void onDocumentOpened()
+    {
+    }
+    virtual void onStyleSheetsDidChange()
+    {
+    }
     void onNodeAdded(const std::shared_ptr<Node>, bool fast_insert, bool recursive);
     void onNodeRemoved(const std::shared_ptr<Node>, bool recursive);
 

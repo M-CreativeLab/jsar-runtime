@@ -1,0 +1,68 @@
+{
+  "api": {
+    "EventTarget": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/EventTarget",
+        "spec_url": "https://dom.spec.whatwg.org/#interface-eventtarget",
+        "support": {
+          "jsar": {
+            "version_added": "0.6.0"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "addEventListener": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "removeEventListener": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/EventTarget/removeEventListener",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "dispatchEvent": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/EventTarget/dispatchEvent",
+          "spec_url": "https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent",
+          "support": {
+            "jsar": {
+              "version_added": "0.6.0"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

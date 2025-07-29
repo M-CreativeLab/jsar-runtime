@@ -188,7 +188,10 @@ namespace client_layout
     void destroy();
 
     std::optional<client_cssom::ComputedStyle> style() const;
-    const client_cssom::ComputedStyle &styleRef() const;
+    client_cssom::ComputedStyle &styleRef() const;
+
+    // Helper functions to get 3D transformations.
+    float getTranslateZ() const;
 
     // The struct to represent if two fragments has differences.
     struct FragmentDifference

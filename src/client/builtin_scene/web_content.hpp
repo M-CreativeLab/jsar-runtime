@@ -13,6 +13,7 @@
 #include <client/per_process.hpp>
 
 #include "./ecs-inl.hpp"
+#include "./text.hpp"
 #include "./texture_altas.hpp"
 
 namespace builtin_scene
@@ -124,6 +125,10 @@ namespace builtin_scene
     bool resetSkSurface(float width, float height);
     SkCanvas *canvas() const;
 
+    inline client_cssom::ComputedStyle &style()
+    {
+      return style_;
+    }
     inline const client_cssom::ComputedStyle &style() const
     {
       return style_;
@@ -167,6 +172,10 @@ namespace builtin_scene
     {
       background_color_ = glm::vec4(r, g, b, a);
     }
+    inline void setBackgroundColor(const SkColor4f color)
+    {
+      background_color_ = glm::vec4(color.fR, color.fG, color.fB, color.fA);
+    }
 
     inline std::shared_ptr<Texture> textureRect() const
     {
@@ -176,6 +185,17 @@ namespace builtin_scene
     {
       return *texture_;
     }
+
+    // Spatial image support
+    inline bool isSpatialized() const
+    {
+      return is_spatialized_;
+    }
+    inline void setSpatialized(bool v)
+    {
+      is_spatialized_ = v;
+    }
+
     // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
     inline int texturePad() const
     {
@@ -189,6 +209,7 @@ namespace builtin_scene
      * @returns The texture or `nullptr` if the texture is not used.
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
+
     inline void setEnabled(bool enabled)
     {
       enabled_ = enabled;
@@ -210,18 +231,17 @@ namespace builtin_scene
       if (is_texture_using_ != value)
         is_texture_using_ = value;
     }
+
+    // Web content must be transparent objects.
     inline bool isOpaque() const
     {
-      return is_opaque_;
+      return false;
     }
     inline bool isTransparent() const
     {
-      return !is_opaque_;
+      return true;
     }
-    inline void setOpaque(bool b)
-    {
-      is_opaque_ = b;
-    }
+
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
@@ -258,9 +278,9 @@ namespace builtin_scene
     int texture_pad_ = 2;
     bool enabled_ = true;
     bool is_texture_using_ = false;
-    bool is_opaque_ = false;
     bool is_visible_ = true;
     bool is_dirty_ = true;
+    bool is_spatialized_ = false;
   };
 
   class WebContentContext : public ecs::Resource
@@ -361,6 +381,80 @@ namespace builtin_scene
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
+
+    private:
+      // The clipping area for the background, it can be a path or a rounded rectangle.
+      class ClippingArea : public std::variant<std::monostate, SkPath, SkRRect>
+      {
+      public:
+        ClippingArea() = default;
+        ClippingArea(const SkPath &path)
+            : std::variant<std::monostate, SkPath, SkRRect>(path)
+        {
+        }
+        ClippingArea(const SkRRect &rrect)
+            : std::variant<std::monostate, SkPath, SkRRect>(rrect)
+        {
+        }
+
+        inline bool isEmpty() const
+        {
+          return std::holds_alternative<std::monostate>(*this);
+        }
+        inline bool isPath() const
+        {
+          return std::holds_alternative<SkPath>(*this);
+        }
+        inline bool isRRect() const
+        {
+          return std::holds_alternative<SkRRect>(*this);
+        }
+
+        inline const SkPath &path() const
+        {
+          return std::get<SkPath>(*this);
+        }
+        inline const SkRRect &roundedRect() const
+        {
+          return std::get<SkRRect>(*this);
+        }
+
+        friend std::ostream &operator<<(std::ostream &os, const ClippingArea &area)
+        {
+          if (area.isEmpty())
+            os << "ClippingArea()";
+          else if (area.isPath())
+            os << "ClippingArea(Path)";
+          else if (area.isRRect())
+          {
+            auto &rrect = area.roundedRect();
+            os << "ClippingArea(" << rrect.width() << "," << rrect.height() << ")";
+          }
+          return os;
+        }
+      };
+
+      // Helper methods for drawing and clipping.
+      SkRRect getBackgroundClippingArea(const SkRRect &,
+                                        const client_layout::Fragment &,
+                                        const client_cssom::ComputedStyle &);
+      std::optional<SkPath> createTextPath(const std::string &textContent, const WebContent &);
+
+      // Draw the background for a fragment, returning an optional SkPaint if a fill is drawn.
+      std::optional<SkPaint> drawBackground(SkCanvas *,
+                                            SkRRect &originalRRect,
+                                            ClippingArea &,
+                                            const client_layout::Fragment &,
+                                            const client_cssom::ComputedStyle &,
+                                            bool &textureRequired);
+      // Draw the rounded rectangle with the given paint, using the clipping area if provided.
+      void drawRRect(SkCanvas *, const SkRRect &, const SkPaint &, const ClippingArea &);
+      // Draw the image in the positioning area with the given paint.
+      void drawImage(SkCanvas *,
+                     const sk_sp<SkImage> &,
+                     const SkRect &positioningArea,
+                     const SkPaint &,
+                     const client_cssom::ComputedStyle &);
     };
 
     class RenderImageSystem final : public RenderBaseSystem

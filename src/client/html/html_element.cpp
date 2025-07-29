@@ -1,6 +1,7 @@
 #include <client/cssom/units.hpp>
 #include <client/dom/document-inl.hpp>
 #include <client/dom/attr.hpp>
+#include <client/dom/browsing_context.hpp>
 
 #include "./html_element.hpp"
 
@@ -74,6 +75,23 @@ namespace dom
     return nullopt;
   }
 
+  HTMLElement::HTMLElement(const HTMLElement &other)
+      : Element(other)
+      , dir(other.dir)
+      , draggable(other.draggable)
+      , hidden(other.hidden)
+      , innerText(other.innerText)
+      , lang(other.lang)
+      , nonce(other.nonce)
+      , outerText(other.outerText)
+      , title(other.title)
+      , offset_width_(other.offset_width_)
+      , offset_height_(other.offset_height_)
+      , dataset_(other.dataset_)
+      , style_(other.style_)
+  {
+  }
+
   void HTMLElement::setDataset(const string &key, const string &value)
   {
     dataset_[key] = value;
@@ -84,6 +102,14 @@ namespace dom
   {
     dataset_.erase(key);
     removeAttribute("data-" + CamelCaseToDashStyle(key));
+  }
+
+  void HTMLElement::fetchArrayBufferLikeResource(const std::string &url,
+                                                 std::function<void(const void *data, size_t length)> callback)
+  {
+    assert(ownerDocument->expired() == false && "The owner document is expired.");
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->fetchArrayBufferLikeResource(url, callback);
   }
 
   void HTMLElement::createdCallback(bool from_scripting)
@@ -137,6 +163,16 @@ namespace dom
         dataset_[key] = newValue;
       }
     }
+  }
+
+  void HTMLElement::connectedCallback()
+  {
+    Element::connectedCallback();
+  }
+
+  void HTMLElement::disconnectedCallback()
+  {
+    Element::disconnectedCallback();
   }
 
   void HTMLElement::markAsDirty()

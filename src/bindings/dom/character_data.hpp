@@ -40,6 +40,11 @@ namespace dombinding
     {
     }
 
+    std::string_view Data() const
+    {
+      return this->node->data();
+    }
+
   private:
     Napi::Value DataGetter(const Napi::CallbackInfo &info);
     void DataSetter(const Napi::CallbackInfo &info, const Napi::Value &value);

@@ -104,21 +104,21 @@ namespace builtin_scene
     /**
      * The translation of the transform.
      */
-    inline math::Vec3 translation()
+    inline math::Vec3 translation() const
     {
       return translation_;
     }
     /**
      * The rotation of the transform.
      */
-    inline math::Quat rotation()
+    inline math::Quat rotation() const
     {
       return rotation_;
     }
     /**
      * The scale of the transform.
      */
-    inline math::Vec3 scale()
+    inline math::Vec3 scale() const
     {
       return scale_;
     }
@@ -314,6 +314,13 @@ namespace builtin_scene
     inline bool hasPostTransform() const
     {
       return postTransform_ != nullptr;
+    }
+    /**
+     * @returns The post transform reference
+     */
+    const Transform &postTransformRef() const
+    {
+      return *postTransform_;
     }
     /**
      * Get the post transform reference to update, and initialize if it is not initialized.

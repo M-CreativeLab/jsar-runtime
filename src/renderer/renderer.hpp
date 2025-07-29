@@ -6,6 +6,8 @@
 #include <shared_mutex>
 #include <atomic>
 #include <memory>
+#include <functional>
+#include <unordered_map>
 
 #include <common/classes.hpp>
 #include <common/viewport.hpp>
@@ -48,6 +50,10 @@ namespace renderer
 
     using ContentRendererReference = std::shared_ptr<TrContentRenderer>;
     using ContentRenderersList = std::vector<ContentRendererReference>;
+
+  public:
+    // Callback for command buffer execution events
+    using CommandBufferExecutionCallback = std::function<void(const std::vector<commandbuffers::TrCommandBufferBase *> &, const renderer::TrContentRenderer *)>;
 
   private:
     static inline std::shared_ptr<TrRenderer> Instance_ = nullptr;
@@ -155,6 +161,19 @@ namespace renderer
     {
       commandBufferChanServer->removeClient(client);
     }
+
+    /**
+     * Register a callback to be notified when command buffers are executed.
+     * This is used by the inspector to dispatch command buffer events.
+     * Returns a callback ID that can be used to unregister the callback.
+     */
+    int registerCommandBufferExecutionCallback(CommandBufferExecutionCallback callback);
+
+    /**
+     * Unregister a command buffer execution callback.
+     */
+    void unregisterCommandBufferExecutionCallback(int callbackId);
+
     void setRHI(TrRenderHardwareInterface *);
     TrRenderHardwareInterface *getRHI();
     /**
@@ -279,5 +298,9 @@ namespace renderer
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
     std::unique_ptr<ipc::TrOneShotServer<TrCommandBufferMessage>> commandBufferChanServer = nullptr;
+
+    std::unordered_map<int, CommandBufferExecutionCallback> onExecutedCallbacks_;
+    int nextCallbackId_ = 1;
+    mutable std::shared_mutex callbacksMutex_;
   };
 }

@@ -34,6 +34,26 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with shader attachment information.
+     * Shader attachment is crucial for understanding program linking and shader pipeline setup.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus shader attachment parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add shader attachment parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(program), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(shader), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     uint32_t program;
     uint32_t shader;

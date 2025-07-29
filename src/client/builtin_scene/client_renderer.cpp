@@ -1,6 +1,7 @@
 #include <array>
 #include <chrono>
 #include <client/dom/node.hpp>
+#include <client/dom/element.hpp>
 #include <client/cssom/units.hpp>
 
 #include "./client_renderer.hpp"
@@ -234,9 +235,6 @@ namespace builtin_scene
           if (transparentInstances.count() > 0)
           {
             WebGLVertexArrayScope vaoScope(glContext_, transparentInstances.vao);
-            glContext.depthMask(false);
-            glContext.enable(WEBGL_BLEND);
-            glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
 
             // Set the base matrix, move the transparent objects +z 0.001
             auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
@@ -245,11 +243,33 @@ namespace builtin_scene
 
             // Draw
             transparentInstances.beforeInstancedDraw(glContext);
-            glContext.drawElementsInstanced(mesh->primitiveTopology(),
-                                            meshIndicesCount,
-                                            WEBGL_UNSIGNED_INT,
-                                            0,
-                                            transparentInstances.count());
+            {
+              // Draw transparent instances to color attachment
+              glContext.depthMask(false);
+              glContext.enable(WEBGL_BLEND);
+              glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+              glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                              meshIndicesCount,
+                                              WEBGL_UNSIGNED_INT,
+                                              0,
+                                              transparentInstances.count());
+
+              // Draw transparent instances to depth attachment if depth-only pass is enabled.
+              if (instancedMesh.isDepthOnlyPassEnabled())
+              {
+                glContext.colorMask(false, false, false, false);
+                glContext.depthMask(true);
+                glContext.disable(WEBGL_BLEND);
+                glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                                meshIndicesCount,
+                                                WEBGL_UNSIGNED_INT,
+                                                0,
+                                                transparentInstances.count());
+
+                // Restore the color mask state
+                glContext.colorMask(true, true, true, true);
+              }
+            }
             transparentInstances.afterInstancedDraw(glContext);
           }
         }
@@ -409,7 +429,7 @@ namespace builtin_scene
 
     // Create a mesh for the volume mask
     auto entity = spawn(
-      Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 1.0f))),
+      Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.05f))),
       MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
       Transform::FromXYZ(0.0f, 0.0f, 0.0f)
         .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
@@ -473,13 +493,14 @@ namespace builtin_scene
     return postMat * baseMatrixInWorldSpace;
   }
 
-  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
+  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent,
+                                                           optional<Renderer::XRRenderTarget> renderTarget)
   {
     if (!meshComponent.isInstancedMesh())
       return;
 
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
-    auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
+    auto updateInstanceData = [this, &renderTarget](ecs::EntityId id, Instance &instance) -> bool
     {
       bool hasChanged = false;
       auto transformComponent = getComponent<Transform>(id);
@@ -499,21 +520,49 @@ namespace builtin_scene
           hasChanged = true;
 
         auto elementComponent = getComponent<hierarchy::Element>(id);
-        // Only transparent content needs to update it's z-index
-        if (webContentComponent->isTransparent() && elementComponent != nullptr)
+        if (elementComponent != nullptr &&
+            elementComponent->node != nullptr &&
+            elementComponent->node->isElementOrText())
         {
-          auto index = elementComponent->node->depth(); // FIXME: using the node depth as the z-index currently.
-          if (instance.setZIndex(index))
+          if (instance.setRenderQueue(elementComponent->node->getRenderQueue()))
             hasChanged = true;
         }
 
         auto textureRect = webContentComponent->textureRect();
         int texturePad = webContentComponent->texturePad();
+
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
-          instance.setTexture(textureRect->getUvOffset(texturePad),
-                              textureRect->getUvScale(texturePad),
+
+          // Calculate left and right eye texture coordinates for spatial images
+          Instance::TextureOffset uvOffset = textureRect->getUvOffset(texturePad);
+          Instance::TextureOffset uvOffsetR = uvOffset;
+          Instance::TextureScale uvScale = textureRect->getUvScale(texturePad);
+
+          // For spatial images, the texture atlas system handles left/right eye regions
+          // via instance data coordinates set in setSpatialTexture method
+          if (webContentComponent->isSpatialized())
+          {
+            assert(renderTarget != nullopt &&
+                   "The render target must be valid for spatialized images.");
+
+            if (renderTarget->isMultiview())
+            {
+              uvOffsetR.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
+            else
+            {
+              auto view = renderTarget->view();
+              if (view != nullptr && view->eye() == client_xr::XREye::kRight)
+                uvOffset.setForRight(uvScale);
+              uvScale.setHalfWidth();
+            }
+          }
+          instance.setTexture(uvOffset,
+                              uvOffsetR,
+                              uvScale,
                               textureRect->layer,
                               hasChanged);
         }
@@ -621,7 +670,7 @@ namespace builtin_scene
     renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
 
     // Update the instance transformation matrix if it's an instanced mesh
-    tryUpdateInstanceDataForInstancedMesh(*meshComponent);
+    tryUpdateInstanceDataForInstancedMesh(*meshComponent, renderTarget);
 
     // Draw
     shared_ptr<Transform> parentTransform = nullptr;

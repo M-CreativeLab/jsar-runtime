@@ -17,6 +17,7 @@ namespace dombinding
     static void Init(Napi::Env env);
     static std::vector<Napi::ClassPropertyDescriptor<Text>> GetClassProperties(Napi::Env env);
     static Napi::Value NewInstance(Napi::Env env, std::shared_ptr<dom::Node> nodeImpl);
+    static bool IsInstanceOf(const Napi::Value &);
 
   public:
     Text(const Napi::CallbackInfo &info);

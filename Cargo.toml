@@ -3,14 +3,13 @@ resolver = "2"
 members = ["crates/jsbindings", "crates/runtime_apis"]
 
 [workspace.dependencies]
-app_units = "0.7"
 backtrace = "0.3"
 base64 = "0.21.7"
 bitflags = "2.5"
 cfg-if = "1.0.0"
 content-security-policy = { version = "0.5", features = ["serde"] }
 cookie = "0.12"
-cssparser = { version = "0.34", features = ["serde"] }
+cssparser = { version = "0.35", features = ["serde"] }
 cxx = { version = "1.0" }
 cxx-build = { version = "1.0" }
 data-url = "0.3.1"
@@ -47,19 +46,17 @@ quote = "1"
 serde = "1.0.198"
 serde_bytes = "0.11"
 serde_json = "1.0"
-servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
-servo_atoms = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
 slab = "0.4.9"
 smallvec = "1.13"
 string_cache = "0.8.7"
-style = { git = "https://github.com/servo/stylo", branch = "2024-12-04", features = [
+stylo = { git = "https://github.com/m-creativelab/stylo", branch = "2025-06-03-jsar-20250723", features = [
   "servo",
 ] }
-style_config = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
-style_traits = { git = "https://github.com/servo/stylo", branch = "2024-12-04", features = [
+stylo_config = { git = "https://github.com/m-creativelab/stylo", branch = "2025-06-03-jsar-20250723" }
+stylo_traits = { git = "https://github.com/m-creativelab/stylo", branch = "2025-06-03-jsar-20250723", features = [
   "servo",
 ] }
-selectors = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
+selectors = { git = "https://github.com/m-creativelab/stylo", branch = "2025-06-03-jsar-20250723" }
 surfman = "0.9.2"
 syn = { version = "2", default-features = false, features = [
   "clone-impls",

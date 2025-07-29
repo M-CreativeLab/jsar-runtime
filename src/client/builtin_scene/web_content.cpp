@@ -219,7 +219,13 @@ namespace builtin_scene
     else
       texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
 
-    assert(texture_ != nullptr && "The texture must be valid.");
+    if (texture_ == nullptr) [[unlikely]]
+    {
+      cerr << "Failed to resize or initialize the texture for WebContent: " << name_ << endl
+           << "  expected size: " << w << "x" << h << endl
+           << "  device pixel ratio: " << device_pixel_ratio_ << endl;
+      assert(false && "Failed to resize or initialize the texture.");
+    }
     return texture_;
   }
 
@@ -228,13 +234,15 @@ namespace builtin_scene
     const WebContentTextStyle &sourceTextStyle = content_style_.textStyle;
     skia::textlayout::TextStyle newTextStyle;
 
-    newTextStyle.setColor(sourceTextStyle.color);
-    if (sourceTextStyle.foregroundColor.has_value())
+    SkPaint foregroundPaint;
     {
-      SkPaint foregroundPaint;
-      foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
-      newTextStyle.setForegroundColor(foregroundPaint);
+      foregroundPaint.setAntiAlias(true);
+      foregroundPaint.setColor(sourceTextStyle.color);
+      if (sourceTextStyle.foregroundColor.has_value())
+        foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
+      newTextStyle.setForegroundPaint(foregroundPaint);
     }
+
     if (sourceTextStyle.backgroundColor.has_value())
     {
       SkPaint backgroundPaint;

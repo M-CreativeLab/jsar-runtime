@@ -24,6 +24,7 @@
 #define TYPED_ELEMENT_MAP(XX)         \
   XX("audio", HTMLAudioElement)       \
   XX("body", HTMLBodyElement)         \
+  XX("button", HTMLButtonElement)     \
   XX("canvas", HTMLCanvasElement)     \
   XX("div", HTMLDivElement)           \
   XX("head", HTMLHeadElement)         \
@@ -200,7 +201,7 @@ namespace dom
     {
       return adopted_style_ != nullptr;
     }
-    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
+    inline client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       assert(adopted_style_ != nullptr && "The adopted style should not be null.");
       return *adopted_style_;
@@ -233,6 +234,9 @@ namespace dom
     {
       return is_focused_;
     }
+
+    // Overrides the `Node::getRenderQueue()` method to return the render queue of the element.
+    virtual builtin_scene::RenderQueue getRenderQueue() const override;
 
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.

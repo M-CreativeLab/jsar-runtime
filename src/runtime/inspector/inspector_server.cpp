@@ -53,7 +53,6 @@ void TrInspectorServer::tryAccept()
     if (client == nullptr)
       break;
 
-    int clientFd = client->fd_;
     clients_.push_back(move(client));
   }
 }
@@ -145,4 +144,17 @@ unique_ptr<TrInspectorClient> TrInspectorServer::accept()
   {
     return make_unique<TrInspectorClient>(clientFd, inspector);
   }
+}
+
+int TrInspectorServer::countWebSocketClients() const
+{
+  int count = 0;
+  for (const auto &client : clients_)
+  {
+    if (client->isWebSocket())
+    {
+      count++;
+    }
+  }
+  return count;
 }
