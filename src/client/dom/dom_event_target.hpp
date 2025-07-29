@@ -179,6 +179,10 @@ namespace dom
   XX(SelectionChange, "selectionchange")   \
   XX(VisibilityChange, "visibilitychange")
 
+#define WINDOW_EVENT_TYPES_MAP(XX) \
+  XX(Online, "online")             \
+  XX(Offline, "offline")
+
 #define CANVAS_EVENT_TYPES_MAP(XX)                           \
   XX(ContextLost, "contextlost")                             \
   XX(ContextRestored, "contextrestored")                     \
@@ -204,6 +208,7 @@ namespace dom
   HTMLELEMENT_EVENT_TYPES_MAP(XX)      \
   HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
   DOCUMENT_EVENT_TYPES_MAP(XX)         \
+  WINDOW_EVENT_TYPES_MAP(XX)           \
   CANVAS_EVENT_TYPES_MAP(XX)           \
   WEBXR_EVENT_TYPES_MAP(XX)
 

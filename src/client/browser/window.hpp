@@ -246,21 +246,6 @@ namespace browser
 
   public: // Network event support
     /**
-     * Online event handler property
-     */
-    std::function<void()> ononline = nullptr;
-
-    /**
-     * Offline event handler property  
-     */
-    std::function<void()> onoffline = nullptr;
-
-    /**
-     * Initialize network event monitoring for this window
-     */
-    void initializeNetworkEventReceiver();
-
-    /**
      * Handle network status change
      */
     void handleNetworkStatusChange(bool isOnline);

@@ -19,8 +19,6 @@ namespace browser
       : dom::DOMEventTarget()
       , client_context_(client_context)
   {
-    // Initialize server-side network event listening
-    initializeNetworkEventReceiver();
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
@@ -66,32 +64,17 @@ namespace browser
     return *computedStyle;
   }
 
-  void Window::initializeNetworkEventReceiver()
-  {
-    // Network events are now received from the server-side via the client context
-    // The client context polling worker will call handleNetworkStatusChange when events arrive
-  }
-
   void Window::handleNetworkStatusChange(bool isOnline)
   {
-    // Update navigator.onLine status
-    auto& navigator = browser::getNavigator();
-    navigator.updateOnlineStatus(isOnline);
+    // Create and dispatch the appropriate DOM event
+    auto eventType = isOnline ? dom::DOMEventType::Online : dom::DOMEventType::Offline;
+    auto event = std::make_shared<dom::Event>(
+      dom::DOMEventConstructorType::kEvent,
+      eventType,
+      dom::DOMEventInit::Default()
+    );
     
-    // Create and dispatch the appropriate event
-    std::string eventType = isOnline ? "online" : "offline";
-    
-    // Call the appropriate event handler if set
-    if (isOnline && ononline)
-    {
-      ononline();
-    }
-    else if (!isOnline && onoffline)
-    {
-      onoffline();
-    }
-    
-    // TODO: Also dispatch DOM events for addEventListener support
-    // This would require proper integration with the DOM event system
+    // Dispatch the event using the DOM event system
+    this->dispatchEvent(eventType, event);
   }
 }
