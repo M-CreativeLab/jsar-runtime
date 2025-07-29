@@ -2,11 +2,6 @@
 
 #include <memory>
 
-namespace dom
-{
-  class NetworkStatusMonitor;
-}
-
 namespace browser
 {
   /**

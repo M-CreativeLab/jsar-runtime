@@ -1,13 +1,11 @@
 #include "./navigator.hpp"
-#include <client/dom/network_status_monitor.hpp>
 
 namespace browser
 {
   Navigator::Navigator()
   {
-    // Initialize with current network status
-    auto& monitor = dom::getNetworkMonitor();
-    online_status_ = monitor.isOnline();
+    // Initialize with default online status (will be updated by server events)
+    online_status_ = true;
   }
 
   bool Navigator::onLine() const

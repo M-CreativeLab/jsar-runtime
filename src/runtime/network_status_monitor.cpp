@@ -1,7 +1,6 @@
 #include "./network_status_monitor.hpp"
-#include <client/browser/window.hpp>
-#include <client/browser/navigator.hpp>
-#include <common/events_v2/event.hpp>
+#include "./constellation.hpp"
+#include <common/events_v2/native_event.hpp>
 #include <runtime/platform_base.hpp>
 
 // Platform-specific includes
@@ -39,12 +38,13 @@
 #include <errno.h>
 #endif
 
-namespace dom
+namespace runtime
 {
   // Global instance
   static std::unique_ptr<NetworkStatusMonitor> g_networkMonitor = nullptr;
 
-  NetworkStatusMonitor::NetworkStatusMonitor()
+  NetworkStatusMonitor::NetworkStatusMonitor(TrConstellation* constellation)
+    : constellation_(constellation)
   {
     initializeNetworkStatus();
   }
@@ -90,7 +90,7 @@ namespace dom
       if (currentStatus != isOnline_.load())
       {
         isOnline_.store(currentStatus);
-        dispatchNetworkEvent(currentStatus);
+        dispatchNetworkEventToClients(currentStatus);
       }
 
       std::this_thread::sleep_for(POLLING_INTERVAL);
@@ -102,31 +102,27 @@ namespace dom
     if (isOnline != isOnline_.load())
     {
       isOnline_.store(isOnline);
-      dispatchNetworkEvent(isOnline);
+      dispatchNetworkEventToClients(isOnline);
     }
   }
 
-  void NetworkStatusMonitor::dispatchNetworkEvent(bool isOnline)
+  void NetworkStatusMonitor::dispatchNetworkEventToClients(bool isOnline)
   {
-    // Update navigator.onLine
-    auto& navigator = browser::getNavigator();
-    navigator.updateOnlineStatus(isOnline);
-    
-    // Notify all registered callbacks
-    for (auto& callback : statusChangeCallbacks_)
+    // Create network status event and dispatch to all clients
+    if (constellation_ && constellation_->nativeEventTarget)
     {
-      callback(isOnline);
+      auto networkEvent = std::make_shared<events_comm::TrNetworkStatusChanged>(isOnline);
+      auto event = std::make_shared<events_comm::TrNativeEvent>(
+        events_comm::TrNativeEventType::NetworkStatusChanged,
+        networkEvent
+      );
+      
+      // Dispatch to all connected clients
+      constellation_->nativeEventTarget->dispatchEvent(
+        events_comm::TrNativeEventType::NetworkStatusChanged,
+        event
+      );
     }
-  }
-
-  void NetworkStatusMonitor::addStatusChangeCallback(std::function<void(bool)> callback)
-  {
-    statusChangeCallbacks_.push_back(callback);
-  }
-
-  void NetworkStatusMonitor::clearStatusChangeCallbacks()
-  {
-    statusChangeCallbacks_.clear();
   }
 
   bool NetworkStatusMonitor::checkNetworkStatus()
@@ -286,19 +282,13 @@ namespace dom
     return (result == 0 || errno == EINPROGRESS);
   }
 
-  NetworkStatusMonitor& getNetworkMonitor()
+  void initializeNetworkMonitoring(TrConstellation* constellation)
   {
     if (!g_networkMonitor)
     {
-      g_networkMonitor = std::make_unique<NetworkStatusMonitor>();
+      g_networkMonitor = std::make_unique<NetworkStatusMonitor>(constellation);
+      g_networkMonitor->startMonitoring();
     }
-    return *g_networkMonitor;
-  }
-
-  void initializeNetworkMonitoring()
-  {
-    auto& monitor = getNetworkMonitor();
-    monitor.startMonitoring();
   }
 
   void cleanupNetworkMonitoring()
@@ -309,4 +299,4 @@ namespace dom
       g_networkMonitor.reset();
     }
   }
-} // namespace dom
+} // namespace runtime

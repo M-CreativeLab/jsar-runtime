@@ -462,6 +462,7 @@ public:
 
 private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
+  void onListenNetworkEvent(events_comm::TrNativeEventMessage &eventMessage);
 
 public:
   uint32_t id;
@@ -502,6 +503,7 @@ private: // event fields
   TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
   events_comm::TrNativeEventSender *eventChanSender = nullptr;
   events_comm::TrNativeEventReceiver *eventChanReceiver = nullptr;
+  unique_ptr<WorkerThread> networkEventsPollingWorker = nullptr;
 
 private: // media fields
   TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;

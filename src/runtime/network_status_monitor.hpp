@@ -6,24 +6,23 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include "common/events_v2/native_event.hpp"
 
 // Forward declarations
-namespace browser
-{
-  class Window;
-}
+class TrConstellation;
 
-namespace dom
+namespace runtime
 {
   /**
    * @class NetworkStatusMonitor
-   * Monitors network connectivity status and dispatches online/offline events.
+   * Monitors network connectivity status and dispatches online/offline events to all clients.
    * Uses platform-specific APIs when available, falls back to simple connectivity checks.
+   * Runs on the server-side and broadcasts events to all connected clients.
    */
   class NetworkStatusMonitor
   {
   public:
-    NetworkStatusMonitor();
+    NetworkStatusMonitor(TrConstellation* constellation);
     ~NetworkStatusMonitor();
 
     /**
@@ -47,16 +46,6 @@ namespace dom
     void updateNetworkStatus(bool isOnline);
 
     /**
-     * Add a callback to be notified of network status changes
-     */
-    void addStatusChangeCallback(std::function<void(bool)> callback);
-
-    /**
-     * Remove all status change callbacks
-     */
-    void clearStatusChangeCallbacks();
-
-    /**
      * Check current network status using platform-specific APIs
      */
     bool checkNetworkStatus();
@@ -73,9 +62,9 @@ namespace dom
     void monitoringLoop();
 
     /**
-     * Dispatch network status change event
+     * Dispatch network status change event to all clients
      */
-    void dispatchNetworkEvent(bool isOnline);
+    void dispatchNetworkEventToClients(bool isOnline);
 
     /**
      * Platform-specific network status check implementations
@@ -91,25 +80,20 @@ namespace dom
 #endif
 
   private:
+    TrConstellation* constellation_;
     std::atomic<bool> isOnline_{true};
     std::atomic<bool> isMonitoring_{false};
     std::unique_ptr<std::thread> monitoringThread_;
-    std::vector<std::function<void(bool)>> statusChangeCallbacks_;
     static constexpr std::chrono::milliseconds POLLING_INTERVAL{5000}; // 5 seconds
   };
 
   /**
-   * Get the global network monitor instance
+   * Initialize network monitoring for the runtime
    */
-  NetworkStatusMonitor& getNetworkMonitor();
-
-  /**
-   * Initialize network monitoring for the window object
-   */
-  void initializeNetworkMonitoring();
+  void initializeNetworkMonitoring(TrConstellation* constellation);
 
   /**
    * Cleanup network monitoring
    */
   void cleanupNetworkMonitoring();
-} // namespace dom
+} // namespace runtime

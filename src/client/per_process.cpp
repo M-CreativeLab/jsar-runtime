@@ -443,6 +443,18 @@ void TrClientContextPerProcess::start()
         onListenMediaEvent(incomingEvent);
     };
     mediaEventsPollingWorker = make_unique<WorkerThread>("TrMediaEventsPolling", onPollingMediaEventsWork);
+
+    // Create worker for network events polling
+    auto onPollingNetworkEventsWork = [this](WorkerThread &worker)
+    {
+      events_comm::TrNativeEventMessage *incomingEvent = eventChanReceiver->recvEvent(100);
+      if (incomingEvent != nullptr)
+      {
+        onListenNetworkEvent(*incomingEvent);
+        delete incomingEvent;
+      }
+    };
+    networkEventsPollingWorker = make_unique<WorkerThread>("TrNetworkEventsPolling", onPollingNetworkEventsWork);
   }
   {
     // Create sender & receiver for commandbuffer chan.
@@ -770,5 +782,25 @@ void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMes
   else
   {
     fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
+  }
+}
+
+void TrClientContextPerProcess::onListenNetworkEvent(events_comm::TrNativeEventMessage &eventMessage)
+{
+  auto eventType = eventMessage.getType();
+  if (eventType == events_comm::TrNativeEventType::NetworkStatusChanged)
+  {
+    auto networkEvent = events_comm::TrNativeEvent::LoadEventFromMessage(eventMessage);
+    auto networkStatusEvent = networkEvent->template detail<events_comm::TrNetworkStatusChanged>();
+    
+    if (networkStatusEvent && window)
+    {
+      // Dispatch the network status change to the window
+      window->handleNetworkStatusChange(networkStatusEvent->isOnline);
+    }
+  }
+  else
+  {
+    // Could be other types of events, just ignore for now
   }
 }

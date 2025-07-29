@@ -5,6 +5,7 @@
 #include "./content_manager.hpp"
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
+#include "./network_status_monitor.hpp"
 
 #ifdef TR_ENABLE_INSPECTOR
 #include "./inspector.hpp"
@@ -69,6 +70,9 @@ bool TrConstellation::initialize()
     xrDevice->initialize();
     perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
 
+    // Initialize network monitoring
+    runtime::initializeNetworkMonitoring(this);
+
 #ifdef TR_ENABLE_INSPECTOR
     inspector->initialize();
 #endif
@@ -83,6 +87,7 @@ bool TrConstellation::initialize()
 void TrConstellation::shutdown()
 {
   disableTicking = true;
+  runtime::cleanupNetworkMonitoring();
   mediaManager->shutdown(); // Shutdown the media manager first to release the audio resources.
   contentManager->shutdown();
   renderer->shutdown();

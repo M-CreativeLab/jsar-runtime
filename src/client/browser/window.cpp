@@ -1,10 +1,10 @@
 #include <client/dom/element.hpp>
 #include <client/dom/document.hpp>
-#include <client/dom/network_status_monitor.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
+#include <common/events_v2/native_event.hpp>
 
 #include "./window.hpp"
 
@@ -19,8 +19,8 @@ namespace browser
       : dom::DOMEventTarget()
       , client_context_(client_context)
   {
-    // Initialize network event monitoring
-    initializeNetworkEvents();
+    // Initialize server-side network event listening
+    initializeNetworkEventReceiver();
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
@@ -66,19 +66,18 @@ namespace browser
     return *computedStyle;
   }
 
-  void Window::initializeNetworkEvents()
+  void Window::initializeNetworkEventReceiver()
   {
-    // Get the network monitor and register for status changes
-    auto& networkMonitor = dom::getNetworkMonitor();
-    
-    // Register a callback to handle network status changes
-    networkMonitor.addStatusChangeCallback([this](bool isOnline) {
-      this->handleNetworkStatusChange(isOnline);
-    });
+    // Network events are now received from the server-side via the client context
+    // The client context polling worker will call handleNetworkStatusChange when events arrive
   }
 
   void Window::handleNetworkStatusChange(bool isOnline)
   {
+    // Update navigator.onLine status
+    auto& navigator = browser::getNavigator();
+    navigator.updateOnlineStatus(isOnline);
+    
     // Create and dispatch the appropriate event
     std::string eventType = isOnline ? "online" : "offline";
     

@@ -258,7 +258,7 @@ namespace browser
     /**
      * Initialize network event monitoring for this window
      */
-    void initializeNetworkEvents();
+    void initializeNetworkEventReceiver();
 
     /**
      * Handle network status change

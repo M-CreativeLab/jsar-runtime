@@ -25,7 +25,8 @@ namespace events_comm
   XX(RpcRequest)                 \
   XX(RpcResponse)                \
   XX(DocumentRequest)            \
-  XX(DocumentEvent)
+  XX(DocumentEvent)              \
+  XX(NetworkStatusChanged)
 
   enum class TrNativeEventType
   {
@@ -240,6 +241,45 @@ namespace events_comm
   public:
     uint32_t documentId;
     TrDocumentEventType eventType;
+    long long timestamp = 0;
+
+    friend class TrEventDetailStorage;
+  };
+
+  class TrNetworkStatusChanged : public TrEventDetailObject
+  {
+  public:
+    TrNetworkStatusChanged() = default;
+    TrNetworkStatusChanged(bool isOnline)
+        : isOnline(isOnline)
+    {
+      auto now = chrono::system_clock::now();
+      timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
+    }
+
+  protected:
+    void serialize(rapidjson::Document &destDoc) override
+    {
+      destDoc.AddMember("isOnline", isOnline, destDoc.GetAllocator());
+      
+      rapidjson::Value timestampValue;
+      timestampValue.SetInt64(timestamp);
+      destDoc.AddMember("timestamp", timestampValue, destDoc.GetAllocator());
+    }
+    
+    void deserialize(rapidjson::Document &srcDoc) override
+    {
+      if (!srcDoc.HasMember("isOnline") || !srcDoc["isOnline"].IsBool())
+        isOnline = true;
+      else
+        isOnline = srcDoc["isOnline"].GetBool();
+
+      if (srcDoc.HasMember("timestamp") && srcDoc["timestamp"].IsInt64())
+        timestamp = srcDoc["timestamp"].GetInt64();
+    }
+
+  public:
+    bool isOnline;
     long long timestamp = 0;
 
     friend class TrEventDetailStorage;
