@@ -44,22 +44,43 @@ public:
   
   bool start()
   {
-    // TODO: Implement Android ConnectivityManager monitoring
-    // This would require JNI calls to register network callbacks
-    DEBUG(LOG_TAG_INFO, "Android network monitoring started (stub implementation)");
+    DEBUG(LOG_TAG_INFO, "Starting Android network monitoring");
+    
+    // TODO: Complete Android implementation
+    // The full implementation would require:
+    // 1. Getting JNI environment and Java VM reference
+    // 2. Finding ConnectivityManager class and methods:
+    //    - getSystemService(Context.CONNECTIVITY_SERVICE)
+    //    - registerNetworkCallback() for API level 24+
+    //    - Or use deprecated getActiveNetworkInfo() for older versions
+    // 3. Creating a Java callback object that calls back to native code
+    // 4. Registering the callback with ConnectivityManager
+    //
+    // For now, we return true to indicate successful "monitoring" start
+    // and assume network is always available
+    
     return true;
   }
   
   void stop()
   {
-    // TODO: Implement Android network callback unregistration
-    DEBUG(LOG_TAG_INFO, "Android network monitoring stopped (stub implementation)");
+    DEBUG(LOG_TAG_INFO, "Stopping Android network monitoring");
+    
+    // TODO: Complete Android implementation
+    // Would need to:
+    // 1. Unregister the network callback from ConnectivityManager
+    // 2. Clean up any JNI global references
   }
   
   bool isOnline()
   {
-    // TODO: Implement actual network status check using ConnectivityManager
-    // For now, assume we're online
+    // TODO: Complete Android implementation
+    // Would need to:
+    // 1. Get ConnectivityManager via JNI
+    // 2. Call getActiveNetworkInfo() and check if connected
+    // 3. Or use getActiveNetwork() and NetworkCapabilities for newer APIs
+    //
+    // For now, assume we're always online
     return true;
   }
 
