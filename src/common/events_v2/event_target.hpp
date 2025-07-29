@@ -25,7 +25,9 @@ namespace events_comm
   public:
     TrEventTarget() = default;
     TrEventTarget(const TrEventTarget &other)
-        : eventToListenersMap(other.eventToListenersMap) {};
+        : eventToListenersMap(other.eventToListenersMap)
+    {
+    }
     virtual ~TrEventTarget() = default;
 
   public:

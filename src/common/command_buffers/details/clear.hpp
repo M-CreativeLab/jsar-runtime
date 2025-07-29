@@ -28,6 +28,25 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with clear operation information.
+     * Clear operations are important for understanding frame rendering pipeline.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus clear operation parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add clear operation parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(mask), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     int mask;
   };
@@ -64,6 +83,28 @@ namespace commandbuffers
          << b << ", "
          << a << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with clear color information.
+     * Clear color is important for understanding the rendering background setup.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus clear color parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add clear color parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetFloat(r), allocator);
+      parameters.PushBack(rapidjson::Value().SetFloat(g), allocator);
+      parameters.PushBack(rapidjson::Value().SetFloat(b), allocator);
+      parameters.PushBack(rapidjson::Value().SetFloat(a), allocator);
+
+      return cmdInfo;
     }
 
   public:

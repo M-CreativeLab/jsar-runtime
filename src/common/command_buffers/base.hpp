@@ -77,6 +77,22 @@ namespace commandbuffers
      * Serialize the command buffer to a JSON object.
      * This method provides structured data for debugging and inspection tools.
      * 
+     * ## JSON Structure
+     * The implementation provides:
+     * - `id`: Command buffer unique identifier
+     * - `type`: Numeric command type (see CommandBufferType enum)
+     * - `typeName`: Human-readable command type name
+     * - `parameters`: Object containing the GLES call parameters
+     * - `context`: Object containing extra context info such as current program, VAO, etc.
+     *   - `contextId`: WebGL context identifier  
+     *   - `xrRenderingInfo`: XR session information (if applicable)
+     *     - `sessionId`: XR session identifier
+     *     - `stereoId`: Stereo rendering identifier
+     *     - `viewIndex`: Eye/view index for XR rendering
+     * 
+     * Derived classes should call this base method and add command-specific parameters
+     * to the "parameters" object returned by this method.
+     * 
      * @param allocator The JSON allocator to use for creating the JSON object
      * @returns A JSON object representing the command buffer
      */
@@ -84,14 +100,21 @@ namespace commandbuffers
     {
       rapidjson::Value cmdInfo(rapidjson::kObjectType);
 
-      // Basic command buffer information
+      // Basic command buffer information at top level
       cmdInfo.AddMember("id", rapidjson::Value().SetUint(id), allocator);
-      cmdInfo.AddMember("contextId", rapidjson::Value().SetUint(contextId), allocator);
       cmdInfo.AddMember("type", rapidjson::Value().SetInt(static_cast<int>(type)), allocator);
 
       // Command type name for human readability
       std::string typeName = commandTypeToStr(type);
       cmdInfo.AddMember("typeName", rapidjson::Value().SetString(typeName.c_str(), allocator), allocator);
+
+      // Create empty parameters array - derived classes will populate this
+      rapidjson::Value parameters(rapidjson::kArrayType);
+      cmdInfo.AddMember("parameters", parameters, allocator);
+
+      // Create context object with contextId and XR info
+      rapidjson::Value context(rapidjson::kObjectType);
+      context.AddMember("contextId", rapidjson::Value().SetUint(contextId), allocator);
 
       // XR rendering info if available
       if (renderingInfo.isValid())
@@ -100,8 +123,10 @@ namespace commandbuffers
         xrInfo.AddMember("sessionId", rapidjson::Value().SetUint(renderingInfo.sessionId), allocator);
         xrInfo.AddMember("stereoId", rapidjson::Value().SetUint(renderingInfo.stereoId), allocator);
         xrInfo.AddMember("viewIndex", rapidjson::Value().SetInt(renderingInfo.viewIndex), allocator);
-        cmdInfo.AddMember("xrRenderingInfo", xrInfo, allocator);
+        context.AddMember("xrRenderingInfo", xrInfo, allocator);
       }
+
+      cmdInfo.AddMember("context", context, allocator);
 
       return cmdInfo;
     }

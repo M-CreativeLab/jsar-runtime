@@ -1400,9 +1400,12 @@ namespace crates::layout2
          << "           overflow-x: " << style.overflow().x() << std::endl
          << "           overflow-y: " << style.overflow().y() << std::endl
          << "             position: " << style.position() << std::endl
-         << "                 size: " << "(" << style.width() << ", " << style.height() << ")" << std::endl
-         << "            [min]size: " << "(" << style.minWidth() << ", " << style.minHeight() << ")" << std::endl
-         << "            [max]size: " << "(" << style.maxWidth() << ", " << style.maxHeight() << ")" << std::endl
+         << "                 size: "
+         << "(" << style.width() << ", " << style.height() << ")" << std::endl
+         << "            [min]size: "
+         << "(" << style.minWidth() << ", " << style.minHeight() << ")" << std::endl
+         << "            [max]size: "
+         << "(" << style.maxWidth() << ", " << style.maxHeight() << ")" << std::endl
          << "               margin: " << style.margin() << std::endl
          << "              padding: " << style.padding() << std::endl
          << "               border: " << style.border() << std::endl
