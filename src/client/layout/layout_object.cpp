@@ -381,6 +381,15 @@ namespace client_layout
       {
         resulting_fragment.moveBy(offset.x, offset.y, offset.z);
       }
+      
+      // Performance optimization: viewport culling for scroll containers
+      // Skip expensive rendering calculations for elements outside viewport
+      if (!scrollable_area->isFragmentInViewport(resulting_fragment))
+      {
+        // Element is outside viewport - could potentially optimize rendering here
+        // For now, we continue with normal processing but this marks where 
+        // further optimizations could be added (e.g., skipping expensive style calculations)
+      }
     }
 
     // Returns the accumulated fragment if it is set, otherwise returns the resulting fragment.

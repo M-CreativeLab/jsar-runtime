@@ -620,6 +620,31 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
+  void Element::smoothScrollTo(const ScrollOptions &options)
+  {
+    auto layoutBox = principalBox();
+    if (layoutBox == nullptr || !layoutBox->isBox())
+      return;
+
+    glm::vec3 offset = glm::vec3(options.left, options.top, 0);
+    auto box = dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox);
+    if (box && box->isScrollContainer())
+    {
+      auto scrollableArea = box->getScrollableArea();
+      if (scrollableArea)
+      {
+        scrollableArea->smoothScrollTo(offset);
+        
+        // Throttle scroll events for better performance
+        if (!shouldThrottleScrollEvent())
+        {
+          last_scroll_event_time_ = std::chrono::steady_clock::now();
+          dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+        }
+      }
+    }
+  }
+
   builtin_scene::RenderQueue Element::getRenderQueue() const
   {
     auto renderQueue = Node::getRenderQueue();
