@@ -38,7 +38,7 @@ namespace dom
     std::string lower_input = input;
     std::transform(lower_input.begin(), lower_input.end(), lower_input.begin(), ::tolower);
 
-#define XX(LEVEL, TAG_NAME) \
+#define XX(LEVEL, TAG_NAME)     \
   if (lower_input == #TAG_NAME) \
     return HeadingLevel::LEVEL;
 
