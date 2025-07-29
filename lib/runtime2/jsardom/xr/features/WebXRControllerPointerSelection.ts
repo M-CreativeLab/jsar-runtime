@@ -460,7 +460,19 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
           const camera = this._options.xrInput.xrCamera;
           if (camera) {
             camera.viewport.toGlobalToRef(scene.getEngine().getRenderWidth(), scene.getEngine().getRenderHeight(), this._viewportRef);
-            Vector3.ProjectToRef(controllerGlobalPosition, this._identityMatrix, scene.getTransformMatrix(), this._viewportRef, this._screenCoordinatesRef);
+            
+            // For screen mode, calculate screen coordinates differently
+            if (controllerData.xrController && controllerData.xrController.inputSource.targetRayMode === 'screen') {
+              // For screen mode, project the ray direction to get screen coordinates
+              const ray = controllerData.tmpRay;
+              // Find where the ray intersects with the camera's near plane
+              const nearPlaneDistance = camera.minZ || 0.1;
+              const rayPoint = ray.origin.add(ray.direction.scale(nearPlaneDistance));
+              Vector3.ProjectToRef(rayPoint, this._identityMatrix, scene.getTransformMatrix(), this._viewportRef, this._screenCoordinatesRef);
+            } else {
+              // For other modes, use controller position projection
+              Vector3.ProjectToRef(controllerGlobalPosition, this._identityMatrix, scene.getTransformMatrix(), this._viewportRef, this._screenCoordinatesRef);
+            }
 
             // stay safe
             if (
