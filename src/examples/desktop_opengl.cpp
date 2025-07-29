@@ -323,7 +323,7 @@ namespace jsar::example
           init.active = true;
           init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass : xr::TrStereoRenderingMode::SinglePass;
           embedder_->configureXrDevice(init);
-          windowCtx_->createXrRenderer();
+          windowCtx_->createXrRenderer(monoMode);
         }
       }
 

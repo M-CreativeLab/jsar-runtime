@@ -1,8 +1,12 @@
 #pragma once
 
+#ifdef __APPLE__
 #include <OpenGL/gl3.h>
-#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#else
+#include <GL/gl.h>
+#endif
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <common/viewport.hpp>
@@ -29,7 +33,7 @@ namespace jsar::example
     TrViewport drawingViewport();
     std::string title();
     StatPanel *createStatPanel();
-    XRStereoscopicRenderer *createXrRenderer();
+    XRStereoscopicRenderer *createXrRenderer(bool monoMode = false);
     void handleScroll(double xoffset, double yoffset);
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);

@@ -10,8 +10,9 @@ namespace jsar::example
   class XRStereoscopicRenderer
   {
   public:
-    XRStereoscopicRenderer(WindowContext *windowCtx)
+    XRStereoscopicRenderer(WindowContext *windowCtx, bool monoMode = false)
         : windowCtx(windowCtx)
+        , monoMode(monoMode)
         , viewer_position_(0.0f, 0.0f, 0.35f)
     {
       float eyeOffset = XR_EYE_SPAN / 2;
@@ -44,6 +45,10 @@ namespace jsar::example
       assert(eyeIndex < 2);
       return eye_position_[eyeIndex];
     }
+    bool isMonoMode() const
+    {
+      return monoMode;
+    }
 
     void initialize(std::shared_ptr<xr::Device> xrDevice)
     {
@@ -71,8 +76,9 @@ namespace jsar::example
     }
     glm::mat4 getProjectionMatrix()
     {
+      float aspectRatio = monoMode ? windowCtx->aspect : (windowCtx->aspect / 2);
       return glm::perspective(glm::radians(fov),
-                              windowCtx->aspect / 2, // aspect ratio for each eye
+                              aspectRatio,
                               near,
                               far);
     }
@@ -120,6 +126,7 @@ namespace jsar::example
 
   private:
     std::shared_ptr<xr::Device> xrDevice = nullptr;
+    bool monoMode = false;
     glm::vec3 viewer_position_;
     glm::quat viewer_orientation_;
     glm::vec3 eye_position_[2];
