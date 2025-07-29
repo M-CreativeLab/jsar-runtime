@@ -1,5 +1,6 @@
 #include "./window.hpp"
 #include "./location.hpp"
+#include "./navigator.hpp"
 
 namespace browserbinding
 {
@@ -14,14 +15,16 @@ namespace browserbinding
        InstanceMethod("confirm", &Window::Confirm, napi_property_attributes::napi_default_jsproperty),
        InstanceMethod("focus", &Window::Focus, napi_property_attributes::napi_default_jsproperty),
        InstanceMethod("open", &Window::Open, napi_property_attributes::napi_default_jsproperty),
-       InstanceMethod("prompt", &Window::Prompt, napi_property_attributes::napi_default_jsproperty),
-       InstanceAccessor("_navigatorOnLine", &Window::NavigatorOnLineGetter, nullptr, napi_property_attributes::napi_default_jsproperty)});
+       InstanceMethod("prompt", &Window::Prompt, napi_property_attributes::napi_default_jsproperty)});
     props.insert(props.end(), added.begin(), added.end());
 
     Napi::Function func = DefineClass(env, "Window", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.Global().Set("Window", func);
+
+    // Initialize Navigator class
+    Navigator::Init(env);
   }
 
   Napi::Object Window::NewInstance(Napi::Env env, std::string url)
@@ -31,6 +34,12 @@ namespace browserbinding
     auto locationObject = Location::NewInstance(env, url);
     windowObject.Set("location", locationObject);
     windowObject.Set("origin", locationObject.Get("origin"));
+
+    // Create navigator object
+    auto window = Napi::ObjectWrap<Window>::Unwrap(windowObject)->eventTarget;
+    auto navigatorObject = Navigator::NewInstance(env, window);
+    windowObject.Set("navigator", navigatorObject);
+
     return scope.Escape(windowObject).ToObject();
   }
 
@@ -142,14 +151,5 @@ namespace browserbinding
 
     eventTarget->prompt(message, defaultValue);
     return env.Undefined();
-  }
-
-  Napi::Value Window::NavigatorOnLineGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    bool isOnline = eventTarget->navigator_onLine();
-    return Napi::Boolean::New(env, isOnline);
   }
 }

@@ -10,8 +10,8 @@ window.addEventListener('offline', function() {
   console.log('Network is now offline');
 });
 
-// Check current network status
-if (window._navigatorOnLine) {
+// Check current network status using standard navigator.onLine
+if (window.navigator.onLine) {
   console.log('Currently online');
 } else {
   console.log('Currently offline');
@@ -34,7 +34,7 @@ window.addEventListener('online', function() {
 });
 
 function makeRequest(url) {
-  if (!window._navigatorOnLine) {
+  if (!window.navigator.onLine) {
     failedRequests.push(url);
     console.log('Offline - queuing request for later:', url);
     return;

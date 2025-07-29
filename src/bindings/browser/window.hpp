@@ -27,9 +27,6 @@ namespace browserbinding
     Napi::Value Prompt(const Napi::CallbackInfo &info);
 
   public:
-    Napi::Value NavigatorOnLineGetter(const Napi::CallbackInfo &info);
-
-  public:
     static thread_local Napi::FunctionReference *constructor;
   };
 }
