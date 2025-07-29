@@ -5,7 +5,7 @@ namespace dom
 {
   void HTMLIframeElement::createdCallback(bool from_scripting)
   {
-    defaultStyle_.setProperty("display", "inline-block");
+    defaultStyle_.setProperty("display", "block");
     HTMLElement::createdCallback(from_scripting);
   }
 }
