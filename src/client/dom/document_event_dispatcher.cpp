@@ -19,10 +19,14 @@ namespace dom
 
   float DocumentEventDispatcher::GetClickDistanceThreshold()
   {
-    // Default threshold: 5 pixels
-    float defaultThresholdPixels = 5.0f;
+    // Default threshold: 1 pixels
+    float defaultThresholdPixels = 2.0f;
 
-#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+#if defined(__ANDROID__)
+    // Use 5 pixels as the default threshold at Android devices
+    defaultThresholdPixels = 5.0f;
+
+#if (__ANDROID_API__ >= 26)
     char thresholdStr[PROP_VALUE_MAX];
     if (__system_property_get("jsar.events.click_distance_threshold", thresholdStr) >= 0)
     {
@@ -34,9 +38,10 @@ namespace dom
       }
     }
 #endif
+#endif
 
     // Check environment variable
-    const char *envThreshold = std::getenv("JSAR_CLICK_DISTANCE_THRESHOLD");
+    const char *envThreshold = getenv("JSAR_CLICK_DISTANCE_THRESHOLD");
     if (envThreshold != nullptr)
     {
       char *endptr;
