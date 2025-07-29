@@ -727,33 +727,35 @@ namespace builtin_scene::web_renderer
     // Text should be positioned in the content area (inside border and padding)
     const auto &borderBox = content.fragment()->border();
     const auto &paddingBox = content.fragment()->padding();
-    float textOffsetX = borderBox.left() + paddingBox.left();
-    float textOffsetY = borderBox.top() + paddingBox.top() +
-                        paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
+    float offsetX = borderBox.left() + paddingBox.left();
+    float offsetY = borderBox.top() + paddingBox.top();
 
     // Use the paragraph visitor to extract glyph paths with proper font handling
     // This approach correctly handles mixed CJK/English text by using the fonts
     // that the paragraph system has already resolved for each glyph
-    paragraph->visit([&textPath, textOffsetX, textOffsetY](int lineNumber, const Paragraph::VisitorInfo *info)
-                     {
-      if (info == nullptr) {
+    auto addPath = [&textPath, offsetX, offsetY](int lineNumber, const Paragraph::VisitorInfo *info)
+    {
+      if (info == nullptr)
+      {
         // End of line marker, nothing to do
         return;
       }
 
       // Extract glyph paths from the properly resolved fonts
-      for (int i = 0; i < info->count; ++i) {
+      for (int i = 0; i < info->count; ++i)
+      {
         SkPath glyphPath;
-        if (info->font.getPath(info->glyphs[i], &glyphPath)) {
+        if (info->font.getPath(info->glyphs[i], &glyphPath))
+        {
           // Calculate the absolute position including the text offset within the fragment
           SkMatrix transform = SkMatrix::Translate(
-            info->origin.x() + info->positions[i].x() + textOffsetX,
-            info->origin.y() + info->positions[i].y() + textOffsetY
-          );
-          glyphPath.transform(transform);
-          textPath.addPath(glyphPath);
+            info->origin.x() + info->positions[i].x() + offsetX,
+            info->origin.y() + info->positions[i].y() + offsetY);
+          textPath.addPath(glyphPath, transform);
         }
-      } });
+      }
+    };
+    paragraph->visit(addPath);
 
     return textPath.isEmpty()
              ? nullopt
