@@ -32,9 +32,33 @@ namespace canvas
     // Convert to lowercase for case-insensitive search
     transform(start_data.begin(), start_data.end(), start_data.begin(), ::tolower);
     
-    // Check for common SVG indicators
-    return start_data.find("<svg") != string::npos || 
-           start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos;
+    // Check if it's a pure SVG file
+    // Look for <svg tag near the beginning (after optional XML declaration and whitespace)
+    size_t svg_pos = start_data.find("<svg");
+    if (svg_pos != string::npos)
+    {
+      // Ensure it's not embedded in HTML by checking for HTML tags before SVG
+      size_t html_pos = start_data.find("<html");
+      size_t body_pos = start_data.find("<body");
+      size_t doctype_pos = start_data.find("<!doctype");
+      
+      // If we find HTML structure before SVG, it's not a pure SVG file
+      if ((html_pos != string::npos && html_pos < svg_pos) ||
+          (body_pos != string::npos && body_pos < svg_pos) ||
+          (doctype_pos != string::npos && doctype_pos < svg_pos))
+      {
+        return false;
+      }
+      return true;
+    }
+    
+    // Also check for XML declaration with SVG reference
+    if (start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos)
+    {
+      return true;
+    }
+    
+    return false;
   }
 
   // Helper function to decode SVG data to SkBitmap
