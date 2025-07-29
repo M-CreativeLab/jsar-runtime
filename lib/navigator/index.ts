@@ -107,7 +107,7 @@ class NavigatorImpl implements Navigator {
   language: string;
   languages: readonly string[];
   locks: LockManager;
-  onLine: boolean;
+  onLine: boolean = true; // Default to online, will be updated by network monitor
   mimeTypes: MimeTypeArray;
   pdfViewerEnabled: boolean = false;
   plugins: PluginArray;
@@ -135,4 +135,14 @@ export function configureGL(gl: WebGLRenderingContext | WebGL2RenderingContext) 
   }
   navigator.gl = gl;
   isGLConfigured = true;
+}
+
+/**
+ * Update the network status of the navigator.
+ * This is called by the runtime when network connectivity changes.
+ * 
+ * @param isOnline true if the network is online, false otherwise
+ */
+export function updateNetworkStatus(isOnline: boolean) {
+  navigator.onLine = isOnline;
 }

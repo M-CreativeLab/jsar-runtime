@@ -28,6 +28,17 @@ public:
   }
 
   /**
+   * Get all active content runtimes.
+   * 
+   * @returns A copy of the contents vector for safe iteration.
+   */
+  std::vector<std::shared_ptr<TrContentRuntime>> getContents()
+  {
+    std::shared_lock<std::shared_mutex> lock(contentsMutex);
+    return contents;
+  }
+
+  /**
    * Set the request authorization headers for upcoming content(client-side) HTTP requests.
    * 
    * @param raw_headers The raw headers string.

@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+9217c2f9efce289ac73820b5e7f22358 /home/runner/work/jsar-runtime/jsar-runtime/src/client/builtin_scene/shaders_store.gen.hpp
+0ac9a2e21042b2b5c9947236fba18e9a /home/runner/work/jsar-runtime/jsar-runtime/src/runtime/res/client.bin.h
+eefc93162125294a3a23cad13113ddbc CMakeFiles/TransmuteClientBinaryHeader
+eefc93162125294a3a23cad13113ddbc CMakeFiles/TransmuteClientShadersHeader

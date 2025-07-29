@@ -5,6 +5,7 @@
 #include "./content_manager.hpp"
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
+#include "./network_monitor.hpp"
 
 #ifdef TR_ENABLE_INSPECTOR
 #include "./inspector.hpp"
@@ -31,6 +32,11 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = TrRenderer::Make(this);
   xrDevice = xr::Device::Make(this);
+
+  // Initialize network monitor with callback to dispatch network status events
+  networkMonitor = TrNetworkMonitor::create([this](bool isOnline) {
+    onNetworkStatusChanged(isOnline);
+  });
 
 #ifdef TR_ENABLE_INSPECTOR
   inspector = std::make_shared<TrInspector>(this);
@@ -72,6 +78,11 @@ bool TrConstellation::initialize()
 #ifdef TR_ENABLE_INSPECTOR
     inspector->initialize();
 #endif
+
+    // Start network monitoring
+    if (networkMonitor) {
+      networkMonitor->start();
+    }
   }
   initialized = true;
 
@@ -83,6 +94,12 @@ bool TrConstellation::initialize()
 void TrConstellation::shutdown()
 {
   disableTicking = true;
+  
+  // Stop network monitoring
+  if (networkMonitor) {
+    networkMonitor->stop();
+  }
+  
   mediaManager->shutdown(); // Shutdown the media manager first to release the audio resources.
   contentManager->shutdown();
   renderer->shutdown();
@@ -178,6 +195,28 @@ bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, sha
 {
   assert(embedder != nullptr);
   return embedder->onEvent(event, content);
+}
+
+void TrConstellation::onNetworkStatusChanged(bool isOnline)
+{
+  DEBUG(LOG_TAG_CONSTELLATION, "Network status changed: %s", isOnline ? "online" : "offline");
+  
+  // Create a network status event
+  auto networkEvent = std::make_shared<events_comm::TrNetworkStatusChanged>(isOnline);
+  
+  // Dispatch the event to all active content runtimes
+  events_comm::TrNativeEvent event(events_comm::TrNativeEventType::NetworkStatusChanged);
+  event.setDetail(*networkEvent);
+  
+  // Broadcast to all content runtimes through the content manager
+  if (contentManager) {
+    // For now, we'll dispatch to all contents - this could be optimized later
+    // to only dispatch to contents that have network event listeners
+    auto contents = contentManager->getContents();
+    for (auto& content : contents) {
+      dispatchNativeEvent(event, content);
+    }
+  }
 }
 
 TrConstellationInit &TrConstellation::getOptions()

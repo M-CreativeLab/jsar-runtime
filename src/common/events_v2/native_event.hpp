@@ -25,7 +25,8 @@ namespace events_comm
   XX(RpcRequest)                 \
   XX(RpcResponse)                \
   XX(DocumentRequest)            \
-  XX(DocumentEvent)
+  XX(DocumentEvent)              \
+  XX(NetworkStatusChanged)
 
   enum class TrNativeEventType
   {
@@ -241,6 +242,33 @@ namespace events_comm
     uint32_t documentId;
     TrDocumentEventType eventType;
     long long timestamp = 0;
+
+    friend class TrEventDetailStorage;
+  };
+
+  class TrNetworkStatusChanged : public TrEventDetailObject
+  {
+  public:
+    TrNetworkStatusChanged() = default;
+    TrNetworkStatusChanged(bool isOnline)
+        : isOnline(isOnline)
+    {
+    }
+
+  protected:
+    void serialize(rapidjson::Document &destDoc) override
+    {
+      auto &allocator = destDoc.GetAllocator();
+      destDoc.AddMember("isOnline", isOnline, allocator);
+    }
+    void deserialize(rapidjson::Document &srcDoc) override
+    {
+      if (srcDoc.HasMember("isOnline") && srcDoc["isOnline"].IsBool())
+        isOnline = srcDoc["isOnline"].GetBool();
+    }
+
+  public:
+    bool isOnline = true;
 
     friend class TrEventDetailStorage;
   };

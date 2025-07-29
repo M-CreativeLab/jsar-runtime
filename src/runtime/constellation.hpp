@@ -14,6 +14,7 @@
 #include "common/analytics/perf_fs.hpp"
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
+#include "network_monitor.hpp"
 
 class TrEmbedder;
 class TrContentRuntime;
@@ -258,6 +259,12 @@ public:
    * @returns If the event is dispatched successfully.
    */
   bool dispatchNativeEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content);
+  /**
+   * Called when network status changes to dispatch network events.
+   *
+   * @param isOnline true if network is online, false if offline
+   */
+  void onNetworkStatusChanged(bool isOnline);
 
 public:
   /**
@@ -292,6 +299,13 @@ public:
    * An XR device does manage the XR session, frames, input sources, etc.
    */
   std::shared_ptr<xr::Device> xrDevice;
+  /**
+   * The smart pointer to the network monitor.
+   *
+   * A network monitor does track network connectivity changes and dispatches events
+   * when the network status changes between online and offline.
+   */
+  std::shared_ptr<TrNetworkMonitor> networkMonitor;
   /**
    * The performance file system for the host.
    */

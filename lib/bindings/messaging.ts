@@ -1,4 +1,5 @@
 const { NativeEventTarget } = process._linkedBinding('transmute:messaging');
+import { updateNetworkStatus } from '../navigator/index.js';
 
 const nativeEventTarget = new NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
@@ -9,6 +10,7 @@ enum EventType {
   RpcResponse = NativeEventTarget.EventTypes.RpcResponse,
   DocumentRequest = NativeEventTarget.EventTypes.DocumentRequest,
   DocumentEvent = NativeEventTarget.EventTypes.DocumentEvent,
+  NetworkStatusChanged = NativeEventTarget.EventTypes.NetworkStatusChanged,
 }
 
 function eventNameToType(type: string): EventType {
@@ -21,6 +23,8 @@ function eventNameToType(type: string): EventType {
       return EventType.DocumentRequest;
     case 'documentEvent':
       return EventType.DocumentEvent;
+    case 'networkStatusChanged':
+      return EventType.NetworkStatusChanged;
     default:
       throw new TypeError(`unknown event type: ${type}`);
   }
@@ -93,6 +97,26 @@ function onNativeEventListener(_eventId: number, eventType: number, peerId: numb
           eventTarget.dispatchEvent(new DocumentRequestEvent(init));
         } else {
           console.warn('Invalid document request, the JSON source is:', message);
+        }
+      }
+      break;
+    case EventType.NetworkStatusChanged:
+      {
+        let networkStatus: { isOnline: boolean };
+        try {
+          networkStatus = JSON.parse(message);
+        } catch (_err) {
+          // Do nothing.
+        }
+        if (networkStatus && typeof networkStatus.isOnline === 'boolean') {
+          // Update navigator.onLine
+          updateNetworkStatus(networkStatus.isOnline);
+          
+          // Dispatch online/offline events to window
+          const eventName = networkStatus.isOnline ? 'online' : 'offline';
+          eventTarget.dispatchEvent(new Event(eventName));
+        } else {
+          console.warn('Invalid network status event, the JSON source is:', message);
         }
       }
       break;
