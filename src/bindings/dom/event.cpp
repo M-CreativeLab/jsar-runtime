@@ -2,6 +2,7 @@
 #include "./events/webxr_session.hpp"
 #include "./events/webxr_inputsource.hpp"
 #include "./events/webxr_inputsourceschange.hpp"
+#include "./events/network_event.hpp"
 
 namespace dombinding
 {
@@ -15,6 +16,7 @@ namespace dombinding
     XRSessionEvent::Init(env);
     XRInputSourceEvent::Init(env);
     XRInputSourcesChangeEvent::Init(env);
+    events::NetworkEvent::Init(env);
   }
 
   // static
@@ -36,6 +38,10 @@ namespace dombinding
     case dom::DOMEventConstructorType::kXRInputSourcesChangeEvent:
       instance = XRInputSourcesChangeEvent::NewInstance(
         env, dynamic_pointer_cast<client_xr::XRInputSourcesChangeEvent>(nativeEvent));
+      break;
+    case dom::DOMEventConstructorType::kNetworkEvent:
+      instance = events::NetworkEvent::NewInstance(
+        env, dynamic_pointer_cast<dom::NetworkEvent>(nativeEvent));
       break;
     case dom::DOMEventConstructorType::kEvent:
     default:
