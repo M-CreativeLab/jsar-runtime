@@ -39,11 +39,11 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add texture creation parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -84,11 +84,11 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add texture deletion parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetUint(texture), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -271,7 +271,8 @@ namespace commandbuffers
          << level << ", "
          << WebGLHelper::WebGLEnumToString(format) << ", "
          << WebGLHelper::WebGLEnumToString(pixelType) << ", "
-         << "pixels=" << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
+         << "pixels="
+         << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
       return ss.str();
     }
 

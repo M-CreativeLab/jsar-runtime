@@ -39,11 +39,11 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add clear operation parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetInt(mask), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -96,14 +96,14 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add clear color parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetFloat(r), allocator);
       parameters.PushBack(rapidjson::Value().SetFloat(g), allocator);
       parameters.PushBack(rapidjson::Value().SetFloat(b), allocator);
       parameters.PushBack(rapidjson::Value().SetFloat(a), allocator);
-      
+
       return cmdInfo;
     }
 

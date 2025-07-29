@@ -47,13 +47,13 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add draw arrays parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -107,14 +107,14 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add instanced draw arrays parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -170,14 +170,14 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add draw elements parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
-      
+
       return cmdInfo;
     }
 
@@ -236,7 +236,7 @@ namespace commandbuffers
     {
       // Get base command information with new structure
       rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
-      
+
       // Add instanced draw elements parameters to the parameters array in OpenGL function order
       rapidjson::Value &parameters = cmdInfo["parameters"];
       parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
@@ -244,7 +244,7 @@ namespace commandbuffers
       parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
       parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
-      
+
       return cmdInfo;
     }
 

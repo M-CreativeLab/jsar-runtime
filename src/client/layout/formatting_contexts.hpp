@@ -81,7 +81,9 @@ namespace client_layout
     {
       content_size_ = std::nullopt;
     }
-    virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
+    virtual void contentSizeDidChange(const glm::vec3 &contentSize)
+    {
+    }
 
     // Set if the formatting context node is empty, which will be ignored in the layout.
     virtual void setIsEmpty(bool);
