@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <string>
 #include <skia/include/codec/SkCodec.h>
 #include <skia/include/codec/SkPngDecoder.h>
 #include <skia/include/codec/SkJpegDecoder.h>
@@ -6,14 +8,123 @@
 #include <skia/include/codec/SkGifDecoder.h>
 #include <common/image/image_processor.hpp>
 
+#define NANOSVG_IMPLEMENTATION
+#include "../../../thirdparty/nanosvg/nanosvg.h"
+#define NANOSVGRAST_IMPLEMENTATION
+#include "../../../thirdparty/nanosvg/nanosvgrast.h"
+
 #include "./image_codec.hpp"
 
 namespace canvas
 {
   using namespace std;
 
+  // Helper function to check if data contains SVG content
+  static bool IsSVGData(const vector<char> &data)
+  {
+    if (data.empty())
+      return false;
+    
+    // Look for SVG signature in the first few hundred bytes
+    size_t search_length = min(data.size(), size_t(512));
+    string start_data(data.begin(), data.begin() + search_length);
+    
+    // Convert to lowercase for case-insensitive search
+    transform(start_data.begin(), start_data.end(), start_data.begin(), ::tolower);
+    
+    // Check for common SVG indicators
+    return start_data.find("<svg") != string::npos || 
+           start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos;
+  }
+
+  // Helper function to decode SVG data to SkBitmap
+  static bool DecodeSVG(const vector<char> &svg_data, SkBitmap &decoded_bitmap)
+  {
+    try
+    {
+      // Convert vector<char> to null-terminated string
+      string svg_string(svg_data.begin(), svg_data.end());
+      
+      // Parse SVG
+      NSVGimage* image = nsvgParse(const_cast<char*>(svg_string.c_str()), "px", 96.0f);
+      if (!image)
+      {
+        cerr << "Failed to parse SVG data" << endl;
+        return false;
+      }
+
+      // Calculate dimensions
+      int width = static_cast<int>(image->width);
+      int height = static_cast<int>(image->height);
+      
+      if (width <= 0 || height <= 0)
+      {
+        cerr << "Invalid SVG dimensions: " << width << "x" << height << endl;
+        nsvgDelete(image);
+        return false;
+      }
+
+      // Apply size constraints similar to other image formats
+      int max_size = max(width, height);
+      if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
+      {
+        float scale = static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / max_size;
+        width = static_cast<int>(width * scale);
+        height = static_cast<int>(height * scale);
+      }
+
+      // Create rasterizer
+      NSVGrasterizer* rast = nsvgCreateRasterizer();
+      if (!rast)
+      {
+        cerr << "Failed to create SVG rasterizer" << endl;
+        nsvgDelete(image);
+        return false;
+      }
+
+      // Allocate bitmap
+      SkImageInfo info = SkImageInfo::Make(width, height, kN32_SkColorType, kPremul_SkAlphaType);
+      if (!decoded_bitmap.allocPixels(info))
+      {
+        cerr << "Failed to allocate bitmap for SVG" << endl;
+        nsvgDeleteRasterizer(rast);
+        nsvgDelete(image);
+        return false;
+      }
+
+      // Clear the bitmap to transparent
+      decoded_bitmap.eraseColor(SK_ColorTRANSPARENT);
+
+      // Calculate scale factor
+      float scale = min(static_cast<float>(width) / image->width, 
+                       static_cast<float>(height) / image->height);
+
+      // Rasterize SVG to bitmap
+      nsvgRasterize(rast, image, 0, 0, scale, 
+                    static_cast<unsigned char*>(decoded_bitmap.getPixels()),
+                    width, height, decoded_bitmap.rowBytes());
+
+      // Cleanup
+      nsvgDeleteRasterizer(rast);
+      nsvgDelete(image);
+
+      return true;
+    }
+    catch (const exception &e)
+    {
+      cerr << "SVG decoding error: " << e.what() << endl;
+      return false;
+    }
+  }
+
   bool ImageCodec::Decode(const vector<char> &image_data, SkBitmap &decoded_bitmap, const string &src_hint)
   {
+    // Check if this is SVG data first
+    if (IsSVGData(image_data))
+    {
+      return DecodeSVG(image_data, decoded_bitmap);
+    }
+
     static constexpr const SkCodecs::Decoder decoders[] = {
       SkPngDecoder::Decoder(),
       SkJpegDecoder::Decoder(),
