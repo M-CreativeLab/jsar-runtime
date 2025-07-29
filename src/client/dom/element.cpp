@@ -588,7 +588,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -602,7 +608,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -756,7 +768,13 @@ namespace dom
       return;
 
     layoutBox->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -771,6 +789,12 @@ namespace dom
     {
       return false;
     }
+  }
+
+  bool Element::shouldThrottleScrollEvent() const
+  {
+    auto now = std::chrono::steady_clock::now();
+    return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 
   bool Element::recalcStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)

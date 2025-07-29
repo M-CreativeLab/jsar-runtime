@@ -376,7 +376,11 @@ namespace client_layout
     if (scrollable_area != nullptr)
     {
       auto offset = scrollable_area->getScrollOffset();
-      resulting_fragment.moveBy(offset.x, offset.y, offset.z);
+      // Performance optimization: only apply offset if it's non-zero
+      if (offset.x != 0.0f || offset.y != 0.0f || offset.z != 0.0f)
+      {
+        resulting_fragment.moveBy(offset.x, offset.y, offset.z);
+      }
     }
 
     // Returns the accumulated fragment if it is set, otherwise returns the resulting fragment.

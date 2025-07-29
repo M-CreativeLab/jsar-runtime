@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <chrono>
 #include <client/animation/animatable.hpp>
 #include <client/animation/animation.hpp>
 #include <client/animation/animation_timeline.hpp>
@@ -321,6 +322,7 @@ namespace dom
   private:
     bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
     bool setActionState(bool &state, bool value);
+    bool shouldThrottleScrollEvent() const;
 
   public:
     std::string id;
@@ -364,5 +366,9 @@ namespace dom
     bool is_hovered_ = false;
     bool is_focused_ = false;
     bool is_active_ = false;
+    
+    // Scroll performance optimization
+    std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // ~60fps throttling
   };
 }
