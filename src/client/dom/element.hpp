@@ -29,6 +29,7 @@
   XX("div", HTMLDivElement)           \
   XX("head", HTMLHeadElement)         \
   XX("html", HTMLHtmlElement)         \
+  XX("iframe", HTMLIframeElement)     \
   XX("img", HTMLImageElement)         \
   XX("link", HTMLLinkElement)         \
   XX("meta", HTMLMetaElement)         \

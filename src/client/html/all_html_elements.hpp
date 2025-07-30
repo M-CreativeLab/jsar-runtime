@@ -6,6 +6,7 @@
 #include "./html_head_element.hpp"
 #include "./html_heading_element.hpp"
 #include "./html_html_element.hpp"
+#include "./html_iframe_element.hpp"
 #include "./html_image_element.hpp"
 #include "./html_link_element.hpp"
 #include "./html_media_element.hpp"
