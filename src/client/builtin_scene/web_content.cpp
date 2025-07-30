@@ -2,6 +2,7 @@
 #include <vector>
 #include <skia/include/core/SkImageInfo.h>
 #include <client/macros.h>
+#include <client/cssom/units.hpp>
 
 #include "./web_content.hpp"
 
@@ -62,7 +63,7 @@ namespace builtin_scene
       , last_fragment_(std::nullopt)
       , content_style_()
       , background_color_(1.0f, 1.0f, 1.0f, 0.0f)
-      , device_pixel_ratio_(1.0f)
+      , device_pixel_ratio_(client_cssom::DevicePixelRatio)
   {
     resetSkSurface(initialWidth, initialHeight);
   }

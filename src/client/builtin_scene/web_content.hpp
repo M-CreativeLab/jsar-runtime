@@ -161,6 +161,19 @@ namespace builtin_scene
       return physicalHeight() / device_pixel_ratio_;
     }
 
+    inline float devicePixelRatio() const
+    {
+      return device_pixel_ratio_;
+    }
+    inline void setDevicePixelRatio(float ratio)
+    {
+      if (ratio > 0.0f && device_pixel_ratio_ != ratio)
+      {
+        device_pixel_ratio_ = ratio;
+        setDirty(true); // Mark as dirty to trigger re-rendering with new ratio
+      }
+    }
+
     // Check if the surface needs to be resized.
     bool needsResize(float w, float h) const;
 
