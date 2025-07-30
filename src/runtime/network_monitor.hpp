@@ -61,16 +61,16 @@ namespace runtime
   };
 
   /**
-   * @class SocketBasedNetworkMonitor
+   * @class DefaultNetworkMonitor
    * Common implementation using socket-based connectivity detection.
    * This can be used as a fallback or default implementation for platforms
    * that don't have platform-specific network monitoring APIs.
    */
-  class SocketBasedNetworkMonitor : public NetworkMonitor
+  class DefaultNetworkMonitor : public NetworkMonitor
   {
   public:
-    SocketBasedNetworkMonitor() = default;
-    ~SocketBasedNetworkMonitor() override;
+    DefaultNetworkMonitor() = default;
+    ~DefaultNetworkMonitor() override;
 
     bool startMonitoring(NetworkStatusCallback callback) override;
     void stopMonitoring() override;
@@ -95,7 +95,7 @@ namespace runtime
    * since Android platform-specific APIs require Java/JNI integration which is not
    * compatible with the C/C++ library constraints.
    */
-  class AndroidNetworkMonitor : public SocketBasedNetworkMonitor
+  class AndroidNetworkMonitor : public DefaultNetworkMonitor
   {
   public:
     AndroidNetworkMonitor() = default;

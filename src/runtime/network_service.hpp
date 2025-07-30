@@ -57,6 +57,31 @@ namespace runtime
     void unregisterEventCallback();
 
     /**
+     * Enable manual network status control.
+     * When enabled, the automatic monitoring is disabled and network status
+     * must be set manually using setNetworkStatus().
+     * @param enabled true to enable manual control, false to resume automatic monitoring
+     */
+    void setManualMode(bool enabled);
+
+    /**
+     * Check if manual mode is enabled.
+     * @return true if manual mode is active
+     */
+    bool isManualMode() const
+    {
+      return manualMode_;
+    }
+
+    /**
+     * Set the network status manually.
+     * This only works when manual mode is enabled.
+     * @param status The network status to set
+     * @return true if status was set successfully, false if manual mode is not enabled
+     */
+    bool setNetworkStatus(NetworkStatus status);
+
+    /**
      * Get the singleton instance of the network service.
      * @return Reference to the global network service instance
      */
@@ -69,7 +94,9 @@ namespace runtime
     std::shared_ptr<NetworkMonitor> monitor_;
     NetworkEventDispatcher eventDispatcher_;
     bool isRunning_ = false;
+    bool manualMode_ = false;
     NetworkStatus lastKnownStatus_ = NetworkStatus::Online;
+    NetworkStatus manualStatus_ = NetworkStatus::Online;
   };
 
 } // namespace runtime

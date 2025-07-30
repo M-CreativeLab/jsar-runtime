@@ -1,8 +1,5 @@
 #include "network_monitor.hpp"
-
-#if UNITY_ANDROID
-#include <android/log.h>
-#endif
+#include "common/debug.hpp"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -20,18 +17,18 @@ namespace runtime
 #elif UNITY_OSX
     return std::make_shared<MacOSNetworkMonitor>();
 #else
-    // For other platforms, use the socket-based implementation as default
-    return std::make_shared<SocketBasedNetworkMonitor>();
+    // For other platforms, use the default implementation
+    return std::make_shared<DefaultNetworkMonitor>();
 #endif
   }
 
-  // SocketBasedNetworkMonitor implementation
-  SocketBasedNetworkMonitor::~SocketBasedNetworkMonitor()
+  // DefaultNetworkMonitor implementation
+  DefaultNetworkMonitor::~DefaultNetworkMonitor()
   {
     stopMonitoring();
   }
 
-  bool SocketBasedNetworkMonitor::startMonitoring(NetworkStatusCallback callback)
+  bool DefaultNetworkMonitor::startMonitoring(NetworkStatusCallback callback)
   {
     if (isMonitoring_)
     {
@@ -59,11 +56,8 @@ namespace runtime
           {
             statusCallback_(currentStatus);
           }
-#if UNITY_ANDROID
-          __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", 
-                              "Network status changed to: %s", 
-                              currentStatus == NetworkStatus::Online ? "Online" : "Offline");
-#endif
+          DEBUG(LOG_TAG_JSAR, "Network status changed to: %s", 
+                currentStatus == NetworkStatus::Online ? "Online" : "Offline");
         }
         
         // Check every 2 seconds
@@ -76,13 +70,11 @@ namespace runtime
       statusCallback_(getCurrentStatus());
     }
 
-#if UNITY_ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "Network monitoring started");
-#endif
+    DEBUG(LOG_TAG_JSAR, "Network monitoring started");
     return true;
   }
 
-  void SocketBasedNetworkMonitor::stopMonitoring()
+  void DefaultNetworkMonitor::stopMonitoring()
   {
     if (!isMonitoring_)
     {
@@ -101,17 +93,15 @@ namespace runtime
     isMonitoring_ = false;
     statusCallback_ = nullptr;
 
-#if UNITY_ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "Network monitoring stopped");
-#endif
+    DEBUG(LOG_TAG_JSAR, "Network monitoring stopped");
   }
 
-  NetworkStatus SocketBasedNetworkMonitor::getCurrentStatus() const
+  NetworkStatus DefaultNetworkMonitor::getCurrentStatus() const
   {
     return testConnectivity() ? NetworkStatus::Online : NetworkStatus::Offline;
   }
 
-  bool SocketBasedNetworkMonitor::testConnectivity() const
+  bool DefaultNetworkMonitor::testConnectivity() const
   {
     // Use a simple socket-based connectivity test
     // Try to create a socket and connect to a well-known server

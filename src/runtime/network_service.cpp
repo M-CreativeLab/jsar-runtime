@@ -20,35 +20,49 @@ namespace runtime
       return false;
     }
 
-    // Set up the callback to handle network status changes
-    auto statusCallback = [this](NetworkStatus status)
+    // Only start automatic monitoring if not in manual mode
+    if (!manualMode_)
     {
-      onNetworkStatusChanged(status);
-    };
+      // Set up the callback to handle network status changes
+      auto statusCallback = [this](NetworkStatus status)
+      {
+        onNetworkStatusChanged(status);
+      };
 
-    if (monitor_->startMonitoring(statusCallback))
-    {
-      isRunning_ = true;
-      lastKnownStatus_ = monitor_->getCurrentStatus();
-      return true;
+      if (!monitor_->startMonitoring(statusCallback))
+      {
+        return false;
+      }
     }
 
-    return false;
+    isRunning_ = true;
+    lastKnownStatus_ = getCurrentStatus();
+    return true;
   }
 
   void NetworkService::stop()
   {
-    if (!isRunning_ || !monitor_)
+    if (!isRunning_)
     {
       return;
     }
 
-    monitor_->stopMonitoring();
+    // Stop monitoring if not in manual mode
+    if (!manualMode_ && monitor_)
+    {
+      monitor_->stopMonitoring();
+    }
+
     isRunning_ = false;
   }
 
   NetworkStatus NetworkService::getCurrentStatus() const
   {
+    if (manualMode_)
+    {
+      return manualStatus_;
+    }
+
     if (monitor_)
     {
       return monitor_->getCurrentStatus();
@@ -86,6 +100,61 @@ namespace runtime
       const char *statusStr = (status == NetworkStatus::Online) ? "online" : "offline";
       std::cout << "[NetworkService] Network status changed to: " << statusStr << std::endl;
     }
+  }
+
+  void NetworkService::setManualMode(bool enabled)
+  {
+    if (manualMode_ == enabled)
+    {
+      return; // No change needed
+    }
+
+    manualMode_ = enabled;
+
+    if (isRunning_)
+    {
+      if (enabled)
+      {
+        // Switch to manual mode: stop automatic monitoring
+        if (monitor_)
+        {
+          monitor_->stopMonitoring();
+        }
+        std::cout << "[NetworkService] Switched to manual network monitoring mode" << std::endl;
+      }
+      else
+      {
+        // Switch to automatic mode: start monitoring
+        if (monitor_)
+        {
+          auto statusCallback = [this](NetworkStatus status)
+          {
+            onNetworkStatusChanged(status);
+          };
+          monitor_->startMonitoring(statusCallback);
+        }
+        std::cout << "[NetworkService] Switched to automatic network monitoring mode" << std::endl;
+      }
+    }
+  }
+
+  bool NetworkService::setNetworkStatus(NetworkStatus status)
+  {
+    if (!manualMode_)
+    {
+      return false; // Manual mode must be enabled
+    }
+
+    NetworkStatus oldStatus = manualStatus_;
+    manualStatus_ = status;
+
+    // Trigger status change notification if the status actually changed
+    if (oldStatus != status)
+    {
+      onNetworkStatusChanged(status);
+    }
+
+    return true;
   }
 
 } // namespace runtime
