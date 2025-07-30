@@ -62,7 +62,7 @@ namespace canvas
   }
 
   // Helper function to decode SVG data to SkBitmap
-  static bool DecodeSVG(const vector<char> &svg_data, SkBitmap &decoded_bitmap)
+  static bool DecodeSVG(const vector<char> &svg_data, SkBitmap &decoded_bitmap, int target_width = -1, int target_height = -1)
   {
     try
     {
@@ -77,9 +77,33 @@ namespace canvas
         return false;
       }
 
-      // Calculate dimensions
-      int width = static_cast<int>(image->width);
-      int height = static_cast<int>(image->height);
+      // Calculate dimensions - use target dimensions if provided, otherwise use original
+      int width, height;
+      
+      if (target_width > 0 && target_height > 0)
+      {
+        // Both dimensions specified
+        width = target_width;
+        height = target_height;
+      }
+      else if (target_width > 0)
+      {
+        // Only width specified, maintain aspect ratio
+        width = target_width;
+        height = static_cast<int>((target_width * image->height) / image->width);
+      }
+      else if (target_height > 0)
+      {
+        // Only height specified, maintain aspect ratio
+        height = target_height;
+        width = static_cast<int>((target_height * image->width) / image->height);
+      }
+      else
+      {
+        // No target dimensions, use original
+        width = static_cast<int>(image->width);
+        height = static_cast<int>(image->height);
+      }
 
       if (width <= 0 || height <= 0)
       {
@@ -132,12 +156,12 @@ namespace canvas
     }
   }
 
-  bool ImageCodec::Decode(const vector<char> &image_data, SkBitmap &decoded_bitmap, const string &src_hint)
+  bool ImageCodec::Decode(const vector<char> &image_data, SkBitmap &decoded_bitmap, const string &src_hint, int target_width, int target_height)
   {
     // Check if this is SVG data first
     if (IsSVG(image_data))
     {
-      return DecodeSVG(image_data, decoded_bitmap);
+      return DecodeSVG(image_data, decoded_bitmap, target_width, target_height);
     }
 
     static constexpr const SkCodecs::Decoder decoders[] = {

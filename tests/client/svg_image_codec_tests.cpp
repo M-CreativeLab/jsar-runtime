@@ -30,6 +30,63 @@ TEST_CASE("SVG Image Codec basic functionality", "[svg-codec]")
     REQUIRE(!decoded_bitmap.empty());
   }
 
+  SECTION("SVG decoding with target width and height")
+  {
+    std::string svg_content = R"(
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="80" height="80" fill="red"/>
+</svg>
+)";
+    
+    std::vector<char> svg_data(svg_content.begin(), svg_content.end());
+    SkBitmap decoded_bitmap;
+    
+    bool success = ImageCodec::Decode(svg_data, decoded_bitmap, "test.svg", 200, 300);
+    
+    REQUIRE(success == true);
+    REQUIRE(decoded_bitmap.width() == 200);
+    REQUIRE(decoded_bitmap.height() == 300);
+    REQUIRE(!decoded_bitmap.empty());
+  }
+
+  SECTION("SVG decoding with target width only (maintain aspect ratio)")
+  {
+    std::string svg_content = R"(
+<svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="80" height="30" fill="blue"/>
+</svg>
+)";
+    
+    std::vector<char> svg_data(svg_content.begin(), svg_content.end());
+    SkBitmap decoded_bitmap;
+    
+    bool success = ImageCodec::Decode(svg_data, decoded_bitmap, "test.svg", 200, -1);
+    
+    REQUIRE(success == true);
+    REQUIRE(decoded_bitmap.width() == 200);
+    REQUIRE(decoded_bitmap.height() == 100); // 200 * (50/100) = 100
+    REQUIRE(!decoded_bitmap.empty());
+  }
+
+  SECTION("SVG decoding with target height only (maintain aspect ratio)")
+  {
+    std::string svg_content = R"(
+<svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="80" height="30" fill="green"/>
+</svg>
+)";
+    
+    std::vector<char> svg_data(svg_content.begin(), svg_content.end());
+    SkBitmap decoded_bitmap;
+    
+    bool success = ImageCodec::Decode(svg_data, decoded_bitmap, "test.svg", -1, 100);
+    
+    REQUIRE(success == true);
+    REQUIRE(decoded_bitmap.width() == 200); // 100 * (100/50) = 200
+    REQUIRE(decoded_bitmap.height() == 100);
+    REQUIRE(!decoded_bitmap.empty());
+  }
+
   SECTION("SVG with no XML declaration")
   {
     std::string svg_content = R"(
@@ -63,8 +120,28 @@ TEST_CASE("SVG Image Codec basic functionality", "[svg-codec]")
     
     REQUIRE(success == true);
     // Should be scaled down due to size constraints
-    REQUIRE(decoded_bitmap.width() <= 2048);
-    REQUIRE(decoded_bitmap.height() <= 2048);
+    REQUIRE(decoded_bitmap.width() <= 1024);
+    REQUIRE(decoded_bitmap.height() <= 1024);
+  }
+
+  SECTION("SVG with target dimensions exceeding size constraints")
+  {
+    std::string svg_content = R"(
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="100" height="100" fill="purple"/>
+</svg>
+)";
+    
+    std::vector<char> svg_data(svg_content.begin(), svg_content.end());
+    SkBitmap decoded_bitmap;
+    
+    // Request very large dimensions
+    bool success = ImageCodec::Decode(svg_data, decoded_bitmap, "large_target.svg", 2048, 2048);
+    
+    REQUIRE(success == true);
+    // Should be scaled down due to size constraints
+    REQUIRE(decoded_bitmap.width() <= 1024);
+    REQUIRE(decoded_bitmap.height() <= 1024);
   }
 
   SECTION("Invalid SVG data")
