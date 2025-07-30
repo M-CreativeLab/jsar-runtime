@@ -88,6 +88,8 @@ namespace dom
 
   void HTMLImageElement::styleAdoptedCallback()
   {
+    HTMLElement::styleAdoptedCallback();
+
     const client_cssom::ComputedStyle &adopted_style = adoptedStyleRef();
     if (adopted_style.hasProperty("height") ||
         adopted_style.hasProperty("width"))
