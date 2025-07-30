@@ -6,10 +6,12 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLIframeElement::constructor;
   void HTMLIframeElement::Init(Napi::Env env)
   {
+#define MODULE_NAME "HTMLIFrameElement"
     auto props = GetClassProperties(env);
-    Napi::Function func = DefineClass(env, "HTMLIFrameElement", props);
+    Napi::Function func = DefineClass(env, MODULE_NAME, props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
-    env.Global().Set("HTMLIFrameElement", func);
+    env.Global().Set(MODULE_NAME, func);
+#undef MODULE_NAME
   }
 }
