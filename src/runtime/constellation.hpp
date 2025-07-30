@@ -19,6 +19,10 @@ class TrEmbedder;
 class TrContentRuntime;
 class TrContentManager;
 class TrMediaManager;
+namespace runtime
+{
+  class NetworkService;
+}
 #ifdef TR_ENABLE_INSPECTOR
 class TrInspector;
 #endif
@@ -279,6 +283,13 @@ public:
    * The smart pointer to the media manager.
    */
   std::shared_ptr<TrMediaManager> mediaManager;
+  /**
+   * The smart pointer to the network service.
+   *
+   * A network service does monitor network connectivity status and provides
+   * callbacks for network status changes throughout the runtime.
+   */
+  std::shared_ptr<runtime::NetworkService> networkService;
   /**
    * The smart pointer to the renderer.
    *

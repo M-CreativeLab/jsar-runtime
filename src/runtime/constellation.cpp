@@ -4,6 +4,7 @@
 #include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./media_manager.hpp"
+#include "./network_service.hpp"
 #include "./embedder.hpp"
 
 #ifdef TR_ENABLE_INSPECTOR
@@ -29,6 +30,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   nativeEventTarget = std::make_shared<events_comm::TrNativeEventTarget>();
   contentManager = std::make_shared<TrContentManager>(this);
   mediaManager = std::make_shared<TrMediaManager>(this);
+  networkService = std::make_shared<runtime::NetworkService>();
   renderer = TrRenderer::Make(this);
   xrDevice = xr::Device::Make(this);
 
@@ -65,6 +67,7 @@ bool TrConstellation::initialize()
   {
     contentManager->initialize();
     mediaManager->initialize();
+    networkService->start();
     renderer->initialize();
     xrDevice->initialize();
     perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
@@ -84,6 +87,7 @@ void TrConstellation::shutdown()
 {
   disableTicking = true;
   mediaManager->shutdown(); // Shutdown the media manager first to release the audio resources.
+  networkService->stop();
   contentManager->shutdown();
   renderer->shutdown();
   xrDevice->shutdown();

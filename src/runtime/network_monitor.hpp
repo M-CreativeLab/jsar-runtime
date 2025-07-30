@@ -60,25 +60,46 @@ namespace runtime
     bool isMonitoring_ = false;
   };
 
-#if UNITY_ANDROID
   /**
-   * @class AndroidNetworkMonitor
-   * Android-specific implementation using C/C++ socket-based connectivity detection.
+   * @class SocketBasedNetworkMonitor
+   * Common implementation using socket-based connectivity detection.
+   * This can be used as a fallback or default implementation for platforms
+   * that don't have platform-specific network monitoring APIs.
    */
-  class AndroidNetworkMonitor : public NetworkMonitor
+  class SocketBasedNetworkMonitor : public NetworkMonitor
   {
   public:
-    AndroidNetworkMonitor() = default;
-    ~AndroidNetworkMonitor() override;
+    SocketBasedNetworkMonitor() = default;
+    ~SocketBasedNetworkMonitor() override;
 
     bool startMonitoring(NetworkStatusCallback callback) override;
     void stopMonitoring() override;
     NetworkStatus getCurrentStatus() const override;
 
+  protected:
+    /**
+     * Test network connectivity using socket connection.
+     * @return true if network is available, false otherwise
+     */
+    bool testConnectivity() const;
+
   private:
-    // C++-only implementation using threading and socket-based detection
     std::thread monitoringThread_;
     std::atomic<bool> stopRequested_{false};
+  };
+
+#if UNITY_ANDROID
+  /**
+   * @class AndroidNetworkMonitor
+   * Android-specific implementation. For now, this uses the common socket-based approach
+   * since Android platform-specific APIs require Java/JNI integration which is not
+   * compatible with the C/C++ library constraints.
+   */
+  class AndroidNetworkMonitor : public SocketBasedNetworkMonitor
+  {
+  public:
+    AndroidNetworkMonitor() = default;
+    ~AndroidNetworkMonitor() override = default;
   };
 #endif
 
