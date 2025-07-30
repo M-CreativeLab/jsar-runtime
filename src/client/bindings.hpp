@@ -10,6 +10,7 @@
 #include <bindings/messaging/binding.hpp>
 #include <bindings/renderer/binding.hpp>
 #include <bindings/webgl/binding.hpp>
+#include <bindings/webnn/binding.hpp>
 #include <bindings/webxr/binding.hpp>
 
 /**
@@ -40,4 +41,5 @@
   MODULE(math3d)                   \
   MODULE(renderer)                 \
   MODULE(webgl)                    \
+  MODULE(webnn)                    \
   MODULE(webxr)

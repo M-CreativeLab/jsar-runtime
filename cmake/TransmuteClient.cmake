@@ -11,6 +11,7 @@ file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
     "src/client/layout/*.cpp"
     "src/client/media/*.cpp"
     "src/client/networking/*.cpp"
+    "src/client/nn/*.cpp"
     "src/client/scripting_base/*.cpp"
     "src/client/scroll/*.cpp"
     "src/client/xr/*.cpp"
@@ -60,6 +61,11 @@ target_include_directories(TransmuteClientLibrary PRIVATE ${NODE_ADDON_API_HEADE
 tr_target_link_library(TransmuteClientLibrary ${TR_CRATE_BUILD_PATH} jsar_jsbindings STATIC)
 tr_target_link_thirdparty_library(TransmuteClientLibrary node)
 tr_target_link_skia_library(TransmuteClientLibrary)
+target_link_libraries(TransmuteClientLibrary PRIVATE TransmuteGgml)
+
+# Link OpenMP (required by ggml)
+find_package(OpenMP REQUIRED)
+target_link_libraries(TransmuteClientLibrary PRIVATE OpenMP::OpenMP_CXX)
 
 if(APPLE)
     target_link_libraries(TransmuteClientLibrary PRIVATE "-framework CoreFoundation")

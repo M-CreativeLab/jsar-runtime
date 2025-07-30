@@ -124,6 +124,7 @@ include(cmake/TransmuteCXXFlags.cmake)
 include(cmake/TransmuteCommon.cmake)
 include(cmake/TransmuteCore.cmake)
 include(cmake/TransmuteHTTPParser.cmake)
+include(cmake/TransmuteGgml.cmake)
 include(cmake/TransmuteClient.cmake)
 include(cmake/TransmuteTests.cmake)
 
