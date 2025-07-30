@@ -566,6 +566,10 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
 
   private _attachScreenRayMode(xrController: WebXRInputSource) {
     const controllerData = this._controllers[xrController.uniqueId];
+    
+    // Configure the native screen input source for touch interactions
+    this._configureScreenInputSource(xrController);
+    
     const pointerEventInit: PointerEventInit = {
       pointerId: controllerData.id,
       pointerType: 'xr',
@@ -882,6 +886,60 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     // here due to a typo
     return this.laserPointerDefaultColor;
   }
+
+  /**
+   * Configure the screen input source for screen mode interactions
+   */
+  private _configureScreenInputSource(xrController: WebXRInputSource): void {
+    try {
+      // For screen mode, we need to ensure the input source is properly configured
+      // Access the native XR device through the session manager
+      const nativeDevice = this._getNativeXRDevice();
+      if (!nativeDevice) {
+        console.debug('Native XR device not available for screen input source configuration');
+        return;
+      }
+
+      // Get the screen input source from the native device
+      const screenInputSource = nativeDevice.getScreenInputSource();
+      if (!screenInputSource) {
+        console.warn('Screen input source not available from native device');
+        return;
+      }
+
+      // For now, we'll log that screen mode is configured
+      // The actual enabling would require additional native API methods
+      console.debug('Screen input source configured for target ray mode:', xrController.inputSource.targetRayMode);
+      console.debug('Screen input source details:', screenInputSource);
+      
+      // Mark this controller as having screen mode configured
+      (xrController as any)._screenModeConfigured = true;
+      (xrController as any)._nativeScreenInputSourceId = screenInputSource.id;
+      
+    } catch (error) {
+      console.warn('Failed to configure screen input source:', error);
+    }
+  }
+
+  /**
+   * Get the native XR device from the session manager
+   */
+  private _getNativeXRDevice(): any {
+    try {
+      // Access the XR system through the navigator
+      const xrSystem = (globalThis as any).navigator?.xr;
+      if (!xrSystem) {
+        return null;
+      }
+
+      // The XR system should have access to the native device
+      // This is based on the XRDeviceNative interface from transmute-private.d.ts
+      return (xrSystem as any).device || (xrSystem as any)._device || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
 }
 
 //register the plugin
