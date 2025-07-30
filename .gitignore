@@ -58,4 +58,3 @@ node_modules
 
 # Build artifacts
 ./build/cmake/
-build/test/
