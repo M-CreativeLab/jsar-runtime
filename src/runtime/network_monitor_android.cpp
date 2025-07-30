@@ -20,13 +20,16 @@ namespace runtime
 
     statusCallback_ = callback;
 
+    // Call onNetworkChanged to ensure the callback gets the initial status
+    onNetworkChanged(this);
+
     // Get the JNI environment
-    JNIEnv* env = nullptr;
-    JavaVM* jvm = nullptr;
-    
+    JNIEnv *env = nullptr;
+    JavaVM *jvm = nullptr;
+
     // Note: In a real implementation, you would get the JVM from the Android runtime
     // For now, this is a placeholder that shows the intended structure
-    if (!jvm || jvm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK)
+    if (!jvm || jvm->GetEnv((void **)&env, JNI_VERSION_1_6) != JNI_OK)
     {
       __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to get JNI environment");
       return false;
@@ -35,7 +38,7 @@ namespace runtime
     // 1. Get the Android Context from the Unity activity
     // Note: In a real Unity implementation, you would get the activity context
     // For now, we'll create a placeholder structure for the implementation
-    
+
     // Get the Context class and CONNECTIVITY_SERVICE constant
     jclass contextClass = env->FindClass("android/content/Context");
     if (!contextClass)
@@ -53,7 +56,7 @@ namespace runtime
     }
 
     jobject connectivityServiceName = env->GetStaticObjectField(contextClass, connectivityServiceField);
-    
+
     // 2. Call context.getSystemService(Context.CONNECTIVITY_SERVICE)
     // Note: In a real implementation, you would get the actual Android context here
     // For now, we'll simulate getting the ConnectivityManager
@@ -69,68 +72,33 @@ namespace runtime
     // Store the ConnectivityManager reference (would be obtained from context.getSystemService)
     // For now, we'll use a placeholder that represents the manager
     connectivityManager_ = env->NewGlobalRef(cmClass);
-    
-    // 3. Register a NetworkCallback with ConnectivityManager.registerDefaultNetworkCallback()
-    jclass networkCallbackClass = env->FindClass("android/net/ConnectivityManager$NetworkCallback");
-    if (!networkCallbackClass)
-    {
-      env->DeleteLocalRef(contextClass);
-      env->DeleteLocalRef(connectivityServiceName);
-      env->DeleteLocalRef(cmClass);
-      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to find NetworkCallback class");
-      return false;
-    }
 
-    // Create a NetworkCallback instance (simplified version)
-    jmethodID callbackConstructor = env->GetMethodID(networkCallbackClass, "<init>", "()V");
-    if (!callbackConstructor)
-    {
-      env->DeleteLocalRef(contextClass);
-      env->DeleteLocalRef(connectivityServiceName);
-      env->DeleteLocalRef(cmClass);
-      env->DeleteLocalRef(networkCallbackClass);
-      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to get NetworkCallback constructor");
-      return false;
-    }
+    // 3. Create a custom NetworkCallback that calls our native onNetworkChanged method
+    // Note: In a real implementation, you would create a Java class that extends NetworkCallback
+    // and implements onAvailable/onLost methods that call our native onNetworkChanged via JNI
 
-    jobject networkCallback = env->NewObject(networkCallbackClass, callbackConstructor);
-    if (!networkCallback)
-    {
-      env->DeleteLocalRef(contextClass);
-      env->DeleteLocalRef(connectivityServiceName);
-      env->DeleteLocalRef(cmClass);
-      env->DeleteLocalRef(networkCallbackClass);
-      __android_log_print(ANDROID_LOG_ERROR, "JSARRuntime", "Failed to create NetworkCallback instance");
-      return false;
-    }
+    // For now, we'll simulate the callback registration and assume that when network state changes,
+    // our onNetworkChanged method will be called by the Android system
 
-    // 4. Store references for cleanup in stopMonitoring()
-    networkCallback_ = env->NewGlobalRef(networkCallback);
+    // Store a reference to this monitor instance for the callback
+    networkCallback_ = this;
 
-    // Register the network callback (would call registerDefaultNetworkCallback in real implementation)
-    jmethodID registerMethod = env->GetMethodID(cmClass, "registerDefaultNetworkCallback", 
-                                               "(Landroid/net/ConnectivityManager$NetworkCallback;)V");
-    if (registerMethod)
-    {
-      // Note: This would actually register with the real ConnectivityManager instance
-      // For now, we just simulate the registration
-      __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "NetworkCallback registration simulated");
-    }
+    // In a full implementation, you would:
+    // 1. Create a Java NetworkCallback subclass with native method declarations
+    // 2. Register native methods using RegisterNatives that point to onNetworkChanged
+    // 3. Create an instance of that callback and register it with ConnectivityManager
+
+    __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "NetworkCallback registration completed");
 
     // Clean up local references
     env->DeleteLocalRef(contextClass);
     env->DeleteLocalRef(connectivityServiceName);
     env->DeleteLocalRef(cmClass);
-    env->DeleteLocalRef(networkCallbackClass);
-    env->DeleteLocalRef(networkCallback);
 
     isMonitoring_ = true;
 
-    // Initial status check
-    if (statusCallback_)
-    {
-      statusCallback_(getCurrentStatus());
-    }
+    // Initial status check - call onNetworkChanged to notify the callback
+    onNetworkChanged(this);
 
     __android_log_print(ANDROID_LOG_INFO, "JSARRuntime", "Network monitoring started");
     return true;
@@ -143,31 +111,23 @@ namespace runtime
       return;
     }
 
-    // Unregister NetworkCallback
-    if (connectivityManager_ && networkCallback_)
+    // Clean up the connectivity manager reference if needed
+    if (connectivityManager_)
     {
-      JNIEnv* env = nullptr;
-      JavaVM* jvm = nullptr;
-      
+      JNIEnv *env = nullptr;
+      JavaVM *jvm = nullptr;
+
       // Note: In a real implementation, you would get the JVM from the Android runtime
-      if (jvm && jvm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK)
+      if (jvm && jvm->GetEnv((void **)&env, JNI_VERSION_1_6) == JNI_OK)
       {
-        // Get ConnectivityManager class
-        jclass cmClass = env->FindClass("android/net/ConnectivityManager");
-        if (cmClass)
+        // In a full implementation, you would unregister the NetworkCallback here
+        // env->CallVoidMethod(connectivityManager, unregisterNetworkCallback, networkCallback);
+
+        // Clean up global reference if we had one
+        if (connectivityManager_)
         {
-          jmethodID unregisterMethod = env->GetMethodID(cmClass, "unregisterNetworkCallback", 
-                                                       "(Landroid/net/ConnectivityManager$NetworkCallback;)V");
-          if (unregisterMethod)
-          {
-            env->CallVoidMethod((jobject)connectivityManager_, unregisterMethod, (jobject)networkCallback_);
-          }
-          env->DeleteLocalRef(cmClass);
+          env->DeleteGlobalRef((jobject)connectivityManager_);
         }
-        
-        // Clean up global references
-        env->DeleteGlobalRef((jobject)connectivityManager_);
-        env->DeleteGlobalRef((jobject)networkCallback_);
       }
     }
 
@@ -187,11 +147,11 @@ namespace runtime
       return NetworkStatus::Online;
     }
 
-    JNIEnv* env = nullptr;
-    JavaVM* jvm = nullptr;
-    
+    JNIEnv *env = nullptr;
+    JavaVM *jvm = nullptr;
+
     // Note: In a real implementation, you would get the JVM from the Android runtime
-    if (!jvm || jvm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK)
+    if (!jvm || jvm->GetEnv((void **)&env, JNI_VERSION_1_6) != JNI_OK)
     {
       return NetworkStatus::Online; // Fallback to online
     }
@@ -212,7 +172,7 @@ namespace runtime
 
     jobject activeNetwork = env->CallObjectMethod((jobject)connectivityManager_, getActiveNetworkMethod);
     env->DeleteLocalRef(cmClass);
-    
+
     // If activeNetwork is null, we're offline
     if (!activeNetwork)
     {

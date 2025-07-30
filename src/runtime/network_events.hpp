@@ -23,7 +23,7 @@ namespace runtime
    * @class NetworkEventCallback
    * Simple callback interface for network status changes.
    */
-  using NetworkEventCallback = std::function<void(NetworkEventType eventType, NetworkStatus status, const std::string& timestamp)>;
+  using NetworkEventCallback = std::function<void(NetworkEventType eventType, NetworkStatus status, const std::string &timestamp)>;
 
   /**
    * @class NetworkEventDispatcher
