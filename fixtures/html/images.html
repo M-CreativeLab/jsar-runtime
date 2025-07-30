@@ -8,7 +8,7 @@
 <body style="background-color: #fff;padding: 20px;">
   <h2>Images:</h2>
   <img src="images/jsar-logo-00.png" style="transform:translateZ(10px);height:300px;" />
-  <img src="images/react-logo-00.svg" style="height:300px;" />
+  <img id="svg-image" src="images/react-logo-00.svg" style="height:400px;" />
   <img id="placeholder" />
 </body>
 
@@ -60,6 +60,14 @@
     console.info('placeholder:', placeholder);
     placeholder.setAttribute('src', 'https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg');
     console.info('placeholder.src:', placeholder.src);
+  }, 1000);
+
+  setTimeout(() => {
+    // Update the SVG image size dynamically
+    const svgImage = document.getElementById('svg-image');
+    console.info('svgImage:', svgImage);
+    console.info(svgImage.height, svgImage.width);
+    svgImage.style.height = '200px';
   }, 1000);
 </script>
 

@@ -3,7 +3,6 @@
 #include <common/image/image_processor.hpp>
 #include <crates/bindings.hpp>
 #include <client/per_process.hpp>
-#include <client/canvas/image_codec.hpp>
 #include <client/cssom/layout.hpp>
 #include <client/dom/browsing_context.hpp>
 #include <client/dom/document.hpp>
@@ -87,6 +86,22 @@ namespace dom
     }
   }
 
+  void HTMLImageElement::styleAdoptedCallback()
+  {
+    const client_cssom::ComputedStyle &adopted_style = adoptedStyleRef();
+    if (adopted_style.hasProperty("height") ||
+        adopted_style.hasProperty("width"))
+    {
+      if (!adopted_style.height().isAuto())
+        height_ = adopted_style.height().toLayoutValue().value();
+      if (!adopted_style.width().isAuto())
+        width_ = adopted_style.width().toLayoutValue().value();
+
+      // Schedule the image decoding if the sizes in style is changed.
+      decodeImageAsync();
+    }
+  }
+
   void HTMLImageElement::loadImage()
   {
     if (is_src_image_loading ||
@@ -101,20 +116,36 @@ namespace dom
 
   bool HTMLImageElement::decodeImage(SkBitmap &bitmap)
   {
-    if (is_src_image_decoded_)
-      return true;
-
-    is_src_image_decoded_ = canvas::ImageCodec::Decode(image_data_.value(), bitmap, getSrc());
+    is_src_image_decoded_ = canvas::ImageCodec::Decode(image_data_.value(),
+                                                       &image_format_,
+                                                       bitmap,
+                                                       getSrc(),
+                                                       width_,
+                                                       height_);
     if (is_src_image_decoded_)
     {
-      image_data_->clear();
-      image_data_.reset();
+      bool perserve_image_data = image_format_.isSVG();
+      if (!perserve_image_data)
+      {
+        image_data_->clear();
+        image_data_.reset();
+      }
     }
     return is_src_image_decoded_;
   }
 
-  void HTMLImageElement::decodeImageAsync(const SkBitmap &bitmap)
+  void HTMLImageElement::decodeImageAsync()
   {
+    // Skip the decoding if the image data is not ready.
+    if (!is_src_image_loaded_ || !image_data_.has_value())
+      return;
+
+    // Skip the decoding if the image is already decoded except for SVG images, which are needed to be rasterized with
+    // the current size always.
+    bool always_decoding = image_format_.isSVG();
+    if (!always_decoding && is_src_image_decoded_)
+      return;
+
     auto work = [](uv_work_t *handle)
     {
       if (handle != nullptr && handle->data != nullptr)
@@ -132,9 +163,12 @@ namespace dom
         {
           imageElement->onImageDecoded(*imageElement->sk_bitmap_);
 
-          // Mark the image is completed.
-          imageElement->complete = true;
-          imageElement->dispatchEvent(DOMEventType::Load);
+          // Mark the image is completed for the first decoded time.
+          if (!imageElement->complete)
+          {
+            imageElement->complete = true;
+            imageElement->dispatchEvent(DOMEventType::Load);
+          }
         }
         else
         {
@@ -187,7 +221,7 @@ namespace dom
     assert(sk_bitmap_ != nullptr && "The image bitmap is not created yet.");
 
     // TODO(yorkie): support `decoding` options.
-    decodeImageAsync(*sk_bitmap_);
+    decodeImageAsync();
   }
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)

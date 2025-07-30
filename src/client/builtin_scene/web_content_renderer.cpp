@@ -838,6 +838,7 @@ namespace builtin_scene::web_renderer
           SkBitmap bitmap;
           // TODO(yorkie): support decoding this async?
           if (canvas::ImageCodec::Decode(image.getUrlImageData(),
+                                         nullptr,
                                          bitmap,
                                          image.getUrl()))
           {

@@ -527,7 +527,7 @@ namespace client_layout
     useSceneWithCallback(resizeEntity);
 
     if (resized == true)
-      sizeDidChange();
+      sizeDidChange(newSize);
     return resized;
   }
 
@@ -781,11 +781,11 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::sizeWillChange(const Fragment &newSize)
+  void LayoutObject::sizeWillChange(const Fragment &)
   {
   }
 
-  void LayoutObject::sizeDidChange()
+  void LayoutObject::sizeDidChange(const Fragment &)
   {
   }
 

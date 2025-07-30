@@ -4,10 +4,12 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <node/uv.h>
+
+#include <client/canvas/image_codec.hpp>
+#include <client/canvas/image_source.hpp>
 #include <client/dom/geometry/dom_rect.hpp>
 
 #include "./html_element.hpp"
-#include "../canvas/image_source.hpp"
 
 namespace dom
 {
@@ -52,6 +54,7 @@ namespace dom
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue,
                                   const std::string &newValue) override;
+    void styleAdoptedCallback() override;
 
     inline geometry::DOMRect getImageClientRect() const
     {
@@ -100,7 +103,7 @@ namespace dom
 
   private:
     bool decodeImage(SkBitmap &);
-    void decodeImageAsync(const SkBitmap &bitmap);
+    void decodeImageAsync();
 
     void onImageDataReady(const void *imageData, size_t imageByteLength);
     void onImageDecoded(const SkBitmap &bitmap);
@@ -140,6 +143,12 @@ namespace dom
     }
     inline void setHeight(size_t height)
     {
+      height_ = height;
+      onSizeDidChange();
+    }
+    inline void setSize(size_t width, size_t height)
+    {
+      width_ = width;
       height_ = height;
       onSizeDidChange();
     }
@@ -210,6 +219,7 @@ namespace dom
     std::optional<int> height_;
 
     std::optional<std::vector<char>> image_data_ = std::nullopt;
+    canvas::EncodedImageFormat image_format_;
     std::shared_ptr<SkBitmap> sk_bitmap_;
     bool is_src_image_loading = false;
     bool is_src_image_loaded_ = false;

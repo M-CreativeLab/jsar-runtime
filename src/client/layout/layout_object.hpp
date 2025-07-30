@@ -433,8 +433,8 @@ namespace client_layout
     virtual void styleWillChange(client_cssom::ComputedStyle &newStyle);
     virtual void styleDidChange();
 
-    virtual void sizeWillChange(const Fragment &newSize);
-    virtual void sizeDidChange();
+    virtual void sizeWillChange(const Fragment &);
+    virtual void sizeDidChange(const Fragment &);
 
     virtual void willComputeLayout(const ConstraintSpace &);
     virtual void didComputeLayoutOnce(const ConstraintSpace &);
