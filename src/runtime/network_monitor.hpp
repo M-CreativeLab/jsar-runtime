@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <functional>
+#include <thread>
+#include <atomic>
 #include "platform_base.hpp"
 
 namespace runtime
@@ -61,7 +63,7 @@ namespace runtime
 #if UNITY_ANDROID
   /**
    * @class AndroidNetworkMonitor
-   * Android-specific implementation using ConnectivityManager APIs.
+   * Android-specific implementation using C/C++ socket-based connectivity detection.
    */
   class AndroidNetworkMonitor : public NetworkMonitor
   {
@@ -74,12 +76,9 @@ namespace runtime
     NetworkStatus getCurrentStatus() const override;
 
   private:
-    void checkNetworkStatus();
-    static void onNetworkChanged(AndroidNetworkMonitor *monitor);
-
-    // Platform-specific members will be added here
-    void *connectivityManager_ = nullptr;
-    void *networkCallback_ = nullptr;
+    // C++-only implementation using threading and socket-based detection
+    std::thread monitoringThread_;
+    std::atomic<bool> stopRequested_{false};
   };
 #endif
 
