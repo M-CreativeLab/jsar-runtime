@@ -9,9 +9,9 @@
 #include <common/image/image_processor.hpp>
 
 #define NANOSVG_IMPLEMENTATION
-#include "../../../thirdparty/nanosvg/nanosvg.h"
+#include <nanosvg/nanosvg.h>
 #define NANOSVGRAST_IMPLEMENTATION
-#include "../../../thirdparty/nanosvg/nanosvgrast.h"
+#include <nanosvg/nanosvgrast.h>
 
 #include "./image_codec.hpp"
 
@@ -20,18 +20,18 @@ namespace canvas
   using namespace std;
 
   // Helper function to check if data contains SVG content
-  static bool IsSVGData(const vector<char> &data)
+  static bool IsSVG(const vector<char> &data)
   {
     if (data.empty())
       return false;
-    
+
     // Look for SVG signature in the first few hundred bytes
     size_t search_length = min(data.size(), size_t(512));
     string start_data(data.begin(), data.begin() + search_length);
-    
+
     // Convert to lowercase for case-insensitive search
     transform(start_data.begin(), start_data.end(), start_data.begin(), ::tolower);
-    
+
     // Check if it's a pure SVG file
     // Look for <svg tag near the beginning (after optional XML declaration and whitespace)
     size_t svg_pos = start_data.find("<svg");
@@ -41,7 +41,7 @@ namespace canvas
       size_t html_pos = start_data.find("<html");
       size_t body_pos = start_data.find("<body");
       size_t doctype_pos = start_data.find("<!doctype");
-      
+
       // If we find HTML structure before SVG, it's not a pure SVG file
       if ((html_pos != string::npos && html_pos < svg_pos) ||
           (body_pos != string::npos && body_pos < svg_pos) ||
@@ -51,13 +51,13 @@ namespace canvas
       }
       return true;
     }
-    
+
     // Also check for XML declaration with SVG reference
     if (start_data.find("<?xml") != string::npos && start_data.find("svg") != string::npos)
     {
       return true;
     }
-    
+
     return false;
   }
 
@@ -68,9 +68,9 @@ namespace canvas
     {
       // Convert vector<char> to null-terminated string
       string svg_string(svg_data.begin(), svg_data.end());
-      
+
       // Parse SVG
-      NSVGimage* image = nsvgParse(const_cast<char*>(svg_string.c_str()), "px", 96.0f);
+      NSVGimage *image = nsvgParse(const_cast<char *>(svg_string.c_str()), "px", 96.0f);
       if (!image)
       {
         cerr << "Failed to parse SVG data" << endl;
@@ -80,7 +80,7 @@ namespace canvas
       // Calculate dimensions
       int width = static_cast<int>(image->width);
       int height = static_cast<int>(image->height);
-      
+
       if (width <= 0 || height <= 0)
       {
         cerr << "Invalid SVG dimensions: " << width << "x" << height << endl;
@@ -98,7 +98,7 @@ namespace canvas
       }
 
       // Create rasterizer
-      NSVGrasterizer* rast = nsvgCreateRasterizer();
+      NSVGrasterizer *rast = nsvgCreateRasterizer();
       if (!rast)
       {
         cerr << "Failed to create SVG rasterizer" << endl;
@@ -108,30 +108,21 @@ namespace canvas
 
       // Allocate bitmap
       SkImageInfo info = SkImageInfo::Make(width, height, kN32_SkColorType, kPremul_SkAlphaType);
-      if (!decoded_bitmap.allocPixels(info))
-      {
-        cerr << "Failed to allocate bitmap for SVG" << endl;
-        nsvgDeleteRasterizer(rast);
-        nsvgDelete(image);
-        return false;
-      }
+      decoded_bitmap.allocPixels(info);
 
       // Clear the bitmap to transparent
       decoded_bitmap.eraseColor(SK_ColorTRANSPARENT);
 
       // Calculate scale factor
-      float scale = min(static_cast<float>(width) / image->width, 
-                       static_cast<float>(height) / image->height);
+      float scale = min(static_cast<float>(width) / image->width,
+                        static_cast<float>(height) / image->height);
 
       // Rasterize SVG to bitmap
-      nsvgRasterize(rast, image, 0, 0, scale, 
-                    static_cast<unsigned char*>(decoded_bitmap.getPixels()),
-                    width, height, decoded_bitmap.rowBytes());
+      nsvgRasterize(rast, image, 0, 0, scale, static_cast<unsigned char *>(decoded_bitmap.getPixels()), width, height, decoded_bitmap.rowBytes());
 
       // Cleanup
       nsvgDeleteRasterizer(rast);
       nsvgDelete(image);
-
       return true;
     }
     catch (const exception &e)
@@ -144,7 +135,7 @@ namespace canvas
   bool ImageCodec::Decode(const vector<char> &image_data, SkBitmap &decoded_bitmap, const string &src_hint)
   {
     // Check if this is SVG data first
-    if (IsSVGData(image_data))
+    if (IsSVG(image_data))
     {
       return DecodeSVG(image_data, decoded_bitmap);
     }
