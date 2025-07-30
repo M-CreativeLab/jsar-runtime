@@ -62,4 +62,20 @@ TEST_CASE("WebContent device pixel ratio", "[web_content]")
     content.setDevicePixelRatio(content.devicePixelRatio());
     REQUIRE(content.isDirty() == false);
   }
+
+  SECTION("Surface respects device pixel ratio")
+  {
+    WebContent content("test", 150.0f, 100.0f);
+    
+    // With default device pixel ratio of 1.5
+    // Physical surface should be: 150 * 1.5 = 225, 100 * 1.5 = 150 (plus texture padding)
+    // Note: The actual surface size includes texture padding, so we check the logical calculation
+    
+    float logicalW = content.logicalWidth();
+    float logicalH = content.logicalHeight();
+    
+    // Verify that logical = physical / device_pixel_ratio
+    REQUIRE(logicalW == Catch::Approx(content.physicalWidth() / content.devicePixelRatio()));
+    REQUIRE(logicalH == Catch::Approx(content.physicalHeight() / content.devicePixelRatio()));
+  }
 }
