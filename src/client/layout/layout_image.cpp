@@ -71,7 +71,7 @@ namespace client_layout
     return false;
   }
 
-  void LayoutImage::setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap)
+  void LayoutImage::setImageBitmap(shared_ptr<SkBitmap> srcBitmap)
   {
     adjustImageSize();
 
@@ -146,6 +146,7 @@ namespace client_layout
   {
     LayoutReplaced::sizeDidChange(newSize);
 
+    imageElement().setSize(newSize.width(), newSize.height());
     adjustImageSize();
   }
 

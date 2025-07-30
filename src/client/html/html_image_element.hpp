@@ -130,11 +130,11 @@ namespace dom
 
     inline size_t width() const override
     {
-      return width_.value_or(0);
+      return width_.value_or(natural_width_);
     }
     inline size_t height() const override
     {
-      return height_.value_or(0);
+      return height_.value_or(natural_height_);
     }
     inline void setWidth(size_t width)
     {
@@ -217,6 +217,9 @@ namespace dom
 
     std::optional<int> width_;
     std::optional<int> height_;
+
+    int natural_width_ = 0;
+    int natural_height_ = 0;
 
     std::optional<std::vector<char>> image_data_ = std::nullopt;
     canvas::EncodedImageFormat image_format_;

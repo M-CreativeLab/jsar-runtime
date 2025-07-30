@@ -33,7 +33,9 @@ namespace dom
   void HTMLImageElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
-    sk_bitmap_ = make_shared<SkBitmap>();
+
+    if (sk_bitmap_ == nullptr)
+      sk_bitmap_ = make_shared<SkBitmap>();
   }
 
   void HTMLImageElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
@@ -46,13 +48,11 @@ namespace dom
     }
     else if (name == "width")
     {
-      newValue.empty() ? width_ = 0 : width_ = stoi(newValue);
-      onSizeDidChange();
+      setWidth(newValue.empty() ? 0 : stoi(newValue));
     }
     else if (name == "height")
     {
-      newValue.empty() ? height_ = 0 : height_ = stoi(newValue);
-      onSizeDidChange();
+      setHeight(newValue.empty() ? 0 : stoi(newValue));
     }
     else if (name == "loading")
     {
@@ -89,19 +89,6 @@ namespace dom
   void HTMLImageElement::styleAdoptedCallback()
   {
     HTMLElement::styleAdoptedCallback();
-
-    const client_cssom::ComputedStyle &adopted_style = adoptedStyleRef();
-    if (adopted_style.hasProperty("height") ||
-        adopted_style.hasProperty("width"))
-    {
-      if (!adopted_style.height().isAuto())
-        height_ = adopted_style.height().toLayoutValue().value();
-      if (!adopted_style.width().isAuto())
-        width_ = adopted_style.width().toLayoutValue().value();
-
-      // Schedule the image decoding if the sizes in style is changed.
-      decodeImageAsync();
-    }
   }
 
   void HTMLImageElement::loadImage()
@@ -118,12 +105,23 @@ namespace dom
 
   bool HTMLImageElement::decodeImage(SkBitmap &bitmap)
   {
+    optional<int> decoding_width = width_;
+    optional<int> decoding_height = height_;
+    if (hasAdoptedStyle())
+    {
+      const auto &style = adoptedStyleRef();
+      if (style.width().isAuto())
+        decoding_width = nullopt;
+      if (style.height().isAuto())
+        decoding_height = nullopt;
+    }
+
     is_src_image_decoded_ = canvas::ImageCodec::Decode(image_data_.value(),
                                                        &image_format_,
                                                        bitmap,
                                                        getSrc(),
-                                                       width_,
-                                                       height_);
+                                                       decoding_width,
+                                                       decoding_height);
     if (is_src_image_decoded_)
     {
       bool perserve_image_data = image_format_.isSVG();
@@ -228,11 +226,8 @@ namespace dom
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)
   {
-    // Use natural width and height if the width and height are not set.
-    if (!width_.has_value())
-      width_ = bitmap.width();
-    if (!height_.has_value())
-      height_ = bitmap.height();
+    natural_width_ = bitmap.width();
+    natural_height_ = bitmap.height();
 
     if (!connected)
       return;
@@ -240,6 +235,9 @@ namespace dom
     auto imageBox = dynamic_pointer_cast<client_layout::LayoutImage>(principalBox());
     assert(imageBox != nullptr && "The image box is not created yet.");
     imageBox->setImageBitmap(sk_bitmap_);
+
+    // Notify the layout system that the image is ready for updating.
+    markAsDirty();
   }
 
   void HTMLImageElement::onSizeDidChange()
@@ -252,6 +250,8 @@ namespace dom
       sk_bitmap_ = make_shared<SkBitmap>();
       sk_bitmap_->allocPixels(imageInfo);
     }
+
+    decodeImageAsync();
   }
 
   bool HTMLImageElement::validateSizeToMakeBitmap()

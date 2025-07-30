@@ -242,7 +242,10 @@ namespace canvas
         }
 
         // Allocate bitmap
-        SkImageInfo info = SkImageInfo::Make(width, height, kN32_SkColorType, kPremul_SkAlphaType);
+        SkImageInfo info = SkImageInfo::Make(width,
+                                             height,
+                                             kN32_SkColorType,
+                                             kPremul_SkAlphaType);
         decoded_bitmap.allocPixels(info);
 
         // Clear the bitmap to transparent
@@ -253,7 +256,15 @@ namespace canvas
                           static_cast<float>(height) / image->height);
 
         // Rasterize SVG to bitmap
-        nsvgRasterize(rast, image, 0, 0, scale, static_cast<unsigned char *>(decoded_bitmap.getPixels()), width, height, decoded_bitmap.rowBytes());
+        nsvgRasterize(rast,
+                      image,
+                      0,
+                      0,
+                      scale,
+                      static_cast<unsigned char *>(decoded_bitmap.getPixels()),
+                      width,
+                      height,
+                      decoded_bitmap.rowBytes());
 
         // Cleanup
         nsvgDeleteRasterizer(rast);

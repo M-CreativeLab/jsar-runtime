@@ -1036,13 +1036,17 @@ namespace builtin_scene::web_renderer
       SkRRect &roundedRect = content.rounded_rect_;
       canvas->clipRRect(roundedRect, true);
 
+      SkPaint imagePaint;
+      imagePaint.setAntiAlias(true);
+      imagePaint.setStyle(SkPaint::kFill_Style);
+
       SkRect srcRect = SkRect::MakeWH(skImage->width(), skImage->height());
       SkRect dstRect = SkRect::MakeWH(content.logicalWidth(), content.logicalHeight());
       canvas->drawImageRect(skImage,
                             srcRect,
                             dstRect,
                             SkSamplingOptions(),
-                            nullptr,
+                            &imagePaint,
                             SkCanvas::kStrict_SrcRectConstraint);
     }
     canvas->restore();
