@@ -17,14 +17,13 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material()
+      : Material(false) // Web content must use transparent material
       , width_(0.0f)
       , height_(0.0f)
       , textureAtlas_(nullptr)
       , textureOffset_(0.0f, 0.0f)
       , textureScale_(1.0f, 1.0f)
   {
-    this->isOpaque_ = true;
   }
 
   bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,

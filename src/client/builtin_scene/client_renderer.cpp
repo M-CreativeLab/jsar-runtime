@@ -88,15 +88,9 @@ namespace builtin_scene
     }
   }
 
-  void RenderSystem::renderPass(vector<EntityId> &roots,
-                                RenderPass renderPass,
-                                optional<XRRenderTarget> renderTarget)
+  void RenderSystem::renderPass(vector<EntityId> &roots, RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
     assert(roots.size() > 0 && "The roots must not be empty.");
-
-    // TODO(yorkie): support other render passes like particles, post-processing, etc.
-    if (renderPass != RenderPass::kOpaques)
-      return;
 
     renderVolumeMask(renderPass, renderTarget);
     onBeforeRender(renderTarget);
@@ -130,6 +124,11 @@ namespace builtin_scene
       renderer_->initializeMesh3d(meshComponent);
     if (!materialComponent->initialized())
       renderer_->initializeMeshMaterial3d(meshComponent, materialComponent);
+
+    // Skip rendering if the material does not for this render pass, such as the mesh is not opaque but the render pass
+    // is for opaques.
+    if (!materialComponent->matchesPass(renderPass))
+      return;
 
     // Update the mesh3d and material if needed
     renderer_->tryUpdateMeshMaterial3d(meshComponent, materialComponent);

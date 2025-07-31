@@ -14,7 +14,7 @@ namespace builtin_scene
         , index_(index)
     {
     }
-
+  
   private:
     int index_;
   };

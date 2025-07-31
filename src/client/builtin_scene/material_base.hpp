@@ -64,6 +64,10 @@ namespace builtin_scene
     Material()
     {
     }
+    Material(bool isOpaque)
+        : isOpaque_(isOpaque)
+    {
+    }
     virtual ~Material() = default;
 
   public:

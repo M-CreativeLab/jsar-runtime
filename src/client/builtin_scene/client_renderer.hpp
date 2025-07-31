@@ -65,17 +65,8 @@ namespace builtin_scene
      * @param renderTarget The XR render target.
      */
     void renderMesh(ecs::EntityId &, std::shared_ptr<Mesh3d>, RenderPass, std::optional<XRRenderTarget>);
-    /**
-     * Execute this before rendering the scene.
-     *
-     * @param renderTarget The XR render target.
-     */
+
     void onBeforeRender(std::optional<XRRenderTarget>);
-    /**
-     * Execute this after rendering the scene.
-     *
-     * @param renderTarget The XR render target.
-     */
     void onAfterRender(std::optional<XRRenderTarget>);
 
     // Traverse the entity hierarchy in pre-order and execute the given function for each entity.

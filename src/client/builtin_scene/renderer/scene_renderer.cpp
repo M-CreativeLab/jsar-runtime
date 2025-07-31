@@ -409,6 +409,10 @@ namespace builtin_scene
     assert(drawMaskGeometry != nullptr);
     assert(volumeMask_.has_value());
 
+    // Clear the stencil buffer before drawing the volume mask.
+    glContext_->clearStencil(0x00);
+    glContext_->clear(WEBGL_STENCIL_BUFFER_BIT);
+
     glContext_->enable(WEBGL_DEPTH_TEST);
     glContext_->colorMask(false, false, false, false);
     glContext_->depthMask(false);
