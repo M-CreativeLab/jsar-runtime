@@ -78,13 +78,13 @@ namespace jsar::example
     }
 
   public:
-    bool onEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content) override
+    bool onEvent(events_comm::TrNativeEvent &event, shared_ptr<TrContentRuntime> content) override
     {
       if (event.type == events_comm::TrNativeEventType::RpcRequest)
       {
         events_comm::TrNativeEvent respEvent(events_comm::TrNativeEventType::RpcResponse);
         auto request = event.detail<events_comm::TrRpcRequest>();
-        std::cout << "Received RPC request: " << request.method << std::endl;
+        cout << "Received RPC request: " << request.method << endl;
         if (request.method == "ping")
         {
           PongResponse pongResp;
@@ -126,8 +126,8 @@ namespace jsar::example
     {
       printf("Usage: jsar_desktop_opengl [options] [url]\n");
       printf("Options:\n");
-      printf("  -w <width>              Window width (default: 960)\n");
-      printf("  -h <height>             Window height (default: 600)\n");
+      printf("  -w <width>              Window width (default: 1600)\n");
+      printf("  -h <height>             Window height (default: 900)\n");
       printf("  -n <count>              Number of apps (default: 1)\n");
       printf("  --samples             MSAA samples (default: 4)\n");
       printf("  --mono                  Monoscopic XR rendering (default)\n");
@@ -265,10 +265,6 @@ namespace jsar::example
         return false;
       }
 
-      // In stereo mode, double the width for side-by-side rendering
-      if (!monoMode)
-        width *= 2;
-
       int count;
       GLFWmonitor *glassMonitor = nullptr;
       GLFWmonitor **monitors = glfwGetMonitors(&count);
@@ -306,7 +302,7 @@ namespace jsar::example
         prepareRenderTarget(samples);
       }
 
-      embedder_ = std::make_unique<DesktopEmbedder>(!monoMode);
+      embedder_ = make_unique<DesktopEmbedder>(!monoMode);
       assert(embedder_ != nullptr);
 
       auto drawingViewport = windowCtx_->drawingViewport();
@@ -573,8 +569,8 @@ namespace jsar::example
     }
 
   public:
-    int width = 960;
-    int height = 600;
+    int width = 1600;
+    int height = 900;
     bool xrEnabled = false;
     bool monoMode = true; // Default to mono mode
     bool multiPass = false;
@@ -583,8 +579,8 @@ namespace jsar::example
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
-    std::unique_ptr<WindowContext> windowCtx_;
-    std::unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<WindowContext> windowCtx_;
+    unique_ptr<DesktopEmbedder> embedder_;
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };
