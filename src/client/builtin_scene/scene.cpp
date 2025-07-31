@@ -69,7 +69,7 @@ namespace builtin_scene
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
     addPlugin<WebXRPlugin>();
-    addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
+    addResource(ecs::Resource::Make<SceneRenderer>(glContext_, volumeSize_));
   }
 
   void Scene::bootstrap()

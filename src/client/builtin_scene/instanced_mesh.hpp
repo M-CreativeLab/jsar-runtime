@@ -263,7 +263,7 @@ namespace builtin_scene
 
   class InstancedMeshBase
   {
-    friend class Renderer;
+    friend class SceneRenderer;
     friend class RenderSystem;
 
   public:
