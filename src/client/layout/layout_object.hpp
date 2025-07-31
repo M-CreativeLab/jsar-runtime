@@ -151,6 +151,18 @@ namespace client_layout
 
     bool hasClip() const;
     bool isScrollContainer() const;
+    
+    /**
+     * Calculate the layer number based on scrollable container hierarchy.
+     * Each scrollable container in the parent hierarchy adds 1 to the layer count.
+     */
+    int calculateLayer() const;
+    
+    /**
+     * Update the layer for this object and all its descendants recursively.
+     * This should be called when the DOM hierarchy changes.
+     */
+    void updateLayersRecursively();
 
     inline std::shared_ptr<dom::Node> node() const
     {

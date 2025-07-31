@@ -164,6 +164,44 @@ namespace client_layout
     return isScrollableInX || isScrollableInY;
   }
 
+  int LayoutObject::calculateLayer() const  
+  {
+    int layer = 0;
+    
+    // Walk up the parent hierarchy and count scrollable containers
+    auto current = parent();
+    while (current != nullptr)
+    {
+      if (current->isScrollContainer())
+      {
+        layer++;
+      }
+      current = current->parent();
+    }
+    
+    return layer;
+  }
+
+  void LayoutObject::updateLayersRecursively()
+  {
+    // Update this object's layer
+    if (hasEntity())
+    {
+      auto webContent = getSceneComponent<WebContent>();
+      if (webContent != nullptr)
+      {
+        int newLayer = this->calculateLayer();
+        webContent->setLayer(newLayer);
+      }
+    }
+    
+    // Recursively update all children
+    for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
+    {
+      child->updateLayersRecursively();
+    }
+  }
+
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
   {
     assert(node() != nullptr || parent() != nullptr);
@@ -431,6 +469,9 @@ namespace client_layout
 
     auto &parentCtx = *formattingContext_;
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
+    
+    // Update layers for the new child and its descendants since hierarchy changed
+    newChild->updateLayersRecursively();
   }
 
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)
@@ -440,6 +481,13 @@ namespace client_layout
 
     child->formattingContext_->onRemoved(*formattingContext_);
     child->destroy();
+    
+    // Update layers for remaining children since hierarchy changed
+    // Note: We don't need to update the removed child's layers as it's being destroyed
+    for (auto sibling = slowFirstChild(); sibling != nullptr; sibling = sibling->nextSibling())
+    {
+      sibling->updateLayersRecursively();
+    }
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
@@ -485,6 +533,10 @@ namespace client_layout
         if (parent() != nullptr)
           parentContent = parent()->getSceneComponent<WebContent>();
         webContent->setStyle(style, parentContent);
+        
+        // Update layer after style change as it might affect scrollable containers
+        int newLayer = this->calculateLayer();
+        webContent->setLayer(newLayer);
       }
     }
 
@@ -731,7 +783,8 @@ namespace client_layout
 
         // Add `WebContent` component to the entity.
         auto fragment = this->fragment();
-        scene.addComponent(entity, WebContent(string(this->debugName()), fragment.contentWidth(), fragment.contentHeight()));
+        int layer = this->calculateLayer();
+        scene.addComponent(entity, WebContent(string(this->debugName()), fragment.contentWidth(), fragment.contentHeight(), layer));
       }
     };
     useSceneWithCallback(configEntity);

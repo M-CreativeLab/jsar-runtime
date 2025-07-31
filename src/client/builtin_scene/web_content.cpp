@@ -58,8 +58,9 @@ namespace builtin_scene
   {
   }
 
-  WebContent::WebContent(std::string name, float initialWidth, float initialHeight)
+  WebContent::WebContent(std::string name, float initialWidth, float initialHeight, int layer)
       : name_(name)
+      , layer_(layer)
       , last_fragment_(std::nullopt)
       , content_style_()
       , background_color_(1.0f, 1.0f, 1.0f, 0.0f)
