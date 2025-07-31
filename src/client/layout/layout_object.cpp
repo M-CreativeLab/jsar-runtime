@@ -1,4 +1,5 @@
 #include <vector>
+#include <cstdio>
 #include <client/dom/node.hpp>
 #include <client/dom/browsing_context.hpp>
 #include <client/dom/document-inl.hpp>
@@ -199,6 +200,49 @@ namespace client_layout
     for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
     {
       child->updateLayersRecursively();
+    }
+  }
+
+  void LayoutObject::printLayerTree(int indent) const
+  {
+    // Create indentation string
+    std::string indentStr(indent * 2, ' ');
+    
+    // Get node information
+    std::string nodeInfo = "unknown";
+    if (node())
+    {
+      nodeInfo = node()->nodeName();
+    }
+    
+    // Get layer information
+    int layer = calculateLayer();
+    bool isScrollable = isScrollContainer();
+    
+    // Get WebContent layer if available
+    std::string webContentLayer = "";
+    if (hasEntity())
+    {
+      auto webContent = getSceneComponent<WebContent>();
+      if (webContent != nullptr)
+      {
+        webContentLayer = " [WebContent: layer=" + std::to_string(webContent->layer()) + "]";
+      }
+    }
+    
+    // Print current node information
+    printf("%s%s (calculated layer: %d%s%s)%s\n", 
+           indentStr.c_str(),
+           nodeInfo.c_str(),
+           layer,
+           isScrollable ? ", scrollable" : "",
+           hasEntity() ? ", hasEntity" : "",
+           webContentLayer.c_str());
+    
+    // Recursively print all children
+    for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
+    {
+      child->printLayerTree(indent + 1);
     }
   }
 
