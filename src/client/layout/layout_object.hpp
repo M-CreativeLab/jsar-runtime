@@ -163,12 +163,6 @@ namespace client_layout
      * This should be called when the DOM hierarchy changes.
      */
     void updateLayersRecursively();
-    
-    /**
-     * Print the layer tree for debugging purposes.
-     * Shows the hierarchy with layer numbers for each node.
-     */
-    void printLayerTree(int indent = 0) const;
 
     inline std::shared_ptr<dom::Node> node() const
     {

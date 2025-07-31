@@ -4,6 +4,7 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/all_html_elements.hpp>
+#include <client/builtin_scene/web_content.hpp>
 
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"
@@ -134,7 +135,26 @@ namespace client_layout
       string prefixSpaces = "";
       for (int i = 0; i < depth; i++)
         prefixSpaces += "  "; // use 2 spaces as the indentation.
-      cout << prefixSpaces << object.debugName() << endl;
+
+      // Get layer information
+      int layer = object.calculateLayer();
+      bool isScrollable = object.isScrollContainer();
+      string layerInfo = " (layer: " + to_string(layer);
+      if (isScrollable)
+        layerInfo += ", scrollable";
+      
+      // Get WebContent layer if available
+      if (object.hasEntity())
+      {
+        auto webContent = object.getSceneComponent<builtin_scene::WebContent>();
+        if (webContent != nullptr)
+        {
+          layerInfo += ", WebContent: " + to_string(webContent->layer());
+        }
+      }
+      layerInfo += ")";
+
+      cout << prefixSpaces << object.debugName() << layerInfo << endl;
 
       if (object.isText())
       {

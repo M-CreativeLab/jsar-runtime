@@ -167,20 +167,26 @@ namespace client_layout
 
   int LayoutObject::calculateLayer() const  
   {
-    int layer = 0;
-    
-    // Walk up the parent hierarchy and count scrollable containers
+    // Walk up to find the outermost (closest to root) scrollable container
+    LayoutObject* outermostScrollableContainer = nullptr;
     auto current = parent();
     while (current != nullptr)
     {
       if (current->isScrollContainer())
       {
-        layer++;
+        outermostScrollableContainer = current.get();
       }
       current = current->parent();
     }
     
-    return layer;
+    if (outermostScrollableContainer != nullptr)
+    {
+      // If there's a scrollable container ancestor, we're in layer 1
+      return 1;
+    }
+    
+    // No scrollable container found, this is layer 0
+    return 0;
   }
 
   void LayoutObject::updateLayersRecursively()
@@ -203,48 +209,7 @@ namespace client_layout
     }
   }
 
-  void LayoutObject::printLayerTree(int indent) const
-  {
-    // Create indentation string
-    std::string indentStr(indent * 2, ' ');
-    
-    // Get node information
-    std::string nodeInfo = "unknown";
-    if (node())
-    {
-      nodeInfo = node()->nodeName();
-    }
-    
-    // Get layer information
-    int layer = calculateLayer();
-    bool isScrollable = isScrollContainer();
-    
-    // Get WebContent layer if available
-    std::string webContentLayer = "";
-    if (hasEntity())
-    {
-      auto webContent = getSceneComponent<WebContent>();
-      if (webContent != nullptr)
-      {
-        webContentLayer = " [WebContent: layer=" + std::to_string(webContent->layer()) + "]";
-      }
-    }
-    
-    // Print current node information
-    printf("%s%s (calculated layer: %d%s%s)%s\n", 
-           indentStr.c_str(),
-           nodeInfo.c_str(),
-           layer,
-           isScrollable ? ", scrollable" : "",
-           hasEntity() ? ", hasEntity" : "",
-           webContentLayer.c_str());
-    
-    // Recursively print all children
-    for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
-    {
-      child->printLayerTree(indent + 1);
-    }
-  }
+
 
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
   {
