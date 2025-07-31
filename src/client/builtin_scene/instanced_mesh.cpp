@@ -368,7 +368,7 @@ namespace builtin_scene
       InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
   }
 
-  void InstancedMeshBase::updateRenderQueues(bool ignoreDirty)
+  void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
   {
     if (!isDirty_ && !ignoreDirty)
       return;

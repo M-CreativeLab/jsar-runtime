@@ -129,7 +129,7 @@ namespace builtin_scene
                     std::shared_ptr<Transform> transform,
                     std::shared_ptr<Transform> parentTransform,
                     RenderPass renderPass,
-                    std::optional<XRRenderTarget> renderTarget = std::nullopt);
+                    std::optional<XRRenderTarget> renderTarget);
     /**
      * Update the view projection matrix.
      *
@@ -171,6 +171,12 @@ namespace builtin_scene
      * Disable the volume mask, this will disable the stencil test.
      */
     void disableVolumeMask();
+
+  private:
+    void drawInstancedMeshImpl(const Mesh3d &mesh,
+                               const client_graphics::WebGLProgramScope &,
+                               RenderPass renderPass,
+                               std::optional<XRRenderTarget> renderTarget);
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;

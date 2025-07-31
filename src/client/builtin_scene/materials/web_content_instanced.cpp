@@ -17,7 +17,7 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material(false) // Web content must use transparent material
+      : Material(false)
       , width_(0.0f)
       , height_(0.0f)
       , textureAtlas_(nullptr)

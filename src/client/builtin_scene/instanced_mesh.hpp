@@ -370,11 +370,11 @@ namespace builtin_scene
                std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
                std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
     /**
-     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList` the queues.
+     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
      * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
-    void updateRenderQueues(bool ignoreDirty = false);
+    void updateInstancesList(bool ignoreDirty = false);
 
   private:
     inline void markAsDirty()

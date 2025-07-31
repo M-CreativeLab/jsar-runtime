@@ -228,76 +228,7 @@ namespace builtin_scene
       WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
       if (mesh->isInstancedMesh())
       {
-        auto &instancedMesh = mesh->getHandleCheckedAsRef<InstancedMeshBase>();
-        if (instancedMesh.instanceCount() > 0)
-        {
-          WebGL2Context &glContext = *glContext_;
-          instancedMesh.updateRenderQueues(); // Update the render queues for opaque and transparent instances.
-
-          auto meshIndicesCount = mesh->indices().size();
-          auto opaqueInstances = instancedMesh.getOpaqueInstancesList();
-          if (opaqueInstances.count() > 0)
-          {
-            glContext.depthMask(true);
-            glContext.disable(WEBGL_BLEND);
-
-            auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
-            glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
-
-            opaqueInstances.beforeInstancedDraw(glContext);
-            glContext.drawElementsInstanced(mesh->primitiveTopology(),
-                                            meshIndicesCount,
-                                            WEBGL_UNSIGNED_INT,
-                                            0,
-                                            opaqueInstances.count());
-            opaqueInstances.afterInstancedDraw(glContext);
-          }
-
-          /**
-           * TODO: does this need to be moved global transparent rendering queue?
-           */
-          auto transparentInstances = instancedMesh.getTransparentInstancesList();
-          if (transparentInstances.count() > 0)
-          {
-            WebGLVertexArrayScope vaoScope(glContext_, transparentInstances.vao);
-
-            // Set the base matrix, move the transparent objects +z 0.001
-            auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
-            glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-            glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
-
-            // Draw
-            transparentInstances.beforeInstancedDraw(glContext);
-            {
-              // Draw transparent instances to color attachment
-              glContext.depthMask(false);
-              glContext.enable(WEBGL_BLEND);
-              glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
-              glContext.drawElementsInstanced(mesh->primitiveTopology(),
-                                              meshIndicesCount,
-                                              WEBGL_UNSIGNED_INT,
-                                              0,
-                                              transparentInstances.count());
-
-              // Draw transparent instances to depth attachment if depth-only pass is enabled.
-              if (instancedMesh.isDepthOnlyPassEnabled())
-              {
-                glContext.colorMask(false, false, false, false);
-                glContext.depthMask(true);
-                glContext.disable(WEBGL_BLEND);
-                glContext.drawElementsInstanced(mesh->primitiveTopology(),
-                                                meshIndicesCount,
-                                                WEBGL_UNSIGNED_INT,
-                                                0,
-                                                transparentInstances.count());
-
-                // Restore the color mask state
-                glContext.colorMask(true, true, true, true);
-              }
-            }
-            transparentInstances.afterInstancedDraw(glContext);
-          }
-        }
+        drawInstancedMeshImpl(*mesh, programScope, renderPass, renderTarget);
       }
       else
       {
@@ -448,5 +379,95 @@ namespace builtin_scene
   void SceneRenderer::disableVolumeMask()
   {
     glContext_->disable(WEBGL_STENCIL_TEST);
+  }
+
+  void SceneRenderer::drawInstancedMeshImpl(const Mesh3d &mesh,
+                                            const client_graphics::WebGLProgramScope &programScope,
+                                            RenderPass renderPass,
+                                            std::optional<XRRenderTarget> renderTarget)
+  {
+    assert((renderPass == RenderPass::kOpaques || renderPass == RenderPass::kTransparents) &&
+           "RenderPass must be either Opaques or Transparents for instanced meshes.");
+
+    auto &instancedMesh = mesh.getHandleCheckedAsRef<InstancedMeshBase>();
+    if (instancedMesh.instanceCount() <= 0)
+      return;
+
+    size_t meshIndicesCount = mesh.indices().size();
+    WebGL2Context &glContext = *glContext_;
+
+    // Update the render queues for opaque and transparent instances.
+    instancedMesh.updateInstancesList();
+
+    // Draw the opaque instances
+    if (renderPass == RenderPass::kOpaques)
+    {
+      RenderableInstancesList &instances = instancedMesh.getOpaqueInstancesList();
+      if (instances.count() > 0)
+      {
+        glContext.depthMask(true);
+        glContext.disable(WEBGL_BLEND);
+
+        auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
+        glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
+
+        instances.beforeInstancedDraw(glContext);
+        glContext.drawElementsInstanced(mesh.primitiveTopology(),
+                                        meshIndicesCount,
+                                        WEBGL_UNSIGNED_INT,
+                                        0,
+                                        instances.count());
+        instances.afterInstancedDraw(glContext);
+      }
+    }
+    else if (renderPass == RenderPass::kTransparents)
+    {
+      // Draw the transparent instances
+      RenderableInstancesList &instances = instancedMesh.getTransparentInstancesList();
+      if (instances.count() > 0)
+      {
+        WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
+
+        // Set the base matrix, move the transparent objects +z 0.001
+        auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
+        glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+        glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+        // Draw
+        instances.beforeInstancedDraw(glContext);
+        {
+          // Draw transparent instances to color attachment
+          glContext.depthMask(false);
+          glContext.enable(WEBGL_BLEND);
+          glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+          glContext.drawElementsInstanced(mesh.primitiveTopology(),
+                                          meshIndicesCount,
+                                          WEBGL_UNSIGNED_INT,
+                                          0,
+                                          instances.count());
+
+          // Draw transparent instances to depth attachment if depth-only pass is enabled.
+          if (instancedMesh.isDepthOnlyPassEnabled())
+          {
+            glContext.colorMask(false, false, false, false);
+            glContext.depthMask(true);
+            glContext.disable(WEBGL_BLEND);
+            glContext.drawElementsInstanced(mesh.primitiveTopology(),
+                                            meshIndicesCount,
+                                            WEBGL_UNSIGNED_INT,
+                                            0,
+                                            instances.count());
+
+            // Restore the color mask state
+            glContext.colorMask(true, true, true, true);
+          }
+        }
+        instances.afterInstancedDraw(glContext);
+      }
+    }
+    else
+    {
+      assert(false && "Unreachable code: RenderPass must be either Opaques or Transparents for instanced meshes.");
+    }
   }
 }
