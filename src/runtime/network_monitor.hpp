@@ -91,15 +91,18 @@ namespace runtime
 #if UNITY_ANDROID
   /**
    * @class AndroidNetworkMonitor
-   * Android-specific implementation. For now, this uses the common socket-based approach
-   * since Android platform-specific APIs require Java/JNI integration which is not
-   * compatible with the C/C++ library constraints.
+   * Android-specific implementation using JNI to interface with ConnectivityManager.
+   * Provides real-time network status monitoring through Android's native APIs.
    */
-  class AndroidNetworkMonitor : public DefaultNetworkMonitor
+  class AndroidNetworkMonitor : public NetworkMonitor
   {
   public:
     AndroidNetworkMonitor() = default;
-    ~AndroidNetworkMonitor() override = default;
+    ~AndroidNetworkMonitor() override;
+
+    bool startMonitoring(NetworkStatusCallback callback) override;
+    void stopMonitoring() override;
+    NetworkStatus getCurrentStatus() const override;
   };
 #endif
 
