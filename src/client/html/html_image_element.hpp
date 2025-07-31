@@ -4,10 +4,12 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <node/uv.h>
+
+#include <client/canvas/image_codec.hpp>
+#include <client/canvas/image_source.hpp>
 #include <client/dom/geometry/dom_rect.hpp>
 
 #include "./html_element.hpp"
-#include "../canvas/image_source.hpp"
 
 namespace dom
 {
@@ -52,6 +54,7 @@ namespace dom
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue,
                                   const std::string &newValue) override;
+    void styleAdoptedCallback() override;
 
     inline geometry::DOMRect getImageClientRect() const
     {
@@ -94,20 +97,35 @@ namespace dom
     }
 
     /**
-     * Load the node's image, containing the image data, decoding it if necessary and rendering it.
+     * Loads the image, containing the image data, decoding it if necessary and rendering it.
      */
     void loadImage();
 
+    /**
+     * Decodes from the element's image data.
+     */
+    void decodeImage();
+
   private:
-    bool decodeImage(SkBitmap &);
-    void decodeImageAsync(const SkBitmap &bitmap);
+    inline void ensureSkBitmap()
+    {
+      if (sk_bitmap_ == nullptr)
+        sk_bitmap_ = std::make_shared<SkBitmap>();
+      assert(sk_bitmap_ != nullptr &&
+             "The SkBitmap should not be null in HTMLImageElement.");
+    }
 
     void onImageDataReady(const void *imageData, size_t imageByteLength);
     void onImageDecoded(const SkBitmap &bitmap);
     void onSizeDidChange();
 
+    void layoutSizeChangedCallback(const client_layout::Fragment &) override;
+
     // Validate if the current size is valid to create bitmap.
     bool validateSizeToMakeBitmap();
+
+    // The implementation of the image decoding logic.
+    bool decodeImageImpl(SkBitmap &);
 
   public:
     /**
@@ -127,11 +145,11 @@ namespace dom
 
     inline size_t width() const override
     {
-      return width_.value_or(0);
+      return width_.value_or(natural_width_);
     }
     inline size_t height() const override
     {
-      return height_.value_or(0);
+      return height_.value_or(natural_height_);
     }
     inline void setWidth(size_t width)
     {
@@ -209,7 +227,14 @@ namespace dom
     std::optional<int> width_;
     std::optional<int> height_;
 
+    std::optional<int> decoding_width_;
+    std::optional<int> decoding_height_;
+
+    int natural_width_ = 0;
+    int natural_height_ = 0;
+
     std::optional<std::vector<char>> image_data_ = std::nullopt;
+    canvas::EncodedImageFormat image_format_;
     std::shared_ptr<SkBitmap> sk_bitmap_;
     bool is_src_image_loading = false;
     bool is_src_image_loaded_ = false;
