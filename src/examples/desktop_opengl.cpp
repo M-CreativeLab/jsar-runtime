@@ -166,30 +166,24 @@ namespace jsar::example
         }
         else if (arg == "--stereo")
         {
-          if (i + 1 >= argc)
+          monoMode = false;
+          multiPass = false; // Default to singlepass
+          
+          // Check if next argument is a valid stereo mode
+          if (i + 1 < argc)
           {
-            monoMode = false;
-            multiPass = false; // Default to singlepass if no mode is specified
-          }
-          else
-          {
-            string mode = argv[++i];
-            if (mode == "multipass")
+            string nextArg = argv[i + 1];
+            if (nextArg == "multipass")
             {
-              monoMode = false;
               multiPass = true;
+              i++; // Consume the mode argument
             }
-            else if (mode == "singlepass")
+            else if (nextArg == "singlepass")
             {
-              monoMode = false;
               multiPass = false;
+              i++; // Consume the mode argument
             }
-            else
-            {
-              printf("Error: Invalid stereo mode '%s'. Use 'multipass' or 'singlepass'\n", mode.c_str());
-              help();
-              return false;
-            }
+            // If next argument is not a valid mode, keep default (singlepass) and don't increment i
           }
         }
         else if (arg == "-w")
@@ -200,7 +194,14 @@ namespace jsar::example
             help();
             return false;
           }
-          width = atoi(argv[++i]);
+          int parsedWidth = atoi(argv[++i]);
+          if (parsedWidth <= 0)
+          {
+            printf("Error: Width must be a positive integer, got '%s'\n", argv[i]);
+            help();
+            return false;
+          }
+          width = parsedWidth;
         }
         else if (arg == "-h")
         {
@@ -210,7 +211,14 @@ namespace jsar::example
             help();
             return false;
           }
-          height = atoi(argv[++i]);
+          int parsedHeight = atoi(argv[++i]);
+          if (parsedHeight <= 0)
+          {
+            printf("Error: Height must be a positive integer, got '%s'\n", argv[i]);
+            help();
+            return false;
+          }
+          height = parsedHeight;
         }
         else if (arg == "-n")
         {
