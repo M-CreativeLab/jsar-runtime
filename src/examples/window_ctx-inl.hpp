@@ -115,7 +115,7 @@ namespace jsar::example
 
     int viewIndex = 0;
     float viewportWidth = width;
-    
+
     // In stereo mode, determine which eye is being interacted with
     if (!xrRenderer->isMonoMode())
     {
