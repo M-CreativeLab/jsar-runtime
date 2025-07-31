@@ -131,13 +131,14 @@ namespace jsar::example
       printf("  -n <count>              Number of apps (default: 1)\n");
       printf("  --samples             MSAA samples (default: 4)\n");
       printf("  --mono                  Monoscopic XR rendering (default)\n");
-      printf("  --stereo <mode>         Stereo XR rendering mode:\n");
+      printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
       printf("                            multipass - Multiple rendering passes\n");
       printf("                            singlepass - Single rendering pass\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
       printf("  jsar_desktop_opengl --mono\n");
+      printf("  jsar_desktop_opengl --stereo                 # Uses singlepass by default\n");
       printf("  jsar_desktop_opengl --stereo multipass\n");
       printf("  jsar_desktop_opengl --stereo singlepass\n");
     }
