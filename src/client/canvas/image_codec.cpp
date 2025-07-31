@@ -191,23 +191,27 @@ namespace canvas
         // Calculate dimensions - use target dimensions if provided, otherwise use original
         int width, height;
 
-        if (target_width > 0 && target_height > 0)
+        // Use value primitives to simplify the checking
+        int target_width_value = target_width.value_or(-1);
+        int target_height_value = target_height.value_or(-1);
+
+        if (target_width_value > 0 && target_height_value > 0)
         {
           // Both dimensions specified
-          width = target_width.value();
-          height = target_height.value();
+          width = target_width_value;
+          height = target_height_value;
         }
-        else if (target_width > 0)
+        else if (target_width_value > 0)
         {
           // Only width specified, maintain aspect ratio
-          width = target_width.value();
-          height = static_cast<int>((target_width.value() * image->height) / image->width);
+          width = target_width_value;
+          height = static_cast<int>((target_width_value * image->height) / image->width);
         }
-        else if (target_height > 0)
+        else if (target_height_value > 0)
         {
           // Only height specified, maintain aspect ratio
-          height = target_height.value();
-          width = static_cast<int>((target_height.value() * image->width) / image->height);
+          height = target_height_value;
+          width = static_cast<int>((target_height_value * image->width) / image->height);
         }
         else
         {

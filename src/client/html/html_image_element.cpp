@@ -264,8 +264,8 @@ namespace dom
                                                        decoding_height);
     if (is_src_image_decoded_)
     {
-      bool perserve_image_data = image_format_.isSVG();
-      if (!perserve_image_data)
+      bool preserve_image_data = image_format_.isSVG();
+      if (!preserve_image_data)
       {
         image_data_->clear();
         image_data_.reset();
