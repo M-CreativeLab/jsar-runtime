@@ -15,6 +15,7 @@
 #include "./meshes/builder.hpp"
 #include "./mesh_base.hpp"
 #include "./render_queue.hpp"
+#include "./render_layer.hpp"
 
 namespace builtin_scene
 {
@@ -180,6 +181,7 @@ namespace builtin_scene
   private:
     InstanceData data_;
     RenderQueue renderQueue_;
+    RenderLayer renderLayer_;
     bool enabled_ = false;
     bool isOpaque_ = false;
 

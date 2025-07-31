@@ -12,6 +12,7 @@
 namespace builtin_scene
 {
   using namespace std;
+  using namespace ecs;
 
   void RenderStartupSystem::onExecute()
   {
@@ -30,31 +31,188 @@ namespace builtin_scene
 
   void RenderSystem::onExecute()
   {
-    auto renderer = getResource<SceneRenderer>();
-    assert(renderer != nullptr); // The renderer must be valid.
-
-    auto xrExperience = getResource<WebXRExperience>();
-    if (xrExperience != nullptr) // XR rendering
+    if (renderer_ == nullptr) [[unlikely]]
     {
-      auto xrViewerPose = xrExperience->viewerPose();
+      renderer_ = getResource<SceneRenderer>();
+      assert(renderer_ != nullptr); // The renderer must be valid.
+    }
+
+    if (xrExperience_ == nullptr) [[unlikely]]
+    {
+      xrExperience_ = getResource<WebXRExperience>();
+    }
+    if (xrExperience_ != nullptr)
+    {
+      auto xrViewerPose = xrExperience_->viewerPose();
       if (xrViewerPose != nullptr)
       {
         auto &views = xrViewerPose->views();
-        if (!xrExperience->multiviewEnabled())
+        if (!xrExperience_->multiviewEnabled())
         {
           for (auto view : views)
-            render(*renderer, XRRenderTarget(view));
+            render(XRRenderTarget(view));
         }
         else
         {
-          render(*renderer, XRRenderTarget(views));
+          render(XRRenderTarget(views));
         }
         return;
       }
     }
 
     // Fallback to the default rendering
-    render(*renderer, nullopt);
+    render(nullopt);
+  }
+
+  void RenderSystem::render(optional<XRRenderTarget> renderTarget)
+  {
+    auto roots = queryEntities<hierarchy::Root>([](const hierarchy::Root &root) -> bool
+                                                { return root.renderable == true; });
+    if (roots.size() > 0)
+    {
+      if (renderTarget != nullopt)
+      {
+        if (!renderTarget->isMultiview())
+          renderer_->setViewport(renderTarget->view()->viewport());
+      }
+
+      // Update data for meshes(including instanced), materials, particles, etc.
+      for (const auto &root : roots)
+        traverseAndUpdate(root, renderTarget);
+
+      // Render the objects (opaques, transparents).
+      renderPass(roots, RenderPass::kOpaques, renderTarget);
+      renderPass(roots, RenderPass::kTransparents, renderTarget);
+
+      // TODO(yorkie): Render the particles and other post-processing effects.
+    }
+  }
+
+  void RenderSystem::renderPass(vector<EntityId> &roots,
+                                RenderPass renderPass,
+                                optional<XRRenderTarget> renderTarget)
+  {
+    assert(roots.size() > 0 && "The roots must not be empty.");
+
+    // TODO(yorkie): support other render passes like particles, post-processing, etc.
+    if (renderPass != RenderPass::kOpaques)
+      return;
+
+    renderVolumeMask(renderPass, renderTarget);
+    onBeforeRender(renderTarget);
+    for (const auto &root : roots)
+      traverseAndRender(root, renderPass, renderTarget);
+    onAfterRender(renderTarget);
+  }
+
+  void RenderSystem::renderVolumeMask(RenderPass renderPass, optional<XRRenderTarget> renderTarget)
+  {
+    if (renderer_->isVolumeMaskEnabled())
+    {
+      renderer_->addVolumeMask([this, &renderPass, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
+                               { renderMesh(entity, getComponent<Mesh3d>(entity), renderPass, renderTarget); });
+    }
+  }
+
+  void RenderSystem::renderMesh(EntityId &entity,
+                                shared_ptr<Mesh3d> meshComponent,
+                                RenderPass renderPass,
+                                optional<XRRenderTarget> renderTarget)
+  {
+    auto materialComponent = getComponent<MeshMaterial3d>(entity);
+    if (TR_UNLIKELY(materialComponent == nullptr))
+    {
+      assert(false && "The material component must be valid.");
+      return;
+    }
+
+    if (!meshComponent->initialized())
+      renderer_->initializeMesh3d(meshComponent);
+    if (!materialComponent->initialized())
+      renderer_->initializeMeshMaterial3d(meshComponent, materialComponent);
+
+    // Update the mesh3d and material if needed
+    renderer_->tryUpdateMeshMaterial3d(meshComponent, materialComponent);
+
+    // Draw
+    shared_ptr<Transform> parentTransform = nullptr;
+    auto parentComponent = getComponent<hierarchy::Parent>(entity);
+    if (parentComponent != nullptr)
+      parentTransform = getComponent<Transform>(parentComponent->parent());
+    renderer_->drawMesh3d(entity,
+                          meshComponent,
+                          materialComponent,
+                          getComponent<Transform>(entity),
+                          parentTransform,
+                          renderPass,
+                          renderTarget);
+  }
+
+  void RenderSystem::onBeforeRender(optional<XRRenderTarget> renderTarget)
+  {
+    if (renderer_->isVolumeMaskEnabled())
+      renderer_->enableVolumeMask();
+  }
+
+  void RenderSystem::onAfterRender(optional<XRRenderTarget> renderTarget)
+  {
+    if (renderer_->isVolumeMaskEnabled())
+      renderer_->disableVolumeMask();
+  }
+
+  void RenderSystem::traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&exec)
+  {
+    // Pre-order traversal
+    if (!exec(root))
+      return;
+
+    auto children = getComponent<hierarchy::Children>(root);
+    if (children != nullptr)
+    {
+      for (const auto &child : children->children())
+        traverse(child, std::move(exec));
+    }
+  }
+
+  void RenderSystem::traverseAndRender(EntityId root, RenderPass renderPass, optional<XRRenderTarget> renderTarget)
+  {
+    auto renderEntity = [this, &renderPass, &renderTarget](EntityId entity) -> bool
+    {
+      // Render the mesh if it exists
+      auto mesh = getComponent<Mesh3d>(entity);
+      if (mesh != nullptr)
+      {
+        // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
+        if (mesh->isRenderingDisabled())
+          return false;
+        renderMesh(entity, mesh, renderPass, renderTarget);
+      }
+
+      // TODO: support other renderable components (e.g., particles, etc.)
+      return true;
+    };
+    return traverse(root, renderEntity);
+  }
+
+  void RenderSystem::traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget> renderTarget)
+  {
+    auto updateEntity = [this, &renderTarget](EntityId entity) -> bool
+    {
+      auto mesh = getComponent<Mesh3d>(entity);
+      if (mesh != nullptr)
+      {
+        // Skip updating data if the mesh rendering is disabled.
+        if (mesh->isRenderingDisabled())
+          return false;
+
+        // Update the data for renderable mesh components.
+        // TODO(yorkie): update transformation matrix here?
+        if (mesh->isInstancedMesh())
+          updateInstancedMeshData(*mesh, renderTarget);
+      }
+      return true; // Continue traversing children
+    };
+    return traverse(root, updateEntity);
   }
 
   glm::mat4 RenderSystem::getTransformationMatrix(ecs::EntityId id)
@@ -85,11 +243,9 @@ namespace builtin_scene
     return postMat * baseMatrixInWorldSpace;
   }
 
-  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent,
-                                                           optional<XRRenderTarget> renderTarget)
+  void RenderSystem::updateInstancedMeshData(const Mesh3d &meshComponent, optional<XRRenderTarget> renderTarget)
   {
-    if (!meshComponent.isInstancedMesh())
-      return;
+    assert(meshComponent.isInstancedMesh());
 
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
     auto updateInstanceData = [this, &renderTarget](ecs::EntityId id, Instance &instance) -> bool
@@ -167,113 +323,5 @@ namespace builtin_scene
       return hasChanged;
     };
     instancedMesh.iterateInstances(updateInstanceData);
-  }
-
-  void RenderSystem::render(SceneRenderer &renderer, optional<XRRenderTarget> renderTarget)
-  {
-    auto roots = queryEntities<hierarchy::Root>([](const hierarchy::Root &root) -> bool
-                                                { return root.renderable == true; });
-    if (roots.size() <= 0) // No root entities to render
-      return;
-
-    if (renderTarget != nullopt)
-    {
-      if (!renderTarget->isMultiview())
-        renderer.setViewport(renderTarget->view()->viewport());
-    }
-
-    renderVolumeMask(renderer, renderTarget);
-    onBeforeRender(renderer, renderTarget);
-    for (const auto &root : roots)
-      traverseAndRender(root, renderer, renderTarget);
-    onAfterRender(renderer, renderTarget);
-  }
-
-  void RenderSystem::renderVolumeMask(SceneRenderer &renderer, optional<XRRenderTarget> renderTarget)
-  {
-    if (renderer.isVolumeMaskEnabled())
-    {
-      renderer.addVolumeMask([this, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
-                             { renderMesh(entity, getComponent<Mesh3d>(entity), renderer, renderTarget); });
-    }
-  }
-
-  void RenderSystem::onBeforeRender(SceneRenderer &renderer, optional<XRRenderTarget> renderTarget)
-  {
-    if (renderer.isVolumeMaskEnabled())
-      renderer.enableVolumeMask();
-  }
-
-  void RenderSystem::onAfterRender(SceneRenderer &renderer, optional<XRRenderTarget> renderTarget)
-  {
-    if (renderer.isVolumeMaskEnabled())
-      renderer.disableVolumeMask();
-  }
-
-  void RenderSystem::traverseAndRender(ecs::EntityId entity,
-                                       SceneRenderer &renderer,
-                                       optional<XRRenderTarget> renderTarget)
-  {
-    auto renderEntity = [this, &renderer, renderTarget](ecs::EntityId entity) -> bool
-    {
-      // Render the mesh if it exists
-      auto mesh = getComponent<Mesh3d>(entity);
-      if (mesh != nullptr)
-      {
-        // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
-        if (mesh->isRenderingDisabled())
-          return false;
-        renderMesh(entity, mesh, renderer, renderTarget);
-      }
-
-      // TODO: support other renderable components (e.g., particles, etc.)
-      return true;
-    };
-
-    if (!renderEntity(entity))
-      return;
-
-    auto children = getComponent<hierarchy::Children>(entity);
-    if (children != nullptr)
-    {
-      for (const auto &child : children->children())
-        traverseAndRender(child, renderer, renderTarget);
-    }
-  }
-
-  void RenderSystem::renderMesh(ecs::EntityId &entity,
-                                shared_ptr<Mesh3d> meshComponent,
-                                SceneRenderer &renderer,
-                                optional<XRRenderTarget> renderTarget)
-  {
-    auto materialComponent = getComponent<MeshMaterial3d>(entity);
-    if (TR_UNLIKELY(materialComponent == nullptr))
-    {
-      assert(false && "The material component must be valid.");
-      return;
-    }
-
-    if (!meshComponent->initialized())
-      renderer.initializeMesh3d(meshComponent);
-    if (!materialComponent->initialized())
-      renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
-
-    // Update the mesh3d and material if needed
-    renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
-
-    // Update the instance transformation matrix if it's an instanced mesh
-    tryUpdateInstanceDataForInstancedMesh(*meshComponent, renderTarget);
-
-    // Draw
-    shared_ptr<Transform> parentTransform = nullptr;
-    auto parentComponent = getComponent<hierarchy::Parent>(entity);
-    if (parentComponent != nullptr)
-      parentTransform = getComponent<Transform>(parentComponent->parent());
-    renderer.drawMesh3d(entity,
-                        meshComponent,
-                        materialComponent,
-                        getComponent<Transform>(entity),
-                        parentTransform,
-                        renderTarget);
   }
 }

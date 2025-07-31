@@ -10,6 +10,8 @@
 #include <client/builtin_scene/mesh_material.hpp>
 #include <client/builtin_scene/transform.hpp>
 #include <client/builtin_scene/xr.hpp>
+
+#include "./render_pass.hpp"
 #include "./render_target.hpp"
 
 namespace builtin_scene
@@ -118,13 +120,15 @@ namespace builtin_scene
      * @param material The material to draw the mesh with.
      * @param transform The transform of the mesh.
      * @param parentTransform The parent transform of the mesh, `nullptr` for the root transform.
+     * @param renderPass The render pass to use, which can be used to filter the objects or instances to render.
      * @param renderTarget The XR render target to draw the mesh with.
      */
     void drawMesh3d(const ecs::EntityId &entity,
                     std::shared_ptr<Mesh3d> mesh,
                     std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
-                    std::shared_ptr<Transform> parentTransform = nullptr,
+                    std::shared_ptr<Transform> parentTransform,
+                    RenderPass renderPass,
                     std::optional<XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Update the view projection matrix.

@@ -195,7 +195,7 @@ namespace builtin_scene
   void SceneRenderer::tryUpdateMeshMaterial3d(shared_ptr<Mesh3d> mesh3d, shared_ptr<MeshMaterial3d> meshMaterial3d)
   {
     auto program = meshMaterial3d->program();
-    if (TR_UNLIKELY(program == nullptr))
+    if (program == nullptr) [[unlikely]]
       return;
 
     // Update the vertex data if it's dirty
@@ -208,6 +208,7 @@ namespace builtin_scene
                                  shared_ptr<MeshMaterial3d> material,
                                  shared_ptr<Transform> transform,
                                  shared_ptr<Transform> parentTransform,
+                                 RenderPass renderPass,
                                  optional<XRRenderTarget> renderTarget)
   {
     assert(mesh != nullptr && material != nullptr);
