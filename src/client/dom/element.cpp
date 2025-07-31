@@ -275,6 +275,10 @@ namespace dom
     }
   }
 
+  void Element::layoutSizeChangedCallback(const client_layout::Fragment &)
+  {
+  }
+
   void Element::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);

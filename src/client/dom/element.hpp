@@ -68,6 +68,7 @@ namespace dom
   {
     friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
+    friend class client_layout::LayoutObject;
 
   public:
     /**
@@ -286,6 +287,10 @@ namespace dom
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
+    /**
+     * When the element's layout size is changed, this is called when the layout box size(width, height) is changed.
+     */
+    virtual void layoutSizeChangedCallback(const client_layout::Fragment &);
 
   protected:
     // Initialize the CSS boxes of the element.

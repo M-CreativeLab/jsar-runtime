@@ -145,8 +145,6 @@ namespace client_layout
   void LayoutImage::sizeDidChange(const Fragment &newSize)
   {
     LayoutReplaced::sizeDidChange(newSize);
-
-    imageElement().setSize(newSize.width(), newSize.height());
     adjustImageSize();
   }
 

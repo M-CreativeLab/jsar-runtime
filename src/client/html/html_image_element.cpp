@@ -33,9 +33,7 @@ namespace dom
   void HTMLImageElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
-
-    if (sk_bitmap_ == nullptr)
-      sk_bitmap_ = make_shared<SkBitmap>();
+    ensureSkBitmap();
   }
 
   void HTMLImageElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
@@ -103,38 +101,7 @@ namespace dom
                                  { this->onImageDataReady(data, length); });
   }
 
-  bool HTMLImageElement::decodeImage(SkBitmap &bitmap)
-  {
-    optional<int> decoding_width = width_;
-    optional<int> decoding_height = height_;
-    if (hasAdoptedStyle())
-    {
-      const auto &style = adoptedStyleRef();
-      if (style.width().isAuto())
-        decoding_width = nullopt;
-      if (style.height().isAuto())
-        decoding_height = nullopt;
-    }
-
-    is_src_image_decoded_ = canvas::ImageCodec::Decode(image_data_.value(),
-                                                       &image_format_,
-                                                       bitmap,
-                                                       getSrc(),
-                                                       decoding_width,
-                                                       decoding_height);
-    if (is_src_image_decoded_)
-    {
-      bool perserve_image_data = image_format_.isSVG();
-      if (!perserve_image_data)
-      {
-        image_data_->clear();
-        image_data_.reset();
-      }
-    }
-    return is_src_image_decoded_;
-  }
-
-  void HTMLImageElement::decodeImageAsync()
+  void HTMLImageElement::decodeImage()
   {
     // Skip the decoding if the image data is not ready.
     if (!is_src_image_loaded_ || !image_data_.has_value())
@@ -151,7 +118,7 @@ namespace dom
       if (handle != nullptr && handle->data != nullptr)
       {
         auto imageElement = static_cast<HTMLImageElement *>(handle->data);
-        imageElement->decodeImage(*imageElement->sk_bitmap_);
+        imageElement->decodeImageImpl(*imageElement->sk_bitmap_);
       }
     };
     auto afterWork = [](uv_work_t *handle, int status)
@@ -216,12 +183,10 @@ namespace dom
     //
     // The above code snippet creates a new `Image` object without connecting it to the DOM, and it's allowed to load
     // the image data without the `connectedCallback` being called. In this case, the `sk_bitmap_` is not created yet.
-    if (sk_bitmap_ == nullptr)
-      sk_bitmap_ = make_shared<SkBitmap>();
-    assert(sk_bitmap_ != nullptr && "The image bitmap is not created yet.");
+    ensureSkBitmap();
 
     // TODO(yorkie): support `decoding` options.
-    decodeImageAsync();
+    decodeImage();
   }
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)
@@ -229,15 +194,16 @@ namespace dom
     natural_width_ = bitmap.width();
     natural_height_ = bitmap.height();
 
-    if (!connected)
-      return;
+    if (connected)
+    {
+      // Set the SkBitmap to the layout object.
+      auto imageBox = dynamic_pointer_cast<client_layout::LayoutImage>(principalBox());
+      assert(imageBox != nullptr && "The image box is not created yet.");
+      imageBox->setImageBitmap(sk_bitmap_);
 
-    auto imageBox = dynamic_pointer_cast<client_layout::LayoutImage>(principalBox());
-    assert(imageBox != nullptr && "The image box is not created yet.");
-    imageBox->setImageBitmap(sk_bitmap_);
-
-    // Notify the layout system that the image is ready for updating.
-    markAsDirty();
+      // Notify the layout system that the image is ready for updating.
+      markAsDirty();
+    }
   }
 
   void HTMLImageElement::onSizeDidChange()
@@ -250,8 +216,25 @@ namespace dom
       sk_bitmap_ = make_shared<SkBitmap>();
       sk_bitmap_->allocPixels(imageInfo);
     }
+  }
 
-    decodeImageAsync();
+  void HTMLImageElement::layoutSizeChangedCallback(const client_layout::Fragment &newFragment)
+  {
+    decoding_width_ = newFragment.width();
+    decoding_height_ = newFragment.height();
+
+    // Unset the decoding size if the corresponding style is auto.
+    if (hasAdoptedStyle())
+    {
+      const auto &style = adoptedStyleRef();
+      if (style.width().isAuto())
+        decoding_width_ = nullopt;
+      if (style.height().isAuto())
+        decoding_height_ = nullopt;
+    }
+
+    // Dispatch decoding to render the image with the new resolution.
+    decodeImage();
   }
 
   bool HTMLImageElement::validateSizeToMakeBitmap()
@@ -261,5 +244,33 @@ namespace dom
     if (width_.value() <= 0 || height_.value() <= 0)
       return false;
     return true;
+  }
+
+  bool HTMLImageElement::decodeImageImpl(SkBitmap &bitmap)
+  {
+    optional<int> decoding_width = decoding_width_;
+    optional<int> decoding_height = decoding_height_;
+
+    if (!decoding_width.has_value() && width_.has_value())
+      decoding_width = width_;
+    if (!decoding_height.has_value() && height_.has_value())
+      decoding_height = height_;
+
+    is_src_image_decoded_ = canvas::ImageCodec::Decode(image_data_.value(),
+                                                       &image_format_,
+                                                       bitmap,
+                                                       getSrc(),
+                                                       decoding_width,
+                                                       decoding_height);
+    if (is_src_image_decoded_)
+    {
+      bool perserve_image_data = image_format_.isSVG();
+      if (!perserve_image_data)
+      {
+        image_data_->clear();
+        image_data_.reset();
+      }
+    }
+    return is_src_image_decoded_;
   }
 }

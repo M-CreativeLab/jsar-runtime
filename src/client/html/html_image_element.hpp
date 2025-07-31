@@ -97,20 +97,35 @@ namespace dom
     }
 
     /**
-     * Load the node's image, containing the image data, decoding it if necessary and rendering it.
+     * Loads the image, containing the image data, decoding it if necessary and rendering it.
      */
     void loadImage();
 
+    /**
+     * Decodes from the element's image data.
+     */
+    void decodeImage();
+
   private:
-    bool decodeImage(SkBitmap &);
-    void decodeImageAsync();
+    inline void ensureSkBitmap()
+    {
+      if (sk_bitmap_ == nullptr)
+        sk_bitmap_ = std::make_shared<SkBitmap>();
+      assert(sk_bitmap_ != nullptr &&
+             "The SkBitmap should not be null in HTMLImageElement.");
+    }
 
     void onImageDataReady(const void *imageData, size_t imageByteLength);
     void onImageDecoded(const SkBitmap &bitmap);
     void onSizeDidChange();
 
+    void layoutSizeChangedCallback(const client_layout::Fragment &) override;
+
     // Validate if the current size is valid to create bitmap.
     bool validateSizeToMakeBitmap();
+
+    // The implementation of the image decoding logic.
+    bool decodeImageImpl(SkBitmap &);
 
   public:
     /**
@@ -143,12 +158,6 @@ namespace dom
     }
     inline void setHeight(size_t height)
     {
-      height_ = height;
-      onSizeDidChange();
-    }
-    inline void setSize(size_t width, size_t height)
-    {
-      width_ = width;
       height_ = height;
       onSizeDidChange();
     }
@@ -217,6 +226,9 @@ namespace dom
 
     std::optional<int> width_;
     std::optional<int> height_;
+
+    std::optional<int> decoding_width_;
+    std::optional<int> decoding_height_;
 
     int natural_width_ = 0;
     int natural_height_ = 0;

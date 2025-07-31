@@ -785,8 +785,22 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::sizeDidChange(const Fragment &)
+  void LayoutObject::sizeDidChange(const Fragment &newSize)
   {
+    auto this_node = node();
+    if (this_node != nullptr) [[unlikely]]
+    {
+      if (this_node->isElement())
+      {
+        auto &element = dom::Node::AsChecked<dom::Element>(this_node);
+        element.layoutSizeChangedCallback(newSize);
+      }
+      else if (this_node->isText())
+      {
+        auto &textNode = dom::Node::AsChecked<dom::Text>(this_node);
+        textNode.layoutSizeChangedCallback(newSize);
+      }
+    }
   }
 
   void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)
