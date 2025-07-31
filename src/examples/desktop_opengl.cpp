@@ -10,6 +10,7 @@
 #else
 #include <GL/gl.h>
 #endif
+
 #include <GLFW/glfw3.h>
 #ifdef __APPLE__
 #include <GLFW/glfw3native.h>
@@ -54,13 +55,13 @@ namespace jsar::example
   class DesktopEmbedder : public TrEmbedder
   {
   public:
-    DesktopEmbedder()
+    DesktopEmbedder(bool stereoMode)
         : TrEmbedder()
     {
       auto renderer = constellation->renderer;
       auto rhi = RHIFactory::CreateRHI(kUnityGfxRendererOpenGLCore, constellation.get());
       renderer->setRHI(rhi);
-      renderer->useDoubleWideFramebuffer = true;
+      renderer->useDoubleWideFramebuffer = stereoMode;
 
       // Check the environment variable to enable tracing
       const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
@@ -147,12 +148,12 @@ namespace jsar::example
         return false;
 
       int samples = 4;
-      
+
       // Parse arguments manually to support long options
       for (int i = 1; i < argc; i++)
       {
-        std::string arg = argv[i];
-        
+        string arg = argv[i];
+
         if (arg == "--help")
         {
           help();
@@ -166,26 +167,28 @@ namespace jsar::example
         {
           if (i + 1 >= argc)
           {
-            printf("Error: --stereo requires a mode argument (multipass or singlepass)\n");
-            help();
-            return false;
-          }
-          std::string mode = argv[++i];
-          if (mode == "multipass")
-          {
             monoMode = false;
-            multiPass = true;
-          }
-          else if (mode == "singlepass")
-          {
-            monoMode = false;
-            multiPass = false;
+            multiPass = false; // Default to multipass if no mode is specified
           }
           else
           {
-            printf("Error: Invalid stereo mode '%s'. Use 'multipass' or 'singlepass'\n", mode.c_str());
-            help();
-            return false;
+            string mode = argv[++i];
+            if (mode == "multipass")
+            {
+              monoMode = false;
+              multiPass = true;
+            }
+            else if (mode == "singlepass")
+            {
+              monoMode = false;
+              multiPass = false;
+            }
+            else
+            {
+              printf("Error: Invalid stereo mode '%s'. Use 'multipass' or 'singlepass'\n", mode.c_str());
+              help();
+              return false;
+            }
           }
         }
         else if (arg == "-w")
@@ -220,11 +223,11 @@ namespace jsar::example
           if (nApps < 0)
             nApps = 1;
         }
-        else if (arg == "-s")
+        else if (arg == "--samples")
         {
           if (i + 1 >= argc)
           {
-            printf("Error: -s requires a samples argument\n");
+            printf("Error: --samples requires a samples argument\n");
             help();
             return false;
           }
@@ -262,7 +265,7 @@ namespace jsar::example
       }
 
       // In stereo mode, double the width for side-by-side rendering
-      if (xrEnabled && !monoMode)
+      if (!monoMode)
         width *= 2;
 
       int count;
@@ -283,8 +286,8 @@ namespace jsar::example
        * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
        */
       windowCtx_ = glassMonitor == nullptr
-                     ? std::make_unique<WindowContext>(width, height)
-                     : std::make_unique<WindowContext>(glassMonitor);
+                     ? make_unique<WindowContext>(width, height)
+                     : make_unique<WindowContext>(glassMonitor);
 
       if (windowCtx_->isTerminated())
         return false;
@@ -302,7 +305,7 @@ namespace jsar::example
         prepareRenderTarget(samples);
       }
 
-      embedder_ = std::make_unique<DesktopEmbedder>();
+      embedder_ = std::make_unique<DesktopEmbedder>(!monoMode);
       assert(embedder_ != nullptr);
 
       auto drawingViewport = windowCtx_->drawingViewport();
@@ -512,6 +515,10 @@ namespace jsar::example
             embedder_->onTransparentsRenderPass();
           }
         }
+        else
+        {
+          assert(false && "Non-XR rendering is not supported.");
+        }
 
         embedder_->onAfterRendering();
 
@@ -568,7 +575,7 @@ namespace jsar::example
     int width = 960;
     int height = 600;
     bool xrEnabled = false;
-    bool monoMode = true;  // Default to mono mode
+    bool monoMode = true; // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
     int nApps = 1;
