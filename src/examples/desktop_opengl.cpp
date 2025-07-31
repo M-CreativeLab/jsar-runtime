@@ -129,7 +129,7 @@ namespace jsar::example
       printf("  -w <width>              Window width (default: 960)\n");
       printf("  -h <height>             Window height (default: 600)\n");
       printf("  -n <count>              Number of apps (default: 1)\n");
-      printf("  -s <samples>            MSAA samples (default: 4)\n");
+      printf("  --samples             MSAA samples (default: 4)\n");
       printf("  --mono                  Monoscopic XR rendering (default)\n");
       printf("  --stereo <mode>         Stereo XR rendering mode:\n");
       printf("                            multipass - Multiple rendering passes\n");
@@ -168,7 +168,7 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             monoMode = false;
-            multiPass = false; // Default to multipass if no mode is specified
+            multiPass = false; // Default to singlepass if no mode is specified
           }
           else
           {
