@@ -88,44 +88,81 @@ namespace builtin_scene
     }
   }
 
-  void RenderSystem::renderPass(vector<EntityId> &roots,
-                                RenderPass renderPass,
-                                optional<XRRenderTarget> renderTarget)
+  struct RenderableMeshEntity
+  {
+    EntityId id;
+    shared_ptr<Mesh3d> meshComponent;
+    shared_ptr<MeshMaterial3d> materialComponent;
+  };
+
+  void RenderSystem::renderPass(vector<EntityId> &roots, RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
     assert(roots.size() > 0 && "The roots must not be empty.");
 
-    // TODO(yorkie): support other render passes like particles, post-processing, etc.
-    if (renderPass != RenderPass::kOpaques)
-      return;
+    vector<RenderableMeshEntity> entities; // TODO(yorkie): cache this?
+    auto addRenderableItem = [this, &renderPass, &entities](EntityId entity) -> bool
+    {
+      // Render the mesh if it exists
+      auto mesh = getComponent<Mesh3d>(entity);
+      if (mesh != nullptr)
+      {
+        // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
+        if (mesh->isRenderingDisabled())
+          return false;
 
-    renderVolumeMask(renderPass, renderTarget);
-    onBeforeRender(renderTarget);
+        auto material = getComponent<MeshMaterial3d>(entity);
+        assert(material != nullptr &&
+               "The material component must be valid on renderable mesh");
+
+        if (material->matchesPass(renderPass))
+          entities.push_back({entity, mesh, material});
+      }
+
+      // TODO: support other renderable components (e.g., particles, etc.)
+      return true;
+    };
+
+    // Search for renderable items in the hierarchy
     for (const auto &root : roots)
-      traverseAndRender(root, renderPass, renderTarget);
-    onAfterRender(renderTarget);
+      traverse(root, addRenderableItem);
+
+    // Render items
+    if (entities.size() > 0)
+    {
+      renderVolumeMask(renderPass, renderTarget);
+      onBeforeRender(renderTarget);
+      for (const auto &entity : entities)
+      {
+        renderMesh(entity.id,
+                   entity.meshComponent,
+                   entity.materialComponent,
+                   renderPass,
+                   renderTarget);
+      }
+      onAfterRender(renderTarget);
+    }
   }
 
   void RenderSystem::renderVolumeMask(RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
     if (renderer_->isVolumeMaskEnabled())
     {
-      renderer_->addVolumeMask([this, &renderPass, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
-                               { renderMesh(entity, getComponent<Mesh3d>(entity), renderPass, renderTarget); });
+      auto renderVolume = [this, &renderPass, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
+      {
+        auto meshComponent = getComponent<Mesh3d>(entity);
+        auto materialComponent = getComponent<MeshMaterial3d>(entity);
+        renderMesh(entity, meshComponent, materialComponent, renderPass, renderTarget);
+      };
+      renderer_->addVolumeMask(renderVolume);
     }
   }
 
-  void RenderSystem::renderMesh(EntityId &entity,
+  void RenderSystem::renderMesh(const EntityId &entity,
                                 shared_ptr<Mesh3d> meshComponent,
+                                shared_ptr<MeshMaterial3d> materialComponent,
                                 RenderPass renderPass,
                                 optional<XRRenderTarget> renderTarget)
   {
-    auto materialComponent = getComponent<MeshMaterial3d>(entity);
-    if (TR_UNLIKELY(materialComponent == nullptr))
-    {
-      assert(false && "The material component must be valid.");
-      return;
-    }
-
     if (!meshComponent->initialized())
       renderer_->initializeMesh3d(meshComponent);
     if (!materialComponent->initialized())
@@ -174,29 +211,10 @@ namespace builtin_scene
     }
   }
 
-  void RenderSystem::traverseAndRender(EntityId root, RenderPass renderPass, optional<XRRenderTarget> renderTarget)
+  size_t RenderSystem::traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget> renderTarget)
   {
-    auto renderEntity = [this, &renderPass, &renderTarget](EntityId entity) -> bool
-    {
-      // Render the mesh if it exists
-      auto mesh = getComponent<Mesh3d>(entity);
-      if (mesh != nullptr)
-      {
-        // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
-        if (mesh->isRenderingDisabled())
-          return false;
-        renderMesh(entity, mesh, renderPass, renderTarget);
-      }
-
-      // TODO: support other renderable components (e.g., particles, etc.)
-      return true;
-    };
-    return traverse(root, renderEntity);
-  }
-
-  void RenderSystem::traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget> renderTarget)
-  {
-    auto updateEntity = [this, &renderTarget](EntityId entity) -> bool
+    size_t num = 0;
+    auto updateEntity = [this, &renderTarget, &num](EntityId entity) -> bool
     {
       auto mesh = getComponent<Mesh3d>(entity);
       if (mesh != nullptr)
@@ -209,10 +227,14 @@ namespace builtin_scene
         // TODO(yorkie): update transformation matrix here?
         if (mesh->isInstancedMesh())
           updateInstancedMeshData(*mesh, renderTarget);
+
+        num++;
       }
       return true; // Continue traversing children
     };
-    return traverse(root, updateEntity);
+
+    traverse(root, updateEntity);
+    return num;
   }
 
   glm::mat4 RenderSystem::getTransformationMatrix(ecs::EntityId id)

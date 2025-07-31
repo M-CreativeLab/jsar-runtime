@@ -61,27 +61,22 @@ namespace builtin_scene
      *
      * @param entity The entity to render.
      * @param meshComponent The mesh component to render.
+     * @param materialComponent The mesh material component to use for rendering.
      * @param renderPass The render pass to use, which can be used to filter the objects or instances to render.
      * @param renderTarget The XR render target.
      */
-    void renderMesh(ecs::EntityId &, std::shared_ptr<Mesh3d>, RenderPass, std::optional<XRRenderTarget>);
-    /**
-     * Execute this before rendering the scene.
-     *
-     * @param renderTarget The XR render target.
-     */
+    void renderMesh(const ecs::EntityId &,
+                    std::shared_ptr<Mesh3d>,
+                    std::shared_ptr<MeshMaterial3d>,
+                    const RenderPass,
+                    std::optional<XRRenderTarget>);
+
     void onBeforeRender(std::optional<XRRenderTarget>);
-    /**
-     * Execute this after rendering the scene.
-     *
-     * @param renderTarget The XR render target.
-     */
     void onAfterRender(std::optional<XRRenderTarget>);
 
     // Traverse the entity hierarchy in pre-order and execute the given function for each entity.
     void traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&);
-    void traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget>);
-    void traverseAndRender(ecs::EntityId root, RenderPass, std::optional<XRRenderTarget>);
+    size_t traverseAndUpdate(ecs::EntityId root, std::optional<XRRenderTarget>);
 
     glm::mat4 getTransformationMatrix(ecs::EntityId);
     void updateInstancedMeshData(const Mesh3d &, std::optional<XRRenderTarget>);
