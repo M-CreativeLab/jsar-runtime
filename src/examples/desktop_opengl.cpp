@@ -168,7 +168,7 @@ namespace jsar::example
         {
           monoMode = false;
           multiPass = false; // Default to singlepass
-          
+
           // Check if next argument is a valid stereo mode
           if (i + 1 < argc)
           {
