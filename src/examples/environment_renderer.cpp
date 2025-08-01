@@ -1,4 +1,3 @@
-#include "environment_renderer.hpp"
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -20,9 +19,10 @@
 #include <GL/glext.h>
 #endif
 
+#include "environment_renderer.hpp"
+
 namespace jsar::example
 {
-
   using namespace std;
 
   // Vertex shader for skybox rendering
@@ -526,7 +526,7 @@ void main()
         8, // bits per component
         width * channels, // bytes per row
         colorSpace,
-        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big
+        (CGBitmapInfo)(kCGImageAlphaPremultipliedLast) | kCGBitmapByteOrder32Big
     );
 
     CGColorSpaceRelease(colorSpace);

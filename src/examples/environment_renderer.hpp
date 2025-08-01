@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #else
@@ -70,7 +72,11 @@ namespace jsar::example
     void createPlaceholderFace(GLenum target, int faceIndex);
 
 #ifdef __APPLE__
-    bool loadImageWithCoreGraphics(const std::string &filePath, std::vector<unsigned char> &imageData, int &width, int &height, int &channels);
+    bool loadImageWithCoreGraphics(const std::string &filePath,
+                                   std::vector<unsigned char> &imageData,
+                                   int &width,
+                                   int &height,
+                                   int &channels);
 #endif
 
     bool initialized_;
