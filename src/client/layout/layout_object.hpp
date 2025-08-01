@@ -62,6 +62,10 @@ namespace client_layout
     {
       return false;
     }
+    virtual bool isInput() const
+    {
+      return false;
+    }
     virtual bool isNone() const
     {
       return false;

@@ -15,6 +15,7 @@
 #include "./layout_grid.hpp"
 #include "./layout_image.hpp"
 #include "./layout_html_canvas.hpp"
+#include "./layout_html_input.hpp"
 
 namespace client_layout
 {
@@ -254,6 +255,8 @@ namespace client_layout
       boxObject = make_unique<LayoutImage>(element);
     else if (dom::Node::Is<dom::HTMLCanvasElement>(element))
       boxObject = make_unique<LayoutHTMLCanvas>(element);
+    else if (dom::Node::Is<dom::HTMLInputElement>(element))
+      boxObject = make_unique<LayoutHTMLInput>(element);
 
     // Skip the box creation for the display type of "none".
     if (display.isNone())

@@ -431,13 +431,13 @@ namespace dom
     after(getOwnerDocumentChecked().createTextNode(text));
   }
 
-  string Element::getAttribute(const string &name) const
+  string Element::getAttribute(const string &name, const std::string &defaultValue) const
   {
     auto it = attributeNodes_.find(name);
     if (it != attributeNodes_.end())
       return it->second->value;
     else
-      return "";
+      return defaultValue;
   }
 
   vector<string> Element::getAttributeNames() const
