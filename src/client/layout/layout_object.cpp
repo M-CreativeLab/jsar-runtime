@@ -486,10 +486,7 @@ namespace client_layout
     child->formattingContext_->onRemoved(*formattingContext_);
     child->destroy();
 
-    // Update layers for remaining children since hierarchy changed
-    // Note: We don't need to update the removed child's layers as it's being destroyed
-    for (auto sibling = slowFirstChild(); sibling != nullptr; sibling = sibling->nextSibling())
-      sibling->updateLayer(true);
+    // FIXME(yorkie): should we update the sibling's layer?
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
