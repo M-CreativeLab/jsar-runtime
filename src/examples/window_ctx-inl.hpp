@@ -20,21 +20,8 @@
 namespace jsar::example
 {
 #ifdef __APPLE__
-  // Helper function to customize macOS window appearance
-  void customizeMacOSWindow(GLFWwindow* window)
-  {
-    NSWindow* nsWindow = glfwGetCocoaWindow(window);
-    if (nsWindow)
-    {
-      // Set window style to hide title bar but keep system buttons and rounded corners
-      [nsWindow setStyleMask:([nsWindow styleMask] | NSWindowStyleMaskFullSizeContentView)];
-      [nsWindow setTitlebarAppearsTransparent:YES];
-      [nsWindow setTitleVisibility:NSWindowTitleHidden];
-      
-      // Preserve system buttons and rounded corners
-      // The window will still have close/minimize/maximize buttons but no title bar
-    }
-  }
+  // Forward declare the macOS window customization function (implemented in macos_window.mm)
+  extern "C" void customizeMacOSWindow(GLFWwindow* window);
 #endif
 
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)

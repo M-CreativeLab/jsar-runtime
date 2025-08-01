@@ -119,6 +119,10 @@ function(tr_add_example EXECUTABLE_NAME)
     find_package(ZLIB REQUIRED) # Search for ZLIB
 
     file(GLOB TR_EXAMPLES_SOURCE "src/examples/*.cpp")
+    if(APPLE)
+        file(GLOB TR_EXAMPLES_SOURCE_MM "src/examples/*.mm")
+        list(APPEND TR_EXAMPLES_SOURCE ${TR_EXAMPLES_SOURCE_MM})
+    endif()
     add_executable(${EXECUTABLE_NAME} ${TR_EXAMPLES_SOURCE})
 
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
