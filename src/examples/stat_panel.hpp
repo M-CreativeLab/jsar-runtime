@@ -128,7 +128,7 @@ namespace jsar::example
       auto typeface = fontMgr.getTypeface("monospace");
       textFont.setTypeface(typeface);
       textFont.setSize(14);
-      textFont.setEdging(SkFont::Edging::kAntiAlias);
+      textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
       textFont.setSubpixel(true);
     }
 
@@ -156,15 +156,18 @@ namespace jsar::example
       auto skCanvas = surface->getCanvas();
       skCanvas->clear(SK_ColorTRANSPARENT);
 
+      int top = 50;
+      int left = 30;
+
       // draw fps
       std::string fpsStr = "   Fps: " + std::to_string(fps);
       auto textBlob = SkTextBlob::MakeFromString(fpsStr.c_str(), textFont);
-      skCanvas->drawTextBlob(textBlob, 30, 35, textPaint);
+      skCanvas->drawTextBlob(textBlob, left, top, textPaint);
 
       // draw uptime
       std::string uptimeStr = "Uptime: " + std::to_string(uptime) + "s";
       auto uptimeBlob = SkTextBlob::MakeFromString(uptimeStr.c_str(), textFont);
-      skCanvas->drawTextBlob(uptimeBlob, 30, 55, textPaint);
+      skCanvas->drawTextBlob(uptimeBlob, left, top + 25, textPaint);
 
       // read pixels from Skia surface to texImage2D
       int w = windowCtx->width;
