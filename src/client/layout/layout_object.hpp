@@ -153,8 +153,18 @@ namespace client_layout
     bool isScrollContainer() const;
     
     /**
-     * Calculate the layer number based on scrollable container hierarchy.
-     * Each scrollable container in the parent hierarchy adds 1 to the layer count.
+     * Get the current layer number for this layout object.
+     */
+    int layer() const { return layer_; }
+    
+    /**
+     * Set the layer number for this layout object.
+     */
+    void setLayer(int layer) { layer_ = layer; }
+    
+    /**
+     * Calculate the layer number based on parent's layer and local scrollable container status.
+     * Only looks at immediate parent to compute layer efficiently.
      */
     int calculateLayer() const;
     
@@ -491,6 +501,12 @@ namespace client_layout
     std::weak_ptr<LayoutObject> parent_;
     std::weak_ptr<LayoutObject> previous_;
     std::weak_ptr<LayoutObject> next_;
+    
+    /**
+     * The layer number for this layout object. 
+     * Layer 0 means no scrollable container ancestors, layer 1+ means inside scrollable containers.
+     */
+    int layer_;
 
   private: // LayoutObjectBitfields: holds all the boolean values for `LayoutObject`.
 #define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase) \

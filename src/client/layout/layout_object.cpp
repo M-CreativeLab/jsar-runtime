@@ -18,6 +18,7 @@ namespace client_layout
   LayoutObject::LayoutObject(shared_ptr<dom::Node> node)
       : node_(node)
       , formattingContext_(nullptr)
+      , layer_(0)  // Initialize layer to 0
   {
     if (dom::Node::Is<dom::Document>(node))
       scene_ = dom::Node::As<dom::Document>(node)->scene;
@@ -165,40 +166,61 @@ namespace client_layout
     return isScrollableInX || isScrollableInY;
   }
 
-  int LayoutObject::calculateLayer() const  
+  int LayoutObject::calculateLayer() const
   {
-    // Walk up to find the outermost (closest to root) scrollable container
-    LayoutObject* outermostScrollableContainer = nullptr;
-    auto current = parent();
-    while (current != nullptr)
+    auto parentPtr = parent();
+    if (parentPtr == nullptr)
     {
-      if (current->isScrollContainer())
-      {
-        outermostScrollableContainer = current.get();
-      }
-      current = current->parent();
+      // Root element has layer 0
+      return 0;
     }
     
-    if (outermostScrollableContainer != nullptr)
-    {
-      // If there's a scrollable container ancestor, we're in layer 1
-      return 1;
-    }
+    // Start with parent's layer
+    int parentLayer = parentPtr->layer();
     
-    // No scrollable container found, this is layer 0
-    return 0;
+    // If parent is a scrollable container, children get parent's layer + 1
+    if (parentPtr->isScrollContainer())
+    {
+      return parentLayer + 1;
+    }
+    else
+    {
+      return parentLayer;
+    }
   }
 
   void LayoutObject::updateLayersRecursively()
   {
-    // Update this object's layer
+    // Calculate and set this object's layer based on parent
+    auto parentPtr = parent();
+    if (parentPtr == nullptr)
+    {
+      // Root element has layer 0
+      layer_ = 0;
+    }
+    else
+    {
+      // Start with parent's layer
+      int parentLayer = parentPtr->layer();
+      
+      // If parent is a scrollable container, children get parent's layer + 1
+      if (parentPtr->isScrollContainer())
+      {
+        layer_ = parentLayer + 1;
+      }
+      else
+      {
+        layer_ = parentLayer;
+      }
+    }
+    
+    // Update WebContent component if it exists
     if (hasEntity())
     {
       auto webContent = getSceneComponent<WebContent>();
       if (webContent != nullptr)
       {
-        int newLayer = this->calculateLayer();
-        webContent->setLayer(newLayer);
+        webContent->setLayer(layer_);
       }
     }
     
@@ -544,8 +566,12 @@ namespace client_layout
         webContent->setStyle(style, parentContent);
         
         // Update layer after style change as it might affect scrollable containers
-        int newLayer = this->calculateLayer();
-        webContent->setLayer(newLayer);
+        // We need to update layers from the root to properly recalculate the hierarchy
+        auto rootView = view();
+        if (rootView != nullptr)
+        {
+          rootView->updateLayersRecursively();
+        }
       }
     }
 
