@@ -38,26 +38,35 @@ namespace client_cssom::css_transform_parser
   struct TransformFunction
   {
     TransformFunctionType type;
-    std::vector<double> values;  // Numeric values
-    std::vector<std::string> units;  // Units for each value
-    
-    TransformFunction(TransformFunctionType t) : type(t) {}
+    std::vector<double> values;     // Numeric values
+    std::vector<std::string> units; // Units for each value
+
+    TransformFunction(TransformFunctionType t)
+        : type(t)
+    {
+    }
   };
 
   // Main parser class
   class CSSTransformParser
   {
   public:
-    explicit CSSTransformParser(const std::string& input);
-    
+    explicit CSSTransformParser(const std::string &input);
+
     // Parse the transform string and return list of functions
     std::vector<TransformFunction> parse();
-    
+
     // Check if parsing was successful
-    bool isValid() const { return is_valid_; }
-    
+    bool isValid() const
+    {
+      return is_valid_;
+    }
+
     // Get error message if parsing failed
-    const std::string& getError() const { return error_message_; }
+    const std::string &getError() const
+    {
+      return error_message_;
+    }
 
   private:
     std::string input_;
@@ -66,7 +75,7 @@ namespace client_cssom::css_transform_parser
     size_t current_token_index_;
     bool is_valid_;
     std::string error_message_;
-    
+
     // Parse individual transform functions
     std::optional<TransformFunction> parseTransformFunction();
     std::optional<TransformFunction> parseMatrix();
@@ -90,19 +99,19 @@ namespace client_cssom::css_transform_parser
     std::optional<TransformFunction> parseSkewX();
     std::optional<TransformFunction> parseSkewY();
     std::optional<TransformFunction> parsePerspective();
-    
+
     // Helper methods
     bool consumeToken(css_value_tokenizer::TokenType expected_type);
     bool consumeComma();
-    bool consumeNumber(double& value, std::string& unit);
-    bool consumeLength(double& value, std::string& unit);
-    bool consumeAngle(double& value, std::string& unit);
+    bool consumeNumber(double &value, std::string &unit);
+    bool consumeLength(double &value, std::string &unit);
+    bool consumeAngle(double &value, std::string &unit);
     bool isAtEnd() const;
-    const css_value_tokenizer::Token& currentToken() const;
+    const css_value_tokenizer::Token &currentToken() const;
     void advance();
-    void setError(const std::string& message);
-    
+    void setError(const std::string &message);
+
     // Transform function name to type mapping
-    static TransformFunctionType getFunctionType(const std::string& name);
+    static TransformFunctionType getFunctionType(const std::string &name);
   };
 }

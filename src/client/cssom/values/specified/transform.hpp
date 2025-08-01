@@ -174,15 +174,15 @@ namespace client_cssom::values::specified
     {
       css_transform_parser::CSSTransformParser parser(input);
       auto functions = parser.parse();
-      
+
       if (!parser.isValid())
       {
         return false;
       }
-      
+
       // Clear existing operations
       operations_.clear();
-      
+
       // Convert parsed functions to transform operations
       for (const auto &func : functions)
       {
@@ -191,7 +191,7 @@ namespace client_cssom::values::specified
           return false;
         }
       }
-      
+
       return true;
     }
 
@@ -208,54 +208,54 @@ namespace client_cssom::values::specified
     bool addTransformFunction(const css_transform_parser::TransformFunction &func)
     {
       using namespace css_transform_parser;
-      
+
       switch (func.type)
       {
-        case TransformFunctionType::kMatrix:
-          return addMatrix(func);
-        case TransformFunctionType::kMatrix3D:
-          return addMatrix3D(func);
-        case TransformFunctionType::kTranslate:
-          return addTranslate(func);
-        case TransformFunctionType::kTranslateX:
-          return addTranslateX(func);
-        case TransformFunctionType::kTranslateY:
-          return addTranslateY(func);
-        case TransformFunctionType::kTranslateZ:
-          return addTranslateZ(func);
-        case TransformFunctionType::kTranslate3D:
-          return addTranslate3D(func);
-        case TransformFunctionType::kScale:
-          return addScale(func);
-        case TransformFunctionType::kScaleX:
-          return addScaleX(func);
-        case TransformFunctionType::kScaleY:
-          return addScaleY(func);
-        case TransformFunctionType::kScaleZ:
-          return addScaleZ(func);
-        case TransformFunctionType::kScale3D:
-          return addScale3D(func);
-        case TransformFunctionType::kRotate:
-          return addRotate(func);
-        case TransformFunctionType::kRotateX:
-          return addRotateX(func);
-        case TransformFunctionType::kRotateY:
-          return addRotateY(func);
-        case TransformFunctionType::kRotateZ:
-          return addRotateZ(func);
-        case TransformFunctionType::kRotate3D:
-          return addRotate3D(func);
-        case TransformFunctionType::kSkew:
-          return addSkew(func);
-        case TransformFunctionType::kSkewX:
-          return addSkewX(func);
-        case TransformFunctionType::kSkewY:
-          return addSkewY(func);
-        case TransformFunctionType::kPerspective:
-          // Perspective is not implemented in the current transform operations
-          return true; // Skip for now
-        default:
-          return false;
+      case TransformFunctionType::kMatrix:
+        return addMatrix(func);
+      case TransformFunctionType::kMatrix3D:
+        return addMatrix3D(func);
+      case TransformFunctionType::kTranslate:
+        return addTranslate(func);
+      case TransformFunctionType::kTranslateX:
+        return addTranslateX(func);
+      case TransformFunctionType::kTranslateY:
+        return addTranslateY(func);
+      case TransformFunctionType::kTranslateZ:
+        return addTranslateZ(func);
+      case TransformFunctionType::kTranslate3D:
+        return addTranslate3D(func);
+      case TransformFunctionType::kScale:
+        return addScale(func);
+      case TransformFunctionType::kScaleX:
+        return addScaleX(func);
+      case TransformFunctionType::kScaleY:
+        return addScaleY(func);
+      case TransformFunctionType::kScaleZ:
+        return addScaleZ(func);
+      case TransformFunctionType::kScale3D:
+        return addScale3D(func);
+      case TransformFunctionType::kRotate:
+        return addRotate(func);
+      case TransformFunctionType::kRotateX:
+        return addRotateX(func);
+      case TransformFunctionType::kRotateY:
+        return addRotateY(func);
+      case TransformFunctionType::kRotateZ:
+        return addRotateZ(func);
+      case TransformFunctionType::kRotate3D:
+        return addRotate3D(func);
+      case TransformFunctionType::kSkew:
+        return addSkew(func);
+      case TransformFunctionType::kSkewX:
+        return addSkewX(func);
+      case TransformFunctionType::kSkewY:
+        return addSkewY(func);
+      case TransformFunctionType::kPerspective:
+        // Perspective is not implemented in the current transform operations
+        return true; // Skip for now
+      default:
+        return false;
       }
     }
 
@@ -263,15 +263,14 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 6)
         return false;
-      
+
       operations_.push_back(TransformOperation::Matrix(
         Number(func.values[0]),
         Number(func.values[1]),
         Number(func.values[2]),
         Number(func.values[3]),
         Number(func.values[4]),
-        Number(func.values[5])
-      ));
+        Number(func.values[5])));
       return true;
     }
 
@@ -279,13 +278,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 16)
         return false;
-      
+
       operations_.push_back(TransformOperation::Matrix3D(
-        Number(func.values[0]),  Number(func.values[1]),  Number(func.values[2]),  Number(func.values[3]),
-        Number(func.values[4]),  Number(func.values[5]),  Number(func.values[6]),  Number(func.values[7]),
-        Number(func.values[8]),  Number(func.values[9]),  Number(func.values[10]), Number(func.values[11]),
-        Number(func.values[12]), Number(func.values[13]), Number(func.values[14]), Number(func.values[15])
-      ));
+        Number(func.values[0]), Number(func.values[1]), Number(func.values[2]), Number(func.values[3]), Number(func.values[4]), Number(func.values[5]), Number(func.values[6]), Number(func.values[7]), Number(func.values[8]), Number(func.values[9]), Number(func.values[10]), Number(func.values[11]), Number(func.values[12]), Number(func.values[13]), Number(func.values[14]), Number(func.values[15])));
       return true;
     }
 
@@ -293,11 +288,10 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 2)
         return false;
-      
+
       operations_.push_back(TransformOperation::Translate(
         createLengthPercentage(func.values[0], func.units[0]),
-        createLengthPercentage(func.values[1], func.units[1])
-      ));
+        createLengthPercentage(func.values[1], func.units[1])));
       return true;
     }
 
@@ -305,10 +299,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::TranslateX(
-        createLengthPercentage(func.values[0], func.units[0])
-      ));
+        createLengthPercentage(func.values[0], func.units[0])));
       return true;
     }
 
@@ -316,10 +309,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::TranslateY(
-        createLengthPercentage(func.values[0], func.units[0])
-      ));
+        createLengthPercentage(func.values[0], func.units[0])));
       return true;
     }
 
@@ -327,10 +319,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::TranslateZ(
-        createLength(func.values[0], func.units[0])
-      ));
+        createLength(func.values[0], func.units[0])));
       return true;
     }
 
@@ -338,12 +329,11 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 3)
         return false;
-      
+
       operations_.push_back(TransformOperation::Translate3D(
         createLengthPercentage(func.values[0], func.units[0]),
         createLengthPercentage(func.values[1], func.units[1]),
-        createLength(func.values[2], func.units[2])
-      ));
+        createLength(func.values[2], func.units[2])));
       return true;
     }
 
@@ -354,8 +344,7 @@ namespace client_cssom::values::specified
         // Uniform scaling: scale(x) is equivalent to scale(x, x)
         operations_.push_back(TransformOperation::Scale(
           Number(func.values[0]),
-          Number(func.values[0])
-        ));
+          Number(func.values[0])));
       }
       else if (func.values.size() == 2)
       {
@@ -363,8 +352,7 @@ namespace client_cssom::values::specified
         // The second value is ignored for now due to GenericScale limitations
         operations_.push_back(TransformOperation::Scale(
           Number(func.values[0]),
-          Number(func.values[0])
-        ));
+          Number(func.values[0])));
       }
       else
       {
@@ -377,10 +365,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::ScaleX(
-        Number(func.values[0])
-      ));
+        Number(func.values[0])));
       return true;
     }
 
@@ -388,10 +375,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::ScaleY(
-        Number(func.values[0])
-      ));
+        Number(func.values[0])));
       return true;
     }
 
@@ -399,10 +385,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::ScaleZ(
-        Number(func.values[0])
-      ));
+        Number(func.values[0])));
       return true;
     }
 
@@ -410,12 +395,11 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 3)
         return false;
-      
+
       operations_.push_back(TransformOperation::Scale3D(
         Number(func.values[0]),
         Number(func.values[1]),
-        Number(func.values[2])
-      ));
+        Number(func.values[2])));
       return true;
     }
 
@@ -423,10 +407,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::Rotate(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
@@ -434,10 +417,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::RotateX(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
@@ -445,10 +427,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::RotateY(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
@@ -456,10 +437,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::RotateZ(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
@@ -467,13 +447,12 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 4)
         return false;
-      
+
       operations_.push_back(TransformOperation::Rotate3D(
         Number(func.values[0]),
         Number(func.values[1]),
         Number(func.values[2]),
-        createAngle(func.values[3], func.units[3])
-      ));
+        createAngle(func.values[3], func.units[3])));
       return true;
     }
 
@@ -481,11 +460,10 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 2)
         return false;
-      
+
       operations_.push_back(TransformOperation::Skew(
         createAngle(func.values[0], func.units[0]),
-        createAngle(func.values[1], func.units[1])
-      ));
+        createAngle(func.values[1], func.units[1])));
       return true;
     }
 
@@ -493,10 +471,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::SkewX(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
@@ -504,10 +481,9 @@ namespace client_cssom::values::specified
     {
       if (func.values.size() != 1)
         return false;
-      
+
       operations_.push_back(TransformOperation::SkewY(
-        createAngle(func.values[0], func.units[0])
-      ));
+        createAngle(func.values[0], func.units[0])));
       return true;
     }
 
