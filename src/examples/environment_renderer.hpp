@@ -66,7 +66,7 @@ namespace jsar::example
     void createCubeGeometry();
     void createProceduralCubeMap();
     bool loadHDRCubeMap(const std::string &filePath);
-    bool loadDDSCubeMap(const std::string &filePath);
+    bool loadDirectoryCubeMap(const std::string &directoryPath);
     void destroyResources();
 
     bool initialized_;
