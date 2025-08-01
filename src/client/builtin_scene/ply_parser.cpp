@@ -1,7 +1,7 @@
 #include "./ply_parser.hpp"
 #include <common/debug.hpp>
-#include <algorithm>
-#include <cstring>
+#include <sstream>
+#include <iostream>
 
 namespace builtin_scene::model_renderer
 {
@@ -9,208 +9,191 @@ namespace builtin_scene::model_renderer
 
   bool PlyParser::parse(const std::vector<char> &data, std::vector<GaussianSplat> &splats)
   {
-    // Convert data to string and split into lines
-    std::string content(data.begin(), data.end());
-    std::istringstream stream(content);
-    std::vector<std::string> lines;
-    std::string line;
-    
-    while (std::getline(stream, line)) {
-      lines.push_back(line);
-    }
-    
-    if (lines.empty()) {
-      DEBUG(LOG_TAG, "PLY file is empty");
-      return false;
-    }
-    
-    // Check PLY magic header
-    if (lines[0] != "ply") {
-      DEBUG(LOG_TAG, "Invalid PLY file - missing 'ply' header");
-      return false;
-    }
-    
-    // Parse header
-    std::vector<PlyElement> elements;
-    size_t headerEndIndex = 0;
-    
-    if (!parseHeader(lines, headerEndIndex, elements)) {
-      DEBUG(LOG_TAG, "Failed to parse PLY header");
-      return false;
-    }
-    
-    // Find vertex element
-    PlyElement vertexElement;
-    bool foundVertices = false;
-    
-    for (const auto &element : elements) {
-      if (element.name == "vertex") {
-        vertexElement = element;
-        foundVertices = true;
-        break;
-      }
-    }
-    
-    if (!foundVertices) {
-      DEBUG(LOG_TAG, "No vertex element found in PLY file");
-      return false;
-    }
-    
-    // Parse vertex data
-    if (!parseVertices(lines, headerEndIndex + 1, vertexElement, splats)) {
-      DEBUG(LOG_TAG, "Failed to parse vertex data");
-      return false;
-    }
-    
-    DEBUG(LOG_TAG, "Successfully parsed PLY file with %zu splats", splats.size());
-    return true;
-  }
-
-  bool PlyParser::parseHeader(const std::vector<std::string> &lines, 
-                             size_t &headerEndIndex, 
-                             std::vector<PlyElement> &elements)
-  {
-    PlyElement currentElement;
-    bool inElement = false;
-    
-    for (size_t i = 1; i < lines.size(); ++i) {
-      const std::string &line = lines[i];
+    try {
+      // Convert data to string stream
+      std::string content(data.begin(), data.end());
+      std::stringstream ss(content);
       
-      if (line == "end_header") {
-        if (inElement) {
-          elements.push_back(currentElement);
-        }
-        headerEndIndex = i;
-        return true;
+      // Create tinyply file instance
+      tinyply::PlyFile plyFile;
+      
+      // Read PLY file
+      plyFile.read(ss);
+      
+      // Request common properties for Gaussian Splatting
+      std::shared_ptr<tinyply::PlyData> vertices;
+      std::shared_ptr<tinyply::PlyData> colors;
+      std::shared_ptr<tinyply::PlyData> opacities;
+      std::shared_ptr<tinyply::PlyData> scales;
+      std::shared_ptr<tinyply::PlyData> rotations;
+      
+      try {
+        vertices = plyFile.request_properties_from_element("vertex", {"x", "y", "z"});
+      } catch (const std::exception &e) {
+        DEBUG(LOG_TAG, "Failed to get vertex positions: %s", e.what());
+        return false;
       }
       
-      std::vector<std::string> tokens = split(line);
-      if (tokens.empty()) continue;
-      
-      if (tokens[0] == "format") {
-        if (tokens.size() >= 2 && tokens[1] != "ascii") {
-          DEBUG(LOG_TAG, "Only ASCII PLY format is supported");
-          return false;
+      try {
+        colors = plyFile.request_properties_from_element("vertex", {"red", "green", "blue"});
+      } catch (const std::exception &e) {
+        // Try alternative color names
+        try {
+          colors = plyFile.request_properties_from_element("vertex", {"r", "g", "b"});
+        } catch (const std::exception &e2) {
+          DEBUG(LOG_TAG, "No color properties found, using default colors");
         }
       }
-      else if (tokens[0] == "element") {
-        if (inElement) {
-          elements.push_back(currentElement);
+      
+      try {
+        opacities = plyFile.request_properties_from_element("vertex", {"opacity"});
+      } catch (const std::exception &e) {
+        try {
+          opacities = plyFile.request_properties_from_element("vertex", {"alpha"});
+        } catch (const std::exception &e2) {
+          DEBUG(LOG_TAG, "No opacity properties found, using default opacity");
+        }
+      }
+      
+      try {
+        scales = plyFile.request_properties_from_element("vertex", {"scale_0", "scale_1", "scale_2"});
+      } catch (const std::exception &e) {
+        try {
+          scales = plyFile.request_properties_from_element("vertex", {"sx", "sy", "sz"});
+        } catch (const std::exception &e2) {
+          DEBUG(LOG_TAG, "No scale properties found, using default scales");
+        }
+      }
+      
+      try {
+        rotations = plyFile.request_properties_from_element("vertex", {"rot_0", "rot_1", "rot_2", "rot_3"});
+      } catch (const std::exception &e) {
+        try {
+          rotations = plyFile.request_properties_from_element("vertex", {"qx", "qy", "qz", "qw"});
+        } catch (const std::exception &e2) {
+          DEBUG(LOG_TAG, "No rotation properties found, using default rotations");
+        }
+      }
+      
+      // Parse vertex data (required for tinyply)
+      plyFile.parse_vertex_data();
+      
+      if (!vertices || vertices->count == 0) {
+        DEBUG(LOG_TAG, "No vertex data found in PLY file");
+        return false;
+      }
+      
+      splats.clear();
+      splats.reserve(vertices->count);
+      
+      // Extract vertex positions
+      auto position_data = vertices->get_data<float>();
+      
+      // Extract colors if available
+      std::vector<float> color_data;
+      if (colors && colors->count > 0) {
+        color_data = colors->get_data<float>();
+      }
+      
+      // Extract opacities if available
+      std::vector<float> opacity_data;
+      if (opacities && opacities->count > 0) {
+        opacity_data = opacities->get_data<float>();
+      }
+      
+      // Extract scales if available
+      std::vector<float> scale_data;
+      if (scales && scales->count > 0) {
+        scale_data = scales->get_data<float>();
+      }
+      
+      // Extract rotations if available
+      std::vector<float> rotation_data;
+      if (rotations && rotations->count > 0) {
+        rotation_data = rotations->get_data<float>();
+      }
+      
+      // Build splats from extracted data
+      for (size_t i = 0; i < vertices->count; ++i) {
+        GaussianSplat splat;
+        
+        // Position (required)
+        if (i * 3 + 2 < position_data.size()) {
+          splat.position[0] = position_data[i * 3 + 0];
+          splat.position[1] = position_data[i * 3 + 1];
+          splat.position[2] = position_data[i * 3 + 2];
         }
         
-        if (tokens.size() >= 3) {
-          currentElement = PlyElement();
-          currentElement.name = tokens[1];
-          currentElement.count = std::stoi(tokens[2]);
-          inElement = true;
+        // Color (default to white if not available)
+        if (!color_data.empty() && i * 3 + 2 < color_data.size()) {
+          splat.color[0] = color_data[i * 3 + 0] / 255.0f; // Normalize if in 0-255 range
+          splat.color[1] = color_data[i * 3 + 1] / 255.0f;
+          splat.color[2] = color_data[i * 3 + 2] / 255.0f;
+        } else {
+          splat.color[0] = 1.0f;
+          splat.color[1] = 1.0f;
+          splat.color[2] = 1.0f;
         }
-      }
-      else if (tokens[0] == "property" && inElement) {
-        if (tokens.size() >= 3) {
-          PlyProperty prop;
-          prop.type = tokens[1];
-          prop.name = tokens[2];
-          prop.index = static_cast<int>(currentElement.properties.size());
-          currentElement.properties.push_back(prop);
+        
+        // Opacity (default to 1.0 if not available)
+        if (!opacity_data.empty() && i < opacity_data.size()) {
+          splat.opacity = opacity_data[i];
+        } else {
+          splat.opacity = 1.0f;
         }
-      }
-    }
-    
-    DEBUG(LOG_TAG, "PLY header incomplete - missing end_header");
-    return false;
-  }
-
-  bool PlyParser::parseVertices(const std::vector<std::string> &lines,
-                               size_t startIndex,
-                               const PlyElement &element,
-                               std::vector<GaussianSplat> &splats)
-  {
-    // Create property name to index mapping
-    std::map<std::string, int> propMap;
-    for (const auto &prop : element.properties) {
-      propMap[prop.name] = prop.index;
-    }
-    
-    splats.clear();
-    splats.reserve(element.count);
-    
-    for (int i = 0; i < element.count && (startIndex + i) < lines.size(); ++i) {
-      const std::string &line = lines[startIndex + i];
-      std::vector<std::string> values = split(line);
-      
-      if (values.size() < element.properties.size()) {
-        DEBUG(LOG_TAG, "Invalid vertex data at line %zu", startIndex + i);
-        continue;
+        
+        // Scale (default to 1.0 if not available)
+        if (!scale_data.empty() && i * 3 + 2 < scale_data.size()) {
+          splat.scale[0] = scale_data[i * 3 + 0];
+          splat.scale[1] = scale_data[i * 3 + 1];
+          splat.scale[2] = scale_data[i * 3 + 2];
+        } else {
+          splat.scale[0] = 1.0f;
+          splat.scale[1] = 1.0f;
+          splat.scale[2] = 1.0f;
+        }
+        
+        // Rotation (default to identity quaternion if not available)
+        if (!rotation_data.empty() && i * 4 + 3 < rotation_data.size()) {
+          splat.rotation[0] = rotation_data[i * 4 + 0];
+          splat.rotation[1] = rotation_data[i * 4 + 1];
+          splat.rotation[2] = rotation_data[i * 4 + 2];
+          splat.rotation[3] = rotation_data[i * 4 + 3];
+        } else {
+          splat.rotation[0] = 0.0f;
+          splat.rotation[1] = 0.0f;
+          splat.rotation[2] = 0.0f;
+          splat.rotation[3] = 1.0f; // Identity quaternion
+        }
+        
+        splats.push_back(splat);
       }
       
-      GaussianSplat splat;
+      DEBUG(LOG_TAG, "Successfully parsed PLY file with %zu splats using tinyply", splats.size());
+      return true;
       
-      // Parse position (required)
-      if (propMap.count("x")) splat.position[0] = parseFloat(values[propMap["x"]]);
-      if (propMap.count("y")) splat.position[1] = parseFloat(values[propMap["y"]]);
-      if (propMap.count("z")) splat.position[2] = parseFloat(values[propMap["z"]]);
-      
-      // Parse color (with defaults)
-      splat.color[0] = propMap.count("red") ? parseFloat(values[propMap["red"]], 255.0f) / 255.0f : 1.0f;
-      splat.color[1] = propMap.count("green") ? parseFloat(values[propMap["green"]], 255.0f) / 255.0f : 1.0f;
-      splat.color[2] = propMap.count("blue") ? parseFloat(values[propMap["blue"]], 255.0f) / 255.0f : 1.0f;
-      
-      // Alternative RGB naming
-      if (propMap.count("r")) splat.color[0] = parseFloat(values[propMap["r"]]);
-      if (propMap.count("g")) splat.color[1] = parseFloat(values[propMap["g"]]);
-      if (propMap.count("b")) splat.color[2] = parseFloat(values[propMap["b"]]);
-      
-      // Parse opacity (default to 1.0)
-      splat.opacity = propMap.count("opacity") ? parseFloat(values[propMap["opacity"]], 1.0f) : 1.0f;
-      if (propMap.count("alpha")) splat.opacity = parseFloat(values[propMap["alpha"]], 1.0f);
-      
-      // Parse scale (default to 1.0)
-      splat.scale[0] = propMap.count("scale_0") ? parseFloat(values[propMap["scale_0"]], 1.0f) : 1.0f;
-      splat.scale[1] = propMap.count("scale_1") ? parseFloat(values[propMap["scale_1"]], 1.0f) : 1.0f;
-      splat.scale[2] = propMap.count("scale_2") ? parseFloat(values[propMap["scale_2"]], 1.0f) : 1.0f;
-      
-      // Alternative scale naming
-      if (propMap.count("sx")) splat.scale[0] = parseFloat(values[propMap["sx"]], 1.0f);
-      if (propMap.count("sy")) splat.scale[1] = parseFloat(values[propMap["sy"]], 1.0f);
-      if (propMap.count("sz")) splat.scale[2] = parseFloat(values[propMap["sz"]], 1.0f);
-      
-      // Parse rotation quaternion (default to identity)
-      splat.rotation[0] = propMap.count("rot_0") ? parseFloat(values[propMap["rot_0"]], 0.0f) : 0.0f;
-      splat.rotation[1] = propMap.count("rot_1") ? parseFloat(values[propMap["rot_1"]], 0.0f) : 0.0f;
-      splat.rotation[2] = propMap.count("rot_2") ? parseFloat(values[propMap["rot_2"]], 0.0f) : 0.0f;
-      splat.rotation[3] = propMap.count("rot_3") ? parseFloat(values[propMap["rot_3"]], 1.0f) : 1.0f;
-      
-      // Alternative rotation naming
-      if (propMap.count("qx")) splat.rotation[0] = parseFloat(values[propMap["qx"]], 0.0f);
-      if (propMap.count("qy")) splat.rotation[1] = parseFloat(values[propMap["qy"]], 0.0f);
-      if (propMap.count("qz")) splat.rotation[2] = parseFloat(values[propMap["qz"]], 0.0f);
-      if (propMap.count("qw")) splat.rotation[3] = parseFloat(values[propMap["qw"]], 1.0f);
-      
-      splats.push_back(splat);
+    } catch (const std::exception &e) {
+      DEBUG(LOG_TAG, "Error parsing PLY file: %s", e.what());
+      return false;
     }
-    
-    return true;
   }
 
-  std::vector<std::string> PlyParser::split(const std::string &str)
+  float PlyParser::extractFloat(const std::shared_ptr<tinyply::PlyData> &plyData, 
+                               size_t index, 
+                               float defaultValue)
   {
-    std::vector<std::string> tokens;
-    std::istringstream stream(str);
-    std::string token;
-    
-    while (stream >> token) {
-      tokens.push_back(token);
-    }
-    
-    return tokens;
-  }
-
-  float PlyParser::parseFloat(const std::string &str, float defaultValue)
-  {
-    try {
-      return std::stof(str);
-    } catch (const std::exception &) {
+    if (!plyData || !plyData->buffer || index >= plyData->count) {
       return defaultValue;
     }
+    
+    if (plyData->t == tinyply::Type::FLOAT32) {
+      const float* data = reinterpret_cast<const float*>(plyData->buffer.get());
+      return data[index];
+    } else if (plyData->t == tinyply::Type::FLOAT64) {
+      const double* data = reinterpret_cast<const double*>(plyData->buffer.get());
+      return static_cast<float>(data[index]);
+    }
+    
+    return defaultValue;
   }
 }

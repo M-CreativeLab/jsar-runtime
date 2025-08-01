@@ -15,7 +15,6 @@
 #include "./model_3d_renderer.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
-#include "./ply_parser.hpp"
 
 namespace builtin_scene::model_renderer
 {
@@ -23,8 +22,6 @@ namespace builtin_scene::model_renderer
   using namespace client_graphics;
 
   static const char *LOG_TAG = "Model3DRenderer";
-
-
 
   void InitSystem::onExecute()
   {
@@ -72,26 +69,19 @@ namespace builtin_scene::model_renderer
 
   RenderGaussianSplattingSystem::RenderGaussianSplattingSystem()
       : RenderBaseSystem()
-      , materialInitialized_(false)
   {
   }
 
   void RenderGaussianSplattingSystem::onExecute()
   {
-    // Initialize material on first use
-    if (!materialInitialized_) {
-      if (!initializeMaterial()) {
-        DEBUG(LOG_TAG, "Failed to initialize Gaussian Splatting material");
-        return;
-      }
-    }
-
     auto list = queryEntitiesWithComponent<Model3d>([](const Model3d &model) -> bool {
       return model.isLoaded() && model.isGaussianSplatting() && model.visible();
     });
 
     if (list.size() == 0)
       return;
+
+    DEBUG(LOG_TAG, "Found %zu 3DGS models to render (rendering not implemented in this PR)", list.size());
 
     for (auto &item : list) {
       auto webContent = getComponent<WebContent>(item.first);
@@ -109,79 +99,13 @@ namespace builtin_scene::model_renderer
     }
 
     const auto &splats = model->getSplats();
-    if (splats.empty()) {
-      return;
-    }
-
-    DEBUG(LOG_TAG, "Rendering 3DGS model with %zu splats", splats.size());
+    DEBUG(LOG_TAG, "Model has %zu splats (rendering not implemented in this PR)", splats.size());
     
-    // Get camera position for depth sorting
-    glm::vec3 cameraPos = getCameraPosition();
+    // TODO: Implement actual 3DGS rendering in future PR
+    // This PR only provides the framework and data structures
     
-    // Convert Model3d splat format to material format
-    std::vector<materials::GaussianSplattingMaterial::GaussianSplat> materialSplats;
-    materialSplats.reserve(splats.size());
-    
-    for (const auto &splat : splats) {
-      materials::GaussianSplattingMaterial::GaussianSplat ms;
-      ms.position = glm::vec3(splat.position[0], splat.position[1], splat.position[2]);
-      ms.color = glm::vec3(splat.color[0], splat.color[1], splat.color[2]);
-      ms.opacity = splat.opacity;
-      ms.scale = glm::vec3(splat.scale[0], splat.scale[1], splat.scale[2]);
-      ms.rotation = glm::vec4(splat.rotation[0], splat.rotation[1], 
-                              splat.rotation[2], splat.rotation[3]);
-      materialSplats.push_back(ms);
-    }
-    
-    // Sort splats by depth (back to front for proper alpha blending)
-    DEBUG(LOG_TAG, "Sorting %zu splats by depth", materialSplats.size());
-    std::sort(materialSplats.begin(), materialSplats.end(), 
-      [&cameraPos](const materials::GaussianSplattingMaterial::GaussianSplat &a, 
-                   const materials::GaussianSplattingMaterial::GaussianSplat &b) {
-        float distA = glm::distance2(a.position, cameraPos);
-        float distB = glm::distance2(b.position, cameraPos);
-        return distA > distB; // Back to front sorting
-      });
-    
-    // Update material with sorted splats data
-    gaussianMaterial_->updateSplats(materialSplats);
-    
-    // TODO: Actually render using the material and mesh system
-    // This would typically involve creating/updating a mesh and rendering it
-    // with the gaussian splatting material
-  }
-
-  bool RenderGaussianSplattingSystem::initializeMaterial()
-  {
-    DEBUG(LOG_TAG, "Initializing Gaussian Splatting material");
-    
-    gaussianMaterial_ = std::make_shared<materials::GaussianSplattingMaterial>();
-    
-    // Get the renderer to access the WebGL context
-    auto renderer = getResource<Renderer>();
-    if (!renderer) {
-      DEBUG(LOG_TAG, "Renderer resource not available");
-      return false;
-    }
-    
-    auto glContext = renderer->glContext();
-    if (!glContext) {
-      DEBUG(LOG_TAG, "WebGL context not available");
-      return false;
-    }
-    
-    // The material will be initialized when first used
-    materialInitialized_ = true;
-    DEBUG(LOG_TAG, "Gaussian Splatting material initialized successfully");
-    return true;
-  }
-
-  glm::vec3 RenderGaussianSplattingSystem::getCameraPosition()
-  {
-    // Get camera position from the renderer or scene
-    // For now, return a default position (origin)
-    // TODO: Get actual camera position from the scene
-    return glm::vec3(0.0f, 0.0f, 0.0f);
+    // Mark content as clean since we're not actually rendering anything yet
+    content.setDirty(false);
   }
 
   void RenderGLTFSystem::onExecute()
@@ -193,6 +117,8 @@ namespace builtin_scene::model_renderer
     if (list.size() == 0)
       return;
 
+    DEBUG(LOG_TAG, "Found %zu GLTF models to render (rendering not implemented)", list.size());
+
     for (auto &item : list) {
       auto webContent = getComponent<WebContent>(item.first);
       if (webContent != nullptr && webContent->isDirty()) {
@@ -203,8 +129,9 @@ namespace builtin_scene::model_renderer
 
   void RenderGLTFSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    // TODO: Implement GLTF rendering
+    // TODO: Implement GLTF rendering in future PR
     DEBUG(LOG_TAG, "GLTF rendering not yet implemented");
+    content.setDirty(false);
   }
 
   void UpdateTextureSystem::onExecute()

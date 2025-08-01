@@ -62,17 +62,6 @@ namespace builtin_scene::model_renderer
 
   private:
     void render(ecs::EntityId entity, WebContent &content) override;
-    
-    // Initialize material for 3DGS rendering
-    bool initializeMaterial();
-    
-    // Get camera position for depth sorting
-    glm::vec3 getCameraPosition();
-    
-    // Material for gaussian splatting
-    std::shared_ptr<materials::GaussianSplattingMaterial> gaussianMaterial_;
-    
-    bool materialInitialized_ = false;
   };
 
   /**

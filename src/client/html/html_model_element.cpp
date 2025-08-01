@@ -311,13 +311,12 @@ namespace dom
       }
       else
       {
-        DEBUG("HTMLModelElement", "PLY parsing failed");
-        // Model loading failed - do not set as loaded
+        std::cerr << "PLY parsing failed" << std::endl;
       }
     }
     else
     {
-      // TODO: Implement GLTF/GLB parsing
+      std::cerr << "Model type not supported yet: " << typeHint << std::endl;
       std::cerr << "GLTF/GLB parsing not yet implemented" << std::endl;
       // Model loading failed - do not set as loaded
     }
