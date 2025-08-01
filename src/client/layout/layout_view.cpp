@@ -4,8 +4,6 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/all_html_elements.hpp>
-#include <client/builtin_scene/web_content.hpp>
-
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"
 #include "./layout_none.hpp"
