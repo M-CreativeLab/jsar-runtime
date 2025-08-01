@@ -3,6 +3,10 @@
 #include <cmath>
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
+// macOS-specific includes for window customization
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
+#include <Cocoa/Cocoa.h>
 #else
 #include <GL/gl.h>
 #endif
@@ -15,6 +19,24 @@
 
 namespace jsar::example
 {
+#ifdef __APPLE__
+  // Helper function to customize macOS window appearance
+  void customizeMacOSWindow(GLFWwindow* window)
+  {
+    NSWindow* nsWindow = glfwGetCocoaWindow(window);
+    if (nsWindow)
+    {
+      // Set window style to hide title bar but keep system buttons and rounded corners
+      [nsWindow setStyleMask:([nsWindow styleMask] | NSWindowStyleMaskFullSizeContentView)];
+      [nsWindow setTitlebarAppearsTransparent:YES];
+      [nsWindow setTitleVisibility:NSWindowTitleHidden];
+      
+      // Preserve system buttons and rounded corners
+      // The window will still have close/minimize/maximize buttons but no title bar
+    }
+  }
+#endif
+
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
   {
     WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
@@ -278,16 +300,19 @@ namespace jsar::example
     double deltaTime = currentTime - lastFrameTime;
     lastFrameTime = currentTime;
 
-    // Smoothing factor - higher values = faster animation (0.0 to 1.0)
-    // Using different factors for rotation and position for optimal feel
-    float rotationSmoothingFactor = 8.0f; // Faster for rotation
-    float positionSmoothingFactor = 5.0f; // Slightly slower for position
+    // Improved smooth damping animation with cubic easing
+    // Using exponential decay with cubic easing for smoother approach to target
+    float rotationDampingFactor = 12.0f; // Higher damping for smoother animation
+    float positionDampingFactor = 8.0f;
 
-    // Smooth horizontal rotation animation
+    // Smooth horizontal rotation animation with cubic easing
     float rotationDifference = targetHorizontalRotation - currentHorizontalRotation;
-    if (std::abs(rotationDifference) > 0.01f) // Only animate if difference is significant
+    if (std::abs(rotationDifference) > 0.001f) // Lower threshold for smoother ending
     {
-      float rotationStep = rotationDifference * rotationSmoothingFactor * static_cast<float>(deltaTime);
+      // Cubic easing out for smoother deceleration
+      float t = std::min(1.0f, rotationDampingFactor * static_cast<float>(deltaTime));
+      float easeOut = 1.0f - std::pow(1.0f - t, 3.0f); // Cubic ease-out
+      float rotationStep = rotationDifference * easeOut;
       currentHorizontalRotation += rotationStep;
       
       // Keep the original horizontalRotation variable in sync
@@ -297,15 +322,18 @@ namespace jsar::example
       xrRenderer->rotateViewerByAxisY(rotationStep * (M_PI / 180.0f)); // Convert to radians
     }
 
-    // Smooth position animation  
+    // Smooth position animation with cubic easing
     glm::vec3 currentViewerPos = xrRenderer->viewerPosition();
     glm::vec3 positionDifference = targetViewerPosition - currentViewerPos;
-    if (glm::length(positionDifference) > 0.001f) // Only animate if difference is significant
+    if (glm::length(positionDifference) > 0.0001f) // Lower threshold for smoother ending
     {
-      glm::vec3 positionStep = positionDifference * positionSmoothingFactor * static_cast<float>(deltaTime);
+      // Cubic easing out for smoother deceleration
+      float t = std::min(1.0f, positionDampingFactor * static_cast<float>(deltaTime));
+      float easeOut = 1.0f - std::pow(1.0f - t, 3.0f); // Cubic ease-out
+      glm::vec3 positionStep = positionDifference * easeOut;
       
       // Apply only the Z-axis movement (forward/backward)
-      if (std::abs(positionStep.z) > 0.001f)
+      if (std::abs(positionStep.z) > 0.0001f)
       {
         xrRenderer->moveViewerForward(positionStep.z);
         // Update our target position tracking
@@ -333,9 +361,13 @@ namespace jsar::example
       glfwSetWindowUserPointer(window, this);
       glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
       
-      // Make window frameless but try to preserve system buttons on macOS
-      // On some platforms this may still show close/minimize/maximize buttons
+#ifdef __APPLE__
+      // On macOS, customize window to hide title bar but keep system buttons and rounded corners
+      customizeMacOSWindow(window);
+#else
+      // On other platforms, use GLFW's decorated setting as fallback
       glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
+#endif
     }
   }
 }
