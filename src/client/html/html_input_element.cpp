@@ -19,23 +19,23 @@ namespace dom
         input_type == "search" ||
         input_type == "url")
     {
-      defaultStyle_.setProperty("padding", "4px");
+      defaultStyle_.setProperty("padding", "0.25em");
       defaultStyle_.setProperty("border", "1px solid #ccc");
       defaultStyle_.setProperty("background-color", "white");
-      defaultStyle_.setProperty("width", "200px");
-      defaultStyle_.setProperty("height", "20px");
+      defaultStyle_.setProperty("width", "12.5em");
+      defaultStyle_.setProperty("height", "1.25em");
     }
     else if (input_type == "checkbox" ||
              input_type == "radio")
     {
-      defaultStyle_.setProperty("width", "16px");
-      defaultStyle_.setProperty("height", "16px");
+      defaultStyle_.setProperty("width", "1em");
+      defaultStyle_.setProperty("height", "1em");
     }
     else if (input_type == "button" ||
              input_type == "submit" ||
              input_type == "reset")
     {
-      defaultStyle_.setProperty("padding", "4px 8px");
+      defaultStyle_.setProperty("padding", "0.25em 0.5em");
       defaultStyle_.setProperty("border", "1px solid #ccc");
       defaultStyle_.setProperty("background-color", "#f0f0f0");
       defaultStyle_.setProperty("cursor", "pointer");
