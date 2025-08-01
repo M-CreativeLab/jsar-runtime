@@ -50,6 +50,12 @@ namespace jsar::example
     GLFWwindow *window;
     StatPanel *statPanel;
     XRStereoscopicRenderer *xrRenderer = nullptr;
+    
+    // Mouse control state
+    bool middleMousePressed = false;
+    float horizontalRotation = 0.0f; // Current horizontal rotation in degrees
+    double lastMouseX = 0.0;
+    double lastMouseY = 0.0;
 
   private:
     bool terminated = false;

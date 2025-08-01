@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #else
@@ -100,8 +101,21 @@ namespace jsar::example
   void WindowContext::handleScroll(double xoffset, double yoffset)
   {
     assert(xrRenderer != nullptr);
+    
+    // Handle distance limits for forward/backward movement
     if (yoffset != 0)
-      xrRenderer->moveViewerForward(yoffset * 0.1);
+    {
+      glm::vec3 currentPos = xrRenderer->viewerPosition();
+      float newZ = currentPos.z + (yoffset * 0.1f);
+      
+      // Apply near/far limits (assuming initial position around 0.35f)
+      float minDistance = -5.0f; // Far limit (negative Z is forward)
+      float maxDistance = 5.0f;  // Near limit (positive Z is backward)
+      
+      if (newZ >= minDistance && newZ <= maxDistance)
+        xrRenderer->moveViewerForward(yoffset * 0.1f);
+    }
+    
     if (xoffset != 0)
       xrRenderer->rotateViewerByAxisY(xoffset * 0.1);
   }
@@ -112,6 +126,30 @@ namespace jsar::example
       return;
     if (xrRenderer == nullptr)
       return;
+
+    // Handle middle mouse horizontal rotation
+    if (middleMousePressed)
+    {
+      double deltaX = xoffset - lastMouseX;
+      
+      // Convert mouse movement to rotation (sensitivity factor)
+      float rotationSensitivity = 0.1f;
+      float deltaRotation = static_cast<float>(deltaX) * rotationSensitivity;
+      
+      // Update horizontal rotation with limits (+/- 30 degrees)
+      horizontalRotation += deltaRotation;
+      if (horizontalRotation > 30.0f)
+        horizontalRotation = 30.0f;
+      else if (horizontalRotation < -30.0f)
+        horizontalRotation = -30.0f;
+      
+      // Apply rotation to XR renderer
+      xrRenderer->rotateViewerByAxisY(deltaRotation * (M_PI / 180.0f)); // Convert to radians
+      
+      lastMouseX = xoffset;
+      lastMouseY = yoffset;
+      return; // Skip normal cursor handling when middle mouse is pressed
+    }
 
     int viewIndex = 0;
     float viewportWidth = width;
@@ -167,6 +205,18 @@ namespace jsar::example
 
     if (button == GLFW_MOUSE_BUTTON_LEFT)
       xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
+    else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+    {
+      if (action == GLFW_PRESS)
+      {
+        middleMousePressed = true;
+        glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
+      }
+      else if (action == GLFW_RELEASE)
+      {
+        middleMousePressed = false;
+      }
+    }
   }
 
   void WindowContext::terminate()

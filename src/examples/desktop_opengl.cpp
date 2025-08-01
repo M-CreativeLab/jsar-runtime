@@ -148,8 +148,8 @@ namespace jsar::example
       printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
       printf("                            multipass - Multiple rendering passes\n");
       printf("                            singlepass - Single rendering pass\n");
-      printf("  --env-map               Enable default environment map rendering (default)\n");
-      printf("  --no-env-map            Disable default environment map rendering\n");
+      printf("  --env-map <path>        Specify environment map directory path\n");
+      printf("  --no-env-map            Disable environment map rendering\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
@@ -157,6 +157,7 @@ namespace jsar::example
       printf("  %s --stereo                 # Uses singlepass by default\n", programName);
       printf("  %s --stereo multipass\n", programName);
       printf("  %s --stereo singlepass\n", programName);
+      printf("  %s --env-map /path/to/cubemap  # Use custom environment map\n", programName);
       printf("  %s --no-env-map             # Disable environment map\n", programName);
     }
 
@@ -183,6 +184,13 @@ namespace jsar::example
         }
         else if (arg == "--env-map")
         {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --env-map requires a directory path argument\n");
+            help(argv[0]);
+            return false;
+          }
+          envMapPath = argv[++i];
           envMapEnabled = true;
         }
         else if (arg == "--no-env-map")
@@ -377,7 +385,7 @@ namespace jsar::example
       if (envMapEnabled)
       {
         envRenderer_ = make_unique<EnvironmentRenderer>();
-        if (!envRenderer_->initialize())
+        if (!envRenderer_->initialize(envMapPath))
         {
           fprintf(stderr, "Warning: Failed to initialize environment renderer\n");
           envRenderer_.reset();
@@ -646,6 +654,7 @@ namespace jsar::example
     bool multiPass = false;
     bool multisampleEnabled = true;
     bool envMapEnabled = true; // Default to enabled
+    string envMapPath = ""; // Path to environment map directory
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
