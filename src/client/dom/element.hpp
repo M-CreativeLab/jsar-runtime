@@ -128,7 +128,7 @@ namespace dom
     {
       after(std::vector<std::shared_ptr<Node>>{node});
     }
-    std::string getAttribute(const std::string &name) const;
+    std::string getAttribute(const std::string &name, const std::string &defaultValue = "") const;
     std::vector<std::string> getAttributeNames() const;
     std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
     Attr &getAttributeNodeChecked(const std::string &name) const;
