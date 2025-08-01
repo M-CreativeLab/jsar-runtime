@@ -4,7 +4,10 @@
 #include <client/cssom/style_traits.hpp>
 #include <client/cssom/values/generics/transform.hpp>
 #include <client/cssom/values/computed/transform.hpp>
+#include <client/cssom/values/computed/percentage.hpp>
 #include <client/cssom/values/specified/length.hpp>
+#include <client/cssom/values/specified/common.hpp>
+#include <client/cssom/values/specified/angle.hpp>
 #include <client/cssom/parsers/css_transform_parser.hpp>
 
 namespace client_cssom::values::specified
@@ -262,12 +265,12 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::Matrix(
-        Number::From(func.values[0]),
-        Number::From(func.values[1]),
-        Number::From(func.values[2]),
-        Number::From(func.values[3]),
-        Number::From(func.values[4]),
-        Number::From(func.values[5])
+        Number(func.values[0]),
+        Number(func.values[1]),
+        Number(func.values[2]),
+        Number(func.values[3]),
+        Number(func.values[4]),
+        Number(func.values[5])
       ));
       return true;
     }
@@ -278,10 +281,10 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::Matrix3D(
-        Number::From(func.values[0]),  Number::From(func.values[1]),  Number::From(func.values[2]),  Number::From(func.values[3]),
-        Number::From(func.values[4]),  Number::From(func.values[5]),  Number::From(func.values[6]),  Number::From(func.values[7]),
-        Number::From(func.values[8]),  Number::From(func.values[9]),  Number::From(func.values[10]), Number::From(func.values[11]),
-        Number::From(func.values[12]), Number::From(func.values[13]), Number::From(func.values[14]), Number::From(func.values[15])
+        Number(func.values[0]),  Number(func.values[1]),  Number(func.values[2]),  Number(func.values[3]),
+        Number(func.values[4]),  Number(func.values[5]),  Number(func.values[6]),  Number(func.values[7]),
+        Number(func.values[8]),  Number(func.values[9]),  Number(func.values[10]), Number(func.values[11]),
+        Number(func.values[12]), Number(func.values[13]), Number(func.values[14]), Number(func.values[15])
       ));
       return true;
     }
@@ -350,8 +353,8 @@ namespace client_cssom::values::specified
       {
         // Uniform scaling: scale(x) is equivalent to scale(x, x)
         operations_.push_back(TransformOperation::Scale(
-          Number::From(func.values[0]),
-          Number::From(func.values[0])
+          Number(func.values[0]),
+          Number(func.values[0])
         ));
       }
       else if (func.values.size() == 2)
@@ -359,8 +362,8 @@ namespace client_cssom::values::specified
         // Non-uniform scaling: scale(x, y) - use the first value for GenericScale
         // The second value is ignored for now due to GenericScale limitations
         operations_.push_back(TransformOperation::Scale(
-          Number::From(func.values[0]),
-          Number::From(func.values[0])
+          Number(func.values[0]),
+          Number(func.values[0])
         ));
       }
       else
@@ -376,7 +379,7 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::ScaleX(
-        Number::From(func.values[0])
+        Number(func.values[0])
       ));
       return true;
     }
@@ -387,7 +390,7 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::ScaleY(
-        Number::From(func.values[0])
+        Number(func.values[0])
       ));
       return true;
     }
@@ -398,7 +401,7 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::ScaleZ(
-        Number::From(func.values[0])
+        Number(func.values[0])
       ));
       return true;
     }
@@ -409,9 +412,9 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::Scale3D(
-        Number::From(func.values[0]),
-        Number::From(func.values[1]),
-        Number::From(func.values[2])
+        Number(func.values[0]),
+        Number(func.values[1]),
+        Number(func.values[2])
       ));
       return true;
     }
@@ -466,9 +469,9 @@ namespace client_cssom::values::specified
         return false;
       
       operations_.push_back(TransformOperation::Rotate3D(
-        Number::From(func.values[0]),
-        Number::From(func.values[1]),
-        Number::From(func.values[2]),
+        Number(func.values[0]),
+        Number(func.values[1]),
+        Number(func.values[2]),
         createAngle(func.values[3], func.units[3])
       ));
       return true;
@@ -513,11 +516,11 @@ namespace client_cssom::values::specified
     {
       if (unit == "%")
       {
-        return LengthPercentage::Percentage(Percentage::From(value));
+        return LengthPercentage(computed::Percentage(value / 100.0f));
       }
       else
       {
-        return LengthPercentage::Length(createLength(value, unit));
+        return LengthPercentage(createLength(value, unit));
       }
     }
 
@@ -546,24 +549,24 @@ namespace client_cssom::values::specified
     {
       if (unit == "deg" || unit.empty())
       {
-        return Angle::FromDeg(value);
+        return Angle(AngleDimension::Deg(value), false);
       }
       else if (unit == "rad")
       {
-        return Angle::FromRad(value);
+        return Angle(AngleDimension::Rad(value), false);
       }
       else if (unit == "grad")
       {
-        return Angle::FromGrad(value);
+        return Angle(AngleDimension::Grad(value), false);
       }
       else if (unit == "turn")
       {
-        return Angle::FromTurn(value);
+        return Angle(AngleDimension::Turn(value), false);
       }
       else
       {
         // Default to degrees for unknown units
-        return Angle::FromDeg(value);
+        return Angle(AngleDimension::Deg(value), false);
       }
     }
   };
