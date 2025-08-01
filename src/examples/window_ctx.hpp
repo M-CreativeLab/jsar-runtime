@@ -64,6 +64,12 @@ namespace jsar::example
     glm::vec3 targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f); // Target position
     glm::vec3 currentViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f); // Smoothly interpolated position
     double lastFrameTime = 0.0; // For delta time calculation
+    
+    // Throttling state for smooth input handling
+    double lastScrollTime = 0.0;
+    double lastMouseMoveTime = 0.0;
+    static constexpr double SCROLL_THROTTLE_INTERVAL = 0.016; // ~60 FPS (16ms)
+    static constexpr double MOUSE_THROTTLE_INTERVAL = 0.016; // ~60 FPS (16ms)
 
   private:
     bool terminated = false;

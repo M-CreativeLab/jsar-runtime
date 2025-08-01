@@ -41,6 +41,10 @@ namespace jsar::example
     currentViewerPosition = targetViewerPosition;
     lastFrameTime = 0.0;
     
+    // Initialize throttling state
+    lastScrollTime = 0.0;
+    lastMouseMoveTime = 0.0;
+    
     if (monitor == nullptr)
     {
       terminate();
@@ -67,6 +71,10 @@ namespace jsar::example
     targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f);
     currentViewerPosition = targetViewerPosition;
     lastFrameTime = 0.0;
+    
+    // Initialize throttling state
+    lastScrollTime = 0.0;
+    lastMouseMoveTime = 0.0;
     
     aspect = (float)width / (float)height;
     initWindow(nullptr);
@@ -123,6 +131,14 @@ namespace jsar::example
   {
     assert(xrRenderer != nullptr);
 
+    // Throttle scroll events to prevent overly sensitive scrolling
+    double currentTime = glfwGetTime();
+    if (currentTime - lastScrollTime < SCROLL_THROTTLE_INTERVAL)
+    {
+      return; // Skip this scroll event due to throttling
+    }
+    lastScrollTime = currentTime;
+
     // Handle distance limits for forward/backward movement
     if (yoffset != 0)
     {
@@ -131,8 +147,8 @@ namespace jsar::example
       float newTargetZ = targetViewerPosition.z + deltaZ;
 
       // Apply near/far limits (assuming initial position around 0.35f)
-      float minDistance = -5.0f; // Far limit (negative Z is forward)
-      float maxDistance = 5.0f;  // Near limit (positive Z is backward)
+      float minDistance = 0.1f; // Near limit
+      float maxDistance = 1.0f;  // Far limit
 
       // Clamp the target position within limits
       if (newTargetZ >= minDistance && newTargetZ <= maxDistance)
@@ -152,6 +168,14 @@ namespace jsar::example
     if (xrRenderer == nullptr)
       return;
 
+    // Throttle mouse move events to prevent overly sensitive mouse movement
+    double currentTime = glfwGetTime();
+    if (currentTime - lastMouseMoveTime < MOUSE_THROTTLE_INTERVAL)
+    {
+      return; // Skip this mouse move event due to throttling
+    }
+    lastMouseMoveTime = currentTime;
+
     // Handle middle mouse horizontal rotation
     if (middleMousePressed)
     {
@@ -161,12 +185,12 @@ namespace jsar::example
       float rotationSensitivity = 0.1f;
       float deltaRotation = static_cast<float>(deltaX) * rotationSensitivity;
 
-      // Update target horizontal rotation with limits (+/- 5 degrees)
+      // Update target horizontal rotation with limits (+/- 30 degrees)
       targetHorizontalRotation += deltaRotation;
-      if (targetHorizontalRotation > 5.0f)
-        targetHorizontalRotation = 5.0f;
-      else if (targetHorizontalRotation < -5.0f)
-        targetHorizontalRotation = -5.0f;
+      if (targetHorizontalRotation > 30.0f)
+        targetHorizontalRotation = 30.0f;
+      else if (targetHorizontalRotation < -30.0f)
+        targetHorizontalRotation = -30.0f;
 
       lastMouseX = xoffset;
       lastMouseY = yoffset;
@@ -308,6 +332,10 @@ namespace jsar::example
       glfwGetWindowContentScale(window, &contentScaling[0], &contentScaling[1]);
       glfwSetWindowUserPointer(window, this);
       glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
+      
+      // Make window frameless but try to preserve system buttons on macOS
+      // On some platforms this may still show close/minimize/maximize buttons
+      glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
     }
   }
 }
