@@ -5,6 +5,8 @@
 #include <fstream>
 #include <cstring>
 #include <algorithm>
+#include <iomanip>
+#include <ios>
 
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
@@ -466,9 +468,233 @@ void main()
 
   bool EnvironmentRenderer::loadDDSCubeMap(const string &filePath)
   {
-    // For now, fall back to procedural. DDS loading would require additional implementation
-    cout << "DDS cube map loading not yet implemented, using procedural environment" << endl;
-    createProceduralCubeMap();
+    cout << "Loading DDS cube map: " << filePath << endl;
+    
+    // Check if file exists
+    ifstream file(filePath, ios::binary);
+    if (!file.is_open())
+    {
+      cout << "Failed to open DDS file: " << filePath << ", falling back to procedural environment" << endl;
+      createProceduralCubeMap();
+      return true;
+    }
+    
+    // DDS file format structures
+    struct DDSPixelFormat {
+      uint32_t dwSize;
+      uint32_t dwFlags;
+      uint32_t dwFourCC;
+      uint32_t dwRGBBitCount;
+      uint32_t dwRBitMask;
+      uint32_t dwGBitMask;
+      uint32_t dwBBitMask;
+      uint32_t dwABitMask;
+    };
+    
+    struct DDSHeader {
+      uint32_t dwSize;
+      uint32_t dwFlags;
+      uint32_t dwHeight;
+      uint32_t dwWidth;
+      uint32_t dwPitchOrLinearSize;
+      uint32_t dwDepth;
+      uint32_t dwMipMapCount;
+      uint32_t dwReserved1[11];
+      DDSPixelFormat ddspf;
+      uint32_t dwCaps;
+      uint32_t dwCaps2;
+      uint32_t dwCaps3;
+      uint32_t dwCaps4;
+      uint32_t dwReserved2;
+    };
+    
+    // Read and validate DDS magic number
+    uint32_t magic;
+    file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if (magic != 0x20534444) // "DDS "
+    {
+      cout << "Invalid DDS magic number in file: " << filePath << ", falling back to procedural environment" << endl;
+      file.close();
+      createProceduralCubeMap();
+      return true;
+    }
+    
+    // Read DDS header
+    DDSHeader header;
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
+    
+    // Validate that this is a cube map
+    const uint32_t DDSCAPS2_CUBEMAP = 0x200;
+    const uint32_t DDSCAPS2_CUBEMAP_POSITIVEX = 0x400;
+    const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800;
+    const uint32_t DDSCAPS2_CUBEMAP_POSITIVEY = 0x1000;
+    const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEY = 0x2000;
+    const uint32_t DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000;
+    const uint32_t DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000;
+    const uint32_t DDSCAPS2_CUBEMAP_ALLFACES = (DDSCAPS2_CUBEMAP_POSITIVEX | DDSCAPS2_CUBEMAP_NEGATIVEX |
+                                                DDSCAPS2_CUBEMAP_POSITIVEY | DDSCAPS2_CUBEMAP_NEGATIVEY |
+                                                DDSCAPS2_CUBEMAP_POSITIVEZ | DDSCAPS2_CUBEMAP_NEGATIVEZ);
+    
+    if (!(header.dwCaps2 & DDSCAPS2_CUBEMAP) || (header.dwCaps2 & DDSCAPS2_CUBEMAP_ALLFACES) != DDSCAPS2_CUBEMAP_ALLFACES)
+    {
+      cout << "DDS file is not a complete cube map: " << filePath << ", falling back to procedural environment" << endl;
+      file.close();
+      createProceduralCubeMap();
+      return true;
+    }
+    
+    // Determine format
+    GLenum format = GL_RGBA;
+    GLenum internalFormat = GL_RGBA8;
+    GLenum type = GL_UNSIGNED_BYTE;
+    bool compressed = false;
+    
+    // Check for common DDS formats
+    const uint32_t DDSPF_FOURCC = 0x4;
+    const uint32_t DDSPF_RGB = 0x40;
+    const uint32_t DDSPF_RGBA = 0x41;
+    
+    if (header.ddspf.dwFlags & DDSPF_FOURCC)
+    {
+      // Handle compressed formats
+      switch (header.ddspf.dwFourCC)
+      {
+        case 0x31545844: // DXT1
+          format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+          internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+          compressed = true;
+          break;
+        case 0x33545844: // DXT3
+          format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+          internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+          compressed = true;
+          break;
+        case 0x35545844: // DXT5
+          format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+          internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+          compressed = true;
+          break;
+        default:
+          cout << "Unsupported DDS compression format: " << hex << header.ddspf.dwFourCC << dec 
+               << " in file: " << filePath << ", falling back to procedural environment" << endl;
+          file.close();
+          createProceduralCubeMap();
+          return true;
+      }
+    }
+    else if (header.ddspf.dwFlags & DDSPF_RGB)
+    {
+      // Uncompressed RGB/RGBA formats
+      if (header.ddspf.dwRGBBitCount == 24)
+      {
+        format = GL_RGB;
+        internalFormat = GL_RGB8;
+        type = GL_UNSIGNED_BYTE;
+      }
+      else if (header.ddspf.dwRGBBitCount == 32)
+      {
+        format = GL_RGBA;
+        internalFormat = GL_RGBA8;
+        type = GL_UNSIGNED_BYTE;
+      }
+      else
+      {
+        cout << "Unsupported DDS bit count: " << header.ddspf.dwRGBBitCount 
+             << " in file: " << filePath << ", falling back to procedural environment" << endl;
+        file.close();
+        createProceduralCubeMap();
+        return true;
+      }
+    }
+    else
+    {
+      cout << "Unsupported DDS pixel format in file: " << filePath << ", falling back to procedural environment" << endl;
+      file.close();
+      createProceduralCubeMap();
+      return true;
+    }
+    
+    // Create OpenGL cube map texture
+    if (cubeMapTexture_ != 0)
+    {
+      glDeleteTextures(1, &cubeMapTexture_);
+    }
+    
+    glGenTextures(1, &cubeMapTexture_);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture_);
+    
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    
+    // Calculate face data size
+    uint32_t faceSize;
+    if (compressed)
+    {
+      // For compressed formats, calculate size based on compression ratio
+      uint32_t blockSize = (header.ddspf.dwFourCC == 0x31545844) ? 8 : 16; // DXT1 = 8 bytes/block, DXT3/5 = 16 bytes/block
+      uint32_t width = header.dwWidth;
+      uint32_t height = header.dwHeight;
+      faceSize = max(1u, (width + 3) / 4) * max(1u, (height + 3) / 4) * blockSize;
+    }
+    else
+    {
+      faceSize = header.dwWidth * header.dwHeight * (header.ddspf.dwRGBBitCount / 8);
+    }
+    
+    // Read and upload each face
+    GLenum faces[6] = {
+      GL_TEXTURE_CUBE_MAP_POSITIVE_X, // Right
+      GL_TEXTURE_CUBE_MAP_NEGATIVE_X, // Left  
+      GL_TEXTURE_CUBE_MAP_POSITIVE_Y, // Top
+      GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, // Bottom
+      GL_TEXTURE_CUBE_MAP_POSITIVE_Z, // Front
+      GL_TEXTURE_CUBE_MAP_NEGATIVE_Z  // Back
+    };
+    
+    vector<uint8_t> faceData(faceSize);
+    
+    for (int i = 0; i < 6; i++)
+    {
+      file.read(reinterpret_cast<char*>(faceData.data()), faceSize);
+      if (file.fail())
+      {
+        cout << "Failed to read face " << i << " from DDS file: " << filePath << ", falling back to procedural environment" << endl;
+        file.close();
+        glDeleteTextures(1, &cubeMapTexture_);
+        cubeMapTexture_ = 0;
+        createProceduralCubeMap();
+        return true;
+      }
+      
+      if (compressed)
+      {
+        glCompressedTexImage2D(faces[i], 0, internalFormat, header.dwWidth, header.dwHeight, 0, faceSize, faceData.data());
+      }
+      else
+      {
+        glTexImage2D(faces[i], 0, internalFormat, header.dwWidth, header.dwHeight, 0, format, type, faceData.data());
+      }
+      
+      GLenum error = glGetError();
+      if (error != GL_NO_ERROR)
+      {
+        cout << "OpenGL error uploading face " << i << " from DDS file: " << filePath << " (error: " << error << "), falling back to procedural environment" << endl;
+        file.close();
+        glDeleteTextures(1, &cubeMapTexture_);
+        cubeMapTexture_ = 0;
+        createProceduralCubeMap();
+        return true;
+      }
+    }
+    
+    file.close();
+    hasCubeMapTexture_ = true;
+    
+    cout << "Successfully loaded DDS cube map: " << filePath << " (" << header.dwWidth << "x" << header.dwHeight << ")" << endl;
     return true;
   }
 

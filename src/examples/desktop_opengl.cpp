@@ -123,9 +123,9 @@ namespace jsar::example
     App() = default;
 
   public:
-    void help()
+    void help(const char* programName)
     {
-      printf("Usage: jsar_desktop_opengl [options] [url]\n");
+      printf("Usage: %s [options] [url]\n", programName);
       printf("Options:\n");
       printf("  -w <width>              Window width (default: 1600)\n");
       printf("  -h <height>             Window height (default: 900)\n");
@@ -140,11 +140,11 @@ namespace jsar::example
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
-      printf("  jsar_desktop_opengl --mono\n");
-      printf("  jsar_desktop_opengl --stereo                 # Uses singlepass by default\n");
-      printf("  jsar_desktop_opengl --stereo multipass\n");
-      printf("  jsar_desktop_opengl --stereo singlepass\n");
-      printf("  jsar_desktop_opengl --no-env-map             # Disable environment map\n");
+      printf("  %s --mono\n", programName);
+      printf("  %s --stereo                 # Uses singlepass by default\n", programName);
+      printf("  %s --stereo multipass\n", programName);
+      printf("  %s --stereo singlepass\n", programName);
+      printf("  %s --no-env-map             # Disable environment map\n", programName);
     }
 
     bool init(int argc, char **argv)
@@ -161,7 +161,7 @@ namespace jsar::example
 
         if (arg == "--help")
         {
-          help();
+          help(argv[0]);
           return false;
         }
         else if (arg == "--mono")
@@ -203,14 +203,14 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -w requires a width argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           int parsedWidth = atoi(argv[++i]);
           if (parsedWidth <= 0)
           {
             printf("Error: Width must be a positive integer, got '%s'\n", argv[i]);
-            help();
+            help(argv[0]);
             return false;
           }
           width = parsedWidth;
@@ -220,14 +220,14 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -h requires a height argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           int parsedHeight = atoi(argv[++i]);
           if (parsedHeight <= 0)
           {
             printf("Error: Height must be a positive integer, got '%s'\n", argv[i]);
-            help();
+            help(argv[0]);
             return false;
           }
           height = parsedHeight;
@@ -237,7 +237,7 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -n requires an app count argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           nApps = atoi(argv[++i]);
@@ -249,7 +249,7 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: --samples requires a samples argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           samples = atoi(argv[++i]);
@@ -264,7 +264,7 @@ namespace jsar::example
         else
         {
           printf("Error: Unknown argument '%s'\n", arg.c_str());
-          help();
+          help(argv[0]);
           return false;
         }
       }
@@ -281,7 +281,7 @@ namespace jsar::example
 
       if (width == -1 || height == -1)
       {
-        help();
+        help(argv[0]);
         return false;
       }
 
