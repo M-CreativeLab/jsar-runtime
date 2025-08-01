@@ -31,6 +31,7 @@
 #include "./window_ctx-inl.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
+#include "./environment_renderer.hpp"
 
 namespace jsar::example
 {
@@ -134,6 +135,8 @@ namespace jsar::example
       printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
       printf("                            multipass - Multiple rendering passes\n");
       printf("                            singlepass - Single rendering pass\n");
+      printf("  --env-map               Enable default environment map rendering (default)\n");
+      printf("  --no-env-map            Disable default environment map rendering\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
@@ -141,6 +144,7 @@ namespace jsar::example
       printf("  jsar_desktop_opengl --stereo                 # Uses singlepass by default\n");
       printf("  jsar_desktop_opengl --stereo multipass\n");
       printf("  jsar_desktop_opengl --stereo singlepass\n");
+      printf("  jsar_desktop_opengl --no-env-map             # Disable environment map\n");
     }
 
     bool init(int argc, char **argv)
@@ -163,6 +167,14 @@ namespace jsar::example
         else if (arg == "--mono")
         {
           monoMode = true;
+        }
+        else if (arg == "--env-map")
+        {
+          envMapEnabled = true;
+        }
+        else if (arg == "--no-env-map")
+        {
+          envMapEnabled = false;
         }
         else if (arg == "--stereo")
         {
@@ -348,6 +360,21 @@ namespace jsar::example
         xrRenderer->initialize(embedder_->constellation->xrDevice);
       }
 
+      // Initialize environment renderer
+      if (envMapEnabled)
+      {
+        envRenderer_ = make_unique<EnvironmentRenderer>();
+        if (!envRenderer_->initialize())
+        {
+          fprintf(stderr, "Warning: Failed to initialize environment renderer\n");
+          envRenderer_.reset();
+        }
+        else
+        {
+          fprintf(stdout, "Environment renderer initialized successfully\n");
+        }
+      }
+
       return true;
     }
 
@@ -437,7 +464,29 @@ namespace jsar::example
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        
+        // Environment map rendering: set background color based on view direction
+        if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+        {
+          // For now, we'll use a simple approach: modify the clear color to simulate
+          // an environment. In a full implementation, this would render a proper skybox.
+          if (xrEnabled)
+          {
+            auto xrRenderer = windowCtx_->xrRenderer;
+            if (xrRenderer != nullptr)
+            {
+              // Use the first eye's view matrix to determine the environment color
+              auto viewMatrix = glm::make_mat4(xrRenderer->getViewMatrixForEye(0));
+              envRenderer_->render(viewMatrix, glm::mat4(1.0f));
+            }
+          }
+        }
+        else
+        {
+          // Default black background
+          glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        }
+        
         glClearDepth(1.0f);
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -574,6 +623,10 @@ namespace jsar::example
       // Shutdown the embedder when the window is closed.
       if (embedder_ != nullptr)
         embedder_->shutdown();
+      
+      // Shutdown environment renderer
+      if (envRenderer_ != nullptr)
+        envRenderer_->shutdown();
     }
 
   public:
@@ -583,12 +636,14 @@ namespace jsar::example
     bool monoMode = true; // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
+    bool envMapEnabled = true; // Default to enabled
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
     unique_ptr<WindowContext> windowCtx_;
     unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<EnvironmentRenderer> envRenderer_;
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };
