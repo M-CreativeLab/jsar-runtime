@@ -139,12 +139,12 @@ namespace client_layout
 
       // Get layer information
       int layer = object.layer();
-      bool isScrollable = object.isScrollContainer();
-      string layerInfo = " (layer: " + to_string(layer);
-      if (isScrollable)
-        layerInfo += ", scrollable";
-      layerInfo += ")";
+      string layerInfo = " ";
+      if (object.isScrollContainer())
+        layerInfo += "(scrollable)";
+      layerInfo += " → layer(" + to_string(layer) + ")";
 
+      // Format: "   objectName (scrollable?) → layer(n)"
       cout << prefixSpaces << object.debugName() << layerInfo << endl;
 
       if (object.isText())
@@ -190,7 +190,8 @@ namespace client_layout
     };
 
     // Print the view tree.
-    cout << "LayoutView (" << message << ")" << endl;
+    cout << "Print LayoutView at \"" << message << "\": " << endl
+         << "LayoutView (scrollable) → layer(0)" << endl;
     for (shared_ptr<const LayoutObject> child : childrenRef())
       printObject(*child);
 
