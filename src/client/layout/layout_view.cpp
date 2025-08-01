@@ -138,7 +138,7 @@ namespace client_layout
         prefixSpaces += "  "; // use 2 spaces as the indentation.
 
       // Get layer information
-      int layer = object.calculateLayer();
+      int layer = object.layer();
       bool isScrollable = object.isScrollContainer();
       string layerInfo = " (layer: " + to_string(layer);
       if (isScrollable)
