@@ -34,6 +34,13 @@ namespace jsar::example
 
   WindowContext::WindowContext(GLFWmonitor *monitor)
   {
+    // Initialize animation state
+    targetHorizontalRotation = 0.0f;
+    currentHorizontalRotation = 0.0f;
+    targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f);
+    currentViewerPosition = targetViewerPosition;
+    lastFrameTime = 0.0;
+    
     if (monitor == nullptr)
     {
       terminate();
@@ -54,6 +61,13 @@ namespace jsar::example
       : width(width)
       , height(height)
   {
+    // Initialize animation state
+    targetHorizontalRotation = 0.0f;
+    currentHorizontalRotation = 0.0f;
+    targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f);
+    currentViewerPosition = targetViewerPosition;
+    lastFrameTime = 0.0;
+    
     aspect = (float)width / (float)height;
     initWindow(nullptr);
   }
@@ -89,6 +103,13 @@ namespace jsar::example
     assert(window != nullptr && "Window is not initialized.");
     xrRenderer = new XRStereoscopicRenderer(this, monoMode);
 
+    // Initialize animation state with current viewer position
+    targetViewerPosition = xrRenderer->viewerPosition();
+    currentViewerPosition = targetViewerPosition;
+    targetHorizontalRotation = 0.0f;
+    currentHorizontalRotation = 0.0f;
+    lastFrameTime = 0.0;
+
     glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
                              { GetContextAndExecute(window)->handleCursorMove(xpos, ypos); });
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
@@ -105,15 +126,19 @@ namespace jsar::example
     // Handle distance limits for forward/backward movement
     if (yoffset != 0)
     {
-      glm::vec3 currentPos = xrRenderer->viewerPosition();
-      float newZ = currentPos.z + (yoffset * 0.1f);
+      // Calculate new target position
+      float deltaZ = yoffset * 0.1f;
+      float newTargetZ = targetViewerPosition.z + deltaZ;
 
       // Apply near/far limits (assuming initial position around 0.35f)
-      float minDistance = 0.1f; // Far limit (negative Z is forward)
-      float maxDistance = 1.0f; // Near limit (positive Z is backward)
+      float minDistance = -5.0f; // Far limit (negative Z is forward)
+      float maxDistance = 5.0f;  // Near limit (positive Z is backward)
 
-      if (newZ >= minDistance && newZ <= maxDistance)
-        xrRenderer->moveViewerForward(yoffset * 0.1f);
+      // Clamp the target position within limits
+      if (newTargetZ >= minDistance && newTargetZ <= maxDistance)
+      {
+        targetViewerPosition.z = newTargetZ;
+      }
     }
 
     if (xoffset != 0)
@@ -136,15 +161,12 @@ namespace jsar::example
       float rotationSensitivity = 0.1f;
       float deltaRotation = static_cast<float>(deltaX) * rotationSensitivity;
 
-      // Update horizontal rotation with limits (+/- 5 degrees)
-      horizontalRotation += deltaRotation;
-      if (horizontalRotation > 5.0f)
-        horizontalRotation = 5.0f;
-      else if (horizontalRotation < -5.0f)
-        horizontalRotation = -5.0f;
-
-      // Apply rotation to XR renderer
-      xrRenderer->rotateViewerByAxisY(deltaRotation * (M_PI / 180.0f)); // Convert to radians
+      // Update target horizontal rotation with limits (+/- 5 degrees)
+      targetHorizontalRotation += deltaRotation;
+      if (targetHorizontalRotation > 5.0f)
+        targetHorizontalRotation = 5.0f;
+      else if (targetHorizontalRotation < -5.0f)
+        targetHorizontalRotation = -5.0f;
 
       lastMouseX = xoffset;
       lastMouseY = yoffset;
@@ -215,6 +237,55 @@ namespace jsar::example
       else if (action == GLFW_RELEASE)
       {
         middleMousePressed = false;
+      }
+    }
+  }
+
+  void WindowContext::updateAnimation()
+  {
+    if (xrRenderer == nullptr)
+      return;
+
+    // Get current time for delta time calculation
+    double currentTime = glfwGetTime();
+    if (lastFrameTime == 0.0)
+      lastFrameTime = currentTime;
+    
+    double deltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
+
+    // Smoothing factor - higher values = faster animation (0.0 to 1.0)
+    // Using different factors for rotation and position for optimal feel
+    float rotationSmoothingFactor = 8.0f; // Faster for rotation
+    float positionSmoothingFactor = 5.0f; // Slightly slower for position
+
+    // Smooth horizontal rotation animation
+    float rotationDifference = targetHorizontalRotation - currentHorizontalRotation;
+    if (std::abs(rotationDifference) > 0.01f) // Only animate if difference is significant
+    {
+      float rotationStep = rotationDifference * rotationSmoothingFactor * static_cast<float>(deltaTime);
+      currentHorizontalRotation += rotationStep;
+      
+      // Keep the original horizontalRotation variable in sync
+      horizontalRotation = currentHorizontalRotation;
+      
+      // Apply the rotation difference to XR renderer
+      xrRenderer->rotateViewerByAxisY(rotationStep * (M_PI / 180.0f)); // Convert to radians
+    }
+
+    // Smooth position animation  
+    glm::vec3 currentViewerPos = xrRenderer->viewerPosition();
+    glm::vec3 positionDifference = targetViewerPosition - currentViewerPos;
+    if (glm::length(positionDifference) > 0.001f) // Only animate if difference is significant
+    {
+      glm::vec3 positionStep = positionDifference * positionSmoothingFactor * static_cast<float>(deltaTime);
+      
+      // Apply only the Z-axis movement (forward/backward)
+      if (std::abs(positionStep.z) > 0.001f)
+      {
+        xrRenderer->moveViewerForward(positionStep.z);
+        // Update our target position tracking
+        currentViewerPosition = xrRenderer->viewerPosition();
       }
     }
   }

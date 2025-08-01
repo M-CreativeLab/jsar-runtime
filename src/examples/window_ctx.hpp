@@ -37,6 +37,7 @@ namespace jsar::example
     void handleScroll(double xoffset, double yoffset);
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);
+    void updateAnimation(); // Update smooth animation for viewer controls
 
   private:
     void terminate();
@@ -56,6 +57,13 @@ namespace jsar::example
     float horizontalRotation = 0.0f; // Current horizontal rotation in degrees
     double lastMouseX = 0.0;
     double lastMouseY = 0.0;
+    
+    // Animation state for smooth viewer movement
+    float targetHorizontalRotation = 0.0f; // Target rotation in degrees
+    float currentHorizontalRotation = 0.0f; // Smoothly interpolated rotation
+    glm::vec3 targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f); // Target position
+    glm::vec3 currentViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f); // Smoothly interpolated position
+    double lastFrameTime = 0.0; // For delta time calculation
 
   private:
     bool terminated = false;

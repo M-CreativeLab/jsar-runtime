@@ -486,6 +486,9 @@ namespace jsar::example
           panel->uptime = embedder_->getUptime(); // update uptime to panel
         }
 
+        // Update smooth animation for viewer controls
+        windowCtx_->updateAnimation();
+
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
 
         // Always clear with black background
