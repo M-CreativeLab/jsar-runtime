@@ -18,7 +18,7 @@ namespace dombinding
         T::InstanceAccessor("placeholder", &T::PlaceholderGetter, &T::PlaceholderSetter),
         T::InstanceAccessor("name", &T::NameGetter, &T::NameSetter),
         T::InstanceAccessor("valueAsNumber", &T::ValueAsNumberGetter, &T::ValueAsNumberSetter),
-        
+
         // Methods
         T::InstanceMethod("checkValidity", &T::CheckValidity),
         T::InstanceMethod("setCustomValidity", &T::SetCustomValidity),
@@ -54,7 +54,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsString()) {
+    if (value.IsString())
+    {
       node->setType(value.As<Napi::String>().Utf8Value());
     }
   }
@@ -70,7 +71,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsString()) {
+    if (value.IsString())
+    {
       node->setValue(value.As<Napi::String>().Utf8Value());
     }
   }
@@ -86,7 +88,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsBoolean()) {
+    if (value.IsBoolean())
+    {
       node->setChecked(value.As<Napi::Boolean>().Value());
     }
   }
@@ -102,7 +105,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsBoolean()) {
+    if (value.IsBoolean())
+    {
       node->setDisabled(value.As<Napi::Boolean>().Value());
     }
   }
@@ -118,7 +122,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsBoolean()) {
+    if (value.IsBoolean())
+    {
       node->setRequired(value.As<Napi::Boolean>().Value());
     }
   }
@@ -134,7 +139,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsString()) {
+    if (value.IsString())
+    {
       node->setPlaceholder(value.As<Napi::String>().Utf8Value());
     }
   }
@@ -150,7 +156,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsString()) {
+    if (value.IsString())
+    {
       node->setName(value.As<Napi::String>().Utf8Value());
     }
   }
@@ -160,7 +167,8 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     double value = node->valueAsNumber();
-    if (std::isnan(value)) {
+    if (std::isnan(value))
+    {
       return env.Null();
     }
     return Napi::Number::New(env, value);
@@ -170,7 +178,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (value.IsNumber()) {
+    if (value.IsNumber())
+    {
       node->setValueAsNumber(value.As<Napi::Number>().DoubleValue());
     }
   }
@@ -187,7 +196,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (info.Length() > 0 && info[0].IsString()) {
+    if (info.Length() > 0 && info[0].IsString())
+    {
       node->setCustomValidity(info[0].As<Napi::String>().Utf8Value());
     }
     return env.Undefined();
@@ -205,7 +215,8 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     int steps = 1;
-    if (info.Length() > 0 && info[0].IsNumber()) {
+    if (info.Length() > 0 && info[0].IsNumber())
+    {
       steps = info[0].As<Napi::Number>().Int32Value();
     }
     node->stepUp(steps);
@@ -217,7 +228,8 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     int steps = 1;
-    if (info.Length() > 0 && info[0].IsNumber()) {
+    if (info.Length() > 0 && info[0].IsNumber())
+    {
       steps = info[0].As<Napi::Number>().Int32Value();
     }
     node->stepDown(steps);
@@ -236,7 +248,8 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (info.Length() >= 2 && info[0].IsNumber() && info[1].IsNumber()) {
+    if (info.Length() >= 2 && info[0].IsNumber() && info[1].IsNumber())
+    {
       int start = info[0].As<Napi::Number>().Int32Value();
       int end = info[1].As<Napi::Number>().Int32Value();
       node->setSelectionRange(start, end);
