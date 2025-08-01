@@ -3,9 +3,11 @@
 
 #include <client/cssom/parsers/css_transform_parser.hpp>
 #include <client/cssom/values/specified/transform.hpp>
+#include <client/cssom/style_traits.hpp>
 
 using namespace client_cssom::css_transform_parser;
 using namespace client_cssom::values::specified;
+using namespace client_cssom;
 
 TEST_CASE("CSSTransformParser basic functionality", "[css-transform-parser]")
 {
@@ -289,20 +291,16 @@ TEST_CASE("Transform class integration", "[transform-integration]")
 {
   SECTION("Parse simple transform")
   {
-    Transform transform;
-    bool success = transform.parse("translateX(10px)");
+    auto transform = Parse::ParseSingleValue<Transform>("translateX(10px)");
     
-    REQUIRE(success);
     REQUIRE(transform.operations().size() == 1);
     REQUIRE(transform.operations()[0].isTranslateX());
   }
   
   SECTION("Parse multiple transforms")
   {
-    Transform transform;
-    bool success = transform.parse("translateX(10px) rotate(45deg) scale(2)");
+    auto transform = Parse::ParseSingleValue<Transform>("translateX(10px) rotate(45deg) scale(2)");
     
-    REQUIRE(success);
     REQUIRE(transform.operations().size() == 3);
     REQUIRE(transform.operations()[0].isTranslateX());
     REQUIRE(transform.operations()[1].isRotate());
@@ -311,10 +309,16 @@ TEST_CASE("Transform class integration", "[transform-integration]")
   
   SECTION("Parse none")
   {
-    Transform transform;
-    bool success = transform.parse("none");
+    auto transform = Parse::ParseSingleValue<Transform>("none");
     
-    REQUIRE(success);
+    REQUIRE(transform.operations().empty());
+  }
+  
+  SECTION("Parse invalid transform should return empty")
+  {
+    auto transform = Parse::ParseSingleValue<Transform>("invalid(10px)");
+    
+    // Should return default empty transform on parsing failure
     REQUIRE(transform.operations().empty());
   }
 }
