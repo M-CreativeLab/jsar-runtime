@@ -26,26 +26,14 @@ A desktop simulator for JSAR runtime content with the following features:
 
 ```bash
 # Default with environment map
-./jsar_desktop_opengl
+./transmute_browser
 
 # Stereo rendering with environment map
-./jsar_desktop_opengl --stereo singlepass
+./transmute_browser --stereo singlepass
 
 # Disable environment map for solid black background
-./jsar_desktop_opengl --no-env-map
+./transmute_browser --no-env-map
 
 # Custom window size with environment map
-./jsar_desktop_opengl -w 1920 -h 1080 --env-map
+./transmute_browser -w 1920 -h 1080 --env-map
 ```
-
-### Testing Environment Maps
-
-Use the provided demo file to test environment mapping:
-
-```bash
-./jsar_desktop_opengl fixtures/html/environment-map-demo.html
-```
-
-Look around in different directions to see the background colors change dynamically.
-
-For more details, see [Environment Map Documentation](../docs/environment-map-rendering.md).
