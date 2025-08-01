@@ -65,9 +65,9 @@ namespace jsar::example
     void createShaders();
     void createCubeGeometry();
     void createProceduralCubeMap();
-    bool loadHDRCubeMap(const std::string &filePath);
     bool loadDirectoryCubeMap(const std::string &directoryPath);
     void destroyResources();
+    void createPlaceholderFace(GLenum target, int faceIndex);
 
 #ifdef __APPLE__
     bool loadImageWithCoreGraphics(const std::string &filePath, std::vector<unsigned char> &imageData, int &width, int &height, int &channels);

@@ -59,4 +59,3 @@ node_modules
 # Build artifacts
 ./build/cmake/
 build-temp/
-build/

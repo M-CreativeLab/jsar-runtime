@@ -3,6 +3,7 @@
 #include <iostream>
 #include <filesystem>
 #include <memory>
+#include <cstring>
 
 #ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -123,8 +124,20 @@ namespace jsar::example
     App() = default;
 
   public:
-    void help(const char* programName)
+    void help(const char* programPath)
     {
+      // Extract just the filename from the program path
+      const char* programName = programPath;
+      const char* lastSlash = strrchr(programPath, '/');
+      if (lastSlash != nullptr) {
+        programName = lastSlash + 1;
+      }
+      // Also check for backslash (Windows paths)
+      const char* lastBackslash = strrchr(programName, '\\');
+      if (lastBackslash != nullptr) {
+        programName = lastBackslash + 1;
+      }
+      
       printf("Usage: %s [options] [url]\n", programName);
       printf("Options:\n");
       printf("  -w <width>              Window width (default: 1600)\n");

@@ -550,12 +550,23 @@ void main()
   }
 #endif
 
-  bool EnvironmentRenderer::loadHDRCubeMap(const string &filePath)
+  void EnvironmentRenderer::createPlaceholderFace(GLenum target, int faceIndex)
   {
-    // For now, fall back to procedural. HDR loading would require additional libraries like stb_image
-    cout << "HDR cube map loading not yet implemented, using procedural environment" << endl;
-    createProceduralCubeMap();
-    return true;
+    // Create a simple colored face as placeholder
+    vector<unsigned char> data(256 * 256 * 3);
+    // Use different colors for different faces for testing
+    unsigned char r = (faceIndex == 0 || faceIndex == 1) ? 255 : 64;  // Red for X faces
+    unsigned char g = (faceIndex == 2 || faceIndex == 3) ? 255 : 64;  // Green for Y faces
+    unsigned char b = (faceIndex == 4 || faceIndex == 5) ? 255 : 64;  // Blue for Z faces
+    
+    for (int j = 0; j < 256 * 256; j++)
+    {
+      data[j * 3] = r;
+      data[j * 3 + 1] = g;
+      data[j * 3 + 2] = b;
+    }
+    
+    glTexImage2D(target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
   }
 
   bool EnvironmentRenderer::loadDirectoryCubeMap(const string &directoryPath)
@@ -642,21 +653,7 @@ void main()
       {
         // For now, HDR loading is not implemented, so we'll create a placeholder
         cout << "HDR face loading not yet implemented for " << faceFiles[i] << ", using placeholder" << endl;
-        // Create a simple colored face as placeholder
-        vector<unsigned char> data(256 * 256 * 3);
-        // Use different colors for different faces for testing
-        unsigned char r = (i == 0 || i == 1) ? 255 : 64;  // Red for X faces
-        unsigned char g = (i == 2 || i == 3) ? 255 : 64;  // Green for Y faces  
-        unsigned char b = (i == 4 || i == 5) ? 255 : 64;  // Blue for Z faces
-        
-        for (int j = 0; j < 256 * 256; j++)
-        {
-          data[j * 3] = r;
-          data[j * 3 + 1] = g;
-          data[j * 3 + 2] = b;
-        }
-        
-        glTexImage2D(faces[i].target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+        createPlaceholderFace(faces[i].target, i);
       }
       else if (extension == "png" || extension == "jpg" || extension == "jpeg")
       {
@@ -689,40 +686,12 @@ void main()
         else
         {
           cout << "Failed to load " << extension << " face: " << faceFiles[i] << ", using placeholder" << endl;
-          // Create a simple colored face as placeholder
-          vector<unsigned char> data(256 * 256 * 3);
-          // Use different colors for different faces for testing
-          unsigned char r = (i == 0 || i == 1) ? 255 : 64;  // Red for X faces
-          unsigned char g = (i == 2 || i == 3) ? 255 : 64;  // Green for Y faces
-          unsigned char b = (i == 4 || i == 5) ? 255 : 64;  // Blue for Z faces
-          
-          for (int j = 0; j < 256 * 256; j++)
-          {
-            data[j * 3] = r;
-            data[j * 3 + 1] = g;
-            data[j * 3 + 2] = b;
-          }
-          
-          glTexImage2D(faces[i].target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+          createPlaceholderFace(faces[i].target, i);
         }
 #else
         // On non-macOS platforms, PNG/JPG loading is not implemented, use placeholder
         cout << "PNG/JPG face loading not implemented on this platform for " << faceFiles[i] << ", using placeholder" << endl;
-        // Create a simple colored face as placeholder
-        vector<unsigned char> data(256 * 256 * 3);
-        // Use different colors for different faces for testing
-        unsigned char r = (i == 0 || i == 1) ? 255 : 64;  // Red for X faces
-        unsigned char g = (i == 2 || i == 3) ? 255 : 64;  // Green for Y faces
-        unsigned char b = (i == 4 || i == 5) ? 255 : 64;  // Blue for Z faces
-        
-        for (int j = 0; j < 256 * 256; j++)
-        {
-          data[j * 3] = r;
-          data[j * 3 + 1] = g;
-          data[j * 3 + 2] = b;
-        }
-        
-        glTexImage2D(faces[i].target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+        createPlaceholderFace(faces[i].target, i);
 #endif
       }
       
