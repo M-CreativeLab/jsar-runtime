@@ -48,7 +48,6 @@ node_modules
 /build/output
 /build/external
 /build/targets/*
-targets/
 /src/proto/*
 !/src/proto/*.proto
 *.apk

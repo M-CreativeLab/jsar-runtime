@@ -18,7 +18,7 @@ namespace client_layout
   LayoutObject::LayoutObject(shared_ptr<dom::Node> node)
       : node_(node)
       , formattingContext_(nullptr)
-      , layer_(0)  // Initialize layer to 0
+      , layer_(0)
   {
     if (dom::Node::Is<dom::Document>(node))
       scene_ = dom::Node::As<dom::Document>(node)->scene;
@@ -166,7 +166,7 @@ namespace client_layout
     return isScrollableInX || isScrollableInY;
   }
 
-  int LayoutObject::calculateLayer() const
+  int LayoutObject::recalcLayer() const
   {
     auto parentPtr = parent();
     if (parentPtr == nullptr)
@@ -174,64 +174,37 @@ namespace client_layout
       // Root element has layer 0
       return 0;
     }
-    
+
     // Start with parent's layer
     int parentLayer = parentPtr->layer();
-    
+
     // If current node is a scrollable container, it gets parent's layer + 1
     if (isScrollContainer())
-    {
       return parentLayer + 1;
-    }
     else
-    {
       return parentLayer;
-    }
   }
 
-  void LayoutObject::updateLayersRecursively()
+  void LayoutObject::updateLayer(bool includeDescendants)
   {
     // Calculate and set this object's layer based on parent
-    auto parentPtr = parent();
-    if (parentPtr == nullptr)
-    {
-      // Root element has layer 0
-      layer_ = 0;
-    }
-    else
-    {
-      // Start with parent's layer
-      int parentLayer = parentPtr->layer();
-      
-      // If current node is a scrollable container, it gets parent's layer + 1
-      if (isScrollContainer())
-      {
-        layer_ = parentLayer + 1;
-      }
-      else
-      {
-        layer_ = parentLayer;
-      }
-    }
-    
+    layer_ = recalcLayer();
+
     // Update WebContent component if it exists
     if (hasEntity())
     {
       auto webContent = getSceneComponent<WebContent>();
       if (webContent != nullptr)
-      {
         webContent->setLayer(layer_);
-      }
     }
-    
+
     // Recursively update all children
-    for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
+    if (includeDescendants)
     {
-      child->updateLayersRecursively();
+      for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
+        child->updateLayer(includeDescendants);
     }
   }
-
-
 
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
   {
@@ -500,9 +473,9 @@ namespace client_layout
 
     auto &parentCtx = *formattingContext_;
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
-    
+
     // Update layers for the new child and its descendants since hierarchy changed
-    newChild->updateLayersRecursively();
+    newChild->updateLayer(true);
   }
 
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)
@@ -512,13 +485,11 @@ namespace client_layout
 
     child->formattingContext_->onRemoved(*formattingContext_);
     child->destroy();
-    
+
     // Update layers for remaining children since hierarchy changed
     // Note: We don't need to update the removed child's layers as it's being destroyed
     for (auto sibling = slowFirstChild(); sibling != nullptr; sibling = sibling->nextSibling())
-    {
-      sibling->updateLayersRecursively();
-    }
+      sibling->updateLayer(true);
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
@@ -564,14 +535,6 @@ namespace client_layout
         if (parent() != nullptr)
           parentContent = parent()->getSceneComponent<WebContent>();
         webContent->setStyle(style, parentContent);
-        
-        // Update layer after style change as it might affect scrollable containers
-        // We need to update layers from the root to properly recalculate the hierarchy
-        auto rootView = view();
-        if (rootView != nullptr)
-        {
-          rootView->updateLayersRecursively();
-        }
       }
     }
 
@@ -817,9 +780,12 @@ namespace client_layout
           .addInstance(entity); // Add the entity to the instanced mesh.
 
         // Add `WebContent` component to the entity.
-        auto fragment = this->fragment();
-        int layer = this->calculateLayer();
-        scene.addComponent(entity, WebContent(string(this->debugName()), fragment.contentWidth(), fragment.contentHeight(), layer));
+        const auto &fragment = this->fragment();
+        scene.addComponent(entity,
+                           WebContent(string(this->debugName()),
+                                      fragment.contentWidth(),
+                                      fragment.contentHeight(),
+                                      this->layer()));
       }
     };
     useSceneWithCallback(configEntity);

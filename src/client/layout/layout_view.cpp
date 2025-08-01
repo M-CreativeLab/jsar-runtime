@@ -143,16 +143,6 @@ namespace client_layout
       string layerInfo = " (layer: " + to_string(layer);
       if (isScrollable)
         layerInfo += ", scrollable";
-      
-      // Get WebContent layer if available
-      if (object.hasEntity())
-      {
-        auto webContent = object.getSceneComponent<builtin_scene::WebContent>();
-        if (webContent != nullptr)
-        {
-          layerInfo += ", WebContent: " + to_string(webContent->layer());
-        }
-      }
       layerInfo += ")";
 
       cout << prefixSpaces << object.debugName() << layerInfo << endl;

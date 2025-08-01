@@ -155,28 +155,18 @@ namespace client_layout
 
     bool hasClip() const;
     bool isScrollContainer() const;
-    
-    /**
-     * Get the current layer number for this layout object.
-     */
-    int layer() const { return layer_; }
-    
-    /**
-     * Set the layer number for this layout object.
-     */
-    void setLayer(int layer) { layer_ = layer; }
-    
-    /**
-     * Calculate the layer number based on parent's layer and local scrollable container status.
-     * Only looks at immediate parent to compute layer efficiently.
-     */
-    int calculateLayer() const;
-    
-    /**
-     * Update the layer for this object and all its descendants recursively.
-     * This should be called when the DOM hierarchy changes.
-     */
-    void updateLayersRecursively();
+
+    int layer() const
+    {
+      return layer_;
+    }
+    void setLayer(int layer)
+    {
+      layer_ = layer;
+    }
+
+    int recalcLayer() const;
+    void updateLayer(bool includeDescendants = true);
 
     inline std::shared_ptr<dom::Node> node() const
     {
@@ -505,7 +495,7 @@ namespace client_layout
     std::weak_ptr<LayoutObject> parent_;
     std::weak_ptr<LayoutObject> previous_;
     std::weak_ptr<LayoutObject> next_;
-    
+
     /**
      * The layer number for this layout object. 
      * Layer 0 means in the root scrollable container, layer 1+ means inside nested scrollable containers.
