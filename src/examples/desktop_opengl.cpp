@@ -464,7 +464,7 @@ namespace jsar::example
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
-        
+
         // Always clear with black background
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
@@ -619,7 +619,7 @@ namespace jsar::example
       // Shutdown the embedder when the window is closed.
       if (embedder_ != nullptr)
         embedder_->shutdown();
-      
+
       // Shutdown environment renderer
       if (envRenderer_ != nullptr)
         envRenderer_->shutdown();

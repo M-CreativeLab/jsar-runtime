@@ -28,7 +28,7 @@ namespace jsar::example
      * Initialize the environment renderer with OpenGL resources.
      * @param cubeMapPath Optional path to HDR or DDS cube map file. If empty, uses procedural environment.
      */
-    bool initialize(const std::string& cubeMapPath = "");
+    bool initialize(const std::string &cubeMapPath = "");
 
     /**
      * Render the environment map as a skybox.
@@ -47,26 +47,32 @@ namespace jsar::example
     /**
      * Enable or disable environment map rendering.
      */
-    void setEnabled(bool enabled) { enabled_ = enabled; }
-    bool isEnabled() const { return enabled_; }
+    void setEnabled(bool enabled)
+    {
+      enabled_ = enabled;
+    }
+    bool isEnabled() const
+    {
+      return enabled_;
+    }
 
     /**
      * Load a new cube map from file (HDR or DDS format).
      */
-    bool loadCubeMap(const std::string& filePath);
+    bool loadCubeMap(const std::string &filePath);
 
   private:
     void createShaders();
     void createCubeGeometry();
     void createProceduralCubeMap();
-    bool loadHDRCubeMap(const std::string& filePath);
-    bool loadDDSCubeMap(const std::string& filePath);
+    bool loadHDRCubeMap(const std::string &filePath);
+    bool loadDDSCubeMap(const std::string &filePath);
     void destroyResources();
 
     bool initialized_;
     bool enabled_;
     bool hasCubeMapTexture_;
-    
+
     // OpenGL resources
     GLuint shaderProgram_;
     GLuint vertexShader_;
@@ -74,15 +80,15 @@ namespace jsar::example
     GLuint vao_;
     GLuint vbo_;
     GLuint cubeMapTexture_;
-    
+
     // Shader uniforms
     GLint viewMatrixLocation_;
     GLint projectionMatrixLocation_;
     GLint cubeMapLocation_;
-    
+
     // Shader source code
-    static const char* vertexShaderSource_;
-    static const char* fragmentShaderSource_;
+    static const char *vertexShaderSource_;
+    static const char *fragmentShaderSource_;
   };
 
 } // namespace jsar::example

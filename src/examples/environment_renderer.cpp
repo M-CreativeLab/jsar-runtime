@@ -17,8 +17,10 @@
 namespace jsar::example
 {
 
+  using namespace std;
+
   // Vertex shader for skybox rendering
-  const char* EnvironmentRenderer::vertexShaderSource_ = R"(
+  const char *EnvironmentRenderer::vertexShaderSource_ = R"(
 #version 330 core
 layout (location = 0) in vec3 position;
 
@@ -41,7 +43,7 @@ void main()
 )";
 
   // Fragment shader for skybox rendering
-  const char* EnvironmentRenderer::fragmentShaderSource_ = R"(
+  const char *EnvironmentRenderer::fragmentShaderSource_ = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -76,35 +78,42 @@ void main()
     shutdown();
   }
 
-  bool EnvironmentRenderer::initialize(const std::string& cubeMapPath)
+  bool EnvironmentRenderer::initialize(const string &cubeMapPath)
   {
-    if (initialized_) {
+    if (initialized_)
+    {
       return true;
     }
 
-    std::cout << "Initializing Environment Renderer..." << std::endl;
+    cout << "Initializing Environment Renderer..." << endl;
 
     // Create shaders
     createShaders();
-    if (shaderProgram_ == 0) {
-      std::cerr << "Failed to create environment shaders" << std::endl;
+    if (shaderProgram_ == 0)
+    {
+      cerr << "Failed to create environment shaders" << endl;
       return false;
     }
 
     // Create cube geometry
     createCubeGeometry();
-    if (vao_ == 0) {
-      std::cerr << "Failed to create cube geometry" << std::endl;
+    if (vao_ == 0)
+    {
+      cerr << "Failed to create cube geometry" << endl;
       return false;
     }
 
     // Load cube map texture
-    if (!cubeMapPath.empty()) {
-      if (!loadCubeMap(cubeMapPath)) {
-        std::cout << "Failed to load cube map from " << cubeMapPath << ", using procedural environment" << std::endl;
+    if (!cubeMapPath.empty())
+    {
+      if (!loadCubeMap(cubeMapPath))
+      {
+        cout << "Failed to load cube map from " << cubeMapPath << ", using procedural environment" << endl;
         createProceduralCubeMap();
       }
-    } else {
+    }
+    else
+    {
       createProceduralCubeMap();
     }
 
@@ -114,38 +123,39 @@ void main()
     cubeMapLocation_ = glGetUniformLocation(shaderProgram_, "skybox");
 
     initialized_ = true;
-    std::cout << "Environment Renderer initialized successfully" << std::endl;
+    cout << "Environment Renderer initialized successfully" << endl;
     return true;
   }
 
   void EnvironmentRenderer::render(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
   {
-    if (!initialized_ || !enabled_ || !hasCubeMapTexture_) {
+    if (!initialized_ || !enabled_ || !hasCubeMapTexture_)
+    {
       return;
     }
 
     // Disable depth writing (but keep depth testing to ensure skybox is behind everything)
     glDepthMask(GL_FALSE);
-    
+
     glUseProgram(shaderProgram_);
-    
+
     // Set uniforms
     glUniformMatrix4fv(viewMatrixLocation_, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionMatrixLocation_, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    
+
     // Bind cube map texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture_);
     glUniform1i(cubeMapLocation_, 0);
-    
+
     // Render cube
     glBindVertexArray(vao_);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
-    
+
     // Re-enable depth writing
     glDepthMask(GL_TRUE);
-    
+
     glUseProgram(0);
   }
 
@@ -155,18 +165,23 @@ void main()
     initialized_ = false;
   }
 
-  bool EnvironmentRenderer::loadCubeMap(const std::string& filePath)
+  bool EnvironmentRenderer::loadCubeMap(const string &filePath)
   {
     // Determine file type by extension
-    std::string extension = filePath.substr(filePath.find_last_of(".") + 1);
-    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-    
-    if (extension == "hdr") {
+    string extension = filePath.substr(filePath.find_last_of(".") + 1);
+    transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+    if (extension == "hdr")
+    {
       return loadHDRCubeMap(filePath);
-    } else if (extension == "dds") {
+    }
+    else if (extension == "dds")
+    {
       return loadDDSCubeMap(filePath);
-    } else {
-      std::cerr << "Unsupported cube map format: " << extension << std::endl;
+    }
+    else
+    {
+      cerr << "Unsupported cube map format: " << extension << endl;
       return false;
     }
   }
@@ -177,13 +192,15 @@ void main()
     vertexShader_ = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader_, 1, &vertexShaderSource_, nullptr);
     glCompileShader(vertexShader_);
-    
+
     GLint success;
     GLchar infoLog[512];
     glGetShaderiv(vertexShader_, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
       glGetShaderInfoLog(vertexShader_, 512, nullptr, infoLog);
-      std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+      cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+           << infoLog << endl;
       return;
     }
 
@@ -191,11 +208,13 @@ void main()
     fragmentShader_ = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader_, 1, &fragmentShaderSource_, nullptr);
     glCompileShader(fragmentShader_);
-    
+
     glGetShaderiv(fragmentShader_, GL_COMPILE_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
       glGetShaderInfoLog(fragmentShader_, 512, nullptr, infoLog);
-      std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+      cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+           << infoLog << endl;
       return;
     }
 
@@ -204,11 +223,13 @@ void main()
     glAttachShader(shaderProgram_, vertexShader_);
     glAttachShader(shaderProgram_, fragmentShader_);
     glLinkProgram(shaderProgram_);
-    
+
     glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
       glGetProgramInfoLog(shaderProgram_, 512, nullptr, infoLog);
-      std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+      cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+           << infoLog << endl;
       shaderProgram_ = 0;
       return;
     }
@@ -222,49 +243,120 @@ void main()
   {
     // Cube vertices for skybox (positions only, no normals or texture coordinates needed)
     float skyboxVertices[] = {
-        // positions          
-        -1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
+      // positions
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
 
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
 
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
 
-        -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
 
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
 
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f
-    };
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      -1.0f,
+      1.0f,
+      1.0f,
+      -1.0f,
+      1.0f};
 
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
@@ -274,7 +366,7 @@ void main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
     glBindVertexArray(0);
   }
@@ -286,50 +378,69 @@ void main()
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture_);
 
     int width = 256, height = 256;
-    std::vector<unsigned char> data(width * height * 3);
+    vector<unsigned char> data(width * height * 3);
 
     // Define colors for different directions
-    glm::vec3 skyColor(0.5f, 0.7f, 1.0f);      // Light blue
-    glm::vec3 horizonColor(1.0f, 0.9f, 0.7f);  // Warm horizon
-    glm::vec3 groundColor(0.3f, 0.2f, 0.1f);   // Brown ground
+    glm::vec3 skyColor(0.5f, 0.7f, 1.0f);     // Light blue
+    glm::vec3 horizonColor(1.0f, 0.9f, 0.7f); // Warm horizon
+    glm::vec3 groundColor(0.3f, 0.2f, 0.1f);  // Brown ground
 
     // Generate each face of the cubemap
-    for (int face = 0; face < 6; face++) {
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int face = 0; face < 6; face++)
+    {
+      for (int y = 0; y < height; y++)
+      {
+        for (int x = 0; x < width; x++)
+        {
           // Convert to normalized cube coordinates
           float u = (2.0f * x / width) - 1.0f;
           float v = (2.0f * y / height) - 1.0f;
-          
+
           glm::vec3 dir;
-          switch(face) {
-            case 0: dir = glm::vec3(1.0f, -v, -u); break;  // +X
-            case 1: dir = glm::vec3(-1.0f, -v, u); break;  // -X
-            case 2: dir = glm::vec3(u, 1.0f, v); break;    // +Y
-            case 3: dir = glm::vec3(u, -1.0f, -v); break;  // -Y
-            case 4: dir = glm::vec3(u, -v, 1.0f); break;   // +Z
-            case 5: dir = glm::vec3(-u, -v, -1.0f); break; // -Z
+          switch (face)
+          {
+          case 0:
+            dir = glm::vec3(1.0f, -v, -u);
+            break; // +X
+          case 1:
+            dir = glm::vec3(-1.0f, -v, u);
+            break; // -X
+          case 2:
+            dir = glm::vec3(u, 1.0f, v);
+            break; // +Y
+          case 3:
+            dir = glm::vec3(u, -1.0f, -v);
+            break; // -Y
+          case 4:
+            dir = glm::vec3(u, -v, 1.0f);
+            break; // +Z
+          case 5:
+            dir = glm::vec3(-u, -v, -1.0f);
+            break; // -Z
           }
           dir = glm::normalize(dir);
-          
+
           // Create gradient based on Y component (up/down)
           float t = dir.y;
           glm::vec3 color;
-          if (t > 0.0f) {
+          if (t > 0.0f)
+          {
             // Sky
             color = glm::mix(horizonColor, skyColor, t);
-          } else {
+          }
+          else
+          {
             // Ground
             color = glm::mix(horizonColor, groundColor, -t);
           }
-          
+
           int index = (y * width + x) * 3;
           data[index] = (unsigned char)(color.r * 255);
           data[index + 1] = (unsigned char)(color.g * 255);
           data[index + 2] = (unsigned char)(color.b * 255);
         }
       }
-      
+
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
     }
 
@@ -341,48 +452,52 @@ void main()
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     hasCubeMapTexture_ = true;
-    
-    std::cout << "Created procedural cube map environment" << std::endl;
+
+    cout << "Created procedural cube map environment" << endl;
   }
 
-  bool EnvironmentRenderer::loadHDRCubeMap(const std::string& filePath)
+  bool EnvironmentRenderer::loadHDRCubeMap(const string &filePath)
   {
     // For now, fall back to procedural. HDR loading would require additional libraries like stb_image
-    std::cout << "HDR cube map loading not yet implemented, using procedural environment" << std::endl;
+    cout << "HDR cube map loading not yet implemented, using procedural environment" << endl;
     createProceduralCubeMap();
     return true;
   }
 
-  bool EnvironmentRenderer::loadDDSCubeMap(const std::string& filePath)
+  bool EnvironmentRenderer::loadDDSCubeMap(const string &filePath)
   {
     // For now, fall back to procedural. DDS loading would require additional implementation
-    std::cout << "DDS cube map loading not yet implemented, using procedural environment" << std::endl;
+    cout << "DDS cube map loading not yet implemented, using procedural environment" << endl;
     createProceduralCubeMap();
     return true;
   }
 
   void EnvironmentRenderer::destroyResources()
   {
-    if (cubeMapTexture_ != 0) {
+    if (cubeMapTexture_ != 0)
+    {
       glDeleteTextures(1, &cubeMapTexture_);
       cubeMapTexture_ = 0;
     }
-    
-    if (vao_ != 0) {
+
+    if (vao_ != 0)
+    {
       glDeleteVertexArrays(1, &vao_);
       vao_ = 0;
     }
-    
-    if (vbo_ != 0) {
+
+    if (vbo_ != 0)
+    {
       glDeleteBuffers(1, &vbo_);
       vbo_ = 0;
     }
-    
-    if (shaderProgram_ != 0) {
+
+    if (shaderProgram_ != 0)
+    {
       glDeleteProgram(shaderProgram_);
       shaderProgram_ = 0;
     }
-    
+
     hasCubeMapTexture_ = false;
   }
 

@@ -115,9 +115,12 @@ tr_target_install(TransmuteCore)
 
 # Add examples
 # TODO: move to a separate TransmuteExample.cmake?
-function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
+function(tr_add_example EXECUTABLE_NAME)
     find_package(ZLIB REQUIRED) # Search for ZLIB
-    add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
+
+    file(GLOB TR_EXAMPLES_SOURCE "src/examples/*.cpp")
+    add_executable(${EXECUTABLE_NAME} ${TR_EXAMPLES_SOURCE})
+
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE ZLIB::ZLIB)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore)
@@ -148,5 +151,5 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
 endfunction()
 
 if (APPLE)
-    tr_add_example(jsar_desktop_opengl "src/examples/desktop_opengl.cpp")
+    tr_add_example(transmute_browser)
 endif()
