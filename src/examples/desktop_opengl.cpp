@@ -3,6 +3,7 @@
 #include <iostream>
 #include <filesystem>
 #include <memory>
+#include <cstring>
 
 #ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -31,6 +32,7 @@
 #include "./window_ctx-inl.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
+#include "./environment_renderer.hpp"
 
 namespace jsar::example
 {
@@ -122,9 +124,23 @@ namespace jsar::example
     App() = default;
 
   public:
-    void help()
+    void help(const char *programPath)
     {
-      printf("Usage: jsar_desktop_opengl [options] [url]\n");
+      // Extract just the filename from the program path
+      const char *programName = programPath;
+      const char *lastSlash = strrchr(programPath, '/');
+      if (lastSlash != nullptr)
+      {
+        programName = lastSlash + 1;
+      }
+      // Also check for backslash (Windows paths)
+      const char *lastBackslash = strrchr(programName, '\\');
+      if (lastBackslash != nullptr)
+      {
+        programName = lastBackslash + 1;
+      }
+
+      printf("Usage: %s [options] [url]\n", programName);
       printf("Options:\n");
       printf("  -w <width>              Window width (default: 1600)\n");
       printf("  -h <height>             Window height (default: 900)\n");
@@ -134,13 +150,17 @@ namespace jsar::example
       printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
       printf("                            multipass - Multiple rendering passes\n");
       printf("                            singlepass - Single rendering pass\n");
+      printf("  --env-map <path>        Specify environment map directory path\n");
+      printf("  --no-env-map            Disable environment map rendering\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
-      printf("  jsar_desktop_opengl --mono\n");
-      printf("  jsar_desktop_opengl --stereo                 # Uses singlepass by default\n");
-      printf("  jsar_desktop_opengl --stereo multipass\n");
-      printf("  jsar_desktop_opengl --stereo singlepass\n");
+      printf("  %s --mono\n", programName);
+      printf("  %s --stereo                 # Uses singlepass by default\n", programName);
+      printf("  %s --stereo multipass\n", programName);
+      printf("  %s --stereo singlepass\n", programName);
+      printf("  %s --env-map /path/to/cubemap  # Use custom environment map\n", programName);
+      printf("  %s --no-env-map             # Disable environment map\n", programName);
     }
 
     bool init(int argc, char **argv)
@@ -157,12 +177,27 @@ namespace jsar::example
 
         if (arg == "--help")
         {
-          help();
+          help(argv[0]);
           return false;
         }
         else if (arg == "--mono")
         {
           monoMode = true;
+        }
+        else if (arg == "--env-map")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --env-map requires a directory path argument\n");
+            help(argv[0]);
+            return false;
+          }
+          envMapPath = argv[++i];
+          envMapEnabled = true;
+        }
+        else if (arg == "--no-env-map")
+        {
+          envMapEnabled = false;
         }
         else if (arg == "--stereo")
         {
@@ -191,14 +226,14 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -w requires a width argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           int parsedWidth = atoi(argv[++i]);
           if (parsedWidth <= 0)
           {
             printf("Error: Width must be a positive integer, got '%s'\n", argv[i]);
-            help();
+            help(argv[0]);
             return false;
           }
           width = parsedWidth;
@@ -208,14 +243,14 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -h requires a height argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           int parsedHeight = atoi(argv[++i]);
           if (parsedHeight <= 0)
           {
             printf("Error: Height must be a positive integer, got '%s'\n", argv[i]);
-            help();
+            help(argv[0]);
             return false;
           }
           height = parsedHeight;
@@ -225,7 +260,7 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: -n requires an app count argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           nApps = atoi(argv[++i]);
@@ -237,7 +272,7 @@ namespace jsar::example
           if (i + 1 >= argc)
           {
             printf("Error: --samples requires a samples argument\n");
-            help();
+            help(argv[0]);
             return false;
           }
           samples = atoi(argv[++i]);
@@ -252,7 +287,7 @@ namespace jsar::example
         else
         {
           printf("Error: Unknown argument '%s'\n", arg.c_str());
-          help();
+          help(argv[0]);
           return false;
         }
       }
@@ -269,7 +304,7 @@ namespace jsar::example
 
       if (width == -1 || height == -1)
       {
-        help();
+        help(argv[0]);
         return false;
       }
 
@@ -346,6 +381,21 @@ namespace jsar::example
         auto xrRenderer = windowCtx_->xrRenderer;
         assert(xrRenderer != nullptr);
         xrRenderer->initialize(embedder_->constellation->xrDevice);
+      }
+
+      // Initialize environment renderer
+      if (envMapEnabled)
+      {
+        envRenderer_ = make_unique<EnvironmentRenderer>();
+        if (!envRenderer_->initialize(envMapPath))
+        {
+          fprintf(stderr, "Warning: Failed to initialize environment renderer\n");
+          envRenderer_.reset();
+        }
+        else
+        {
+          fprintf(stdout, "Environment renderer initialized successfully\n");
+        }
       }
 
       return true;
@@ -436,7 +486,12 @@ namespace jsar::example
           panel->uptime = embedder_->getUptime(); // update uptime to panel
         }
 
+        // Update smooth animation for viewer controls
+        windowCtx_->updateAnimation();
+
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
+
+        // Always clear with black background
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
         glClearStencil(0);
@@ -467,6 +522,14 @@ namespace jsar::example
 
               TrViewport eyeViewport(w, h, x, y);
               glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
+
+              // Render environment map (skybox) for this eye
+              if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+              {
+                auto viewMatrix = xrRenderer->getViewMatrixForEye(viewIndex);
+                auto projectionMatrix = xrRenderer->getProjectionMatrix();
+                envRenderer_->render(viewMatrix, projectionMatrix);
+              }
 
               // render JSAR content
               {
@@ -507,6 +570,14 @@ namespace jsar::example
 
             auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
             xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+
+            // Render environment map (skybox) - use first eye's view matrix for singlepass
+            if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+            {
+              auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
+              auto projectionMatrix = xrRenderer->getProjectionMatrix();
+              envRenderer_->render(viewMatrix, projectionMatrix);
+            }
 
             for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
@@ -574,6 +645,10 @@ namespace jsar::example
       // Shutdown the embedder when the window is closed.
       if (embedder_ != nullptr)
         embedder_->shutdown();
+
+      // Shutdown environment renderer
+      if (envRenderer_ != nullptr)
+        envRenderer_->shutdown();
     }
 
   public:
@@ -583,12 +658,15 @@ namespace jsar::example
     bool monoMode = true; // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
+    bool envMapEnabled = true; // Default to enabled
+    string envMapPath = "";    // Path to environment map directory
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
     unique_ptr<WindowContext> windowCtx_;
     unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<EnvironmentRenderer> envRenderer_;
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };
