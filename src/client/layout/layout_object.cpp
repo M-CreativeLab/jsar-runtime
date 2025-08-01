@@ -178,8 +178,8 @@ namespace client_layout
     // Start with parent's layer
     int parentLayer = parentPtr->layer();
     
-    // If parent is a scrollable container, children get parent's layer + 1
-    if (parentPtr->isScrollContainer())
+    // If current node is a scrollable container, it gets parent's layer + 1
+    if (isScrollContainer())
     {
       return parentLayer + 1;
     }
@@ -203,8 +203,8 @@ namespace client_layout
       // Start with parent's layer
       int parentLayer = parentPtr->layer();
       
-      // If parent is a scrollable container, children get parent's layer + 1
-      if (parentPtr->isScrollContainer())
+      // If current node is a scrollable container, it gets parent's layer + 1
+      if (isScrollContainer())
       {
         layer_ = parentLayer + 1;
       }

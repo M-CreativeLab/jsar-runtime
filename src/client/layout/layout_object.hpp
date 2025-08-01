@@ -504,7 +504,7 @@ namespace client_layout
     
     /**
      * The layer number for this layout object. 
-     * Layer 0 means no scrollable container ancestors, layer 1+ means inside scrollable containers.
+     * Layer 0 means in the root scrollable container, layer 1+ means inside nested scrollable containers.
      */
     int layer_;
 
