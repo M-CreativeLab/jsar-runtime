@@ -1,15 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #else
 #include <GL/gl.h>
-#endif
-#ifndef GL_GLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#endif
 #include <GL/glext.h>
+#endif
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -17,8 +15,8 @@ namespace jsar::example
 {
 
   /**
-   * A simple environment map renderer that provides default background/environment lighting
-   * for the simulator. This can render a simple gradient or procedural environment.
+   * Environment map renderer that loads HDR or DDS cube textures and renders them as skybox.
+   * Provides realistic environment lighting and background for the JSAR simulator.
    */
   class EnvironmentRenderer
   {
@@ -28,12 +26,13 @@ namespace jsar::example
 
     /**
      * Initialize the environment renderer with OpenGL resources.
+     * @param cubeMapPath Optional path to HDR or DDS cube map file. If empty, uses procedural environment.
      */
-    bool initialize();
+    bool initialize(const std::string& cubeMapPath = "");
 
     /**
      * Render the environment map as a skybox.
-     * This should be called after clearing but before rendering content.
+     * This should be called after clearing depth but before rendering content.
      * 
      * @param viewMatrix The view matrix for the current eye
      * @param projectionMatrix The projection matrix for the current eye
@@ -51,13 +50,22 @@ namespace jsar::example
     void setEnabled(bool enabled) { enabled_ = enabled; }
     bool isEnabled() const { return enabled_; }
 
+    /**
+     * Load a new cube map from file (HDR or DDS format).
+     */
+    bool loadCubeMap(const std::string& filePath);
+
   private:
     void createShaders();
-    void createGeometry();
+    void createCubeGeometry();
+    void createProceduralCubeMap();
+    bool loadHDRCubeMap(const std::string& filePath);
+    bool loadDDSCubeMap(const std::string& filePath);
     void destroyResources();
 
     bool initialized_;
     bool enabled_;
+    bool hasCubeMapTexture_;
     
     // OpenGL resources
     GLuint shaderProgram_;
@@ -65,10 +73,16 @@ namespace jsar::example
     GLuint fragmentShader_;
     GLuint vao_;
     GLuint vbo_;
+    GLuint cubeMapTexture_;
     
     // Shader uniforms
-    GLint mvpMatrixLocation_;
-    GLint timeLocation_;
+    GLint viewMatrixLocation_;
+    GLint projectionMatrixLocation_;
+    GLint cubeMapLocation_;
+    
+    // Shader source code
+    static const char* vertexShaderSource_;
+    static const char* fragmentShaderSource_;
   };
 
 } // namespace jsar::example

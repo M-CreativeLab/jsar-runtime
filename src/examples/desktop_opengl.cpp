@@ -465,28 +465,8 @@ namespace jsar::example
 
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
         
-        // Environment map rendering: set background color based on view direction
-        if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
-        {
-          // For now, we'll use a simple approach: modify the clear color to simulate
-          // an environment. In a full implementation, this would render a proper skybox.
-          if (xrEnabled)
-          {
-            auto xrRenderer = windowCtx_->xrRenderer;
-            if (xrRenderer != nullptr)
-            {
-              // Use the first eye's view matrix to determine the environment color
-              auto viewMatrix = glm::make_mat4(xrRenderer->getViewMatrixForEye(0));
-              envRenderer_->render(viewMatrix, glm::mat4(1.0f));
-            }
-          }
-        }
-        else
-        {
-          // Default black background
-          glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        }
-        
+        // Always clear with black background
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -516,6 +496,14 @@ namespace jsar::example
 
               TrViewport eyeViewport(w, h, x, y);
               glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
+
+              // Render environment map (skybox) for this eye
+              if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+              {
+                auto viewMatrix = xrRenderer->getViewMatrixForEye(viewIndex);
+                auto projectionMatrix = xrRenderer->getProjectionMatrix();
+                envRenderer_->render(viewMatrix, projectionMatrix);
+              }
 
               // render JSAR content
               {
@@ -556,6 +544,14 @@ namespace jsar::example
 
             auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
             xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+
+            // Render environment map (skybox) - use first eye's view matrix for singlepass
+            if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+            {
+              auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
+              auto projectionMatrix = xrRenderer->getProjectionMatrix();
+              envRenderer_->render(viewMatrix, projectionMatrix);
+            }
 
             for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
