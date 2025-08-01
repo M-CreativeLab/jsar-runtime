@@ -166,12 +166,7 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    double value = node->valueAsNumber();
-    if (std::isnan(value))
-    {
-      return env.Null();
-    }
-    return Napi::Number::New(env, value);
+    return Napi::Number::New(env, node->valueAsNumber());
   }
 
   void HTMLInputElement::ValueAsNumberSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
