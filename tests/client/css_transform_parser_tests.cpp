@@ -259,6 +259,90 @@ TEST_CASE("CSSTransformParser skew functions", "[css-transform-parser]")
   }
 }
 
+TEST_CASE("CSSTransformParser negative values", "[css-transform-parser]")
+{
+  SECTION("Parse negative translateX")
+  {
+    CSSTransformParser parser("translateX(-10px)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == -10.0);
+    REQUIRE(functions[0].units[0] == "px");
+  }
+  
+  SECTION("Parse negative rotate")
+  {
+    CSSTransformParser parser("rotate(-45deg)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kRotate);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == -45.0);
+    REQUIRE(functions[0].units[0] == "deg");
+  }
+  
+  SECTION("Parse negative scale")
+  {
+    CSSTransformParser parser("scale(-1)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kScale);
+    REQUIRE(functions[0].values.size() == 2);
+    REQUIRE(functions[0].values[0] == -1.0);
+    REQUIRE(functions[0].values[1] == -1.0); // Should default to same value
+  }
+  
+  SECTION("Parse translate with negative values")
+  {
+    CSSTransformParser parser("translate(-10px, -20px)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
+    REQUIRE(functions[0].values.size() == 2);
+    REQUIRE(functions[0].values[0] == -10.0);
+    REQUIRE(functions[0].values[1] == -20.0);
+    REQUIRE(functions[0].units[0] == "px");
+    REQUIRE(functions[0].units[1] == "px");
+  }
+  
+  SECTION("Parse mixed positive and negative values")
+  {
+    CSSTransformParser parser("translate(10px, -20px)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
+    REQUIRE(functions[0].values.size() == 2);
+    REQUIRE(functions[0].values[0] == 10.0);
+    REQUIRE(functions[0].values[1] == -20.0);
+    REQUIRE(functions[0].units[0] == "px");
+    REQUIRE(functions[0].units[1] == "px");
+  }
+  
+  SECTION("Parse negative decimal values")
+  {
+    CSSTransformParser parser("scaleX(-0.5)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kScaleX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == -0.5);
+  }
+}
+
 TEST_CASE("CSSTransformParser error handling", "[css-transform-parser]")
 {
   SECTION("Invalid function name")

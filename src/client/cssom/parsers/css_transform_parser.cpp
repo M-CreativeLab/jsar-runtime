@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <cmath>
+#include <cctype>
 
 namespace client_cssom::css_transform_parser
 {
@@ -809,6 +810,49 @@ namespace client_cssom::css_transform_parser
       advance();
       return true;
     }
+    else if (token.type == TokenType::kIdentifier)
+    {
+      // Handle negative numbers tokenized as identifiers (e.g., "-10", "-1")
+      const std::string& str = token.value;
+      if (!str.empty() && str[0] == '-')
+      {
+        try
+        {
+          // Try to parse as a pure number
+          double parsed_value = std::stod(str);
+          value = parsed_value;
+          unit = "";
+          advance();
+          
+          // Check if next token is a decimal part (e.g., ".5" after "-0")
+          if (!isAtEnd() && currentToken().type == TokenType::kNumber)
+          {
+            const std::string& next_str = currentToken().value;
+            if (!next_str.empty() && next_str[0] == '.')
+            {
+              // Combine the integer and decimal parts
+              double decimal_part = currentToken().numeric_value;
+              // For negative identifiers starting with "-", always treat as negative
+              if (str[0] == '-')
+              {
+                value = parsed_value - decimal_part;
+              }
+              else
+              {
+                value = parsed_value + decimal_part;
+              }
+              advance(); // Consume the decimal part
+            }
+          }
+          
+          return true;
+        }
+        catch (...)
+        {
+          // Not a valid number, fall through
+        }
+      }
+    }
     
     return false;
   }
@@ -851,6 +895,48 @@ namespace client_cssom::css_transform_parser
       advance();
       return true;
     }
+    else if (token.type == TokenType::kIdentifier)
+    {
+      // Handle negative lengths tokenized as identifiers (e.g., "-10px", "-5em")
+      const std::string& str = token.value;
+      if (!str.empty() && str[0] == '-')
+      {
+        // Try to extract number and unit
+        size_t unit_start = 1; // Start after the minus sign
+        while (unit_start < str.length() && 
+               (std::isdigit(str[unit_start]) || str[unit_start] == '.'))
+        {
+          unit_start++;
+        }
+        
+        if (unit_start > 1 && unit_start < str.length())
+        {
+          try
+          {
+            std::string number_part = str.substr(0, unit_start);
+            std::string unit_part = str.substr(unit_start);
+            
+            // Check if unit is valid
+            if (unit_part == "px" || unit_part == "em" || unit_part == "rem" || 
+                unit_part == "vh" || unit_part == "vw" || unit_part == "vmin" || 
+                unit_part == "vmax" || unit_part == "%" || unit_part == "cm" || 
+                unit_part == "mm" || unit_part == "in" || unit_part == "pt" || 
+                unit_part == "pc")
+            {
+              double parsed_value = std::stod(number_part);
+              value = parsed_value;
+              unit = unit_part;
+              advance();
+              return true;
+            }
+          }
+          catch (...)
+          {
+            // Not a valid number, fall through
+          }
+        }
+      }
+    }
     
     return false;
   }
@@ -882,6 +968,44 @@ namespace client_cssom::css_transform_parser
         unit = u;
         advance();
         return true;
+      }
+    }
+    else if (token.type == TokenType::kIdentifier)
+    {
+      // Handle negative angles tokenized as identifiers (e.g., "-45deg", "-1.5rad")
+      const std::string& str = token.value;
+      if (!str.empty() && str[0] == '-')
+      {
+        // Try to extract number and unit
+        size_t unit_start = 1; // Start after the minus sign
+        while (unit_start < str.length() && 
+               (std::isdigit(str[unit_start]) || str[unit_start] == '.'))
+        {
+          unit_start++;
+        }
+        
+        if (unit_start > 1 && unit_start < str.length())
+        {
+          try
+          {
+            std::string number_part = str.substr(0, unit_start);
+            std::string unit_part = str.substr(unit_start);
+            
+            // Check if unit is valid
+            if (unit_part == "deg" || unit_part == "rad" || unit_part == "grad" || unit_part == "turn")
+            {
+              double parsed_value = std::stod(number_part);
+              value = parsed_value;
+              unit = unit_part;
+              advance();
+              return true;
+            }
+          }
+          catch (...)
+          {
+            // Not a valid number, fall through
+          }
+        }
       }
     }
     
