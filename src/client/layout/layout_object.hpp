@@ -156,6 +156,18 @@ namespace client_layout
     bool hasClip() const;
     bool isScrollContainer() const;
 
+    int layer() const
+    {
+      return layer_;
+    }
+    void setLayer(int layer)
+    {
+      layer_ = layer;
+    }
+
+    int recalcLayer() const;
+    void updateLayer(bool includeDescendants = true);
+
     inline std::shared_ptr<dom::Node> node() const
     {
       return node_.lock();
@@ -483,6 +495,12 @@ namespace client_layout
     std::weak_ptr<LayoutObject> parent_;
     std::weak_ptr<LayoutObject> previous_;
     std::weak_ptr<LayoutObject> next_;
+
+    /**
+     * The layer number for this layout object. 
+     * Layer 0 means in the root scrollable container, layer 1+ means inside nested scrollable containers.
+     */
+    int layer_;
 
   private: // LayoutObjectBitfields: holds all the boolean values for `LayoutObject`.
 #define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase) \

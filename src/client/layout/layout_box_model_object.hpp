@@ -50,6 +50,7 @@ namespace client_layout
 
     std::shared_ptr<client_scroll::ScrollableArea> getScrollableArea() const;
 
+    // Update the fields from the style.
     virtual void updateFromStyle();
 
     virtual float paddingTop() const

@@ -4,7 +4,6 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/all_html_elements.hpp>
-
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"
 #include "./layout_none.hpp"
@@ -135,7 +134,16 @@ namespace client_layout
       string prefixSpaces = "";
       for (int i = 0; i < depth; i++)
         prefixSpaces += "  "; // use 2 spaces as the indentation.
-      cout << prefixSpaces << object.debugName() << endl;
+
+      // Get layer information
+      int layer = object.layer();
+      string layerInfo = " ";
+      if (object.isScrollContainer())
+        layerInfo += "(scrollable)";
+      layerInfo += " → layer(" + to_string(layer) + ")";
+
+      // Format: "   objectName (scrollable?) → layer(n)"
+      cout << prefixSpaces << object.debugName() << layerInfo << endl;
 
       if (object.isText())
       {
@@ -180,7 +188,8 @@ namespace client_layout
     };
 
     // Print the view tree.
-    cout << "LayoutView (" << message << ")" << endl;
+    cout << "Print LayoutView at \"" << message << "\": " << endl
+         << "LayoutView (scrollable) → layer(0)" << endl;
     for (shared_ptr<const LayoutObject> child : childrenRef())
       printObject(*child);
 
