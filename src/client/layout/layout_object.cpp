@@ -1,5 +1,4 @@
 #include <vector>
-#include <cstdio>
 #include <client/dom/node.hpp>
 #include <client/dom/browsing_context.hpp>
 #include <client/dom/document-inl.hpp>
