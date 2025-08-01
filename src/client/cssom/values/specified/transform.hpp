@@ -532,11 +532,11 @@ namespace client_cssom::values::specified
       }
       else if (unit == "em")
       {
-        return NoCalcLength::FromEm(value);
+        return NoCalcLength(FontRelativeLength::Em(value));
       }
       else if (unit == "rem")
       {
-        return NoCalcLength::FromRem(value);
+        return NoCalcLength(FontRelativeLength::Rem(value));
       }
       else
       {
@@ -549,24 +549,24 @@ namespace client_cssom::values::specified
     {
       if (unit == "deg" || unit.empty())
       {
-        return Angle(AngleDimension::Deg(value), false);
+        return Angle::Deg(value);
       }
       else if (unit == "rad")
       {
-        return Angle(AngleDimension::Rad(value), false);
+        return Angle::Rad(value);
       }
       else if (unit == "grad")
       {
-        return Angle(AngleDimension::Grad(value), false);
+        return Angle::Grad(value);
       }
       else if (unit == "turn")
       {
-        return Angle(AngleDimension::Turn(value), false);
+        return Angle::Turn(value);
       }
       else
       {
         // Default to degrees for unknown units
-        return Angle(AngleDimension::Deg(value), false);
+        return Angle::Deg(value);
       }
     }
   };

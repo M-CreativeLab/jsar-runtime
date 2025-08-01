@@ -8,9 +8,6 @@
 
 namespace client_cssom::css_transform_parser
 {
-  // Forward declarations
-  class TransformFunction;
-  
   // Enum for different transform function types
   enum class TransformFunctionType
   {
