@@ -5,6 +5,7 @@
 #include <client/cssom/values/generics/transform.hpp>
 #include <client/cssom/values/computed/transform.hpp>
 #include <client/cssom/values/specified/length.hpp>
+#include <client/cssom/parsers/css_transform_parser.hpp>
 
 namespace client_cssom::values::specified
 {
@@ -98,6 +99,61 @@ namespace client_cssom::values::specified
           specified_translate_3d.y().toComputedValue(context),
           specified_translate_3d.z().toComputedValue(context));
       }
+      else if (isScale())
+      {
+        const auto &specified_scale = getScale();
+        return computed::TransformOperation::Scale(specified_scale.number().toComputedValue(context), specified_scale.number().toComputedValue(context));
+      }
+      else if (isScaleX())
+      {
+        const auto &specified_scale_x = getScaleX();
+        return computed::TransformOperation::ScaleX(specified_scale_x.x().toComputedValue(context));
+      }
+      else if (isScaleY())
+      {
+        const auto &specified_scale_y = getScaleY();
+        return computed::TransformOperation::ScaleY(specified_scale_y.y().toComputedValue(context));
+      }
+      else if (isScaleZ())
+      {
+        const auto &specified_scale_z = getScaleZ();
+        return computed::TransformOperation::ScaleZ(specified_scale_z.z().toComputedValue(context));
+      }
+      else if (isScale3D())
+      {
+        const auto &specified_scale_3d = getScale3D();
+        return computed::TransformOperation::Scale3D(specified_scale_3d.x().toComputedValue(context),
+                                                     specified_scale_3d.y().toComputedValue(context),
+                                                     specified_scale_3d.z().toComputedValue(context));
+      }
+      else if (isRotate())
+      {
+        const auto &specified_rotate = getRotate();
+        return computed::TransformOperation::Rotate(specified_rotate.angle().toComputedValue(context));
+      }
+      else if (isRotateX())
+      {
+        const auto &specified_rotate_x = getRotateX();
+        return computed::TransformOperation::RotateX(specified_rotate_x.angle().toComputedValue(context));
+      }
+      else if (isRotateY())
+      {
+        const auto &specified_rotate_y = getRotateY();
+        return computed::TransformOperation::RotateY(specified_rotate_y.angle().toComputedValue(context));
+      }
+      else if (isRotateZ())
+      {
+        const auto &specified_rotate_z = getRotateZ();
+        return computed::TransformOperation::RotateZ(specified_rotate_z.angle().toComputedValue(context));
+      }
+      else if (isRotate3D())
+      {
+        const auto &specified_rotate_3d = getRotate3D();
+        return computed::TransformOperation::Rotate3D(specified_rotate_3d.x().toComputedValue(context),
+                                                      specified_rotate_3d.y().toComputedValue(context),
+                                                      specified_rotate_3d.z().toComputedValue(context),
+                                                      specified_rotate_3d.angle().toComputedValue(context));
+      }
 
       assert(false && "Invalid transform operation type.");
     }
@@ -113,38 +169,26 @@ namespace client_cssom::values::specified
   private:
     bool parse(const std::string &input) override
     {
-      using InnerType = crates::css2::values::specified::transform::TransformOperationType;
-
-      const auto &handle = crates::css2::parsing::parseTransform(input);
-      for (const auto &op : handle.operations())
+      css_transform_parser::CSSTransformParser parser(input);
+      auto functions = parser.parse();
+      
+      if (!parser.isValid())
       {
-        switch (op.type())
+        return false;
+      }
+      
+      // Clear existing operations
+      operations_.clear();
+      
+      // Convert parsed functions to transform operations
+      for (const auto &func : functions)
+      {
+        if (!addTransformFunction(func))
         {
-        case InnerType::kMatrix:
-          addMatrix(op);
-          break;
-        case InnerType::kMatrix3D:
-          addMatrix3D(op);
-          break;
-        case InnerType::kTranslate:
-          addTranslate(op);
-          break;
-        case InnerType::kTranslateX:
-          addTranslateX(op);
-          break;
-        case InnerType::kTranslateY:
-          addTranslateY(op);
-          break;
-        case InnerType::kTranslateZ:
-          addTranslateZ(op);
-          break;
-        case InnerType::kTranslate3D:
-          addTranslate3D(op);
-          break;
-        default:
-          break;
+          return false;
         }
       }
+      
       return true;
     }
 
@@ -158,69 +202,369 @@ namespace client_cssom::values::specified
     }
 
   private:
-    void addMatrix(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+    bool addTransformFunction(const css_transform_parser::TransformFunction &func)
     {
-      using InnerMatrix = crates::css2::values::generics::GenericMatrix<crates::css2::values::specified::Number>;
+      using namespace css_transform_parser;
+      
+      switch (func.type)
+      {
+        case TransformFunctionType::kMatrix:
+          return addMatrix(func);
+        case TransformFunctionType::kMatrix3D:
+          return addMatrix3D(func);
+        case TransformFunctionType::kTranslate:
+          return addTranslate(func);
+        case TransformFunctionType::kTranslateX:
+          return addTranslateX(func);
+        case TransformFunctionType::kTranslateY:
+          return addTranslateY(func);
+        case TransformFunctionType::kTranslateZ:
+          return addTranslateZ(func);
+        case TransformFunctionType::kTranslate3D:
+          return addTranslate3D(func);
+        case TransformFunctionType::kScale:
+          return addScale(func);
+        case TransformFunctionType::kScaleX:
+          return addScaleX(func);
+        case TransformFunctionType::kScaleY:
+          return addScaleY(func);
+        case TransformFunctionType::kScaleZ:
+          return addScaleZ(func);
+        case TransformFunctionType::kScale3D:
+          return addScale3D(func);
+        case TransformFunctionType::kRotate:
+          return addRotate(func);
+        case TransformFunctionType::kRotateX:
+          return addRotateX(func);
+        case TransformFunctionType::kRotateY:
+          return addRotateY(func);
+        case TransformFunctionType::kRotateZ:
+          return addRotateZ(func);
+        case TransformFunctionType::kRotate3D:
+          return addRotate3D(func);
+        case TransformFunctionType::kSkew:
+          return addSkew(func);
+        case TransformFunctionType::kSkewX:
+          return addSkewX(func);
+        case TransformFunctionType::kSkewY:
+          return addSkewY(func);
+        case TransformFunctionType::kPerspective:
+          // Perspective is not implemented in the current transform operations
+          return true; // Skip for now
+        default:
+          return false;
+      }
+    }
 
-      const auto &inner_matrix = inner_operation.getImplAs<InnerMatrix>();
-      operations_.push_back(TransformOperation::Matrix(inner_matrix.a.value,
-                                                       inner_matrix.b.value,
-                                                       inner_matrix.c.value,
-                                                       inner_matrix.d.value,
-                                                       inner_matrix.e.value,
-                                                       inner_matrix.f.value));
-    }
-    void addMatrix3D(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+    bool addMatrix(const css_transform_parser::TransformFunction &func)
     {
-      using InnerMatrix3D = crates::css2::values::generics::GenericMatrix3D<crates::css2::values::specified::Number>;
+      if (func.values.size() != 6)
+        return false;
+      
+      operations_.push_back(TransformOperation::Matrix(
+        Number::From(func.values[0]),
+        Number::From(func.values[1]),
+        Number::From(func.values[2]),
+        Number::From(func.values[3]),
+        Number::From(func.values[4]),
+        Number::From(func.values[5])
+      ));
+      return true;
+    }
 
-      const auto &inner_matrix3d = inner_operation.getImplAs<InnerMatrix3D>();
-      operations_.push_back(TransformOperation::Matrix3D(inner_matrix3d.m11.value,
-                                                         inner_matrix3d.m12.value,
-                                                         inner_matrix3d.m13.value,
-                                                         inner_matrix3d.m14.value,
-                                                         inner_matrix3d.m21.value,
-                                                         inner_matrix3d.m22.value,
-                                                         inner_matrix3d.m23.value,
-                                                         inner_matrix3d.m24.value,
-                                                         inner_matrix3d.m31.value,
-                                                         inner_matrix3d.m32.value,
-                                                         inner_matrix3d.m33.value,
-                                                         inner_matrix3d.m34.value,
-                                                         inner_matrix3d.m41.value,
-                                                         inner_matrix3d.m42.value,
-                                                         inner_matrix3d.m43.value,
-                                                         inner_matrix3d.m44.value));
-    }
-    void addTranslate(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+    bool addMatrix3D(const css_transform_parser::TransformFunction &func)
     {
-      const auto &inner_translate =
-        inner_operation.getImplAs<crates::css2::values::specified::transform::Translate>();
-      operations_.push_back(TransformOperation::Translate(LengthPercentage::From(inner_translate.x),
-                                                          LengthPercentage::From(inner_translate.y)));
+      if (func.values.size() != 16)
+        return false;
+      
+      operations_.push_back(TransformOperation::Matrix3D(
+        Number::From(func.values[0]),  Number::From(func.values[1]),  Number::From(func.values[2]),  Number::From(func.values[3]),
+        Number::From(func.values[4]),  Number::From(func.values[5]),  Number::From(func.values[6]),  Number::From(func.values[7]),
+        Number::From(func.values[8]),  Number::From(func.values[9]),  Number::From(func.values[10]), Number::From(func.values[11]),
+        Number::From(func.values[12]), Number::From(func.values[13]), Number::From(func.values[14]), Number::From(func.values[15])
+      ));
+      return true;
     }
-    void addTranslateX(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+
+    bool addTranslate(const css_transform_parser::TransformFunction &func)
     {
-      const auto &x = inner_operation.getImplAs<crates::css2::values::specified::LengthPercentage>();
-      operations_.push_back(TransformOperation::TranslateX(LengthPercentage::From(x)));
+      if (func.values.size() != 2)
+        return false;
+      
+      operations_.push_back(TransformOperation::Translate(
+        createLengthPercentage(func.values[0], func.units[0]),
+        createLengthPercentage(func.values[1], func.units[1])
+      ));
+      return true;
     }
-    void addTranslateY(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+
+    bool addTranslateX(const css_transform_parser::TransformFunction &func)
     {
-      const auto &y = inner_operation.getImplAs<crates::css2::values::specified::LengthPercentage>();
-      operations_.push_back(TransformOperation::TranslateY(LengthPercentage::From(y)));
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::TranslateX(
+        createLengthPercentage(func.values[0], func.units[0])
+      ));
+      return true;
     }
-    void addTranslateZ(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+
+    bool addTranslateY(const css_transform_parser::TransformFunction &func)
     {
-      const auto &z = inner_operation.getImplAs<crates::css2::values::specified::Length>();
-      operations_.push_back(TransformOperation::TranslateZ(NoCalcLength::FromPx(z.numberValue())));
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::TranslateY(
+        createLengthPercentage(func.values[0], func.units[0])
+      ));
+      return true;
     }
-    void addTranslate3D(const crates::css2::values::specified::transform::TransformOperation &inner_operation)
+
+    bool addTranslateZ(const css_transform_parser::TransformFunction &func)
     {
-      const auto &inner_translate3d =
-        inner_operation.getImplAs<crates::css2::values::specified::transform::Translate3D>();
-      operations_.push_back(TransformOperation::Translate3D(LengthPercentage::From(inner_translate3d.x),
-                                                            LengthPercentage::From(inner_translate3d.y),
-                                                            NoCalcLength::FromPx(inner_translate3d.z.numberValue())));
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::TranslateZ(
+        createLength(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addTranslate3D(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 3)
+        return false;
+      
+      operations_.push_back(TransformOperation::Translate3D(
+        createLengthPercentage(func.values[0], func.units[0]),
+        createLengthPercentage(func.values[1], func.units[1]),
+        createLength(func.values[2], func.units[2])
+      ));
+      return true;
+    }
+
+    bool addScale(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() == 1)
+      {
+        // Uniform scaling: scale(x) is equivalent to scale(x, x)
+        operations_.push_back(TransformOperation::Scale(
+          Number::From(func.values[0]),
+          Number::From(func.values[0])
+        ));
+      }
+      else if (func.values.size() == 2)
+      {
+        // Non-uniform scaling: scale(x, y) - use the first value for GenericScale
+        // The second value is ignored for now due to GenericScale limitations
+        operations_.push_back(TransformOperation::Scale(
+          Number::From(func.values[0]),
+          Number::From(func.values[0])
+        ));
+      }
+      else
+      {
+        return false;
+      }
+      return true;
+    }
+
+    bool addScaleX(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::ScaleX(
+        Number::From(func.values[0])
+      ));
+      return true;
+    }
+
+    bool addScaleY(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::ScaleY(
+        Number::From(func.values[0])
+      ));
+      return true;
+    }
+
+    bool addScaleZ(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::ScaleZ(
+        Number::From(func.values[0])
+      ));
+      return true;
+    }
+
+    bool addScale3D(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 3)
+        return false;
+      
+      operations_.push_back(TransformOperation::Scale3D(
+        Number::From(func.values[0]),
+        Number::From(func.values[1]),
+        Number::From(func.values[2])
+      ));
+      return true;
+    }
+
+    bool addRotate(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::Rotate(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addRotateX(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::RotateX(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addRotateY(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::RotateY(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addRotateZ(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::RotateZ(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addRotate3D(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 4)
+        return false;
+      
+      operations_.push_back(TransformOperation::Rotate3D(
+        Number::From(func.values[0]),
+        Number::From(func.values[1]),
+        Number::From(func.values[2]),
+        createAngle(func.values[3], func.units[3])
+      ));
+      return true;
+    }
+
+    bool addSkew(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 2)
+        return false;
+      
+      operations_.push_back(TransformOperation::Skew(
+        createAngle(func.values[0], func.units[0]),
+        createAngle(func.values[1], func.units[1])
+      ));
+      return true;
+    }
+
+    bool addSkewX(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::SkewX(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    bool addSkewY(const css_transform_parser::TransformFunction &func)
+    {
+      if (func.values.size() != 1)
+        return false;
+      
+      operations_.push_back(TransformOperation::SkewY(
+        createAngle(func.values[0], func.units[0])
+      ));
+      return true;
+    }
+
+    // Helper methods to create values
+    LengthPercentage createLengthPercentage(double value, const std::string &unit)
+    {
+      if (unit == "%")
+      {
+        return LengthPercentage::Percentage(Percentage::From(value));
+      }
+      else
+      {
+        return LengthPercentage::Length(createLength(value, unit));
+      }
+    }
+
+    NoCalcLength createLength(double value, const std::string &unit)
+    {
+      if (unit == "px" || unit.empty())
+      {
+        return NoCalcLength::FromPx(value);
+      }
+      else if (unit == "em")
+      {
+        return NoCalcLength::FromEm(value);
+      }
+      else if (unit == "rem")
+      {
+        return NoCalcLength::FromRem(value);
+      }
+      else
+      {
+        // Default to pixels for unknown units
+        return NoCalcLength::FromPx(value);
+      }
+    }
+
+    Angle createAngle(double value, const std::string &unit)
+    {
+      if (unit == "deg" || unit.empty())
+      {
+        return Angle::FromDeg(value);
+      }
+      else if (unit == "rad")
+      {
+        return Angle::FromRad(value);
+      }
+      else if (unit == "grad")
+      {
+        return Angle::FromGrad(value);
+      }
+      else if (unit == "turn")
+      {
+        return Angle::FromTurn(value);
+      }
+      else
+      {
+        // Default to degrees for unknown units
+        return Angle::FromDeg(value);
+      }
     }
   };
 }
