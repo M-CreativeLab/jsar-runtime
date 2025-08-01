@@ -6,7 +6,6 @@
 // macOS-specific includes for window customization
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
-#include <Cocoa/Cocoa.h>
 #else
 #include <GL/gl.h>
 #endif
@@ -21,7 +20,7 @@ namespace jsar::example
 {
 #ifdef __APPLE__
   // Forward declare the macOS window customization function (implemented in macos_window.mm)
-  extern "C" void customizeMacOSWindow(GLFWwindow* window);
+  extern "C" void customizeMacOSWindow(GLFWwindow *window);
 #endif
 
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
@@ -49,11 +48,11 @@ namespace jsar::example
     targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f);
     currentViewerPosition = targetViewerPosition;
     lastFrameTime = 0.0;
-    
+
     // Initialize throttling state
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
-    
+
     if (monitor == nullptr)
     {
       terminate();
@@ -80,11 +79,11 @@ namespace jsar::example
     targetViewerPosition = glm::vec3(0.0f, 0.0f, 0.35f);
     currentViewerPosition = targetViewerPosition;
     lastFrameTime = 0.0;
-    
+
     // Initialize throttling state
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
-    
+
     aspect = (float)width / (float)height;
     initWindow(nullptr);
   }
@@ -157,7 +156,7 @@ namespace jsar::example
 
       // Apply near/far limits (assuming initial position around 0.35f)
       float minDistance = 0.1f; // Near limit
-      float maxDistance = 1.0f;  // Far limit
+      float maxDistance = 1.0f; // Far limit
 
       // Clamp the target position within limits
       if (newTargetZ >= minDistance && newTargetZ <= maxDistance)
@@ -283,7 +282,7 @@ namespace jsar::example
     double currentTime = glfwGetTime();
     if (lastFrameTime == 0.0)
       lastFrameTime = currentTime;
-    
+
     double deltaTime = currentTime - lastFrameTime;
     lastFrameTime = currentTime;
 
@@ -301,10 +300,10 @@ namespace jsar::example
       float easeOut = 1.0f - std::pow(1.0f - t, 3.0f); // Cubic ease-out
       float rotationStep = rotationDifference * easeOut;
       currentHorizontalRotation += rotationStep;
-      
+
       // Keep the original horizontalRotation variable in sync
       horizontalRotation = currentHorizontalRotation;
-      
+
       // Apply the rotation difference to XR renderer
       xrRenderer->rotateViewerByAxisY(rotationStep * (M_PI / 180.0f)); // Convert to radians
     }
@@ -318,7 +317,7 @@ namespace jsar::example
       float t = std::min(1.0f, positionDampingFactor * static_cast<float>(deltaTime));
       float easeOut = 1.0f - std::pow(1.0f - t, 3.0f); // Cubic ease-out
       glm::vec3 positionStep = positionDifference * easeOut;
-      
+
       // Apply only the Z-axis movement (forward/backward)
       if (std::abs(positionStep.z) > 0.0001f)
       {
@@ -347,7 +346,7 @@ namespace jsar::example
       glfwGetWindowContentScale(window, &contentScaling[0], &contentScaling[1]);
       glfwSetWindowUserPointer(window, this);
       glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
-      
+
 #ifdef __APPLE__
       // On macOS, customize window to hide title bar but keep system buttons and rounded corners
       customizeMacOSWindow(window);
