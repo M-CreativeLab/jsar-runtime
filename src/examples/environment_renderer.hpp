@@ -69,6 +69,10 @@ namespace jsar::example
     bool loadDirectoryCubeMap(const std::string &directoryPath);
     void destroyResources();
 
+#ifdef __APPLE__
+    bool loadImageWithCoreGraphics(const std::string &filePath, std::vector<unsigned char> &imageData, int &width, int &height, int &channels);
+#endif
+
     bool initialized_;
     bool enabled_;
     bool hasCubeMapTexture_;

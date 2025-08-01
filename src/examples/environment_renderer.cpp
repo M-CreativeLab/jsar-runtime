@@ -12,6 +12,9 @@
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <ImageIO/ImageIO.h>
+#include <CoreFoundation/CoreFoundation.h>
 #else
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -179,25 +182,14 @@ void main()
         // Path is a directory
         return loadDirectoryCubeMap(filePath);
       }
-      else if (S_ISREG(pathStat.st_mode))
+      else
       {
-        // Path is a regular file
-        string extension = filePath.substr(filePath.find_last_of(".") + 1);
-        transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-
-        if (extension == "hdr")
-        {
-          return loadHDRCubeMap(filePath);
-        }
-        else
-        {
-          cerr << "Unsupported cube map format: " << extension << ". Supported formats: hdr, or directory with 6 face files." << endl;
-          return false;
-        }
+        cerr << "Path is not a directory: " << filePath << ". Only directory-based cube maps are supported." << endl;
+        return false;
       }
     }
     
-    cerr << "Could not access path: " << filePath << endl;
+    cerr << "Could not access directory: " << filePath << endl;
     return false;
   }
 
@@ -471,6 +463,93 @@ void main()
     cout << "Created procedural cube map environment" << endl;
   }
 
+#ifdef __APPLE__
+  bool EnvironmentRenderer::loadImageWithCoreGraphics(const string &filePath, vector<unsigned char> &imageData, int &width, int &height, int &channels)
+  {
+    // Create a CFString from the file path
+    CFStringRef cfPath = CFStringCreateWithCString(kCFAllocatorDefault, filePath.c_str(), kCFStringEncodingUTF8);
+    if (!cfPath)
+    {
+      cerr << "Failed to create CFString for path: " << filePath << endl;
+      return false;
+    }
+
+    // Create a file URL
+    CFURLRef fileURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, cfPath, kCFURLPOSIXPathStyle, false);
+    CFRelease(cfPath);
+    if (!fileURL)
+    {
+      cerr << "Failed to create file URL for path: " << filePath << endl;
+      return false;
+    }
+
+    // Create an image source
+    CGImageSourceRef imageSource = CGImageSourceCreateWithURL(fileURL, nullptr);
+    CFRelease(fileURL);
+    if (!imageSource)
+    {
+      cerr << "Failed to create image source for path: " << filePath << endl;
+      return false;
+    }
+
+    // Create an image from the source
+    CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, nullptr);
+    CFRelease(imageSource);
+    if (!image)
+    {
+      cerr << "Failed to create image from source for path: " << filePath << endl;
+      return false;
+    }
+
+    // Get image dimensions
+    width = (int)CGImageGetWidth(image);
+    height = (int)CGImageGetHeight(image);
+    channels = 4; // We'll always convert to RGBA for simplicity
+
+    // Allocate data for the image
+    imageData.resize(width * height * channels);
+
+    // Create a color space
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    if (!colorSpace)
+    {
+      cerr << "Failed to create color space" << endl;
+      CGImageRelease(image);
+      return false;
+    }
+
+    // Create a bitmap context
+    CGContextRef context = CGBitmapContextCreate(
+        imageData.data(),
+        width,
+        height,
+        8, // bits per component
+        width * channels, // bytes per row
+        colorSpace,
+        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big
+    );
+
+    CGColorSpaceRelease(colorSpace);
+    
+    if (!context)
+    {
+      cerr << "Failed to create bitmap context" << endl;
+      CGImageRelease(image);
+      return false;
+    }
+
+    // Draw the image into the context
+    CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
+
+    // Clean up
+    CGContextRelease(context);
+    CGImageRelease(image);
+
+    cout << "Successfully loaded image: " << filePath << " (" << width << "x" << height << ")" << endl;
+    return true;
+  }
+#endif
+
   bool EnvironmentRenderer::loadHDRCubeMap(const string &filePath)
   {
     // For now, fall back to procedural. HDR loading would require additional libraries like stb_image
@@ -581,8 +660,54 @@ void main()
       }
       else if (extension == "png" || extension == "jpg" || extension == "jpeg")
       {
-        // For now, PNG/JPG loading is not implemented, so we'll create a placeholder
-        cout << "PNG/JPG face loading not yet implemented for " << faceFiles[i] << ", using placeholder" << endl;
+#ifdef __APPLE__
+        // Use Core Graphics to load PNG/JPG on macOS
+        vector<unsigned char> imageData;
+        int imgWidth, imgHeight, imgChannels;
+        
+        if (loadImageWithCoreGraphics(faceFiles[i], imageData, imgWidth, imgHeight, imgChannels))
+        {
+          // Convert RGBA to RGB if needed
+          if (imgChannels == 4)
+          {
+            vector<unsigned char> rgbData(imgWidth * imgHeight * 3);
+            for (int j = 0; j < imgWidth * imgHeight; j++)
+            {
+              rgbData[j * 3] = imageData[j * 4];         // R
+              rgbData[j * 3 + 1] = imageData[j * 4 + 1]; // G
+              rgbData[j * 3 + 2] = imageData[j * 4 + 2]; // B
+              // Skip alpha channel
+            }
+            glTexImage2D(faces[i].target, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, rgbData.data());
+          }
+          else
+          {
+            glTexImage2D(faces[i].target, 0, GL_RGB, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData.data());
+          }
+          cout << "Loaded " << extension << " face: " << faceFiles[i] << " (" << imgWidth << "x" << imgHeight << ")" << endl;
+        }
+        else
+        {
+          cout << "Failed to load " << extension << " face: " << faceFiles[i] << ", using placeholder" << endl;
+          // Create a simple colored face as placeholder
+          vector<unsigned char> data(256 * 256 * 3);
+          // Use different colors for different faces for testing
+          unsigned char r = (i == 0 || i == 1) ? 255 : 64;  // Red for X faces
+          unsigned char g = (i == 2 || i == 3) ? 255 : 64;  // Green for Y faces
+          unsigned char b = (i == 4 || i == 5) ? 255 : 64;  // Blue for Z faces
+          
+          for (int j = 0; j < 256 * 256; j++)
+          {
+            data[j * 3] = r;
+            data[j * 3 + 1] = g;
+            data[j * 3 + 2] = b;
+          }
+          
+          glTexImage2D(faces[i].target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+        }
+#else
+        // On non-macOS platforms, PNG/JPG loading is not implemented, use placeholder
+        cout << "PNG/JPG face loading not implemented on this platform for " << faceFiles[i] << ", using placeholder" << endl;
         // Create a simple colored face as placeholder
         vector<unsigned char> data(256 * 256 * 3);
         // Use different colors for different faces for testing
@@ -598,6 +723,7 @@ void main()
         }
         
         glTexImage2D(faces[i].target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+#endif
       }
       
       GLenum error = glGetError();
