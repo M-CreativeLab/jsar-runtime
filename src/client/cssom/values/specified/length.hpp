@@ -514,8 +514,6 @@ namespace client_cssom::values::specified
         , length_(AbsoluteLength::Px(0))
     {
     }
-
-  private:
     NoCalcLength(AbsoluteLength absolute_length)
         : tag_(kAbsolute)
         , length_(absolute_length)
@@ -889,7 +887,6 @@ namespace client_cssom::values::specified
     {
     }
 
-  private:
     LengthPercentage(NoCalcLength length)
         : tag_(kLength)
         , value_(length)
