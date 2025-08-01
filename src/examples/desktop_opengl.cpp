@@ -124,20 +124,22 @@ namespace jsar::example
     App() = default;
 
   public:
-    void help(const char* programPath)
+    void help(const char *programPath)
     {
       // Extract just the filename from the program path
-      const char* programName = programPath;
-      const char* lastSlash = strrchr(programPath, '/');
-      if (lastSlash != nullptr) {
+      const char *programName = programPath;
+      const char *lastSlash = strrchr(programPath, '/');
+      if (lastSlash != nullptr)
+      {
         programName = lastSlash + 1;
       }
       // Also check for backslash (Windows paths)
-      const char* lastBackslash = strrchr(programName, '\\');
-      if (lastBackslash != nullptr) {
+      const char *lastBackslash = strrchr(programName, '\\');
+      if (lastBackslash != nullptr)
+      {
         programName = lastBackslash + 1;
       }
-      
+
       printf("Usage: %s [options] [url]\n", programName);
       printf("Options:\n");
       printf("  -w <width>              Window width (default: 1600)\n");
@@ -654,7 +656,7 @@ namespace jsar::example
     bool multiPass = false;
     bool multisampleEnabled = true;
     bool envMapEnabled = true; // Default to enabled
-    string envMapPath = ""; // Path to environment map directory
+    string envMapPath = "";    // Path to environment map directory
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 

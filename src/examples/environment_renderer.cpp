@@ -188,7 +188,7 @@ void main()
         return false;
       }
     }
-    
+
     cerr << "Could not access directory: " << filePath << endl;
     return false;
   }
@@ -520,17 +520,16 @@ void main()
 
     // Create a bitmap context
     CGContextRef context = CGBitmapContextCreate(
-        imageData.data(),
-        width,
-        height,
-        8, // bits per component
-        width * channels, // bytes per row
-        colorSpace,
-        (CGBitmapInfo)(kCGImageAlphaPremultipliedLast) | kCGBitmapByteOrder32Big
-    );
+      imageData.data(),
+      width,
+      height,
+      8,                // bits per component
+      width * channels, // bytes per row
+      colorSpace,
+      (CGBitmapInfo)(kCGImageAlphaPremultipliedLast) | kCGBitmapByteOrder32Big);
 
     CGColorSpaceRelease(colorSpace);
-    
+
     if (!context)
     {
       cerr << "Failed to create bitmap context" << endl;
@@ -555,30 +554,31 @@ void main()
     // Create a simple colored face as placeholder
     vector<unsigned char> data(256 * 256 * 3);
     // Use different colors for different faces for testing
-    unsigned char r = (faceIndex == 0 || faceIndex == 1) ? 255 : 64;  // Red for X faces
-    unsigned char g = (faceIndex == 2 || faceIndex == 3) ? 255 : 64;  // Green for Y faces
-    unsigned char b = (faceIndex == 4 || faceIndex == 5) ? 255 : 64;  // Blue for Z faces
-    
+    unsigned char r = (faceIndex == 0 || faceIndex == 1) ? 255 : 64; // Red for X faces
+    unsigned char g = (faceIndex == 2 || faceIndex == 3) ? 255 : 64; // Green for Y faces
+    unsigned char b = (faceIndex == 4 || faceIndex == 5) ? 255 : 64; // Blue for Z faces
+
     for (int j = 0; j < 256 * 256; j++)
     {
       data[j * 3] = r;
       data[j * 3 + 1] = g;
       data[j * 3 + 2] = b;
     }
-    
+
     glTexImage2D(target, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, data.data());
   }
 
   bool EnvironmentRenderer::loadDirectoryCubeMap(const string &directoryPath)
   {
     cout << "Loading cube map from directory: " << directoryPath << endl;
-    
+
     // Face names and corresponding OpenGL targets
-    struct FaceInfo {
+    struct FaceInfo
+    {
       string filename;
       GLenum target;
     };
-    
+
     FaceInfo faces[6] = {
       {"px", GL_TEXTURE_CUBE_MAP_POSITIVE_X}, // +X (right)
       {"nx", GL_TEXTURE_CUBE_MAP_NEGATIVE_X}, // -X (left)
@@ -587,18 +587,18 @@ void main()
       {"pz", GL_TEXTURE_CUBE_MAP_POSITIVE_Z}, // +Z (front)
       {"nz", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z}  // -Z (back)
     };
-    
+
     // Supported extensions in order of preference
     vector<string> extensions = {"hdr", "png", "jpg", "jpeg"};
-    
+
     // Find files for each face
     vector<string> faceFiles(6);
     bool allFacesFound = true;
-    
+
     for (int i = 0; i < 6; i++)
     {
       bool faceFound = false;
-      for (const string& ext : extensions)
+      for (const string &ext : extensions)
       {
         string fullPath = directoryPath + "/" + faces[i].filename + "." + ext;
         ifstream testFile(fullPath);
@@ -611,44 +611,44 @@ void main()
         }
         testFile.close();
       }
-      
+
       if (!faceFound)
       {
         cout << "Could not find face file for " << faces[i].filename << " in directory: " << directoryPath << endl;
         allFacesFound = false;
       }
     }
-    
+
     if (!allFacesFound)
     {
       cout << "Not all cube map faces found in directory: " << directoryPath << ", falling back to procedural environment" << endl;
       createProceduralCubeMap();
       return true;
     }
-    
+
     // Create OpenGL cube map texture
     if (cubeMapTexture_ != 0)
     {
       glDeleteTextures(1, &cubeMapTexture_);
     }
-    
+
     glGenTextures(1, &cubeMapTexture_);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture_);
-    
+
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    
+
     // Load each face
     bool success = true;
     for (int i = 0; i < 6; i++)
     {
       string extension = faceFiles[i].substr(faceFiles[i].find_last_of(".") + 1);
       transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-      
+
       if (extension == "hdr")
       {
         // For now, HDR loading is not implemented, so we'll create a placeholder
@@ -661,7 +661,7 @@ void main()
         // Use Core Graphics to load PNG/JPG on macOS
         vector<unsigned char> imageData;
         int imgWidth, imgHeight, imgChannels;
-        
+
         if (loadImageWithCoreGraphics(faceFiles[i], imageData, imgWidth, imgHeight, imgChannels))
         {
           // Convert RGBA to RGB if needed
@@ -694,7 +694,7 @@ void main()
         createPlaceholderFace(faces[i].target, i);
 #endif
       }
-      
+
       GLenum error = glGetError();
       if (error != GL_NO_ERROR)
       {
@@ -703,9 +703,9 @@ void main()
         break;
       }
     }
-    
+
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    
+
     if (!success)
     {
       cout << "Failed to load cube map from directory: " << directoryPath << ", falling back to procedural environment" << endl;
@@ -714,7 +714,7 @@ void main()
       createProceduralCubeMap();
       return true;
     }
-    
+
     hasCubeMapTexture_ = true;
     cout << "Successfully loaded cube map from directory: " << directoryPath << endl;
     return true;
