@@ -64,3 +64,32 @@ Then you can view the graphics debugging logs in `TR_GLES` channel as well:
 ```
 
 > This option is only available in the OpenGLES backend and requires the support of the `KHR_debug` extension in the device.
+
+### Configure click distance threshold
+
+#### Click Distance Threshold
+
+The click distance threshold determines the maximum distance between `mousedown` and `mouseup` hit points for triggering click events, as defined in the [Web UI Events specification](https://www.w3.org/TR/uievents/). This threshold helps distinguish between click and drag gestures by measuring the spatial proximity of pointer events.
+
+When a user interaction begins with a `selectStart` event and ends with a `selectEnd` event, a `click` event is only generated if:
+1. Both events target the same element
+2. The distance between hit points is less than the configured threshold
+
+#### Configuration
+
+To configure the click distance threshold:
+
+```sh
+adb shell setprop jsar.events.click_distance_threshold 5
+```
+
+The default value is 5 pixels, which provides good tolerance for pointer device jitter while maintaining distinction between click and drag gestures.
+
+- **Smaller values** (1-3): More precise click detection, may be harder to trigger clicks with pointing devices
+- **Larger values** (5-10): More tolerant of device jitter, easier to trigger clicks but may register drags as clicks
+
+You can also set this via environment variable at non-Android platforms:
+
+```sh
+export JSAR_CLICK_DISTANCE_THRESHOLD=5
+```

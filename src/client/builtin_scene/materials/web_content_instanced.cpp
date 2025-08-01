@@ -17,14 +17,13 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material()
+      : Material(false)
       , width_(0.0f)
       , height_(0.0f)
       , textureAtlas_(nullptr)
       , textureOffset_(0.0f, 0.0f)
       , textureScale_(1.0f, 1.0f)
   {
-    this->isOpaque_ = true;
   }
 
   bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,
@@ -153,4 +152,5 @@ namespace builtin_scene::materials
     // No matter the texture update is successful or not, we will return the status.
     return TextureUpdateStatus::kSuccess;
   }
+
 } // namespace builtin_scene::materials

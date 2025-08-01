@@ -39,6 +39,28 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with viewport setup information.
+     * Viewport commands are critical for understanding rendering output dimensions and clipping.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus viewport parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add viewport parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(x), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(y), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(width), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(height), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     int x;
     int y;
@@ -78,6 +100,28 @@ namespace commandbuffers
          << width << ", "
          << height << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with scissor test setup information.
+     * Scissor commands control pixel-level clipping and are important for rendering optimization.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus scissor parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add scissor parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(x), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(y), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(width), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(height), allocator);
+
+      return cmdInfo;
     }
 
   public:

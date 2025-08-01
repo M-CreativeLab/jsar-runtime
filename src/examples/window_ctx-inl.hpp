@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef __APPLE__
 #include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -79,10 +83,10 @@ namespace jsar::example
     return ctx;
   }
 
-  XRStereoscopicRenderer *WindowContext::createXrRenderer()
+  XRStereoscopicRenderer *WindowContext::createXrRenderer(bool monoMode)
   {
     assert(window != nullptr && "Window is not initialized.");
-    xrRenderer = new XRStereoscopicRenderer(this);
+    xrRenderer = new XRStereoscopicRenderer(this, monoMode);
 
     glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
                              { GetContextAndExecute(window)->handleCursorMove(xpos, ypos); });
@@ -110,14 +114,21 @@ namespace jsar::example
       return;
 
     int viewIndex = 0;
-    auto halfWidth = width / 2;
-    if (xoffset > halfWidth)
+    float viewportWidth = width;
+
+    // In stereo mode, determine which eye is being interacted with
+    if (!xrRenderer->isMonoMode())
     {
-      xoffset -= halfWidth;
-      viewIndex = 1;
+      auto halfWidth = width / 2;
+      if (xoffset > halfWidth)
+      {
+        xoffset -= halfWidth;
+        viewIndex = 1;
+      }
+      viewportWidth = halfWidth;
     }
 
-    glm::vec4 viewport(0, 0, halfWidth, height);
+    glm::vec4 viewport(0, 0, viewportWidth, height);
     glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
 
     GLfloat depth;

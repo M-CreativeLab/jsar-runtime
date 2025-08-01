@@ -527,7 +527,7 @@ namespace client_layout
     useSceneWithCallback(resizeEntity);
 
     if (resized == true)
-      sizeDidChange();
+      sizeDidChange(newSize);
     return resized;
   }
 
@@ -781,12 +781,26 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::sizeWillChange(const Fragment &newSize)
+  void LayoutObject::sizeWillChange(const Fragment &)
   {
   }
 
-  void LayoutObject::sizeDidChange()
+  void LayoutObject::sizeDidChange(const Fragment &newSize)
   {
+    auto this_node = node();
+    if (this_node != nullptr) [[unlikely]]
+    {
+      if (this_node->isElement())
+      {
+        auto &element = dom::Node::AsChecked<dom::Element>(this_node);
+        element.layoutSizeChangedCallback(newSize);
+      }
+      else if (this_node->isText())
+      {
+        auto &textNode = dom::Node::AsChecked<dom::Text>(this_node);
+        textNode.layoutSizeChangedCallback(newSize);
+      }
+    }
   }
 
   void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)
@@ -815,7 +829,7 @@ namespace client_layout
         };
 
         string imageUrl = image.getUrl();
-        element.fetchResourceThreadSafe(imageUrl, onImageLoaded);
+        element.fetchArrayBufferLikeResource(imageUrl, onImageLoaded);
         image.startLoadingUrlImage();
       }
     }

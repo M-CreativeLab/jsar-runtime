@@ -36,6 +36,27 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with draw arrays information.
+     * This is crucial for GPU profiling as draw calls are major performance points.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus draw arrays parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add draw arrays parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     int mode;
     int first;
@@ -73,6 +94,28 @@ namespace commandbuffers
          << count << ", "
          << instanceCount << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with instanced draw arrays information.
+     * This is crucial for GPU profiling as instanced draw calls can have significant performance impact.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus instanced draw arrays parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add instanced draw arrays parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(first), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -114,6 +157,28 @@ namespace commandbuffers
          << indicesType << ", "
          << indicesOffset << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with draw elements information.
+     * This is crucial for GPU profiling as indexed draw calls show different performance characteristics.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus draw elements parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add draw elements parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -158,6 +223,29 @@ namespace commandbuffers
          << "offset=" << indicesOffset << ", "
          << "instances=" << instanceCount << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with instanced draw elements information.
+     * This is crucial for GPU profiling as instanced indexed draws have complex performance characteristics.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus instanced draw elements parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add instanced draw elements parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetInt(mode), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(count), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesType), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(indicesOffset), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(instanceCount), allocator);
+
+      return cmdInfo;
     }
 
   public:

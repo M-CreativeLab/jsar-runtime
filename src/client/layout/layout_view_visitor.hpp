@@ -19,10 +19,18 @@ namespace client_layout
 
   public:
     virtual bool onVisitObject(LayoutObject &object, int depth) = 0;
-    virtual void onVisitText(const LayoutText &text, int depth) {};
-    virtual void onVisitBox(const LayoutBoxModelObject &box, int depth) {};
-    virtual void onVisitBlock(const LayoutBlock &block, int depth) {};
-    virtual void onVisitInline(const LayoutInline &inlineObject, int depth) {};
+    virtual void onVisitText(const LayoutText &text, int depth)
+    {
+    }
+    virtual void onVisitBox(const LayoutBoxModelObject &box, int depth)
+    {
+    }
+    virtual void onVisitBlock(const LayoutBlock &block, int depth)
+    {
+    }
+    virtual void onVisitInline(const LayoutInline &inlineObject, int depth)
+    {
+    }
 
   public:
     void visit(LayoutView &view);

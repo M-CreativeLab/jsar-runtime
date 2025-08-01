@@ -21,6 +21,32 @@ namespace commandbuffers
     {
     }
 
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with texture creation information.
+     * Texture creation is critical for understanding GPU memory usage and rendering pipeline.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus texture creation parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add texture creation parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     int clientId;
   };
@@ -39,6 +65,31 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest(that, clone)
         , texture(that.texture)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << texture << ")";
+      return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with texture deletion information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus texture deletion parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add texture deletion parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(texture), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -220,7 +271,8 @@ namespace commandbuffers
          << level << ", "
          << WebGLHelper::WebGLEnumToString(format) << ", "
          << WebGLHelper::WebGLEnumToString(pixelType) << ", "
-         << "pixels=" << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
+         << "pixels="
+         << "Bytes(" << pixelsByteLength << ", " << pixels << ")";
       return ss.str();
     }
 

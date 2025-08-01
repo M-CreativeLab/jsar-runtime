@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <cstring>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/dom/element.hpp>
 #include <client/html/html_element.hpp>
@@ -6,10 +8,53 @@
 
 #include "./document_event_dispatcher.hpp"
 
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+#include <sys/system_properties.h>
+#endif
+
 namespace dom
 {
   using namespace std;
   using namespace std::placeholders;
+
+  float DocumentEventDispatcher::GetClickDistanceThreshold()
+  {
+    // Default threshold: 1 pixels
+    float defaultThresholdPixels = 2.0f;
+
+#if defined(__ANDROID__)
+    // Use 5 pixels as the default threshold at Android devices
+    defaultThresholdPixels = 5.0f;
+
+#if (__ANDROID_API__ >= 26)
+    char thresholdStr[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.events.click_distance_threshold", thresholdStr) >= 0)
+    {
+      char *endptr;
+      float threshold = strtof(thresholdStr, &endptr);
+      if (endptr != thresholdStr && threshold > 0)
+      {
+        return client_cssom::pixelToMeter(threshold);
+      }
+    }
+#endif
+#endif
+
+    // Check environment variable
+    const char *envThreshold = getenv("JSAR_CLICK_DISTANCE_THRESHOLD");
+    if (envThreshold != nullptr)
+    {
+      char *endptr;
+      float threshold = strtof(envThreshold, &endptr);
+      if (endptr != envThreshold && threshold > 0)
+      {
+        return client_cssom::pixelToMeter(threshold);
+      }
+    }
+
+    // Return default threshold
+    return client_cssom::pixelToMeter(defaultThresholdPixels);
+  }
 
   DocumentEventDispatcher::DocumentEventDispatcher(HTMLDocument *document)
       : document_(document)
@@ -63,7 +108,7 @@ namespace dom
             // Criteria 1: same target
             current_mousedown_target_.lock() == target &&
             // Criteria 2: distance < threshold
-            glm::distance(current_mousedown_hit_point_, hitPoint) < click_distance_threshold_
+            glm::distance(current_mousedown_hit_point_, hitPoint) < Click_distance_threshold_
             // TODO(yorkie): add criteria: time < 500ms?
         )
           target->simulateClick(hitPoint);

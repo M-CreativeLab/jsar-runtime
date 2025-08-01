@@ -146,7 +146,9 @@ namespace scripting_base
   public:
     ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args, std::shared_ptr<D> inner = nullptr)
         : current_isolate_(isolate)
-        , inner_handle_(inner) {};
+        , inner_handle_(inner)
+    {
+    }
 
     virtual ~ObjectWrap()
     {

@@ -89,10 +89,6 @@ namespace dom
       , offset_height_(other.offset_height_)
       , dataset_(other.dataset_)
       , style_(other.style_)
-      // Don't copy the resource-loading related fields.
-      , load_async_handle_()
-      , load_requests_mutex_()
-      , load_requests_()
   {
   }
 
@@ -108,22 +104,12 @@ namespace dom
     removeAttribute("data-" + CamelCaseToDashStyle(key));
   }
 
-  void HTMLElement::fetchResource(const string &url, function<void(const void *data, size_t length)> callback)
+  void HTMLElement::fetchArrayBufferLikeResource(const std::string &url,
+                                                 std::function<void(const void *data, size_t length)> callback)
   {
     assert(ownerDocument->expired() == false && "The owner document is expired.");
     auto browsingContext = ownerDocument->lock()->browsingContext;
     browsingContext->fetchArrayBufferLikeResource(url, callback);
-  }
-
-  void HTMLElement::fetchResourceThreadSafe(const string &url, function<void(const void *data, size_t length)> callback)
-  {
-    assert(load_async_handle_.data == this &&
-           "The async handle data is not set to this element.");
-
-    unique_lock<shared_mutex> lock(load_requests_mutex_);
-    // Schedule the image loading on the scripting thread.
-    load_requests_.emplace_back(url, std::move(callback));
-    uv_async_send(&load_async_handle_);
   }
 
   void HTMLElement::createdCallback(bool from_scripting)
@@ -182,30 +168,11 @@ namespace dom
   void HTMLElement::connectedCallback()
   {
     Element::connectedCallback();
-
-    load_async_handle_.data = this;
-    auto handle_load_requests = [](uv_async_t *handle)
-    {
-      auto element = static_cast<HTMLElement *>(handle->data);
-      assert(element != nullptr && "The async handle data is not set to this element.");
-      element->processLoadRequests();
-    };
-    uv_async_init(TrClientContextPerProcess::Get()->getScriptingEventLoop(),
-                  &load_async_handle_,
-                  handle_load_requests);
   }
 
   void HTMLElement::disconnectedCallback()
   {
     Element::disconnectedCallback();
-
-    // Clear the load requests when the element is disconnected.
-    unique_lock<shared_mutex> lock(load_requests_mutex_);
-    load_requests_.clear();
-
-    // Reset the async handle data to avoid dangling pointer.
-    load_async_handle_.data = nullptr;
-    uv_close(reinterpret_cast<uv_handle_t *>(&load_async_handle_), nullptr);
   }
 
   void HTMLElement::markAsDirty()
@@ -219,23 +186,5 @@ namespace dom
     auto document = getOwnerDocumentReference();
     if (document != nullptr)
       document->styleCache().resetStyle(getPtr<HTMLElement>());
-  }
-
-  void HTMLElement::processLoadRequests()
-  {
-    assert(ownerDocument->expired() == false && "The owner document is expired.");
-    auto browsingContext = ownerDocument->lock()->browsingContext;
-
-    unique_lock<shared_mutex> lock(load_requests_mutex_);
-    while (!load_requests_.empty())
-    {
-      LoadResourceRequest request = load_requests_.front();
-      load_requests_.pop_front();
-
-      // If the URL is empty, skip the request.
-      if (request.url.empty())
-        continue;
-      browsingContext->fetchArrayBufferLikeResource(request.url, request.call);
-    }
   }
 }

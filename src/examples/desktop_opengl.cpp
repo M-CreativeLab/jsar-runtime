@@ -4,11 +4,17 @@
 #include <filesystem>
 #include <memory>
 
+#ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
-
 #include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
 #include <GLFW/glfw3native.h>
+#endif
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -49,13 +55,13 @@ namespace jsar::example
   class DesktopEmbedder : public TrEmbedder
   {
   public:
-    DesktopEmbedder()
+    DesktopEmbedder(bool stereoMode)
         : TrEmbedder()
     {
       auto renderer = constellation->renderer;
       auto rhi = RHIFactory::CreateRHI(kUnityGfxRendererOpenGLCore, constellation.get());
       renderer->setRHI(rhi);
-      renderer->useDoubleWideFramebuffer = true;
+      renderer->useDoubleWideFramebuffer = stereoMode;
 
       // Check the environment variable to enable tracing
       const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
@@ -72,13 +78,13 @@ namespace jsar::example
     }
 
   public:
-    bool onEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content) override
+    bool onEvent(events_comm::TrNativeEvent &event, shared_ptr<TrContentRuntime> content) override
     {
       if (event.type == events_comm::TrNativeEventType::RpcRequest)
       {
         events_comm::TrNativeEvent respEvent(events_comm::TrNativeEventType::RpcResponse);
         auto request = event.detail<events_comm::TrRpcRequest>();
-        std::cout << "Received RPC request: " << request.method << std::endl;
+        cout << "Received RPC request: " << request.method << endl;
         if (request.method == "ping")
         {
           PongResponse pongResp;
@@ -118,7 +124,23 @@ namespace jsar::example
   public:
     void help()
     {
-      printf("Usage: gl-desktop [-w width] [-h height] [url]\n");
+      printf("Usage: jsar_desktop_opengl [options] [url]\n");
+      printf("Options:\n");
+      printf("  -w <width>              Window width (default: 1600)\n");
+      printf("  -h <height>             Window height (default: 900)\n");
+      printf("  -n <count>              Number of apps (default: 1)\n");
+      printf("  --samples             MSAA samples (default: 4)\n");
+      printf("  --mono                  Monoscopic XR rendering (default)\n");
+      printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
+      printf("                            multipass - Multiple rendering passes\n");
+      printf("                            singlepass - Single rendering pass\n");
+      printf("  --help                  Show this help\n");
+      printf("\n");
+      printf("Examples:\n");
+      printf("  jsar_desktop_opengl --mono\n");
+      printf("  jsar_desktop_opengl --stereo                 # Uses singlepass by default\n");
+      printf("  jsar_desktop_opengl --stereo multipass\n");
+      printf("  jsar_desktop_opengl --stereo singlepass\n");
     }
 
     bool init(int argc, char **argv)
@@ -127,39 +149,116 @@ namespace jsar::example
         return false;
 
       int samples = 4;
-      int opt;
-      while ((opt = getopt(argc, argv, "w:h:x:mn:s:")) != -1)
+
+      // Parse arguments manually to support long options
+      for (int i = 1; i < argc; i++)
       {
-        switch (opt)
+        string arg = argv[i];
+
+        if (arg == "--help")
         {
-        case 'w':
-          width = atoi(optarg);
-          break;
-        case 'h':
-          height = atoi(optarg);
-          break;
-        case 'x':
-          if (strcmp(optarg, "r") == 0)
-            xrEnabled = true;
-          break;
-        case 'm':
-          multiPass = true;
-          break;
-        case 'n':
-          nApps = atoi(optarg);
+          help();
+          return false;
+        }
+        else if (arg == "--mono")
+        {
+          monoMode = true;
+        }
+        else if (arg == "--stereo")
+        {
+          monoMode = false;
+          multiPass = false; // Default to singlepass
+
+          // Check if next argument is a valid stereo mode
+          if (i + 1 < argc)
+          {
+            string nextArg = argv[i + 1];
+            if (nextArg == "multipass")
+            {
+              multiPass = true;
+              i++; // Consume the mode argument
+            }
+            else if (nextArg == "singlepass")
+            {
+              multiPass = false;
+              i++; // Consume the mode argument
+            }
+            // If next argument is not a valid mode, keep default (singlepass) and don't increment i
+          }
+        }
+        else if (arg == "-w")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -w requires a width argument\n");
+            help();
+            return false;
+          }
+          int parsedWidth = atoi(argv[++i]);
+          if (parsedWidth <= 0)
+          {
+            printf("Error: Width must be a positive integer, got '%s'\n", argv[i]);
+            help();
+            return false;
+          }
+          width = parsedWidth;
+        }
+        else if (arg == "-h")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -h requires a height argument\n");
+            help();
+            return false;
+          }
+          int parsedHeight = atoi(argv[++i]);
+          if (parsedHeight <= 0)
+          {
+            printf("Error: Height must be a positive integer, got '%s'\n", argv[i]);
+            help();
+            return false;
+          }
+          height = parsedHeight;
+        }
+        else if (arg == "-n")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -n requires an app count argument\n");
+            help();
+            return false;
+          }
+          nApps = atoi(argv[++i]);
           if (nApps < 0)
             nApps = 1;
-          break;
-        case 's':
-          samples = atoi(optarg);
+        }
+        else if (arg == "--samples")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --samples requires a samples argument\n");
+            help();
+            return false;
+          }
+          samples = atoi(argv[++i]);
           if (samples < 0 || samples > 16)
             samples = 4;
-          break;
-        default:
+        }
+        else if (arg[0] != '-')
+        {
+          // This is the URL argument
+          requestUrl = arg;
+        }
+        else
+        {
+          printf("Error: Unknown argument '%s'\n", arg.c_str());
           help();
-          break;
+          return false;
         }
       }
+
+      // XR is now always enabled
+      xrEnabled = true;
 
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -173,12 +272,6 @@ namespace jsar::example
         help();
         return false;
       }
-
-      if (xrEnabled)
-        width *= 2;
-
-      if (optind < argc)
-        requestUrl = string(argv[optind]);
 
       int count;
       GLFWmonitor *glassMonitor = nullptr;
@@ -198,8 +291,8 @@ namespace jsar::example
        * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
        */
       windowCtx_ = glassMonitor == nullptr
-                     ? std::make_unique<WindowContext>(width, height)
-                     : std::make_unique<WindowContext>(glassMonitor);
+                     ? make_unique<WindowContext>(width, height)
+                     : make_unique<WindowContext>(glassMonitor);
 
       if (windowCtx_->isTerminated())
         return false;
@@ -217,7 +310,7 @@ namespace jsar::example
         prepareRenderTarget(samples);
       }
 
-      embedder_ = std::make_unique<DesktopEmbedder>();
+      embedder_ = make_unique<DesktopEmbedder>(!monoMode);
       assert(embedder_ != nullptr);
 
       auto drawingViewport = windowCtx_->drawingViewport();
@@ -238,7 +331,7 @@ namespace jsar::example
           init.active = true;
           init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass : xr::TrStereoRenderingMode::SinglePass;
           embedder_->configureXrDevice(init);
-          windowCtx_->createXrRenderer();
+          windowCtx_->createXrRenderer(monoMode);
         }
       }
 
@@ -349,7 +442,7 @@ namespace jsar::example
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        int viewsCount = xrEnabled ? 2 : 1;
+        int viewsCount = (xrEnabled && !monoMode) ? 2 : 1;
         auto drawingViewport = windowCtx_->drawingViewport();
 
         if (embedder_ == nullptr)
@@ -365,7 +458,7 @@ namespace jsar::example
 
           if (multiPass)
           {
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               uint32_t w = drawingViewport.width() / viewsCount;
               uint32_t h = drawingViewport.height();
@@ -415,7 +508,7 @@ namespace jsar::example
             auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
             xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
 
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
               auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
@@ -427,13 +520,9 @@ namespace jsar::example
             embedder_->onTransparentsRenderPass();
           }
         }
-        else // Non-XR rendering
+        else
         {
-          glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
-          glGetError(); // Clear the error
-
-          embedder_->onOpaquesRenderPass();
-          embedder_->onTransparentsRenderPass();
+          assert(false && "Non-XR rendering is not supported.");
         }
 
         embedder_->onAfterRendering();
@@ -488,17 +577,18 @@ namespace jsar::example
     }
 
   public:
-    int width = 960;
-    int height = 600;
+    int width = 1600;
+    int height = 900;
     bool xrEnabled = false;
+    bool monoMode = true; // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
-    std::unique_ptr<WindowContext> windowCtx_;
-    std::unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<WindowContext> windowCtx_;
+    unique_ptr<DesktopEmbedder> embedder_;
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };

@@ -26,6 +26,7 @@
 #include "./materials.hpp"
 #include "./web_content.hpp"
 #include "./image.hpp"
+#include "./xr.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -722,79 +723,39 @@ namespace builtin_scene::web_renderer
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
 
-    // Get the font from the text style
-    const auto &textStyle = paragraphStyle.getTextStyle();
-    sk_sp<SkTypeface> typeface = nullptr;
+    // Calculate the text offset within the fragment
+    // Text should be positioned in the content area (inside border and padding)
+    const auto &borderBox = content.fragment()->border();
+    const auto &paddingBox = content.fragment()->padding();
+    float offsetX = borderBox.left() + paddingBox.left();
+    float offsetY = borderBox.top() + paddingBox.top();
 
-    // Try to get typeface from font families
-    if (textStyle.getFontFamilies().size() > 0)
+    // Use the paragraph visitor to extract glyph paths with proper font handling
+    // This approach correctly handles mixed CJK/English text by using the fonts
+    // that the paragraph system has already resolved for each glyph
+    auto addPath = [&textPath, offsetX, offsetY](int lineNumber, const Paragraph::VisitorInfo *info)
     {
-      auto typefaces = fontCollection->findTypefaces(textStyle.getFontFamilies(), textStyle.getFontStyle());
-      if (!typefaces.empty())
+      if (info == nullptr)
       {
-        // Use the first matching typeface
-        typeface = typefaces[0];
+        // End of line marker, nothing to do
+        return;
       }
-    }
 
-    if (!typeface)
-    {
-      // Fallback to default typeface
-      typeface = fontCollection->defaultFallback();
-    }
-
-    if (typeface)
-    {
-      SkFont font(typeface, textStyle.getFontSize());
-
-      // Convert text to glyphs
-      vector<SkGlyphID> glyphs(textContent.size());
-      int glyphCount = font.textToGlyphs(textContent.c_str(),
-                                         textContent.size(),
-                                         SkTextEncoding::kUTF8,
-                                         glyphs.data(),
-                                         glyphs.size());
-
-      if (glyphCount > 0)
+      // Extract glyph paths from the properly resolved fonts
+      for (int i = 0; i < info->count; ++i)
       {
-        glyphs.resize(glyphCount);
-
-        // Get glyph positions with proper fragment positioning
-        vector<SkPoint> positions(glyphCount);
-        vector<SkScalar> widths(glyphCount);
-        font.getWidths(glyphs.data(), glyphCount, widths.data());
-
-        // Calculate the text offset within the fragment
-        // Text should be positioned in the content area (inside border and padding)
-        const auto &borderBox = content.fragment()->border();
-        const auto &paddingBox = content.fragment()->padding();
-        float textOffsetX = borderBox.left() + paddingBox.left();
-        float textOffsetY = borderBox.top() + paddingBox.top() +
-                            paragraphStyle.getStrutStyle().getFontSize(); // Use struct size that considering line height
-
-        float x = textOffsetX;
-        float y = textOffsetY;
-
-        for (int i = 0; i < glyphCount; ++i)
+        SkPath glyphPath;
+        if (info->font.getPath(info->glyphs[i], &glyphPath))
         {
-          positions[i] = SkPoint::Make(x, y);
-          x += widths[i];
-        }
-
-        // Get paths for each glyph and add to textPath
-        for (int i = 0; i < glyphCount; ++i)
-        {
-          SkPath glyphPath;
-          if (font.getPath(glyphs[i], &glyphPath))
-          {
-            // Transform glyph path to its position
-            SkMatrix transform = SkMatrix::Translate(positions[i].x(), positions[i].y());
-            glyphPath.transform(transform);
-            textPath.addPath(glyphPath);
-          }
+          // Calculate the absolute position including the text offset within the fragment
+          SkMatrix transform = SkMatrix::Translate(
+            info->origin.x() + info->positions[i].x() + offsetX,
+            info->origin.y() + info->positions[i].y() + offsetY);
+          textPath.addPath(glyphPath, transform);
         }
       }
-    }
+    };
+    paragraph->visit(addPath);
 
     return textPath.isEmpty()
              ? nullopt
@@ -877,6 +838,7 @@ namespace builtin_scene::web_renderer
           SkBitmap bitmap;
           // TODO(yorkie): support decoding this async?
           if (canvas::ImageCodec::Decode(image.getUrlImageData(),
+                                         nullptr,
                                          bitmap,
                                          image.getUrl()))
           {
@@ -1074,13 +1036,17 @@ namespace builtin_scene::web_renderer
       SkRRect &roundedRect = content.rounded_rect_;
       canvas->clipRRect(roundedRect, true);
 
+      SkPaint imagePaint;
+      imagePaint.setAntiAlias(true);
+      imagePaint.setStyle(SkPaint::kFill_Style);
+
       SkRect srcRect = SkRect::MakeWH(skImage->width(), skImage->height());
       SkRect dstRect = SkRect::MakeWH(content.logicalWidth(), content.logicalHeight());
       canvas->drawImageRect(skImage,
                             srcRect,
                             dstRect,
                             SkSamplingOptions(),
-                            nullptr,
+                            &imagePaint,
                             SkCanvas::kStrict_SrcRectConstraint);
     }
     canvas->restore();
@@ -1129,8 +1095,10 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
+      // Check if this is a spatial image and set the spatial flag
+      auto imageComponent = getComponent<Image2d>(entity);
+      // Use the same texture update method for both spatial and non-spatial images
       auto status = webContentMaterial->updateTexture(content);
-      // Mark the content as clean if the texture is no need to update or updated successfully.
       if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
         content.setDirty(false);
     }
