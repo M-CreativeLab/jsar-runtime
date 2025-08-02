@@ -65,3 +65,5 @@ docs/versions/
 
 # Website build artifacts
 .website/
+website/.next/
+website/node_modules/
