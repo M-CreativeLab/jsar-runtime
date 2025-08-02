@@ -1,0 +1,12 @@
+{
+  "babylon": "Babylon.js Integration",
+  "three": "Three.js Integration", 
+  "typescript": "TypeScript Support",
+  "vanillajs": "Vanilla JavaScript",
+  "modules": "ES Modules",
+  "web-workers": "Web Workers",
+  "webassembly": "WebAssembly",
+  "image": "Image Support",
+  "audio": "Audio Support",
+  "debugging": "Debugging"
+}

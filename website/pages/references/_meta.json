@@ -1,0 +1,13 @@
+{
+  "jsar-apis": "JSAR APIs",
+  "web-apis": "Web APIs",
+  "webxr": "WebXR",
+  "webxr-inputsources": "WebXR Input Sources",
+  "webgl": "WebGL",
+  "spatial-css": "Spatial CSS",
+  "xsml": "XSML",
+  "graphics-backends": "Graphics Backends",
+  "runtime-configuration": "Runtime Configuration",
+  "caching": "Caching",
+  "embedder-guides": "Embedder Guides"
+}
