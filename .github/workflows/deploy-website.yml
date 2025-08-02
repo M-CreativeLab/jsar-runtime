@@ -8,6 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      deployments: write
+      pages: write
 
     steps:
       - name: Checkout code
