@@ -16,6 +16,28 @@ jobs:
           # Fetch full history for accurate deployment
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build documentation artifacts
+        run: |
+          # Run custom build scripts for documentation
+          if [ -f "package.json" ] && npm run | grep -q "build:docs"; then
+            echo "Running npm run build:docs..."
+            npm run build:docs
+          else
+            echo "No build:docs script found, running default documentation build..."
+            # Add any default build commands here if needed
+            # For now, we'll just ensure the docs directory exists
+            mkdir -p docs
+          fi
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
