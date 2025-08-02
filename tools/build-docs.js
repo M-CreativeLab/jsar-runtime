@@ -432,7 +432,7 @@ function createHtmlTemplate(content, title, currentFile = '', version = '') {
           // Construct URL for version-specific docs
           const currentPath = window.location.pathname;
           const filename = currentPath.split('/').pop();
-          const versionUrl = \`../versions/\${selectedVersion}/\${filename}\`;
+          const versionUrl = \`\${selectedVersion}/\${filename}\`;
           window.location.href = versionUrl;
         }
       });
@@ -533,7 +533,7 @@ function createManualIndexPage(outputDir) {
 function buildManualPages() {
   const docsDir = path.join(__dirname, '..', 'docs');
   const manualDir = path.join(docsDir, 'manual');
-  const outputDir = path.join(docsDir, 'manual-html');
+  const outputDir = path.join(__dirname, '..', '.website', 'manual');
   
   // Create output directory
   if (!fs.existsSync(outputDir)) {
@@ -578,15 +578,15 @@ function buildManualPages() {
 }
 
 function buildVersionedDocs() {
-  const docsDir = path.join(__dirname, '..', 'docs');
-  const versionsDir = path.join(docsDir, 'versions');
+  const websiteDir = path.join(__dirname, '..', '.website');
+  const manualDir = path.join(websiteDir, 'manual');
   const versions = getAvailableVersions();
   
   console.log(`Building documentation for ${versions.length} versions...`);
   
-  // Create versions directory
-  if (!fs.existsSync(versionsDir)) {
-    fs.mkdirSync(versionsDir, { recursive: true });
+  // Create manual directory
+  if (!fs.existsSync(manualDir)) {
+    fs.mkdirSync(manualDir, { recursive: true });
   }
   
   const currentBranch = getCurrentBranch();
@@ -595,7 +595,7 @@ function buildVersionedDocs() {
     try {
       console.log(`Building docs for ${version}...`);
       
-      const versionDir = path.join(versionsDir, version);
+      const versionDir = path.join(manualDir, version);
       
       // Create version directory
       if (!fs.existsSync(versionDir)) {
@@ -679,7 +679,7 @@ function createVersionIndexPage(outputDir, version) {
 
 <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); margin: 1.5rem 0;">
   <strong>Version Notice:</strong> You are viewing documentation for ${version}. 
-  <a href="../../manual-html/index.html">Switch to current version</a> for the latest documentation.
+  <a href="../index.html">Switch to current version</a> for the latest documentation.
 </div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0;">

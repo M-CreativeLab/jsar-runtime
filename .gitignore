@@ -62,3 +62,6 @@ node_modules
 # Documentation build artifacts
 docs/manual-html/
 docs/versions/
+
+# Website build artifacts
+.website/
