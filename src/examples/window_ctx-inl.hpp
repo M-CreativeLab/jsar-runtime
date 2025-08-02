@@ -60,7 +60,7 @@ namespace jsar::example
     // Initialize dragging state
     isDraggingWindow = false;
     leftMousePressed = false;
-    dragRegionHeight = 40; // Default to 40 pixels
+    dragRegionHeight = 25; // Default to 25 pixels
 
     if (monitor == nullptr)
     {
@@ -96,7 +96,7 @@ namespace jsar::example
     // Initialize dragging state
     isDraggingWindow = false;
     leftMousePressed = false;
-    dragRegionHeight = 40; // Default to 40 pixels
+    dragRegionHeight = 25; // Default to 25 pixels
 
     aspect = (float)width / (float)height;
     initWindow(nullptr);

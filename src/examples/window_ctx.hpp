@@ -62,7 +62,7 @@ namespace jsar::example
     // Window dragging state (macOS specific)
     bool isDraggingWindow = false;
     bool leftMousePressed = false;
-    int dragRegionHeight = 40; // Configurable height for macOS window drag region (in pixels)
+    int dragRegionHeight = 25; // Configurable height for macOS window drag region (in pixels)
 
     // Animation state for smooth viewer movement
     float targetHorizontalRotation = 0.0f;                          // Target rotation in degrees
