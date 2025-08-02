@@ -18,6 +18,7 @@ export function createNavbar() {
           <!-- Center: Desktop Navigation -->
           <div class="desktop-nav flex items-center gap-5 mx-auto">
             <a href="index.html#features" class="nav-link">Features</a>
+            <a href="manual-html/index.html" class="nav-link">Manual</a>
             <a href="index.html#documentation" class="nav-link">Documentation</a>
             <a href="blog.html" class="nav-link">Blog</a>
             <a href="index.html#changelog" class="nav-link">Changelog</a>
@@ -47,6 +48,7 @@ export function createNavbar() {
           <!-- Mobile Menu -->
           <div class="mobile-menu" id="mobile-menu">
             <a href="index.html#features">Features</a>
+            <a href="manual-html/index.html">Manual</a>
             <a href="index.html#documentation">Documentation</a>
             <a href="blog.html">Blog</a>
             <a href="index.html#changelog">Changelog</a>

@@ -58,3 +58,7 @@ node_modules
 
 # Build artifacts
 ./build/cmake/
+
+# Documentation build artifacts
+docs/manual-html/
+docs/versions/
