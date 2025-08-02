@@ -100,7 +100,9 @@ namespace dom
       return std::nullopt;
     }
     void clearTransitions();
-    size_t setTransitions(const client_cssom::ComputedStyle &, std::shared_ptr<AnimationTimeline>);
+    size_t setTransitions(const client_cssom::ComputedStyle &new_style, 
+                         const client_cssom::ComputedStyle *old_style,
+                         std::shared_ptr<AnimationTimeline> timeline);
     bool updateFrameToStyle(client_cssom::ComputedStyle &);
 
   private:

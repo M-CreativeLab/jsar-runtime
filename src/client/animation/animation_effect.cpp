@@ -9,14 +9,46 @@ namespace dom
   {
     timing_.delay = transition_property.delay.seconds().value;
     timing_.duration = transition_property.duration.seconds().value;
+    
+    // Convert the computed timing function to the animation timing function
+    // For now, create a linear timing function - this should be enhanced to support
+    // the actual timing function from transition_property.timing_function
     timing_function_ = LinearTimingFunction::Create({});
+    timing_.easing = timing_function_.get();
   }
 
   AnimationEffect::ComputedTiming AnimationEffect::getComputedTiming() const
   {
     ComputedTiming computed_timing(timing_);
-    // Fill in the computed timing values based on the effect's timing
-    // TODO: Implement the logic to compute endTime, activeDuration, localTime, progress, and currentIteration
+    
+    // Calculate basic timing values
+    computed_timing.activeDuration = timing_.duration * timing_.iterations;
+    computed_timing.endTime = computed_timing.activeDuration + timing_.delay + timing_.endDelay;
+    
+    // Use the stored local time
+    computed_timing.localTime = local_time_;
+    
+    // Calculate progress based on local time
+    if (computed_timing.localTime >= timing_.delay && 
+        computed_timing.localTime <= timing_.delay + timing_.duration)
+    {
+      float active_time = computed_timing.localTime - timing_.delay;
+      computed_timing.progress = active_time / timing_.duration;
+      computed_timing.currentIteration = 0; // Simple case for transitions
+    }
+    else if (computed_timing.localTime > timing_.delay + timing_.duration)
+    {
+      // Animation is finished
+      computed_timing.progress = 1.0f;
+      computed_timing.currentIteration = timing_.iterations - 1;
+    }
+    else
+    {
+      // Animation hasn't started yet
+      computed_timing.progress = std::nullopt;
+      computed_timing.currentIteration = std::nullopt;
+    }
+    
     return computed_timing;
   }
 

@@ -17,24 +17,58 @@ namespace dom
     transitions_.clear();
   }
 
-  size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &style,
+  size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &new_style,
+                                       const client_cssom::ComputedStyle *old_style,
                                        shared_ptr<AnimationTimeline> timeline)
   {
     clearTransitions();
 
-    int len = style.getTransitionPropertiesCount();
+    int len = new_style.getTransitionPropertiesCount();
     for (size_t index = 0; index < len; ++index)
     {
-      auto transition_property = style.getTransitionProperty(index);
+      auto transition_property = new_style.getTransitionProperty(index);
       if (TR_UNLIKELY(!transition_property.has_value()))
         continue;
 
       auto property = transition_property->property;
+      std::string property_name = property.toCss();
+      
+      // Skip if transition duration is zero or negative
+      if (transition_property->duration.seconds().value <= 0.0f)
+        continue;
+
+      // Get the old and new values for this property
+      std::string start_value, end_value;
+      if (old_style != nullptr)
+      {
+        auto old_it = old_style->find(property_name);
+        auto new_it = new_style.find(property_name);
+        
+        if (old_it != old_style->end())
+          start_value = old_it->second;
+        if (new_it != new_style.end())
+          end_value = new_it->second;
+          
+        // Only create transition if values are different
+        if (start_value == end_value || start_value.empty() || end_value.empty())
+          continue;
+      }
+      else
+      {
+        // No old style, use computed values as both start and end (no transition)
+        auto new_it = new_style.find(property_name);
+        if (new_it != new_style.end())
+        {
+          start_value = end_value = new_it->second;
+        }
+        continue; // Skip creating transition if no old style
+      }
+
       auto effect = make_unique<AnimationEffect>(*transition_property);
-      auto animation = Animation::MakeAnimation<CSSTransition>(move(effect), timeline);
+      auto animation = make_shared<CSSTransition>(move(effect), timeline, property_name, start_value, end_value);
       auto animatables = AnimatableProperties::FromTransitionProperty(property);
       auto transition_animation = make_shared<RunningTransition>(animation, animatables);
-      transitions_.emplace(property.toCss(), transition_animation);
+      transitions_.emplace(property_name, transition_animation);
     }
 
     return transitions_.size();

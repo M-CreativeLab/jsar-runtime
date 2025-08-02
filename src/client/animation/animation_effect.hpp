@@ -122,6 +122,9 @@ namespace dom
     void updateTimingDirection(Direction direction);
     void updateTimingFill(FillMode fill);
     void updateTimingEasing(std::unique_ptr<TimingFunction> easing);
+    
+    // Update the local time for timing calculations
+    void updateLocalTime(float local_time) { local_time_ = local_time; }
 
     friend std::ostream &operator<<(std::ostream &os, const AnimationEffect &effect)
     {
@@ -140,5 +143,6 @@ namespace dom
   private:
     Timing timing_;
     std::unique_ptr<TimingFunction> timing_function_ = nullptr;
+    float local_time_ = 0.0f;
   };
 }

@@ -782,11 +782,14 @@ namespace dom
     ElementAnimations &element_animations = elementAnimationsRef();
     CSSAnimations &css_animations = element_animations.cssAnimations();
 
+    // Store the old style for transition detection
+    const client_cssom::ComputedStyle *old_style = adopted_style_.get();
+
     // 1. Update the css transitions if the new computed style has transition properties.
     if (new_computed_style.hasTransitionProperties())
     {
       auto owner_document = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-      css_animations.setTransitions(new_computed_style, owner_document->timeline());
+      css_animations.setTransitions(new_computed_style, old_style, owner_document->timeline());
     }
     else
     {
