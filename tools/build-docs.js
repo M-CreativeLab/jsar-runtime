@@ -6,6 +6,10 @@ const { execSync } = require('child_process');
 
 // Improved MDX to HTML converter with table support
 function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '', version = '') {
+  // First, convert .mdx links to .html links in the content
+  content = content.replace(/\]\(\.\/([^)]+)\.mdx\)/g, '](./$1.html)');
+  content = content.replace(/\]\(([^)]+)\.mdx\)/g, ']($1.html)');
+  
   const lines = content.split('\n');
   const htmlLines = [];
   let inCodeBlock = false;
@@ -174,6 +178,10 @@ function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '
 }
 
 function generateManualNavigation(allFiles, currentFile = '') {
+  // Calculate the proper relative path depth for navigation links
+  const depth = currentFile.split('/').length - 1;
+  const navPathPrefix = depth > 0 ? '../'.repeat(depth) : '';
+  
   const structure = {
     'introduction.html': 'Introduction',
     'quick-start.html': 'Quick Start',
@@ -239,9 +247,10 @@ function generateManualNavigation(allFiles, currentFile = '') {
     const sectionName = structure[section];
     const isActive = currentFile === section;
     const sectionClass = isActive ? 'nav-link active' : 'nav-link';
+    const sectionUrl = navPathPrefix + section;
     
     nav += `  <li style="margin-bottom: 0.5rem;">\n`;
-    nav += `    <a href="${section}" class="${sectionClass}" style="font-weight: 600;">${sectionName}</a>\n`;
+    nav += `    <a href="${sectionUrl}" class="${sectionClass}" style="font-weight: 600;">${sectionName}</a>\n`;
     
     // Add subsections
     const subsections = Object.keys(structure).filter(key => 
@@ -253,7 +262,8 @@ function generateManualNavigation(allFiles, currentFile = '') {
       for (const subsection of subsections) {
         const isSubActive = currentFile === subsection;
         const subClass = isSubActive ? 'nav-link active' : 'nav-link';
-        nav += `      <li style="margin-bottom: 0.25rem;"><a href="${subsection}" class="${subClass}" style="font-size: 0.9em;">${structure[subsection]}</a></li>\n`;
+        const subsectionUrl = navPathPrefix + subsection;
+        nav += `      <li style="margin-bottom: 0.25rem;"><a href="${subsectionUrl}" class="${subClass}" style="font-size: 0.9em;">${structure[subsection]}</a></li>\n`;
       }
       nav += `    </ul>\n`;
     }
@@ -270,13 +280,18 @@ function createHtmlTemplate(content, title, currentFile = '', version = '') {
   const navigation = generateManualNavigation([], currentFile);
   const versions = getAvailableVersions();
   
+  // Calculate the proper relative path depth for nested directories
+  // For files like quick-start/setup.html, we need ../../ to reach shared/
+  const depth = currentFile.split('/').length - 1;
+  const pathPrefix = depth > 0 ? '../'.repeat(depth + 1) : '../';
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - JSAR</title>
-  <link rel="stylesheet" href="../shared/global.css">
+  <link rel="stylesheet" href="${pathPrefix}shared/global.css">
   <style>
     .manual-container {
       max-width: 1200px;
@@ -500,9 +515,9 @@ function createHtmlTemplate(content, title, currentFile = '', version = '') {
   <div id="footer-container"></div>
   
   <script type="module">
-    import { createNavbar } from '../shared/navbar.js';
-    import { createFooter } from '../shared/footer.js';
-    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+    import { createNavbar } from '${pathPrefix}shared/navbar.js';
+    import { createFooter } from '${pathPrefix}shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '${pathPrefix}shared/common.js';
 
     document.addEventListener('DOMContentLoaded', () => {
       // Insert navbar

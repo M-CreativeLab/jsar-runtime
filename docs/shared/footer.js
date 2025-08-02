@@ -17,7 +17,7 @@ export function createFooter() {
           <div>
             <h4 class="font-semibold text-primary mb-4">Resources</h4>
             <div class="space-y-2">
-              <a href="manual/introduction.mdx" class="block text-secondary hover:text-accent transition-colors">Documentation</a>
+              <a href="manual/introduction.html" class="block text-secondary hover:text-accent transition-colors">Documentation</a>
               <a href="browser-compat-data.html" class="block text-secondary hover:text-accent transition-colors">API Compatibility</a>
               <a href="changelogs/alpha.md" class="block text-secondary hover:text-accent transition-colors">Changelog</a>
               <a href="https://github.com/M-CreativeLab/jsar-runtime" class="block text-secondary hover:text-accent transition-colors" target="_blank">GitHub Repository</a>
