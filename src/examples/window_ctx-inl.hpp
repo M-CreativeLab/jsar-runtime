@@ -21,6 +21,10 @@ namespace jsar::example
 #ifdef __APPLE__
   // Forward declare the macOS window customization function (implemented in macos_window.mm)
   extern "C" void customizeMacOSWindow(GLFWwindow *window);
+  extern "C" void startWindowDragging(GLFWwindow *window);
+  extern "C" void updateWindowDragging(GLFWwindow *window);
+  extern "C" void stopWindowDragging(GLFWwindow *window);
+  extern "C" bool isMouseInDragRegion(GLFWwindow *window, double xpos, double ypos, int dragRegionHeight);
 #endif
 
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
@@ -53,6 +57,11 @@ namespace jsar::example
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
 
+    // Initialize dragging state
+    isDraggingWindow = false;
+    leftMousePressed = false;
+    dragRegionHeight = 25; // Default to 25 pixels
+
     if (monitor == nullptr)
     {
       terminate();
@@ -83,6 +92,11 @@ namespace jsar::example
     // Initialize throttling state
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
+
+    // Initialize dragging state
+    isDraggingWindow = false;
+    leftMousePressed = false;
+    dragRegionHeight = 25; // Default to 25 pixels
 
     aspect = (float)width / (float)height;
     initWindow(nullptr);
@@ -171,6 +185,15 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
+    // Handle window dragging on macOS - prioritize dragging and skip bounds checking
+#ifdef __APPLE__
+    if (isDraggingWindow)
+    {
+      updateWindowDragging(window);
+      return; // Skip normal cursor handling when dragging window
+    }
+#endif
+
     if (xoffset < 0 || yoffset < 0 || xoffset > width || yoffset > height)
       return;
     if (xrRenderer == nullptr)
@@ -258,7 +281,40 @@ namespace jsar::example
       return;
 
     if (button == GLFW_MOUSE_BUTTON_LEFT)
-      xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
+    {
+      if (action == GLFW_PRESS)
+      {
+        leftMousePressed = true;
+
+#ifdef __APPLE__
+        // Check if mouse is in the drag region (configurable height) on macOS
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        if (isMouseInDragRegion(window, xpos, ypos, dragRegionHeight))
+        {
+          isDraggingWindow = true;
+          startWindowDragging(window);
+          return; // Don't process as normal UI interaction
+        }
+#endif
+      }
+      else if (action == GLFW_RELEASE)
+      {
+        leftMousePressed = false;
+#ifdef __APPLE__
+        if (isDraggingWindow)
+        {
+          stopWindowDragging(window);
+          isDraggingWindow = false;
+          return; // Don't process as normal UI interaction
+        }
+#endif
+      }
+
+      // Only update primary action if we're not dragging the window
+      if (!isDraggingWindow)
+        xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
+    }
     else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
     {
       if (action == GLFW_PRESS)
@@ -354,6 +410,14 @@ namespace jsar::example
       // On other platforms, use GLFW's decorated setting as fallback
       glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
 #endif
+    }
+  }
+
+  void WindowContext::setDragRegionHeight(int height)
+  {
+    if (height >= 0)
+    {
+      dragRegionHeight = height;
     }
   }
 }
