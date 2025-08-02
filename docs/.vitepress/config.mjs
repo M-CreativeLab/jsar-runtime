@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'JSAR',
   description: 'Revolutionary Browser Engine for Spatial Web',
-  base: '/jsar-runtime/',
+  ignoreDeadLinks: true, // Temporarily ignore dead links while we migrate
   
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
@@ -12,17 +12,16 @@ export default defineConfig({
     ['meta', { property: 'og:locale', content: 'en' }],
     ['meta', { property: 'og:title', content: 'JSAR | Revolutionary Browser Engine for Spatial Web' }],
     ['meta', { property: 'og:site_name', content: 'JSAR' }],
-    ['meta', { property: 'og:image', content: 'https://m-creativelab.github.io/jsar-runtime/JSAR_POSTER.png' }],
+    ['meta', { property: 'og:image', content: '/JSAR_POSTER.png' }],
   ],
 
   themeConfig: {
-    logo: '/logo.svg',
     
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Documentation', link: '/manual/quick-start' },
+      { text: 'Documentation', link: '/manual/introduction' },
       { text: 'Blog', link: '/blog' },
-      { text: 'API Reference', link: '/api/' },
+      { text: 'API Reference', link: '/api/browser-compat-data' },
       { text: 'GitHub', link: 'https://github.com/M-CreativeLab/jsar-runtime' }
     ],
 
@@ -117,12 +116,6 @@ export default defineConfig({
   markdown: {
     image: {
       lazyLoading: true
-    }
-  },
-
-  vite: {
-    optimizeDeps: {
-      include: ['three']
     }
   }
 })
