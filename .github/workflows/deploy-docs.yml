@@ -1,0 +1,29 @@
+---
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for accurate deployment
+          fetch-depth: 0
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          # Overwrite gh-pages branch contents completely
+          force_orphan: true
+          # Keep CNAME file if it exists
+          keep_files: false
+          # Add commit message for deployment
+          commit_message: 'Deploy docs from ${{ github.sha }}'
