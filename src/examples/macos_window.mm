@@ -5,6 +5,11 @@
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
 
+// Store window position and mouse offset for dragging
+static NSPoint dragStartMouseLocation;
+static NSPoint dragStartWindowOrigin;
+static bool isDragging = false;
+
 extern "C" {
 
 void customizeMacOSWindow(GLFWwindow* window)
@@ -27,23 +32,41 @@ void startWindowDragging(GLFWwindow* window)
   NSWindow* nsWindow = glfwGetCocoaWindow(window);
   if (nsWindow)
   {
-    // Get the current mouse location in screen coordinates
-    NSPoint mouseLocation = [NSEvent mouseLocation];
-    
-    // Create a mouse down event to initiate window dragging
-    NSEvent* mouseDownEvent = [NSEvent mouseEventWithType:NSEventTypeLeftMouseDown
-                                                location:mouseLocation
-                                           modifierFlags:0
-                                               timestamp:[[NSProcessInfo processInfo] systemUptime]
-                                            windowNumber:[nsWindow windowNumber]
-                                                 context:nil
-                                             eventNumber:0
-                                              clickCount:1
-                                                pressure:1.0];
-    
-    // Start the window drag operation
-    [nsWindow performWindowDragWithEvent:mouseDownEvent];
+    // Store the initial mouse and window positions for dragging
+    dragStartMouseLocation = [NSEvent mouseLocation];
+    dragStartWindowOrigin = [nsWindow frame].origin;
+    isDragging = true;
   }
+}
+
+void updateWindowDragging(GLFWwindow* window)
+{
+  if (!isDragging)
+    return;
+    
+  NSWindow* nsWindow = glfwGetCocoaWindow(window);
+  if (nsWindow)
+  {
+    // Get the current mouse location and calculate the offset
+    NSPoint currentMouseLocation = [NSEvent mouseLocation];
+    NSPoint offset = NSMakePoint(
+      currentMouseLocation.x - dragStartMouseLocation.x,
+      currentMouseLocation.y - dragStartMouseLocation.y
+    );
+    
+    // Update the window position
+    NSPoint newOrigin = NSMakePoint(
+      dragStartWindowOrigin.x + offset.x,
+      dragStartWindowOrigin.y + offset.y
+    );
+    
+    [nsWindow setFrameOrigin:newOrigin];
+  }
+}
+
+void stopWindowDragging(GLFWwindow* window)
+{
+  isDragging = false;
 }
 
 bool isMouseInDragRegion(GLFWwindow* window, double xpos, double ypos)

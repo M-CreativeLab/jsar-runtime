@@ -22,6 +22,8 @@ namespace jsar::example
   // Forward declare the macOS window customization function (implemented in macos_window.mm)
   extern "C" void customizeMacOSWindow(GLFWwindow *window);
   extern "C" void startWindowDragging(GLFWwindow *window);
+  extern "C" void updateWindowDragging(GLFWwindow *window);
+  extern "C" void stopWindowDragging(GLFWwindow *window);
   extern "C" bool isMouseInDragRegion(GLFWwindow *window, double xpos, double ypos);
 #endif
 
@@ -186,9 +188,14 @@ namespace jsar::example
     if (xrRenderer == nullptr)
       return;
 
-    // Skip normal cursor handling if we're dragging the window
+    // Handle window dragging on macOS
+#ifdef __APPLE__
     if (isDraggingWindow)
-      return;
+    {
+      updateWindowDragging(window);
+      return; // Skip normal cursor handling when dragging window
+    }
+#endif
 
     // Throttle mouse move events to prevent overly sensitive mouse movement
     double currentTime = glfwGetTime();
@@ -292,7 +299,14 @@ namespace jsar::example
       else if (action == GLFW_RELEASE)
       {
         leftMousePressed = false;
-        isDraggingWindow = false;
+#ifdef __APPLE__
+        if (isDraggingWindow)
+        {
+          stopWindowDragging(window);
+          isDraggingWindow = false;
+          return; // Don't process as normal UI interaction
+        }
+#endif
       }
       
       // Only update primary action if we're not dragging the window
