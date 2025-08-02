@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio system - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Audio system</h1>
+<p>An audio system is an essential part of the application experience especially in XR devices, this kind of device is lack of the physical feedbacks like the smartphone or the desktop computer, so the audio feedbacks are more important in the XR applications.</p>
+<h2>Audio</h2>
+<p>JSAR provides the built-in asset loaders for audio files, you can use ECMAScript modules to import the audio files directly in your code:</p>
+<pre><code class="language-js">import soundBuffer from './sound.wav';
+</code></pre>
+<p>Then you can use the <code>Audio</code> class to create an audio object:</p>
+<pre><code class="language-js">const url = URL.createObjectURL(new Blob([soundBuffer], { type: 'audio/wav' }));
+const sound = new Audio(url);
+sound.play();
+</code></pre>
+<p>Or if your audio file can be accessed via URL, you can use the URL directly:</p>
+<pre><code class="language-js">const sound = new Audio('https://example.com/sound.wav');
+sound.play();
+</code></pre>
+<p>Or relative to your HTML URL:</p>
+<pre><code class="language-js">const sound = new Audio('./sound.wav');
+sound.play();
+</code></pre>
+<p>Then you can listen to the events like <code>ended</code> or <code>loadeddata</code>:</p>
+<pre><code class="language-js">sound.addEventListener('ended', () => {
+  console.log('The sound has ended');
+});
+sound.addEventListener('loadeddata', () => {
+  console.info('duration:', audio1.duration);
+});
+</code></pre>
+<p>Developers can use <code>document.createElement()</code> to create an audio element for the audio playback:</p>
+<pre><code class="language-js">const audio = document.createElement('audio');
+audio.src = 'https://example.com/sound.wav';
+audio.play();
+</code></pre>
+<h2>3D Audio</h2>
+<p>The <a href="#">audio spatialization</a> is enabled by default for any audio instance.</p>
+<p>You don't need to use any Web Audio APIs especially <code>AudioListener</code> and <code>PannerNode</code> to enable the 3D audio, this is because a document in JSAR represents a subspace in the host space, and each audio instance can be an audio source, the audio system of JSAR can achieve the audio spatialization automatically based on the pose of the each document's subspace.</p>
+<p>When users go move around the audio source, or just drag the application in host space, the user can feel where the application by ears.</p>
+<p>[audio spatialization]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics</p>
+<h2>Subsystems and APIs to be supported</h2>
+<p>This section listed the audio-related subsystems and APIs that are planned to be supported in the future.</p>
+<h3>Audio session</h3>
+<p><a href="#Audio Session">Audio Session Spec</a>:</p>
+<p>> This API defines an API surface for controlling how audio is rendered and interacts with other audio playing applications.</p>
+<p>With the audio session API, the different applications can work together to mix the audio experiences to users.</p>
+<p>[Audio Session]: https://www.w3.org/TR/audio-session/</p>
+<h3>Web Audio API</h3>
+<p>The <a href="#">Web Audio API</a> is a powerful audio processing API that allows developers to create and manipulate audio in the browser, and it also supported the audio streaming playback, the audio effects and the audio spatialization.</p>
+<p>We plan to support the Web Audio API in next 2 versions.</p>
+<p>[Web Audio API]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

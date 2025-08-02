@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpatialCSS - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>SpatialCSS</h1>
+<p>SpatialCSS references a lot of existing definitions in web development CSS to define the styles of space and spatial objects. This is used to control the visual effects of space. The purpose of designing JSAR in this way is to allow web developers to enter AR application development with minimal barriers.</p>
+<p>Similar to CSS, using SpatialCSS primarily involves two parts:</p>
+<p>1. Selecting spatial objects using selectors like id, class, tag, etc. 2. Defining styles within selectors.</p>
+<p>For example:</p>
+<pre><code class="language-css">#box {
+  rotation: 0 0 0;
+  position: 0 0 0;
+  material: "red";
+}
+</code></pre>
+<p>This code selects a spatial object with the id "box" and sets its rotation to 0, position to 0, and material to red.</p>
+<p>Now, let's dive into these two parts in detail.</p>
+<h2>Selectors</h2>
+<p>Selectors are used to query objects within the space for further style settings.</p>
+<h3>ID Selector</h3>
+<p>The ID selector is used to query objects in space by their ID. For example:</p>
+<pre><code class="language-html"><space>
+  <cube id="a1">
+    <cube id="a2"></cube>
+  </cube>
+</space>
+</code></pre>
+<p>With the selector #a1, you select the outer cube, and a2 selects the inner cube.</p>
+<p>In SpatialCSS, the syntax for the ID selector is <code>#{id}</code>, where id is the ID of the object. Here's the specific SpatialCSS code:</p>
+<pre><code class="language-css">#a1 {
+  rotation: 0 0 0;
+  material: "red";
+}
+</code></pre>
+<h3>Class Selector</h3>
+<p>> Not supported yet.</p>
+<h3>Tag Selector</h3>
+<p>> Not supported yet.</p>
+<h2>Styles</h2>
+<p>Next, let's introduce styles in SpatialCSS, which are used to set the styles of spatial objects, including position, rotation, material, and more.</p>
+<h3>Layout</h3>
+<p>Layout is used to set the position, rotation, scale, and other properties of spatial objects. But before we dive into layout, we need to understand the spatial coordinate system and object center point, which are crucial for understanding parent-child layout relationships.</p>
+<h4>Spatial Coordinate System</h4>
+<p>The spatial coordinate system is a three-dimensional coordinate system. For example, its origin is at the center of space, the positive x-axis points to the right, the positive y-axis points upward, and the positive z-axis points outward from the screen. In a space, all position relationships depend on this coordinate system, and JSAR follows Babylon.js's coordinate system, which is a right-handed coordinate system, specifically:</p>
+<ul><li>The positive x-axis points to the right.</li>
+<li>The positive y-axis points upward.</li>
+<li>The positive z-axis points outward from the screen.</li>
+<h4>Pivot: Object Center Point</h4>
+<p>The object's center point is the point at the center of the object. For example, for a cube, its center point is its geometric center, and for a sphere, its center point is its center of mass. The object's center point is a critical concept in JSAR and Babylon.js because it determines the object's position, rotation, scale, and more. For example:</p>
+<li>Position: The object's position is relative to its center point. For a cube, a position of 0 0 0 means its center point is at the center of space, and a position of 0 1 0 means its center point is 1 meter above the center of space.</li>
+<li>Rotation: The object's rotation is relative to its center point. For a cube, a rotation of 0 0 0 means its center point is at the center of space, and a rotation of 0 0 90 means its center point is 90 degrees to the right of the center of space.</li>
+<li>Scale: The object's scale is relative to its center point. For a cube, a scale of 1 1 1 means no scaling, and a scale of 1 2 1 means it's scaled 2 times in the upward direction relative to its center point.</li>
+<h4>Parent-Child Relationship</h4>
+<p>The parent-child relationship refers to the relationship between objects in the space. It determines the meaning of layout property values in SpatialCSS because all layout properties are relative to the parent object. If there's no parent object, it's relative to the entire space.</p>
+<p>> Note: In XSML, everything is relative, so you can understand that all layout relationships in SpatialCSS are relative.</p>
+<h4>Properties</h4>
+<p>Now, let's start introducing the specific layout properties and their meanings.</p>
+<p>##### Position</p>
+<p>The <code>position</code> property is used to set the position of an object. Its syntax is <code>position: x y z</code>, where <code>x</code>, <code>y</code>, and <code>z</code> are numerical values representing the object's position along the x, y, and z axes. For example:</p>
+<pre><code class="language-css">#a1 {
+  position: 0 0 0;
+}
+</code></pre>
+<p>This code sets the position of the object with the ID "a1" to the center of the space.</p>
+<p>You can also set the position using <code>x</code>, <code>y</code>, and <code>z</code> individually, like this:</p>
+<pre><code class="language-css">#a1 {
+  x: 0;
+  y: 0;
+  z: 0;
+}
+</code></pre>
+<p>The above code achieves the same effect as <code>position: 0 0 0;</code>.</p>
+<p>##### Rotation</p>
+<p>The <code>rotation</code> property is used to set the rotation of an object. Its syntax is <code>rotation: x y z</code>, where <code>x</code>, <code>y</code>, and <code>z</code> are numerical values representing the object's rotation angles around the x, y, and z axes. For example:</p>
+<pre><code class="language-css">#a1 {
+  rotation: 0 180 90;
+}
+</code></pre>
+<p>This code sets the rotation of the object with the ID "a1" to 0 degrees around the x-axis, 180 degrees around the y-axis, and 90 degrees around the z-axis.</p>
+<p>> Note: <code>rotation</code> uses degrees as the unit, please do not use radians.</p>
+<p>##### Scaling</p>
+<p>The <code>scaling</code> property is used to set the scaling of an object. Its syntax is <code>scaling: x y z</code>, where <code>x</code>, <code>y</code>, and <code>z</code> are numerical values representing the scaling factors along the x, y, and z axes. For example:</p>
+<pre><code class="language-css">#a1 {
+  scaling: 1 2 1;
+}
+</code></pre>
+<p>This code sets the scaling of the object with the ID "a1" to <code>1 2 1</code>, which means no scaling along the x and z axes and a 2x scaling along the y-axis.</p>
+<p>Please note that it's better to control the actual size of the object using specific parameters of the object tag, such as <code><cube size="2"></cube></code>. This is because <code>scale</code> will scale all child objects simultaneously, while <code>size</code> only scales the current object. Using <code>scale</code> can lead to unexpected results.</p>
+<h3>Material</h3>
+<p>Material is used to set the material of an object. Its syntax is <code>material: "material"</code>, where <code>"material"</code> is the name of the material. For example:</p>
+<pre><code class="language-css">#a1 {
+  material: "red";
+}
+</code></pre>
+<p>This code sets the material of the object with the ID "a1" to red. But where is the "red" material defined? SpatialCSS uses the same approach as defining fonts and keyframes:</p>
+<pre><code class="language-css">@material red {
+  /<em> Material-specific properties </em>/
+}
+</code></pre>
+<h4>Standard Material</h4>
+<p>The standard material is the default material type and does not require setting a type. It provides the following properties.</p>
+<p>> Texture type properties are not supported through SpatialCSS.</p>
+<p>##### <code>diffuse-color</code></p>
+<p>The material's diffuse color, supported formats include:</p>
+<li><code>#rrggbb</code>: For example, <code>#ff0000</code> represents red.</li>
+<li><code>rgb(r,g,b)</code>: For example, <code>rgb(255,0,0)</code> represents red.</li>
+<p>##### <code>specular-color</code></p>
+<p>The material's specular reflection color, supported colors are the same as <code>diffuse-color</code>.</p>
+<p>##### <code>emissive-color</code></p>
+<p>The material's emissive color, supported colors are the same as <code>diffuse-color</code>.</p>
+<h4>Physical-based Material</h4>
+<p>The physical-based material is a type of material based on physics, providing more realistic lighting and shading. It supports the following properties.</p>
+<p>##### <code>albedo-color</code></p>
+<p>The material's base color, supported colors are the same as <code>diffuse-color</code>.</p>
+<p>##### <code>metallic</code></p>
+<p>The material's metallicness, with values ranging from 0 to 1. 0 represents non-metallic, while 1 represents fully metallic.</p>
+<p>##### <code>roughness</code></p>
+<p>The material's roughness, with values ranging from 0 to 1. 0 represents completely smooth, while 1 represents completely rough.</p>
+<h4>Common Properties</h4>
+<p>Common properties are attributes supported by all materials. Their meanings are as follows.</p>
+<p>##### <code>alpha</code></p>
+<p>The material's transparency, with values ranging from 0 to 1. 0 represents fully transparent, while 1 represents fully opaque.</p>
+<p>##### <code>backface-culling</code></p>
+<p>Backface culling of the material, with values <code>true</code> or <code>false</code>. The default is <code>true</code>, indicating backface culling, while <code>false</code> means no backface culling.</p>
+<p>##### <code>side-orientation</code></p>
+<p>The orientation of the material, with values <code>frontside</code>, <code>backside</code>, or <code>doubleside</code>, representing:</p>
+<li><code>frontside</code>: The front face.</li>
+<li><code>backside</code>: The back face, which is the reverse side.</li>
+<li><code>doubleside</code>: Double-sided, meaning both the front and back faces are visible.</li>
+<p>##### <code>transparency-mode</code></p>
+<p>The transparency mode of the material, with values <code>opaque</code>, <code>alpha</code>, <code>alpha-blend</code>, or <code>alpha-test</code>, representing:</p>
+<li><code>opaque</code>: Fully opaque.</li>
+<li><code>alpha</code>: Transparent.</li>
+<li><code>alpha-blend</code>: Alpha blending, where transparency is determined by the alpha value.</li>
+<li><code>alpha-test</code>: Alpha testing, where transparency is determined by an alpha threshold.</li></ul>
+<h3>Animation</h3>
+<p>SpatialCSS supports CSS Animation, and its syntax is the same as CSS Animation. You can refer to <a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/animation">CSS Animation</a> for more details.</p>
+<p>Here's an example:</p>
+<pre><code class="language-css">@keyframes rotate {
+  from {
+    rotation: 0 0 0;
+  }
+  to {
+    rotation: 0 360 0;
+  }
+}
+<p>#a1 {   animation: rotate 5s infinite; } </code></pre></p>
+<p>This code rotates the object with the ID "a1" 360 degrees around the y-axis over 5 seconds and repeats the animation infinitely.</p>
+<p>> Currently, animation only supports setting <code>position</code>, <code>rotation</code>, and <code>scaling</code> properties.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

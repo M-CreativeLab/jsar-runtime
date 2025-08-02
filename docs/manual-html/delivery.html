@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publishing and Distribution - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Publishing and Distribution</h1>
+<p>JSAR Spatial Mini-Apps support various distribution methods, including:</p>
+<ul><li>Distributing through the Rokid AR Store to Rokid AR Studio devices (recommended).</li>
+<li>Publishing as a traditional web service through Github, Npm, or other custom services. Users can access it in the following ways:</li></ul>
+  - Accessing it online through JSAR's provided traditional web browser access.
+  - Scanning a QR code through the JSAR Canary app on Rokid AR Studio devices.
+<p>JSAR Canary is an independent spatial app released by the JSAR team within Rokid AR Studio (which means it is not in the desktop space). It provides a preview of the latest JSAR runtime features. Users can scan a QR code to access any XSML document and initialize it in the spatial environment.</p>
+<p>> JSAR Canary is for developer preview purposes only. The runtime environment is different from the desktop space mini-app environment. If you need to publish your mini-app to the Rokid Store, please use the desktop space mini-app in Rokid AR Studio for preview and debugging, and follow the official submission and publication process for the store.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

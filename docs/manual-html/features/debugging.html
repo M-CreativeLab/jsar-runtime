@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debugging your application - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Debugging your application</h1>
+<p>Each application in JSAR is a standalone <a href="#nodejs">Node.js</a> process, and each process will start a debugging server to provide the debugging interface for the developers. The debugging server is based on the <a href="#cdp">Chrome DevTools Protocol</a>, which allows developers to debug the application in the browser.</p>
+<p>[nodejs]: https://nodejs.org/ [cdp]: https://chromedevtools.github.io/devtools-protocol/</p>
+<h2>Prerequisites</h2>
+<p>Before you start debugging, you need to learn how to install adb tool and use <code>logcat</code> to view the console output.</p>
+<h3>Install adb</h3>
+<p>The <code>adb</code> tool is a command-line utility that allows you to communicate with an Android Open Source Project (AOSP) device. You can install the <code>adb</code> tool by following the instructions on the <a href="#adb">Android Developers website</a>.</p>
+<p>When you have installed the <code>adb</code> tool, you can use the following command to connect to the device via network:</p>
+<pre><code class="language-sh">adb connect <device-ip>
+</code></pre>
+<h3>View the console output</h3>
+<p>JSAR outputs the console messages to the Android logcat, you can use the following command to view the console output:</p>
+<pre><code class="language-sh">adb logcat -s jsar
+</code></pre>
+<p>Then you can see the console output in the terminal:</p>
+<pre><code class="language-sh">07-12 22:12:23.326  9826  9850 D jsar    : client(9957): Detected a long frame(#135) takes 341ms in session(2)
+</code></pre>
+<h3>Other <code>logcat</code> channels</h3>
+<p>There are other log channels used by JSAR, you can listen to them on-demand: <code>adb logcat -s jsar -s jsar.error</code>, the following table lists the log channels:</p>
+<p>| Channel      | Description | | ------------ | --- | | <code>jsar</code>       | The main log channel for JSAR | | <code>jsar.error</code> | The error log channel for JSAR | | <code>TR_GLES</code>    | The OpenGL ES log channel |</p>
+<p>[adb]: https://developer.android.com/studio/command-line/adb</p>
+<h2>Looking for the debugging server</h2>
+<p>When you start the application, you will see the following message in the console:</p>
+<pre><code class="language-sh">07-12 22:14:34.649 10055 10075 D jsar    : client(10142): Debugger listening on ws://0.0.0.0:9229/6f969656-e8a2-4e93-a904-c9e1fe940c13
+</code></pre>
+<p>You can extract the debugging server port from the message, in this case, the port is <code>9229</code>.</p>
+<pre><code class="language-sh">adb forward tcp:9229 tcp:9229
+</code></pre>
+<p>The above command forwards the port <code>9229</code> from the device to the host, then you can open the Chrome browser and navigate to <code>chrome://inspect</code> to connect to the debugging server.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

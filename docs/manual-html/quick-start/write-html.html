@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write your first HTML - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Write your first HTML</h1>
+<p>The way to get started JSAR is the same as creating a Web page, developer can create a simple <code>index.html</code> file with the following content:</p>
+<p>``<code>html title="index.html" <html> <head>   <title>My First WebXR</title>   <script type="importmap">     {       "imports": {         "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"       }     }   </script>   <script type="module">     import * as THREE from 'three';</p>
+<p>const scene = new THREE.Scene();     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);</p>
+<p>const light = new THREE.DirectionalLight(0xffffff, 0.5);     light.position.set(0, 1, 1);     scene.add(light);</p>
+<p>const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);     const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: false });     const obj = new THREE.Mesh(geometry, material);     scene.add(obj);</p>
+<p>navigator.xr.requestSession('immersive-ar', {}).then((session) => {       const baseLayer = new XRWebGLLayer(session, navigator.gl);       session.updateRenderState({ baseLayer });</p>
+<p>const renderer = new THREE.WebGLRenderer({         canvas: {           // mock the canvas           addEventListener() { },         },         context: navigator.gl,       });       renderer.xr.enabled = true;       renderer.xr.setReferenceSpaceType('local');       renderer.xr.setSession(session);</p>
+<p>function animate() {         obj.rotation.x += 0.01;         obj.rotation.y += 0.01;         renderer.render(scene, camera);       }       camera.position.z = 5;       renderer.setAnimationLoop(animate);     }, (err) => {       console.warn('Failed to start XR session:', err);     });   </script> </head> <body> </body> </html> <pre><code class="language-"> Now let's explain the code above one by one.</p>
+<h2>Using </code>importmap<code> script</h2>
+<p></code></pre>html <script type="importmap">   {     "imports": {       "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"     }   } </script> <pre><code class="language-"> The <a href="#"></code>importmap<code></a> feature is convinient to configure the import path of the modules, in this case, import the </code>three<code> module will be resolved to the URL </code>https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js<code>.</p>
+<p></code></pre>html <script type="module">   import * as THREE from 'three';   // ... </script> <pre><code class="language-"> [</code>importmap<code>]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap</p>
+<h2>Create </code>three<code> renderer</h2>
+<p>At traditional Web browser, to get 3d library to work, developer needs to create a canvas to get the WebGL context, then create library's renderer to start rendering.</p>
+<p></code></pre>js const renderer = new THREE.WebGLRenderer(); <pre><code class="language-"> The above line would call </code>document.createElement('canvas')<code> to create a canvas. Developer is able to pass a canvas element to the constructor to use it as the rendering canvas.</p>
+<p></code></pre>js const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('custom-canvas') }); <pre><code class="language-"> In traditional Web browser, the render target is the browser window, but in JSAR, all applications (including WebXR and host) are sharing the same render target, that means the WebGL context is also shared. To create a </code>three<code> renderer:</p>
+<p></code></pre>js const gl = navigator.gl; const renderer = new THREE.WebGLRenderer({   canvas: {     // mock the canvas     addEventListener() { },   },   context: gl, }); <pre><code class="language-"> JSAR runtime exposes a new __readonly__ property </code>gl: WebGL2RenderingContext<code> on the </code>navigator<code> object, application could use this property to make draw calls on the shared context.</p>
+<h2>Request an XR session</h2>
+<p>In JSAR, developer doesn't need a AR/VR button to trigger the XR session, developer could request the session directly because the device is already in XR mode:</p>
+<p></code></pre>js navigator.xr.requestSession('immersive-ar', {}).then((session) => {   const baseLayer = new XRWebGLLayer(session, navigator.gl);   session.updateRenderState({ baseLayer });</p>
+<p>renderer.xr.enabled = true;   renderer.xr.setReferenceSpaceType('local');   renderer.xr.setSession(session); }); <pre><code class="language-"> The above code is how to configure the three.js library to work with WebXR, the same code could be used in traditional Web browser.</p>
+<h2>Start the animation loop</h2>
+<p>Now both the </code>three<code> renderer and WebXR configuration are ready, the last step is to start the animation loop:</p>
+<p></code></pre>js function animate() {   obj.rotation.x += 0.01;   renderer.render(scene, camera); } renderer.setAnimationLoop(animate); </code>`<code></p>
+<p>Three.js </code>renderer.setAnimationLoop<code> method is used to start the animation loop, internally it will call the </code>XRSession<code>'s </code>requestAnimationFrame` method to get the next frame callback and render the scene at that time.</p>
+<h2>Next</h2>
+<p>In the <a href="./run.mdx">next section</a>, we will introduce how to run the HTML file just created.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

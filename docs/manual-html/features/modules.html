@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modules - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Modules</h1>
+<p>JSAR implemented <a href="#esm">ECMAScript modules</a> to manage the dependencies between scripts, which is the official standard to write modular JavaScript, and it's supported by all modern browsers and JavaScript runtimes.</p>
+<p>Based on the basic implementation of the module system, JSAR provides many other module loaders for the different formats, such as: JSON, image, audio, video, binary files, etc. Both they are useful for space development.</p>
+<h2>Getting started</h2>
+<p>To use ECMAScript modules in JSAR:</p>
+<p>``<code>ts title="foo.ts" export function foo() {   console.log('foo'); } <pre><code class="language-"> Then use a </code><script><code> tag to import the </code>.ts<code> file:</p>
+<p></code></pre>html title="index.html" <html> <head>   <title>Modules</title>   <script type="module">     import { foo } from './foo.ts';     foo();  // prints 'foo'   </script> </head> <body> </body> </html> <pre><code class="language-"> <h2>Module declaration</h2></p>
+<p>To declare a module, ECMAScript modules provide the </code>export<code> keyword to export the module members:</p>
+<p></code></pre>ts title="foo.ts" export function foo() {   console.log('foo'); }</p>
+<p>export default function bar() {   console.log('bar'); } <pre><code class="language-"> Export a constant:</p>
+<p></code></pre>ts title="baz.ts" export const baz = 'baz'; <pre><code class="language-"> And </code>export default<code> to export the default member:</p>
+<p></code></pre>ts title="bar.ts" export default function bar() {   console.log('bar'); } <pre><code class="language-"> <h2>Importing modules</h2></p>
+<p>To import the module exported by </code>export<code>:</p>
+<p></code></pre>ts title="main.ts" import { foo } from './foo.ts'; foo();  // prints 'foo' <pre><code class="language-"> To import the constant exported by </code>export const<code>:</p>
+<p></code></pre>ts title="main.ts" import { baz } from './baz.ts'; console.log(baz);  // prints 'baz' <pre><code class="language-"> To import the default member exported by </code>export default<code>:</p>
+<p></code></pre>ts title="main.ts" import bar1 from './bar.ts'; import bar2 from './bar.ts'; bar1();  // prints 'bar' bar2();  // prints 'bar' <pre><code class="language-"> Note that local import specifiers must always include the full file extension:</p>
+<p></code></pre>ts title="main.ts" import { foo } from './foo';  // Error: missing file extension <pre><code class="language-"> <h2>Importing third-party modules</h2></p>
+<p>To import a third-party module, you just need to use the </code>import<code> but with a URL specifier:</p>
+<p></code></pre>ts title="main.ts" import { foo } from 'https://example.com/foo.ts'; <pre><code class="language-"> > We are planning to support importing third-party modules from the package registries like <a href="#npm">NPM</a> and <a href="#">JSR</a> such as: </code>npm:cowsay@1.6.0<code> and </code>jsr:@luca/cases@1.0.0<code>.</p>
+<h2>Using </code>importmap<code> to manage dependencies</h2>
+<p>Importmap is a JSON file that maps the module specifiers to the URLs, which is useful to manage the dependencies in the application.</p>
+<p>To use the importmap, you need to add a </code><script><code> tag with the </code>type="importmap"<code>:</p>
+<p></code></pre>html title="index.html" <html> <head>   <title>Modules</title>   <script type="importmap">     {       "imports": {         "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js",         "three/addons/": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/jsm/"       }     }   </script>   <script type="module">     import * as THREE from 'three';     import { PDBLoader } from 'three/addons/loaders/PDBLoader.js';</p>
+<p>console.info(THREE); // prints the THREE object     console.info(PDBLoader); // prints the PDBLoader object   </script> </head> <pre><code class="language-"> The </code>three<code> and </code>three/addons/loaders/PDBLoader.js<code> will be resolved to the URLs from the importmap:</p>
+<p>| Module specifier | URL | | --- | --- | | </code>three<code> | https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js | | </code>three/addons/loaders/PDBLoader.js<code> | https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/jsm/loaders/PDBLoader.js |</p>
+<p>Note: the importmap works for the whole document, the importmap is shared between all the modules in the document, including the modules imported by </code><script><code> tags.</p>
+<h2>Asset loaders</h2>
+<p>There are assets loaders to load the different formats of the modules.</p>
+<p>| Loader      | Description | Specifier extensions | Export type | | ----------- | ----------- | -------------------- | ----------- | | JSON        | Load the JSON file        | </code>.json<code> | </code>object<code> | | WebAssembly | Load the WebAssembly file | </code>.wasm<code> | <a href="#ArrayBuffer"></code>ArrayBuffer<code></a> | | Image       | Load the image file       | </code>.jpeg<code>, </code>.png<code>, </code>.svg<code>, </code>.gif<code>  | <a href="#ArrayBuffer"></code>ArrayBuffer<code></a> | | Audio       | Load the audio file       | </code>.mp3<code>, </code>.wav<code>, </code>.ogg<code>  | <a href="#ArrayBuffer"></code>ArrayBuffer<code></a> | | Binary      | Load a binary file        | </code>.bin<code>, </code>.data<code>  | <a href="#ArrayBuffer"></code>ArrayBuffer<code></a> |</p>
+<p>> For safety reasons, the loaders except the JSON loader will return the assets as <a href="#ArrayBuffer"></code>ArrayBuffer<code></a>, the developers need to decode the assets by themselves, but we'll consider returning the decoded object such as </code>Image<code> and </code>Audio<code> in the future versions once the safety is guaranteed. > > If you are eager for this feature, please let us know at <a href="https://forum.rokid.com/index">Rokid Forum</a>.</p>
+<p>For instance, to load a JSON file:</p>
+<p></code></pre>json title="data.json" {   "foo": "bar" } <pre><code class="language-"> </code></pre>ts title="main.ts" import data from './data.json'; console.info(data); // prints { foo: 'bar' } <pre><code class="language-"> The JSON loader will load the JSON file and parse it as an JavaScript object.</p>
+<p>To load other assets that returns an <a href="#ArrayBuffer"></code>ArrayBuffer<code></a>:</p>
+<p></code></pre>ts title="main.ts" import screenshot from './screenshot.png'; import music from './music.mp3'; console.info(screenshot); // prints the screenshot as ArrayBuffer console.info(music); // prints the music as ArrayBuffer <pre><code class="language-"> To help developers to load custom assets that are not supported by the built-in loaders, JSAR provides two binary loaders: binary and data, developers can rename the custom assets to </code>.bin<code> or </code>.data<code> to use with the binary loaders.</p>
+<p></code></pre>text title="names.data" Alice Bob Chrome ... Yorkie Zoe <pre><code class="language-"> </code></pre>sh title="data.bin" [...] <pre><code class="language-"> </code></pre>ts title="main.ts" import names from './names.data'; console.info(names); // prints the names as ArrayBuffer</p>
+<p>import data from './data.bin'; console.info(data); // prints the data as ArrayBuffer <pre><code class="language-"> [ArrayBuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer</p>
+<h2>Dynamic import</h2>
+<p>Dynamic import is a feature that allows you to import modules (including assets) dynamically at runtime, which is useful to load the modules or assets conditionally.</p>
+<p>To use dynamic import, you need to use the </code>import()<code> function instead of the </code>import<code> statement:</p>
+<p></code></pre>ts title="main.ts" async function load() {   const module = await import('./foo.ts');   module.foo();  // prints 'foo'</p>
+<p>const screenshot = await import('./screenshot.png');   console.info(screenshot); // prints the screenshot as ArrayBuffer } </code>``</p>
+<p>[esm]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules [npm]: https://www.npmjs.com/ [jsr]: https://jsr.io/</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

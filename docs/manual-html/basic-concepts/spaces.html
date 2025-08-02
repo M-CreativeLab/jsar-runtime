@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spaces - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Spaces</h1>
+<p>This section will introduce what's space and space-related fundamental concepts.</p>
+<h2>Space</h2>
+<p>In the context of augmented reality (AR), a space refers to an area in the real world, which can be a flat surface or a three-dimensional object. Users interact with the space to obtain information about the space, such as its size, position, rotation, and more. In XR development, a scene is typically used to represent and encapsulate one or more spaces.</p>
+<p>!<a href="intro-subspace-in-deskstop.png">Space Example</a></p>
+<p>For instance, the _YodaOS-Master_ system desktop (as shown in the image above) is a space. Users can see a series of virtual screens (surfaces) arranged in the space, and there may also be independent objects in the space. All of these surfaces and objects collectively constitute the desktop space, but each screen or object can be considered a subspace.</p>
+<p>> __YodaOS-Master__ is an XR operating system developed by <a href="#">Rokid</a>, which is based on <a href="https://source.android.com/">Android Open Source Project (AOSP)</a> and designed for AR glasses.</p>
+<p>[Rokid]: https://global.rokid.com/</p>
+<h2>Degrees of Freedom (DoF)</h2>
+<p>In the field of augmented reality and virtual reality, the term "degrees of freedom" (DoF) is often used to describe the level of realism in a space. Higher degrees (&lt;=6) of freedom indicate a more realistic space.</p>
+<p>In general, the movement of an object in space can be described in terms of position and rotation. Position includes the offset along the X, Y, and Z axes, while rotation involves the angles of rotation around these axes (pitch, yaw, and roll). Therefore, when an object moves in a space, it exhibits changes in position and orientation. The number of parameters used to describe these changes is referred to as degrees of freedom (DoF).</p>
+<h3>0 DoF</h3>
+<p>0 DoF (Zero Degree of Freedom) refers to a space where the observer has a fixed viewpoint and cannot move or change their perspective.</p>
+<p>> __Observer__ refers to the person or device that is viewing the space. However in the context of XR development, the observer is typically the user itself.</p>
+<p>!<a href="space-0dof.gif">0 DoF Space</a></p>
+<h3>3 DoF</h3>
+<p>3 DoF (Three Degrees of Freedom) refers to a space where the observer has three degrees of freedom, typically related to the space's orientation.</p>
+<p>In virtual spaces, if a camera or observer only changes its orientation while maintaining a fixed position, the space is said to have 3 DoF. This means that objects within the virtual space can move programmatically, but the observer's position remains fixed, and they observe the virtual space from different orientations.</p>
+<p>!<a href="space-3dof.gif">3 DoF Space</a></p>
+<h3>6 DoF</h3>
+<p>6 DoF (Six Degrees of Freedom) refers to a space where the observer has six degrees of freedom, including both position and orientation.</p>
+<p>In virtual spaces, if a camera or observer can change both its position and orientation, the space is said to have 6 DoF. The observer can freely move and rotate within the space, providing a high level of realism.</p>
+<p>!<a href="space-6dof.gif">6 DoF Space</a></p>
+<h2>Embeddable Spaces</h2>
+<p>So, what are embeddable spaces, also known as subspaces?</p>
+<p>An embeddable space, or subspace, is a complete space containing objects that can be embedded within another space as a component. This allows us to:</p>
+<ul><li>Move, rotate, and scale the embedded space from the parent space.</li>
+<li>Interact with objects of the embedded space directly.</li>
+<li>Combine multiple embedded spaces within a parent space to create more complex spatial experiences.</li></ul>
+<p>The key technical challenge in embeddable spaces is how to embed/composite a space into another space (the host space) without interfering with the host space or other embedded spaces. This is referred to as space safety. In a host space, it's similar to:</p>
+<p>1. Different web pages running in the same web browser without interfering with each other, demonstrating browser security. 2. Multiple windows operating on the same screen in a windowing system, where each window does not disrupt the others, demonstrating windowing system security.</p>
+<p>Embeddable spaces are the most important fundamental concept in JSAR, because one of the main objectives of JSAR is to open Web pages and WebXR applications in an embeddable space, allowing users to interact with them in a 3D environment. With this capability, users can view and interact with multiple Web contents simultaneously in a single XR space.</p>
+<h2>Next</h2>
+<p>In the next section, you will learn about the <a href="./basic-concepts/input-sources">Input Sources</a> in XR development.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

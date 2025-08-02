@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Native(C++) embedder API - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Native(C++) embedder API</h1>
+<p>JSAR could be embedded in any 3d engine or application written in C++, this document describes for embedding developers how to use JSAR in their applications.</p>
+<h2>Request for JSAR SDK</h2>
+<p>JSAR native SDK is not available in the public, if you are interested in using JSAR native SDK, please contact us at <a href="https://forum.rokid.com/">Rokid Forum</a>.</p>
+<h2><code>TrEmbedder</code> class</h2>
+<p><code>TrEmbedder</code> is the main virtual class that should be inherited by the embedding application, it contains the main functions that should be implemented by the embedding application.</p>
+<pre><code class="language-cpp">class SimpleEmbedder : public TrEmbedder
+{
+public:
+  DesktopEmbedder() : TrEmbedder()
+  {
+    auto renderer = constellation->getRenderer();
+    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, getConstellation());
+    renderer->setApi(api);
+  }
+};
+</code></pre>
+<h3>Constructor</h3>
+<p>The <code>TrEmbedder</code> constructor signature is:</p>
+<pre><code class="language-cpp">TrEmbedder(TrHostEngine hostEngine = TrHostEngine::None)
+</code></pre>
+<p>There is a <code>TrHostEngine</code> enum that embedding developers could use to specify the host engine that they are using, the default value is <code>TrHostEngine::None</code>, which means the embedding application is a standalone.</p>
+<p>The possible values for <code>TrHostEngine</code> are:</p>
+<pre><code class="language-cpp">enum class TrHostEngine
+{
+  None,   // Standalone
+  Unity,  // Embedding in Unity
+  Unreal, // Embedding in Unreal
+  Cocos,  // Embedding in Cocos
+};
+</code></pre>
+<h3>Virtual Methods</h3>
+<p>The virtual methods that embedding developers are optional to implement for their applications. This section describes all the virtual methods that developers could implement.</p>
+<h4><code>~TrEmbedder()</code></h4>
+<p>If the custom embedder class has its own resources, the developers should release them in a custom destructor.</p>
+<pre><code class="language-cpp">~TrEmbedder() {
+  // Release resources
+}
+</code></pre>
+<h4><code>bool onEvent(TrEvent &event, TrContentRuntime *content)</code></h4>
+<p>This virtual method will be called by the runtime when there is an event to be handled by the embedding application.</p>
+<pre><code class="language-cpp">bool onEvent(TrEvent &event, TrContentRuntime *content) {
+  // Handle the event
+  return true;
+}
+</code></pre>
+<h3>Instance Methods</h3>
+<p>The instance methods are the methods inherited from the <code>TrEmbedder</code> class that developers could use to interact with the runtime.</p>
+<h4><code>uint32_t getFps()</code></h4>
+<p>This method returns the current frames per second of the runtime.</p>
+<h4><code>uint32_t getUptime()</code></h4>
+<p>This method returns the current uptime of the runtime in milliseconds.</p>
+<h4><code>void onStart(std::string argJson)</code></h4>
+<p>This method starts the runtime with the given arguments in JSON format:</p>
+<pre><code class="language-json">{
+  "applicationCacheDirectory": "path/to/cache",
+  "httpsProxyServer": "https://proxy.server:port",
+  "enableV8Profiling": true,
+  "isXRSupported": true
+}
+</code></pre>
+<p>The above fields are used to configure the runtime:</p>
+<p>| Field                       | Description                                  | | --------------------------- | -------------------------------------------- | | <code>applicationCacheDirectory</code> | The path to the application cache directory. | | <code>httpsProxyServer</code>          | The HTTPS proxy server to use.               | | <code>enableV8Profiling</code>         | Enable V8 profiling.                         | | <code>isXRSupported</code>             | Enable XR support.                           |</p>
+<p>Internally, this method will start the internal components: renderer, content manager, media service and other services.</p>
+<h4><code>void onFrame()</code></h4>
+<p>This method should be called in every frame to update the runtime, such as <code>Update()</code> in Unity or <code>Tick()</code> in Unreal.</p>
+<p>Note: This frame in the method name doesn't mean the actual frame especially in the case of XR, it represents an update cycle by the host engine, the frame in OpenXR or WebXR should be configured by the <code>configureXrDevice(bool enabled, xr::TrDeviceInit &init)</code> method which will be explained later.</p>
+<h4><code>bool configureXrDevice(bool enabled, xr::TrDeviceInit &init)</code></h4>
+<p>This method is used to configure the XR device, the <code>enabled</code> parameter is used to enable or disable the XR device, and the <code>init</code> parameter is used to configure the XR device.</p>
+<p>| Field                      | Description                                                                  | | -------------------------- | ---------------------------------------------------------------------------- | | <code>init.active</code>              | If the XR device is active.                                                  | | <code>init.stereoRenderingMode</code> | The stereo rendering mode that defines how runtime consumes the <code>onFrame()</code>. |</p>
+<p>The possible values for <code>stereoRenderingMode</code> are:</p>
+<pre><code class="language-cpp">enum class StereoRenderingMode
+{
+  MultiPass = 0,            // Multi-pass rendering
+  SinglePass = 1,           // Single-pass rendering
+  SinglePassInstanced = 2,  // Single-pass instanced rendering
+  SinglePassMultiview = 3,  // Single-pass multiview rendering
+};
+</code></pre>
+<p>In multi-pass rendering, the runtime will call <code>onFrame()</code> for each eye, that means one call for the left eye and another call for the right eye. However, in both single-pass rendering modes, the runtime will call <code>onFrame()</code> once, and the application should render the scene for both eyes which might be more efficient.</p>
+<h4><code>void shutdown()</code></h4>
+<p>This method should be called to shutdown the runtime, it will release all the resources and stop the internal components, it will be returned when all the resources are released.</p>
+<pre><code class="language-cpp">embedder->shutdown();
+// Wait until the runtime is shutdown
+</code></pre>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

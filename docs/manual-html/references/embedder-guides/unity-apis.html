@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unity embedder API - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Unity embedder API</h1>
+<p>JSAR provides a <a href="#">Unity</a> plugin that allows developers to embed JSAR in their Unity applications. This document describes how to use the JSAR Unity plugin in Unity applications and provides a reference for the Unity API.</p>
+<p>[Unity]: https://unity.com/</p>
+<h2>Prerequisites</h2>
+<p>To use the JSAR Unity plugin, you need to have Unity installed on your machine. You can download Unity from the <a href="https://unity.com/">Unity download page</a>.</p>
+<h3>Supported platforms</h3>
+<p>JSAR Unity SDK supports the following platforms:</p>
+<ul><li>Android arm64</li>
+<li>Windows x86_64</li>
+<li>macOS (x86_64, arm64)</li>
+<p>On Windows and macOS, Unity is commonly used as an editor, JSAR's plugin supports developing and testing on these platforms but not rendering to the editor's scene view, developers should build and run the application to see the AR content at Android or YodaOS-Master devices.</p>
+<h3>Supported Unity pipelines</h3>
+<p>Currently, JSAR supports the following Unity pipelines:</p>
+<li>Built-in Render Pipeline</li>
+<li>Universal Render Pipeline (URP)</li>
+<h3>Supported stereo rendering modes</h3>
+<p>JSAR supports both multi-pass and single-pass (instanced/multiview) stereo rendering modes. The stereo rendering mode can be configured using the <code>XRSettings.stereoRenderingMode</code> property in Unity, or check out your Unity XR provider's documentation for more details.</p>
+<h2>Download and installation</h2>
+<p>Currently JSAR Unity plugin is not available in the Unity Asset Store or any other public registries because it's in alpha, if you are interested in using JSAR Unity plugin, please contact us at <a href="https://forum.rokid.com/">Rokid Forum</a>.</p>
+<h2>Usage guide</h2>
+<p>In this section, we will guide you in using this plugin both in the built-in render pipeline and the Universal Render Pipeline (URP).</p>
+<p>> Coming soon</p>
+<h2>C# API Reference</h2>
+<h3>Class <code>Transmute</code></h3>
+<p>This class is the main entry point for the JSAR Unity plugin. It provides methods to start and stop the JSAR runtime, and start the applets (namely the Web applications) in your Unity scene.</p>
+<h4>Static properties</h4>
+<p>__<code>TransmuteFeature RendererFeature</code>__</p>
+<p>This property is set at the Universal Render Pipeline (URP), you can access it to get the renderer feature instance.</p>
+<p>__<code>Transmute Instance</code>__</p>
+<p>The <code>Transmute</code> must be a singleton, this static property provides the singleton instance of the <code>Transmute</code> class.</p>
+<p>__<code>string ApplicationCacheDirectory</code>__</p>
+<p>The path to the application cache directory, or set it to customize the cache directory.</p>
+<h4>Static methods</h4>
+<p>__<code>MainControllerInputSource GetMainControllerInputSource()</code>__</p>
+<p>Get the main controller input source to update.</p>
+<p>__<code>ScreenControllerInputSource GetScreenControllerInputSource(int index)</code>__</p>
+<p>Get the screen controller input source to update, the int parameter is the screen-controller index.</p>
+<p>__<code>HandedInputSource GetHandInputSource(int handness)</code>__</p>
+<p>Get the handed input source to update, the int parameter is the handness index, 0 for left hand, 1 for right hand.</p>
+<p>__<code>void SetHandInputSourcesEnabled(bool enabled)</code>__</p>
+<p>Enable or disable the handed input sources.</p>
+<h4>Instance properties</h4>
+<p>__<code>Camera CameraToUse</code>__</p>
+<p>The camera to use for rendering the Web content, not working in the Universal Render Pipeline (URP).</p>
+<p>__<code>LayerMask LightLayerToUse</code>__</p>
+<p>> This property is not implemented yet.</p>
+<p>Select a layer which contains the lights to use for rendering the Web content.</p>
+<p>__<code>Vector3 AppletBoxPosition</code>__</p>
+<p>The initial position of the applet bounding box's position when an WebXR application is started in <code>local</code> reference space.</p>
+<p>__<code>GameObject AppletPrefab</code>__</p>
+<p>The prefab to use for initializing the applet's GameObject.</p>
+<p>__<code>string HttpsProxyServer</code>__</p>
+<p>The HTTPS proxy server to use for applet networking such as <code>https://proxy.server:port</code>.</p>
+<p>__<code>bool DisableExecCache</code>__</p>
+<p>Disable the cache, if true, the cache will be disabled, it means any applet will be loaded from the network and will not write related files to the cache directory.</p>
+<p>__<code>List<TransmuteApplet> Applets</code>__</p>
+<p>The list of applets that are currently running.</p>
+<h4>Instance events and actions</h4>
+<p>__<code>UnityEvent<GameObject, TransmuteApplet> OnAppletCreated</code>__</p>
+<p>This event is triggered when an applet is created.</p>
+<li><code>GameObject</code> is the GameObject that contains the applet.</li>
+<li><code>TransmuteApplet</code> is the <code>TransmuteApplet</code> instance that represents the applet.</li>
+<p>__<code>UnityEvent<GameObject> OnXRSessionCreated</code>__</p>
+<p>This event is triggered when an XR session is created.</p>
+<p>__<code>UnityEvent<GameObject> OnXRSessionEnded</code>__</p>
+<p>This event is triggered when an XR session is ended.</p>
+<p>__<code>UnityEvent<GameObject> OnLoading</code>__</p>
+<p>This event is triggered when the applet is loading.</p>
+<p>__<code>UnityEvent<GameObject> OnLoaded</code>__</p>
+<p>This event is triggered when the applet is loaded.</p>
+<p>__<code>UnityEvent<GameObject> OnError</code>__</p>
+<p>This event is triggered when an error occurs.</p>
+<p>__<code>Action<string, string> OnWindowOpen</code>__</p>
+<p>This action is triggered when a <code>window.open()</code> event is called in an applet, the first parameter is the URL to open, and the second parameter is the target. The implementator should handle this request if needed.</p>
+<p>__<code>Action<string> OnWindowAlert</code>__</p>
+<p>This action is triggered when a <code>window.alert()</code> event is called in an applet, the parameter is the message to alert. The implementator should handle this request if needed.</p>
+<p>__<code>Action<string> OnWindowPrompt</code>__</p>
+<p>This action is triggered when a <code>window.prompt()</code> event is called in an applet, the parameter is the message to prompt. The implementator should handle this request if needed.</p>
+<h4>Instance methods</h4>
+<p>__<code>TransmuteApplet CreateApplet(string url)</code>__</p>
+<p>This creates an applet from the given URL and returns the <code>TransmuteApplet</code> instance.</p>
+<p>__<code>void DestroyApplets()</code>__</p>
+<p>This destroys all the applets that are currently running.</p>
+<h3>Enum <code>TransmuteInputEvent.InputSourceActionState</code></h3>
+<p>This enum represents the action state of an input source, it has two values: <code>Pressed</code> and <code>Released</code>.</p>
+<li><code>Pressed</code> means the action button is pressed.</li>
+<li><code>Released</code> means the action button is released.</li>
+<h3>Enum <code>TransmuteInputEvent.HandJointIndex</code></h3>
+<p>This enum represents the joint index of the hand, it has the following values:</p>
+<li><code>WRIST</code></li>
+<li><code>THUMB_METACARPAL</code></li>
+<li><code>THUMB_PROXIMAL</code></li>
+<li><code>THUMB_DISTAL</code></li>
+<li><code>THUMB_TIP</code></li>
+<li><code>INDEX_FINGER_METACARPAL</code></li>
+<li><code>INDEX_FINGER_PHALANX_PROXIMAL</code></li>
+<li><code>INDEX_FINGER_PHALANX_INTERMEDIATE</code></li>
+<li><code>INDEX_FINGER_PHALANX_DISTAL</code></li>
+<li><code>INDEX_FINGER_TIP</code></li>
+<li><code>MIDDLE_FINGER_METACARPAL</code></li>
+<li><code>MIDDLE_FINGER_PHALANX_PROXIMAL</code></li>
+<li><code>MIDDLE_FINGER_PHALANX_INTERMEDIATE</code></li>
+<li><code>MIDDLE_FINGER_PHALANX_DISTAL</code></li>
+<li><code>MIDDLE_FINGER_TIP</code></li>
+<li><code>RING_FINGER_METACARPAL</code></li>
+<li><code>RING_FINGER_PHALANX_PROXIMAL</code></li>
+<li><code>RING_FINGER_PHALANX_INTERMEDIATE</code></li>
+<li><code>RING_FINGER_PHALANX_DISTAL</code></li>
+<li><code>RING_FINGER_TIP</code></li>
+<li><code>LITTLE_FINGER_METACARPAL</code></li>
+<li><code>LITTLE_FINGER_PHALANX_PROXIMAL</code></li>
+<li><code>LITTLE_FINGER_PHALANX_INTERMEDIATE</code></li>
+<li><code>LITTLE_FINGER_PHALANX_DISTAL</code></li>
+<li><code>LITTLE_FINGER_TIP</code></li>
+<li><code>END</code></li>
+<h3>Class <code>TransmuteInputEvent.XRInputSource</code></h3>
+<p>This is a base class for all the input sources: <code>MainControllerInputSource</code>, <code>ScreenControllerInputSource</code>, <code>HandedInputSource</code> and new input sources in the future.</p>
+<p>To get the corresponding input source, you still need to use the static methods in the <code>Transmute</code> class, this is because the input sources are global and shared among all the applets, when there is an input source update, all the applets are able to get the update.</p>
+<h4>Instance properties</h4>
+<p>__<code>bool Enabled</code>__</p>
+<p>If the input source is enabled or not.</p>
+<p>__<code>int Id</code>__</p>
+<p>The input source id.</p>
+<h4>Instance methods</h4>
+<p>__<code>void SetEnabled(bool enabled)</code>__</p>
+<p>Enable or disable the input source.</p>
+<p>__<code>void SetTargetRayPose(Pose pose)</code>__</p>
+<p>The target ray for an input source is the ray that is used to interact with the applet, this method sets the pose of the target ray.</p>
+<li>The <code>pose</code> parameter is the pose of the target ray to update.</li>
+<p>__<code>void SetGripPose(Pose pose)</code>__</p>
+<p>The grip pose for an input source is the pose when the user is holding the input device, this method sets the pose of the grip.</p>
+<li>The <code>pose</code> parameter is the pose of the grip to update.</li>
+<p>__<code>void SetPrimaryActionState(TransmuteInputEvent.InputSourceActionState state)</code>__</p>
+<p>At WebXR, the primary action is defined as an action that is triggered by the primary button, the implementor should use this method to update the primary action state (pressed or released) of the input source.</p>
+<li>The <code>state</code> parameter is the state of the primary action.</li>
+<p>__<code>void SetSqueezeActionState(TransmuteInputEvent.InputSourceActionState state)</code>__</p>
+<p>Similar to the primary action, the squeeze action is also defined by the implementor and used by the application developers.</p>
+<li>The <code>state</code> parameter is the state of the squeeze action.</li>
+<h3>Class <code>TransmuteInputEvent.MainControllerInputSource</code></h3>
+<p>This class represents the main controller input source and inherits from <code>TransmuteInputEvent.XRInputSource</code>. No new properties or methods are added to this class, please refer to the base class <code>TransmuteInputEvent.XRInputSource</code> for more details.</p>
+<h3>Class <code>TransmuteInputEvent.ScreenControllerInputSource</code></h3>
+<p>This class represents the screen controller input source and inherits from <code>TransmuteInputEvent.XRInputSource</code>. No new properties or methods are added to this class, please refer to the base class <code>TransmuteInputEvent.XRInputSource</code> for more details.</p>
+<h3>Class <code>TransmuteInputEvent.HandedInputSource</code></h3>
+<p>This class represents the handed input source and inherits from <code>TransmuteInputEvent.XRInputSource</code>.</p>
+<h4>Instance properties</h4>
+<p>__<code>int Handness</code>__</p>
+<p>The handness of the input source, 0 for left hand, 1 for right hand.</p>
+<h4>Instance methods</h4>
+<p>__<code>void SetJoint(TransmuteInputEvent.HandJointIndex index, Vector3 position, Quaternion rotation)</code>__</p>
+<p>Set the joint position and rotation of the hand.</p>
+<li>The <code>index</code> parameter is the joint index, see <code>TransmuteInputEvent.HandJointIndex</code> for more details.</li>
+<li>The <code>position</code> parameter is the position of the joint.</li>
+<li>The <code>rotation</code> parameter is the rotation of the joint.</li></ul>
+<p>__<code>void ResetJoints()</code>__</p>
+<p>Reset all the joints of the hand to the default pose, the implementor should call this method when the hand is not tracked.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>

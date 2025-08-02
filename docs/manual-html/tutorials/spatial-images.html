@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creating Spatial Images - JSAR</title>
+  <link rel="stylesheet" href="../shared/global.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 2rem;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .manual-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .manual-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    .manual-content h1 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .manual-content h2 {
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+    
+    .manual-content h3 {
+      color: var(--text-primary);
+      margin: 1.5rem 0 1rem;
+    }
+    
+    .manual-content p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    .manual-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    .manual-content pre {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .manual-content ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    
+    .manual-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    
+    .version-switcher {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 0.375rem;
+    }
+    
+    .version-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .manual-container {
+        grid-template-columns: 1fr;
+        padding: 6rem 1rem 2rem;
+      }
+      
+      .manual-sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Navigation -->
+  <div id="navbar-container"></div>
+  
+  <div class="manual-container">
+    <aside class="manual-sidebar">
+      <div class="version-switcher">
+        <label for="version-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary);">Version:</label>
+        <select id="version-select" class="version-select">
+          <option value="current">Current (v0.8.2)</option>
+        </select>
+      </div>
+      
+      <nav class="manual-nav">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Documentation</h3>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href="introduction.html" class="nav-link">Introduction</a></li>
+          <li><a href="quick-start.html" class="nav-link">Quick Start</a></li>
+          <li><a href="basic-concepts.html" class="nav-link">Basic Concepts</a></li>
+          <li><a href="features.html" class="nav-link">Features</a></li>
+          <li><a href="runtime.html" class="nav-link">Runtime</a></li>
+          <li><a href="delivery.html" class="nav-link">Delivery</a></li>
+          <li><a href="developer-tools.html" class="nav-link">Developer Tools</a></li>
+          <li><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+          <li><a href="references.html" class="nav-link">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="manual-content">
+      <h1>Creating Spatial Images</h1>
+<p>This tutorial will guide you through creating and displaying spatial (stereo) images in JSAR, allowing you to create immersive 3D visual content using standard HTML.</p>
+<h2>Step 1: Prepare Your Stereo Image</h2>
+<p>First, you need to prepare a side-by-side stereo image. This should be a single image file containing two views:</p>
+<ul><li>Left half: Content for the left eye</li>
+<li>Right half: Content for the right eye</li>
+<p>The image should have a 2:1 aspect ratio (e.g., 800x400 pixels).</p>
+<p>For this tutorial, let's assume you have a stereo image named <code>landscape-stereo.jpg</code>.</p>
+<h2>Step 2: Create Your HTML File</h2>
+<p>Create a new HTML file with basic spatial image display:</p>
+<pre><code class="language-html"><!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spatial Images Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .image-section {
+      margin: 30px 0;
+      text-align: center;
+    }
+    .spatial-image {
+      border: 3px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spatial Images in JSAR</h1>
+<p><div class="image-section">       <h2>Regular Image</h2>       <img src="regular-photo.jpg"             style="width: 400px; height: 300px;"             alt="Regular photo" />       <p>This image displays the same content to both eyes</p>     </div>          <div class="image-section">       <h2>Spatial Stereo Image</h2>       <img src="landscape-stereo.jpg"             spatial="stereo"             class="spatial-image"            style="width: 400px; height: 200px;"             alt="Stereo landscape" />       <p>This image shows different content to each eye, creating a 3D effect</p>     </div>   </div> </body> </html> </code></pre></p>
+<h2>Step 3: Understanding the Behavior</h2>
+<h3>In Stereo Mode (WebXR/Immersive)</h3>
+<li><strong>Spatial images</strong>: Left half displayed to left eye, right half to right eye</li>
+<li><strong>Regular images</strong>: Full image displayed to both eyes (unchanged behavior)</li>
+<h3>In Non-Stereo Mode</h3>
+<li><strong>Spatial images</strong>: Full side-by-side image displayed normally</li>
+<li><strong>Regular images</strong>: Normal display (unchanged behavior)</li>
+<h2>Step 4: Testing Your Spatial Images</h2>
+<p>1. <strong>Test in JSAR Environment</strong>: Run your HTML file in the JSAR runtime to see the full spatial effect 2. <strong>Test in Regular Browser</strong>: Verify that spatial images display as regular images (fallback behavior) 3. <strong>Test Different Stereo Content</strong>: Try various types of stereo images to understand the effect</p>
+<h2>Step 5: Best Practices</h2>
+<p>1. <strong>Optimize Image Size</strong>: Spatial images contain twice the visual information, so compress appropriately 2. <strong>Align Content</strong>: Ensure left and right eye content is vertically aligned 3. <strong>Test Parallax</strong>: Use appropriate stereo separation for comfortable viewing 4. <strong>Provide Fallbacks</strong>: Always test how spatial images look in non-stereo mode</p>
+<h2>Summary</h2>
+<p>You've learned how to: <li>Create basic spatial images with the <code>spatial="stereo"</code> attribute</li> <li>Add interactive JavaScript functionality</li> <li>Handle dynamic spatial image creation</li> <li>Test and optimize spatial image content</li></ul></p>
+<p>Spatial images in JSAR provide a simple yet powerful way to add 3D depth to your immersive applications using standard HTML elements.</p>
+    </main>
+  </div>
+  
+  <!-- Footer -->
+  <div id="footer-container"></div>
+  
+  <script type="module">
+    import { createNavbar } from '../shared/navbar.js';
+    import { createFooter } from '../shared/footer.js';
+    import { initThemeToggle, initMobileMenu } from '../shared/common.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Insert navbar
+      const navContainer = document.getElementById('navbar-container');
+      if (navContainer) {
+        navContainer.innerHTML = createNavbar();
+      }
+
+      // Insert footer
+      const footerContainer = document.getElementById('footer-container');
+      if (footerContainer) {
+        footerContainer.innerHTML = createFooter();
+      }
+
+      // Initialize functionality
+      initThemeToggle();
+      initMobileMenu();
+      
+      initVersionSwitcher();
+    });
+    
+    function initVersionSwitcher() {
+      const versionSelect = document.getElementById('version-select');
+      if (!versionSelect) return;
+      
+      // Load available versions
+      loadAvailableVersions().then(versions => {
+        versions.forEach(version => {
+          if (version !== 'current') {
+            const option = document.createElement('option');
+            option.value = version;
+            option.textContent = version;
+            versionSelect.appendChild(option);
+          }
+        });
+      });
+      
+      versionSelect.addEventListener('change', (e) => {
+        const selectedVersion = e.target.value;
+        if (selectedVersion !== 'current') {
+          // Redirect to versioned docs (to be implemented)
+          console.log('Switch to version:', selectedVersion);
+        }
+      });
+    }
+    
+    async function loadAvailableVersions() {
+      // This will be populated with actual version data
+      return ['amidala-v0.8.2', 'amidala-v0.8.1', 'amidala-v0.8.0'];
+    }
+  </script>
+</body>
+</html>
