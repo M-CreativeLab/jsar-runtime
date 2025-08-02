@@ -7,7 +7,10 @@
     "test": "jest",
     "test:ci": "jest --ci --reporters=default --reporters=jest-junit --collectCoverage --coverageDirectory=\"./coverage\"",
     "publish:webapis": "node ./tools/publish-webapis.cjs",
-    "build:website": "sh ./tools/build_website.sh"
+    "build:website": "sh ./tools/build_website.sh",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",
@@ -38,6 +41,7 @@
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
     "typescript-eslint": "^8.33.0",
+    "vitepress": "^1.0.0",
     "webpack": "^5.88.1",
     "webpack-bundle-analyzer": "^4.9.1",
     "webpack-cli": "^5.1.4"

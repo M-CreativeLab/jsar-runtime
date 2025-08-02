@@ -58,3 +58,7 @@ node_modules
 
 # Build artifacts
 ./build/cmake/
+
+# VitePress build output
+docs/.vitepress/dist
+docs/.vitepress/cache
