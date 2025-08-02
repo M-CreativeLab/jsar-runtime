@@ -24,7 +24,7 @@ namespace jsar::example
   extern "C" void startWindowDragging(GLFWwindow *window);
   extern "C" void updateWindowDragging(GLFWwindow *window);
   extern "C" void stopWindowDragging(GLFWwindow *window);
-  extern "C" bool isMouseInDragRegion(GLFWwindow *window, double xpos, double ypos);
+  extern "C" bool isMouseInDragRegion(GLFWwindow *window, double xpos, double ypos, int dragRegionHeight);
 #endif
 
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
@@ -60,6 +60,7 @@ namespace jsar::example
     // Initialize dragging state
     isDraggingWindow = false;
     leftMousePressed = false;
+    dragRegionHeight = 40; // Default to 40 pixels
 
     if (monitor == nullptr)
     {
@@ -95,6 +96,7 @@ namespace jsar::example
     // Initialize dragging state
     isDraggingWindow = false;
     leftMousePressed = false;
+    dragRegionHeight = 40; // Default to 40 pixels
 
     aspect = (float)width / (float)height;
     initWindow(nullptr);
@@ -285,10 +287,10 @@ namespace jsar::example
         leftMousePressed = true;
         
 #ifdef __APPLE__
-        // Check if mouse is in the drag region (top 40 pixels) on macOS
+        // Check if mouse is in the drag region (configurable height) on macOS
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        if (isMouseInDragRegion(window, xpos, ypos))
+        if (isMouseInDragRegion(window, xpos, ypos, dragRegionHeight))
         {
           isDraggingWindow = true;
           startWindowDragging(window);
@@ -408,6 +410,14 @@ namespace jsar::example
       // On other platforms, use GLFW's decorated setting as fallback
       glfwSetWindowAttrib(window, GLFW_DECORATED, GLFW_FALSE);
 #endif
+    }
+  }
+
+  void WindowContext::setDragRegionHeight(int height)
+  {
+    if (height >= 0)
+    {
+      dragRegionHeight = height;
     }
   }
 }

@@ -69,14 +69,14 @@ void stopWindowDragging(GLFWwindow* window)
   isDragging = false;
 }
 
-bool isMouseInDragRegion(GLFWwindow* window, double xpos, double ypos)
+bool isMouseInDragRegion(GLFWwindow* window, double xpos, double ypos, int dragRegionHeight)
 {
-  // Check if mouse is in the top 40 pixels of the window
+  // Check if mouse is in the top dragRegionHeight pixels of the window  
   int windowWidth, windowHeight;
   glfwGetWindowSize(window, &windowWidth, &windowHeight);
   
-  // GLFW uses top-left origin, so check if y-coordinate is within the top 40 pixels
-  return (ypos >= 0 && ypos <= 40 && xpos >= 0 && xpos <= windowWidth);
+  // GLFW uses top-left origin, so check if y-coordinate is within the top dragRegionHeight pixels
+  return (ypos >= 0 && ypos <= dragRegionHeight && xpos >= 0 && xpos <= windowWidth);
 }
 
 } // extern "C"

@@ -38,6 +38,7 @@ namespace jsar::example
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);
     void updateAnimation(); // Update smooth animation for viewer controls
+    void setDragRegionHeight(int height); // Set the height of the macOS window drag region
 
   private:
     void terminate();
@@ -61,6 +62,7 @@ namespace jsar::example
     // Window dragging state (macOS specific)
     bool isDraggingWindow = false;
     bool leftMousePressed = false;
+    int dragRegionHeight = 40; // Configurable height for macOS window drag region (in pixels)
 
     // Animation state for smooth viewer movement
     float targetHorizontalRotation = 0.0f;                          // Target rotation in degrees
