@@ -8,6 +8,7 @@
 // Store window position and mouse offset for dragging
 static NSPoint dragStartMouseLocation;
 static NSPoint dragStartWindowOrigin;
+static NSPoint lastMouseLocation;
 static bool isDragging = false;
 
 extern "C" {
@@ -34,6 +35,7 @@ void startWindowDragging(GLFWwindow* window)
   {
     // Store the initial mouse and window positions for dragging
     dragStartMouseLocation = [NSEvent mouseLocation];
+    lastMouseLocation = dragStartMouseLocation;
     dragStartWindowOrigin = [nsWindow frame].origin;
     isDragging = true;
   }
@@ -47,20 +49,31 @@ void updateWindowDragging(GLFWwindow* window)
   NSWindow* nsWindow = glfwGetCocoaWindow(window);
   if (nsWindow)
   {
-    // Get the current mouse location and calculate the offset
+    // Get the current mouse location for immediate, responsive dragging
     NSPoint currentMouseLocation = [NSEvent mouseLocation];
-    NSPoint offset = NSMakePoint(
-      currentMouseLocation.x - dragStartMouseLocation.x,
-      currentMouseLocation.y - dragStartMouseLocation.y
+    
+    // Calculate delta from last position for smoother, more responsive movement
+    NSPoint delta = NSMakePoint(
+      currentMouseLocation.x - lastMouseLocation.x,
+      currentMouseLocation.y - lastMouseLocation.y
     );
     
-    // Update the window position
-    NSPoint newOrigin = NSMakePoint(
-      dragStartWindowOrigin.x + offset.x,
-      dragStartWindowOrigin.y + offset.y
-    );
-    
-    [nsWindow setFrameOrigin:newOrigin];
+    // Only update if there's actual movement to avoid unnecessary operations
+    if (delta.x != 0.0 || delta.y != 0.0)
+    {
+      // Get current window frame and update origin by delta
+      NSRect currentFrame = [nsWindow frame];
+      NSPoint newOrigin = NSMakePoint(
+        currentFrame.origin.x + delta.x,
+        currentFrame.origin.y + delta.y
+      );
+      
+      // Use setFrameOrigin for immediate positioning without animation
+      [nsWindow setFrameOrigin:newOrigin];
+      
+      // Update last mouse position for next delta calculation
+      lastMouseLocation = currentMouseLocation;
+    }
   }
 }
 

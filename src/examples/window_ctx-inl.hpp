@@ -185,12 +185,7 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
-    if (xoffset < 0 || yoffset < 0 || xoffset > width || yoffset > height)
-      return;
-    if (xrRenderer == nullptr)
-      return;
-
-    // Handle window dragging on macOS
+    // Handle window dragging on macOS - prioritize dragging and skip bounds checking
 #ifdef __APPLE__
     if (isDraggingWindow)
     {
@@ -198,6 +193,11 @@ namespace jsar::example
       return; // Skip normal cursor handling when dragging window
     }
 #endif
+
+    if (xoffset < 0 || yoffset < 0 || xoffset > width || yoffset > height)
+      return;
+    if (xrRenderer == nullptr)
+      return;
 
     // Throttle mouse move events to prevent overly sensitive mouse movement
     double currentTime = glfwGetTime();
@@ -285,7 +285,7 @@ namespace jsar::example
       if (action == GLFW_PRESS)
       {
         leftMousePressed = true;
-        
+
 #ifdef __APPLE__
         // Check if mouse is in the drag region (configurable height) on macOS
         double xpos, ypos;
@@ -310,7 +310,7 @@ namespace jsar::example
         }
 #endif
       }
-      
+
       // Only update primary action if we're not dragging the window
       if (!isDraggingWindow)
         xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
