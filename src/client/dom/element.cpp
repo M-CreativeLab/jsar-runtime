@@ -789,7 +789,8 @@ namespace dom
     if (new_computed_style.hasTransitionProperties())
     {
       auto owner_document = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-      css_animations.setTransitions(new_computed_style, old_style, owner_document->timeline());
+      css_animations.setTransitions(new_computed_style, old_style, owner_document->timeline(), 
+                                    std::static_pointer_cast<Element>(shared_from_this()));
     }
     else
     {

@@ -13,6 +13,7 @@
 
 namespace dom
 {
+  class Element;
   // A map of animatable properties.
   class AnimatableProperties : public std::vector<std::string>
   {
@@ -102,7 +103,8 @@ namespace dom
     void clearTransitions();
     size_t setTransitions(const client_cssom::ComputedStyle &new_style, 
                          const client_cssom::ComputedStyle *old_style,
-                         std::shared_ptr<AnimationTimeline> timeline);
+                         std::shared_ptr<AnimationTimeline> timeline,
+                         std::shared_ptr<Element> target_element);
     bool updateFrameToStyle(client_cssom::ComputedStyle &);
 
   private:

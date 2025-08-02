@@ -19,7 +19,8 @@ namespace dom
 
   size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &new_style,
                                        const client_cssom::ComputedStyle *old_style,
-                                       shared_ptr<AnimationTimeline> timeline)
+                                       shared_ptr<AnimationTimeline> timeline,
+                                       shared_ptr<Element> target_element)
   {
     clearTransitions();
 
@@ -66,6 +67,16 @@ namespace dom
 
       auto effect = make_unique<AnimationEffect>(*transition_property);
       auto animation = make_shared<CSSTransition>(move(effect), timeline, property_name, start_value, end_value);
+      
+      // Set the owning element for the transition
+      animation->setOwningElement(target_element);
+      
+      // Attach the animation to the timeline so it gets updated
+      timeline->animationAttached(animation);
+      
+      // Start the animation
+      animation->play();
+      
       auto animatables = AnimatableProperties::FromTransitionProperty(property);
       auto transition_animation = make_shared<RunningTransition>(animation, animatables);
       transitions_.emplace(property_name, transition_animation);
