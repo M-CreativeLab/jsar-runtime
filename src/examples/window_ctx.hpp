@@ -37,7 +37,7 @@ namespace jsar::example
     void handleScroll(double xoffset, double yoffset);
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);
-    void updateAnimation(); // Update smooth animation for viewer controls
+    void updateAnimation();               // Update smooth animation for viewer controls
     void setDragRegionHeight(int height); // Set the height of the macOS window drag region
 
   private:

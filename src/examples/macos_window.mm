@@ -8,7 +8,7 @@
 // Store window position and mouse offset for dragging
 static NSPoint dragStartMouseLocation;
 static NSPoint dragStartWindowOrigin;
-static NSPoint lastMouseLocation;
+static NSPoint mouseToWindowOffset; // Offset from mouse to window origin when dragging starts
 static bool isDragging = false;
 
 extern "C" {
@@ -35,8 +35,15 @@ void startWindowDragging(GLFWwindow* window)
   {
     // Store the initial mouse and window positions for dragging
     dragStartMouseLocation = [NSEvent mouseLocation];
-    lastMouseLocation = dragStartMouseLocation;
     dragStartWindowOrigin = [nsWindow frame].origin;
+    
+    // Calculate the offset from mouse position to window origin
+    // This ensures 1:1 mapping between mouse movement and window movement
+    mouseToWindowOffset = NSMakePoint(
+      dragStartWindowOrigin.x - dragStartMouseLocation.x,
+      dragStartWindowOrigin.y - dragStartMouseLocation.y
+    );
+    
     isDragging = true;
   }
 }
@@ -49,31 +56,18 @@ void updateWindowDragging(GLFWwindow* window)
   NSWindow* nsWindow = glfwGetCocoaWindow(window);
   if (nsWindow)
   {
-    // Get the current mouse location for immediate, responsive dragging
+    // Get the current mouse location
     NSPoint currentMouseLocation = [NSEvent mouseLocation];
     
-    // Calculate delta from last position for smoother, more responsive movement
-    NSPoint delta = NSMakePoint(
-      currentMouseLocation.x - lastMouseLocation.x,
-      currentMouseLocation.y - lastMouseLocation.y
+    // Calculate the new window position by applying the fixed offset
+    // This ensures 1:1 mapping between mouse movement and window movement
+    NSPoint newOrigin = NSMakePoint(
+      currentMouseLocation.x + mouseToWindowOffset.x,
+      currentMouseLocation.y + mouseToWindowOffset.y
     );
     
-    // Only update if there's actual movement to avoid unnecessary operations
-    if (delta.x != 0.0 || delta.y != 0.0)
-    {
-      // Get current window frame and update origin by delta
-      NSRect currentFrame = [nsWindow frame];
-      NSPoint newOrigin = NSMakePoint(
-        currentFrame.origin.x + delta.x,
-        currentFrame.origin.y + delta.y
-      );
-      
-      // Use setFrameOrigin for immediate positioning without animation
-      [nsWindow setFrameOrigin:newOrigin];
-      
-      // Update last mouse position for next delta calculation
-      lastMouseLocation = currentMouseLocation;
-    }
+    // Use setFrameOrigin for immediate positioning without animation
+    [nsWindow setFrameOrigin:newOrigin];
   }
 }
 
