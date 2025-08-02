@@ -58,6 +58,10 @@ namespace jsar::example
     double lastMouseX = 0.0;
     double lastMouseY = 0.0;
 
+    // Window dragging state (macOS specific)
+    bool isDraggingWindow = false;
+    bool leftMousePressed = false;
+
     // Animation state for smooth viewer movement
     float targetHorizontalRotation = 0.0f;                          // Target rotation in degrees
     float currentHorizontalRotation = 0.0f;                         // Smoothly interpolated rotation

@@ -21,6 +21,8 @@ namespace jsar::example
 #ifdef __APPLE__
   // Forward declare the macOS window customization function (implemented in macos_window.mm)
   extern "C" void customizeMacOSWindow(GLFWwindow *window);
+  extern "C" void startWindowDragging(GLFWwindow *window);
+  extern "C" bool isMouseInDragRegion(GLFWwindow *window, double xpos, double ypos);
 #endif
 
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
@@ -53,6 +55,10 @@ namespace jsar::example
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
 
+    // Initialize dragging state
+    isDraggingWindow = false;
+    leftMousePressed = false;
+
     if (monitor == nullptr)
     {
       terminate();
@@ -83,6 +89,10 @@ namespace jsar::example
     // Initialize throttling state
     lastScrollTime = 0.0;
     lastMouseMoveTime = 0.0;
+
+    // Initialize dragging state
+    isDraggingWindow = false;
+    leftMousePressed = false;
 
     aspect = (float)width / (float)height;
     initWindow(nullptr);
@@ -176,6 +186,10 @@ namespace jsar::example
     if (xrRenderer == nullptr)
       return;
 
+    // Skip normal cursor handling if we're dragging the window
+    if (isDraggingWindow)
+      return;
+
     // Throttle mouse move events to prevent overly sensitive mouse movement
     double currentTime = glfwGetTime();
     if (currentTime - lastMouseMoveTime < MOUSE_THROTTLE_INTERVAL)
@@ -258,7 +272,33 @@ namespace jsar::example
       return;
 
     if (button == GLFW_MOUSE_BUTTON_LEFT)
-      xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
+    {
+      if (action == GLFW_PRESS)
+      {
+        leftMousePressed = true;
+        
+#ifdef __APPLE__
+        // Check if mouse is in the drag region (top 40 pixels) on macOS
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        if (isMouseInDragRegion(window, xpos, ypos))
+        {
+          isDraggingWindow = true;
+          startWindowDragging(window);
+          return; // Don't process as normal UI interaction
+        }
+#endif
+      }
+      else if (action == GLFW_RELEASE)
+      {
+        leftMousePressed = false;
+        isDraggingWindow = false;
+      }
+      
+      // Only update primary action if we're not dragging the window
+      if (!isDraggingWindow)
+        xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
+    }
     else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
     {
       if (action == GLFW_PRESS)

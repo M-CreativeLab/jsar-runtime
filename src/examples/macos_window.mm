@@ -22,6 +22,40 @@ void customizeMacOSWindow(GLFWwindow* window)
   }
 }
 
+void startWindowDragging(GLFWwindow* window)
+{
+  NSWindow* nsWindow = glfwGetCocoaWindow(window);
+  if (nsWindow)
+  {
+    // Get the current mouse location in screen coordinates
+    NSPoint mouseLocation = [NSEvent mouseLocation];
+    
+    // Create a mouse down event to initiate window dragging
+    NSEvent* mouseDownEvent = [NSEvent mouseEventWithType:NSEventTypeLeftMouseDown
+                                                location:mouseLocation
+                                           modifierFlags:0
+                                               timestamp:[[NSProcessInfo processInfo] systemUptime]
+                                            windowNumber:[nsWindow windowNumber]
+                                                 context:nil
+                                             eventNumber:0
+                                              clickCount:1
+                                                pressure:1.0];
+    
+    // Start the window drag operation
+    [nsWindow performWindowDragWithEvent:mouseDownEvent];
+  }
+}
+
+bool isMouseInDragRegion(GLFWwindow* window, double xpos, double ypos)
+{
+  // Check if mouse is in the top 40 pixels of the window
+  int windowWidth, windowHeight;
+  glfwGetWindowSize(window, &windowWidth, &windowHeight);
+  
+  // GLFW uses top-left origin, so check if y-coordinate is within the top 40 pixels
+  return (ypos >= 0 && ypos <= 40 && xpos >= 0 && xpos <= windowWidth);
+}
+
 } // extern "C"
 
 #endif
