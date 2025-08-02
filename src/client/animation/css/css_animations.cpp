@@ -37,6 +37,10 @@ namespace dom
       // Skip if transition duration is zero or negative
       if (transition_property->duration.seconds().value <= 0.0f)
         continue;
+      
+      // Skip if property is not animatable
+      if (!client_cssom::ComputedStyle::IsAnimatableProperty(property_name))
+        continue;
 
       // Get the old and new values for this property
       std::string start_value, end_value;
