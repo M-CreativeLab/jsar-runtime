@@ -4,19 +4,24 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-// Improved MDX to HTML converter
+// Improved MDX to HTML converter with table support
 function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '', version = '') {
   const lines = content.split('\n');
   const htmlLines = [];
   let inCodeBlock = false;
   let inList = false;
+  let inTable = false;
   let currentListItems = [];
+  let currentTableRows = [];
+  let tableHeaders = [];
   
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
     
     // Handle code blocks
     if (line.startsWith('```')) {
+      flushList();
+      flushTable();
       if (inCodeBlock) {
         htmlLines.push('</code></pre>');
         inCodeBlock = false;
@@ -33,22 +38,44 @@ function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '
       continue;
     }
     
-    // Headers
-    if (line.startsWith('#### ')) {
+    // Handle table rows
+    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
       flushList();
-      htmlLines.push(`<h4>${line.replace('#### ', '')}</h4>`);
+      const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
+      
+      // Check if this is a separator row (|---|---|)
+      if (cells.every(cell => /^-+$/.test(cell))) {
+        // This is a header separator, mark current row as headers
+        if (currentTableRows.length > 0) {
+          tableHeaders = currentTableRows.pop();
+        }
+        continue;
+      }
+      
+      currentTableRows.push(cells);
+      inTable = true;
+    }
+    // Headers
+    else if (line.startsWith('#### ')) {
+      flushList();
+      flushTable();
+      htmlLines.push(`<h4>${processInlineMarkdown(line.replace('#### ', ''))}</h4>`);
     } else if (line.startsWith('### ')) {
       flushList();
-      htmlLines.push(`<h3>${line.replace('### ', '')}</h3>`);
+      flushTable();
+      htmlLines.push(`<h3>${processInlineMarkdown(line.replace('### ', ''))}</h3>`);
     } else if (line.startsWith('## ')) {
       flushList();
-      htmlLines.push(`<h2>${line.replace('## ', '')}</h2>`);
+      flushTable();
+      htmlLines.push(`<h2>${processInlineMarkdown(line.replace('## ', ''))}</h2>`);
     } else if (line.startsWith('# ')) {
       flushList();
-      htmlLines.push(`<h1>${line.replace('# ', '')}</h1>`);
+      flushTable();
+      htmlLines.push(`<h1>${processInlineMarkdown(line.replace('# ', ''))}</h1>`);
     }
     // List items
     else if (line.startsWith('- ')) {
+      flushTable();
       const listItem = processInlineMarkdown(line.replace('- ', ''));
       currentListItems.push(`<li>${listItem}</li>`);
       inList = true;
@@ -56,11 +83,13 @@ function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '
     // Empty lines
     else if (line.trim() === '') {
       flushList();
+      flushTable();
       htmlLines.push('');
     }
     // Regular paragraphs
     else {
       flushList();
+      flushTable();
       if (line.trim()) {
         const processedLine = processInlineMarkdown(line);
         htmlLines.push(`<p>${processedLine}</p>`);
@@ -69,6 +98,7 @@ function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '
   }
   
   flushList(); // Ensure any remaining list is flushed
+  flushTable(); // Ensure any remaining table is flushed
   
   function flushList() {
     if (inList && currentListItems.length > 0) {
@@ -77,6 +107,42 @@ function convertMdxToHtml(content, title = 'JSAR Documentation', currentFile = '
       htmlLines.push('</ul>');
       currentListItems = [];
       inList = false;
+    }
+  }
+  
+  function flushTable() {
+    if (inTable && (currentTableRows.length > 0 || tableHeaders.length > 0)) {
+      htmlLines.push('<table class="table">');
+      
+      // Add headers if present
+      if (tableHeaders.length > 0) {
+        htmlLines.push('<thead>');
+        htmlLines.push('<tr>');
+        for (const header of tableHeaders) {
+          htmlLines.push(`<th>${processInlineMarkdown(header)}</th>`);
+        }
+        htmlLines.push('</tr>');
+        htmlLines.push('</thead>');
+      }
+      
+      // Add body rows
+      if (currentTableRows.length > 0) {
+        htmlLines.push('<tbody>');
+        for (const row of currentTableRows) {
+          htmlLines.push('<tr>');
+          for (const cell of row) {
+            htmlLines.push(`<td>${processInlineMarkdown(cell)}</td>`);
+          }
+          htmlLines.push('</tr>');
+        }
+        htmlLines.push('</tbody>');
+      }
+      
+      htmlLines.push('</table>');
+      
+      currentTableRows = [];
+      tableHeaders = [];
+      inTable = false;
     }
   }
   
@@ -314,6 +380,42 @@ function createHtmlTemplate(content, title, currentFile = '', version = '') {
     
     .manual-content a:hover {
       text-decoration: underline;
+    }
+    
+    /* Table styling */
+    .manual-content .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .manual-content .table th,
+    .manual-content .table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .manual-content .table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .manual-content .table td {
+      color: var(--text-secondary);
+    }
+    
+    .manual-content .table tr:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .manual-content .table tr:last-child td {
+      border-bottom: none;
     }
     
     .version-switcher {
