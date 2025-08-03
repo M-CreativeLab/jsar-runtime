@@ -221,6 +221,11 @@
   text-decoration: underline;
 }
 
+/* Task list styling */
+.vp-doc .task-list input {
+  margin-right: 0.8rem;
+}
+
 /* Footer styling */
 .VPFooter {
   background: var(--vp-c-bg-soft);

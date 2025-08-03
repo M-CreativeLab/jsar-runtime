@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitepress'
 import { buildStart } from './build-hooks.mjs'
+import taskCheckbox from 'markdown-it-task-checkbox'
 
 export default defineConfig({
   base: '/jsar-runtime/',
@@ -201,6 +202,9 @@ export default defineConfig({
   markdown: {
     image: {
       lazyLoading: true
+    },
+    config: (md) => {
+      md.use(taskCheckbox, { disabled: true })
     }
   }
 })
