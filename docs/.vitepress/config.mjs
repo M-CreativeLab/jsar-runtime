@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 import { buildStart } from './build-hooks.mjs'
 
 export default defineConfig({
+  base: '/jsar-runtime/',
   vite: {
     resolve: {
       alias: [
