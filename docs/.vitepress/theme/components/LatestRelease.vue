@@ -81,7 +81,7 @@ onMounted(async () => {
       <div class="version-content" v-html="version.renderedContent"></div>
     </div>
     <p class="view-more">
-      <a href="/changelogs/alpha.html">View Full Changelog</a>
+      <a :href="withBase('/changelogs/alpha.html')">View Full Changelog</a>
     </p>
   </div>
 </template>
