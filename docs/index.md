@@ -88,13 +88,13 @@ Ready to build your first spatial web application? Check out our comprehensive g
 <div class="custom-block tip">
   <p class="custom-block-title">Quick Start</p>
   <p>Learn the basics and create your first JSAR application in minutes.</p>
-  <a href="/manual/quick-start">Start Learning →</a>
+  <a href="manual/quick-start">Start Learning →</a>
 </div>
 
 <div class="custom-block tip">
   <p class="custom-block-title">Examples</p>
   <p>Explore practical examples and tutorials to deepen your understanding.</p>
-  <a href="/manual/tutorials">View Tutorials →</a>
+  <a href="manual/tutorials/helloworld-babylonjs">View Tutorials →</a>
 </div>
 
 ## Community
@@ -103,8 +103,8 @@ Join our growing community of developers building the future of spatial web:
 
 - 💬 [GitHub Discussions](https://github.com/M-CreativeLab/jsar-runtime/discussions)
 - 🐛 [Report Issues](https://github.com/M-CreativeLab/jsar-runtime/issues)
-- 📖 [Contributing Guide](/contributing/coding_style_guides)
-- 📰 [Blog](/blog) - Technical insights and updates
+- 📖 [Contributing Guide](contributing/coding_style_guides)
+- 📰 [Blog](blog) - Technical insights and updates
 
 <style>
 .VPHero .VPImage {

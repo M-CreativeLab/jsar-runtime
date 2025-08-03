@@ -39,7 +39,10 @@ export default defineConfig({
 
     nav: [
       { text: 'Documentation', link: '/manual/introduction' },
-      { text: 'API Reference', link: '/api/browser-compat-data' },
+      {
+        text: 'API Reference',
+        link: '/api/browser-compat-data',
+      },
       { text: 'Changelog', link: '/changelogs/alpha' },
       { text: 'Blog', link: '/blog' },
       { text: 'GitHub', link: 'https://github.com/M-CreativeLab/jsar-runtime' }
@@ -115,18 +118,18 @@ export default defineConfig({
           text: 'Tutorials',
           collapsed: false,
           items: [
-            { text: 'Connect WebSocket Server', link: '/manual/tutorials/connect-websocket-server' },
-            { text: 'Create Materials', link: '/manual/tutorials/create-materials' },
-            { text: 'Create Meshes', link: '/manual/tutorials/create-meshes' },
             { text: 'Hello World with Babylon.js', link: '/manual/tutorials/helloworld-babylonjs' },
             { text: 'Hello World with Three.js', link: '/manual/tutorials/helloworld-threejs' },
+            { text: 'Create Materials', link: '/manual/tutorials/create-materials' },
+            { text: 'Create Meshes', link: '/manual/tutorials/create-meshes' },
+            { text: 'Spatial Images', link: '/manual/tutorials/spatial-images' },
             { text: 'HTTPS Request', link: '/manual/tutorials/https-request' },
-            { text: 'Spatial Images', link: '/manual/tutorials/spatial-images' }
+            { text: 'Connect WebSocket Server', link: '/manual/tutorials/connect-websocket-server' },
           ]
         },
         {
           text: 'References',
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: 'Overview', link: '/manual/references' },
             { text: 'Caching', link: '/manual/references/caching' },
