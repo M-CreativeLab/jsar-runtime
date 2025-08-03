@@ -22,7 +22,7 @@ export default defineConfig({
     }
   },
   title: 'YODAOS JSAR',
-  description: 'Revolutionary Browser Engine for Spatial Web',
+  description: 'Open Source Browser Engine for the Spatial Web',
   ignoreDeadLinks: true, // Temporarily ignore dead links while we migrate
   buildEnd: buildStart,
 
@@ -31,7 +31,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#3b82f6' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'en' }],
-    ['meta', { property: 'og:title', content: 'JSAR | Revolutionary Browser Engine for Spatial Web' }],
+    ['meta', { property: 'og:title', content: 'JSAR | Open Source Browser Engine for the Spatial Web' }],
     ['meta', { property: 'og:site_name', content: 'JSAR' }],
     ['meta', { property: 'og:image', content: '/JSAR_POSTER.png' }],
   ],
@@ -182,8 +182,8 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Released under the Apache 2.0 License.',
-      copyright: 'Copyright © 2025 M-CreativeLab'
+      message: 'Apache 2.0 License.<br>Built with ❤️ using <a href="https://www.trae.ai/" target="_blank">Trae 2.0</a>.',
+      copyright: '©2025 ROKID MLabs. All rights reserved.'
     },
 
     editLink: {
