@@ -62,3 +62,4 @@ node_modules
 # VitePress build output
 docs/.vitepress/dist
 docs/.vitepress/cache
+docs/api/browser-compat-data/all.json

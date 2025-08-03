@@ -4,10 +4,7 @@ layout: home
 hero:
   name: "JSAR"
   text: "Spatial Web Browser Engine"
-  tagline: Create immersive Web experiences with HTML5, CSS3, and TypeScript.
-  image:
-    src: /logo-playwebxr.jpg
-    alt: JSAR Logo
+  tagline: "Empowering Web developers to craft immersive experiences with the full power of modern web technologies — HTML5, CSS3, and TypeScript."
   actions:
     - theme: brand
       text: Get Started
@@ -19,72 +16,70 @@ hero:
       text: View on GitHub
       link: https://github.com/M-CreativeLab/jsar-runtime
 
+header: false
+feature3DEffect: true
+
 features:
   - icon: 🎯
-    title: 3D-First Design
-    details: Mix-rendering multiple Web 2D and 3D contents in a single scene with high performance GPU-driven renderer.
-  
+    title: Design for Spatial Web
+    details: Every HTML element is spatially rendered in the browser, powered by JSAR.
+
   - icon: 🌐
     title: Web Standards Compliant
-    details: Supports WebXR, WebGL, DOM, CSSOM, and other modern Web standards for seamless compatibility.
-  
+    details: Supports modern Web standards, including HTML5, CSS3, DOM, WebGL, and WebXR.
+
   - icon: ⚡
     title: High Performance
-    details: Built-in ECS architecture achieves GPU-driven rendering for elements with TypeScript-native scripting.
+    details: Dynamically batches all spatialized HTML elements into ≤10 GPU draw calls per frame.
 
   - icon: 📱
     title: Cross-Platform
-    details: Runs on desktop, mobile, and XR devices with consistent performance and functionality.
+    details: Delivers flawless performance across every platform (desktop, mobile, and XR) with pixel-perfect consistency.
 
   - icon: 🛠️
-    title: Developer Friendly
-    details: Rich debugging tools, hot reload, and comprehensive documentation for smooth development experience.
+    title: Web Developer Friendly
+    details: Deep Chrome DevTools integration for seamless debugging and profiling.
 
   - icon: 🔧
     title: Extensible
-    details: Plugin system and modular architecture allow for easy customization and extension.
+    details: An extensible plugin system and modular architecture unlock limitless customization.
 ---
 
-## Technology Stack
+## Web Compatibility Overview
 
-JSAR provides comprehensive support for modern web technologies and 3D graphics APIs.
+JSAR provides comprehensive support for modern Web standards. For a complete browser compatibility report, please visit our [Browser Compatibility Data](/api/browser-compat-data.html).
 
 ### Scripting & Modules
-- ✅ **JavaScript** - Full ES2023 support
-- ✅ **TypeScript** - Native TypeScript compilation
-- ✅ **ECMAScript Module** - Modern module system
-- ✅ **WebAssembly** - High-performance WASM support
-- ✅ **Web Worker** - Multi-threaded processing
+
+- [Completed] **JavaScript** - Full ES2023 support
+- [Completed] **TypeScript** - Native TypeScript compilation
+- [Completed] **ECMAScript Module** - Modern module system
+- [Completed] **WebAssembly** - High-performance WASM support
+- [Completed] **Web Worker** - Multi-threaded processing
 
 ### 3D Graphics
-- ✅ **WebGL 1.0** - Fully supported
-- ✅ **WebGL 2.0** - Complete implementation
-- 🔄 **WebGPU** - In development
+
+- [Completed] **WebGL 1.0** - Fully supported
+- [Completed] **WebGL 2.0** - Complete implementation
+- [In Progress] **WebGPU** - In development
 
 ### WebXR Device APIs
-- ✅ **Spaces & Reference Spaces** - Complete implementation
-- ✅ **Stereo Rendering** - Optimized dual-eye rendering
-- ✅ **Input Sources** - Controllers and hand tracking
-- ✅ **Hand Tracking** - Precise gesture recognition
+
+- [Completed] **Spaces & Reference Spaces** - Complete implementation
+- [Completed] **Stereo Rendering** - Optimized dual-eye rendering
+- [Completed] **Input Sources** - Controllers and hand tracking
+- [Completed] **Hand Tracking** - Precise gesture recognition
 
 ### Classic Rendering
-- 🔄 **DOM API** - Partial implementation
-- 🔄 **HTML5** - Core features supported
-- 🔄 **CSS3** - Growing feature set
-- ✅ **Canvas 2D** - Full 2D rendering support
+
+- [In Progress] **DOM API** - Partial implementation
+- [In Progress] **HTML5** - Core features supported
+- [In Progress] **CSS3** - Growing feature set
+- [Completed] **Canvas 2D** - Full 2D rendering support
 
 ## Latest Updates
 
-::: info Latest Release
-**v0.8.2** - December 2024
-
-- CSS gradient support
-- Performance optimizations
-- Enhanced developer tools
-- Improved documentation
-
-[View Full Changelog](/changelogs/alpha.md)
-:::
+<LatestRelease />
 
 ## Getting Started
 

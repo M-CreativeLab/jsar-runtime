@@ -3,7 +3,7 @@ title: JSAR Blog
 description: Technical insights, community updates, and deep dives into the spatial web revolution
 ---
 
-# JSAR Blog
+# JSAR Technical Blogs
 
 Technical insights, community updates, and deep dives into the spatial web revolution.
 

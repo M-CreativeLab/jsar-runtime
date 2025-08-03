@@ -22,17 +22,9 @@ After you have installed the application on device, you can input a URL to run j
 
 In this section, we will introduce how to use _Play WebXR_ and how to start developing the 3D Web application using the Web technologies. If you are a Web developer but not familiar with 3D, it's recommended to learn from this section.
 
-## Setup
-
-Learn how to set up your development environment and get JSAR running on your device.
-
-## Write HTML
-
-Create your first 3D web application using familiar HTML, CSS, and JavaScript/TypeScript.
-
-## Run
-
-Deploy and test your JSAR application on supported XR devices.
+- [Setup](./quick-start/setup.mdx)
+- [Write HTML](./quick-start/write-html.mdx)
+- [Run](./quick-start/run.mdx)
 
 [Chromium]: https://www.chromium.org/Home
 [Rokid AR Studio]: https://arstudio.rokid.com/

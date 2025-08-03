@@ -1,52 +1,59 @@
 # Debugging
 
-Learn how to debug your JSAR applications using integrated development tools and browser-based debugging capabilities.
+In the [Interface](developer-tools/intro-gui) section, it was explained how to view the performance of your code in a real environment using the scene tree and property inspector. This section will not provide further explanations on those topics.
 
-## Chrome DevTools Integration
+## Viewing Local Logs
 
-JSAR provides full Chrome DevTools support through the Chrome DevTools Protocol (CDP), allowing you to debug your spatial applications using familiar web development tools.
+There are two ways to view local logs.
 
-### Setting Up Debugging
+### Viewing Logs via VSCode Output
 
-1. Start your JSAR application in development mode
-2. Open Chrome and navigate to `chrome://inspect`
-3. Your JSAR application will appear in the remote targets list
-4. Click "inspect" to open the DevTools
+<!-- 图片暂不可用 -->
 
-### Features Available
+As shown above, JSAR DevTools provides a dedicated output channel to help developers view application logs. Here's how to use it:
 
-- **Console**: Execute JavaScript commands and view console output
-- **Elements**: Inspect DOM structure and CSS styles
-- **Sources**: Set breakpoints and step through code
-- **Network**: Monitor HTTP requests and responses
-- **Performance**: Profile application performance
-- **Memory**: Analyze memory usage and detect leaks
+1. Print logs using `console` and save them.
+2. Open the Terminal panel in Visual Studio Code.
+3. Select the Output panel.
+4. Choose the output channel "JSAR Scene Logs."
+5. Run XSML again.
 
-## Spatial Debugging
+### Viewing Logs via Chrome DevTools
 
-JSAR extends traditional web debugging with spatial-specific features:
+While the previous method allows you to see independent logs of spatial apps, the Output panel in Visual Studio Code is designed for viewing text-based logs. If you want to view JavaScript objects as you would in Chrome DevTools Console, follow these steps:
 
-### 3D Scene Inspector
-- View scene graph hierarchy
-- Inspect 3D object properties
-- Monitor spatial transformations
-- Debug collision detection
+1. Open the command palette with Cmd + Shift + P.
+2. Enter "Developer: Open Webview Developer Tools" and press Enter (make sure you have the preview window open).
+3. A Chrome DevTools window will pop up.
+4. Switch to the Console tab.
+5. Run XSML again.
 
-### XR Session Debugging
-- Track XR session state
-- Monitor input sources
-- Debug hand tracking data
-- Inspect WebXR pose information
+Using this method, you can interactively view JavaScript objects, but note that it includes all log messages, so you may need to add some identifiers for filtering.
 
-## Best Practices
+## Real-Device Debugging
 
-### Performance Debugging
-- Use the Performance tab to identify frame rate issues
-- Monitor WebGL draw calls and texture usage
-- Profile JavaScript execution in spatial contexts
+JSAR supports real-device debugging in Rokid AR Studio's desktop environment. Here are the steps to follow:
 
-### Common Issues
-- Coordinate system transformations
-- Asset loading failures
-- Input handling problems
-- WebXR compatibility issues
+First, open the desktop's quick settings and select "Settings."
+
+<!-- 图片暂不可用 (Step 1) -->
+
+In the settings, select "Developer Options" and enable "Spatial App Debugging."
+
+<!-- 图片暂不可用 (Step 2) -->
+
+Then, swipe down one screen on the application list to see that the current spatial app is in debugging mode.
+
+<!-- 图片暂不可用 (Step 3) -->
+
+Next, open any spatial app project using Visual Studio Code, and you can install the project on the device and debug it in two ways:
+
+1. Open the command palette with Cmd + Shift + P, enter "JSAR: Install to Connected Device," and follow the prompts to select the device.
+2. In the Explorer panel, right-click in a blank area, select "JSAR: Install to Connected Device," and follow the prompts to select the device.
+
+Note: This feature depends on locally installed adb to interact with AOSP devices. The basic adb information is as follows:
+
+```
+Android Debug Bridge version 1.0.41
+Version 34.0.1-9979309
+```

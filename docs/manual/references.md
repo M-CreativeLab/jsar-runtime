@@ -6,31 +6,22 @@ In this chapter, we will provide a list of references, the technical documentati
 
 JSAR is a Web runtime, and it provides a set of APIs that follow the Web platform standards, such as DOM, WebGL, WebXR, and WebAssembly. And it also provides two additional APIs, the one is part of the Node.js APIs for testing and debugging purposes, and the other is the JSAR-specific APIs for the runtime itself.
 
-### Web APIs
-Standard web platform APIs adapted for spatial computing environments.
-
-### JSAR APIs
-Custom APIs specifically designed for spatial web development and XR functionality.
+- [Web APIs](./references/web-apis)
+- [JSAR APIs](./references/jsar-apis)
 
 ## Graphics
 
 These documentations will help you to learn more about how the WebGL works in JSAR, and which graphics backends have been supported by JSAR's unified mixed-rendering architecture. And also here, you can find the references about the WebGL extensions that JSAR supports.
 
-### WebGL and Extensions
-Comprehensive guide to WebGL implementation and supported extensions in JSAR.
+- [WebGL and extensions](./references/webgl-and-extensions)
+- [Graphics backends](./references/graphics-backends)
 
-### Graphics Backends
-Technical details about the rendering pipeline and supported graphics backends.
-
-## WebXR and Input Sources
+## WebXR and input sources
 
 JSAR implements the [WebXR Device API][] to run WebXR applications, here you can find the references about the WebXR Device API and the input sources that JSAR supports.
 
-### WebXR Basis
-Fundamental concepts and implementation details of WebXR in JSAR.
-
-### WebXR Input Sources
-Detailed information about supported input devices and interaction methods.
+- [WebXR basis](./references/webxr-basis)
+- [WebXR input sources](./references/webxr-input-sources)
 
 [WebXR Device API]: https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API
 
@@ -38,16 +29,18 @@ Detailed information about supported input devices and interaction methods.
 
 There is a set of device configuration that you can use to debug and test your applications.
 
-### Device Settings
-Configuration options for different XR devices and platforms.
+- [Runtime configuration](./references/runtime-configuration)
 
-### Development Configuration
-Settings and options for development and debugging environments.
+## Embedders
 
-## Specifications
+If you are a developer who wants to embed JSAR into your application or platform, you can find the embedder APIs and guides here, currently JSAR provides the native C++ APIs and Unity C# APIs to work with.
 
-### JSAR Architecture
-Technical overview of the JSAR runtime architecture and core components.
+- [Native APIs](./references/native-apis)
+- [Unity APIs](./references/unity-apis)
 
-### Performance Guidelines
-Best practices and performance considerations for spatial web applications.
+## Language specifications
+
+JSAR created new languages: XSML and SpatialCSS, and also extends the HTML and CSS to support the spatialized elements and attributes. Here you can find the complete specifications of these new and extended languages.
+
+- [XSML](./references/xsml)
+- [SpatialCSS](./references/spatial-css)

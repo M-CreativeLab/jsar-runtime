@@ -2,7 +2,7 @@
 
 The extension interface is shown in the image below, mainly consisting of 5 areas:
 
-![](vscode-extension-gui.png)
+<!-- 图片暂不可用 (vscode-extension-gui) -->
 
 1. Directory Tree: Used to view files and code in your project.
 2. Editing Area: Used to edit code for a single file.

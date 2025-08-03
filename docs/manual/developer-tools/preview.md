@@ -1,70 +1,37 @@
 # Preview
 
-The JSAR preview system allows you to test your spatial applications in real-time during development, providing immediate feedback and iteration capabilities.
+## Opening the Preview Window
 
-## Live Preview
+- First, open any `*.xsml` file.
+- Select the opened tab, and in the upper right corner, you can find a button to open the scene view.
+- Click the button, and you can open the scene view.
 
-### Development Server
-The JSAR development server provides hot reload functionality:
+<!-- 图片暂不可用 -->
 
-```bash
-npm run docs:dev
-```
+## Interactive Features
 
-This starts a local server with:
-- Automatic file watching
-- Hot module replacement
-- Live preview updates
-- Error overlay display
+In the preview window, several interactive methods are provided to help developers with debugging.
 
-### Preview Modes
+### Rotating Objects
 
-#### Desktop Preview
-Test your application in a desktop browser environment:
-- WebXR emulation for basic testing
-- Mouse and keyboard input simulation
-- Responsive design validation
+You can rotate objects by dragging with the left mouse button.
 
-#### Device Preview
-Test on actual XR devices:
-- Deploy to Rokid AR Studio
-- Use JSAR Canary for quick testing
-- QR code deployment for instant updates
+### Zooming In/Out
 
-## Preview Features
+You can zoom in/out by scrolling the mouse wheel.
 
-### Real-time Updates
-- Instant reflection of code changes
-- No need to restart the application
-- Preserves application state when possible
+> Note: There is a maximum value for zooming in and out. If there is no change when zooming, it may be because you are already at the closest or farthest distance. In this case, try scrolling in the opposite direction.
 
-### Debug Overlay
-- Performance metrics display
-- Console output overlay
-- Error reporting with stack traces
+### Resetting the View
 
-### Multi-device Testing
-- Simultaneous preview on multiple devices
-- Synchronized debugging sessions
-- Cross-platform compatibility validation
+You can reset the view by clicking the button on the left.
 
-## Configuration
+### Reloading
 
-### Preview Settings
-Configure preview behavior in your JSAR project:
+You can reload the current app by clicking the button on the right.
 
-```json
-{
-  "preview": {
-    "autoReload": true,
-    "showDebugInfo": true,
-    "device": "rokid-ar-studio"
-  }
-}
-```
+### Hot Reloading
 
-### Network Configuration
-Set up network access for device preview:
-- Configure firewall rules
-- Set up local network access
-- Enable HTTPS for secure contexts
+Modifying XSML code or any other files in the project will trigger a refresh of the scene.
+
+> Note: In the future, more precise hot reloading will be implemented using VirtualDom, rather than refreshing the entire page each time.

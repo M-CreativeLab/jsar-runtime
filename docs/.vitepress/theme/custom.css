@@ -5,19 +5,19 @@
   --vp-c-brand-2: #1D4ED8;
   --vp-c-brand-3: #1E40AF;
   --vp-c-brand-soft: rgba(59, 130, 246, 0.14);
-  
+
   /* Success colors */
   --vp-c-tip-1: #16a34a;
   --vp-c-tip-2: #15803d;
   --vp-c-tip-3: #166534;
   --vp-c-tip-soft: rgba(22, 163, 74, 0.14);
-  
+
   /* Warning colors */
   --vp-c-warning-1: #ca8a04;
   --vp-c-warning-2: #a16207;
   --vp-c-warning-3: #854d0e;
   --vp-c-warning-soft: rgba(202, 138, 4, 0.14);
-  
+
   /* Error colors */
   --vp-c-danger-1: #991b1b;
   --vp-c-danger-2: #7f1d1d;
@@ -64,16 +64,21 @@
 }
 
 /* Feature cards styling */
+.VPFeatures {
+  margin: 2rem 0;
+}
+
+.VPFeatures .container {
+  gap: 2rem;
+}
+
 .VPFeatures .item {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
   padding: 2rem;
   background: var(--vp-c-bg-soft);
   transition: all 0.3s ease;
 }
 
 .VPFeatures .item:hover {
-  border-color: var(--vp-c-brand-1);
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
   transform: translateY(-2px);
 }
@@ -106,9 +111,8 @@
   color: var(--vp-c-text-1);
 }
 
-.VPSidebarItem.is-active > .item {
+.VPSidebarItem.is-active>.item {
   color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
   border-radius: 6px;
 }
 
@@ -144,24 +148,22 @@
 /* Table styling */
 .vp-doc table {
   border-collapse: collapse;
-  width: 100%;
+  width: fit-content;
   margin: 1.5rem 0;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--vp-c-divider);
 }
 
 .vp-doc th,
 .vp-doc td {
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--vp-c-divider);
+  /* border-bottom: 1px solid var(--vp-c-divider); */
 }
 
 .vp-doc th {
   background: var(--vp-c-bg-soft);
   font-weight: 600;
   color: var(--vp-c-text-1);
+  min-width: 160px;
 }
 
 .vp-doc td {
@@ -190,6 +192,14 @@
 }
 
 /* Code styling */
+.vp-doc div[class*='language-'] {
+  background: transparent;
+
+  code {
+    padding: 20px;
+  }
+}
+
 .vp-doc code {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
@@ -223,15 +233,15 @@
   .VPHero .name {
     font-size: 2.5rem;
   }
-  
+
   .VPHero .text {
     font-size: 1.5rem;
   }
-  
+
   .VPHero .tagline {
     font-size: 1.2rem;
   }
-  
+
   .VPFeatures .item {
     padding: 1.5rem;
   }
@@ -254,6 +264,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
