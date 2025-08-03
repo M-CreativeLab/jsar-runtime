@@ -30,6 +30,8 @@ jobs:
         run: npm ci
 
       - name: Build documentation artifacts
+        env:
+          GTAG: ${{ secrets.GTAG }}
         run: |
           npm run build:website
 

@@ -41,6 +41,16 @@ export default defineConfig({
     ['meta', { name: 'twitter:title', content: 'JSAR | Spatial Web Browser Engine' }],
     ['meta', { name: 'twitter:description', content: 'Open-source spatial web browser engine for immersive 3D browsing and WebXR experiences.' }],
     ['meta', { name: 'twitter:image', content: '/JSAR_POSTER.png' }],
+    // Google Analytics
+    ...(process.env.GTAG ? [
+      ['script', { async: true, src: `https://www.googletagmanager.com/gtag/js?id=${process.env.GTAG}` }],
+      ['script', {}, `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', '${process.env.GTAG}');
+      `]
+    ] : [])
   ],
 
   themeConfig: {
