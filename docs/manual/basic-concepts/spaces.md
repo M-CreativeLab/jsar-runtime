@@ -6,7 +6,7 @@ This section will introduce what's space and space-related fundamental concepts.
 
 In the context of augmented reality (AR), a space refers to an area in the real world, which can be a flat surface or a three-dimensional object. Users interact with the space to obtain information about the space, such as its size, position, rotation, and more. In XR development, a scene is typically used to represent and encapsulate one or more spaces.
 
-![Space Example](intro-subspace-in-deskstop.png)
+<!-- 图片暂不可用 (Space Example) -->
 
 For instance, the _YodaOS-Master_ system desktop (as shown in the image above) is a space. Users can see a series of virtual screens (surfaces) arranged in the space, and there may also be independent objects in the space. All of these surfaces and objects collectively constitute the desktop space, but each screen or object can be considered a subspace.
 
@@ -26,7 +26,7 @@ In general, the movement of an object in space can be described in terms of posi
 
 > __Observer__ refers to the person or device that is viewing the space. However in the context of XR development, the observer is typically the user itself.
 
-![0 DoF Space](space-0dof.gif)
+<!-- 图片暂不可用 (0 DoF Space) -->
 
 ### 3 DoF
 
@@ -34,7 +34,7 @@ In general, the movement of an object in space can be described in terms of posi
 
 In virtual spaces, if a camera or observer only changes its orientation while maintaining a fixed position, the space is said to have 3 DoF. This means that objects within the virtual space can move programmatically, but the observer's position remains fixed, and they observe the virtual space from different orientations.
 
-![3 DoF Space](space-3dof.gif)
+<!-- 图片暂不可用 (3 DoF Space) -->
 
 ### 6 DoF
 
@@ -42,7 +42,7 @@ In virtual spaces, if a camera or observer only changes its orientation while ma
 
 In virtual spaces, if a camera or observer can change both its position and orientation, the space is said to have 6 DoF. The observer can freely move and rotate within the space, providing a high level of realism.
 
-![6 DoF Space](space-6dof.gif)
+<!-- 图片暂不可用 (6 DoF Space) -->
 
 ## Embeddable Spaces
 

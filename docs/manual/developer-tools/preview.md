@@ -6,7 +6,7 @@
 - Select the opened tab, and in the upper right corner, you can find a button to open the scene view.
 - Click the button, and you can open the scene view.
 
-![screenshot](howto-run-project.png)
+<!-- 图片暂不可用 -->
 
 ## Interactive Features
 

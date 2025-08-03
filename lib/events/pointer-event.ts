@@ -11,6 +11,8 @@ export class PointerEventImpl extends MouseEventImpl implements PointerEvent {
   tiltX: number;
   tiltY: number;
   twist: number;
+  altitudeAngle: number;
+  azimuthAngle: number;
 
   constructor(type: string, eventInitDict: PointerEventInit) {
     super(type, eventInitDict);
