@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { marked } from 'marked';
+import { ref, onMounted } from 'vue'
+import { marked } from 'marked'
+import { withBase } from 'vitepress';
 
 // Default value in case of fetch failure
 const versions = ref([
@@ -24,7 +25,7 @@ const versions = ref([
 onMounted(async () => {
   try {
     // Get changelog information
-    const changelogResponse = await fetch('/changelogs/alpha.md');
+    const changelogResponse = await fetch(withBase('/changelogs/alpha.md'));
     if (changelogResponse.ok) {
       const changelogText = await changelogResponse.text();
 

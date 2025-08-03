@@ -114,6 +114,8 @@
 </template>
 
 <script>
+import { withBase } from 'vitepress'
+
 export default {
   name: 'BrowserCompatData',
   data() {
@@ -138,6 +140,7 @@ export default {
     this.initializeData()
   },
   methods: {
+    withBase,
     async initializeData() {
       this.loading = true
       this.error = false
@@ -207,7 +210,7 @@ export default {
     async loadCompatibilityData() {
       try {
         // Load the merged single JSON file
-        const allData = await this.loadJSON('/api/browser-compat-data/all.json')
+        const allData = await this.loadJSON(this.withBase('/api/browser-compat-data/all.json'))
         // 设置浏览器信息
         this.browserInfo = allData.browsers.jsar
 
