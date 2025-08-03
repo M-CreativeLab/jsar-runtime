@@ -29,11 +29,18 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
     ['meta', { name: 'theme-color', content: '#3b82f6' }],
+    ['meta', { name: 'keywords', content: 'spatial browsing, spatial web browser, 3D web browser, immersive web, WebXR, spatial computing, mixed reality browser, augmented reality web, virtual reality browser, spatial web engine, JSAR' }],
+    ['meta', { name: 'description', content: 'JSAR is an open-source spatial web browser engine that enables immersive 3D browsing experiences. Built for spatial computing, WebXR, and the future of spatial browsing on the web.' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'en' }],
-    ['meta', { property: 'og:title', content: 'JSAR | Open Source Browser Engine for the Spatial Web' }],
+    ['meta', { property: 'og:title', content: 'JSAR | Open Source Spatial Web Browser Engine for Immersive Browsing' }],
+    ['meta', { property: 'og:description', content: 'Experience the future of web browsing with JSAR - an open-source spatial web browser engine for 3D, WebXR, and immersive spatial browsing experiences.' }],
     ['meta', { property: 'og:site_name', content: 'JSAR' }],
     ['meta', { property: 'og:image', content: '/JSAR_POSTER.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'JSAR | Spatial Web Browser Engine' }],
+    ['meta', { name: 'twitter:description', content: 'Open-source spatial web browser engine for immersive 3D browsing and WebXR experiences.' }],
+    ['meta', { name: 'twitter:image', content: '/JSAR_POSTER.png' }],
   ],
 
   themeConfig: {
