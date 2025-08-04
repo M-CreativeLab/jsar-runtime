@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <crates/bindings.hpp>
 #include <client/cssom/style_traits.hpp>
 
 namespace client_cssom::values::generics
@@ -484,6 +485,10 @@ namespace client_cssom::values::generics
       kContain,
     };
 
+    // Fields for length-percentage | auto values
+    crates::layout2::styles::LengthPercentageAuto width_;
+    crates::layout2::styles::LengthPercentageAuto height_;
+
   public:
     static T Cover()
     {
@@ -493,16 +498,41 @@ namespace client_cssom::values::generics
     {
       return T(kContain);
     }
+    
+    // Factory methods for length/percentage/auto values
+    static T SingleValue(const crates::layout2::styles::LengthPercentageAuto& width)
+    {
+      return T(kSingleValue, width, crates::layout2::styles::LengthPercentageAuto::Auto());
+    }
+    
+    static T TwoValues(const crates::layout2::styles::LengthPercentageAuto& width,
+                      const crates::layout2::styles::LengthPercentageAuto& height)
+    {
+      return T(kTwoValues, width, height);
+    }
 
   public:
     GenericBackgroundSize()
-        : tag_(kSingleValue)  // Default to single auto value
+        : tag_(kSingleValue)
+        , width_(crates::layout2::styles::LengthPercentageAuto::Auto())
+        , height_(crates::layout2::styles::LengthPercentageAuto::Auto())
     {
     }
 
   protected:
     GenericBackgroundSize(Tag tag)
         : tag_(tag)
+        , width_(crates::layout2::styles::LengthPercentageAuto::Auto())
+        , height_(crates::layout2::styles::LengthPercentageAuto::Auto())
+    {
+    }
+
+    GenericBackgroundSize(Tag tag, 
+                         const crates::layout2::styles::LengthPercentageAuto& width,
+                         const crates::layout2::styles::LengthPercentageAuto& height)
+        : tag_(tag)
+        , width_(width)
+        , height_(height)
     {
     }
 
@@ -537,6 +567,17 @@ namespace client_cssom::values::generics
     inline bool isTwoValues() const
     {
       return tag_ == kTwoValues;
+    }
+
+    // Getters for width and height
+    inline const crates::layout2::styles::LengthPercentageAuto& getWidth() const
+    {
+      return width_;
+    }
+    
+    inline const crates::layout2::styles::LengthPercentageAuto& getHeight() const
+    {
+      return height_;
     }
 
   protected:
