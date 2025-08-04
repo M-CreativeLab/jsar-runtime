@@ -6,28 +6,6 @@ The alpha version of JSAR is the first version of the project.
 
 ### New Features & Improvements
 
-#### Website & Documentation Enhancements
-
-- **VitePress Migration**: Complete refactor of documentation to use VitePress for website generation (#187)
-- **Search Functionality**: Added search bar to improve navigation and content discovery
-- **Site Improvements**: Enhanced site head, updated links, and improved overall user experience
-- **Tracing Integration**: Added tracing platform integration for better monitoring
-- **GitHub Pages Deployment**: Added automated GitHub Action for website deployment (#184)
-- **Markdown Enhancements**: Support for rendering markdown task lists
-- **Base Path Support**: Fixed resource base URL handling for proper deployment
-- **Link Fixes**: Corrected error links and reordered tutorials for better navigation
-- **Changelog Integration**: Fixed changelogs redirect links with proper base path handling
-- **Technical Blog Posts**: Added technical blog posts for community promotion (#136)
-- **Contributing Guide**: Added CONTRIBUTING.md to guide contributors (#138)
-- **Browser Compatibility**: Created browser compatibility visualization webpage (#104)
-- **Documentation Cleanup**: Removed errored license note
-
-#### Browser & Window Management
-
-- **Configurable Window Dragging**: Support for configurable window dragging regions (#180)
-- **Improved Statistics Panel**: Enhanced the browser stat panel for better debugging
-- **Memory Management**: Specified Node options to increase V8 memory for better performance
-
 #### CSS & Styling Enhancements
 
 - **CSS Transform Parser**: Replaced Rust CSS transform parser with C/C++ implementation for better performance (#176)
@@ -74,10 +52,6 @@ The alpha version of JSAR is the first version of the project.
 - **Deployment Permissions**: Added write permissions for deploy-website workflow
 - **Memory Optimization**: Specified Node options to increase V8 memory limits
 - **Lint Fixes**: Fixed various lint errors throughout the codebase
-
-### Maintenance
-
-- Updated project version to 0.9.0 for official release (based on commit 8f966bd3ba60530487c54d3ef123887f8615e9be from main)
 
 ## v0.8.2
 
