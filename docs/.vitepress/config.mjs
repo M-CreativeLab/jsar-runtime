@@ -45,6 +45,7 @@ export default defineConfig({
     ['meta', { name: 'twitter:title', content: 'JSAR | Spatial Web Browser Engine' }],
     ['meta', { name: 'twitter:description', content: 'Open-source spatial web browser engine for immersive 3D browsing and WebXR experiences.' }],
     ['meta', { name: 'twitter:image', content: '/JSAR_POSTER.png' }],
+    ['meta', { name: 'twitter:creator', content: '@yorkiemakoto' }],
     // Google Analytics
     ...(process.env.GTAG ? [
       ['script', { async: true, src: `https://www.googletagmanager.com/gtag/js?id=${process.env.GTAG}` }],
@@ -69,6 +70,7 @@ export default defineConfig({
         text: 'API Reference',
         link: '/api/browser-compat-data',
       },
+      { text: 'Download', link: '/download' },
       { text: 'Changelog', link: '/changelogs/alpha' },
       { text: 'Blog', link: '/blog' },
       { text: 'GitHub', link: 'https://github.com/M-CreativeLab/jsar-runtime' }
