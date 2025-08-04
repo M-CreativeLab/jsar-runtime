@@ -2,7 +2,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mergeCompatibilityData } from './merge-compat-data.mjs';
-import { copyChangelogs, copyBrowserCompatData, copyInspector } from './copy-changelogs.mjs';
+import { copyChangelogs, copyBrowserCompatData, copyInspector, copyStaticAssets } from './copy-changelogs.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +20,9 @@ export const buildStart = () => {
 
     // Copy browser-compat-data/all.json file
     copyBrowserCompatData();
+
+    // Copy static assets (images and README.md)
+    copyStaticAssets();
 
     // Copy inspector HTML files
     copyInspector();

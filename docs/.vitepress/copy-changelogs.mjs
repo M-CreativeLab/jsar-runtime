@@ -97,10 +97,10 @@ export const copyInspector = () => {
 
     // Read all files in the inspector directory
     const files = fs.readdirSync(sourceDir);
-    
+
     // Filter and copy only HTML files
     const htmlFiles = files.filter(file => file.endsWith('.html'));
-    
+
     if (htmlFiles.length === 0) {
       console.log('⚠️ No HTML files found in inspector directory');
       return;
@@ -109,14 +109,66 @@ export const copyInspector = () => {
     htmlFiles.forEach(file => {
       const sourcePath = path.join(sourceDir, file);
       const destPath = path.join(distDir, file);
-      
+
       fs.copyFileSync(sourcePath, destPath);
       console.log(`✅ Copied ${file} to dist/inspector/`);
     });
 
     console.log(`✅ Copied ${htmlFiles.length} HTML files to dist/inspector/`);
 
-    } catch (error) {
-      console.error('❌ Failed to copy inspector files:', error);
+  } catch (error) {
+    console.error('❌ Failed to copy inspector files:', error);
+  }
+};
+
+/**
+ * Copy image files and README.md to dist directory
+ */
+export const copyStaticAssets = () => {
+  try {
+    const docsDir = path.resolve(__dirname, '..');
+    const distDir = path.resolve(__dirname, './dist');
+
+    // Ensure target directory exists
+    if (!fs.existsSync(distDir)) {
+      fs.mkdirSync(distDir, { recursive: true });
     }
-  };
+
+    // Copy README.md
+    const readmePath = path.join(docsDir, 'README.md');
+    if (fs.existsSync(readmePath)) {
+      const destReadmePath = path.join(distDir, 'README.md');
+      fs.copyFileSync(readmePath, destReadmePath);
+      console.log('✅ Copied README.md to dist/');
+    } else {
+      console.log('⚠️ README.md not found, skipping copy');
+    }
+
+    // Copy image files (jpg, png, webp, svg)
+    const imageExtensions = ['.jpg', '.png', '.webp', '.svg'];
+    const files = fs.readdirSync(docsDir);
+
+    const imageFiles = files.filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return imageExtensions.includes(ext);
+    });
+
+    if (imageFiles.length === 0) {
+      console.log('⚠️ No image files found in docs directory');
+      return;
+    }
+
+    imageFiles.forEach(file => {
+      const sourcePath = path.join(docsDir, file);
+      const destPath = path.join(distDir, file);
+
+      fs.copyFileSync(sourcePath, destPath);
+      console.log(`✅ Copied ${file} to dist/`);
+    });
+
+    console.log(`✅ Successfully copied ${imageFiles.length} image file(s) to dist/`);
+
+  } catch (error) {
+    console.error('❌ Failed to copy static assets:', error);
+  }
+};
