@@ -5,15 +5,15 @@ import { useData } from 'vitepress'
 const currentSlide = ref(0)
 const screenshots = ref([
   {
-    src: 'macos-screenshot-00.png',
+    src: 'https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/refs/heads/main/docs/macos-screenshot-00.png',
     alt: 'Mixed 2D and 3D Elements'
   },
   {
-    src: 'macos-screenshot-01.png',
+    src: 'https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/refs/heads/main/docs/macos-screenshot-01.png',
     alt: '2D Elements'
   },
   {
-    src: 'macos-screenshot-02.png',
+    src: 'https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/refs/heads/main/docs/macos-screenshot-02.png',
     alt: '3D Particles'
   },
 ])

@@ -143,31 +143,6 @@ export const copyStaticAssets = () => {
     } else {
       console.log('⚠️ README.md not found, skipping copy');
     }
-
-    // Copy image files (jpg, png, webp, svg)
-    const imageExtensions = ['.jpg', '.png', '.webp', '.svg'];
-    const files = fs.readdirSync(docsDir);
-
-    const imageFiles = files.filter(file => {
-      const ext = path.extname(file).toLowerCase();
-      return imageExtensions.includes(ext);
-    });
-
-    if (imageFiles.length === 0) {
-      console.log('⚠️ No image files found in docs directory');
-      return;
-    }
-
-    imageFiles.forEach(file => {
-      const sourcePath = path.join(docsDir, file);
-      const destPath = path.join(distDir, file);
-
-      fs.copyFileSync(sourcePath, destPath);
-      console.log(`✅ Copied ${file} to dist/`);
-    });
-
-    console.log(`✅ Successfully copied ${imageFiles.length} image file(s) to dist/`);
-
   } catch (error) {
     console.error('❌ Failed to copy static assets:', error);
   }
