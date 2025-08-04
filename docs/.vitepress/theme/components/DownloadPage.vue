@@ -53,8 +53,8 @@ const downloads = ref([
     platforms: [
       {
         name: 'macOS',
-        // url: 'https://github.com/M-CreativeLab/jsar-runtime/releases/latest/download/jsar-browser-macos.dmg',
-        requirements: 'macOS 10.15 or later',
+        url: 'https://github.com/M-CreativeLab/jsar-runtime/releases/latest/download/TransmuteBrowser.zip',
+        requirements: 'macOS 14 or later',
       },
     ]
   },
