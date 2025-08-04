@@ -26,7 +26,7 @@ namespace client_cssom
     kNone,
   };
 
-  class ComputedStyle : std::map<std::string, std::string>
+  class ComputedStyle : public std::map<std::string, std::string>
   {
   public:
     enum Difference

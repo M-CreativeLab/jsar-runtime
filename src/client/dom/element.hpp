@@ -68,6 +68,7 @@ namespace dom
                   public Animatable,
                   virtual public client_cssom::BoxBounding
   {
+    friend class Animation;
     friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
     friend class client_layout::LayoutObject;

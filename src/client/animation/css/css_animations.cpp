@@ -33,11 +33,11 @@ namespace dom
 
       auto property = transition_property->property;
       std::string property_name = property.toCss();
-      
+
       // Skip if transition duration is zero or negative
       if (transition_property->duration.seconds().value <= 0.0f)
         continue;
-      
+
       // Skip if property is not animatable
       if (!client_cssom::ComputedStyle::IsAnimatableProperty(property_name))
         continue;
@@ -48,12 +48,12 @@ namespace dom
       {
         auto old_it = old_style->find(property_name);
         auto new_it = new_style.find(property_name);
-        
+
         if (old_it != old_style->end())
           start_value = old_it->second;
         if (new_it != new_style.end())
           end_value = new_it->second;
-          
+
         // Only create transition if values are different
         if (start_value == end_value || start_value.empty() || end_value.empty())
           continue;
@@ -71,16 +71,16 @@ namespace dom
 
       auto effect = make_unique<AnimationEffect>(*transition_property);
       auto animation = make_shared<CSSTransition>(move(effect), timeline, property_name, start_value, end_value);
-      
+
       // Set the owning element for the transition
       animation->setOwningElement(target_element);
-      
+
       // Attach the animation to the timeline so it gets updated
       timeline->animationAttached(animation);
-      
+
       // Start the animation
       animation->play();
-      
+
       auto animatables = AnimatableProperties::FromTransitionProperty(property);
       auto transition_animation = make_shared<RunningTransition>(animation, animatables);
       transitions_.emplace(property_name, transition_animation);

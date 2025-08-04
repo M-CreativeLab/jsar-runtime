@@ -1,3 +1,5 @@
+#include <client/dom/element.hpp>
+
 #include "./animation-inl.hpp"
 #include "./animation_effect.hpp"
 #include "./animation_timeline.hpp"
@@ -41,7 +43,7 @@ namespace dom
         {
           // Convert to seconds and update the animation effect
           float current_time_seconds = current_time_ms.value() / 1000.0f;
-          
+
           // Calculate local time relative to animation start
           float local_time = 0.0f;
           if (start_time_.has_value())
@@ -55,10 +57,10 @@ namespace dom
             local_time = 0.0f;
             play_state_ = kPlayStateRunning;
           }
-          
+
           // Update the effect's local time
           effect_->updateLocalTime(local_time);
-          
+
           // Check if animation is finished
           auto computed_timing = effect_->getComputedTiming();
           if (local_time >= computed_timing.endTime)
@@ -66,18 +68,16 @@ namespace dom
             play_state_ = kPlayStateFinished;
             return false; // Animation finished, no more updates needed
           }
-          
+
           // Mark the owning element as needing style recalculation
           if (auto owning_element = this->owningElement())
-          {
             owning_element->markAsDirty();
-          }
-          
+
           return true; // Animation is active and updated
         }
       }
     }
-    
+
     return false; // No timeline or timeline not active
   }
 
