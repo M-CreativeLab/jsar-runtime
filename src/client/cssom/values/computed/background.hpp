@@ -90,7 +90,7 @@ namespace client_cssom::values::computed
 
     // Constructor for length/percentage values
     BackgroundSize(const LengthPercentage &width, const std::optional<LengthPercentage> &height = std::nullopt)
-        : generics::GenericBackgroundSize<BackgroundSize>(height ? kLengthPercentagePair : kLengthPercentage)
+        : generics::GenericBackgroundSize<BackgroundSize>(height ? kTwoValues : kSingleValue)
         , width_(width)
         , height_(height)
     {
@@ -105,15 +105,13 @@ namespace client_cssom::values::computed
     {
       switch (tag_)
       {
-      case kAuto:
-        return "auto";
       case kCover:
         return "cover";
       case kContain:
         return "contain";
-      case kLengthPercentage:
+      case kSingleValue:
         return width_.toCss();
-      case kLengthPercentagePair:
+      case kTwoValues:
         return width_.toCss() + " " + (height_ ? height_->toCss() : "auto");
       }
       return "";
@@ -166,7 +164,7 @@ namespace client_cssom::values::computed
 
     // Constructor for length/percentage values
     BackgroundPosition(const LengthPercentage &x, const std::optional<LengthPercentage> &y = std::nullopt)
-        : generics::GenericBackgroundPosition<BackgroundPosition>(y ? kLengthPercentagePair : kLengthPercentage)
+        : generics::GenericBackgroundPosition<BackgroundPosition>(y ? kTwoValues : kSingleLengthPercentage)
         , x_(x)
         , y_(y)
     {
@@ -181,19 +179,12 @@ namespace client_cssom::values::computed
     {
       switch (tag_)
       {
-      case kLeft:
-        return "left";
-      case kCenter:
-        return "center";
-      case kRight:
-        return "right";
-      case kTop:
-        return "top";
-      case kBottom:
-        return "bottom";
-      case kLengthPercentage:
+      case kSingleKeyword:
+      case kSingleLengthPercentage:
         return x_.toCss();
-      case kLengthPercentagePair:
+      case kTwoValues:
+        return x_.toCss() + " " + (y_ ? y_->toCss() : "center");
+      case kEdgeOffsets:
         return x_.toCss() + " " + (y_ ? y_->toCss() : "center");
       }
       return "";

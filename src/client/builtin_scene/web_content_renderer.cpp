@@ -97,12 +97,7 @@ namespace builtin_scene::web_renderer
     float originalWidth = static_cast<float>(image->width());
     float originalHeight = static_cast<float>(image->height());
     
-    if (style.backgroundSize().isAuto())
-    {
-      // Auto: use the image's natural size
-      return SkSize::Make(originalWidth, originalHeight);
-    }
-    else if (style.backgroundSize().isCover())
+    if (style.backgroundSize().isCover())
     {
       // Cover: scale image to cover the entire background area
       float scaleX = positioningArea.width() / originalWidth;
@@ -118,7 +113,7 @@ namespace builtin_scene::web_renderer
       float scale = std::min(scaleX, scaleY);
       return SkSize::Make(originalWidth * scale, originalHeight * scale);
     }
-    else if (style.backgroundSize().isLengthPercentage())
+    else if (style.backgroundSize().isSingleValue())
     {
       // Single length/percentage value - width specified, height is auto
       const auto &width = style.backgroundSize().getWidth();
@@ -141,7 +136,7 @@ namespace builtin_scene::web_renderer
       float scale = calculatedWidth / originalWidth;
       return SkSize::Make(calculatedWidth, originalHeight * scale);
     }
-    else if (style.backgroundSize().isLengthPercentagePair())
+    else if (style.backgroundSize().isTwoValues())
     {
       // Two-value syntax: width and height specified
       const auto &width = style.backgroundSize().getWidth();
@@ -197,52 +192,21 @@ namespace builtin_scene::web_renderer
   {
     float x, y;
 
-    // Handle horizontal positioning
-    if (style.backgroundPosition().isLeft())
+    // Handle horizontal positioning - all types use getX() now
+    const auto &xValue = style.backgroundPosition().getX();
+    if (xValue.isPercentage())
     {
-      x = positioningArea.fLeft;
+      float percent = xValue.getPercentage().value();
+      x = positioningArea.fLeft + percent * (positioningArea.width() - imageSize.width());
     }
-    else if (style.backgroundPosition().isRight())
+    else if (xValue.isLength())
     {
-      x = positioningArea.fRight - imageSize.width();
+      x = positioningArea.fLeft + xValue.getLength().px();
     }
-    else if (style.backgroundPosition().isCenter())
+    else
     {
-      x = positioningArea.fLeft + (positioningArea.width() - imageSize.width()) / 2.0f;
+      x = positioningArea.fLeft + (positioningArea.width() - imageSize.width()) / 2.0f; // center
     }
-    else if (style.backgroundPosition().isLengthPercentage())
-    {
-      // Single value applies to X axis, Y axis defaults to center
-      const auto &xValue = style.backgroundPosition().getX();
-      if (xValue.isPercentage())
-      {
-        float percent = xValue.getPercentage().value();
-        x = positioningArea.fLeft + percent * (positioningArea.width() - imageSize.width());
-      }
-      else if (xValue.isLength())
-      {
-        x = positioningArea.fLeft + xValue.getLength().px();
-      }
-      else
-      {
-        x = positioningArea.fLeft + (positioningArea.width() - imageSize.width()) / 2.0f; // center
-      }
-    }
-    else if (style.backgroundPosition().isLengthPercentagePair())
-    {
-      // Two values: X and Y specified
-      const auto &xValue = style.backgroundPosition().getX();
-      if (xValue.isPercentage())
-      {
-        float percent = xValue.getPercentage().value();
-        x = positioningArea.fLeft + percent * (positioningArea.width() - imageSize.width());
-      }
-      else if (xValue.isLength())
-      {
-        x = positioningArea.fLeft + xValue.getLength().px();
-      }
-      else
-      {
         x = positioningArea.fLeft + (positioningArea.width() - imageSize.width()) / 2.0f; // center
       }
     }
@@ -252,52 +216,27 @@ namespace builtin_scene::web_renderer
     }
 
     // Handle vertical positioning
-    if (style.backgroundPosition().isTop())
+    const auto &yValueOpt = style.backgroundPosition().getY();
+    if (yValueOpt.has_value())
     {
-      y = positioningArea.fTop;
-    }
-    else if (style.backgroundPosition().isBottom())
-    {
-      y = positioningArea.fBottom - imageSize.height();
-    }
-    else if (style.backgroundPosition().isCenter())
-    {
-      y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f;
-    }
-    else if (style.backgroundPosition().isLengthPercentage())
-    {
-      // Single value applies to X axis, Y axis defaults to center
-      y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f;
-    }
-    else if (style.backgroundPosition().isLengthPercentagePair())
-    {
-      // Two values: X and Y specified
-      const auto &yValueOpt = style.backgroundPosition().getY();
-      if (yValueOpt.has_value())
+      const auto &yValue = yValueOpt.value();
+      if (yValue.isPercentage())
       {
-        const auto &yValue = yValueOpt.value();
-        if (yValue.isPercentage())
-        {
-          float percent = yValue.getPercentage().value();
-          y = positioningArea.fTop + percent * (positioningArea.height() - imageSize.height());
-        }
-        else if (yValue.isLength())
-        {
-          y = positioningArea.fTop + yValue.getLength().px();
-        }
-        else
-        {
-          y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f; // center
-        }
+        float percent = yValue.getPercentage().value();
+        y = positioningArea.fTop + percent * (positioningArea.height() - imageSize.height());
+      }
+      else if (yValue.isLength())
+      {
+        y = positioningArea.fTop + yValue.getLength().px();
       }
       else
       {
         y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f; // center
       }
     }
-    else // default to center
+    else
     {
-      y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f;
+      y = positioningArea.fTop + (positioningArea.height() - imageSize.height()) / 2.0f; // center
     }
 
     return SkPoint::Make(x, y);

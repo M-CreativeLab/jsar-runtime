@@ -469,24 +469,22 @@ namespace client_cssom::values::generics
     Tag tag_;
   };
 
+  // bg-size = [ <length-percentage> | auto ]{1,2} | cover | contain
   template <typename T>
   class GenericBackgroundSize : public ToCss
   {
   protected:
     enum Tag : uint8_t
     {
-      kAuto = 0,
+      // [ <length-percentage> | auto ]{1,2}
+      kSingleValue = 0,  // Single <length-percentage> or auto
+      kTwoValues,        // Two <length-percentage> or auto values
+      // Keywords
       kCover,
       kContain,
-      kLengthPercentage,
-      kLengthPercentagePair,
     };
 
   public:
-    static T Auto()
-    {
-      return T(kAuto);
-    }
     static T Cover()
     {
       return T(kCover);
@@ -498,7 +496,7 @@ namespace client_cssom::values::generics
 
   public:
     GenericBackgroundSize()
-        : tag_(kAuto)
+        : tag_(kSingleValue)  // Default to single auto value
     {
     }
 
@@ -513,23 +511,17 @@ namespace client_cssom::values::generics
     {
       switch (tag_)
       {
-      case kAuto:
-        return "auto";
       case kCover:
         return "cover";
       case kContain:
         return "contain";
-      case kLengthPercentage:
-      case kLengthPercentagePair:
+      case kSingleValue:
+      case kTwoValues:
         return ""; // Will be overridden by derived classes
       }
       return "";
     }
 
-    inline bool isAuto() const
-    {
-      return tag_ == kAuto;
-    }
     inline bool isCover() const
     {
       return tag_ == kCover;
@@ -538,60 +530,70 @@ namespace client_cssom::values::generics
     {
       return tag_ == kContain;
     }
-    inline bool isLengthPercentage() const
+    inline bool isSingleValue() const
     {
-      return tag_ == kLengthPercentage;
+      return tag_ == kSingleValue;
     }
-    inline bool isLengthPercentagePair() const
+    inline bool isTwoValues() const
     {
-      return tag_ == kLengthPercentagePair;
+      return tag_ == kTwoValues;
     }
 
   protected:
     Tag tag_;
   };
 
+  // bg-position = [
+  //   [ left | center | right | top | bottom | <length-percentage> ]
+  // |
+  //   [ left | center | right | <length-percentage> ]
+  //   [ top | center | bottom | <length-percentage> ]
+  // |
+  //   [ center | [ left | right ] <length-percentage>? ] &&
+  //   [ center | [ top | bottom ] <length-percentage>? ]
+  // ]
   template <typename T>
   class GenericBackgroundPosition : public ToCss
   {
   protected:
     enum Tag : uint8_t
     {
-      kLeft = 0,
-      kCenter,
-      kRight,
-      kTop,
-      kBottom,
-      kLengthPercentage,
-      kLengthPercentagePair,
-      kEdgeOffset,
+      // Single value: [ left | center | right | top | bottom | <length-percentage> ]
+      kSingleKeyword = 0,       // Single keyword (left, center, right, top, bottom)
+      kSingleLengthPercentage,  // Single <length-percentage>
+      
+      // Two value: [ left | center | right | <length-percentage> ] [ top | center | bottom | <length-percentage> ]
+      kTwoValues,               // Two values (keyword/length-percentage combinations)
+      
+      // Four value edge offsets: [ center | [ left | right ] <length-percentage>? ] && [ center | [ top | bottom ] <length-percentage>? ]
+      kEdgeOffsets,             // Edge offsets like "right 10px bottom 20px"
     };
 
   public:
     static T Left()
     {
-      return T(kLeft);
+      return T(kSingleKeyword);
     }
     static T Center()
     {
-      return T(kCenter);
+      return T(kSingleKeyword);
     }
     static T Right()
     {
-      return T(kRight);
+      return T(kSingleKeyword);
     }
     static T Top()
     {
-      return T(kTop);
+      return T(kSingleKeyword);
     }
     static T Bottom()
     {
-      return T(kBottom);
+      return T(kSingleKeyword);
     }
 
   public:
     GenericBackgroundPosition()
-        : tag_(kCenter)
+        : tag_(kSingleKeyword)  // Default to center
     {
     }
 
@@ -606,55 +608,30 @@ namespace client_cssom::values::generics
     {
       switch (tag_)
       {
-      case kLeft:
-        return "left";
-      case kCenter:
-        return "center";
-      case kRight:
-        return "right";
-      case kTop:
-        return "top";
-      case kBottom:
-        return "bottom";
-      case kLengthPercentage:
-      case kLengthPercentagePair:
-      case kEdgeOffset:
+      case kSingleKeyword:
+      case kSingleLengthPercentage:
+      case kTwoValues:
+      case kEdgeOffsets:
         return ""; // Will be overridden by derived classes
       }
       return "";
     }
 
-    inline bool isLeft() const
+    inline bool isSingleKeyword() const
     {
-      return tag_ == kLeft;
+      return tag_ == kSingleKeyword;
     }
-    inline bool isCenter() const
+    inline bool isSingleLengthPercentage() const
     {
-      return tag_ == kCenter;
+      return tag_ == kSingleLengthPercentage;
     }
-    inline bool isRight() const
+    inline bool isTwoValues() const
     {
-      return tag_ == kRight;
+      return tag_ == kTwoValues;
     }
-    inline bool isTop() const
+    inline bool isEdgeOffsets() const
     {
-      return tag_ == kTop;
-    }
-    inline bool isBottom() const
-    {
-      return tag_ == kBottom;
-    }
-    inline bool isLengthPercentage() const
-    {
-      return tag_ == kLengthPercentage;
-    }
-    inline bool isLengthPercentagePair() const
-    {
-      return tag_ == kLengthPercentagePair;
-    }
-    inline bool isEdgeOffset() const
-    {
-      return tag_ == kEdgeOffset;
+      return tag_ == kEdgeOffsets;
     }
 
   protected:

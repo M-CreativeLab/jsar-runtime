@@ -320,14 +320,14 @@ namespace client_cssom::values::specified
 
     // Constructor for single length/percentage value
     BackgroundSize(const LengthPercentage &width)
-        : generics::GenericBackgroundSize<BackgroundSize>(kLengthPercentage)
+        : generics::GenericBackgroundSize<BackgroundSize>(kSingleValue)
         , width_(width)
     {
     }
 
     // Constructor for two-value syntax
     BackgroundSize(const LengthPercentage &width, const LengthPercentage &height)
-        : generics::GenericBackgroundSize<BackgroundSize>(kLengthPercentagePair)
+        : generics::GenericBackgroundSize<BackgroundSize>(kTwoValues)
         , width_(width)
         , height_(height)
     {
@@ -348,12 +348,7 @@ namespace client_cssom::values::specified
 
     bool parse(const std::string &input) override
     {
-      if (input == "auto")
-      {
-        tag_ = kAuto;
-        return true;
-      }
-      else if (input == "cover")
+      if (input == "cover")
       {
         tag_ = kCover;
         return true;
@@ -389,7 +384,7 @@ namespace client_cssom::values::specified
                 return false;
               }
             }
-            tag_ = kLengthPercentage;
+            tag_ = kSingleValue;
             height_ = std::nullopt;
             return true;
           }
@@ -431,7 +426,7 @@ namespace client_cssom::values::specified
           
           width_ = parsedWidth;
           height_ = parsedHeight;
-          tag_ = kLengthPercentagePair;
+          tag_ = kTwoValues;
           return true;
         }
         
@@ -443,15 +438,13 @@ namespace client_cssom::values::specified
     {
       switch (tag_)
       {
-      case kAuto:
-        return "auto";
       case kCover:
         return "cover";
       case kContain:
         return "contain";
-      case kLengthPercentage:
+      case kSingleValue:
         return width_.toCss();
-      case kLengthPercentagePair:
+      case kTwoValues:
         return width_.toCss() + " " + (height_ ? height_->toCss() : "auto");
       }
       return "";
@@ -459,21 +452,19 @@ namespace client_cssom::values::specified
 
     computed::BackgroundSize toComputedValue(computed::Context &context) const override
     {
-      if (isAuto())
-        return computed::BackgroundSize::Auto();
-      else if (isCover())
+      if (isCover())
         return computed::BackgroundSize::Cover();
       else if (isContain())
         return computed::BackgroundSize::Contain();
-      else if (isLengthPercentage() || isLengthPercentagePair())
+      else if (isSingleValue() || isTwoValues())
       {
         // For now, create a computed value that holds the length/percentage data
         return computed::BackgroundSize::LengthPercentage(width_.toComputedValue(context), 
                                                           height_ ? std::optional<computed::LengthPercentage>(height_->toComputedValue(context)) : std::nullopt);
       }
 
-      // Default to Auto if none match
-      return computed::BackgroundSize::Auto();
+      // Default to single auto value if none match
+      return computed::BackgroundSize::LengthPercentage(computed::LengthPercentage::Auto(), std::nullopt);
     }
 
     // Getters for the length/percentage values
@@ -516,14 +507,14 @@ namespace client_cssom::values::specified
 
     // Constructor for single length/percentage value
     BackgroundPosition(const LengthPercentage &x)
-        : generics::GenericBackgroundPosition<BackgroundPosition>(kLengthPercentage)
+        : generics::GenericBackgroundPosition<BackgroundPosition>(kSingleLengthPercentage)
         , x_(x)
     {
     }
 
     // Constructor for two-value syntax
     BackgroundPosition(const LengthPercentage &x, const LengthPercentage &y)
-        : generics::GenericBackgroundPosition<BackgroundPosition>(kLengthPercentagePair)
+        : generics::GenericBackgroundPosition<BackgroundPosition>(kTwoValues)
         , x_(x)
         , y_(y)
     {
@@ -545,29 +536,12 @@ namespace client_cssom::values::specified
     bool parse(const std::string &input) override
     {
       // Handle basic keyword values
-      if (input == "left")
+      if (input == "left" || input == "center" || input == "right" || 
+          input == "top" || input == "bottom")
       {
-        tag_ = kLeft;
-        return true;
-      }
-      else if (input == "center")
-      {
-        tag_ = kCenter;
-        return true;
-      }
-      else if (input == "right")
-      {
-        tag_ = kRight;
-        return true;
-      }
-      else if (input == "top")
-      {
-        tag_ = kTop;
-        return true;
-      }
-      else if (input == "bottom")
-      {
-        tag_ = kBottom;
+        tag_ = kSingleKeyword;
+        x_ = keywordToPercentage(input);
+        y_ = std::nullopt;
         return true;
       }
       else
@@ -582,6 +556,7 @@ namespace client_cssom::values::specified
               values[0] == "top" || values[0] == "bottom")
           {
             x_ = keywordToPercentage(values[0]);
+            tag_ = kSingleKeyword;
           }
           else if (LengthPercentage::IsLengthOrPercentage(values[0]))
           {
@@ -589,6 +564,7 @@ namespace client_cssom::values::specified
             if (parsedValue.parse(values[0]))
             {
               x_ = parsedValue;
+              tag_ = kSingleLengthPercentage;
             }
             else
             {
@@ -599,7 +575,6 @@ namespace client_cssom::values::specified
           {
             return false;
           }
-          tag_ = kLengthPercentage;
           y_ = std::nullopt;
           return true;
         }
@@ -640,7 +615,7 @@ namespace client_cssom::values::specified
           
           x_ = parsedX;
           y_ = parsedY;
-          tag_ = kLengthPercentagePair;
+          tag_ = kTwoValues;
           return true;
         }
         else if (values.size() == 4)
@@ -700,7 +675,7 @@ namespace client_cssom::values::specified
         x_ = hOffset;
         y_ = vOffset;
         
-        tag_ = kEdgeOffset;
+        tag_ = kEdgeOffsets;
         return true;
       }
       
@@ -711,21 +686,13 @@ namespace client_cssom::values::specified
     {
       switch (tag_)
       {
-      case kLeft:
-        return "left";
-      case kCenter:
-        return "center";
-      case kRight:
-        return "right";
-      case kTop:
-        return "top";
-      case kBottom:
-        return "bottom";
-      case kLengthPercentage:
+      case kSingleKeyword:
         return x_.toCss();
-      case kLengthPercentagePair:
+      case kSingleLengthPercentage:
+        return x_.toCss();
+      case kTwoValues:
         return x_.toCss() + " " + (y_ ? y_->toCss() : "center");
-      case kEdgeOffset:
+      case kEdgeOffsets:
         return x_.toCss() + " " + (y_ ? y_->toCss() : "center"); // Simplified representation
       }
       return "";
@@ -733,25 +700,15 @@ namespace client_cssom::values::specified
 
     computed::BackgroundPosition toComputedValue(computed::Context &context) const override
     {
-      if (isLeft())
-        return computed::BackgroundPosition::Left();
-      else if (isCenter())
-        return computed::BackgroundPosition::Center();
-      else if (isRight())
-        return computed::BackgroundPosition::Right();
-      else if (isTop())
-        return computed::BackgroundPosition::Top();
-      else if (isBottom())
-        return computed::BackgroundPosition::Bottom();
-      else if (isLengthPercentage() || isLengthPercentagePair() || isEdgeOffset())
+      if (isSingleKeyword() || isSingleLengthPercentage() || isTwoValues() || isEdgeOffsets())
       {
-        // For now, create a computed value that holds the length/percentage data
+        // For all types, create a computed value that holds the length/percentage data
         return computed::BackgroundPosition::LengthPercentage(x_.toComputedValue(context), 
                                                               y_ ? std::optional<computed::LengthPercentage>(y_->toComputedValue(context)) : std::nullopt);
       }
 
       // Default to Center if none match
-      return computed::BackgroundPosition::Center();
+      return computed::BackgroundPosition::LengthPercentage(computed::LengthPercentage::Percentage(50.0), std::nullopt);
     }
 
     // Getters for the length/percentage values
