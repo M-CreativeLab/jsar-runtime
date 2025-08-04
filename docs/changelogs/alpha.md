@@ -6,9 +6,74 @@ The alpha version of JSAR is the first version of the project.
 
 ### New Features & Improvements
 
-#### Website Enhancements
+#### Website & Documentation Enhancements
 
-- Added search bar functionality to improve navigation and content discovery
+- **VitePress Migration**: Complete refactor of documentation to use VitePress for website generation (#187)
+- **Search Functionality**: Added search bar to improve navigation and content discovery
+- **Site Improvements**: Enhanced site head, updated links, and improved overall user experience
+- **Tracing Integration**: Added tracing platform integration for better monitoring
+- **GitHub Pages Deployment**: Added automated GitHub Action for website deployment (#184)
+- **Markdown Enhancements**: Support for rendering markdown task lists
+- **Base Path Support**: Fixed resource base URL handling for proper deployment
+- **Link Fixes**: Corrected error links and reordered tutorials for better navigation
+- **Changelog Integration**: Fixed changelogs redirect links with proper base path handling
+- **Technical Blog Posts**: Added technical blog posts for community promotion (#136)
+- **Contributing Guide**: Added CONTRIBUTING.md to guide contributors (#138)
+- **Browser Compatibility**: Created browser compatibility visualization webpage (#104)
+- **Documentation Cleanup**: Removed errored license note
+
+#### Browser & Window Management
+
+- **Configurable Window Dragging**: Support for configurable window dragging regions (#180)
+- **Improved Statistics Panel**: Enhanced the browser stat panel for better debugging
+- **Memory Management**: Specified Node options to increase V8 memory for better performance
+
+#### CSS & Styling Enhancements
+
+- **CSS Transform Parser**: Replaced Rust CSS transform parser with C/C++ implementation for better performance (#176)
+- **Background Properties**: Added support for `background-clip`, `background-origin`, and `background-repeat` properties (#135, #125)
+- **Background Blend Mode**: Added support for `background-blend-mode` CSS property (#119)
+- **Background Images**: Support for `background-image` with `url()` and gradient rendering (#117, #123)
+- **CSS Parsing**: Enhanced CSS parsing with specified classes for background-image
+
+#### HTML & DOM Features
+
+- **HTMLInputElement**: Added comprehensive HTMLInputElement support (#148)
+- **HTMLIFrameElement**: Added basic HTMLIFrameElement and JSAR.UniversalRenderingServer for unified rendering debugging (#127)
+- **Document API**: Added `document.write` and `*.writeln` methods
+- **HTML Parsing**: Enhanced HTML parsing with support for unquoted attribute values (#103)
+- **Attribute Parsing**: Support for attributes without values and improved PCDATA tag parsing
+- **HTML Volume**: Set HTML volume mask depth to 0.05 and added offset to remove gaps between background and borders
+
+#### Rendering & Graphics
+
+- **Layered Rendering**: Support for rendering web content in layers (#172)
+- **SVG Support**: Added SVG image rendering capabilities (#169)
+- **DPR Support**: Implemented device pixel ratio support in web content rendering
+- **Renderer Refactoring**: Complete refactor of the builtin scene renderer
+- **Render Pipeline**: Refined render pipeline and improved offscreen pass with computation graph
+- **Environment Mapping**: Added environment mapping test files and examples
+- **Layer Calculation**: Calculate layer field for each LayoutObject (#174)
+
+#### Inspector & Debugging
+
+- **Chrome DevTools Protocol**: Added basic CDP support with Runtime and Example domains (#121)
+- **WebSocket Support**: Added WebSocket support to prepare for Chrome DevTools Protocol integration (#106)
+- **MDN Compatibility**: Implemented MDN-compatible browser compatibility data structure (#108)
+- **Inspector Logs**: Added `/:id/logs` endpoint for better debugging
+- **Enhanced Debugging**: Support for unified rendering backend debugging
+
+#### Examples & Testing
+
+- **Transmute Browser**: Renamed simulator to transmute_browser (#178)
+- **Rendering Modes**: Updated args parsing with support for mono/stereo rendering modes (#159)
+- **LeaferJS Support**: Added support for LeaferJS base usage in fixtures
+
+#### Build & CI Improvements
+
+- **Deployment Permissions**: Added write permissions for deploy-website workflow
+- **Memory Optimization**: Specified Node options to increase V8 memory limits
+- **Lint Fixes**: Fixed various lint errors throughout the codebase
 
 ### Maintenance
 
