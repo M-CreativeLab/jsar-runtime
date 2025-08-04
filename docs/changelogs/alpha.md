@@ -12,7 +12,7 @@ The alpha version of JSAR is the first version of the project.
 
 ### Maintenance
 
-- Updated project version to 0.9.0 for official release
+- Updated project version to 0.9.0 for official release (based on commit 8f966bd3ba60530487c54d3ef123887f8615e9be from main)
 
 ## v0.8.2
 
