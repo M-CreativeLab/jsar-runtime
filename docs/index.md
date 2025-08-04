@@ -10,9 +10,6 @@ hero:
       text: Get Started
       link: /manual/quick-start
     - theme: alt
-      text: Learn More
-      link: /manual/introduction
-    - theme: alt
       text: View on GitHub
       link: https://github.com/M-CreativeLab/jsar-runtime
 

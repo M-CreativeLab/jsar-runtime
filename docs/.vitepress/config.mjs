@@ -21,6 +21,10 @@ export default defineConfig({
       noExternal: ['three']
     }
   },
+
+  lang: 'en-US',
+  i18nRouting: true,
+
   title: 'YODAOS JSAR',
   description: 'Open Source Browser Engine for the Spatial Web',
   ignoreDeadLinks: true, // Temporarily ignore dead links while we migrate
@@ -54,6 +58,10 @@ export default defineConfig({
   ],
 
   themeConfig: {
+
+    search: {
+      provider: 'local',
+    },
 
     nav: [
       { text: 'Documentation', link: '/manual/introduction' },
