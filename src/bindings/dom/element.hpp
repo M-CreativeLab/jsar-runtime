@@ -20,11 +20,14 @@ namespace dombinding
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
 
-      auto jsThis = info.This().As<Napi::Object>();
-      jsThis.Set("localName", Napi::String::New(env, this->node->localName));
-      jsThis.Set("namespaceURI", Napi::String::New(env, this->node->namespaceURI));
-      jsThis.Set("prefix", Napi::String::New(env, this->node->prefix));
-      jsThis.Set("tagName", Napi::String::New(env, this->node->tagName));
+      if (this->node != nullptr)
+      {
+        auto jsThis = info.This().As<Napi::Object>();
+        jsThis.Set("localName", Napi::String::New(env, this->node->localName));
+        jsThis.Set("namespaceURI", Napi::String::New(env, this->node->namespaceURI));
+        jsThis.Set("prefix", Napi::String::New(env, this->node->prefix));
+        jsThis.Set("tagName", Napi::String::New(env, this->node->tagName));
+      }
     }
     virtual ~ElementBase() = default;
 

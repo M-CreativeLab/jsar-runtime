@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <string>
+#include <sstream>
+
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -116,20 +120,27 @@ namespace jsar::example
 
     void resetCanvas()
     {
-      auto imageInfo = SkImageInfo::MakeN32Premul(windowCtx->width, windowCtx->height);
-      surface = SkSurfaces::Raster(imageInfo);
-      auto canvas = surface->getCanvas();
+      int dpr = 1;
+      int width = windowCtx->width;
+      int height = windowCtx->height;
+      surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(width * dpr,
+                                                              height * dpr));
+      canvas = surface->getCanvas();
+      canvas->clear(SK_ColorTRANSPARENT);
 
       textPaint.setBlendMode(SkBlendMode::kSrcOver);
       textPaint.setAntiAlias(true);
       textPaint.setStyle(SkPaint::kFill_Style);
-      textPaint.setColor(SK_ColorGREEN);
+      textPaint.setColor(0xFF5b8c00);
 
       auto typeface = fontMgr.getTypeface("monospace");
       textFont.setTypeface(typeface);
       textFont.setSize(14);
-      textFont.setEdging(SkFont::Edging::kAntiAlias);
+      textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
       textFont.setSubpixel(true);
+
+      imageInfo = SkImageInfo::MakeN32Premul(width, height);
+      pixels.resize(imageInfo.computeMinByteSize());
     }
 
   public:
@@ -153,30 +164,28 @@ namespace jsar::example
     }
     void uploadCanvas()
     {
-      auto skCanvas = surface->getCanvas();
-      skCanvas->clear(SK_ColorTRANSPARENT);
+      canvas->clear(SK_ColorTRANSPARENT);
 
-      // draw fps
-      std::string fpsStr = "   Fps: " + std::to_string(fps);
-      auto textBlob = SkTextBlob::MakeFromString(fpsStr.c_str(), textFont);
-      skCanvas->drawTextBlob(textBlob, 30, 35, textPaint);
-
-      // draw uptime
-      std::string uptimeStr = "Uptime: " + std::to_string(uptime) + "s";
-      auto uptimeBlob = SkTextBlob::MakeFromString(uptimeStr.c_str(), textFont);
-      skCanvas->drawTextBlob(uptimeBlob, 30, 55, textPaint);
+      stringstream statusbar_ss;
+      statusbar_ss << "Fps: " << fps << "   Uptime: " << uptime << "s";
+      canvas->drawTextBlob(SkTextBlob::MakeFromString(statusbar_ss.str().c_str(), textFont),
+                           100,
+                           20,
+                           textPaint);
 
       // read pixels from Skia surface to texImage2D
-      int w = windowCtx->width;
-      int h = windowCtx->height;
-      SkImageInfo imageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-      uint8_t *dstPixels = new uint8_t[imageInfo.computeMinByteSize()];
-      surface->readPixels(imageInfo, dstPixels, imageInfo.minRowBytes(), 0, 0);
+      surface->readPixels(imageInfo, pixels.data(), imageInfo.minRowBytes(), 0, 0);
 
       glBindTexture(GL_TEXTURE_2D, texture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dstPixels);
-      glGenerateMipmap(GL_TEXTURE_2D);
-      delete[] dstPixels;
+      glTexImage2D(GL_TEXTURE_2D,
+                   0,
+                   GL_RGBA,
+                   windowCtx->width,
+                   windowCtx->height,
+                   0,
+                   GL_RGBA,
+                   GL_UNSIGNED_BYTE,
+                   pixels.data());
     }
 
   private:
@@ -185,12 +194,13 @@ namespace jsar::example
     GLuint program;
     GLuint texture;
     // clang-format off
-    float vertices[16] = {
-        // 位置          // 纹理坐标
-        1.0f, 1.0f, 1.0f, 0.0f,  // 右上角
-        1.0f, -1.0f, 1.0f, 1.0f, // 右下角
-        -1.0f, 1.0f, 0.0f, 0.0f, // 左上角
-        -1.0f, -1.0f, 0.0f, 1.0f // 左下角
+    float vertices[16] = 
+    {
+        // Position              // UV
+        1.0f, 1.0f, 1.0f, 0.0f,  // Right top
+        1.0f, -1.0f, 1.0f, 1.0f, // Right bottom
+        -1.0f, 1.0f, 0.0f, 0.0f, // Left top
+        -1.0f, -1.0f, 0.0f, 1.0f // Left bottom
     };
     // clang-format on
 
@@ -201,8 +211,12 @@ namespace jsar::example
   private:
     WindowContext *windowCtx;
     sk_sp<SkSurface> surface;
+    SkCanvas *canvas;
     SkPaint textPaint;
     SkFont textFont;
     font::FontCacheManager fontMgr;
+
+    SkImageInfo imageInfo;
+    std::vector<uint8_t> pixels;
   };
 }

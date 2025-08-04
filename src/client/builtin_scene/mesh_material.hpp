@@ -1,11 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <cassert>
 #include <concepts>
 #include <client/graphics/webgl_context.hpp>
 
 #include "./ecs.hpp"
 #include "./material_base.hpp"
+#include "./renderer/render_pass.hpp"
 
 namespace builtin_scene
 {
@@ -53,12 +55,31 @@ namespace builtin_scene
     {
       return program_;
     }
-    /**
-     * @returns Whether the material is opaque.
-     */
+
     inline bool isOpaque() const
     {
       return material_->isOpaque();
+    }
+    inline bool isTransparent() const
+    {
+      return !isOpaque();
+    }
+
+    /**
+     * Check if the material matches the given render pass.
+     *
+     * @param pass The render pass to check against.
+     * @returns Whether the material matches the render pass.
+     */
+    inline bool matchesPass(const RenderPass &pass) const
+    {
+      assert(pass == RenderPass::kOpaques || pass == RenderPass::kTransparents);
+      if (pass == RenderPass::kOpaques)
+        return isOpaque();
+      else if (pass == RenderPass::kTransparents)
+        return isTransparent();
+      else
+        return false;
     }
     /**
      * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.

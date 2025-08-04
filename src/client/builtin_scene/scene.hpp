@@ -19,6 +19,7 @@
 #include "./bounding_box.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"
+#include "./render_layer.hpp"
 #include "./web_content.hpp"
 #include "./xr.hpp"
 

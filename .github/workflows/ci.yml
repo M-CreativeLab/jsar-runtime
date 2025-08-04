@@ -36,6 +36,8 @@ jobs:
   build-macos-arm64:
     name: Build on Apple Silicon (macOS ARM64)
     runs-on: macos-14
+    env:
+      NODE_OPTIONS: "--max-old-space-size=4096"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

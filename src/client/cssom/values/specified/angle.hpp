@@ -130,6 +130,22 @@ namespace client_cssom::values::specified
     {
       return Angle(AngleDimension::Deg(0.0f), false);
     }
+    static Angle Deg(float value)
+    {
+      return Angle(AngleDimension::Deg(value), false);
+    }
+    static Angle Grad(float value)
+    {
+      return Angle(AngleDimension::Grad(value), false);
+    }
+    static Angle Rad(float value)
+    {
+      return Angle(AngleDimension::Rad(value), false);
+    }
+    static Angle Turn(float value)
+    {
+      return Angle(AngleDimension::Turn(value), false);
+    }
 
   public:
     Angle() = default;

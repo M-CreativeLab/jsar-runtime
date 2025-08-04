@@ -2,6 +2,8 @@
 
 #include <skia/include/core/SkBitmap.h>
 #include <client/builtin_scene/ecs.hpp>
+#include <client/dom/node.hpp>
+#include <client/html/html_image_element.hpp>
 
 #include "./layout_replaced.hpp"
 
@@ -32,11 +34,20 @@ namespace client_layout
     void setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap);
 
   private:
+    inline dom::HTMLImageElement &imageElement()
+    {
+      return dom::Node::AsChecked<dom::HTMLImageElement>(node());
+    }
+    inline const dom::HTMLImageElement &imageElement() const
+    {
+      return dom::Node::AsChecked<const dom::HTMLImageElement>(node());
+    }
+
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
     void styleWillChange(client_cssom::ComputedStyle &new_style) override;
     void didComputeLayoutOnce(const ConstraintSpace &) override;
-    void sizeDidChange() override;
+    void sizeDidChange(const Fragment &newSize) override;
 
     void layoutDidFirstReady(const Fragment &);
 

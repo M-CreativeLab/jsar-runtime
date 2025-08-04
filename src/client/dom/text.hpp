@@ -20,6 +20,7 @@ namespace dom
   {
     friend class RenderHTMLDocument;
     friend class Element;
+    friend class client_layout::LayoutObject;
 
   public:
     /**
@@ -75,6 +76,7 @@ namespace dom
     void connectedCallback() override;
     void disconnectedCallback() override;
     void nodeValueChangedCallback(const std::string &newValue) override;
+    void layoutSizeChangedCallback(const client_layout::Fragment &);
 
   private:
     void initCSSBoxes();

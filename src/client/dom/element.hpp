@@ -30,7 +30,9 @@
   XX("div", HTMLDivElement)           \
   XX("head", HTMLHeadElement)         \
   XX("html", HTMLHtmlElement)         \
+  XX("iframe", HTMLIframeElement)     \
   XX("img", HTMLImageElement)         \
+  XX("input", HTMLInputElement)       \
   XX("link", HTMLLinkElement)         \
   XX("meta", HTMLMetaElement)         \
   XX("h1", HTMLHeadingElement)        \
@@ -69,6 +71,7 @@ namespace dom
   {
     friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
+    friend class client_layout::LayoutObject;
 
   public:
     /**
@@ -126,7 +129,7 @@ namespace dom
     {
       after(std::vector<std::shared_ptr<Node>>{node});
     }
-    std::string getAttribute(const std::string &name) const;
+    std::string getAttribute(const std::string &name, const std::string &defaultValue = "") const;
     std::vector<std::string> getAttributeNames() const;
     std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
     Attr &getAttributeNodeChecked(const std::string &name) const;
@@ -289,6 +292,10 @@ namespace dom
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
+    /**
+     * When the element's layout size is changed, this is called when the layout box size(width, height) is changed.
+     */
+    virtual void layoutSizeChangedCallback(const client_layout::Fragment &);
 
   protected:
     // Initialize the CSS boxes of the element.

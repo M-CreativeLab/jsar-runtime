@@ -219,8 +219,6 @@ The spatial web is here, and it's built on the web technologies you already know
 
 ---
 
-*JSAR Runtime is developed by M-CreativeLab and the open source community. Licensed under the MIT License.*
-
 **Links:**
 - [GitHub Repository](https://github.com/M-CreativeLab/jsar-runtime)
 - [Stereo Image PR #131](https://github.com/M-CreativeLab/jsar-runtime/pull/131)

@@ -1,0 +1,23 @@
+{
+  "html": {
+    "elements": {
+      "iframe": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Element/iframe",
+          "spec_url": "https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element",
+          "support": {
+            "jsar": {
+              "version_added": "0.9.0",
+              "notes": "Basic iframe element support for DOM creation and recognition. Content loading and rendering not implemented."
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}
