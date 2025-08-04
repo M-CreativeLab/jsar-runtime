@@ -12,7 +12,7 @@ export function createNavbar() {
                 <span class="sm:hidden">JSAR</span>
               </a>
             </div>
-            <div class="version-badge latest">v0.8.2</div>
+            <div class="version-badge latest">v0.9.0</div>
           </div>
           
           <!-- Center: Desktop Navigation -->

@@ -6,7 +6,7 @@ import { withBase } from 'vitepress';
 // Default value in case of fetch failure
 const versions = ref([
   {
-    version: '0.8.2',
+    version: '0.9.0',
     content: '',
     renderedContent: ''
   },

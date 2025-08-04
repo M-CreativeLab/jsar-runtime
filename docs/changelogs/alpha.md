@@ -2,6 +2,18 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.9.0
+
+### New Features & Improvements
+
+#### Website Enhancements
+
+- Added search bar functionality to improve navigation and content discovery
+
+### Maintenance
+
+- Updated project version to 0.9.0 for official release
+
 ## v0.8.2
 
 ### Fixes
