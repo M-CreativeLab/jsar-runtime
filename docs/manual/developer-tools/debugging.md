@@ -8,7 +8,7 @@ There are two ways to view local logs.
 
 ### Viewing Logs via VSCode Output
 
-![](/vscode-extension-howto-scene-logs.png)
+<!-- 图片暂不可用 -->
 
 As shown above, JSAR DevTools provides a dedicated output channel to help developers view application logs. Here's how to use it:
 
@@ -36,15 +36,15 @@ JSAR supports real-device debugging in Rokid AR Studio's desktop environment. He
 
 First, open the desktop's quick settings and select "Settings."
 
-![Step 1](device-debugging-00.png)
+<!-- 图片暂不可用 (Step 1) -->
 
 In the settings, select "Developer Options" and enable "Spatial App Debugging."
 
-![Step 2](device-debugging-01.png)
+<!-- 图片暂不可用 (Step 2) -->
 
 Then, swipe down one screen on the application list to see that the current spatial app is in debugging mode.
 
-![Step 3](device-debugging-02.png)
+<!-- 图片暂不可用 (Step 3) -->
 
 Next, open any spatial app project using Visual Studio Code, and you can install the project on the device and debug it in two ways:
 

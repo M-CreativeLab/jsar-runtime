@@ -1,7 +1,5 @@
 # Three.js support
 
-![Three.js: JavaScript 3D Library](/logo-threejs.svg 'width=200px,align=left')
-
 [Three.js][] is a popular 3D library that can be used to create 3D scenes in the browser. It is often used for creating games, visualizations, and other interactive experiences.
 
 In this section, you will learn how to use [Three.js][] in JSAR.
