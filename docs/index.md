@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "JSAR"
   text: "Spatial Web Browser Engine"
-  tagline: "Empowering Web developers to craft immersive experiences with the full power of modern web technologies — HTML5, CSS3, and TypeScript."
+  tagline: "Empowering Web developers to present Web content spatially with the full power of modern technologies — HTML5, CSS3, and TypeScript."
   actions:
     - theme: brand
       text: Get Started
@@ -45,6 +45,17 @@ features:
     details: An extensible plugin system and modular architecture unlock limitless customization.
 ---
 
+<SpatialWebFeatures />
+
+## Beyond XR Devices
+
+The Spatial Web is not limited to XR devices - it's also transforming how we interact with content on traditional desktop computers. On desktop platforms, Spatial Web browsing creates a bridge between 2D and 3D experiences through:
+
+- **Depth-Based Navigation** - Content organized in 3D space with depth layers
+- **Spatial Organization** - Three-dimensional workspace for intuitive content arrangement
+- **Enhanced Visualization** - Data presented with depth and dimension for better comprehension
+- **Natural Interactions** - Moving through 3D space rather than just clicking through flat pages
+
 ## Web Compatibility Overview
 
 JSAR provides comprehensive support for modern Web standards. For a complete browser compatibility report, please visit our [Browser Compatibility Data](/api/browser-compat-data.html).
@@ -77,46 +88,10 @@ JSAR provides comprehensive support for modern Web standards. For a complete bro
 - [In Progress] **CSS3** - Growing feature set
 - [Completed] **Canvas 2D** - Full 2D rendering support
 
+<!-- End -->
+
+<CallToAction />
+
 ## Latest Updates
 
 <LatestRelease />
-
-## Getting Started
-
-Ready to build your first spatial web application? Check out our comprehensive guides:
-
-<div class="custom-block tip">
-  <p class="custom-block-title">Quick Start</p>
-  <p>Learn the basics and create your first JSAR application in minutes.</p>
-  <a href="manual/quick-start">Start Learning →</a>
-</div>
-
-<div class="custom-block tip">
-  <p class="custom-block-title">Examples</p>
-  <p>Explore practical examples and tutorials to deepen your understanding.</p>
-  <a href="manual/tutorials/helloworld-babylonjs">View Tutorials →</a>
-</div>
-
-## Community
-
-Join our growing community of developers building the future of spatial web:
-
-- 💬 [GitHub Discussions](https://github.com/M-CreativeLab/jsar-runtime/discussions)
-- 🐛 [Report Issues](https://github.com/M-CreativeLab/jsar-runtime/issues)
-- 📖 [Contributing Guide](contributing/coding_style_guides)
-- 📰 [Blog](blog) - Technical insights and updates
-
-<style>
-.VPHero .VPImage {
-  max-width: 280px;
-  border-radius: 16px;
-}
-
-.custom-block.tip {
-  border-color: var(--vp-c-brand-1);
-}
-
-.custom-block.tip .custom-block-title {
-  color: var(--vp-c-brand-1);
-}
-</style>

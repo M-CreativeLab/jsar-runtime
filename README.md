@@ -1,7 +1,7 @@
 <div align="center">
   <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="300">
   <p align="center">
-    JSAR: a revolutionary <b>Browser Engine Library</b> designed for The Spatial Web.
+    JSAR: a <b>Browser Engine Library</b> designed for The Spatial Web.
     <br>
     <br>
     <a href="https://m-creativelab.github.io/jsar-runtime/manual/introduction.html">User Manual</a>
@@ -17,6 +17,8 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
+     - [Spatial Web](#spatial-web)
+     - [Key Features](#key-features)
 2. [Web Compatibility Overview](#web-compatibility-overview)
      - [Request Formats](#supported-url-formats-to-request)
      - [Scripting & Modules](#scripting--modules)
