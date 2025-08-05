@@ -2,7 +2,6 @@
 #include <client/dom/node.hpp>
 
 #include "./layout_box_model_object.hpp"
-#include "./layout_object_child_list.hpp"
 #include "./layout_view.hpp"
 
 namespace client_layout
@@ -12,7 +11,6 @@ namespace client_layout
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
       : LayoutObject(node)
       , scrollable_area_(make_shared<client_scroll::ScrollableArea>())
-      , children_(make_shared<LayoutObjectChildList>())
   {
   }
 

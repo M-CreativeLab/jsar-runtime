@@ -6,7 +6,6 @@
 
 #include "./display_type.hpp"
 #include "./layout_object.hpp"
-#include "./layout_object_child_list.hpp"
 
 namespace client_layout
 {
@@ -108,18 +107,7 @@ namespace client_layout
     void styleDidChange() override;
 
   private:
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() const override
-    {
-      return children_;
-    }
-    std::shared_ptr<LayoutObjectChildList> virtualChildren() override
-    {
-      return children_;
-    }
-
-  private:
     DisplayType display_;
     std::shared_ptr<client_scroll::ScrollableArea> scrollable_area_;
-    std::shared_ptr<LayoutObjectChildList> children_;
   };
 }
