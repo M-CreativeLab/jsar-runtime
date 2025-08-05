@@ -171,12 +171,14 @@ namespace dom
         assert(parentBox != nullptr &&
                "The parent box must not be null in a TextNode().");
       }
-      
+
       auto textObject = layoutView.createText(getPtr<Text>(), parentBox);
-      if (textObject != nullptr) {
+      if (textObject != nullptr)
+      {
         textBoxes_ = {textObject};
-      } else {
-        // Parent is a replaced element, don't create text children
+      }
+      else
+      {
         textBoxes_.clear();
       }
     }

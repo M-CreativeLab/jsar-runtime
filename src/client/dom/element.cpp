@@ -294,10 +294,12 @@ namespace dom
           parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
       }
       principalBox_ = layoutView.createBox(currentDisplayStr_, getPtr<Element>(), parentBlock);
-      if (principalBox_ != nullptr) {
+      if (principalBox_ != nullptr)
+      {
         boxes_ = {principalBox_};
-      } else {
-        // Parent is a replaced element, don't create layout box for this element
+      }
+      else
+      {
         boxes_.clear();
       }
     }
@@ -327,15 +329,19 @@ namespace dom
 
       layoutView.removeObject(principalBox_); // Remove the old box.
       principalBox_ = newPrincipalBox;
-      if (principalBox_ != nullptr) {
+      if (principalBox_ != nullptr)
+      {
         boxes_ = {principalBox_};
-      } else {
+      }
+      else
+      {
         // Parent is a replaced element, don't create layout box for this element
         boxes_.clear();
       }
     }
     // Only assert if we expect a principal box (when parent is not a replaced element)
-    if (principalBox_ == nullptr) {
+    if (principalBox_ == nullptr)
+    {
       // Element is a child of a replaced element, skip further initialization
       return;
     }

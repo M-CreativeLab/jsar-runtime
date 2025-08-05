@@ -221,7 +221,7 @@ namespace client_layout
                                                 shared_ptr<LayoutBoxModelObject> parentBox)
   {
     assert(parentBox != nullptr && "The parent box must be set for the text object.");
-    
+
     // If the parent is a replaced element, don't create text children
     if (parentBox->isLayoutReplaced())
       return nullptr;
