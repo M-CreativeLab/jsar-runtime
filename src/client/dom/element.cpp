@@ -611,7 +611,7 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
-    
+
     // Throttle scroll events for better performance
     if (!shouldThrottleScrollEvent())
     {
@@ -631,7 +631,7 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
-    
+
     // Throttle scroll events for better performance
     if (!shouldThrottleScrollEvent())
     {
@@ -791,7 +791,7 @@ namespace dom
       return;
 
     layoutBox->scrollBy(offset);
-    
+
     // Throttle scroll events for better performance
     if (!shouldThrottleScrollEvent())
     {

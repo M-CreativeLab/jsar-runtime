@@ -205,7 +205,7 @@ namespace client_layout
   {
     if (TR_UNLIKELY(!isScrollContainer()))
       return;
-    
+
     auto scrollable_area = getScrollableArea();
     // Performance optimization: check if scrolling is actually needed
     if (scrollable_area && scrollable_area->needsScrolling())
@@ -222,11 +222,11 @@ namespace client_layout
            << "The box is not a scroll container, skipping scrollBy." << endl;
       return;
     }
-    
+
     // Performance optimization: early exit for zero offset
     if (offset.x == 0.0f && offset.y == 0.0f && offset.z == 0.0f)
       return;
-      
+
     auto scrollable_area = getScrollableArea();
     if (scrollable_area && scrollable_area->needsScrolling())
     {

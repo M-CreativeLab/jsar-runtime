@@ -46,7 +46,7 @@ namespace client_scroll
 
     // Optimize scroll bounds checking with early exit and clamping
     glm::vec3 new_offset = offset;
-    
+
     // Clamp horizontal scroll
     if (overflow_rect_->x > scroll_origin_.x)
     {
@@ -57,7 +57,7 @@ namespace client_scroll
     {
       new_offset.x = 0.0f;
     }
-    
+
     // Clamp vertical scroll (note: negative values for upward scroll)
     if (overflow_rect_->y > scroll_origin_.y)
     {
@@ -68,7 +68,7 @@ namespace client_scroll
     {
       new_offset.y = 0.0f;
     }
-    
+
     // Only update if the offset actually changed
     if (new_offset != scroll_offset_)
     {
