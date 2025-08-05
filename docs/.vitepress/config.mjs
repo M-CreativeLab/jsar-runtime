@@ -32,6 +32,7 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['meta', { name: 'generator', content: 'YODAOS JSAR' }],
     ['meta', { name: 'theme-color', content: '#3b82f6' }],
     ['meta', { name: 'keywords', content: 'spatial browsing, spatial web browser, 3D web browser, immersive web, WebXR, spatial computing, mixed reality browser, augmented reality web, virtual reality browser, spatial web engine, JSAR' }],
     ['meta', { name: 'description', content: 'JSAR is an open-source spatial web browser engine that enables immersive 3D browsing experiences. Built for spatial computing, WebXR, and the future of spatial browsing on the web.' }],
