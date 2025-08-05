@@ -26,11 +26,6 @@ namespace client_scroll
     }
     void scrollTo(const glm::vec3 &offset);
     
-    // Smooth scrolling methods for better user experience
-    void smoothScrollTo(const glm::vec3 &offset);
-    void updateSmoothScroll(); // Called per frame to update smooth scroll animation
-    inline bool isSmoothlyScrolling() const { return is_smoothly_scrolling_; }
-    
     // Performance optimization: check if scrolling is needed
     inline bool needsScrolling() const
     {
@@ -63,10 +58,5 @@ namespace client_scroll
     glm::vec3 scroll_origin_;
     glm::vec3 scroll_offset_;
     std::optional<glm::vec3> overflow_rect_;
-    
-    // Smooth scrolling state
-    glm::vec3 target_scroll_offset_;
-    bool is_smoothly_scrolling_ = false;
-    static constexpr float smooth_scroll_factor_ = 0.15f; // Easing factor
   };
 }

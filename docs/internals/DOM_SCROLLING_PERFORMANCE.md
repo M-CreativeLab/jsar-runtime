@@ -1,10 +1,10 @@
-# Scroll Performance Optimizations
+# DOM Scrolling Performance Optimizations
 
 This document describes the scroll performance optimizations implemented in the JSAR runtime client code.
 
 ## Overview
 
-The scrolling performance has been optimized through several targeted improvements:
+The scrolling performance has been optimized through several targeted improvements to address performance bottlenecks in scroll-heavy applications.
 
 ## 1. Scroll Event Throttling
 
@@ -73,27 +73,12 @@ bool isFragmentInViewport(const client_layout::Fragment &fragment) const;
 
 **Impact**: Foundation for skipping expensive operations on off-screen elements.
 
-## 5. Smooth Scrolling Support
-
-**Location**: `src/client/scroll/scrollable_area.cpp`, `src/client/dom/element.cpp`
-
-**Problem**: Immediate scroll jumps provided poor user experience.
-
-**Solution**: Added momentum-based smooth scrolling with configurable easing.
-
-```cpp
-void smoothScrollTo(const glm::vec3 &offset);
-void updateSmoothScroll(); // Called per frame
-```
-
-**Impact**: Better user experience with natural scrolling animations.
-
 ## Performance Metrics
 
 - **Event Rate**: Reduced from unlimited to 60fps max
 - **CPU Usage**: Significant reduction in layout calculations
 - **Memory**: Reduced event object allocation
-- **UX**: Smooth, natural scrolling animations
+- **Code maintainability**: Cleaner, more efficient scroll handling logic
 
 ## Usage
 
@@ -101,17 +86,6 @@ void updateSmoothScroll(); // Called per frame
 ```cpp
 element->scrollTo({left: 100, top: 50});
 element->scrollBy({left: 10, top: -20});
-```
-
-### Smooth Scrolling
-```cpp
-element->smoothScrollTo({left: 100, top: 50});
-```
-
-### Per-frame Updates (for smooth scrolling)
-```cpp
-// In your render loop
-scrollableArea->updateSmoothScroll();
 ```
 
 ## Configuration
@@ -122,25 +96,20 @@ scrollableArea->updateSmoothScroll();
 static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // 60fps
 ```
 
-### Smooth Scroll Easing
-```cpp
-// In scrollable_area.hpp - adjust easing factor
-static constexpr float smooth_scroll_factor_ = 0.15f; // 15% interpolation
-```
-
 ## Future Enhancements
 
 1. **Actual Rendering Skip**: Use viewport culling to skip rendering off-screen elements
-2. **Momentum Physics**: Add velocity and deceleration for more natural scrolling
-3. **Performance Monitoring**: Add metrics to track scroll performance
-4. **Touch Optimization**: Optimize for touch/gesture input on mobile devices
+2. **Performance Monitoring**: Add metrics to track scroll performance
+3. **Touch Optimization**: Optimize for touch/gesture input on mobile devices
+4. **Advanced Throttling**: Adaptive throttling based on scroll velocity
 
 ## Testing
 
 All optimizations have been thoroughly tested with:
 - Unit tests for throttling logic
 - Boundary tests for scroll bounds
-- Animation tests for smooth scrolling
 - Viewport intersection tests for culling
 
-See test files in `/tmp/` during development for validation code.
+## Backward Compatibility
+
+All changes maintain full backward compatibility with existing APIs. No breaking changes were introduced.
