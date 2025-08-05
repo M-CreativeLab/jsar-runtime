@@ -202,6 +202,10 @@ namespace client_layout
                                                          shared_ptr<LayoutBlock> parentBlock,
                                                          shared_ptr<LayoutObject> beforeObject)
   {
+    // If the parent is a replaced element, don't create any children
+    if (parentBlock != nullptr && parentBlock->isLayoutReplaced())
+      return nullptr;
+
     shared_ptr<LayoutBoxModelObject> boxObject = makeBox(displayStr, element);
     if (parentBlock != nullptr)
       parentBlock->addChild(boxObject, beforeObject);
@@ -217,6 +221,11 @@ namespace client_layout
                                                 shared_ptr<LayoutBoxModelObject> parentBox)
   {
     assert(parentBox != nullptr && "The parent box must be set for the text object.");
+
+    // If the parent is a replaced element, don't create text children
+    if (parentBox->isLayoutReplaced())
+      return nullptr;
+
     shared_ptr<LayoutText> textObject = makeText(textNode);
     parentBox->addChild(textObject);
 
