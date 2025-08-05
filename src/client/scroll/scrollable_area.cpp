@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <common/math_utils.hpp>
 
 #include "./scrollable_area.hpp"
@@ -43,17 +44,35 @@ namespace client_scroll
       return;
     }
 
+    // Optimize scroll bounds checking with early exit and clamping
+    glm::vec3 new_offset = offset;
+
+    // Clamp horizontal scroll
     if (overflow_rect_->x > scroll_origin_.x)
     {
-      float xOffset = offset.x;
-      if (xOffset > 0 && scroll_origin_.x + xOffset <= overflow_rect_->x)
-        scroll_offset_.x = xOffset;
+      float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
+      new_offset.x = std::clamp(offset.x, 0.0f, max_scroll_x);
     }
+    else
+    {
+      new_offset.x = 0.0f;
+    }
+
+    // Clamp vertical scroll (note: negative values for upward scroll)
     if (overflow_rect_->y > scroll_origin_.y)
     {
-      float yOffset = offset.y;
-      if (yOffset < 0 && scroll_origin_.y - yOffset <= overflow_rect_->y)
-        scroll_offset_.y = yOffset;
+      float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
+      new_offset.y = std::clamp(offset.y, -max_scroll_y, 0.0f);
+    }
+    else
+    {
+      new_offset.y = 0.0f;
+    }
+
+    // Only update if the offset actually changed
+    if (new_offset != scroll_offset_)
+    {
+      scroll_offset_ = new_offset;
     }
   }
 
@@ -62,4 +81,6 @@ namespace client_scroll
     scroll_origin_ = fragment.size();
     overflow_rect_ = fragment.contentSize();
   }
+
+
 }
