@@ -172,7 +172,13 @@ namespace dom
                "The parent box must not be null in a TextNode().");
       }
       
-      textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
+      auto textObject = layoutView.createText(getPtr<Text>(), parentBox);
+      if (textObject != nullptr) {
+        textBoxes_ = {textObject};
+      } else {
+        // Parent is a replaced element, don't create text children
+        textBoxes_.clear();
+      }
     }
   }
 

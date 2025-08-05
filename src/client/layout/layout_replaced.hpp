@@ -18,13 +18,6 @@ namespace client_layout
       return true;
     }
 
-    // Replaced elements should not have any layout children
-    void addChild(std::shared_ptr<LayoutObject> newChild,
-                  std::shared_ptr<LayoutObject> beforeChild = nullptr) override final
-    {
-      // Do nothing - replaced elements ignore all children
-    }
-
     void formattingContextDidSet(FormattingContext &) override final;
   };
 }
