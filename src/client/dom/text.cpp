@@ -172,11 +172,6 @@ namespace dom
                "The parent box must not be null in a TextNode().");
       }
       
-      // Skip creating layout text for replaced elements since they ignore their children
-      if (parentBox->isLayoutReplaced()) {
-        return;
-      }
-      
       textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
     }
   }
