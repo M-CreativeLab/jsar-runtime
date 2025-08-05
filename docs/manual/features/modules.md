@@ -1,4 +1,4 @@
-# Modules
+# ECMAScript Modules
 
 JSAR implemented [ECMAScript modules][esm] to manage the dependencies between scripts, which is the official standard to write modular JavaScript, and it's supported by all modern browsers and JavaScript runtimes.
 

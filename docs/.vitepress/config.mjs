@@ -101,22 +101,28 @@ export default defineConfig({
           text: 'Features',
           collapsed: false,
           items: [
-            { text: 'Modules', link: '/manual/features/modules' },
-            { text: 'TypeScript', link: '/manual/features/typescript' },
+            {
+              text: 'Scripting & Modules',
+              collapsed: false,
+              items: [
+                { text: 'ECMAScript Modules', link: '/manual/features/modules' },
+                { text: 'TypeScript', link: '/manual/features/typescript' },
+                { text: 'WebAssembly', link: '/manual/features/webassembly' },
+                { text: 'Web Workers', link: '/manual/features/web-workers' },
+              ]
+            },
             {
               text: 'Graphics Libraries',
-              collapsed: true,
+              collapsed: false,
               items: [
-                { text: 'Babylon.js', link: '/manual/features/babylon' },
                 { text: 'Three.js', link: '/manual/features/three' },
+                { text: 'Babylon.js', link: '/manual/features/babylon' },
                 { text: 'VanillaJS', link: '/manual/features/vanillajs' },
               ]
             },
             { text: 'Audio', link: '/manual/features/audio' },
             { text: 'Image', link: '/manual/features/image' },
             { text: 'Debugging', link: '/manual/features/debugging' },
-            { text: 'WebAssembly', link: '/manual/features/webassembly' },
-            { text: 'Web Workers', link: '/manual/features/web-workers' },
           ]
         },
         {
