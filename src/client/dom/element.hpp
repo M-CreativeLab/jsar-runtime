@@ -191,8 +191,6 @@ namespace dom
     void scrollTo(const ScrollOptions &);
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
-    // Smoothly scrolls an element to the given position for better UX
-    void smoothScrollTo(const ScrollOptions &);
 
     ElementAnimations &elementAnimationsRef()
     {
