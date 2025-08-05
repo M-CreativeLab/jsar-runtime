@@ -202,11 +202,23 @@ namespace client_layout
                                                          shared_ptr<LayoutBlock> parentBlock,
                                                          shared_ptr<LayoutObject> beforeObject)
   {
-    shared_ptr<LayoutBoxModelObject> boxObject = makeBox(displayStr, element);
-    if (parentBlock != nullptr)
-      parentBlock->addChild(boxObject, beforeObject);
-    else
+    shared_ptr<LayoutBoxModelObject> boxObject = nullptr;
+    if (parentBlock == nullptr)
+    {
+      // Add child to the view directly if no parent block is given.
+      boxObject = makeBox(displayStr, element);
       addChild(boxObject);
+    }
+    else
+    {
+      // Skip creating box if the parent is none or a replaced element
+      if (parentBlock->isNone() ||
+          parentBlock->isLayoutReplaced())
+        return nullptr;
+
+      boxObject = makeBox(displayStr, element);
+      parentBlock->addChild(boxObject, beforeObject);
+    }
 
     assert(boxObject->parent() != nullptr && "Inserted box must have a parent box.");
     boxObject->createEntity();
@@ -217,6 +229,12 @@ namespace client_layout
                                                 shared_ptr<LayoutBoxModelObject> parentBox)
   {
     assert(parentBox != nullptr && "The parent box must be set for the text object.");
+
+    // If the parent is none or a replaced element, don't create text children
+    if (parentBox->isNone() ||
+        parentBox->isLayoutReplaced())
+      return nullptr;
+
     shared_ptr<LayoutText> textObject = makeText(textNode);
     parentBox->addChild(textObject);
 

@@ -4,7 +4,7 @@
     JSAR: a revolutionary <b>Browser Engine Library</b> designed for The Spatial Web.
     <br>
     <br>
-    <a href="/docs/manual/introduction.mdx">User Manual</a>
+    <a href="https://m-creativelab.github.io/jsar-runtime/manual/introduction.html">User Manual</a>
     ·
     <a href="https://deepwiki.com/m-creativelab/jsar-runtime">DeepWiki</a>
   </p>
@@ -17,7 +17,7 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-2. [Overview](#overview)
+2. [Web Compatibility Overview](#web-compatibility-overview)
      - [Request Formats](#supported-url-formats-to-request)
      - [Scripting & Modules](#scripting--modules)
      - [3D Graphics](#3d-graphics)
@@ -33,19 +33,32 @@
 
 ## Introduction
 
-### ✨ Bringing Web Technologies to Spatialized Spaces
+**JSAR** ([/dʒ:-sar/](https://ipa-reader.xyz/?text=d%CA%92:-sar)) is a **Web browser engine** designed for the spatial Web. It enables you to create and present immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and other 3D engines.
 
-JSAR is a revolutionary **browser engine library** designed for The Spatial Web. It enables developers to 
-create immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly 
-integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
+### Spatial Web
 
-### 🌟 Why Choose JSAR?
+The Spatial Web represents the next evolution of the Web, where every HTML element exists in three-dimensional space with real 3D coordinates, rather than being confined to flat 2D screens. This spatial transformation enables developers to freely leverage Web technologies to create truly immersive experiences, seamlessly blending virtual reality (VR), augmented reality (AR), and mixed reality (MR) into both our physical world and any digital virtual environments.
 
-- 🎯 **Spatialized Design** - Unlike traditional browsers, JSAR is optimized from the ground up for the specialized spaces.
-- 🌐 **Web Standards Compliant** - Supports WebXR, WebGL, Web APIs, and other modern Web standards
-- ⚡ **High Performance** - A builtin ECS to achieve the GPU-driven renderer for elements
+Key characteristics of the Spatial Web include:
 
-## Overview
+- **3D-First Design**: Content and interfaces are designed to exist in 3D space
+- **Natural Interaction**: Users can interact with digital content using natural gestures and movements
+- **Contextual Awareness**: Digital experiences that understand and respond to their physical surroundings
+- **Persistent**: Digital content can remain anchored in physical space across sessions
+
+### Key Features
+
+- **Designed for the spatial Web** - Every HTML element (including 2D & 3D) is spatially rendered in the browser.
+- **Web Standards Compliant** - Supports modern Web standards, including HTML5, CSS3, DOM, [WebGL][], [WebXR][] and others.
+- **High Performance** - Dynamically batches all spatialized HTML elements into ≤10 GPU draw calls per frame.
+- **Cross-Platform** - Delivers flawless performance across every platform (desktop, mobile, and XR) with pixel-perfect consistency.
+- **Web Developer Friendly** - Deep [Chrome DevTools][] integration for seamless debugging and profiling.
+
+[WebGL]: https://www.khronos.org/webgl/
+[WebXR]: https://www.w3.org/TR/webxr/
+[Chrome DevTools]: https://developer.chrome.com/docs/devtools/
+
+## Web Compatibility Overview
 
 ### Supported URL Formats to Request
 
@@ -54,9 +67,9 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | Format   | Status      | Recommended Use Case       |
 | -------- | ----------- | -------------------------- |
 | HTML     | Partially   | Browsing classic Web pages |
-| GLTF     | Ok          | Displaying 3D models       |
-| JPEG/PNG | Ok          | Viewing images             |
-| SVG      | Not started | Displaying SVG images      |
+| GLTF     | OK          | Displaying 3D models       |
+| JPEG/PNG | OK          | Displaying images          |
+| SVG      | OK          | Displaying SVG images      |
 
 ### Scripting & Modules
 
@@ -243,7 +256,6 @@ The loaders are more convenient way to integrate JSAR into your applications, th
 | --------------------- | ----------- | ----------------------------------------------- |
 | [jsar-loader-unity][] | Ok          | Integrates JSAR into Unity applications         |
 | jsar-loader-unreal    | Not started | Integrates JSAR into Unreal Engine applications |
-| jsar-loader-visionos  | Not started | Integrates JSAR into visionOS applications      |
 
 [jsar-loader-unity]: https://github.com/M-CreativeLab/jsar-loader-unity
 

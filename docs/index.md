@@ -10,6 +10,9 @@ hero:
       text: Get Started
       link: /manual/quick-start
     - theme: alt
+      text: Ask on DeepWiki
+      link: https://deepwiki.com/M-CreativeLab/jsar-runtime
+    - theme: alt
       text: View on GitHub
       link: https://github.com/M-CreativeLab/jsar-runtime
 

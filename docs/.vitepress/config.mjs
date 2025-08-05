@@ -32,6 +32,7 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['meta', { name: 'generator', content: 'YODAOS JSAR' }],
     ['meta', { name: 'theme-color', content: '#3b82f6' }],
     ['meta', { name: 'keywords', content: 'spatial browsing, spatial web browser, 3D web browser, immersive web, WebXR, spatial computing, mixed reality browser, augmented reality web, virtual reality browser, spatial web engine, JSAR' }],
     ['meta', { name: 'description', content: 'JSAR is an open-source spatial web browser engine that enables immersive 3D browsing experiences. Built for spatial computing, WebXR, and the future of spatial browsing on the web.' }],
@@ -100,22 +101,28 @@ export default defineConfig({
           text: 'Features',
           collapsed: false,
           items: [
-            { text: 'Modules', link: '/manual/features/modules' },
-            { text: 'TypeScript', link: '/manual/features/typescript' },
+            {
+              text: 'Scripting & Modules',
+              collapsed: false,
+              items: [
+                { text: 'ECMAScript Modules', link: '/manual/features/modules' },
+                { text: 'TypeScript', link: '/manual/features/typescript' },
+                { text: 'WebAssembly', link: '/manual/features/webassembly' },
+                { text: 'Web Workers', link: '/manual/features/web-workers' },
+              ]
+            },
             {
               text: 'Graphics Libraries',
-              collapsed: true,
+              collapsed: false,
               items: [
-                { text: 'Babylon.js', link: '/manual/features/babylon' },
                 { text: 'Three.js', link: '/manual/features/three' },
+                { text: 'Babylon.js', link: '/manual/features/babylon' },
                 { text: 'VanillaJS', link: '/manual/features/vanillajs' },
               ]
             },
             { text: 'Audio', link: '/manual/features/audio' },
             { text: 'Image', link: '/manual/features/image' },
             { text: 'Debugging', link: '/manual/features/debugging' },
-            { text: 'WebAssembly', link: '/manual/features/webassembly' },
-            { text: 'Web Workers', link: '/manual/features/web-workers' },
           ]
         },
         {
