@@ -1,106 +1,116 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Layout Assertion Test - Replaced Elements with Text</title>
-    <meta charset="utf-8">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .container {
-            margin: 20px 0;
-        }
-        canvas {
-            border: 1px solid #ccc;
-        }
-        img {
-            max-width: 200px;
-            height: auto;
-        }
-        input {
-            padding: 10px;
-            margin: 5px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Layout Assertion Test</h1>
-    <p>This page tests the assertion failure that occurs when text is added to replaced elements during layout initialization.</p>
-    
-    <!-- Canvas element with text content -->
-    <div class="container">
-        <h2>Canvas Element Test</h2>
-        <canvas id="testCanvas" width="300" height="200">
-            This text fallback content should not cause an assertion failure
-        </canvas>
-        <p>Canvas with fallback text content</p>
-    </div>
-    
-    <!-- Image element with alt text -->
-    <div class="container">
-        <h2>Image Element Test</h2>
-        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pgo8L3N2Zz4K" alt="Test image with alt text that might trigger text layout">
-        <p>Image with alt text</p>
-    </div>
-    
-    <!-- Input elements with values and placeholders -->
-    <div class="container">
-        <h2>Input Element Test</h2>
-        <input type="text" placeholder="This placeholder text might trigger layout issues" value="Default value">
-        <input type="button" value="Button with text value">
-        <input type="submit" value="Submit button text">
-        <p>Various input types with text content</p>
-    </div>
-    
-    <!-- Dynamic content that might trigger the layout issue -->
-    <div class="container">
-        <h2>Dynamic Content Test</h2>
-        <canvas id="dynamicCanvas" width="200" height="100"></canvas>
-        <div id="dynamicContainer"></div>
-    </div>
 
-    <script>
-        // Add some dynamic content that might trigger the layout assertion
-        const canvas = document.getElementById('testCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#4CAF50';
-        ctx.fillRect(50, 50, 200, 100);
-        ctx.fillStyle = 'white';
-        ctx.font = '16px Arial';
-        ctx.fillText('Canvas Text', 120, 105);
-        
-        // Dynamic canvas content
-        const dynamicCanvas = document.getElementById('dynamicCanvas');
-        const dynamicCtx = dynamicCanvas.getContext('2d');
-        dynamicCtx.fillStyle = '#2196F3';
-        dynamicCtx.fillRect(0, 0, 200, 100);
-        dynamicCtx.fillStyle = 'white';
-        dynamicCtx.font = '14px Arial';
-        dynamicCtx.fillText('Dynamic Text', 60, 55);
-        
-        // Add dynamic elements that might trigger text layout in replaced elements
-        const container = document.getElementById('dynamicContainer');
-        
-        // Create canvas with text content dynamically
-        const newCanvas = document.createElement('canvas');
-        newCanvas.width = 150;
-        newCanvas.height = 75;
-        newCanvas.textContent = 'Fallback text for dynamically created canvas';
-        container.appendChild(newCanvas);
-        
-        // Create image with alt text dynamically
-        const newImg = document.createElement('img');
-        newImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9Ijc1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmZjk4MDAiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkR5bmFtaWM8L3RleHQ+Cjwvc3ZnPgo=';
-        newImg.alt = 'Dynamically created image with alt text';
-        container.appendChild(newImg);
-        
-        // Create input with text content dynamically
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.placeholder = 'Dynamic input placeholder';
-        newInput.value = 'Dynamic input value';
-        container.appendChild(newInput);
-    </script>
+<head>
+  <title>Layout Assertion Test - Replaced Elements with Text</title>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      margin: 20px 0;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+    }
+
+    img {
+      max-width: 200px;
+      height: auto;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Layout Assertion Test</h1>
+  <p>This page tests the assertion failure that occurs when text is added to replaced elements during layout
+    initialization.</p>
+
+  <!-- Canvas element with text content -->
+  <div class="container">
+    <h2>Canvas Element Test</h2>
+    <canvas id="testCanvas" width="300" height="200">
+      This text fallback content should not cause an assertion failure
+    </canvas>
+    <p>Canvas with fallback text content</p>
+  </div>
+
+  <!-- Image element with alt text -->
+  <div class="container">
+    <h2>Image Element Test</h2>
+    <img
+      src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzMzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pgo8L3N2Zz4K"
+      alt="Test image with alt text that might trigger text layout">
+    <p>Image with alt text</p>
+  </div>
+
+  <!-- Input elements with values and placeholders -->
+  <div class="container">
+    <h2>Input Element Test</h2>
+    <input type="text" placeholder="This placeholder text might trigger layout issues" value="Default value">
+    <input type="button" value="Button with text value">
+    <input type="submit" value="Submit button text">
+    <p>Various input types with text content</p>
+  </div>
+
+  <!-- Dynamic content that might trigger the layout issue -->
+  <div class="container">
+    <h2>Dynamic Content Test</h2>
+    <canvas id="dynamicCanvas" width="200" height="100"></canvas>
+    <div id="dynamicContainer"></div>
+  </div>
+
+  <script>
+    // Add some dynamic content that might trigger the layout assertion
+    const canvas = document.getElementById('testCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#4CAF50';
+    ctx.fillRect(50, 50, 200, 100);
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.fillText('Canvas Text', 120, 105);
+
+    // Dynamic canvas content
+    const dynamicCanvas = document.getElementById('dynamicCanvas');
+    const dynamicCtx = dynamicCanvas.getContext('2d');
+    dynamicCtx.fillStyle = '#2196F3';
+    dynamicCtx.fillRect(0, 0, 200, 100);
+    dynamicCtx.fillStyle = 'white';
+    dynamicCtx.font = '14px Arial';
+    dynamicCtx.fillText('Dynamic Text', 60, 55);
+
+    // Add dynamic elements that might trigger text layout in replaced elements
+    const container = document.getElementById('dynamicContainer');
+
+    // Create canvas with text content dynamically
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = 150;
+    newCanvas.height = 75;
+    newCanvas.textContent = 'Fallback text for dynamically created canvas';
+    container.appendChild(newCanvas);
+
+    // Create image with alt text dynamically
+    const newImg = document.createElement('img');
+    newImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9Ijc1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmZjk4MDAiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkR5bmFtaWM8L3RleHQ+Cjwvc3ZnPgo=';
+    newImg.alt = 'Dynamically created image with alt text';
+    container.appendChild(newImg);
+
+    // Create input with text content dynamically
+    const newInput = document.createElement('input');
+    newInput.type = 'text';
+    newInput.placeholder = 'Dynamic input placeholder';
+    newInput.value = 'Dynamic input value';
+    container.appendChild(newInput);
+  </script>
 </body>
+
 </html>
