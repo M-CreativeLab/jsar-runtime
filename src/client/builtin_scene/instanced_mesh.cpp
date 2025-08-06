@@ -81,12 +81,26 @@ namespace builtin_scene
     setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0, hasChanged);
   }
 
-  void Instance::setSdfData(glm::vec2 planeDimensions, glm::vec4 borderRadius, bool &hasChanged)
+  void Instance::setDimensions(float width, float height, bool &hasChanged)
   {
-    if (data_.sdfPlaneDimensions == planeDimensions && data_.sdfBorderRadius == borderRadius)
+    if (data_.sdfPlaneDimensions.x == width && data_.sdfPlaneDimensions.y == height)
       return; // Skip if there is no change.
 
-    data_.sdfPlaneDimensions = planeDimensions;
+    data_.sdfPlaneDimensions = glm::vec2(width, height);
+    notifyHolders();
+    hasChanged = true;
+  }
+
+  void Instance::setBorderRadius(float topLeft,
+                                 float topRight,
+                                 float bottomRight,
+                                 float bottomLeft,
+                                 bool &hasChanged)
+  {
+    glm::vec4 borderRadius(topLeft, topRight, bottomRight, bottomLeft);
+    if (data_.sdfBorderRadius == borderRadius)
+      return; // Skip if there is no change.
+
     data_.sdfBorderRadius = borderRadius;
     notifyHolders();
     hasChanged = true;

@@ -6,10 +6,10 @@ in float vInstanceTextureEnabled;
 
 #ifdef USE_UVS
 in vec2 uvs;
-in vec2 originalTexCoord; // Original texture coordinates for SDF calculations
 #endif
 
 #ifdef USE_INSTANCE_SDF
+in vec2 vSdfPlaneTexCoord;
 in vec2 vInstanceSdfPlaneDimensions;
 in vec4 vInstanceSdfBorderRadius;
 #else
@@ -18,27 +18,26 @@ uniform vec2 uPlaneDimensions; // Width and height of the plane in logical units
 uniform vec4 uBorderRadius;    // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
 #endif
 
-uniform float uSdfAntiAliasWidth; // Width of anti-aliasing zone
-uniform float uSdfEnabled;        // Enable/disable SDF rendering (0.0 or 1.0)
+uniform float uSdfEnabled; // Enable/disable SDF rendering (0.0 or 1.0)
 
 in vec4 col;
 layout(location = 0) out vec4 outColor;
 
 // SDF function for a rounded rectangle
-// p: point coordinate (relative to center)
-// b: half-dimensions of the rectangle
+// point: point coordinate (relative to center)
+// halfSize: half-dimensions of the rectangle
 // r: corner radius
-float sdfRoundedBox(vec2 p, vec2 b, vec4 r)
+float sdfRoundedBox(vec2 point, vec2 halfSize, vec4 r)
 {
   // Select the appropriate corner radius based on quadrant
-  float ux = step(0.0, p.x);
-  float uy = step(0.0, p.y);
+  float ux = step(0.0, point.x);
+  float uy = step(0.0, point.y);
   float radius = mix(
     mix(r.w, r.z, ux),
     mix(r.x, r.y, ux),
     uy);
 
-  vec2 q = abs(p) - b + radius;
+  vec2 q = abs(point) - halfSize + vec2(radius);
   return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;
 }
 
@@ -49,8 +48,9 @@ vec2 uvToPlaneCoord(vec2 uv, vec2 dimensions)
 }
 
 // Smooth step anti-aliasing based on SDF distance
-float sdfAntiAlias(float dist, float width)
+float sdfAntiAlias(float dist)
 {
+  float width = max(fwidth(dist), 0.01);
   return 1.0 - smoothstep(-width * 0.5, width * 0.5, dist);
 }
 
@@ -80,14 +80,13 @@ void main()
 #endif
 
     // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
-    vec2 planeCoord = uvToPlaneCoord(originalTexCoord, planeDimensions);
+    vec2 planeCoord = uvToPlaneCoord(vSdfPlaneTexCoord, planeDimensions);
 
     // Calculate SDF distance for rounded rectangle
-    vec2 halfDim = planeDimensions * 0.5;
-    float sdfDist = sdfRoundedBox(planeCoord, halfDim, borderRadius);
+    float sdfDist = sdfRoundedBox(planeCoord, planeDimensions * 0.5, borderRadius);
 
     // Apply anti-aliasing based on SDF distance
-    float alpha = sdfAntiAlias(sdfDist, uSdfAntiAliasWidth);
+    float alpha = sdfAntiAlias(sdfDist);
 
     // Multiply the final alpha with the SDF alpha for crisp edges
     outColor.a *= alpha;

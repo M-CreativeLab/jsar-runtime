@@ -74,13 +74,6 @@ namespace builtin_scene::materials
      */
     void setSdfEnabled(bool enabled);
 
-    /**
-     * Set the anti-aliasing width for SDF rendering.
-     *
-     * @param width The width of the anti-aliasing zone in logical units.
-     */
-    void setSdfAntiAliasWidth(float width);
-
   public:
     float width() const
     {
@@ -110,6 +103,5 @@ namespace builtin_scene::materials
 
     // SDF rendering parameters
     bool sdfEnabled_ = true;
-    float sdfAntiAliasWidth_ = 2.0f; // Default anti-alias width in logical units
   };
 }

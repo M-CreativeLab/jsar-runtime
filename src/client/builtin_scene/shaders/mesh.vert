@@ -23,7 +23,6 @@ out vec3 bitang;
 #ifdef USE_UVS
 uniform mat3 textureTransformation;
 out vec2 uvs;
-out vec2 originalTexCoord; // Original texture coordinates for SDF calculations
 #endif
 
 #ifdef USE_VERTEX_COLORS
@@ -52,6 +51,7 @@ out float vInstanceTextureEnabled;
 #ifdef USE_INSTANCE_SDF
 in vec2 instanceSdfPlaneDimensions;
 in vec4 instanceSdfBorderRadius;
+out vec2 vSdfPlaneTexCoord;
 out vec2 vInstanceSdfPlaneDimensions;
 out vec4 vInstanceSdfBorderRadius;
 #endif
@@ -111,7 +111,6 @@ void main()
 
   // UV
 #ifdef USE_UVS
-  originalTexCoord = texCoord; // Store original coordinates for SDF calculations
   vec3 transformedUv = textureTransformation * vec3(texCoord, 1.0);
   uvs = transformedUv.xy;
 
@@ -145,6 +144,7 @@ void main()
 
   // Instance SDF
 #ifdef USE_INSTANCE_SDF
+  vSdfPlaneTexCoord = texCoord;
   vInstanceSdfPlaneDimensions = instanceSdfPlaneDimensions;
   vInstanceSdfBorderRadius = instanceSdfBorderRadius;
 #endif

@@ -152,7 +152,12 @@ namespace builtin_scene
                     uint32_t layerIndex,
                     bool &hasChanged);
     void disableTexture(bool &hasChanged);
-    void setSdfData(glm::vec2 planeDimensions, glm::vec4 borderRadius, bool &hasChanged);
+    void setDimensions(float width, float height, bool &hasChanged);
+    void setBorderRadius(float topLeft,
+                         float topRight,
+                         float bottomRight,
+                         float bottomLeft,
+                         bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \

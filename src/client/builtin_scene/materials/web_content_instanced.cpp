@@ -41,7 +41,6 @@ namespace builtin_scene::materials
 
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
-    LOAD_UNIFORM_LOCATION("uSdfAntiAliasWidth");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
 #undef LOAD_UNIFORM_LOCATION
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
@@ -65,10 +64,11 @@ namespace builtin_scene::materials
 
     // Update the uniforms
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    glContext->uniformMatrix3fv(uniform("textureTransformation"), false, glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
+    glContext->uniformMatrix3fv(uniform("textureTransformation"),
+                                false,
+                                glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
 
     // Update SDF uniforms (instance data is set per instance, not here)
-    glContext->uniform1f(uniform("uSdfAntiAliasWidth"), sdfAntiAliasWidth_);
     glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
 
     // Bind the texture atlas.
@@ -98,11 +98,6 @@ namespace builtin_scene::materials
   void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
   {
     sdfEnabled_ = enabled;
-  }
-
-  void WebContentInstancedMaterial::setSdfAntiAliasWidth(float width)
-  {
-    sdfAntiAliasWidth_ = width;
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)

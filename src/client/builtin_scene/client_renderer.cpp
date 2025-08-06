@@ -290,11 +290,17 @@ namespace builtin_scene
           hasChanged = true;
 
         {
-          // Update sdf data
-          glm::vec2 planeDimensions(client_cssom::pixelToMeter(webContentComponent->logicalWidth()),
-                                    client_cssom::pixelToMeter(webContentComponent->logicalHeight()));
-          glm::vec4 borderRadius(5.0f);
-          instance.setSdfData(planeDimensions, borderRadius, hasChanged);
+          // Update instance for plane dimensions and border radius
+          float width = webContentComponent->logicalWidth();
+          float height = webContentComponent->logicalHeight();
+          float defaultRadius = 20.0f;
+
+          instance.setDimensions(width, height, hasChanged);
+          instance.setBorderRadius(defaultRadius,
+                                   defaultRadius,
+                                   defaultRadius,
+                                   defaultRadius,
+                                   hasChanged);
         }
 
         auto elementComponent = getComponent<hierarchy::Element>(id);
