@@ -33,8 +33,8 @@ float sdfRoundedBox(vec2 point, vec2 halfSize, vec4 r)
   float ux = step(0.0, point.x);
   float uy = step(0.0, point.y);
   float radius = mix(
-    mix(r.x, r.y, ux),  // When uy=0 (top): mix between r.x (top-left) and r.y (top-right)
-    mix(r.w, r.z, ux),  // When uy=1 (bottom): mix between r.w (bottom-left) and r.z (bottom-right)
+    mix(r.w, r.z, ux),  // When uy=0 (bottom): mix between r.w (bottom-left) and r.z (bottom-right)
+    mix(r.x, r.y, ux),  // When uy=1 (top): mix between r.x (top-left) and r.y (top-right)
     uy);
 
   vec2 q = abs(point) - halfSize + vec2(radius);
