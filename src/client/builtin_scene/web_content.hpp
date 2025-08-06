@@ -281,7 +281,7 @@ namespace builtin_scene
      * 
      * @returns The SkRRect containing border radius information.
      */
-    inline const SkRRect& roundedRect() const
+    inline const SkRRect &roundedRect() const
     {
       return rounded_rect_;
     }

@@ -81,14 +81,6 @@ namespace builtin_scene::materials
      */
     void setSdfAntiAliasWidth(float width);
 
-    /**
-     * Update SDF instance data for the given instance.
-     *
-     * @param instance The instance to update with SDF data.
-     * @param content The WebContent to extract SDF data from.
-     */
-    void updateInstanceSdfData(Instance &instance, const WebContent &content);
-
   public:
     float width() const
     {
@@ -115,9 +107,9 @@ namespace builtin_scene::materials
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
     std::unique_ptr<TextureAtlas> textureAtlas_;
-    
+
     // SDF rendering parameters
-    bool sdfEnabled_ = false;
-    float sdfAntiAliasWidth_ = 2.0f;  // Default anti-alias width in logical units
+    bool sdfEnabled_ = true;
+    float sdfAntiAliasWidth_ = 2.0f; // Default anti-alias width in logical units
   };
 }

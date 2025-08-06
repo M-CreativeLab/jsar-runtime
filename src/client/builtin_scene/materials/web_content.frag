@@ -13,8 +13,8 @@ in vec2 vInstanceSdfPlaneDimensions;
 in vec4 vInstanceSdfBorderRadius;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
-uniform vec2 uPlaneDimensions;    // Width and height of the plane in logical units
-uniform vec4 uBorderRadius;       // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
+uniform vec2 uPlaneDimensions; // Width and height of the plane in logical units
+uniform vec4 uBorderRadius;    // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
 #endif
 
 uniform float uSdfAntiAliasWidth; // Width of anti-aliasing zone
@@ -30,11 +30,12 @@ layout(location = 0) out vec4 outColor;
 float sdfRoundedBox(vec2 p, vec2 b, vec4 r)
 {
   // Select the appropriate corner radius based on quadrant
-  vec2 corner = step(0.0, p) * vec2(1.0, 1.0);
+  float ux = step(0.0, p.x);
+  float uy = step(0.0, p.y);
   float radius = mix(
-    mix(r.x, r.y, corner.x), // top-left or top-right
-    mix(r.w, r.z, corner.x), // bottom-left or bottom-right
-    corner.y);
+    mix(r.w, r.z, ux),
+    mix(r.x, r.y, ux),
+    uy);
 
   vec2 q = abs(p) - b + radius;
   return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;

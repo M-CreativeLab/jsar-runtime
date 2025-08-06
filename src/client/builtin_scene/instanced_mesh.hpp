@@ -33,15 +33,15 @@ namespace builtin_scene
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
         , sdfPlaneDimensions(0.0f, 0.0f)
-        , sdfBorderRadius(0.0f, 0.0f, 0.0f, 0.0f)
+        , sdfBorderRadius(5.0f, 5.0f, 0.0f, 0.0f)
     {
     }
-    glm::mat4 transform;    /** 16 */
-    glm::vec4 color;        /** 20 */
-    glm::vec2 texUvOffset;  /** 22 - Left or default view texture coordinates */
-    glm::vec2 texUvOffsetR; /** 24 - Right eye texture coordinates */
-    glm::vec2 texUvScale;   /** 26 - Shared texture scale for both eyes */
-    uint32_t texLayerIndex; /** Shared texture layer for both eyes */
+    glm::mat4 transform;          /** 16 */
+    glm::vec4 color;              /** 20 */
+    glm::vec2 texUvOffset;        /** 22 - Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR;       /** 24 - Right eye texture coordinates */
+    glm::vec2 texUvScale;         /** 26 - Shared texture scale for both eyes */
+    uint32_t texLayerIndex;       /** Shared texture layer for both eyes */
     glm::vec2 sdfPlaneDimensions; /** 28 - Plane dimensions for SDF calculations */
     glm::vec4 sdfBorderRadius;    /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
 
@@ -276,7 +276,7 @@ namespace builtin_scene
     friend class RenderSystem;
 
   public:
-    static constexpr size_t STRIDE = sizeof(float) * 32 + sizeof(uint32_t) * 1;
+    static constexpr size_t STRIDE = sizeof(InstanceData);
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {"instanceTransform",
                                                                   "instanceColor",
                                                                   "instanceTexUvOffset",

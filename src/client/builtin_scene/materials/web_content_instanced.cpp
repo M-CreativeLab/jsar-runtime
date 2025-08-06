@@ -105,35 +105,6 @@ namespace builtin_scene::materials
     sdfAntiAliasWidth_ = width;
   }
 
-  void WebContentInstancedMaterial::updateInstanceSdfData(Instance &instance, const WebContent &content)
-  {
-    if (!sdfEnabled_)
-      return;
-
-    // Set plane dimensions
-    glm::vec2 planeDimensions(content.logicalWidth(), content.logicalHeight());
-
-    // Extract border radius from web content's rounded rect
-    glm::vec4 borderRadius(0.0f);
-    const auto &roundedRect = content.roundedRect();
-    if (!roundedRect.isEmpty())
-    {
-      auto topLeft = roundedRect.radii(SkRRect::kUpperLeft_Corner);
-      auto topRight = roundedRect.radii(SkRRect::kUpperRight_Corner);
-      auto bottomRight = roundedRect.radii(SkRRect::kLowerRight_Corner);
-      auto bottomLeft = roundedRect.radii(SkRRect::kLowerLeft_Corner);
-
-      // Use average of x and y radius for each corner (simplified)
-      borderRadius.x = (topLeft.x() + topLeft.y()) * 0.5f;         // top-left
-      borderRadius.y = (topRight.x() + topRight.y()) * 0.5f;       // top-right
-      borderRadius.z = (bottomRight.x() + bottomRight.y()) * 0.5f; // bottom-right
-      borderRadius.w = (bottomLeft.x() + bottomLeft.y()) * 0.5f;   // bottom-left
-    }
-
-    bool hasChanged = false;
-    instance.setSdfData(planeDimensions, borderRadius, hasChanged);
-  }
-
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
   {
     if (textureAtlas_ == nullptr)
@@ -142,10 +113,6 @@ namespace builtin_scene::materials
     auto textureRect = content.resizeOrInitTexture(*textureAtlas_);
     if (textureRect == nullptr)
       return TextureUpdateStatus::kSkipped; // Just skip when the texture creation is failed.
-
-    // Update material dimensions for SDF calculations
-    width_ = content.logicalWidth();
-    height_ = content.logicalHeight();
 
     unsigned char *pixels = nullptr;
     int internalformat = WEBGL2_RGBA8;

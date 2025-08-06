@@ -289,6 +289,14 @@ namespace builtin_scene
         if (instance.setOpaque(webContentComponent->isOpaque()))
           hasChanged = true;
 
+        {
+          // Update sdf data
+          glm::vec2 planeDimensions(client_cssom::pixelToMeter(webContentComponent->logicalWidth()),
+                                    client_cssom::pixelToMeter(webContentComponent->logicalHeight()));
+          glm::vec4 borderRadius(5.0f);
+          instance.setSdfData(planeDimensions, borderRadius, hasChanged);
+        }
+
         auto elementComponent = getComponent<hierarchy::Element>(id);
         if (elementComponent != nullptr &&
             elementComponent->node != nullptr &&
