@@ -6,6 +6,7 @@ in float vInstanceTextureEnabled;
 
 #ifdef USE_UVS
 in vec2 uvs;
+in vec2 originalTexCoord; // Original texture coordinates for SDF calculations
 #endif
 
 #ifdef USE_INSTANCE_SDF
@@ -78,8 +79,8 @@ void main()
     vec4 borderRadius = uBorderRadius;
 #endif
 
-    // Convert UV to plane coordinates centered at origin
-    vec2 planeCoord = uvToPlaneCoord(uvs, planeDimensions);
+    // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
+    vec2 planeCoord = uvToPlaneCoord(originalTexCoord, planeDimensions);
 
     // Calculate SDF distance for rounded rectangle
     vec2 halfDim = planeDimensions * 0.5;

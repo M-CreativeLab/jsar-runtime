@@ -23,6 +23,7 @@ out vec3 bitang;
 #ifdef USE_UVS
 uniform mat3 textureTransformation;
 out vec2 uvs;
+out vec2 originalTexCoord; // Original texture coordinates for SDF calculations
 #endif
 
 #ifdef USE_VERTEX_COLORS
@@ -110,6 +111,7 @@ void main()
 
   // UV
 #ifdef USE_UVS
+  originalTexCoord = texCoord; // Store original coordinates for SDF calculations
   vec3 transformedUv = textureTransformation * vec3(texCoord, 1.0);
   uvs = transformedUv.xy;
 
