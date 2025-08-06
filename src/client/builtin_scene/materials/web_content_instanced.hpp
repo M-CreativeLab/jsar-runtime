@@ -108,7 +108,7 @@ namespace builtin_scene::materials
     std::unique_ptr<TextureAtlas> textureAtlas_;
     
     // SDF rendering parameters
-    bool sdfEnabled_ = true;
+    bool sdfEnabled_ = false;
     float sdfAntiAliasWidth_ = 2.0f;  // Default anti-alias width in logical units
   };
 }
