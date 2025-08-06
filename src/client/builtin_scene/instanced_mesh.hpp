@@ -32,18 +32,18 @@ namespace builtin_scene
         , texUvOffsetR(0.0f, 0.0f)
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
-        , sdfPlaneDimensions(0.0f, 0.0f)
-        , sdfBorderRadius(5.0f, 5.0f, 0.0f, 0.0f)
+        , dimensions(0.0f, 0.0f)
+        , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
     {
     }
-    glm::mat4 transform;          /** 16 */
-    glm::vec4 color;              /** 20 */
-    glm::vec2 texUvOffset;        /** 22 - Left or default view texture coordinates */
-    glm::vec2 texUvOffsetR;       /** 24 - Right eye texture coordinates */
-    glm::vec2 texUvScale;         /** 26 - Shared texture scale for both eyes */
-    uint32_t texLayerIndex;       /** Shared texture layer for both eyes */
-    glm::vec2 sdfPlaneDimensions; /** 28 - Plane dimensions for SDF calculations */
-    glm::vec4 sdfBorderRadius;    /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    glm::mat4 transform;    /** 16 */
+    glm::vec4 color;        /** 20 */
+    glm::vec2 texUvOffset;  /** 22 - Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR; /** 24 - Right eye texture coordinates */
+    glm::vec2 texUvScale;   /** 26 - Shared texture scale for both eyes */
+    uint32_t texLayerIndex; /** Shared texture layer for both eyes */
+    glm::vec2 dimensions;   /** 28 - The dimensions */
+    glm::vec4 borderRadius; /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -54,8 +54,8 @@ namespace builtin_scene
          << "  texUvScale=" << math3d::to_string(data.texUvScale) << std::endl
          << "  texLayerIndex=" << data.texLayerIndex << std::endl
          << "  texUvOffsetR=" << math3d::to_string(data.texUvOffsetR) << std::endl
-         << "  sdfPlaneDimensions=" << math3d::to_string(data.sdfPlaneDimensions) << std::endl
-         << "  sdfBorderRadius=" << math3d::to_string(data.sdfBorderRadius) << std::endl
+         << "  dimensions=" << math3d::to_string(data.dimensions) << std::endl
+         << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << ")";
       return os;
     }
@@ -153,6 +153,7 @@ namespace builtin_scene
                     bool &hasChanged);
     void disableTexture(bool &hasChanged);
     void setDimensions(float width, float height, bool &hasChanged);
+    void setBorderRadius(glm::vec4 borderRadius, bool &hasChanged);
     void setBorderRadius(float topLeft,
                          float topRight,
                          float bottomRight,
@@ -288,8 +289,8 @@ namespace builtin_scene
                                                                   "instanceTexUvOffsetR",
                                                                   "instanceTexUvScale",
                                                                   "instanceLayerIndex",
-                                                                  "instanceSdfPlaneDimensions",
-                                                                  "instanceSdfBorderRadius"};
+                                                                  "instanceDimensions",
+                                                                  "instanceBorderRadius"};
 
   public:
     InstancedMeshBase() = default;

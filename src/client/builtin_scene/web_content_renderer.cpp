@@ -578,6 +578,18 @@ namespace builtin_scene::web_renderer
     SkRect rect = SkRect::MakeXYWH(left, top, content.logicalWidth() - 2 * left, content.logicalHeight() - 2 * top);
     SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
+    if (drawRoundedRect)
+    {
+      // TODO(yorkie): support radius for xy
+      content.setBorderRadius(roundedRect.radii(SkRRect::kUpperLeft_Corner).x(),
+                              roundedRect.radii(SkRRect::kUpperRight_Corner).x(),
+                              roundedRect.radii(SkRRect::kLowerRight_Corner).x(),
+                              roundedRect.radii(SkRRect::kLowerLeft_Corner).x());
+    }
+    else
+    {
+      content.resetBorderRadius();
+    }
 
     ClippingArea clipInfo;
     if (style.backgroundClip().isText())

@@ -83,10 +83,20 @@ namespace builtin_scene
 
   void Instance::setDimensions(float width, float height, bool &hasChanged)
   {
-    if (data_.sdfPlaneDimensions.x == width && data_.sdfPlaneDimensions.y == height)
+    if (data_.dimensions.x == width && data_.dimensions.y == height)
       return; // Skip if there is no change.
 
-    data_.sdfPlaneDimensions = glm::vec2(width, height);
+    data_.dimensions = glm::vec2(width, height);
+    notifyHolders();
+    hasChanged = true;
+  }
+
+  void Instance::setBorderRadius(glm::vec4 borderRadius, bool &hasChanged)
+  {
+    if (data_.borderRadius == borderRadius)
+      return; // Skip if there is no change.
+
+    data_.borderRadius = borderRadius;
     notifyHolders();
     hasChanged = true;
   }
@@ -97,13 +107,7 @@ namespace builtin_scene
                                  float bottomLeft,
                                  bool &hasChanged)
   {
-    glm::vec4 borderRadius(topLeft, topRight, bottomRight, bottomLeft);
-    if (data_.sdfBorderRadius == borderRadius)
-      return; // Skip if there is no change.
-
-    data_.sdfBorderRadius = borderRadius;
-    notifyHolders();
-    hasChanged = true;
+    setBorderRadius(glm::vec4(topLeft, topRight, bottomRight, bottomLeft), hasChanged);
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
@@ -297,14 +301,29 @@ namespace builtin_scene
         else
         {
           unique_ptr<IVertexAttribute> attrib = nullptr;
-          if (name == "instanceTexUvOffset" ||
-              name == "instanceTexUvScale" ||
-              name == "instanceTexUvOffsetR")
-            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
-          else if (name == "instanceLayerIndex")
+          // 1u
+          if (name == "instanceLayerIndex")
+          {
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
-          else
+          }
+          // 2f
+          else if (name == "instanceTexUvOffset" ||
+                   name == "instanceTexUvScale" ||
+                   name == "instanceTexUvOffsetR" ||
+                   name == "instanceDimensions")
+          {
+            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
+          }
+          // 4f
+          else if (name == "instanceColor" ||
+                   name == "instanceBorderRadius")
+          {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          }
+          else
+          {
+            assert(false && "Unknown instance attribute name.");
+          }
 
           assert(attrib != nullptr);
           callback(*attrib, instanceIndex, STRIDE, offset);

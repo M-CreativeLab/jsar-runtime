@@ -49,11 +49,11 @@ out float vInstanceTextureEnabled;
 #endif
 
 #ifdef USE_INSTANCE_SDF
-in vec2 instanceSdfPlaneDimensions;
-in vec4 instanceSdfBorderRadius;
-out vec2 vSdfPlaneTexCoord;
-out vec2 vInstanceSdfPlaneDimensions;
-out vec4 vInstanceSdfBorderRadius;
+in vec2 instanceDimensions;
+in vec4 instanceBorderRadius;
+out vec2 vInstanceTexCoord;
+out vec2 vInstanceDimensions;
+out vec4 vInstanceBorderRadius;
 #endif
 #endif
 
@@ -144,9 +144,9 @@ void main()
 
   // Instance SDF
 #ifdef USE_INSTANCE_SDF
-  vSdfPlaneTexCoord = texCoord;
-  vInstanceSdfPlaneDimensions = instanceSdfPlaneDimensions;
-  vInstanceSdfBorderRadius = instanceSdfBorderRadius;
+  vInstanceTexCoord = texCoord;
+  vInstanceDimensions = instanceDimensions;
+  vInstanceBorderRadius = instanceBorderRadius;
 #endif
 #endif
 

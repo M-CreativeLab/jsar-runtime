@@ -289,20 +289,13 @@ namespace builtin_scene
         if (instance.setOpaque(webContentComponent->isOpaque()))
           hasChanged = true;
 
-        {
-          // Update instance for plane dimensions and border radius
-          float width = webContentComponent->logicalWidth();
-          float height = webContentComponent->logicalHeight();
-          float defaultRadius = 20.0f;
+        // Update instance basic shape data
+        instance.setBorderRadius(webContentComponent->borderRadius(), hasChanged);
+        instance.setDimensions(webContentComponent->logicalWidth(),
+                               webContentComponent->logicalHeight(),
+                               hasChanged);
 
-          instance.setDimensions(width, height, hasChanged);
-          instance.setBorderRadius(defaultRadius,
-                                   defaultRadius,
-                                   defaultRadius,
-                                   defaultRadius,
-                                   hasChanged);
-        }
-
+        // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);
         if (elementComponent != nullptr &&
             elementComponent->node != nullptr &&
@@ -312,11 +305,11 @@ namespace builtin_scene
             hasChanged = true;
         }
 
+        // Update instance texture data
         auto textureRect = webContentComponent->textureRect();
-        int texturePad = webContentComponent->texturePad();
-
         if (textureRect != nullptr)
         {
+          int texturePad = webContentComponent->texturePad();
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
 
           // Calculate left and right eye texture coordinates for spatial images

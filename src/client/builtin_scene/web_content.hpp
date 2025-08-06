@@ -193,6 +193,21 @@ namespace builtin_scene
     {
       background_color_ = glm::vec4(color.fR, color.fG, color.fB, color.fA);
     }
+    inline glm::vec4 borderRadius() const
+    {
+      return border_radius_;
+    }
+    inline void setBorderRadius(float topLeft,
+                                float topRight,
+                                float bottomRight,
+                                float bottomLeft)
+    {
+      border_radius_ = glm::vec4(topLeft, topRight, bottomRight, bottomLeft);
+    }
+    inline void resetBorderRadius()
+    {
+      border_radius_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
 
     inline std::shared_ptr<Texture> textureRect() const
     {
@@ -300,6 +315,7 @@ namespace builtin_scene
     WebContentStyle content_style_;
     SkRRect rounded_rect_;
     glm::vec4 background_color_;
+    glm::vec4 border_radius_;
 
     std::shared_ptr<Texture> texture_;
     float device_pixel_ratio_ = 1.0f;

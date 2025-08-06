@@ -9,13 +9,13 @@ in vec2 uvs;
 #endif
 
 #ifdef USE_INSTANCE_SDF
-in vec2 vSdfPlaneTexCoord;
-in vec2 vInstanceSdfPlaneDimensions;
-in vec4 vInstanceSdfBorderRadius;
+in vec2 vInstanceTexCoord;
+in vec2 vInstanceDimensions;
+in vec4 vInstanceBorderRadius;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
-uniform vec2 uPlaneDimensions; // Width and height of the plane in logical units
-uniform vec4 uBorderRadius;    // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
+uniform vec2 uDimensions;   // Width and height of the plane in logical units
+uniform vec4 uBorderRadius; // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
 #endif
 
 uniform float uSdfEnabled; // Enable/disable SDF rendering (0.0 or 1.0)
@@ -24,20 +24,20 @@ in vec4 col;
 layout(location = 0) out vec4 outColor;
 
 // SDF function for a rounded rectangle
-// point: point coordinate (relative to center)
-// halfSize: half-dimensions of the rectangle
+// p: point coordinate (relative to center)
+// b: half-dimensions of the rectangle
 // r: corner radius
-float sdfRoundedBox(vec2 point, vec2 halfSize, vec4 r)
+float sdfRoundedBox(vec2 p, vec2 b, vec4 r)
 {
   // Select the appropriate corner radius based on quadrant
-  float ux = step(0.0, point.x);
-  float uy = step(0.0, point.y);
+  float ux = step(0.0, p.x);
+  float uy = step(0.0, p.y);
   float radius = mix(
-    mix(r.w, r.z, ux),  // When uy=0 (bottom): mix between r.w (bottom-left) and r.z (bottom-right)
-    mix(r.x, r.y, ux),  // When uy=1 (top): mix between r.x (top-left) and r.y (top-right)
+    mix(r.w, r.z, ux), // When uy=0 (bottom): mix between r.w (bottom-left) and r.z (bottom-right)
+    mix(r.x, r.y, ux), // When uy=1 (top): mix between r.x (top-left) and r.y (top-right)
     uy);
 
-  vec2 q = abs(point) - halfSize + vec2(radius);
+  vec2 q = abs(p) - b + vec2(radius);
   return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;
 }
 
@@ -71,21 +71,19 @@ void main()
   {
 #ifdef USE_INSTANCE_SDF
     // Use instance data for SDF calculations
-    vec2 planeDimensions = vInstanceSdfPlaneDimensions;
-    vec4 borderRadius = vInstanceSdfBorderRadius;
+    vec2 dimensions = vInstanceDimensions;
+    vec4 borderRadius = vInstanceBorderRadius;
 #else
     // Fallback to uniforms for non-instanced usage
-    vec2 planeDimensions = uPlaneDimensions;
+    vec2 dimensions = uDimensions;
     vec4 borderRadius = uBorderRadius;
 #endif
 
     // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
-    vec2 planeCoord = uvToPlaneCoord(vSdfPlaneTexCoord, planeDimensions);
+    vec2 planeCoord = uvToPlaneCoord(vInstanceTexCoord, dimensions);
 
     // Calculate SDF distance for rounded rectangle
-    float sdfDist = sdfRoundedBox(planeCoord, planeDimensions * 0.5, borderRadius);
-
-    // Apply anti-aliasing based on SDF distance
+    float sdfDist = sdfRoundedBox(planeCoord, dimensions * 0.5, borderRadius);
     float alpha = sdfAntiAlias(sdfDist);
 
     // Multiply the final alpha with the SDF alpha for crisp edges
