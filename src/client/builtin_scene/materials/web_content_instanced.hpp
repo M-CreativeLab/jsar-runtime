@@ -37,7 +37,8 @@ namespace builtin_scene::materials
                           "USE_UVS",
                           "USE_INSTANCE_TRANSFORMS",
                           "USE_INSTANCE_COLORS",
-                          "USE_INSTANCE_TEXTURE"
+                          "USE_INSTANCE_TEXTURE",
+                          "USE_INSTANCE_SDF"
                           // End
                         });
     }
@@ -79,6 +80,14 @@ namespace builtin_scene::materials
      * @param width The width of the anti-aliasing zone in logical units.
      */
     void setSdfAntiAliasWidth(float width);
+
+    /**
+     * Update SDF instance data for the given instance.
+     *
+     * @param instance The instance to update with SDF data.
+     * @param content The WebContent to extract SDF data from.
+     */
+    void updateInstanceSdfData(Instance &instance, const WebContent &content);
 
   public:
     float width() const

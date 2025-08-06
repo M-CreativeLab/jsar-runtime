@@ -32,6 +32,8 @@ namespace builtin_scene
         , texUvOffsetR(0.0f, 0.0f)
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
+        , sdfPlaneDimensions(0.0f, 0.0f)
+        , sdfBorderRadius(0.0f, 0.0f, 0.0f, 0.0f)
     {
     }
     glm::mat4 transform;    /** 16 */
@@ -40,6 +42,8 @@ namespace builtin_scene
     glm::vec2 texUvOffsetR; /** 24 - Right eye texture coordinates */
     glm::vec2 texUvScale;   /** 26 - Shared texture scale for both eyes */
     uint32_t texLayerIndex; /** Shared texture layer for both eyes */
+    glm::vec2 sdfPlaneDimensions; /** 28 - Plane dimensions for SDF calculations */
+    glm::vec4 sdfBorderRadius;    /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -50,6 +54,8 @@ namespace builtin_scene
          << "  texUvScale=" << math3d::to_string(data.texUvScale) << std::endl
          << "  texLayerIndex=" << data.texLayerIndex << std::endl
          << "  texUvOffsetR=" << math3d::to_string(data.texUvOffsetR) << std::endl
+         << "  sdfPlaneDimensions=" << math3d::to_string(data.sdfPlaneDimensions) << std::endl
+         << "  sdfBorderRadius=" << math3d::to_string(data.sdfBorderRadius) << std::endl
          << ")";
       return os;
     }
@@ -146,6 +152,7 @@ namespace builtin_scene
                     uint32_t layerIndex,
                     bool &hasChanged);
     void disableTexture(bool &hasChanged);
+    void setSdfData(glm::vec2 planeDimensions, glm::vec4 borderRadius, bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -269,13 +276,15 @@ namespace builtin_scene
     friend class RenderSystem;
 
   public:
-    static constexpr size_t STRIDE = sizeof(float) * 26 + sizeof(uint32_t) * 1;
+    static constexpr size_t STRIDE = sizeof(float) * 32 + sizeof(uint32_t) * 1;
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {"instanceTransform",
                                                                   "instanceColor",
                                                                   "instanceTexUvOffset",
                                                                   "instanceTexUvOffsetR",
                                                                   "instanceTexUvScale",
-                                                                  "instanceLayerIndex"};
+                                                                  "instanceLayerIndex",
+                                                                  "instanceSdfPlaneDimensions",
+                                                                  "instanceSdfBorderRadius"};
 
   public:
     InstancedMeshBase() = default;

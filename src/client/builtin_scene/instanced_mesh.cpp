@@ -81,6 +81,17 @@ namespace builtin_scene
     setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0, hasChanged);
   }
 
+  void Instance::setSdfData(glm::vec2 planeDimensions, glm::vec4 borderRadius, bool &hasChanged)
+  {
+    if (data_.sdfPlaneDimensions == planeDimensions && data_.sdfBorderRadius == borderRadius)
+      return; // Skip if there is no change.
+
+    data_.sdfPlaneDimensions = planeDimensions;
+    data_.sdfBorderRadius = borderRadius;
+    notifyHolders();
+    hasChanged = true;
+  }
+
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
   {
     // Check if the holder is already added.

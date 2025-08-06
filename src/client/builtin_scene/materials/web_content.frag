@@ -8,9 +8,15 @@ in float vInstanceTextureEnabled;
 in vec2 uvs;
 #endif
 
-// SDF rendering uniforms
+#ifdef USE_INSTANCE_SDF
+in vec2 vInstanceSdfPlaneDimensions;
+in vec4 vInstanceSdfBorderRadius;
+#else
+// SDF rendering uniforms (fallback for non-instanced usage)
 uniform vec2 uPlaneDimensions;    // Width and height of the plane in logical units
 uniform vec4 uBorderRadius;       // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
+#endif
+
 uniform float uSdfAntiAliasWidth; // Width of anti-aliasing zone
 uniform float uSdfEnabled;        // Enable/disable SDF rendering (0.0 or 1.0)
 
@@ -61,12 +67,22 @@ void main()
   // Apply SDF-based anti-aliasing if enabled
   if (uSdfEnabled > 0.5)
   {
+#ifdef USE_INSTANCE_SDF
+    // Use instance data for SDF calculations
+    vec2 planeDimensions = vInstanceSdfPlaneDimensions;
+    vec4 borderRadius = vInstanceSdfBorderRadius;
+#else
+    // Fallback to uniforms for non-instanced usage
+    vec2 planeDimensions = uPlaneDimensions;
+    vec4 borderRadius = uBorderRadius;
+#endif
+
     // Convert UV to plane coordinates centered at origin
-    vec2 planeCoord = uvToPlaneCoord(uvs, uPlaneDimensions);
+    vec2 planeCoord = uvToPlaneCoord(uvs, planeDimensions);
 
     // Calculate SDF distance for rounded rectangle
-    vec2 halfDim = uPlaneDimensions * 0.5;
-    float sdfDist = sdfRoundedBox(planeCoord, halfDim, uBorderRadius);
+    vec2 halfDim = planeDimensions * 0.5;
+    float sdfDist = sdfRoundedBox(planeCoord, halfDim, borderRadius);
 
     // Apply anti-aliasing based on SDF distance
     float alpha = sdfAntiAlias(sdfDist, uSdfAntiAliasWidth);

@@ -41,8 +41,6 @@ namespace builtin_scene::materials
 
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
-    LOAD_UNIFORM_LOCATION("uPlaneDimensions");
-    LOAD_UNIFORM_LOCATION("uBorderRadius");
     LOAD_UNIFORM_LOCATION("uSdfAntiAliasWidth");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
 #undef LOAD_UNIFORM_LOCATION
@@ -69,9 +67,7 @@ namespace builtin_scene::materials
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
     glContext->uniformMatrix3fv(uniform("textureTransformation"), false, glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
 
-    // Update SDF uniforms with default values (these will be updated per instance in updateTexture)
-    glContext->uniform2f(uniform("uPlaneDimensions"), width_, height_);
-    glContext->uniform4f(uniform("uBorderRadius"), 0.0f, 0.0f, 0.0f, 0.0f);
+    // Update SDF uniforms (instance data is set per instance, not here)
     glContext->uniform1f(uniform("uSdfAntiAliasWidth"), sdfAntiAliasWidth_);
     glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
 
@@ -109,6 +105,35 @@ namespace builtin_scene::materials
     sdfAntiAliasWidth_ = width;
   }
 
+  void WebContentInstancedMaterial::updateInstanceSdfData(Instance &instance, const WebContent &content)
+  {
+    if (!sdfEnabled_)
+      return;
+
+    // Set plane dimensions
+    glm::vec2 planeDimensions(content.logicalWidth(), content.logicalHeight());
+
+    // Extract border radius from web content's rounded rect
+    glm::vec4 borderRadius(0.0f);
+    const auto &roundedRect = content.roundedRect();
+    if (!roundedRect.isEmpty())
+    {
+      auto topLeft = roundedRect.radii(SkRRect::kUpperLeft_Corner);
+      auto topRight = roundedRect.radii(SkRRect::kUpperRight_Corner);
+      auto bottomRight = roundedRect.radii(SkRRect::kLowerRight_Corner);
+      auto bottomLeft = roundedRect.radii(SkRRect::kLowerLeft_Corner);
+
+      // Use average of x and y radius for each corner (simplified)
+      borderRadius.x = (topLeft.x() + topLeft.y()) * 0.5f;         // top-left
+      borderRadius.y = (topRight.x() + topRight.y()) * 0.5f;       // top-right
+      borderRadius.z = (bottomRight.x() + bottomRight.y()) * 0.5f; // bottom-right
+      borderRadius.w = (bottomLeft.x() + bottomLeft.y()) * 0.5f;   // bottom-left
+    }
+
+    bool hasChanged = false;
+    instance.setSdfData(planeDimensions, borderRadius, hasChanged);
+  }
+
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
   {
     if (textureAtlas_ == nullptr)
@@ -121,35 +146,6 @@ namespace builtin_scene::materials
     // Update material dimensions for SDF calculations
     width_ = content.logicalWidth();
     height_ = content.logicalHeight();
-
-    // Update SDF uniforms with current content geometry
-    auto glContext = glContext_.lock();
-    if (glContext != nullptr && sdfEnabled_)
-    {
-      // Set plane dimensions
-      glContext->uniform2f(uniform("uPlaneDimensions"), width_, height_);
-
-      // Extract border radius from web content's rounded rect
-      glm::vec4 borderRadius(0.0f);
-      const auto &roundedRect = content.roundedRect();
-      if (!roundedRect.isEmpty())
-      {
-        auto topLeft = roundedRect.radii(SkRRect::kUpperLeft_Corner);
-        auto topRight = roundedRect.radii(SkRRect::kUpperRight_Corner);
-        auto bottomRight = roundedRect.radii(SkRRect::kLowerRight_Corner);
-        auto bottomLeft = roundedRect.radii(SkRRect::kLowerLeft_Corner);
-
-        // Use average of x and y radius for each corner (simplified)
-        borderRadius.x = (topLeft.x() + topLeft.y()) * 0.5f;         // top-left
-        borderRadius.y = (topRight.x() + topRight.y()) * 0.5f;       // top-right
-        borderRadius.z = (bottomRight.x() + bottomRight.y()) * 0.5f; // bottom-right
-        borderRadius.w = (bottomLeft.x() + bottomLeft.y()) * 0.5f;   // bottom-left
-      }
-
-      glContext->uniform4f(uniform("uBorderRadius"), borderRadius.x, borderRadius.y, borderRadius.z, borderRadius.w);
-      glContext->uniform1f(uniform("uSdfAntiAliasWidth"), sdfAntiAliasWidth_);
-      glContext->uniform1f(uniform("uSdfEnabled"), 1.0f);
-    }
 
     unsigned char *pixels = nullptr;
     int internalformat = WEBGL2_RGBA8;
