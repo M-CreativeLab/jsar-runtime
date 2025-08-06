@@ -51,9 +51,15 @@ out float vInstanceTextureEnabled;
 #ifdef USE_INSTANCE_SDF
 in vec2 instanceDimensions;
 in vec4 instanceBorderRadius;
+in vec4 instanceBorderWidth;
+in vec4 instanceBorderColor;
+in float instanceBorderStyle;
 out vec2 vInstanceTexCoord;
 out vec2 vInstanceDimensions;
 out vec4 vInstanceBorderRadius;
+out vec4 vInstanceBorderWidth;
+out vec4 vInstanceBorderColor;
+out float vInstanceBorderStyle;
 #endif
 #endif
 
@@ -147,6 +153,9 @@ void main()
   vInstanceTexCoord = texCoord;
   vInstanceDimensions = instanceDimensions;
   vInstanceBorderRadius = instanceBorderRadius;
+  vInstanceBorderWidth = instanceBorderWidth;
+  vInstanceBorderColor = instanceBorderColor;
+  vInstanceBorderStyle = instanceBorderStyle;
 #endif
 #endif
 

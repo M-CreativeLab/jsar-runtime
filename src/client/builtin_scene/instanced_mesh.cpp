@@ -110,6 +110,50 @@ namespace builtin_scene
     setBorderRadius(glm::vec4(topLeft, topRight, bottomRight, bottomLeft), hasChanged);
   }
 
+  void Instance::setBorderWidth(glm::vec4 borderWidth, bool &hasChanged)
+  {
+    if (data_.borderWidth == borderWidth)
+      return; // Skip if there is no change.
+
+    data_.borderWidth = borderWidth;
+    notifyHolders();
+    hasChanged = true;
+  }
+
+  void Instance::setBorderWidth(float top,
+                                float right,
+                                float bottom,
+                                float left,
+                                bool &hasChanged)
+  {
+    setBorderWidth(glm::vec4(top, right, bottom, left), hasChanged);
+  }
+
+  void Instance::setBorderColor(glm::vec4 borderColor, bool &hasChanged)
+  {
+    if (data_.borderColor == borderColor)
+      return; // Skip if there is no change.
+
+    data_.borderColor = borderColor;
+    notifyHolders();
+    hasChanged = true;
+  }
+
+  void Instance::setBorderColor(float r, float g, float b, float a, bool &hasChanged)
+  {
+    setBorderColor(glm::vec4(r, g, b, a), hasChanged);
+  }
+
+  void Instance::setBorderStyle(float borderStyle, bool &hasChanged)
+  {
+    if (data_.borderStyle == borderStyle)
+      return; // Skip if there is no change.
+
+    data_.borderStyle = borderStyle;
+    notifyHolders();
+    hasChanged = true;
+  }
+
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
   {
     // Check if the holder is already added.

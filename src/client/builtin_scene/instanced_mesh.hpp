@@ -34,6 +34,9 @@ namespace builtin_scene
         , texLayerIndex(0)
         , dimensions(0.0f, 0.0f)
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
+        , borderWidth(0.0f, 0.0f, 0.0f, 0.0f)
+        , borderColor(0.0f, 0.0f, 0.0f, 0.0f)
+        , borderStyle(0.0f)
     {
     }
     glm::mat4 transform;    /** 16 */
@@ -44,6 +47,9 @@ namespace builtin_scene
     uint32_t texLayerIndex; /** Shared texture layer for both eyes */
     glm::vec2 dimensions;   /** 28 - The dimensions */
     glm::vec4 borderRadius; /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    glm::vec4 borderWidth;  /** 36 - Border width for each side (top, right, bottom, left) */
+    glm::vec4 borderColor;  /** 40 - Border color (RGBA) */
+    float borderStyle;      /** 44 - Border style (0=none, 1=solid, 2=dashed) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -56,6 +62,9 @@ namespace builtin_scene
          << "  texUvOffsetR=" << math3d::to_string(data.texUvOffsetR) << std::endl
          << "  dimensions=" << math3d::to_string(data.dimensions) << std::endl
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
+         << "  borderWidth=" << math3d::to_string(data.borderWidth) << std::endl
+         << "  borderColor=" << math3d::to_string(data.borderColor) << std::endl
+         << "  borderStyle=" << data.borderStyle << std::endl
          << ")";
       return os;
     }
@@ -159,6 +168,15 @@ namespace builtin_scene
                          float bottomRight,
                          float bottomLeft,
                          bool &hasChanged);
+    void setBorderWidth(glm::vec4 borderWidth, bool &hasChanged);
+    void setBorderWidth(float top,
+                        float right,
+                        float bottom,
+                        float left,
+                        bool &hasChanged);
+    void setBorderColor(glm::vec4 borderColor, bool &hasChanged);
+    void setBorderColor(float r, float g, float b, float a, bool &hasChanged);
+    void setBorderStyle(float borderStyle, bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -290,7 +308,10 @@ namespace builtin_scene
                                                                   "instanceTexUvScale",
                                                                   "instanceLayerIndex",
                                                                   "instanceDimensions",
-                                                                  "instanceBorderRadius"};
+                                                                  "instanceBorderRadius",
+                                                                  "instanceBorderWidth",
+                                                                  "instanceBorderColor",
+                                                                  "instanceBorderStyle"};
 
   public:
     InstancedMeshBase() = default;

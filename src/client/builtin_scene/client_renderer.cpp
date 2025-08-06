@@ -295,6 +295,36 @@ namespace builtin_scene
                                webContentComponent->logicalHeight(),
                                hasChanged);
 
+        // Update instance border data from computed style
+        const auto &style = webContentComponent->style();
+        
+        // Extract border width (top, right, bottom, left)
+        const auto &borderWidth = style.borderWidth();
+        instance.setBorderWidth(borderWidth.top,    // top
+                               borderWidth.right,   // right
+                               borderWidth.bottom,  // bottom
+                               borderWidth.left,    // left
+                               hasChanged);
+        
+        // Extract border color (use top border color for now, could be extended for per-side colors)
+        const auto &borderColor = style.borderColor();
+        const auto &topBorderColor = borderColor.top;
+        instance.setBorderColor(topBorderColor.red,
+                               topBorderColor.green, 
+                               topBorderColor.blue,
+                               topBorderColor.alpha,
+                               hasChanged);
+        
+        // Extract border style (use top border style, convert to float)
+        const auto &borderStyle = style.borderStyle();
+        float borderStyleValue = 0.0f; // none
+        if (borderStyle.top.isSolid()) {
+          borderStyleValue = 1.0f; // solid
+        } else if (borderStyle.top.isDashed()) {
+          borderStyleValue = 2.0f; // dashed
+        }
+        instance.setBorderStyle(borderStyleValue, hasChanged);
+
         // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);
         if (elementComponent != nullptr &&

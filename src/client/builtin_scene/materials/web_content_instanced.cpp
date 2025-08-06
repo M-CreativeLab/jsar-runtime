@@ -35,13 +35,20 @@ namespace builtin_scene::materials
 #define LOAD_UNIFORM_LOCATION(name)                                               \
   {                                                                               \
     auto loc = glContext->getUniformLocation(program, name);                      \
-    assert(loc.has_value() && "The \"" name "\" uniform location is not found."); \
-    uniforms_.emplace(name, loc.value());                                         \
+    if (loc.has_value()) {                                                        \
+      uniforms_.emplace(name, loc.value());                                       \
+    }                                                                            \
   }
 
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
+    // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
+    LOAD_UNIFORM_LOCATION("uDimensions");
+    LOAD_UNIFORM_LOCATION("uBorderRadius");
+    LOAD_UNIFORM_LOCATION("uBorderWidth");
+    LOAD_UNIFORM_LOCATION("uBorderColor");
+    LOAD_UNIFORM_LOCATION("uBorderStyle");
 #undef LOAD_UNIFORM_LOCATION
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
 

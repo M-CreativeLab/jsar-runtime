@@ -93,6 +93,11 @@ namespace builtin_scene::materials
       return it->second;
     }
 
+    inline bool hasUniform(const std::string &name) const
+    {
+      return uniforms_.find(name) != uniforms_.end();
+    }
+
   private:
     float width_;
     float height_;

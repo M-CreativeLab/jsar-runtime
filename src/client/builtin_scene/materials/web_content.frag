@@ -12,10 +12,16 @@ in vec2 uvs;
 in vec2 vInstanceTexCoord;
 in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
+in vec4 vInstanceBorderWidth;
+in vec4 vInstanceBorderColor;
+in float vInstanceBorderStyle;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
 uniform vec2 uDimensions;   // Width and height of the plane in logical units
 uniform vec4 uBorderRadius; // Border radius for each corner (top-left, top-right, bottom-right, bottom-left)
+uniform vec4 uBorderWidth;  // Border width for each side (top, right, bottom, left)
+uniform vec4 uBorderColor;  // Border color (RGBA)
+uniform float uBorderStyle; // Border style (0=none, 1=solid, 2=dashed)
 #endif
 
 uniform float uSdfEnabled; // Enable/disable SDF rendering (0.0 or 1.0)
@@ -54,6 +60,53 @@ float sdfAntiAlias(float dist)
   return 1.0 - smoothstep(-width * 0.5, width * 0.5, dist);
 }
 
+// Calculate border region using SDF
+// Returns 1.0 if inside border, 0.0 if outside
+float sdfBorder(vec2 p, vec2 dimensions, vec4 borderRadius, vec4 borderWidth)
+{
+  // Calculate outer and inner border bounds
+  vec2 outerDimensions = dimensions;
+  vec2 innerDimensions = dimensions - vec2(borderWidth.y + borderWidth.w, borderWidth.x + borderWidth.z);
+  
+  // Calculate outer and inner border radius
+  vec4 outerRadius = borderRadius;
+  vec4 innerRadius = max(vec4(0.0), borderRadius - vec4(
+    max(borderWidth.x, borderWidth.w),  // top-left: max(top, left)
+    max(borderWidth.x, borderWidth.y),  // top-right: max(top, right)
+    max(borderWidth.z, borderWidth.y),  // bottom-right: max(bottom, right)
+    max(borderWidth.z, borderWidth.w)   // bottom-left: max(bottom, left)
+  ));
+  
+  // Calculate distances to outer and inner edges
+  float outerDist = sdfRoundedBox(p, outerDimensions * 0.5, outerRadius);
+  float innerDist = sdfRoundedBox(p, innerDimensions * 0.5, innerRadius);
+  
+  // Border is the region between outer and inner edges
+  return step(outerDist, 0.0) * step(0.0, innerDist);
+}
+
+// Generate dashed pattern based on position
+float dashPattern(vec2 p, vec2 dimensions, float dashLength)
+{
+  // Calculate distance along the perimeter
+  vec2 absP = abs(p);
+  vec2 halfDim = dimensions * 0.5;
+  
+  // Determine which edge we're closest to and calculate distance along that edge
+  float dist = 0.0;
+  if (absP.x > absP.y * (halfDim.x / halfDim.y)) {
+    // Horizontal edges (top/bottom)
+    dist = absP.x + sign(p.y) * halfDim.y;
+  } else {
+    // Vertical edges (left/right)
+    dist = absP.y + sign(p.x) * halfDim.x;
+  }
+  
+  // Create dash pattern
+  float dashCycle = mod(dist, dashLength * 2.0);
+  return step(dashCycle, dashLength);
+}
+
 void main()
 {
   outColor = col;
@@ -73,20 +126,50 @@ void main()
     // Use instance data for SDF calculations
     vec2 dimensions = vInstanceDimensions;
     vec4 borderRadius = vInstanceBorderRadius;
+    vec4 borderWidth = vInstanceBorderWidth;
+    vec4 borderColor = vInstanceBorderColor;
+    float borderStyle = vInstanceBorderStyle;
 #else
     // Fallback to uniforms for non-instanced usage
     vec2 dimensions = uDimensions;
     vec4 borderRadius = uBorderRadius;
+    vec4 borderWidth = uBorderWidth;
+    vec4 borderColor = uBorderColor;
+    float borderStyle = uBorderStyle;
 #endif
 
     // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
     vec2 planeCoord = uvToPlaneCoord(vInstanceTexCoord, dimensions);
 
-    // Calculate SDF distance for rounded rectangle
+    // Calculate SDF distance for rounded rectangle (for content area clipping)
     float sdfDist = sdfRoundedBox(planeCoord, dimensions * 0.5, borderRadius);
-    float alpha = sdfAntiAlias(sdfDist);
+    float contentAlpha = sdfAntiAlias(sdfDist);
 
-    // Multiply the final alpha with the SDF alpha for crisp edges
-    outColor.a *= alpha;
+    // Apply content alpha for crisp edges
+    outColor.a *= contentAlpha;
+
+    // Apply border rendering if border is enabled (borderStyle > 0.5)
+    if (borderStyle > 0.5 && borderColor.a > 0.0)
+    {
+      // Calculate border region
+      float borderMask = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
+      
+      // Apply border style
+      float borderAlpha = borderMask;
+      if (borderStyle > 1.5) // Dashed style
+      {
+        float dashLength = max(borderWidth.x, max(borderWidth.y, max(borderWidth.z, borderWidth.w))) * 3.0;
+        float dashMask = dashPattern(planeCoord, dimensions, dashLength);
+        borderAlpha *= dashMask;
+      }
+      
+      // Blend border with existing color
+      if (borderAlpha > 0.0)
+      {
+        vec3 finalColor = mix(outColor.rgb, borderColor.rgb, borderAlpha * borderColor.a);
+        float finalAlpha = max(outColor.a, borderAlpha * borderColor.a);
+        outColor = vec4(finalColor, finalAlpha);
+      }
+    }
   }
 }
