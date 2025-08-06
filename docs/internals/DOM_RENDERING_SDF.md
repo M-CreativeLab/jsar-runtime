@@ -123,6 +123,26 @@ Use the provided performance analysis guide to benchmark on target hardware.
 - `src/client/builtin_scene/materials/web_content_instanced.hpp`: New API methods
 - `src/client/builtin_scene/materials/web_content_instanced.cpp`: Uniform handling
 - `src/client/builtin_scene/web_content.hpp`: Rounded rect accessor
+- `src/client/builtin_scene/instanced_mesh.hpp`: Added SDF instance data fields
+- `src/client/builtin_scene/instanced_mesh.cpp`: Instance SDF data methods
+- `src/client/builtin_scene/shaders/mesh.vert`: SDF instance attribute handling
+
+## Integration Points
+
+To use SDF rendering with instanced draw calls:
+
+```cpp
+// Enable SDF on the material
+auto material = std::make_shared<WebContentInstancedMaterial>();
+material->setSdfEnabled(true);
+material->setSdfAntiAliasWidth(2.0f);
+
+// For each WebContent instance, set the SDF data
+Instance &instance = mesh.getInstance(entityId);
+material->updateInstanceSdfData(instance, webContent);
+```
+
+The system automatically extracts plane dimensions and border radius from WebContent and sets them as per-instance data, enabling efficient batch rendering of multiple WebContent elements with individual SDF parameters.
 
 ## Future Enhancements
 
