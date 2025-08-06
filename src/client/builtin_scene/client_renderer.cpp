@@ -309,11 +309,17 @@ namespace builtin_scene
         // Extract border color (use top border color for now, could be extended for per-side colors)
         const auto &borderColor = style.borderColor();
         const auto &topBorderColor = borderColor.top;
-        instance.setBorderColor(topBorderColor.red,
-                               topBorderColor.green, 
-                               topBorderColor.blue,
-                               topBorderColor.alpha,
-                               hasChanged);
+        if (topBorderColor.isAbsolute()) {
+          SkColor skColor = topBorderColor.getAbsoluteColor();
+          instance.setBorderColor(SkColorGetR(skColor) / 255.0f,
+                                 SkColorGetG(skColor) / 255.0f, 
+                                 SkColorGetB(skColor) / 255.0f,
+                                 SkColorGetA(skColor) / 255.0f,
+                                 hasChanged);
+        } else {
+          // Default to transparent if color is not absolute
+          instance.setBorderColor(0.0f, 0.0f, 0.0f, 0.0f, hasChanged);
+        }
         
         // Extract border style (use top border style, convert to float)
         const auto &borderStyle = style.borderStyle();
