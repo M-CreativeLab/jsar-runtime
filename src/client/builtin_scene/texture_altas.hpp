@@ -13,8 +13,8 @@ namespace builtin_scene
   using Texture = crates::texture_atlas::TextureLayout;
   class TextureAtlas
   {
-    static constexpr int kMaxLayerCount = 8;
-    static constexpr int kDefaultSize = 2048;
+    static constexpr int kMaxLayerCount = 4;
+    static constexpr int kDefaultSize = 4096;
 
   public:
     TextureAtlas(std::shared_ptr<client_graphics::WebGL2Context> glContext,

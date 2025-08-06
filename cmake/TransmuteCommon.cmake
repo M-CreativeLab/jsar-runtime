@@ -19,7 +19,11 @@ endif()
 
 # Set the common libraries to be linked by client, common and other tools
 if (ANDROID)
-    add_link_options(-Wl,--no-eh-frame-hdr) # Disable the generation of .eh_frame_hdr section
+    # Enable C++ exception handling for Android to properly catch Rust exceptions
+    # Removed -Wl,--no-eh-frame-hdr to allow exception frame headers
+    # Explicitly enable C++ exception handling
+    add_compile_options(-fexceptions)
+    add_compile_options(-frtti)
     link_libraries(log)
 elseif (LINUX)
     link_libraries(X11 pthread)

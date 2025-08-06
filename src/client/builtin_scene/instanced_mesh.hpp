@@ -15,6 +15,7 @@
 #include "./meshes/builder.hpp"
 #include "./mesh_base.hpp"
 #include "./render_queue.hpp"
+#include "./render_layer.hpp"
 
 namespace builtin_scene
 {
@@ -180,6 +181,7 @@ namespace builtin_scene
   private:
     InstanceData data_;
     RenderQueue renderQueue_;
+    RenderLayer renderLayer_;
     bool enabled_ = false;
     bool isOpaque_ = false;
 
@@ -263,7 +265,7 @@ namespace builtin_scene
 
   class InstancedMeshBase
   {
-    friend class Renderer;
+    friend class SceneRenderer;
     friend class RenderSystem;
 
   public:
@@ -368,11 +370,11 @@ namespace builtin_scene
                std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
                std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
     /**
-     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList` the queues.
+     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
      * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
-    void updateRenderQueues(bool ignoreDirty = false);
+    void updateInstancesList(bool ignoreDirty = false);
 
   private:
     inline void markAsDirty()

@@ -58,3 +58,8 @@ node_modules
 
 # Build artifacts
 ./build/cmake/
+
+# VitePress build output
+docs/.vitepress/dist
+docs/.vitepress/cache
+docs/api/browser-compat-data/all.json

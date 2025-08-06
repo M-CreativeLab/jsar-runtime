@@ -17,6 +17,7 @@ namespace client_layout
   LayoutObject::LayoutObject(shared_ptr<dom::Node> node)
       : node_(node)
       , formattingContext_(nullptr)
+      , layer_(0)
   {
     if (dom::Node::Is<dom::Document>(node))
       scene_ = dom::Node::As<dom::Document>(node)->scene;
@@ -162,6 +163,46 @@ namespace client_layout
     bool isScrollableInX = elementStyle.overflowX().isScrollable();
     bool isScrollableInY = elementStyle.overflowY().isScrollable();
     return isScrollableInX || isScrollableInY;
+  }
+
+  int LayoutObject::recalcLayer() const
+  {
+    auto parentPtr = parent();
+    if (parentPtr == nullptr)
+    {
+      // Root element has layer 0
+      return 0;
+    }
+
+    // Start with parent's layer
+    int parentLayer = parentPtr->layer();
+
+    // If current node is a scrollable container, it gets parent's layer + 1
+    if (isScrollContainer())
+      return parentLayer + 1;
+    else
+      return parentLayer;
+  }
+
+  void LayoutObject::updateLayer(bool includeDescendants)
+  {
+    // Calculate and set this object's layer based on parent
+    layer_ = recalcLayer();
+
+    // Update WebContent component if it exists
+    if (hasEntity())
+    {
+      auto webContent = getSceneComponent<WebContent>();
+      if (webContent != nullptr)
+        webContent->setLayer(layer_);
+    }
+
+    // Recursively update all children
+    if (includeDescendants)
+    {
+      for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
+        child->updateLayer(includeDescendants);
+    }
   }
 
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
@@ -376,7 +417,20 @@ namespace client_layout
     if (scrollable_area != nullptr)
     {
       auto offset = scrollable_area->getScrollOffset();
-      resulting_fragment.moveBy(offset.x, offset.y, offset.z);
+      // Performance optimization: only apply offset if it's non-zero
+      if (offset.x != 0.0f || offset.y != 0.0f || offset.z != 0.0f)
+      {
+        resulting_fragment.moveBy(offset.x, offset.y, offset.z);
+      }
+
+      // Performance optimization: viewport culling for scroll containers
+      // Skip expensive rendering calculations for elements outside viewport
+      if (!scrollable_area->isFragmentInViewport(resulting_fragment))
+      {
+        // Element is outside viewport - could potentially optimize rendering here
+        // For now, we continue with normal processing but this marks where
+        // further optimizations could be added (e.g., skipping expensive style calculations)
+      }
     }
 
     // Returns the accumulated fragment if it is set, otherwise returns the resulting fragment.
@@ -431,6 +485,9 @@ namespace client_layout
 
     auto &parentCtx = *formattingContext_;
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
+
+    // Update layers for the new child and its descendants since hierarchy changed
+    newChild->updateLayer(true);
   }
 
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)
@@ -440,6 +497,8 @@ namespace client_layout
 
     child->formattingContext_->onRemoved(*formattingContext_);
     child->destroy();
+
+    // FIXME(yorkie): should we update the sibling's layer?
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
@@ -527,7 +586,7 @@ namespace client_layout
     useSceneWithCallback(resizeEntity);
 
     if (resized == true)
-      sizeDidChange();
+      sizeDidChange(newSize);
     return resized;
   }
 
@@ -730,8 +789,12 @@ namespace client_layout
           .addInstance(entity); // Add the entity to the instanced mesh.
 
         // Add `WebContent` component to the entity.
-        auto fragment = this->fragment();
-        scene.addComponent(entity, WebContent(string(this->debugName()), fragment.contentWidth(), fragment.contentHeight()));
+        const auto &fragment = this->fragment();
+        scene.addComponent(entity,
+                           WebContent(string(this->debugName()),
+                                      fragment.contentWidth(),
+                                      fragment.contentHeight(),
+                                      this->layer()));
       }
     };
     useSceneWithCallback(configEntity);
@@ -781,12 +844,26 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::sizeWillChange(const Fragment &newSize)
+  void LayoutObject::sizeWillChange(const Fragment &)
   {
   }
 
-  void LayoutObject::sizeDidChange()
+  void LayoutObject::sizeDidChange(const Fragment &newSize)
   {
+    auto this_node = node();
+    if (this_node != nullptr) [[unlikely]]
+    {
+      if (this_node->isElement())
+      {
+        auto &element = dom::Node::AsChecked<dom::Element>(this_node);
+        element.layoutSizeChangedCallback(newSize);
+      }
+      else if (this_node->isText())
+      {
+        auto &textNode = dom::Node::AsChecked<dom::Text>(this_node);
+        textNode.layoutSizeChangedCallback(newSize);
+      }
+    }
   }
 
   void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)

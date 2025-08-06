@@ -1,0 +1,95 @@
+# Runtime configuration
+
+In this section, we will cover some of the runtime configuration options that you can use to customize the behavior of the runtime.
+
+## Android properties
+
+If you are using JSAR in YodaOS-Master or other AOSP-based systems, you can use these properties to configure the runtime.
+
+### Entering the debugging mode
+
+Before all the configration, you need to enable the debugging mode:
+
+```sh
+adb shell setprop jsar.debug.enabled yes
+```
+
+### Disable the caching
+
+To disable the resource caching:
+
+```sh
+adb shell setprop jsar.resources.caching no
+```
+
+### Enable the renderer tracing
+
+To enable the tracing of the renderer:
+
+```sh
+adb shell setprop jsar.renderer.tracing yes
+```
+
+Then you can view the logs in `TR_GLES` channel:
+
+```
+07-18 17:49:16.204 TR_GLES: [0] GL::ActiveTexture(0)
+07-18 17:49:16.204 TR_GLES: [0] GL::BindTexture(0xde1, 24) for active(33984) program(24)
+07-18 17:49:16.204 TR_GLES: [0] GL::ActiveTexture(1)
+07-18 17:49:16.204 TR_GLES: [0] GL::BindTexture(0xde1, 3) for active(33985) program(24)
+07-18 17:49:16.204 TR_GLES: [0] GL::DrawElements(mode=GL_TRIANGLES, count=5220, type=GL_UNSIGNED_INT, indices=0x0)
+07-18 17:49:16.204 TR_GLES:     Program: 24
+07-18 17:49:16.204 TR_GLES:     Program: LINK_STATUS=1
+07-18 17:49:16.204 TR_GLES:     Program: VALIDATE_STATUS=0
+07-18 17:49:16.204 TR_GLES:     Element Array Buffer: 92
+07-18 17:49:16.204 TR_GLES:     Active Attribute(0): Enabled=Yes Size=1 Type=0x8b51 "normal"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(1): Enabled=Yes Size=1 Type=0x8b50 "uv"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(2): Enabled=Yes Size=1 Type=0x8b52 "matricesWeights"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(3): Enabled=Yes Size=1 Type=0x8b51 "position"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(4): Enabled=Yes Size=1 Type=0x8b52 "matricesIndices"
+```
+
+### Enable graphics debugging
+
+To enable the graphics debugging:
+
+```sh
+adb shell setprop jsar.renderer.graphics.debug yes
+```
+
+Then you can view the graphics debugging logs in `TR_GLES` channel as well:
+
+```
+07-18 17:49:16.204 TR_GLES: [KHR_debug] GL::DebugMessageCallback(0x0, 0x0, 0x0, 0x0)
+```
+
+> This option is only available in the OpenGLES backend and requires the support of the `KHR_debug` extension in the device.
+
+### Configure click distance threshold
+
+#### Click Distance Threshold
+
+The click distance threshold determines the maximum distance between `mousedown` and `mouseup` hit points for triggering click events, as defined in the [Web UI Events specification](https://www.w3.org/TR/uievents/). This threshold helps distinguish between click and drag gestures by measuring the spatial proximity of pointer events.
+
+When a user interaction begins with a `selectStart` event and ends with a `selectEnd` event, a `click` event is only generated if:
+1. Both events target the same element
+2. The distance between hit points is less than the configured threshold
+
+#### Configuration
+
+To configure the click distance threshold:
+
+```sh
+adb shell setprop jsar.events.click_distance_threshold 5
+```
+
+The default value is 5 pixels, which provides good tolerance for pointer device jitter while maintaining distinction between click and drag gestures.
+
+- **Smaller values** (1-3): More precise click detection, may be harder to trigger clicks with pointing devices
+- **Larger values** (5-10): More tolerant of device jitter, easier to trigger clicks but may register drags as clicks
+
+You can also set this via environment variable at non-Android platforms:
+
+```sh
+export JSAR_CLICK_DISTANCE_THRESHOLD=5
+```

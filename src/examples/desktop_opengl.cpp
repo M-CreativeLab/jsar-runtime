@@ -3,12 +3,19 @@
 #include <iostream>
 #include <filesystem>
 #include <memory>
+#include <cstring>
 
+#ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
-
 #include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
 #include <GLFW/glfw3native.h>
+#endif
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -25,6 +32,7 @@
 #include "./window_ctx-inl.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
+#include "./environment_renderer.hpp"
 
 namespace jsar::example
 {
@@ -49,13 +57,13 @@ namespace jsar::example
   class DesktopEmbedder : public TrEmbedder
   {
   public:
-    DesktopEmbedder()
+    DesktopEmbedder(bool stereoMode)
         : TrEmbedder()
     {
       auto renderer = constellation->renderer;
       auto rhi = RHIFactory::CreateRHI(kUnityGfxRendererOpenGLCore, constellation.get());
       renderer->setRHI(rhi);
-      renderer->useDoubleWideFramebuffer = true;
+      renderer->useDoubleWideFramebuffer = stereoMode;
 
       // Check the environment variable to enable tracing
       const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
@@ -72,13 +80,13 @@ namespace jsar::example
     }
 
   public:
-    bool onEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content) override
+    bool onEvent(events_comm::TrNativeEvent &event, shared_ptr<TrContentRuntime> content) override
     {
       if (event.type == events_comm::TrNativeEventType::RpcRequest)
       {
         events_comm::TrNativeEvent respEvent(events_comm::TrNativeEventType::RpcResponse);
         auto request = event.detail<events_comm::TrRpcRequest>();
-        std::cout << "Received RPC request: " << request.method << std::endl;
+        cout << "Received RPC request: " << request.method << endl;
         if (request.method == "ping")
         {
           PongResponse pongResp;
@@ -116,9 +124,43 @@ namespace jsar::example
     App() = default;
 
   public:
-    void help()
+    void help(const char *programPath)
     {
-      printf("Usage: gl-desktop [-w width] [-h height] [url]\n");
+      // Extract just the filename from the program path
+      const char *programName = programPath;
+      const char *lastSlash = strrchr(programPath, '/');
+      if (lastSlash != nullptr)
+      {
+        programName = lastSlash + 1;
+      }
+      // Also check for backslash (Windows paths)
+      const char *lastBackslash = strrchr(programName, '\\');
+      if (lastBackslash != nullptr)
+      {
+        programName = lastBackslash + 1;
+      }
+
+      printf("Usage: %s [options] [url]\n", programName);
+      printf("Options:\n");
+      printf("  -w <width>              Window width (default: 1600)\n");
+      printf("  -h <height>             Window height (default: 900)\n");
+      printf("  -n <count>              Number of apps (default: 1)\n");
+      printf("  --samples             MSAA samples (default: 4)\n");
+      printf("  --mono                  Monoscopic XR rendering (default)\n");
+      printf("  --stereo [mode]         Stereo XR rendering mode (default: singlepass):\n");
+      printf("                            multipass - Multiple rendering passes\n");
+      printf("                            singlepass - Single rendering pass\n");
+      printf("  --env-map <path>        Specify environment map directory path\n");
+      printf("  --no-env-map            Disable environment map rendering\n");
+      printf("  --help                  Show this help\n");
+      printf("\n");
+      printf("Examples:\n");
+      printf("  %s --mono\n", programName);
+      printf("  %s --stereo                 # Uses singlepass by default\n", programName);
+      printf("  %s --stereo multipass\n", programName);
+      printf("  %s --stereo singlepass\n", programName);
+      printf("  %s --env-map /path/to/cubemap  # Use custom environment map\n", programName);
+      printf("  %s --no-env-map             # Disable environment map\n", programName);
     }
 
     bool init(int argc, char **argv)
@@ -127,39 +169,131 @@ namespace jsar::example
         return false;
 
       int samples = 4;
-      int opt;
-      while ((opt = getopt(argc, argv, "w:h:x:mn:s:")) != -1)
+
+      // Parse arguments manually to support long options
+      for (int i = 1; i < argc; i++)
       {
-        switch (opt)
+        string arg = argv[i];
+
+        if (arg == "--help")
         {
-        case 'w':
-          width = atoi(optarg);
-          break;
-        case 'h':
-          height = atoi(optarg);
-          break;
-        case 'x':
-          if (strcmp(optarg, "r") == 0)
-            xrEnabled = true;
-          break;
-        case 'm':
-          multiPass = true;
-          break;
-        case 'n':
-          nApps = atoi(optarg);
+          help(argv[0]);
+          return false;
+        }
+        else if (arg == "--mono")
+        {
+          monoMode = true;
+        }
+        else if (arg == "--env-map")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --env-map requires a directory path argument\n");
+            help(argv[0]);
+            return false;
+          }
+          envMapPath = argv[++i];
+          envMapEnabled = true;
+        }
+        else if (arg == "--no-env-map")
+        {
+          envMapEnabled = false;
+        }
+        else if (arg == "--stereo")
+        {
+          monoMode = false;
+          multiPass = false; // Default to singlepass
+
+          // Check if next argument is a valid stereo mode
+          if (i + 1 < argc)
+          {
+            string nextArg = argv[i + 1];
+            if (nextArg == "multipass")
+            {
+              multiPass = true;
+              i++; // Consume the mode argument
+            }
+            else if (nextArg == "singlepass")
+            {
+              multiPass = false;
+              i++; // Consume the mode argument
+            }
+            // If next argument is not a valid mode, keep default (singlepass) and don't increment i
+          }
+        }
+        else if (arg == "-w")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -w requires a width argument\n");
+            help(argv[0]);
+            return false;
+          }
+          int parsedWidth = atoi(argv[++i]);
+          if (parsedWidth <= 0)
+          {
+            printf("Error: Width must be a positive integer, got '%s'\n", argv[i]);
+            help(argv[0]);
+            return false;
+          }
+          width = parsedWidth;
+        }
+        else if (arg == "-h")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -h requires a height argument\n");
+            help(argv[0]);
+            return false;
+          }
+          int parsedHeight = atoi(argv[++i]);
+          if (parsedHeight <= 0)
+          {
+            printf("Error: Height must be a positive integer, got '%s'\n", argv[i]);
+            help(argv[0]);
+            return false;
+          }
+          height = parsedHeight;
+        }
+        else if (arg == "-n")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: -n requires an app count argument\n");
+            help(argv[0]);
+            return false;
+          }
+          nApps = atoi(argv[++i]);
           if (nApps < 0)
             nApps = 1;
-          break;
-        case 's':
-          samples = atoi(optarg);
+        }
+        else if (arg == "--samples")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --samples requires a samples argument\n");
+            help(argv[0]);
+            return false;
+          }
+          samples = atoi(argv[++i]);
           if (samples < 0 || samples > 16)
             samples = 4;
-          break;
-        default:
-          help();
-          break;
+        }
+        else if (arg[0] != '-')
+        {
+          // This is the URL argument
+          requestUrl = arg;
+        }
+        else
+        {
+          printf("Error: Unknown argument '%s'\n", arg.c_str());
+          help(argv[0]);
+          return false;
         }
       }
+
+      // XR is now always enabled
+      xrEnabled = true;
 
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -170,15 +304,9 @@ namespace jsar::example
 
       if (width == -1 || height == -1)
       {
-        help();
+        help(argv[0]);
         return false;
       }
-
-      if (xrEnabled)
-        width *= 2;
-
-      if (optind < argc)
-        requestUrl = string(argv[optind]);
 
       int count;
       GLFWmonitor *glassMonitor = nullptr;
@@ -198,8 +326,8 @@ namespace jsar::example
        * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
        */
       windowCtx_ = glassMonitor == nullptr
-                     ? std::make_unique<WindowContext>(width, height)
-                     : std::make_unique<WindowContext>(glassMonitor);
+                     ? make_unique<WindowContext>(width, height)
+                     : make_unique<WindowContext>(glassMonitor);
 
       if (windowCtx_->isTerminated())
         return false;
@@ -217,7 +345,7 @@ namespace jsar::example
         prepareRenderTarget(samples);
       }
 
-      embedder_ = std::make_unique<DesktopEmbedder>();
+      embedder_ = make_unique<DesktopEmbedder>(!monoMode);
       assert(embedder_ != nullptr);
 
       auto drawingViewport = windowCtx_->drawingViewport();
@@ -238,7 +366,7 @@ namespace jsar::example
           init.active = true;
           init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass : xr::TrStereoRenderingMode::SinglePass;
           embedder_->configureXrDevice(init);
-          windowCtx_->createXrRenderer();
+          windowCtx_->createXrRenderer(monoMode);
         }
       }
 
@@ -253,6 +381,21 @@ namespace jsar::example
         auto xrRenderer = windowCtx_->xrRenderer;
         assert(xrRenderer != nullptr);
         xrRenderer->initialize(embedder_->constellation->xrDevice);
+      }
+
+      // Initialize environment renderer
+      if (envMapEnabled)
+      {
+        envRenderer_ = make_unique<EnvironmentRenderer>();
+        if (!envRenderer_->initialize(envMapPath))
+        {
+          fprintf(stderr, "Warning: Failed to initialize environment renderer\n");
+          envRenderer_.reset();
+        }
+        else
+        {
+          fprintf(stdout, "Environment renderer initialized successfully\n");
+        }
       }
 
       return true;
@@ -343,13 +486,18 @@ namespace jsar::example
           panel->uptime = embedder_->getUptime(); // update uptime to panel
         }
 
+        // Update smooth animation for viewer controls
+        windowCtx_->updateAnimation();
+
         glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
+
+        // Always clear with black background
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        int viewsCount = xrEnabled ? 2 : 1;
+        int viewsCount = (xrEnabled && !monoMode) ? 2 : 1;
         auto drawingViewport = windowCtx_->drawingViewport();
 
         if (embedder_ == nullptr)
@@ -365,7 +513,7 @@ namespace jsar::example
 
           if (multiPass)
           {
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               uint32_t w = drawingViewport.width() / viewsCount;
               uint32_t h = drawingViewport.height();
@@ -374,6 +522,14 @@ namespace jsar::example
 
               TrViewport eyeViewport(w, h, x, y);
               glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
+
+              // Render environment map (skybox) for this eye
+              if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+              {
+                auto viewMatrix = xrRenderer->getViewMatrixForEye(viewIndex);
+                auto projectionMatrix = xrRenderer->getProjectionMatrix();
+                envRenderer_->render(viewMatrix, projectionMatrix);
+              }
 
               // render JSAR content
               {
@@ -415,7 +571,15 @@ namespace jsar::example
             auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
             xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
 
-            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            // Render environment map (skybox) - use first eye's view matrix for singlepass
+            if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+            {
+              auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
+              auto projectionMatrix = xrRenderer->getProjectionMatrix();
+              envRenderer_->render(viewMatrix, projectionMatrix);
+            }
+
+            for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
             {
               auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
               auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
@@ -427,13 +591,9 @@ namespace jsar::example
             embedder_->onTransparentsRenderPass();
           }
         }
-        else // Non-XR rendering
+        else
         {
-          glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
-          glGetError(); // Clear the error
-
-          embedder_->onOpaquesRenderPass();
-          embedder_->onTransparentsRenderPass();
+          assert(false && "Non-XR rendering is not supported.");
         }
 
         embedder_->onAfterRendering();
@@ -485,20 +645,28 @@ namespace jsar::example
       // Shutdown the embedder when the window is closed.
       if (embedder_ != nullptr)
         embedder_->shutdown();
+
+      // Shutdown environment renderer
+      if (envRenderer_ != nullptr)
+        envRenderer_->shutdown();
     }
 
   public:
-    int width = 960;
-    int height = 600;
+    int width = 1600;
+    int height = 900;
     bool xrEnabled = false;
+    bool monoMode = true; // Default to mono mode
     bool multiPass = false;
     bool multisampleEnabled = true;
+    bool envMapEnabled = true; // Default to enabled
+    string envMapPath = "";    // Path to environment map directory
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
-    std::unique_ptr<WindowContext> windowCtx_;
-    std::unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<WindowContext> windowCtx_;
+    unique_ptr<DesktopEmbedder> embedder_;
+    unique_ptr<EnvironmentRenderer> envRenderer_;
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };

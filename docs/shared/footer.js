@@ -7,7 +7,7 @@ export function createFooter() {
           <div>
             <div class="flex items-center gap-2 mb-4">
               <div class="text-2xl font-bold text-accent">JSAR</div>
-              <div class="version-badge">v0.8.2</div>
+              <div class="version-badge">v0.9.0</div>
             </div>
             <p class="text-secondary">
               Revolutionary Browser Engine Library designed for The Spatial Web.

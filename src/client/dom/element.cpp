@@ -24,38 +24,61 @@ namespace dom
     assert(ownerDocument != nullptr && "The owner document is not set when creating an element.");
 
     string nodeName = node.name();
-#define XX(tagName, className)                                                 \
-  if (nodeName == tagName)                                                     \
-  {                                                                            \
-    shared_ptr<Element> element = make_shared<className>(node, ownerDocument); \
-    element->createdCallback(false);                                           \
-    return element;                                                            \
-  }
-    TYPED_ELEMENT_MAP(XX)
-#undef XX
+    shared_ptr<Element> newElement = nullptr;
 
-    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(node, ownerDocument);
-    element->createdCallback(false);
-    return dynamic_pointer_cast<Element>(element);
+    try
+    {
+#define XX(tagName, className)                                \
+  if (nodeName == tagName)                                    \
+  {                                                           \
+    newElement = make_shared<className>(node, ownerDocument); \
+  }
+      TYPED_ELEMENT_MAP(XX)
+#undef XX
+    }
+    catch (const exception &e)
+    {
+      cerr << "Failed to create element from node '" << nodeName << "': " << e.what() << endl;
+    }
+
+    if (newElement == nullptr) [[unlikely]]
+    {
+      newElement = make_shared<HTMLElement>(node, ownerDocument);
+      assert(newElement != nullptr &&
+             "Failed to create an element from the node.");
+    }
+    newElement->createdCallback(false);
+    return newElement;
   }
 
   shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument, bool from_scripting)
   {
-#define XX(tagNameStr, className)                                                 \
-  if (tagName == tagNameStr)                                                      \
-  {                                                                               \
-    shared_ptr<Element> element = make_shared<className>(tagName, ownerDocument); \
-    element->namespaceURI = namespaceURI;                                         \
-    element->createdCallback(from_scripting);                                     \
-    return element;                                                               \
+    shared_ptr<Element> newElement = nullptr;
+    try
+    {
+#define XX(tagNameStr, className)                                \
+  if (tagName == tagNameStr)                                     \
+  {                                                              \
+    newElement = make_shared<className>(tagName, ownerDocument); \
   }
-    TYPED_ELEMENT_MAP(XX)
+      TYPED_ELEMENT_MAP(XX)
 #undef XX
+    }
+    catch (const exception &e)
+    {
+      cerr << "Failed to create element from name '"
+           << namespaceURI << "." << tagName << "': " << e.what() << endl;
+    }
 
-    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(tagName, ownerDocument);
-    element->namespaceURI = namespaceURI;
-    element->createdCallback(from_scripting);
-    return dynamic_pointer_cast<Element>(element);
+    if (newElement == nullptr) [[unlikely]]
+    {
+      newElement = make_shared<HTMLElement>(tagName, ownerDocument);
+      assert(newElement != nullptr &&
+             "Failed to create an element from the tag name.");
+    }
+    newElement->namespaceURI = namespaceURI;
+    newElement->createdCallback(from_scripting);
+    return newElement;
   }
 
   shared_ptr<Node> Element::CloneElement(shared_ptr<Node> srcNode)
@@ -252,6 +275,10 @@ namespace dom
     }
   }
 
+  void Element::layoutSizeChangedCallback(const client_layout::Fragment &)
+  {
+  }
+
   void Element::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
@@ -267,7 +294,14 @@ namespace dom
           parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
       }
       principalBox_ = layoutView.createBox(currentDisplayStr_, getPtr<Element>(), parentBlock);
-      boxes_ = {principalBox_};
+      if (principalBox_ != nullptr)
+      {
+        boxes_ = {principalBox_};
+      }
+      else
+      {
+        boxes_.clear();
+      }
     }
   }
 
@@ -295,10 +329,22 @@ namespace dom
 
       layoutView.removeObject(principalBox_); // Remove the old box.
       principalBox_ = newPrincipalBox;
-      boxes_ = {principalBox_};
+      if (principalBox_ != nullptr)
+      {
+        boxes_ = {principalBox_};
+      }
+      else
+      {
+        // Parent is a replaced element, don't create layout box for this element
+        boxes_.clear();
+      }
     }
-    assert(principalBox_ != nullptr &&
-           "The principal box is not set when reinitializing CSS boxes.");
+    // Only assert if we expect a principal box (when parent is not a replaced element)
+    if (principalBox_ == nullptr)
+    {
+      // Element is a child of a replaced element, skip further initialization
+      return;
+    }
 
     // Skip the following steps to create child boxes if the principal box is a none box.
     if (principalBox_->isNone())
@@ -404,13 +450,13 @@ namespace dom
     after(getOwnerDocumentChecked().createTextNode(text));
   }
 
-  string Element::getAttribute(const string &name) const
+  string Element::getAttribute(const string &name, const std::string &defaultValue) const
   {
     auto it = attributeNodes_.find(name);
     if (it != attributeNodes_.end())
       return it->second->value;
     else
-      return "";
+      return defaultValue;
   }
 
   vector<string> Element::getAttributeNames() const
@@ -565,7 +611,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -579,7 +631,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -733,7 +791,13 @@ namespace dom
       return;
 
     layoutBox->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -748,6 +812,12 @@ namespace dom
     {
       return false;
     }
+  }
+
+  bool Element::shouldThrottleScrollEvent() const
+  {
+    auto now = std::chrono::steady_clock::now();
+    return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 
   bool Element::recalcStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)

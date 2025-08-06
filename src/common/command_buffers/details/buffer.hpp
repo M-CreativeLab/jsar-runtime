@@ -29,6 +29,24 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with buffer creation information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer creation parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add buffer creation parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     uint32_t clientId;
   };
@@ -54,6 +72,24 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << buffer << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with buffer deletion information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer deletion parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add buffer deletion parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(buffer), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -86,6 +122,25 @@ namespace commandbuffers
          << buffer
          << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with buffer binding information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer binding parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add buffer binding parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(buffer), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -163,6 +218,27 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with buffer data information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer data parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add buffer data parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(dataSize), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(data != nullptr), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(usage), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     uint32_t target;
     uint32_t dataSize;
@@ -234,6 +310,27 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with buffer sub data information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus buffer sub data parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add buffer sub data parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(offset), allocator);
+      parameters.PushBack(rapidjson::Value().SetUint(dataSize), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(data != nullptr), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     uint32_t target;
     uint32_t offset;
@@ -262,6 +359,24 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with detailed framebuffer creation information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus framebuffer creation details
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add framebuffer creation parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
+
+      return cmdInfo;
     }
 
   public:
@@ -328,6 +443,26 @@ namespace commandbuffers
         : ss << framebuffer;
       ss << ")";
       return ss.str();
+    }
+
+    /**
+     * Serialize the command buffer to a JSON object with framebuffer binding information.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus framebuffer binding parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add framebuffer binding parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(target), allocator);
+      parameters.PushBack(rapidjson::Value().SetInt(framebuffer), allocator);
+      parameters.PushBack(rapidjson::Value().SetBool(isBindToDefault()), allocator);
+
+      return cmdInfo;
     }
 
   public:

@@ -26,6 +26,18 @@ main.addEventListener('mouseleave', (event) => {
   console.info('main mouseleave', event);
 });
 
+const switchDiv = document.getElementById('switch');
+switchDiv.addEventListener('click', () => {
+  // test append style
+  const style = document.createElement('style');
+  style.textContent = `
+    body {
+      background-color: #87e8de;
+    }
+  `;
+  document.head.appendChild(style);
+});
+
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -45,16 +57,6 @@ run(async () => {
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
-
-  // test append style
-  await sleep(1000);
-  const style = document.createElement('style');
-  style.textContent = `
-    body {
-      background-color: lightgray;
-    }
-  `;
-  document.head.appendChild(style);
 
   await sleep(1000);
   const bar = document.createElement('div');

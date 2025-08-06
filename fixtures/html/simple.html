@@ -14,12 +14,12 @@
     img.float-image {
       border-bottom-right-radius: 50px;
       height: 300px;
-      transform: translate3d(0, 0, 35px);
+      transform: translate3d(0, 0, 0);
       transition: transform 0.3s ease-in-out;
     }
 
     img.float-image:hover {
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 35px);
     }
 
     #header {
@@ -55,7 +55,7 @@
     p {
       width: 100%;
       font-size: 30px;
-      font-weight: bold;
+      font-weight: normal;
       padding: 20px;
       box-sizing: border-box;
     }
@@ -83,7 +83,7 @@
 
     #stereo-image {
       margin: 20px auto;
-      width: 65vw;
+      height: 500px;
     }
   </style>
   <script>
@@ -97,7 +97,7 @@
 <body>
   <img class="float-image" src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten">
   <div id="header">Hello World, JSAR 你好 😯</div>
-  <span class="sub">inline text</span>
+  <span id="switch" class="sub">inline text</span>
   <img id="stereo-image" src="./images/sbs-example2.png" spatial="stereo">
   <main>
     <div style="position:absolute;left:50vw;width:50vw;height:100px;background-color:#9a9ec2; transform: translate3d(10vw, 0, 40px);">

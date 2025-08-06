@@ -4,7 +4,6 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/all_html_elements.hpp>
-
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"
 #include "./layout_none.hpp"
@@ -14,6 +13,7 @@
 #include "./layout_grid.hpp"
 #include "./layout_image.hpp"
 #include "./layout_html_canvas.hpp"
+#include "./layout_html_input.hpp"
 
 namespace client_layout
 {
@@ -134,7 +134,16 @@ namespace client_layout
       string prefixSpaces = "";
       for (int i = 0; i < depth; i++)
         prefixSpaces += "  "; // use 2 spaces as the indentation.
-      cout << prefixSpaces << object.debugName() << endl;
+
+      // Get layer information
+      int layer = object.layer();
+      string layerInfo = " ";
+      if (object.isScrollContainer())
+        layerInfo += "(scrollable)";
+      layerInfo += " → layer(" + to_string(layer) + ")";
+
+      // Format: "   objectName (scrollable?) → layer(n)"
+      cout << prefixSpaces << object.debugName() << layerInfo << endl;
 
       if (object.isText())
       {
@@ -179,7 +188,8 @@ namespace client_layout
     };
 
     // Print the view tree.
-    cout << "LayoutView (" << message << ")" << endl;
+    cout << "Print LayoutView at \"" << message << "\": " << endl
+         << "LayoutView (scrollable) → layer(0)" << endl;
     for (shared_ptr<const LayoutObject> child : childrenRef())
       printObject(*child);
 
@@ -192,11 +202,23 @@ namespace client_layout
                                                          shared_ptr<LayoutBlock> parentBlock,
                                                          shared_ptr<LayoutObject> beforeObject)
   {
-    shared_ptr<LayoutBoxModelObject> boxObject = makeBox(displayStr, element);
-    if (parentBlock != nullptr)
-      parentBlock->addChild(boxObject, beforeObject);
-    else
+    shared_ptr<LayoutBoxModelObject> boxObject = nullptr;
+    if (parentBlock == nullptr)
+    {
+      // Add child to the view directly if no parent block is given.
+      boxObject = makeBox(displayStr, element);
       addChild(boxObject);
+    }
+    else
+    {
+      // Skip creating box if the parent is none or a replaced element
+      if (parentBlock->isNone() ||
+          parentBlock->isLayoutReplaced())
+        return nullptr;
+
+      boxObject = makeBox(displayStr, element);
+      parentBlock->addChild(boxObject, beforeObject);
+    }
 
     assert(boxObject->parent() != nullptr && "Inserted box must have a parent box.");
     boxObject->createEntity();
@@ -207,6 +229,12 @@ namespace client_layout
                                                 shared_ptr<LayoutBoxModelObject> parentBox)
   {
     assert(parentBox != nullptr && "The parent box must be set for the text object.");
+
+    // If the parent is none or a replaced element, don't create text children
+    if (parentBox->isNone() ||
+        parentBox->isLayoutReplaced())
+      return nullptr;
+
     shared_ptr<LayoutText> textObject = makeText(textNode);
     parentBox->addChild(textObject);
 
@@ -234,6 +262,8 @@ namespace client_layout
       boxObject = make_unique<LayoutImage>(element);
     else if (dom::Node::Is<dom::HTMLCanvasElement>(element))
       boxObject = make_unique<LayoutHTMLCanvas>(element);
+    else if (dom::Node::Is<dom::HTMLInputElement>(element))
+      boxObject = make_unique<LayoutHTMLInput>(element);
 
     // Skip the box creation for the display type of "none".
     if (display.isNone())

@@ -141,9 +141,10 @@ void TrHiveServer::start()
 
   hive_comm::TrHiveCommandReceiver commandReceiver(commandChanClient);
   hive_comm::TrHiveCommandSender commandSender(commandChanClient);
-  checkingStatusWorker = make_unique<WorkerThread>("HiveChildrenStatus", [&, this](WorkerThread &worker)
-                                                   { checkStatus(commandSender); worker.sleep(); },
-                                                   100);
+  checkingStatusWorker = make_unique<WorkerThread>(
+    "HiveChildrenStatus", [&, this](WorkerThread &worker)
+    { checkStatus(commandSender); worker.sleep(); },
+    100);
 
   running = true;
   {

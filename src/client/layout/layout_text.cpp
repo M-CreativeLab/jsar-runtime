@@ -171,6 +171,13 @@ namespace client_layout
     formattingContext().setIsEmpty(isEmptyText());
   }
 
+  void LayoutText::styleDidChange()
+  {
+    LayoutObject::styleDidChange();
+
+    updateLayer(false);
+  }
+
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
     adjustTextContentSize(avilableSpace);

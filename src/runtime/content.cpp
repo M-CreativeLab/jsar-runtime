@@ -356,6 +356,23 @@ bool TrContentRuntime::tryDispatchRequest()
     return false;
 
   events_comm::TrDocumentRequest request(requestInit);
+  prepareRequest(request);
+
+  auto requestEvent = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::DocumentRequest,
+                                                            &request);
+  if (eventChanSender->dispatchEvent(requestEvent))
+  {
+    isRequestDispatched = true;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void TrContentRuntime::prepareRequest(events_comm::TrDocumentRequest &request)
+{
   try
   {
     auto url_object = crates::parseURL(requestInit.url);
@@ -376,23 +393,14 @@ bool TrContentRuntime::tryDispatchRequest()
       }
 
       if (isAllowed)
+      {
         request.defaultHTTPHeaders = contentManager->request_authorization_headers.raw_headers;
+      }
     }
   }
   catch (const std::exception &e)
   {
-    DEBUG(LOG_TAG_ERROR, "Skipped setting custom fetch headers due to an error: %s", e.what());
-  }
-
-  auto requestEvent = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::DocumentRequest, &request);
-  if (eventChanSender->dispatchEvent(requestEvent))
-  {
-    isRequestDispatched = true;
-    return true;
-  }
-  else
-  {
-    return false;
+    DEBUG(LOG_TAG_ERROR, "Skipped setting default HTTP headers due to an error: %s", e.what());
   }
 }
 

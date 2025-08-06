@@ -109,8 +109,9 @@ namespace builtin_scene
      * @param name The content name.
      * @param initialWidth The initial width of the content.
      * @param initialHeight The initial height of the content.
+     * @param layer The layer number based on scrollable container hierarchy.
      */
-    WebContent(std::string name, float initialWidth, float initialHeight);
+    WebContent(std::string name, float initialWidth, float initialHeight, int layer = 0);
 
   public:
     /**
@@ -119,6 +120,22 @@ namespace builtin_scene
     inline const std::string &name() const
     {
       return name_;
+    }
+
+    /**
+     * Get the current layer number based on scrollable container hierarchy.
+     */
+    inline int layer() const
+    {
+      return layer_;
+    }
+
+    /**
+     * Set the layer number.
+     */
+    inline void setLayer(int layer)
+    {
+      layer_ = layer;
     }
 
     // Returns if the surface is valid.
@@ -277,6 +294,7 @@ namespace builtin_scene
   private:
     sk_sp<SkSurface> surface_;
     std::string name_;
+    int layer_;
     client_cssom::ComputedStyle style_;
     std::optional<client_layout::Fragment> last_fragment_;
     WebContentStyle content_style_;
