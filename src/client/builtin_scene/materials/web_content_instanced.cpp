@@ -134,7 +134,7 @@ namespace builtin_scene::materials
     sdfEnabled_ = enabled;
   }
 
-  CSSBorderDataTexture* WebContentInstancedMaterial::getBorderDataTexture() const
+  CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
   {
     return borderDataTexture_.get();
   }

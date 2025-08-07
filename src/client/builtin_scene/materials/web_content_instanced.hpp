@@ -80,7 +80,7 @@ namespace builtin_scene::materials
      *
      * @return Pointer to the CSSBorderDataTexture instance.
      */
-    CSSBorderDataTexture* getBorderDataTexture() const;
+    CSSBorderDataTexture *getBorderDataTexture() const;
 
   public:
     float width() const

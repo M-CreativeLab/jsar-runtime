@@ -301,7 +301,7 @@ namespace builtin_scene
   std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
   {
     std::vector<std::shared_ptr<Instance>> instances;
-    for (const auto& weakInstance : list_)
+    for (const auto &weakInstance : list_)
     {
       if (!weakInstance.expired())
       {

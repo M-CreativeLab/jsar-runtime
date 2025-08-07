@@ -415,7 +415,7 @@ namespace builtin_scene
       {
         instances = instancedMesh.getTransparentInstancesList().getInstances();
       }
-      
+
       if (!instances.empty())
       {
         webContentMaterial->getBorderDataTexture()->updateBorderData(instances);

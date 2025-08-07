@@ -37,7 +37,7 @@ namespace builtin_scene
      * Update the border data texture with data from the given instances.
      * @param instances List of instances to extract border data from
      */
-    void updateBorderData(const std::vector<std::shared_ptr<Instance>>& instances);
+    void updateBorderData(const std::vector<std::shared_ptr<Instance>> &instances);
 
     /**
      * Bind the border data texture to the specified texture unit.
@@ -49,13 +49,19 @@ namespace builtin_scene
      * Get the underlying WebGL texture.
      * @return The border data texture
      */
-    std::shared_ptr<client_graphics::WebGLTexture> getTexture() const { return borderDataTexture_; }
+    std::shared_ptr<client_graphics::WebGLTexture> getTexture() const
+    {
+      return borderDataTexture_;
+    }
 
     /**
      * Check if the texture has been initialized.
      * @return true if initialized, false otherwise
      */
-    bool isInitialized() const { return borderDataTexture_ != nullptr; }
+    bool isInitialized() const
+    {
+      return borderDataTexture_ != nullptr;
+    }
 
   private:
     /**
@@ -70,8 +76,8 @@ namespace builtin_scene
      * @param borderWidth Output parameter for border width
      * @param borderColors Output parameter for border colors (4 sides)
      */
-    void extractInstanceBorderData(const Instance& instance, 
-                                   glm::vec4& borderWidth, 
+    void extractInstanceBorderData(const Instance &instance,
+                                   glm::vec4 &borderWidth,
                                    glm::vec4 borderColors[4]);
 
   private:

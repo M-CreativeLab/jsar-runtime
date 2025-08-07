@@ -200,17 +200,17 @@ namespace builtin_scene
     }
 
     // Getters for border fields
-    inline const glm::vec4& getBorderWidths() const
+    inline const glm::vec4 &getBorderWidths() const
     {
       return borderWidths_;
     }
 
-    inline const glm::vec4& getBorderColor(int side) const
+    inline const glm::vec4 &getBorderColor(int side) const
     {
       return borderColors_[side % 4];
     }
 
-    inline const glm::vec4* getBorderColors() const
+    inline const glm::vec4 *getBorderColors() const
     {
       return borderColors_;
     }
