@@ -415,19 +415,13 @@ namespace builtin_scene
       {
         WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
 
-        // Update the border data texture only if needed
-        if (borderDataTexture != nullptr &&
-            borderDataTexture->isInitialized() &&
-            borderDataTexture->needsBorderDataUpdate(instances.getInstances()))
-          borderDataTexture->updateBorderData(instances.getInstances());
-
         glContext.depthMask(true);
         glContext.disable(WEBGL_BLEND);
 
         auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
         glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
 
-        instances.beforeInstancedDraw(glContext);
+        instances.beforeInstancedDraw(glContext, borderDataTexture);
         glContext.drawElementsInstanced(mesh.primitiveTopology(),
                                         meshIndicesCount,
                                         WEBGL_UNSIGNED_INT,
@@ -444,19 +438,13 @@ namespace builtin_scene
       {
         WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
 
-        // Update the border data texture only if needed
-        if (borderDataTexture != nullptr &&
-            borderDataTexture->isInitialized() &&
-            borderDataTexture->needsBorderDataUpdate(instances.getInstances()))
-          borderDataTexture->updateBorderData(instances.getInstances());
-
         // Set the base matrix, move the transparent objects +z 0.001
         auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
         glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
         glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
 
         // Draw
-        instances.beforeInstancedDraw(glContext);
+        instances.beforeInstancedDraw(glContext, borderDataTexture);
         {
           // Draw transparent instances to color attachment
           glContext.depthMask(false);

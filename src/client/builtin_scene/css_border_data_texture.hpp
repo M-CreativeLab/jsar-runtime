@@ -36,9 +36,8 @@ namespace builtin_scene
     /**
      * Update the border data texture with data from the given instances.
      * @param instances List of instances to extract border data from
-     * @param force Force update even if no changes detected
      */
-    void updateBorderData(const std::vector<std::shared_ptr<Instance>> &instances, bool force = false);
+    void updateBorderData(const std::vector<std::shared_ptr<Instance>> &instances);
 
     /**
      * Bind the border data texture to the specified texture unit.
@@ -64,21 +63,6 @@ namespace builtin_scene
       return borderDataTexture_ != nullptr;
     }
 
-    /**
-     * Check if border data needs updating based on instance changes.
-     * @param instances List of instances to check for border changes
-     * @return true if border data needs updating, false otherwise
-     */
-    bool needsBorderDataUpdate(const std::vector<std::shared_ptr<Instance>> &instances);
-
-    /**
-     * Mark the border data as dirty, requiring an update on next check.
-     */
-    void markBorderDataDirty()
-    {
-      isDirty_ = true;
-    }
-
   private:
     /**
      * Resize the texture if needed to accommodate the given number of instances.
@@ -96,23 +80,12 @@ namespace builtin_scene
                                    glm::vec4 &borderWidth,
                                    glm::vec4 borderColors[4]);
 
-    /**
-     * Compute a hash of the border data for an instance for dirty checking.
-     * @param instance The instance to compute hash for
-     * @return Hash value representing the border data
-     */
-    size_t computeInstanceBorderDataHash(const Instance &instance);
-
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     std::shared_ptr<client_graphics::WebGLTexture> borderDataTexture_;
     size_t currentTextureHeight_;
-    bool isDirty_;
 
     // Buffer for texture data (5 columns × N rows of RGBA32F data)
     std::vector<float> textureData_;
-    
-    // Border data hash for dirty checking
-    std::vector<size_t> lastBorderDataHashes_;
   };
 }

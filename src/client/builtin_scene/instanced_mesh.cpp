@@ -1,5 +1,7 @@
 #include "./instanced_mesh-inl.hpp"
 
+namespace builtin_scene { class CSSBorderDataTexture; }
+
 namespace builtin_scene
 {
   using namespace std;
@@ -279,7 +281,7 @@ namespace builtin_scene
     return len * sizeof(InstanceData);
   }
 
-  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext)
+  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
     if (!isDirty_)
       return;
@@ -291,6 +293,13 @@ namespace builtin_scene
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
     }
+    
+    // Update border data texture if provided and initialized
+    if (borderDataTexture != nullptr && borderDataTexture->isInitialized())
+    {
+      borderDataTexture->updateBorderData(getInstances());
+    }
+    
     isDirty_ = false;
   }
 

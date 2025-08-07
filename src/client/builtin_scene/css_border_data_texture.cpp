@@ -13,7 +13,6 @@ namespace builtin_scene
       : glContext_(nullptr)
       , borderDataTexture_(nullptr)
       , currentTextureHeight_(0)
-      , isDirty_(true)
   {
   }
 
@@ -66,7 +65,7 @@ namespace builtin_scene
     return true;
   }
 
-  void CSSBorderDataTexture::updateBorderData(const vector<shared_ptr<Instance>> &instances, bool force)
+  void CSSBorderDataTexture::updateBorderData(const vector<shared_ptr<Instance>> &instances)
   {
     if (TR_UNLIKELY(!isInitialized()))
       return;
@@ -75,15 +74,10 @@ namespace builtin_scene
     if (instanceCount == 0)
       return;
 
-    // Check if border data update is needed (unless forced)
-    if (!force && !needsBorderDataUpdate(instances))
-      return;
-
     // Ensure texture is large enough
     ensureTextureSize(instanceCount);
 
     // Extract border data from instances
-    lastBorderDataHashes_.resize(instanceCount);
     for (size_t i = 0; i < instanceCount; ++i)
     {
       const auto &instance = instances[i];
@@ -93,9 +87,6 @@ namespace builtin_scene
       glm::vec4 borderWidth;
       glm::vec4 borderColors[4];
       extractInstanceBorderData(*instance, borderWidth, borderColors);
-
-      // Store hash for dirty checking
-      lastBorderDataHashes_[i] = computeInstanceBorderDataHash(*instance);
 
       // Store in texture data buffer
       size_t rowOffset = i * 5 * 4; // Each row has 5 columns × 4 components
@@ -129,8 +120,6 @@ namespace builtin_scene
                               WebGLTextureFormat::kRGBA,                               // format
                               WebGLPixelType::kFloat,                                  // type
                               reinterpret_cast<unsigned char *>(textureData_.data())); // data
-
-    isDirty_ = false;
   }
 
   void CSSBorderDataTexture::bind(WebGLTextureUnit textureUnit)
@@ -179,7 +168,6 @@ namespace builtin_scene
                              newHeight);     // height
 
     currentTextureHeight_ = newHeight;
-    isDirty_ = true;
   }
 
   void CSSBorderDataTexture::extractInstanceBorderData(const Instance &instance,
@@ -194,64 +182,5 @@ namespace builtin_scene
     borderColors[1] = instanceBorderColors[1];
     borderColors[2] = instanceBorderColors[2];
     borderColors[3] = instanceBorderColors[3];
-  }
-
-  size_t CSSBorderDataTexture::computeInstanceBorderDataHash(const Instance &instance)
-  {
-    glm::vec4 borderWidth;
-    glm::vec4 borderColors[4];
-    extractInstanceBorderData(instance, borderWidth, borderColors);
-
-    // Compute hash by combining border width and colors
-    size_t hash = 0;
-    
-    // Hash border width components
-    hash ^= std::hash<float>{}(borderWidth.x) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    hash ^= std::hash<float>{}(borderWidth.y) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    hash ^= std::hash<float>{}(borderWidth.z) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    hash ^= std::hash<float>{}(borderWidth.w) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-
-    // Hash border colors
-    for (int i = 0; i < 4; ++i)
-    {
-      hash ^= std::hash<float>{}(borderColors[i].r) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-      hash ^= std::hash<float>{}(borderColors[i].g) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-      hash ^= std::hash<float>{}(borderColors[i].b) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-      hash ^= std::hash<float>{}(borderColors[i].a) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    }
-
-    return hash;
-  }
-
-  bool CSSBorderDataTexture::needsBorderDataUpdate(const vector<shared_ptr<Instance>> &instances)
-  {
-    if (isDirty_)
-      return true;
-
-    size_t instanceCount = instances.size();
-    
-    // Check if instance count changed
-    if (lastBorderDataHashes_.size() != instanceCount)
-    {
-      isDirty_ = true;
-      return true;
-    }
-
-    // Check if any instance border data changed
-    for (size_t i = 0; i < instanceCount; ++i)
-    {
-      const auto &instance = instances[i];
-      if (!instance)
-        continue;
-
-      size_t currentHash = computeInstanceBorderDataHash(*instance);
-      if (i >= lastBorderDataHashes_.size() || lastBorderDataHashes_[i] != currentHash)
-      {
-        isDirty_ = true;
-        return true;
-      }
-    }
-
-    return false;
   }
 }
