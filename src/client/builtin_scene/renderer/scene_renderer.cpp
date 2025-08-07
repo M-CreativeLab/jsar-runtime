@@ -402,25 +402,10 @@ namespace builtin_scene
     instancedMesh.updateInstancesList();
 
     // Update border data texture if using WebContentInstancedMaterial
-    auto webContentMaterial = std::dynamic_pointer_cast<builtin_scene::materials::WebContentInstancedMaterial>(material);
-    if (webContentMaterial && webContentMaterial->getBorderDataTexture() && webContentMaterial->getBorderDataTexture()->isInitialized())
-    {
-      // Get instances from the appropriate list based on render pass
-      std::vector<std::shared_ptr<Instance>> instances;
-      if (renderPass == RenderPass::kOpaques)
-      {
-        instances = instancedMesh.getOpaqueInstancesList().getInstances();
-      }
-      else if (renderPass == RenderPass::kTransparents)
-      {
-        instances = instancedMesh.getTransparentInstancesList().getInstances();
-      }
-
-      if (!instances.empty())
-      {
-        webContentMaterial->getBorderDataTexture()->updateBorderData(instances);
-      }
-    }
+    CSSBorderDataTexture *borderDataTexture = nullptr;
+    auto webContentMaterial = material->material<materials::WebContentInstancedMaterial>();
+    if (webContentMaterial)
+      borderDataTexture = webContentMaterial->getBorderDataTexture();
 
     // Draw the opaque instances
     if (renderPass == RenderPass::kOpaques)
@@ -450,6 +435,11 @@ namespace builtin_scene
       if (instances.count() > 0)
       {
         WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
+
+        // Update the border data texture
+        if (borderDataTexture != nullptr &&
+            borderDataTexture->isInitialized())
+          borderDataTexture->updateBorderData(instances.getInstances());
 
         // Set the base matrix, move the transparent objects +z 0.001
         auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");

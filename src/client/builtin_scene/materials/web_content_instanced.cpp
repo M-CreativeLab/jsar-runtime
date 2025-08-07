@@ -105,9 +105,7 @@ namespace builtin_scene::materials
 
     // Bind the border data texture
     if (borderDataTexture_ && borderDataTexture_->isInitialized())
-    {
       borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
-    }
   }
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)

@@ -312,10 +312,6 @@ namespace builtin_scene
     std::shared_ptr<client_graphics::WebGLVertexArray> vao;
     std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
 
-    // Border data extracted for UBO/SSBO
-    std::vector<glm::vec4> borderWidths_;
-    std::vector<glm::vec4> borderColors_;
-
   private:
     std::vector<std::weak_ptr<Instance>> list_;
     bool isDirty_ = true;

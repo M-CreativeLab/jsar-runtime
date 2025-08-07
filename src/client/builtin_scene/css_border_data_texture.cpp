@@ -62,7 +62,6 @@ namespace builtin_scene
                              WEBGL2_RGBA32F,         // internal format - high precision float
                              5,                      // width (5 columns)
                              currentTextureHeight_); // height
-
     return true;
   }
 
@@ -182,9 +181,9 @@ namespace builtin_scene
     borderWidth = instance.getBorderWidths();
 
     const glm::vec4 *instanceBorderColors = instance.getBorderColors();
-    for (int i = 0; i < 4; ++i)
-    {
-      borderColors[i] = instanceBorderColors[i];
-    }
+    borderColors[0] = instanceBorderColors[0];
+    borderColors[1] = instanceBorderColors[1];
+    borderColors[2] = instanceBorderColors[2];
+    borderColors[3] = instanceBorderColors[3];
   }
 }
