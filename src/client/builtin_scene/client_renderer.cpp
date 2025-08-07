@@ -297,38 +297,42 @@ namespace builtin_scene
 
         // Update instance border data from computed style
         const auto &style = webContentComponent->style();
-        
+        const auto &fragment = webContentComponent->fragment();
+
         // Extract border width (top, right, bottom, left)
-        const auto &borderWidth = style.borderWidth();
-        instance.setBorderWidth(borderWidth.top,    // top
-                               borderWidth.right,   // right
-                               borderWidth.bottom,  // bottom
-                               borderWidth.left,    // left
-                               hasChanged);
-        
+        const auto &borderWidth = fragment->border();
+        instance.setBorderWidth(borderWidth.top(),    // top
+                                borderWidth.right(),  // right
+                                borderWidth.bottom(), // bottom
+                                borderWidth.left(),   // left
+                                hasChanged);
+
         // Extract border color (use top border color for now, could be extended for per-side colors)
         const auto &borderColor = style.borderColor();
-        const auto &topBorderColor = borderColor.top;
-        if (topBorderColor.isAbsolute()) {
+        const auto &topBorderColor = borderColor.top();
+        if (topBorderColor.isAbsolute())
+        {
           SkColor skColor = topBorderColor.getAbsoluteColor();
           instance.setBorderColor(SkColorGetR(skColor) / 255.0f,
-                                 SkColorGetG(skColor) / 255.0f, 
-                                 SkColorGetB(skColor) / 255.0f,
-                                 SkColorGetA(skColor) / 255.0f,
-                                 hasChanged);
-        } else {
+                                  SkColorGetG(skColor) / 255.0f,
+                                  SkColorGetB(skColor) / 255.0f,
+                                  SkColorGetA(skColor) / 255.0f,
+                                  hasChanged);
+        }
+        else
+        {
           // Default to transparent if color is not absolute
           instance.setBorderColor(0.0f, 0.0f, 0.0f, 0.0f, hasChanged);
         }
-        
+
         // Extract border style (use top border style, convert to float)
-        const auto &borderStyle = style.borderStyle();
-        float borderStyleValue = 0.0f; // none
-        if (borderStyle.top.isSolid()) {
-          borderStyleValue = 1.0f; // solid
-        } else if (borderStyle.top.isDashed()) {
-          borderStyleValue = 2.0f; // dashed
-        }
+        // TODO(yorkie): support per-side border styles
+        const auto &borderStyle = style.borderStyle().top();
+        uint32_t borderStyleValue = 0; // none
+        if (borderStyle.isSolid())
+          borderStyleValue = 1; // solid
+        else if (borderStyle.isDashed())
+          borderStyleValue = 2; // dashed
         instance.setBorderStyle(borderStyleValue, hasChanged);
 
         // Update instance render queue

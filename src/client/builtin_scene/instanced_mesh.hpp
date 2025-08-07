@@ -34,22 +34,18 @@ namespace builtin_scene
         , texLayerIndex(0)
         , dimensions(0.0f, 0.0f)
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
-        , borderWidth(0.0f, 0.0f, 0.0f, 0.0f)
-        , borderColor(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
     {
     }
-    glm::mat4 transform;    /** 16 */
-    glm::vec4 color;        /** 20 */
-    glm::vec2 texUvOffset;  /** 22 - Left or default view texture coordinates */
-    glm::vec2 texUvOffsetR; /** 24 - Right eye texture coordinates */
-    glm::vec2 texUvScale;   /** 26 - Shared texture scale for both eyes */
+    glm::mat4 transform;    /** element transformation */
+    glm::vec4 color;        /** background color */
+    glm::vec2 texUvOffset;  /** Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR; /** Right eye texture coordinates */
+    glm::vec2 texUvScale;   /** Shared texture scale for both eyes */
     uint32_t texLayerIndex; /** Shared texture layer for both eyes */
-    glm::vec2 dimensions;   /** 28 - The dimensions */
-    glm::vec4 borderRadius; /** 32 - Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
-    glm::vec4 borderWidth;  /** 36 - Border width for each side (top, right, bottom, left) */
-    glm::vec4 borderColor;  /** 40 - Border color (RGBA) */
-    float borderStyle;      /** 44 - Border style (0=none, 1=solid, 2=dashed) */
+    glm::vec2 dimensions;   /** The dimensions */
+    glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -62,8 +58,6 @@ namespace builtin_scene
          << "  texUvOffsetR=" << math3d::to_string(data.texUvOffsetR) << std::endl
          << "  dimensions=" << math3d::to_string(data.dimensions) << std::endl
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
-         << "  borderWidth=" << math3d::to_string(data.borderWidth) << std::endl
-         << "  borderColor=" << math3d::to_string(data.borderColor) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
          << ")";
       return os;
@@ -200,7 +194,10 @@ namespace builtin_scene
 #undef IMPL_SETTER
 
     // Getter for instance data
-    inline const InstanceData& data() const { return data_; }
+    inline const InstanceData &data() const
+    {
+      return data_;
+    }
 
   private:
     // Add a holder to the instance.
@@ -214,6 +211,8 @@ namespace builtin_scene
 
   private:
     InstanceData data_;
+    glm::vec4 borderWidths_;
+    glm::vec4 borderColors_[4];
     RenderQueue renderQueue_;
     RenderLayer renderLayer_;
     bool enabled_ = false;
@@ -291,7 +290,7 @@ namespace builtin_scene
     InstanceFilter filter;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao;
     std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
-    
+
     // Border data extracted for UBO/SSBO
     std::vector<glm::vec4> borderWidths_;
     std::vector<glm::vec4> borderColors_;
@@ -377,8 +376,8 @@ namespace builtin_scene
      * @param borderWidths Output vector to fill with border width data
      * @param borderColors Output vector to fill with border color data
      */
-    void getBorderData(std::vector<glm::vec4>& borderWidths, std::vector<glm::vec4>& borderColors) const;
-    
+    void getBorderData(std::vector<glm::vec4> &borderWidths, std::vector<glm::vec4> &borderColors) const;
+
     inline RenderableInstancesList &getOpaqueInstancesList() const
     {
       return *opaqueInstances_;

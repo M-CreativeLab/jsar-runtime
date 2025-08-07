@@ -112,12 +112,12 @@ namespace builtin_scene
 
   void Instance::setBorderWidth(glm::vec4 borderWidth, bool &hasChanged)
   {
-    if (data_.borderWidth == borderWidth)
-      return; // Skip if there is no change.
+    // if (data_.borderWidth == borderWidth)
+    //   return; // Skip if there is no change.
 
-    data_.borderWidth = borderWidth;
-    notifyHolders();
-    hasChanged = true;
+    // data_.borderWidth = borderWidth;
+    // notifyHolders();
+    // hasChanged = true;
   }
 
   void Instance::setBorderWidth(float top,
@@ -131,12 +131,12 @@ namespace builtin_scene
 
   void Instance::setBorderColor(glm::vec4 borderColor, bool &hasChanged)
   {
-    if (data_.borderColor == borderColor)
-      return; // Skip if there is no change.
+    // if (data_.borderColor == borderColor)
+    //   return; // Skip if there is no change.
 
-    data_.borderColor = borderColor;
-    notifyHolders();
-    hasChanged = true;
+    // data_.borderColor = borderColor;
+    // notifyHolders();
+    // hasChanged = true;
   }
 
   void Instance::setBorderColor(float r, float g, float b, float a, bool &hasChanged)
@@ -280,14 +280,17 @@ namespace builtin_scene
     {
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
-      
-      // Extract border data for UBO/SSBO
-      borderWidths_.clear();
-      borderColors_.clear();
-      for (const auto& instanceData : array) {
-        borderWidths_.push_back(instanceData.borderWidth);
-        borderColors_.push_back(instanceData.borderColor);
-      }
+
+      // // Extract border data for UBO/SSBO
+      // borderWidths_.clear();
+      // borderColors_.clear();
+      // for (const auto& instance : list_) {
+      //   if (TR_UNLIKELY(instance.expired()))
+      //     continue;
+      //   auto instancePtr = instance.lock();
+      //   borderWidths_.push_back(instancePtr->borderWidths);
+      //   borderColors_.push_back(instanceData.borderColor);
+      // }
     }
     isDirty_ = false;
   }
@@ -354,7 +357,8 @@ namespace builtin_scene
         {
           unique_ptr<IVertexAttribute> attrib = nullptr;
           // 1u
-          if (name == "instanceLayerIndex")
+          if (name == "instanceLayerIndex" ||
+              name == "instanceBorderStyle")
           {
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
           }
@@ -365,11 +369,6 @@ namespace builtin_scene
                    name == "instanceDimensions")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
-          }
-          // 1f
-          else if (name == "instanceBorderStyle")
-          {
-            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
           // 4f
           else if (name == "instanceColor" ||
@@ -481,11 +480,11 @@ namespace builtin_scene
     isDirty_ = false;
   }
 
-  void InstancedMeshBase::getBorderData(std::vector<glm::vec4>& borderWidths, std::vector<glm::vec4>& borderColors) const
+  void InstancedMeshBase::getBorderData(std::vector<glm::vec4> &borderWidths, std::vector<glm::vec4> &borderColors) const
   {
     borderWidths.clear();
     borderColors.clear();
-    
+
     // Collect border data from opaque instances (assuming that's where WebContent is rendered)
     borderWidths = opaqueInstances_->borderWidths_;
     borderColors = opaqueInstances_->borderColors_;
