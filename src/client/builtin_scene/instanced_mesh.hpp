@@ -276,6 +276,16 @@ namespace builtin_scene
      */
     void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
 
+    /**
+     * Set a callback for updating border data when instances change.
+     */
+    void setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback);
+
+    /**
+     * Get the current instances as a vector (for border data updates).
+     */
+    std::vector<std::shared_ptr<Instance>> getInstances() const;
+
   private:
     // Clear the instances.
     void clearInstances();
@@ -298,6 +308,7 @@ namespace builtin_scene
   private:
     std::vector<std::weak_ptr<Instance>> list_;
     bool isDirty_ = true;
+    std::function<void(const std::vector<std::shared_ptr<Instance>>&)> borderDataUpdateCallback_;
   };
 
   class InstancedMeshBase
@@ -396,6 +407,11 @@ namespace builtin_scene
     {
       isDepthOnlyPassEnabled_ = value;
     }
+
+    /**
+     * Set a callback for updating border data when instances change.
+     */
+    void setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback);
 
   protected:
     /**

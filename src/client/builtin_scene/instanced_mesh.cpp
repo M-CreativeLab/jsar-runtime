@@ -281,18 +281,36 @@ namespace builtin_scene
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
 
-      // // Extract border data for UBO/SSBO
-      // borderWidths_.clear();
-      // borderColors_.clear();
-      // for (const auto& instance : list_) {
-      //   if (TR_UNLIKELY(instance.expired()))
-      //     continue;
-      //   auto instancePtr = instance.lock();
-      //   borderWidths_.push_back(instancePtr->borderWidths);
-      //   borderColors_.push_back(instanceData.borderColor);
-      // }
+      // Extract border data for texture updates
+      if (borderDataUpdateCallback_)
+      {
+        auto instances = getInstances();
+        borderDataUpdateCallback_(instances);
+      }
     }
     isDirty_ = false;
+  }
+
+  void RenderableInstancesList::setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback)
+  {
+    borderDataUpdateCallback_ = callback;
+  }
+
+  std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
+  {
+    std::vector<std::shared_ptr<Instance>> instances;
+    for (const auto& weakInstance : list_)
+    {
+      if (!weakInstance.expired())
+      {
+        auto instance = weakInstance.lock();
+        if (instance)
+        {
+          instances.push_back(instance);
+        }
+      }
+    }
+    return instances;
   }
 
   void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
@@ -478,5 +496,17 @@ namespace builtin_scene
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
     isDirty_ = false;
+  }
+
+  void InstancedMeshBase::setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback)
+  {
+    if (opaqueInstances_)
+    {
+      opaqueInstances_->setBorderDataUpdateCallback(callback);
+    }
+    if (transparentInstances_)
+    {
+      transparentInstances_->setBorderDataUpdateCallback(callback);
+    }
   }
 }

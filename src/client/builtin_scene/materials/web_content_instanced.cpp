@@ -9,6 +9,7 @@
 #include <client/macros.h>
 
 #include "./web_content_instanced.hpp"
+#include "../instanced_mesh.hpp"
 
 namespace builtin_scene::materials
 {
@@ -66,8 +67,13 @@ namespace builtin_scene::materials
     assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
 
-    // Initialize border data texture
-    borderDataTexture_ = glContext->createTexture();
+    // Initialize border data texture manager
+    borderDataTexture_ = make_unique<CSSBorderDataTexture>();
+    if (!borderDataTexture_->initialize(glContext))
+    {
+      borderDataTexture_.reset();
+      return false;
+    }
 
     return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
@@ -76,6 +82,15 @@ namespace builtin_scene::materials
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
+
+    // Set up border data callback for instanced meshes
+    if (mesh->isInstancedMesh() && borderDataTexture_ && borderDataTexture_->isInitialized())
+    {
+      auto& instancedMesh = mesh->getHandleCheckedAsRef<InstancedMeshBase>();
+      instancedMesh.setBorderDataUpdateCallback([this](const std::vector<std::shared_ptr<Instance>>& instances) {
+        this->updateBorderData(instances);
+      });
+    }
 
     // Update the uniforms
     glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
@@ -96,6 +111,12 @@ namespace builtin_scene::materials
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);
     textureAtlas_->onBeforeDraw();
+
+    // Bind the border data texture
+    if (borderDataTexture_ && borderDataTexture_->isInitialized())
+    {
+      borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
+    }
   }
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
@@ -120,6 +141,14 @@ namespace builtin_scene::materials
   void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
   {
     sdfEnabled_ = enabled;
+  }
+
+  void WebContentInstancedMaterial::updateBorderData(const std::vector<std::shared_ptr<Instance>>& instances)
+  {
+    if (borderDataTexture_ && borderDataTexture_->isInitialized())
+    {
+      borderDataTexture_->updateBorderData(instances);
+    }
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)

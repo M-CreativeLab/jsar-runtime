@@ -8,6 +8,7 @@
 #include "../material_base.hpp"
 #include "../texture_altas.hpp"
 #include "../web_content.hpp"
+#include "../css_border_data_texture.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials
@@ -74,6 +75,13 @@ namespace builtin_scene::materials
      */
     void setSdfEnabled(bool enabled);
 
+    /**
+     * Update border data texture from the given instances.
+     *
+     * @param instances List of instances to extract border data from.
+     */
+    void updateBorderData(const std::vector<std::shared_ptr<Instance>>& instances);
+
   public:
     float width() const
     {
@@ -109,8 +117,7 @@ namespace builtin_scene::materials
     // SDF rendering parameters
     bool sdfEnabled_ = true;
 
-    // Border data texture for texture-based storage
-    std::shared_ptr<client_graphics::WebGLTexture> borderDataTexture_;
-    bool borderDataDirty_ = true;
+    // Border data texture manager
+    std::unique_ptr<CSSBorderDataTexture> borderDataTexture_;
   };
 }
