@@ -1,6 +1,7 @@
-#include "css_border_data_texture.hpp"
-#include "instanced_mesh.hpp"
 #include <client/macros.h>
+
+#include "./css_border_data_texture.hpp"
+#include "./instanced_mesh.hpp"
 
 namespace builtin_scene
 {
@@ -27,7 +28,7 @@ namespace builtin_scene
 
     glContext_ = glContext;
     borderDataTexture_ = glContext_->createTexture();
-    
+
     if (TR_UNLIKELY(!borderDataTexture_))
       return false;
 
@@ -37,35 +38,35 @@ namespace builtin_scene
 
     // Setup texture parameters
     glContext_->activeTexture(WebGLTextureUnit::kTexture1);
-    glContext_->bindTexture(WebGLTextureBindingTarget::k2D, borderDataTexture_);
-    
+    glContext_->bindTexture(WebGLTextureTarget::kTexture2D, borderDataTexture_);
+
     // Use nearest filtering for precise texel fetch
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kMinFilter, 
-                              WebGLTextureMinificationFilter::kNearest);
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kMagFilter, 
-                              WebGLTextureMagnificationFilter::kNearest);
-    
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureMinFilter,
+                              WEBGL_NEAREST);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureMagFilter,
+                              WEBGL_NEAREST);
+
     // Clamp to edge to avoid sampling issues
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kWrapS, 
-                              WebGLTextureWrapMode::kClampToEdge);
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kWrapT, 
-                              WebGLTextureWrapMode::kClampToEdge);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureWrapS,
+                              WEBGL_CLAMP_TO_EDGE);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureWrapT,
+                              WEBGL_CLAMP_TO_EDGE);
 
     // Use texStorage2D to allocate immutable storage
-    glContext_->texStorage2D(WebGLTexture2DTarget::k2D,
-                             1, // mip levels
-                             WEBGL2_RGBA32F, // internal format - high precision float
-                             5, // width (5 columns)
+    glContext_->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                             1,                      // mip levels
+                             WEBGL2_RGBA32F,         // internal format - high precision float
+                             5,                      // width (5 columns)
                              currentTextureHeight_); // height
 
     return true;
   }
 
-  void CSSBorderDataTexture::updateBorderData(const vector<shared_ptr<Instance>>& instances)
+  void CSSBorderDataTexture::updateBorderData(const vector<shared_ptr<Instance>> &instances)
   {
     if (TR_UNLIKELY(!isInitialized()))
       return;
@@ -80,7 +81,7 @@ namespace builtin_scene
     // Extract border data from instances
     for (size_t i = 0; i < instanceCount; ++i)
     {
-      const auto& instance = instances[i];
+      const auto &instance = instances[i];
       if (!instance)
         continue;
 
@@ -93,7 +94,7 @@ namespace builtin_scene
 
       // Column 0: border widths (top, right, bottom, left)
       textureData_[rowOffset + 0] = borderWidth.x; // top
-      textureData_[rowOffset + 1] = borderWidth.y; // right  
+      textureData_[rowOffset + 1] = borderWidth.y; // right
       textureData_[rowOffset + 2] = borderWidth.z; // bottom
       textureData_[rowOffset + 3] = borderWidth.w; // left
 
@@ -110,15 +111,16 @@ namespace builtin_scene
 
     // Upload data to GPU
     glContext_->activeTexture(WebGLTextureUnit::kTexture1);
-    glContext_->bindTexture(WebGLTextureBindingTarget::k2D, borderDataTexture_);
-    glContext_->texSubImage2D(WebGLTextureBindingTarget::k2D,
+    glContext_->bindTexture(WebGLTextureTarget::kTexture2D, borderDataTexture_);
+    glContext_->texSubImage2D(WebGLTexture2DTarget::kTexture2D,
                               0, // mip level
-                              0, 0, // x, y offset
-                              5, // width
-                              instanceCount, // height
-                              WebGLTextureFormat::kRGBA, // format
-                              WebGLPixelType::kFloat, // type
-                              textureData_.data()); // data
+                              0,
+                              0,                                                       // x, y offset
+                              5,                                                       // width
+                              instanceCount,                                           // height
+                              WebGLTextureFormat::kRGBA,                               // format
+                              WebGLPixelType::kFloat,                                  // type
+                              reinterpret_cast<unsigned char *>(textureData_.data())); // data
 
     isDirty_ = false;
   }
@@ -129,7 +131,7 @@ namespace builtin_scene
       return;
 
     glContext_->activeTexture(textureUnit);
-    glContext_->bindTexture(WebGLTextureBindingTarget::k2D, borderDataTexture_);
+    glContext_->bindTexture(WebGLTextureTarget::kTexture2D, borderDataTexture_);
   }
 
   void CSSBorderDataTexture::ensureTextureSize(size_t instanceCount)
@@ -143,43 +145,43 @@ namespace builtin_scene
 
     // Create a new texture with the new size since texStorage2D creates immutable storage
     borderDataTexture_ = glContext_->createTexture();
-    
+
     // Setup texture parameters
     glContext_->activeTexture(WebGLTextureUnit::kTexture1);
-    glContext_->bindTexture(WebGLTextureBindingTarget::k2D, borderDataTexture_);
-    
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kMinFilter, 
-                              WebGLTextureMinificationFilter::kNearest);
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kMagFilter, 
-                              WebGLTextureMagnificationFilter::kNearest);
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kWrapS, 
-                              WebGLTextureWrapMode::kClampToEdge);
-    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
-                              WebGLTextureParameter::kWrapT, 
-                              WebGLTextureWrapMode::kClampToEdge);
+    glContext_->bindTexture(WebGLTextureTarget::kTexture2D, borderDataTexture_);
+
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureMinFilter,
+                              WEBGL_NEAREST);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureMagFilter,
+                              WEBGL_NEAREST);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureWrapS,
+                              WEBGL_CLAMP_TO_EDGE);
+    glContext_->texParameteri(WebGLTextureTarget::kTexture2D,
+                              WebGLTextureParameterName::kTextureWrapT,
+                              WEBGL_CLAMP_TO_EDGE);
 
     // Allocate new immutable texture storage
-    glContext_->texStorage2D(WebGLTexture2DTarget::k2D,
-                             1, // mip levels
+    glContext_->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                             1,              // mip levels
                              WEBGL2_RGBA32F, // internal format
-                             5, // width
-                             newHeight); // height
+                             5,              // width
+                             newHeight);     // height
 
     currentTextureHeight_ = newHeight;
     isDirty_ = true;
   }
 
-  void CSSBorderDataTexture::extractInstanceBorderData(const Instance& instance,
-                                                        glm::vec4& borderWidth,
-                                                        glm::vec4 borderColors[4])
+  void CSSBorderDataTexture::extractInstanceBorderData(const Instance &instance,
+                                                       glm::vec4 &borderWidth,
+                                                       glm::vec4 borderColors[4])
   {
     // Extract border width and colors from instance
     borderWidth = instance.getBorderWidths();
-    
-    const glm::vec4* instanceBorderColors = instance.getBorderColors();
+
+    const glm::vec4 *instanceBorderColors = instance.getBorderColors();
     for (int i = 0; i < 4; ++i)
     {
       borderColors[i] = instanceBorderColors[i];
