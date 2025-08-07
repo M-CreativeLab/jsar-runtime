@@ -289,18 +289,18 @@ namespace builtin_scene
         if (instance.setOpaque(webContentComponent->isOpaque()))
           hasChanged = true;
 
-        // Update instance basic shape data
-        instance.setBorderRadius(webContentComponent->borderRadius(), hasChanged);
-        instance.setDimensions(webContentComponent->logicalWidth(),
-                               webContentComponent->logicalHeight(),
-                               hasChanged);
-
         // Update instance border data from computed style
         const auto &style = webContentComponent->style();
         const auto &fragment = webContentComponent->fragment();
+        const auto &borderWidth = fragment->border();
+
+        // Update instance basic shape data
+        instance.setBorderRadius(webContentComponent->borderRadius(), hasChanged);
+        instance.setDimensions(fragment->contentWidth() + borderWidth.left() + borderWidth.right(),
+                               fragment->contentHeight() + borderWidth.top() + borderWidth.bottom(),
+                               hasChanged);
 
         // Extract border width (top, right, bottom, left)
-        const auto &borderWidth = fragment->border();
         instance.setBorderWidth(borderWidth.top(),    // top
                                 borderWidth.right(),  // right
                                 borderWidth.bottom(), // bottom
