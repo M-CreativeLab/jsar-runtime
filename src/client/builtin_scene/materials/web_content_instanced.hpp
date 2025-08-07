@@ -76,11 +76,11 @@ namespace builtin_scene::materials
     void setSdfEnabled(bool enabled);
 
     /**
-     * Update border data texture from the given instances.
+     * Get the border data texture for direct updates.
      *
-     * @param instances List of instances to extract border data from.
+     * @return Pointer to the CSSBorderDataTexture instance.
      */
-    void updateBorderData(const std::vector<std::shared_ptr<Instance>>& instances);
+    CSSBorderDataTexture* getBorderDataTexture() const;
 
   public:
     float width() const

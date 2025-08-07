@@ -31,8 +31,8 @@ namespace builtin_scene
     if (TR_UNLIKELY(!borderDataTexture_))
       return false;
 
-    // Initialize with minimal size (will be resized as needed)
-    currentTextureHeight_ = 1;
+    // Initialize with default size of 100 instances
+    currentTextureHeight_ = 100;
     textureData_.resize(5 * 4 * currentTextureHeight_, 0.0f); // 5 columns × 4 components × height
 
     // Setup texture parameters
@@ -55,16 +55,12 @@ namespace builtin_scene
                               WebGLTextureParameter::kWrapT, 
                               WebGLTextureWrapMode::kClampToEdge);
 
-    // Upload initial empty data
-    glContext_->texImage2D(WebGLTextureBindingTarget::k2D,
-                           0, // mip level
-                           WEBGL2_RGBA32F, // internal format - high precision float
-                           5, // width (5 columns)
-                           currentTextureHeight_, // height
-                           0, // border
-                           WebGLTextureFormat::kRGBA, // format
-                           WebGLPixelType::kFloat, // type
-                           textureData_.data()); // data
+    // Use texStorage2D to allocate immutable storage
+    glContext_->texStorage2D(WebGLTexture2DTarget::k2D,
+                             1, // mip levels
+                             WEBGL2_RGBA32F, // internal format - high precision float
+                             5, // width (5 columns)
+                             currentTextureHeight_); // height
 
     return true;
   }
@@ -145,18 +141,32 @@ namespace builtin_scene
     size_t newHeight = instanceCount;
     textureData_.resize(5 * 4 * newHeight, 0.0f);
 
-    // Reallocate GPU texture
+    // Create a new texture with the new size since texStorage2D creates immutable storage
+    borderDataTexture_ = glContext_->createTexture();
+    
+    // Setup texture parameters
     glContext_->activeTexture(WebGLTextureUnit::kTexture1);
     glContext_->bindTexture(WebGLTextureBindingTarget::k2D, borderDataTexture_);
-    glContext_->texImage2D(WebGLTextureBindingTarget::k2D,
-                           0, // mip level
-                           WEBGL2_RGBA32F, // internal format
-                           5, // width
-                           newHeight, // height
-                           0, // border
-                           WebGLTextureFormat::kRGBA, // format
-                           WebGLPixelType::kFloat, // type
-                           nullptr); // data (will be uploaded via texSubImage2D)
+    
+    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
+                              WebGLTextureParameter::kMinFilter, 
+                              WebGLTextureMinificationFilter::kNearest);
+    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
+                              WebGLTextureParameter::kMagFilter, 
+                              WebGLTextureMagnificationFilter::kNearest);
+    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
+                              WebGLTextureParameter::kWrapS, 
+                              WebGLTextureWrapMode::kClampToEdge);
+    glContext_->texParameteri(WebGLTextureBindingTarget::k2D, 
+                              WebGLTextureParameter::kWrapT, 
+                              WebGLTextureWrapMode::kClampToEdge);
+
+    // Allocate new immutable texture storage
+    glContext_->texStorage2D(WebGLTexture2DTarget::k2D,
+                             1, // mip levels
+                             WEBGL2_RGBA32F, // internal format
+                             5, // width
+                             newHeight); // height
 
     currentTextureHeight_ = newHeight;
     isDirty_ = true;
@@ -166,26 +176,13 @@ namespace builtin_scene
                                                         glm::vec4& borderWidth,
                                                         glm::vec4 borderColors[4])
   {
-    // Extract border width from instance
-    // Currently the Instance class has borderWidths_ and borderColors_[4] fields
-    // but the setter methods are commented out. For now, we'll use default values
-    // and set up the infrastructure for when border data is properly populated.
+    // Extract border width and colors from instance
+    borderWidth = instance.getBorderWidths();
     
-    // TODO: Once Instance border data setters are implemented, extract actual data
-    // borderWidth = instance.borderWidths_;
-    // for (int i = 0; i < 4; ++i) {
-    //   borderColors[i] = instance.borderColors_[i];
-    // }
-
-    // For now, use default border values
-    // This maintains compatibility while the border data extraction is being implemented
-    borderWidth = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Default 1px border on all sides
-    
-    // Default to red border color for testing/debugging
-    glm::vec4 defaultColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+    const glm::vec4* instanceBorderColors = instance.getBorderColors();
     for (int i = 0; i < 4; ++i)
     {
-      borderColors[i] = defaultColor;
+      borderColors[i] = instanceBorderColors[i];
     }
   }
 }

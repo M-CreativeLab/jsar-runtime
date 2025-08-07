@@ -112,12 +112,12 @@ namespace builtin_scene
 
   void Instance::setBorderWidth(glm::vec4 borderWidth, bool &hasChanged)
   {
-    // if (data_.borderWidth == borderWidth)
-    //   return; // Skip if there is no change.
+    if (borderWidths_ == borderWidth)
+      return; // Skip if there is no change.
 
-    // data_.borderWidth = borderWidth;
-    // notifyHolders();
-    // hasChanged = true;
+    borderWidths_ = borderWidth;
+    notifyHolders();
+    hasChanged = true;
   }
 
   void Instance::setBorderWidth(float top,
@@ -131,12 +131,22 @@ namespace builtin_scene
 
   void Instance::setBorderColor(glm::vec4 borderColor, bool &hasChanged)
   {
-    // if (data_.borderColor == borderColor)
-    //   return; // Skip if there is no change.
+    // Set the same color for all four sides for now
+    bool anyChanged = false;
+    for (int i = 0; i < 4; ++i)
+    {
+      if (borderColors_[i] != borderColor)
+      {
+        borderColors_[i] = borderColor;
+        anyChanged = true;
+      }
+    }
 
-    // data_.borderColor = borderColor;
-    // notifyHolders();
-    // hasChanged = true;
+    if (anyChanged)
+    {
+      notifyHolders();
+      hasChanged = true;
+    }
   }
 
   void Instance::setBorderColor(float r, float g, float b, float a, bool &hasChanged)
@@ -280,20 +290,12 @@ namespace builtin_scene
     {
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
-
-      // Extract border data for texture updates
-      if (borderDataUpdateCallback_)
-      {
-        auto instances = getInstances();
-        borderDataUpdateCallback_(instances);
-      }
     }
     isDirty_ = false;
   }
 
-  void RenderableInstancesList::setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback)
+  void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
   {
-    borderDataUpdateCallback_ = callback;
   }
 
   std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
@@ -311,10 +313,6 @@ namespace builtin_scene
       }
     }
     return instances;
-  }
-
-  void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
-  {
   }
 
   void RenderableInstancesList::clearInstances()
@@ -496,17 +494,5 @@ namespace builtin_scene
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
     isDirty_ = false;
-  }
-
-  void InstancedMeshBase::setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback)
-  {
-    if (opaqueInstances_)
-    {
-      opaqueInstances_->setBorderDataUpdateCallback(callback);
-    }
-    if (transparentInstances_)
-    {
-      transparentInstances_->setBorderDataUpdateCallback(callback);
-    }
   }
 }

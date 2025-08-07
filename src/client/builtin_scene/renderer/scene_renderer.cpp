@@ -1,6 +1,7 @@
 #include <array>
 #include <chrono>
 #include <client/builtin_scene/materials.hpp>
+#include <client/builtin_scene/materials/web_content_instanced.hpp>
 #include "./scene_renderer.hpp"
 
 namespace builtin_scene
@@ -228,7 +229,7 @@ namespace builtin_scene
       WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
       if (mesh->isInstancedMesh())
       {
-        drawInstancedMeshImpl(*mesh, programScope, renderPass, renderTarget);
+        drawInstancedMeshImpl(*mesh, material, programScope, renderPass, renderTarget);
       }
       else
       {
@@ -382,6 +383,7 @@ namespace builtin_scene
   }
 
   void SceneRenderer::drawInstancedMeshImpl(const Mesh3d &mesh,
+                                            std::shared_ptr<MeshMaterial3d> material,
                                             const client_graphics::WebGLProgramScope &programScope,
                                             RenderPass renderPass,
                                             std::optional<XRRenderTarget> renderTarget)
@@ -398,6 +400,27 @@ namespace builtin_scene
 
     // Update the render queues for opaque and transparent instances.
     instancedMesh.updateInstancesList();
+
+    // Update border data texture if using WebContentInstancedMaterial
+    auto webContentMaterial = std::dynamic_pointer_cast<builtin_scene::materials::WebContentInstancedMaterial>(material);
+    if (webContentMaterial && webContentMaterial->getBorderDataTexture() && webContentMaterial->getBorderDataTexture()->isInitialized())
+    {
+      // Get instances from the appropriate list based on render pass
+      std::vector<std::shared_ptr<Instance>> instances;
+      if (renderPass == RenderPass::kOpaques)
+      {
+        instances = instancedMesh.getOpaqueInstancesList().getInstances();
+      }
+      else if (renderPass == RenderPass::kTransparents)
+      {
+        instances = instancedMesh.getTransparentInstancesList().getInstances();
+      }
+      
+      if (!instances.empty())
+      {
+        webContentMaterial->getBorderDataTexture()->updateBorderData(instances);
+      }
+    }
 
     // Draw the opaque instances
     if (renderPass == RenderPass::kOpaques)

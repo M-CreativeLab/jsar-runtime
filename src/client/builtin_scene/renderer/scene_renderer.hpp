@@ -174,6 +174,7 @@ namespace builtin_scene
 
   private:
     void drawInstancedMeshImpl(const Mesh3d &mesh,
+                               std::shared_ptr<MeshMaterial3d> material,
                                const client_graphics::WebGLProgramScope &,
                                RenderPass renderPass,
                                std::optional<XRRenderTarget> renderTarget);

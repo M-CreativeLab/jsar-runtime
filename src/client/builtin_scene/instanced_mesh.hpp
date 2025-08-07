@@ -199,6 +199,22 @@ namespace builtin_scene
       return data_;
     }
 
+    // Getters for border fields
+    inline const glm::vec4& getBorderWidths() const
+    {
+      return borderWidths_;
+    }
+
+    inline const glm::vec4& getBorderColor(int side) const
+    {
+      return borderColors_[side % 4];
+    }
+
+    inline const glm::vec4* getBorderColors() const
+    {
+      return borderColors_;
+    }
+
   private:
     // Add a holder to the instance.
     void addHolder(std::shared_ptr<RenderableInstancesList> holder);
@@ -277,11 +293,6 @@ namespace builtin_scene
     void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
 
     /**
-     * Set a callback for updating border data when instances change.
-     */
-    void setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback);
-
-    /**
      * Get the current instances as a vector (for border data updates).
      */
     std::vector<std::shared_ptr<Instance>> getInstances() const;
@@ -308,7 +319,6 @@ namespace builtin_scene
   private:
     std::vector<std::weak_ptr<Instance>> list_;
     bool isDirty_ = true;
-    std::function<void(const std::vector<std::shared_ptr<Instance>>&)> borderDataUpdateCallback_;
   };
 
   class InstancedMeshBase
@@ -407,11 +417,6 @@ namespace builtin_scene
     {
       isDepthOnlyPassEnabled_ = value;
     }
-
-    /**
-     * Set a callback for updating border data when instances change.
-     */
-    void setBorderDataUpdateCallback(std::function<void(const std::vector<std::shared_ptr<Instance>>&)> callback);
 
   protected:
     /**

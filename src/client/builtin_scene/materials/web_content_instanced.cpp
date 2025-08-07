@@ -83,15 +83,6 @@ namespace builtin_scene::materials
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
 
-    // Set up border data callback for instanced meshes
-    if (mesh->isInstancedMesh() && borderDataTexture_ && borderDataTexture_->isInitialized())
-    {
-      auto& instancedMesh = mesh->getHandleCheckedAsRef<InstancedMeshBase>();
-      instancedMesh.setBorderDataUpdateCallback([this](const std::vector<std::shared_ptr<Instance>>& instances) {
-        this->updateBorderData(instances);
-      });
-    }
-
     // Update the uniforms
     glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
     glContext->uniformMatrix3fv(uniform("textureTransformation"),
@@ -143,12 +134,9 @@ namespace builtin_scene::materials
     sdfEnabled_ = enabled;
   }
 
-  void WebContentInstancedMaterial::updateBorderData(const std::vector<std::shared_ptr<Instance>>& instances)
+  CSSBorderDataTexture* WebContentInstancedMaterial::getBorderDataTexture() const
   {
-    if (borderDataTexture_ && borderDataTexture_->isInitialized())
-    {
-      borderDataTexture_->updateBorderData(instances);
-    }
+    return borderDataTexture_.get();
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
