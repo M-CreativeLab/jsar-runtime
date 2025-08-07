@@ -267,7 +267,6 @@ namespace builtin_scene
              return false; });
     }
     isDirty_ = true;
-    cout << "RenderableInstancesList updated: " << list_.size() << " instances." << endl;
   }
 
   size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
