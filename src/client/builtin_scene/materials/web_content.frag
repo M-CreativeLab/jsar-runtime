@@ -12,9 +12,14 @@ in vec2 uvs;
 in vec2 vInstanceTexCoord;
 in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
-in vec4 vInstanceBorderWidth;
-in vec4 vInstanceBorderColor;
 in float vInstanceBorderStyle;
+flat in int vInstanceId;
+
+// UBO for border data (width and color interleaved)
+layout(std140, binding = 0) uniform BorderDataBuffer {
+    // Each pair represents: vec4 borderWidth, vec4 borderColor for one instance
+    vec4 borderData[2048];  // Supports 1024 instances (2 vec4s per instance)
+} borderBuffer;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
 uniform vec2 uDimensions;   // Width and height of the plane in logical units
@@ -126,8 +131,8 @@ void main()
     // Use instance data for SDF calculations
     vec2 dimensions = vInstanceDimensions;
     vec4 borderRadius = vInstanceBorderRadius;
-    vec4 borderWidth = vInstanceBorderWidth;
-    vec4 borderColor = vInstanceBorderColor;
+    vec4 borderWidth = borderBuffer.borderData[vInstanceId * 2];       // Width at even indices
+    vec4 borderColor = borderBuffer.borderData[vInstanceId * 2 + 1];   // Color at odd indices
     float borderStyle = vInstanceBorderStyle;
 #else
     // Fallback to uniforms for non-instanced usage

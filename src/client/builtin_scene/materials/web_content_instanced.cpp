@@ -61,6 +61,10 @@ namespace builtin_scene::materials
     // Initialize the texture atlas.
     assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
+    
+    // Initialize border data buffer
+    borderDataBuffer_ = glContext->createBuffer();
+    
     return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
 
@@ -77,6 +81,54 @@ namespace builtin_scene::materials
 
     // Update SDF uniforms (instance data is set per instance, not here)
     glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
+
+    // Update border data buffer if this is an instanced mesh
+    if (mesh->isInstancedMesh())
+    {
+      auto instancedMesh = mesh->getHandleAs<InstancedMeshBase>();
+      if (instancedMesh != nullptr)
+      {
+        std::vector<glm::vec4> borderWidths;
+        std::vector<glm::vec4> borderColors;
+        instancedMesh->getBorderData(borderWidths, borderColors);
+        
+        if (!borderWidths.empty() && borderDataBuffer_ != nullptr)
+        {
+          updateBorderData(borderWidths, borderColors);
+        }
+      }
+    }
+
+    // Update border data buffer if dirty
+    if (borderDataDirty_ && borderDataBuffer_ != nullptr && !borderWidths_.empty())
+    {
+      // Prepare interleaved data: [width0, color0, width1, color1, ...]
+      size_t instanceCount = borderWidths_.size();
+      std::vector<glm::vec4> bufferData;
+      bufferData.reserve(instanceCount * 2); // 2 vec4s per instance (width + color)
+      
+      for (size_t i = 0; i < instanceCount; ++i)
+      {
+        // Add border width (top, right, bottom, left)
+        bufferData.push_back(borderWidths_[i]);
+        
+        // Add border color (r, g, b, a)
+        const auto& color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
+        bufferData.push_back(color);
+      }
+      
+      // Update buffer
+      glContext->bindBuffer(WebGLBufferBindingTarget::kUniformBuffer, borderDataBuffer_);
+      glContext->bufferData(WebGLBufferBindingTarget::kUniformBuffer, 
+                           bufferData.size() * sizeof(glm::vec4), 
+                           bufferData.data(), 
+                           WebGLBufferUsage::kDynamicDraw);
+      
+      // Bind to binding point 0
+      glContext->bindBufferBase(WebGLBufferBindingTarget::kUniformBuffer, 0, borderDataBuffer_);
+      
+      borderDataDirty_ = false;
+    }
 
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);
@@ -105,6 +157,14 @@ namespace builtin_scene::materials
   void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
   {
     sdfEnabled_ = enabled;
+  }
+
+  void WebContentInstancedMaterial::updateBorderData(const std::vector<glm::vec4>& borderWidths, 
+                                                     const std::vector<glm::vec4>& borderColors)
+  {
+    borderWidths_ = borderWidths;
+    borderColors_ = borderColors;
+    borderDataDirty_ = true;
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)

@@ -199,6 +199,9 @@ namespace builtin_scene
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
 
+    // Getter for instance data
+    inline const InstanceData& data() const { return data_; }
+
   private:
     // Add a holder to the instance.
     void addHolder(std::shared_ptr<RenderableInstancesList> holder);
@@ -288,6 +291,10 @@ namespace builtin_scene
     InstanceFilter filter;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao;
     std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
+    
+    // Border data extracted for UBO/SSBO
+    std::vector<glm::vec4> borderWidths_;
+    std::vector<glm::vec4> borderColors_;
 
   private:
     std::vector<std::weak_ptr<Instance>> list_;
@@ -309,8 +316,6 @@ namespace builtin_scene
                                                                   "instanceLayerIndex",
                                                                   "instanceDimensions",
                                                                   "instanceBorderRadius",
-                                                                  "instanceBorderWidth",
-                                                                  "instanceBorderColor",
                                                                   "instanceBorderStyle"};
 
   public:
@@ -366,6 +371,14 @@ namespace builtin_scene
      */
     bool removeInstance(ecs::EntityId id);
 
+    /**
+     * Get border data from opaque instances for UBO/SSBO update.
+     * 
+     * @param borderWidths Output vector to fill with border width data
+     * @param borderColors Output vector to fill with border color data
+     */
+    void getBorderData(std::vector<glm::vec4>& borderWidths, std::vector<glm::vec4>& borderColors) const;
+    
     inline RenderableInstancesList &getOpaqueInstancesList() const
     {
       return *opaqueInstances_;

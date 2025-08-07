@@ -280,6 +280,14 @@ namespace builtin_scene
     {
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
+      
+      // Extract border data for UBO/SSBO
+      borderWidths_.clear();
+      borderColors_.clear();
+      for (const auto& instanceData : array) {
+        borderWidths_.push_back(instanceData.borderWidth);
+        borderColors_.push_back(instanceData.borderColor);
+      }
     }
     isDirty_ = false;
   }
@@ -357,6 +365,11 @@ namespace builtin_scene
                    name == "instanceDimensions")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
+          }
+          // 1f
+          else if (name == "instanceBorderStyle")
+          {
+            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
           // 4f
           else if (name == "instanceColor" ||
@@ -466,5 +479,15 @@ namespace builtin_scene
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
     isDirty_ = false;
+  }
+
+  void InstancedMeshBase::getBorderData(std::vector<glm::vec4>& borderWidths, std::vector<glm::vec4>& borderColors) const
+  {
+    borderWidths.clear();
+    borderColors.clear();
+    
+    // Collect border data from opaque instances (assuming that's where WebContent is rendered)
+    borderWidths = opaqueInstances_->borderWidths_;
+    borderColors = opaqueInstances_->borderColors_;
   }
 }
