@@ -110,7 +110,7 @@ float sdfBorder(vec2 p, vec2 dimensions, vec4 borderRadius, vec4 borderWidth)
   float innerDist = sdfRoundedBox(p, innerDimensions * 0.5, innerRadius);
 
   // Border SDF: negative inside border region, positive outside
-  // Uses SDF subtraction: max(outer, -inner) 
+  // Uses SDF subtraction: max(outer, -inner)
   return max(outerDist, -innerDist);
 }
 
@@ -181,15 +181,18 @@ void main()
     // Apply content alpha for crisp edges
     outColor.a *= contentAlpha;
 
+    borderWidth = vec4(10.0, 10.0, 10.0, 10.0); // Temporary hardcoded border width for testing
+    borderColor = vec4(1.0, 0.0, 0.0, 1.0);     // Temporary hardcoded border color for testing
+
     // Apply border rendering if border is enabled (borderStyle > 0)
     if (borderStyle > 0.5 && borderColor.a > 0.0)
     {
       // Calculate border SDF distance
       float borderDist = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
-      
+
       // Apply SDF anti-aliasing to border
       float borderAlpha = sdfAntiAlias(borderDist);
-      
+
       // Apply border style
       if (borderStyle > 1.0) // Dashed style
       {
