@@ -12,7 +12,7 @@ in vec2 uvs;
 in vec2 vInstanceTexCoord;
 in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
-in uint vInstanceBorderStyle;
+in float vInstanceBorderStyle;
 flat in int vInstanceId;
 
 // Texture-based border data storage
@@ -160,15 +160,18 @@ void main()
     vec4 borderWidth = getBorderWidth(vInstanceId);
     // TODO: Support different colors per border side - for now using top border color for all sides
     vec4 borderColor = getBorderTopColor(vInstanceId);
-    uint borderStyle = vInstanceBorderStyle;
+    float borderStyle = vInstanceBorderStyle;
 #else
     // Fallback to uniforms for non-instanced usage
     vec2 dimensions = uDimensions;
     vec4 borderRadius = uBorderRadius;
     vec4 borderWidth = uBorderWidth;
     vec4 borderColor = uBorderColor;
-    uint borderStyle = uBorderStyle;
+    float borderStyle = uBorderStyle;
 #endif
+
+    borderWidth = vec4(15.0, 15.0, 15.0, 15.0); // Default border width for testing
+    borderColor = vec4(1.0, 0.0, 0.0, 1.0); // Default border color for testing
 
     // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
     vec2 planeCoord = uvToPlaneCoord(vInstanceTexCoord, dimensions);
@@ -181,14 +184,14 @@ void main()
     outColor.a *= contentAlpha;
 
     // Apply border rendering if border is enabled (borderStyle > 0)
-    if (borderStyle > 0 && borderColor.a > 0.0)
+    if (borderStyle > 0.5 && borderColor.a > 0.0)
     {
       // Calculate border region
       float borderMask = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
 
       // Apply border style
       float borderAlpha = borderMask;
-      if (borderStyle > 1) // Dashed style
+      if (borderStyle > 1.0) // Dashed style
       {
         float dashLength = max(borderWidth.x, max(borderWidth.y, max(borderWidth.z, borderWidth.w))) * 3.0;
         float dashMask = dashPattern(planeCoord, dimensions, dashLength);

@@ -636,8 +636,8 @@ namespace builtin_scene::web_renderer
         content.setTextureUsing(true);
       }
     }
-    if (drawBorders(canvas, roundedRect, fragment.value(), style))
-      content.setTextureUsing(true); // enable texture when there are borders.
+    // if (drawBorders(canvas, roundedRect, fragment.value(), style))
+    //   content.setTextureUsing(true); // enable texture when there are borders.
   }
 
   SkRRect RenderBackgroundSystem::getBackgroundClippingArea(const SkRRect &roundedRect,

@@ -55,7 +55,7 @@ in uint instanceBorderStyle;
 out vec2 vInstanceTexCoord;
 out vec2 vInstanceDimensions;
 out vec4 vInstanceBorderRadius;
-out uint vInstanceBorderStyle;
+out float vInstanceBorderStyle;
 flat out int vInstanceId;
 #endif
 #endif
@@ -150,7 +150,7 @@ void main()
   vInstanceTexCoord = texCoord;
   vInstanceDimensions = instanceDimensions;
   vInstanceBorderRadius = instanceBorderRadius;
-  vInstanceBorderStyle = instanceBorderStyle;
+  vInstanceBorderStyle = float(instanceBorderStyle);
   vInstanceId = gl_InstanceID;
 #endif
 #endif
