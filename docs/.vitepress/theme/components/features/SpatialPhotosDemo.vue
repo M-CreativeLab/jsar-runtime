@@ -30,7 +30,7 @@ const initThreeJS = () => {
   // Load texture
   const textureLoader = new THREE.TextureLoader()
   const imageTexture = textureLoader.load(
-    'https://cdn.midjourney.com/849e3b0f-636c-461b-9850-f20928483a24/0_0.png', (texture) => {
+    'https://ar.rokidcdn.com/web-assets/pages/features_spatial_photos.png', (texture) => {
       texture.wrapS = THREE.ClampToEdgeWrapping
       texture.wrapT = THREE.ClampToEdgeWrapping
       texture.minFilter = THREE.LinearFilter
