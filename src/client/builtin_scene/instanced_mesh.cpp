@@ -1,6 +1,10 @@
 #include "./instanced_mesh-inl.hpp"
+#include "./css_border_data_texture.hpp"
 
-namespace builtin_scene { class CSSBorderDataTexture; }
+namespace builtin_scene
+{
+  class CSSBorderDataTexture;
+}
 
 namespace builtin_scene
 {
@@ -51,7 +55,7 @@ namespace builtin_scene
     if (transform == transformationMatrix)
       return; // Skip if there is no change.
 
-    transform = transformationMatrix;
+    data_.transform = transformationMatrix;
     notifyHolders();
     hasChanged = true;
   }
@@ -263,6 +267,7 @@ namespace builtin_scene
              return false; });
     }
     isDirty_ = true;
+    cout << "RenderableInstancesList updated: " << list_.size() << " instances." << endl;
   }
 
   size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
@@ -293,13 +298,11 @@ namespace builtin_scene
       glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
       glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
     }
-    
+
     // Update border data texture if provided and initialized
     if (borderDataTexture != nullptr && borderDataTexture->isInitialized())
-    {
       borderDataTexture->updateBorderData(getInstances());
-    }
-    
+
     isDirty_ = false;
   }
 

@@ -286,7 +286,7 @@ namespace builtin_scene
     /**
      * Called before the instanced draw.
      */
-    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext, 
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
                              class CSSBorderDataTexture *borderDataTexture = nullptr);
     /**
      * Called after the instanced draw.

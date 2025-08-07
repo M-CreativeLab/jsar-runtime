@@ -421,7 +421,7 @@ namespace builtin_scene
         auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
         glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
 
-        instances.beforeInstancedDraw(glContext, borderDataTexture);
+        instances.beforeInstancedDraw(glContext, nullptr);
         glContext.drawElementsInstanced(mesh.primitiveTopology(),
                                         meshIndicesCount,
                                         WEBGL_UNSIGNED_INT,
