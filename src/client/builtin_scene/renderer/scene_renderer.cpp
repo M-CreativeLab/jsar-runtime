@@ -413,6 +413,14 @@ namespace builtin_scene
       RenderableInstancesList &instances = instancedMesh.getOpaqueInstancesList();
       if (instances.count() > 0)
       {
+        WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
+
+        // Update the border data texture only if needed
+        if (borderDataTexture != nullptr &&
+            borderDataTexture->isInitialized() &&
+            borderDataTexture->needsBorderDataUpdate(instances.getInstances()))
+          borderDataTexture->updateBorderData(instances.getInstances());
+
         glContext.depthMask(true);
         glContext.disable(WEBGL_BLEND);
 
@@ -436,9 +444,10 @@ namespace builtin_scene
       {
         WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
 
-        // Update the border data texture
+        // Update the border data texture only if needed
         if (borderDataTexture != nullptr &&
-            borderDataTexture->isInitialized())
+            borderDataTexture->isInitialized() &&
+            borderDataTexture->needsBorderDataUpdate(instances.getInstances()))
           borderDataTexture->updateBorderData(instances.getInstances());
 
         // Set the base matrix, move the transparent objects +z 0.001
