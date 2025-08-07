@@ -15,16 +15,8 @@ in vec4 vInstanceBorderRadius;
 in uint vInstanceBorderStyle;
 flat in int vInstanceId;
 
-// SSBO for border data with separate arrays for each property
-layout(std140, binding = 0) uniform BorderDataBuffer
-{
-  vec4 borderWidths[];
-  vec4 borderTopColor[];
-  vec4 borderRightColor[];
-  vec4 borderBottomColor[];
-  vec4 borderLeftColor[];
-}
-borderBuffer;
+// Texture-based border data storage
+uniform sampler2D borderDataTexture;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
 uniform vec2 uDimensions;   // Width and height of the plane in logical units
@@ -61,6 +53,33 @@ float sdfRoundedBox(vec2 p, vec2 b, vec4 r)
 vec2 uvToPlaneCoord(vec2 uv, vec2 dimensions)
 {
   return (uv - 0.5) * dimensions;
+}
+
+// Read border data from texture
+// Texture layout: each row is one instance, columns are: [width, topColor, rightColor, bottomColor, leftColor]
+vec4 getBorderWidth(int instanceId)
+{
+  return texelFetch(borderDataTexture, ivec2(0, instanceId), 0);
+}
+
+vec4 getBorderTopColor(int instanceId)
+{
+  return texelFetch(borderDataTexture, ivec2(1, instanceId), 0);
+}
+
+vec4 getBorderRightColor(int instanceId)
+{
+  return texelFetch(borderDataTexture, ivec2(2, instanceId), 0);
+}
+
+vec4 getBorderBottomColor(int instanceId)
+{
+  return texelFetch(borderDataTexture, ivec2(3, instanceId), 0);
+}
+
+vec4 getBorderLeftColor(int instanceId)
+{
+  return texelFetch(borderDataTexture, ivec2(4, instanceId), 0);
 }
 
 // Smooth step anti-aliasing based on SDF distance
@@ -138,9 +157,9 @@ void main()
     // Use instance data for SDF calculations
     vec2 dimensions = vInstanceDimensions;
     vec4 borderRadius = vInstanceBorderRadius;
-    vec4 borderWidth = borderBuffer.borderWidths[vInstanceId];
+    vec4 borderWidth = getBorderWidth(vInstanceId);
     // TODO: Support different colors per border side - for now using top border color for all sides
-    vec4 borderColor = borderBuffer.borderTopColor[vInstanceId];
+    vec4 borderColor = getBorderTopColor(vInstanceId);
     uint borderStyle = vInstanceBorderStyle;
 #else
     // Fallback to uniforms for non-instanced usage

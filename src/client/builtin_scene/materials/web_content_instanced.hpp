@@ -118,8 +118,8 @@ namespace builtin_scene::materials
     // SDF rendering parameters
     bool sdfEnabled_ = true;
     
-    // Border data buffers for SSBO/UBO
-    std::shared_ptr<client_graphics::WebGLBuffer> borderDataBuffer_;
+    // Border data texture for texture-based storage
+    std::shared_ptr<client_graphics::WebGLTexture> borderDataTexture_;
     std::vector<glm::vec4> borderWidths_;
     std::vector<glm::vec4> borderColors_;
     bool borderDataDirty_ = true;

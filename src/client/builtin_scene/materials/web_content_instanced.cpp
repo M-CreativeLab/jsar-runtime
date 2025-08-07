@@ -43,6 +43,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
+    LOAD_UNIFORM_LOCATION("borderDataTexture");
     // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
     LOAD_UNIFORM_LOCATION("uDimensions");
     LOAD_UNIFORM_LOCATION("uBorderRadius");
@@ -62,8 +63,8 @@ namespace builtin_scene::materials
     assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
     
-    // Initialize border data buffer
-    borderDataBuffer_ = glContext->createBuffer();
+    // Initialize border data texture
+    borderDataTexture_ = glContext->createTexture();
     
     return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
@@ -75,6 +76,11 @@ namespace builtin_scene::materials
 
     // Update the uniforms
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    // Set border data texture to texture unit 1
+    if (hasUniform("borderDataTexture"))
+    {
+      glContext->uniform1i(uniform("borderDataTexture"), 1);
+    }
     glContext->uniformMatrix3fv(uniform("textureTransformation"),
                                 false,
                                 glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
@@ -99,42 +105,65 @@ namespace builtin_scene::materials
       }
     }
 
-    // Update border data buffer if dirty
-    if (borderDataDirty_ && borderDataBuffer_ != nullptr && !borderWidths_.empty())
+    // Update border data texture if dirty
+    if (borderDataDirty_ && borderDataTexture_ != nullptr && !borderWidths_.empty())
     {
-      // Prepare separate arrays as requested in shader structure
+      // Prepare texture data: each row is one instance, columns are [width, topColor, rightColor, bottomColor, leftColor]
       size_t instanceCount = borderWidths_.size();
-      std::vector<glm::vec4> bufferData;
+      std::vector<float> textureData(instanceCount * 5 * 4); // 5 vec4s per instance, 4 floats per vec4
       
-      // Calculate total size: instanceCount * 5 (1 width array + 4 color arrays)
-      bufferData.reserve(instanceCount * 5);
-      
-      // Add border widths array
       for (size_t i = 0; i < instanceCount; ++i)
       {
-        bufferData.push_back(borderWidths_[i]);
-      }
-      
-      // Add border color arrays (for now, replicate single color to all sides)
-      // TODO: Support separate colors per border side from CSS
-      for (int side = 0; side < 4; ++side) // top, right, bottom, left
-      {
-        for (size_t i = 0; i < instanceCount; ++i)
+        size_t baseIndex = i * 5 * 4;
+        
+        // Column 0: border widths
+        textureData[baseIndex + 0] = borderWidths_[i].x;
+        textureData[baseIndex + 1] = borderWidths_[i].y;
+        textureData[baseIndex + 2] = borderWidths_[i].z;
+        textureData[baseIndex + 3] = borderWidths_[i].w;
+        
+        // Get border color (replicate to all sides for now)
+        const auto& color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
+        
+        // Columns 1-4: border colors (top, right, bottom, left) - for now all the same
+        for (int side = 0; side < 4; ++side)
         {
-          const auto& color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
-          bufferData.push_back(color);
+          size_t colorIndex = baseIndex + (side + 1) * 4;
+          textureData[colorIndex + 0] = color.r;
+          textureData[colorIndex + 1] = color.g;
+          textureData[colorIndex + 2] = color.b;
+          textureData[colorIndex + 3] = color.a;
         }
       }
       
-      // Update buffer
-      glContext->bindBuffer(WebGLBufferBindingTarget::kUniformBuffer, borderDataBuffer_);
-      glContext->bufferData(WebGLBufferBindingTarget::kUniformBuffer, 
-                           bufferData.size() * sizeof(glm::vec4), 
-                           bufferData.data(), 
-                           WebGLBufferUsage::kDynamicDraw);
+      // Update texture
+      glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture1);
+      glContext->bindTexture(client_graphics::WebGLTextureBindingTarget::k2D, borderDataTexture_);
       
-      // Bind to binding point 0
-      glContext->bindBufferBase(WebGLBufferBindingTarget::kUniformBuffer, 0, borderDataBuffer_);
+      // Set texture parameters for nearest neighbor sampling (no interpolation needed for data)
+      glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D, 
+                              client_graphics::WebGLTextureParameter::kMinFilter, 
+                              static_cast<int>(client_graphics::WebGLTextureFilter::kNearest));
+      glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D, 
+                              client_graphics::WebGLTextureParameter::kMagFilter, 
+                              static_cast<int>(client_graphics::WebGLTextureFilter::kNearest));
+      glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D, 
+                              client_graphics::WebGLTextureParameter::kWrapS, 
+                              static_cast<int>(client_graphics::WebGLTextureWrap::kClampToEdge));
+      glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D, 
+                              client_graphics::WebGLTextureParameter::kWrapT, 
+                              static_cast<int>(client_graphics::WebGLTextureWrap::kClampToEdge));
+      
+      // Upload texture data (5 columns x instanceCount rows, RGBA32F format)
+      glContext->texImage2D(client_graphics::WebGLTextureBindingTarget::k2D,
+                           0, // mip level
+                           WEBGL2_RGBA32F, // internal format
+                           5, // width (5 vec4s per instance)
+                           static_cast<int>(instanceCount), // height
+                           0, // border
+                           client_graphics::WebGLTextureFormat::kRGBA,
+                           client_graphics::WebGLPixelType::kFloat,
+                           textureData.data());
       
       borderDataDirty_ = false;
     }
