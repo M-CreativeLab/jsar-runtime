@@ -1,2 +1,0 @@
-"/usr/bin/gcc-ar-13" qc libllhttp.a CMakeFiles/llhttp_static.dir/src/http/llhttp.c.o CMakeFiles/llhttp_static.dir/src/http/llhttp/http.c.o CMakeFiles/llhttp_static.dir/src/http/llhttp/api.c.o
-"/usr/bin/gcc-ranlib-13" libllhttp.a
