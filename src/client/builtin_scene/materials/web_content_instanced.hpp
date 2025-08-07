@@ -74,15 +74,6 @@ namespace builtin_scene::materials
      */
     void setSdfEnabled(bool enabled);
 
-    /**
-     * Update border data for all instances.
-     *
-     * @param borderWidths Vector of border width vec4s (top, right, bottom, left) for each instance
-     * @param borderColors Vector of border color vec4s (r, g, b, a) for each instance
-     */
-    void updateBorderData(const std::vector<glm::vec4>& borderWidths, 
-                          const std::vector<glm::vec4>& borderColors);
-
   public:
     float width() const
     {
@@ -117,11 +108,9 @@ namespace builtin_scene::materials
 
     // SDF rendering parameters
     bool sdfEnabled_ = true;
-    
+
     // Border data texture for texture-based storage
     std::shared_ptr<client_graphics::WebGLTexture> borderDataTexture_;
-    std::vector<glm::vec4> borderWidths_;
-    std::vector<glm::vec4> borderColors_;
     bool borderDataDirty_ = true;
   };
 }

@@ -479,14 +479,4 @@ namespace builtin_scene
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
     isDirty_ = false;
   }
-
-  void InstancedMeshBase::getBorderData(std::vector<glm::vec4> &borderWidths, std::vector<glm::vec4> &borderColors) const
-  {
-    borderWidths.clear();
-    borderColors.clear();
-
-    // Collect border data from opaque instances (assuming that's where WebContent is rendered)
-    borderWidths = opaqueInstances_->borderWidths_;
-    borderColors = opaqueInstances_->borderColors_;
-  }
 }

@@ -52,7 +52,9 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("uBorderColor");
     LOAD_UNIFORM_LOCATION("uBorderStyle");
 #undef LOAD_UNIFORM_LOCATION
+
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    glContext->uniform1i(uniform("borderDataTexture"), 1);
 
     // Set the texture to be flipped by the Y-axis.
     //
@@ -76,98 +78,20 @@ namespace builtin_scene::materials
     assert(glContext != nullptr);
 
     // Update the uniforms
-    glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    // Set border data texture to texture unit 1
-    if (hasUniform("borderDataTexture"))
-    {
-      glContext->uniform1i(uniform("borderDataTexture"), 1);
-    }
+    glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
     glContext->uniformMatrix3fv(uniform("textureTransformation"),
                                 false,
-                                glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
-
-    // Update SDF uniforms (instance data is set per instance, not here)
-    glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
-
-    // Update border data buffer if this is an instanced mesh
-    // if (mesh->isInstancedMesh())
-    // {
-    //   auto instancedMesh = mesh->getHandleAs<InstancedMeshBase>();
-    //   if (instancedMesh != nullptr)
-    //   {
-    //     std::vector<glm::vec4> borderWidths;
-    //     std::vector<glm::vec4> borderColors;
-    //     instancedMesh->getBorderData(borderWidths, borderColors);
-
-    //     if (!borderWidths.empty() && borderDataBuffer_ != nullptr)
-    //     {
-    //       updateBorderData(borderWidths, borderColors);
-    //     }
-    //   }
-    // }
-
-    // Update border data texture if dirty
-    if (borderDataDirty_ && borderDataTexture_ != nullptr && !borderWidths_.empty())
-    {
-      // Prepare texture data: each row is one instance, columns are [width, topColor, rightColor, bottomColor, leftColor]
-      size_t instanceCount = borderWidths_.size();
-      std::vector<float> textureData(instanceCount * 5 * 4); // 5 vec4s per instance, 4 floats per vec4
-
-      for (size_t i = 0; i < instanceCount; ++i)
-      {
-        size_t baseIndex = i * 5 * 4;
-
-        // Column 0: border widths
-        textureData[baseIndex + 0] = borderWidths_[i].x;
-        textureData[baseIndex + 1] = borderWidths_[i].y;
-        textureData[baseIndex + 2] = borderWidths_[i].z;
-        textureData[baseIndex + 3] = borderWidths_[i].w;
-
-        // Get border color (replicate to all sides for now)
-        const auto &color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
-
-        // Columns 1-4: border colors (top, right, bottom, left) - for now all the same
-        for (int side = 0; side < 4; ++side)
-        {
-          size_t colorIndex = baseIndex + (side + 1) * 4;
-          textureData[colorIndex + 0] = color.r;
-          textureData[colorIndex + 1] = color.g;
-          textureData[colorIndex + 2] = color.b;
-          textureData[colorIndex + 3] = color.a;
-        }
-      }
-
-      // // Update texture
-      // glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture1);
-      // glContext->bindTexture(client_graphics::WebGLTextureBindingTarget::k2D, borderDataTexture_);
-
-      // // Set texture parameters for nearest neighbor sampling (no interpolation needed for data)
-      // glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D,
-      //                         client_graphics::WebGLTextureParameter::kMinFilter,
-      //                         static_cast<int>(client_graphics::WebGLTextureFilter::kNearest));
-      // glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D,
-      //                         client_graphics::WebGLTextureParameter::kMagFilter,
-      //                         static_cast<int>(client_graphics::WebGLTextureFilter::kNearest));
-      // glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D,
-      //                         client_graphics::WebGLTextureParameter::kWrapS,
-      //                         static_cast<int>(client_graphics::WebGLTextureWrap::kClampToEdge));
-      // glContext->texParameteri(client_graphics::WebGLTextureBindingTarget::k2D,
-      //                         client_graphics::WebGLTextureParameter::kWrapT,
-      //                         static_cast<int>(client_graphics::WebGLTextureWrap::kClampToEdge));
-
-      // // Upload texture data (5 columns x instanceCount rows, RGBA32F format)
-      // glContext->texImage2D(client_graphics::WebGLTextureBindingTarget::k2D,
-      //                      0, // mip level
-      //                      WEBGL2_RGBA32F, // internal format
-      //                      5, // width (5 vec4s per instance)
-      //                      static_cast<int>(instanceCount), // height
-      //                      0, // border
-      //                      client_graphics::WebGLTextureFormat::kRGBA,
-      //                      client_graphics::WebGLPixelType::kFloat,
-      //                      textureData.data());
-
-      borderDataDirty_ = false;
-    }
+                                glm::mat3(textureScale_.x,
+                                          0.0f,
+                                          0.0f,
+                                          0.0f,
+                                          textureScale_.y,
+                                          0.0f,
+                                          textureOffset_.x,
+                                          textureOffset_.y,
+                                          1.0f));
+    glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    glContext->uniform1i(uniform("borderDataTexture"), 1);
 
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);
@@ -196,14 +120,6 @@ namespace builtin_scene::materials
   void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
   {
     sdfEnabled_ = enabled;
-  }
-
-  void WebContentInstancedMaterial::updateBorderData(const std::vector<glm::vec4> &borderWidths,
-                                                     const std::vector<glm::vec4> &borderColors)
-  {
-    borderWidths_ = borderWidths;
-    borderColors_ = borderColors;
-    borderDataDirty_ = true;
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)

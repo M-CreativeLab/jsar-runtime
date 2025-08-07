@@ -370,14 +370,6 @@ namespace builtin_scene
      */
     bool removeInstance(ecs::EntityId id);
 
-    /**
-     * Get border data from opaque instances for UBO/SSBO update.
-     * 
-     * @param borderWidths Output vector to fill with border width data
-     * @param borderColors Output vector to fill with border color data
-     */
-    void getBorderData(std::vector<glm::vec4> &borderWidths, std::vector<glm::vec4> &borderColors) const;
-
     inline RenderableInstancesList &getOpaqueInstancesList() const
     {
       return *opaqueInstances_;
