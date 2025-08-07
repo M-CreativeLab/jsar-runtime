@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import ThreeDFirstDemo from './features/ThreeDFirstDemo.vue'
+import SpatialPhotosDemo from './features/SpatialPhotosDemo.vue'
+import AudioVisualizerDemo from './features/AudioVisualizerDemo.vue'
 
 const features = [
   {
@@ -36,15 +39,6 @@ const features = [
 `,
     color: 'from-orange-500 to-red-600',
     bgColor: 'bg-orange-50 dark:bg-orange-950/20'
-  },
-  {
-    id: 'persistent',
-    icon: '📍',
-    title: 'Persistent',
-    subtitle: 'Anchored digital content',
-    description: 'Place digital objects in your physical space and find them exactly where you left them. Content persists across sessions, creating a seamless blend between digital and physical worlds.',
-    color: 'from-pink-500 to-rose-600',
-    bgColor: 'bg-pink-50 dark:bg-pink-950/20'
   }
 ]
 
@@ -91,24 +85,11 @@ onUnmounted(() => {
 
 <template>
   <div class="spatial-web-features">
-    <!-- Spatial Web Introduction -->
-    <div class="intro-section">
-      <div class="intro-content">
-        <h2 class="intro-title">What is Spatial Web?</h2>
-        <p class="intro-description">
-          The Spatial Web represents the next evolution of the Web, where every HTML element exists in three-dimensional
-          space with real 3D coordinates, rather than being confined to flat 2D screens.
-        </p>
-      </div>
-    </div>
-
-    <!-- Features Sections -->
     <div class="features-container">
-      <div v-for="(feature, index) in features" :key="feature.id" class="feature-section" :class="[
-        feature.bgColor,
-        { 'visible': visibleFeatures.has(index) },
-        { 'active': activeFeature === index }
-      ]">
+      <div v-for="(feature, index) in features" :key="feature.id" class="feature-section" :class="{
+        'reverse': index % 2 === 1,
+        'visible': visibleFeatures.has(index)
+      }">
         <div class="feature-content">
           <div class="feature-left">
             <div class="feature-header">
@@ -139,10 +120,17 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-
           <div class="feature-right">
             <div class="feature-visual">
-              <div class="visual-container" :class="`gradient-${index}`">
+              <div class="visual-container">
+                <!-- 3D Design Demo -->
+                <ThreeDFirstDemo v-if="feature.id === '3d-design'" />
+
+                <!-- Spatial Photos Demo -->
+                <SpatialPhotosDemo v-else-if="feature.id === 'spatial-image'" />
+
+                <!-- Audio Visualizer Demo -->
+                <AudioVisualizerDemo v-else-if="feature.id === 'spatial-audio'" />
               </div>
             </div>
           </div>
@@ -201,9 +189,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 2rem 0;
+  margin: 1.5rem auto;
   opacity: 0.3;
   transform: translateY(50px);
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-section:nth-child(even) > .feature-content {
+  direction: rtl;
 }
 
 .feature-section:not(:last-of-type) {
@@ -225,6 +218,34 @@ onUnmounted(() => {
   align-items: center;
 }
 
+.feature-content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.feature-text-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.demo-top {
+  order: -1;
+}
+
+.demo-bottom {
+  order: 1;
+}
+
+.demo-inline {
+  margin-top: 1rem;
+}
+
+.demo-inline .demo-window {
+  max-width: 400px;
+}
+
 .feature-content pre {
   text-align: left !important;
 }
@@ -236,10 +257,12 @@ onUnmounted(() => {
 }
 
 .feature-left {
+  direction: ltr;
   animation: slideInLeft 0.8s ease-out;
 }
 
 .feature-right {
+  direction: ltr;
   animation: slideInRight 0.8s ease-out;
 }
 
@@ -354,15 +377,16 @@ onUnmounted(() => {
 .feature-visual {
   position: relative;
   height: 400px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Adjust visual container size to match larger canvas */
 .visual-container {
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
+  width: 100%;
+  height: 400px;
   position: relative;
   display: flex;
   align-items: center;
@@ -370,6 +394,7 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* Keep original gradient background styles */
 .gradient-0 {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
@@ -386,6 +411,7 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #ec4899, #f43f5e);
 }
 
+/* Floating element animation (for non-3D features) */
 .floating-elements {
   position: absolute;
   width: 100%;
@@ -415,114 +441,6 @@ onUnmounted(() => {
   transform: translateX(-50%);
 }
 
-/* 移除 Summary Section 相关样式 */
-/* .summary-section, .summary-content, .summary-title, .summary-text, .summary-actions 等样式都可以删除 */
-.summary-section {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.05) 0%,
-      rgba(147, 51, 234, 0.05) 100%);
-}
-
-.summary-content {
-  max-width: 800px;
-  padding: 0 2rem;
-}
-
-.summary-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--vp-c-text-1);
-}
-
-.summary-text {
-  font-size: 1.2rem;
-  color: var(--vp-c-text-2);
-  margin-bottom: 2rem;
-  line-height: 1.6;
-}
-
-.summary-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.cta-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
-}
-
-.cta-button.primary {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: white;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-}
-
-.cta-button.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-}
-
-.cta-button.secondary {
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-1);
-  border: 2px solid var(--vp-c-divider);
-}
-
-.cta-button.secondary:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
-}
-
-.arrow-icon {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.3s ease;
-}
-
-.cta-button:hover .arrow-icon {
-  transform: translateX(3px);
-}
-
-/* Animations */
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 @keyframes float {
 
   0%,
@@ -531,11 +449,11 @@ onUnmounted(() => {
   }
 
   33% {
-    transform: translateY(-20px) rotate(5deg);
+    transform: translateY(-20px) rotate(1deg);
   }
 
   66% {
-    transform: translateY(10px) rotate(-3deg);
+    transform: translateY(10px) rotate(-1deg);
   }
 }
 
@@ -567,6 +485,11 @@ onUnmounted(() => {
 
   .feature-content {
     padding: 0 1rem;
+    text-align: left;
+  }
+
+  .feature-icon-large {
+    display: none;
   }
 
   .summary-actions {
@@ -582,11 +505,6 @@ onUnmounted(() => {
 
   .feature-visual {
     height: 300px;
-  }
-
-  .visual-container {
-    width: 220px;
-    height: 220px;
   }
 }
 
