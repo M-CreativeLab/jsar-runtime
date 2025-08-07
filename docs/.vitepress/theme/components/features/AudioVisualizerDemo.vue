@@ -332,7 +332,7 @@ const initAudio = async () => {
     console.info('Audio context initialized successfully, state:', audioContext.state)
 
     // Load remote audio file
-    const audioUrl = 'http://ar.rokidcdn.com/web-assets/pages/sounds/music.wav'
+    const audioUrl = 'https://ar.rokidcdn.com/web-assets/pages/sounds/music.wav'
     
     try {
       console.info('Starting to load remote audio:', audioUrl)
