@@ -15,10 +15,13 @@ in vec4 vInstanceBorderRadius;
 in float vInstanceBorderStyle;
 flat in int vInstanceId;
 
-// UBO for border data (width and color interleaved)
-layout(std140, binding = 0) uniform BorderDataBuffer {
-    // Each pair represents: vec4 borderWidth, vec4 borderColor for one instance
-    vec4 borderData[2048];  // Supports 1024 instances (2 vec4s per instance)
+// SSBO for border data with separate arrays for each property
+layout(std430, binding = 0) uniform BorderDataBuffer {
+    vec4 borderWidths[];
+    vec4 borderTopColor[];
+    vec4 borderRightColor[];
+    vec4 borderBottomColor[];
+    vec4 borderLeftColor[];
 } borderBuffer;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
@@ -131,8 +134,9 @@ void main()
     // Use instance data for SDF calculations
     vec2 dimensions = vInstanceDimensions;
     vec4 borderRadius = vInstanceBorderRadius;
-    vec4 borderWidth = borderBuffer.borderData[vInstanceId * 2];       // Width at even indices
-    vec4 borderColor = borderBuffer.borderData[vInstanceId * 2 + 1];   // Color at odd indices
+    vec4 borderWidth = borderBuffer.borderWidths[vInstanceId];
+    // TODO: Support different colors per border side - for now using top border color for all sides
+    vec4 borderColor = borderBuffer.borderTopColor[vInstanceId];
     float borderStyle = vInstanceBorderStyle;
 #else
     // Fallback to uniforms for non-instanced usage

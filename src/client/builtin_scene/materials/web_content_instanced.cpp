@@ -102,19 +102,28 @@ namespace builtin_scene::materials
     // Update border data buffer if dirty
     if (borderDataDirty_ && borderDataBuffer_ != nullptr && !borderWidths_.empty())
     {
-      // Prepare interleaved data: [width0, color0, width1, color1, ...]
+      // Prepare separate arrays as requested in shader structure
       size_t instanceCount = borderWidths_.size();
       std::vector<glm::vec4> bufferData;
-      bufferData.reserve(instanceCount * 2); // 2 vec4s per instance (width + color)
       
+      // Calculate total size: instanceCount * 5 (1 width array + 4 color arrays)
+      bufferData.reserve(instanceCount * 5);
+      
+      // Add border widths array
       for (size_t i = 0; i < instanceCount; ++i)
       {
-        // Add border width (top, right, bottom, left)
         bufferData.push_back(borderWidths_[i]);
-        
-        // Add border color (r, g, b, a)
-        const auto& color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
-        bufferData.push_back(color);
+      }
+      
+      // Add border color arrays (for now, replicate single color to all sides)
+      // TODO: Support separate colors per border side from CSS
+      for (int side = 0; side < 4; ++side) // top, right, bottom, left
+      {
+        for (size_t i = 0; i < instanceCount; ++i)
+        {
+          const auto& color = (i < borderColors_.size()) ? borderColors_[i] : glm::vec4(0.0f);
+          bufferData.push_back(color);
+        }
       }
       
       // Update buffer
