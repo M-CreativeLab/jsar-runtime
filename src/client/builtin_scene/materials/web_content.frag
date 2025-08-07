@@ -90,7 +90,7 @@ float sdfAntiAlias(float dist)
 }
 
 // Calculate border region using SDF
-// Returns 1.0 if inside border, 0.0 if outside
+// Returns SDF distance: negative inside border, positive outside
 float sdfBorder(vec2 p, vec2 dimensions, vec4 borderRadius, vec4 borderWidth)
 {
   // Calculate outer and inner border bounds
@@ -109,8 +109,9 @@ float sdfBorder(vec2 p, vec2 dimensions, vec4 borderRadius, vec4 borderWidth)
   float outerDist = sdfRoundedBox(p, outerDimensions * 0.5, outerRadius);
   float innerDist = sdfRoundedBox(p, innerDimensions * 0.5, innerRadius);
 
-  // Border is the region between outer and inner edges
-  return step(outerDist, 0.0) * step(0.0, innerDist);
+  // Border SDF: negative inside border region, positive outside
+  // Uses SDF subtraction: max(outer, -inner) 
+  return max(outerDist, -innerDist);
 }
 
 // Generate dashed pattern based on position
@@ -170,9 +171,6 @@ void main()
     float borderStyle = uBorderStyle;
 #endif
 
-    borderWidth = vec4(15.0, 15.0, 15.0, 15.0); // Default border width for testing
-    borderColor = vec4(1.0, 0.0, 0.0, 1.0); // Default border color for testing
-
     // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
     vec2 planeCoord = uvToPlaneCoord(vInstanceTexCoord, dimensions);
 
@@ -186,11 +184,13 @@ void main()
     // Apply border rendering if border is enabled (borderStyle > 0)
     if (borderStyle > 0.5 && borderColor.a > 0.0)
     {
-      // Calculate border region
-      float borderMask = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
-
+      // Calculate border SDF distance
+      float borderDist = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
+      
+      // Apply SDF anti-aliasing to border
+      float borderAlpha = sdfAntiAlias(borderDist);
+      
       // Apply border style
-      float borderAlpha = borderMask;
       if (borderStyle > 1.0) // Dashed style
       {
         float dashLength = max(borderWidth.x, max(borderWidth.y, max(borderWidth.z, borderWidth.w))) * 3.0;
