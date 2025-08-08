@@ -178,7 +178,7 @@ namespace builtin_scene
     if (PRIV_FIELD != value)                \
     {                                       \
       PRIV_FIELD = value;                   \
-      notifyHolders();                      \
+      notifyStructureChanged();             \
       return true;                          \
     }                                       \
     else                                    \
@@ -222,6 +222,10 @@ namespace builtin_scene
     void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
     // Notify the holders that the instance data is updated.
     void notifyHolders();
+    // Notify the holders that border data has changed.
+    void notifyBorderDataChanged();
+    // Notify the holders that structure has changed (enable/disable, opaque/transparent).
+    void notifyStructureChanged();
     // Returns `true` if the instance should be skipped to draw.
     bool skipToDraw() const;
 
@@ -271,9 +275,13 @@ namespace builtin_scene
     {
       return list_.size();
     }
-    inline bool isDirty() const
+    inline bool isStructureDirty() const
     {
-      return isDirty_;
+      return structureDirty_;
+    }
+    inline bool isBorderDataDirty() const
+    {
+      return borderDataDirty_;
     }
     /**
      * Update the renderable instances list with the given instances.
@@ -303,9 +311,13 @@ namespace builtin_scene
     void clearInstances();
     // Add an instance to the list.
     void addInstance(std::shared_ptr<Instance> instance);
-    inline void markAsDirty()
+    inline void markStructureAsDirty()
     {
-      isDirty_ = true;
+      structureDirty_ = true;
+    }
+    inline void markBorderDataAsDirty()
+    {
+      borderDataDirty_ = true;
     }
 
   public:
@@ -315,7 +327,8 @@ namespace builtin_scene
 
   private:
     std::vector<std::weak_ptr<Instance>> list_;
-    bool isDirty_ = true;
+    bool structureDirty_ = true;
+    bool borderDataDirty_ = true;
   };
 
   class InstancedMeshBase
@@ -435,9 +448,9 @@ namespace builtin_scene
     void updateInstancesList(bool ignoreDirty = false);
 
   private:
-    inline void markAsDirty()
+    inline void markStructureAsDirty()
     {
-      isDirty_ = true;
+      structureDirty_ = true;
     }
 
   protected:
@@ -449,7 +462,7 @@ namespace builtin_scene
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool isDepthOnlyPassEnabled_ = false;
-    bool isDirty_ = true;
+    bool structureDirty_ = true;
   };
 
   /**
