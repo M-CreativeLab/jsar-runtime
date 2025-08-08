@@ -8,6 +8,9 @@
 #include "./web_content.hpp"
 #include "./model_3d.hpp"
 #include "./client_renderer.hpp"
+#include "./materials.hpp"
+#include "./meshes.hpp"
+#include "./renderer/scene_renderer.hpp"
 #include "../graphics/webgl_context.hpp"
 
 namespace builtin_scene::model_renderer

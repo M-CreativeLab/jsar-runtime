@@ -50,24 +50,119 @@ namespace builtin_scene::model_renderer
       return;
     }
 
-    // Framework is ready for Gaussian splatting rendering
+    // Get the splat data
     const auto &splats = model->getSplats();
     if (splats.empty())
     {
       return;
     }
 
-    // TODO: Actual WebGL rendering implementation
-    // This framework implementation demonstrates that:
-    // 1. The system can find Model3d entities with Gaussian splatting data
-    // 2. The KsplatLoader successfully parsed the .ksplat files
-    // 3. The rendering pipeline is ready for WebGL implementation
-    //
-    // Future implementation will:
-    // - Create WebGL buffers for position, color, opacity, scale, rotation
-    // - Compile and use the Gaussian splatting shaders
-    // - Render splats as points with proper transparency blending
-    // - Apply camera transformations and view-projection matrices
+    // Get the scene renderer and WebGL context
+    auto renderer = getResource<SceneRenderer>();
+    if (!renderer)
+    {
+      return;
+    }
+    auto glContext = renderer->glContext();
+    if (!glContext)
+    {
+      return;
+    }
+
+    // Get the materials resource to manage our Gaussian splatting material
+    auto materials = getResource<Materials>();
+    if (!materials)
+    {
+      return;
+    }
+
+    // Create or get the Gaussian splatting material
+    static std::shared_ptr<materials::GaussianSplattingMaterial> material = nullptr;
+    if (!material)
+    {
+      material = std::make_shared<materials::GaussianSplattingMaterial>();
+      // Initialize the material with the WebGL context
+      auto program = materials->getOrCreateProgram(glContext, material.get());
+      if (program)
+      {
+        material->initialize(glContext, program);
+      }
+    }
+
+    if (!material)
+    {
+      return;
+    }
+
+    // Convert Model3d splats to material format and update
+    std::vector<materials::GaussianSplattingMaterial::GaussianSplat> materialSplats;
+    materialSplats.reserve(splats.size());
+
+    for (const auto &splat : splats)
+    {
+      materials::GaussianSplattingMaterial::GaussianSplat materialSplat;
+      materialSplat.position = splat.position;
+      materialSplat.color = splat.color;
+      materialSplat.opacity = splat.opacity;
+      materialSplat.scale = splat.scale;
+      materialSplat.rotation = splat.rotation;
+      materialSplats.push_back(materialSplat);
+    }
+
+    material->updateSplats(materialSplats);
+
+    // Get the shader program for rendering
+    auto program = materials->getOrCreateProgram(glContext, material.get());
+    if (!program)
+    {
+      return;
+    }
+
+    // Use the shader program
+    glContext->useProgram(program);
+
+    // Set up uniforms - TODO: Get proper MVP and view matrices from camera
+    // For now, use identity matrices as placeholders
+    glm::mat4 mvpMatrix = glm::mat4(1.0f);
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+
+    auto mvpLoc = glContext->getUniformLocation(program, "u_mvpMatrix");
+    if (mvpLoc.has_value())
+    {
+      glContext->uniformMatrix4fv(mvpLoc.value(), false, &mvpMatrix[0][0]);
+    }
+
+    auto viewLoc = glContext->getUniformLocation(program, "u_viewMatrix");
+    if (viewLoc.has_value())
+    {
+      glContext->uniformMatrix4fv(viewLoc.value(), false, &viewMatrix[0][0]);
+    }
+
+    // Enable blending for transparency
+    glContext->enable(client_graphics::WebGL2Context::BLEND);
+    glContext->blendFunc(client_graphics::WebGL2Context::SRC_ALPHA,
+                         client_graphics::WebGL2Context::ONE_MINUS_SRC_ALPHA);
+
+    // Render the splats using the material
+    if (material->getSplatCount() > 0)
+    {
+      // Create a dummy mesh for the material system
+      auto meshes = getResource<Meshes>();
+      if (meshes)
+      {
+        // The material's onBeforeDrawMesh will set up vertex attributes
+        material->onBeforeDrawMesh(program, nullptr);
+
+        // Draw the splats as points
+        glContext->drawArrays(client_graphics::WebGL2Context::POINTS, 0, material->getSplatCount());
+
+        // Clean up
+        material->onAfterDrawMesh(program, nullptr);
+      }
+    }
+
+    // Disable blending
+    glContext->disable(client_graphics::WebGL2Context::BLEND);
   }
 
   void RenderGaussianSplattingSystem::render(ecs::EntityId entity, std::shared_ptr<client_graphics::WebGL2Context> glContext)
