@@ -192,7 +192,9 @@ export class TransmuteRuntime2 extends EventTarget {
 
     // Start the browsing context.
     if (loadAsHTML) {
-      this.#browsingContext.start(codeOrUrl, 'text/html');
+      // Process HTML to handle external scripts synchronously
+      const processedHtml = await this.processHtmlForSynchronousScripts(codeOrUrl, urlObj);
+      this.#browsingContext.start(processedHtml, 'text/html', 'source');
     } else {
       this.#browsingContext.start('', 'text/html');
     }
@@ -202,5 +204,75 @@ export class TransmuteRuntime2 extends EventTarget {
       await evaluateXSML(this.gl, codeOrUrl, urlBase);
     }
     console.info(`Content(#${this.id}): the document is loaded successfully.`);
+  }
+
+  /**
+   * Process HTML content to handle external scripts synchronously.
+   * This method fetches external scripts and inlines them to ensure proper execution order.
+   */
+  private async processHtmlForSynchronousScripts(codeOrUrl: string, urlObj: URL): Promise<string> {
+    let htmlContent: string;
+
+    // If codeOrUrl is a URL, fetch the HTML content
+    if (codeOrUrl.startsWith('http:') || codeOrUrl.startsWith('https:') || codeOrUrl.startsWith('file:')) {
+      htmlContent = await this.#resourceLoader.fetch(codeOrUrl, {}, 'string');
+    } else {
+      // Assume it's already HTML content
+      htmlContent = codeOrUrl;
+    }
+
+    // Parse and process the HTML to inline external scripts
+    return this.inlineExternalScripts(htmlContent, urlObj.href);
+  }
+
+  /**
+   * Parse HTML and inline external scripts to ensure synchronous execution.
+   */
+  private async inlineExternalScripts(htmlContent: string, baseUrl: string): Promise<string> {
+    // Simple regex to find script tags with src attributes
+    const scriptRegex = /<script([^>]*)\s+src\s*=\s*['"]([^'"]+)['"]([^>]*)>(\s*<\/script>)?/gi;
+    const matches = Array.from(htmlContent.matchAll(scriptRegex));
+
+    if (matches.length === 0) {
+      // No external scripts found, return original content
+      return htmlContent;
+    }
+
+    console.info(`Found ${matches.length} external scripts to inline`);
+
+    let processedHtml = htmlContent;
+
+    // Process scripts in reverse order to maintain correct string positions
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const match = matches[i];
+      const fullMatch = match[0];
+      const attributesBefore = match[1];
+      const scriptUrl = match[2];
+      const attributesAfter = match[3];
+      
+      try {
+        // Resolve relative URLs
+        const resolvedUrl = new URL(scriptUrl, baseUrl).href;
+        console.info(`Inlining script: ${resolvedUrl}`);
+
+        // Fetch the script content
+        const scriptContent = await this.#resourceLoader.fetch(resolvedUrl, {}, 'string');
+
+        // Create inline script tag (remove src attribute)
+        const inlineScript = `<script${attributesBefore}${attributesAfter}>\n${scriptContent}\n</script>`;
+
+        // Replace the external script with inline script
+        processedHtml = processedHtml.substring(0, match.index) + 
+                      inlineScript + 
+                      processedHtml.substring(match.index + fullMatch.length);
+
+        console.info(`Successfully inlined script: ${scriptUrl}`);
+      } catch (error) {
+        console.error(`Failed to inline script ${scriptUrl}:`, error);
+        // Keep the original script tag if inlining fails
+      }
+    }
+
+    return processedHtml;
   }
 }
