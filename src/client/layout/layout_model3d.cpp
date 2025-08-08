@@ -1,7 +1,10 @@
 #include <optional>
 #include <client/builtin_scene/scene.hpp>
-#include <client/builtin_scene/model_3d.hpp>
+#include <client/builtin_scene/gaussian_splats_component.hpp>
+#include <client/builtin_scene/gaussian_splats_mesh.hpp>
 #include <client/builtin_scene/materials/gaussian_splatting.hpp>
+#include <client/builtin_scene/meshes/builder.hpp>
+#include <client/builtin_scene/renderer/scene_renderer.hpp>
 
 #include "./layout_model3d.hpp"
 #include "./layout_view.hpp"
@@ -13,14 +16,11 @@ namespace client_layout
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
 
-
-
   void LayoutModel3d::setModelData(const std::vector<dom::HTMLModelElement::GaussianSplat> &splats)
   {
-
     auto setModelData = [this, &splats](Scene &scene)
     {
-      Model3d &modelComponent = scene.getComponentChecked<Model3d>(entity());
+      GaussianSplatsComponent &splatComponent = scene.getComponentChecked<GaussianSplatsComponent>(entity());
 
       // Convert HTMLModelElement::GaussianSplat to builtin_scene::GaussianSplat
       std::vector<builtin_scene::GaussianSplat> convertedSplats;
@@ -46,37 +46,32 @@ namespace client_layout
         convertedSplats.push_back(convertedSplat);
       }
 
-      modelComponent.setSplats(std::move(convertedSplats));
+      splatComponent.setSplats(std::move(convertedSplats));
 
-      // Update spatial information from the HTML element
-      assert(dom::Node::Is<dom::HTMLModelElement>(node()));
-      auto &modelElement = dom::Node::AsChecked<dom::HTMLModelElement>(node());
-
-      // Create and add GaussianSplattingMaterial component if this is a 3DGS model
-      if (modelComponent.isGaussianSplatting())
+      // Add splats to the global GaussianSplatsMesh
+      // Find the global GaussianSplatsMesh entity
+      auto globalSplatsMeshEntities = scene.template queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
+                                                                                       { return true; });
+      if (!globalSplatsMeshEntities.empty())
       {
-        auto material = std::make_shared<materials::GaussianSplattingMaterial>();
+        auto globalSplatsMeshEntityId = globalSplatsMeshEntities[0];
+        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
+        globalSplatsMesh.addSplatsFromEntity(entity(), splatComponent.getSplats());
+      }
+      else
+      {
+        // Create global GaussianSplatsMesh if it doesn't exist
+        auto globalEntity = scene.spawn();
+        scene.addComponent(globalEntity, GaussianSplatsMesh());
+        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalEntity);
 
-        // Convert builtin_scene::GaussianSplat to materials::GaussianSplattingMaterial::GaussianSplat
-        std::vector<materials::GaussianSplattingMaterial::GaussianSplat> materialSplats;
-        materialSplats.reserve(convertedSplats.size());
-
-        for (const auto &splat : convertedSplats)
+        // Initialize the mesh with GL context from renderer resource
+        auto renderer = scene.template getResource<SceneRenderer>();
+        if (renderer)
         {
-          materials::GaussianSplattingMaterial::GaussianSplat materialSplat;
-          materialSplat.position = glm::vec3(splat.position[0], splat.position[1], splat.position[2]);
-          materialSplat.color = glm::vec3(splat.color[0], splat.color[1], splat.color[2]);
-          materialSplat.opacity = splat.opacity;
-          materialSplat.scale = glm::vec3(splat.scale[0], splat.scale[1], splat.scale[2]);
-          materialSplat.rotation = glm::vec4(splat.rotation[0], splat.rotation[1], splat.rotation[2], splat.rotation[3]);
-          materialSplats.push_back(materialSplat);
+          globalSplatsMesh.initializeGeometry(renderer->glContext());
         }
-
-        material->updateSplats(materialSplats);
-
-        // Add the material as a component (assuming there's a component for this)
-        // Note: This may need adjustment based on how materials are handled in the ECS
-        scene.addComponent(entity(), material);
+        globalSplatsMesh.addSplatsFromEntity(entity(), splatComponent.getSplats());
       }
     };
     useSceneWithCallback(setModelData);
@@ -86,39 +81,34 @@ namespace client_layout
   {
     LayoutReplaced::entityDidCreate(entity);
 
-    auto addModelComponent = [this, &entity](Scene &scene)
+    auto addSplatComponent = [this, &entity](Scene &scene)
     {
       assert(dom::Node::Is<dom::HTMLModelElement>(node()));
       auto &modelElement = dom::Node::AsChecked<dom::HTMLModelElement>(node());
 
-      // Determine model type from the element
-      Model3d::ModelType modelType = Model3d::ModelType::Unknown;
-      if (modelElement.getType() == "3dgs")
-      {
-        modelType = Model3d::ModelType::GaussianSplatting;
-      }
-
-      scene.addComponent(entity, Model3d(modelElement.getSrc(), modelType));
-      
-      // Add GaussianSplattingMaterial component if this is a 3DGS model
-      if (modelType == Model3d::ModelType::GaussianSplatting)
-      {
-        auto material = std::make_shared<materials::GaussianSplattingMaterial>();
-        scene.addComponent(entity, material);
-      }
+      // Create GaussianSplatsComponent for this entity
+      scene.addComponent(entity, GaussianSplatsComponent(modelElement.getSrc()));
     };
-    useSceneWithCallback(addModelComponent);
+    useSceneWithCallback(addSplatComponent);
   }
 
   void LayoutModel3d::entityWillBeDestroyed(ecs::EntityId entity)
   {
-    auto removeModelComponent = [&entity](Scene &scene)
+    auto removeSplatComponent = [this, &entity](Scene &scene)
     {
-      scene.removeComponent<Model3d>(entity);
-      // Also remove any material components if they exist
-      scene.removeComponent<std::shared_ptr<materials::GaussianSplattingMaterial>>(entity);
+      // Remove splats from global mesh before destroying component
+      auto globalSplatsMeshEntities = scene.template queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
+                                                                                       { return true; });
+      if (!globalSplatsMeshEntities.empty())
+      {
+        auto globalSplatsMeshEntityId = globalSplatsMeshEntities[0];
+        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
+        globalSplatsMesh.removeSplatsFromEntity(entity);
+      }
+
+      scene.removeComponent<GaussianSplatsComponent>(entity);
     };
-    useSceneWithCallback(removeModelComponent);
+    useSceneWithCallback(removeSplatComponent);
 
     LayoutReplaced::entityWillBeDestroyed(entity);
   }
@@ -159,12 +149,17 @@ namespace client_layout
   {
     auto setVisible = [this, &b](Scene &scene)
     {
-      Model3d &modelComponent = scene.getComponentChecked<Model3d>(entity());
-      modelComponent.setVisible(b);
+      GaussianSplatsComponent &splatComponent = scene.getComponentChecked<GaussianSplatsComponent>(entity());
+      splatComponent.setVisible(b);
     };
     useSceneWithCallback(setVisible);
 
     last_visible_ = b;
   }
+
+  bool LayoutModel3d::enableCustomGeometry() const
+  {
+    return true;
   }
+}
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <memory>
 #include <vector>
 #include "./ecs.hpp"
 
@@ -18,23 +17,14 @@ namespace builtin_scene
   };
 
   /**
-   * Component for 3D models, particularly 3D Gaussian Splatting models.
-   * This component stores the model data and rendering state.
+   * Component for storing Gaussian splats data for individual model entities.
+   * This component preserves the splats for each HTMLModelElement entity.
    */
-  class Model3d : public ecs::Component
+  class GaussianSplatsComponent : public ecs::Component
   {
   public:
-    enum class ModelType
-    {
-      Unknown,
-      GLTF,
-      GLB,
-      GaussianSplatting // For .ksplat files
-    };
-
-    Model3d(const std::string &src, ModelType type)
+    GaussianSplatsComponent(const std::string &src)
         : src_(src)
-        , type_(type)
         , loaded_(false)
         , visible_(true)
     {
@@ -45,10 +35,6 @@ namespace builtin_scene
     inline const std::string &src() const
     {
       return src_;
-    }
-    inline ModelType type() const
-    {
-      return type_;
     }
     inline bool isLoaded() const
     {
@@ -63,11 +49,7 @@ namespace builtin_scene
       visible_ = visible;
     }
 
-    // 3D Gaussian Splatting specific methods
-    inline bool isGaussianSplatting() const
-    {
-      return type_ == ModelType::GaussianSplatting;
-    }
+    // Splat data methods
     inline const std::vector<GaussianSplat> &getSplats() const
     {
       return splats_;
@@ -88,30 +70,12 @@ namespace builtin_scene
       loaded_ = !splats_.empty();
     }
 
-    // WebGL rendering context
-    inline bool hasWebGLTexture() const
-    {
-      return webglTextureId_ != 0;
-    }
-    inline unsigned int getWebGLTextureId() const
-    {
-      return webglTextureId_;
-    }
-    inline void setWebGLTextureId(unsigned int textureId)
-    {
-      webglTextureId_ = textureId;
-    }
-
   private:
     std::string src_;
-    ModelType type_;
     bool loaded_;
     bool visible_;
 
     // 3DGS data
     std::vector<GaussianSplat> splats_;
-
-    // WebGL rendering resources
-    unsigned int webglTextureId_ = 0;
   };
 }

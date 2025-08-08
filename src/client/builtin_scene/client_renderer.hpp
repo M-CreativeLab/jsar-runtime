@@ -71,6 +71,13 @@ namespace builtin_scene
                     const RenderPass,
                     std::optional<XRRenderTarget>);
 
+    /**
+     * Render all Gaussian splats in the scene using the global GaussianSplatsMesh.
+     *
+     * @param renderTarget The XR render target.
+     */
+    void renderGaussianSplats(std::optional<XRRenderTarget> renderTarget);
+
     void onBeforeRender(std::optional<XRRenderTarget>);
     void onAfterRender(std::optional<XRRenderTarget>);
 

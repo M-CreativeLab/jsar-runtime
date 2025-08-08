@@ -8,6 +8,9 @@
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
+#include "./gaussian_splats_component.hpp"
+#include "./gaussian_splats_mesh.hpp"
+#include "./camera.hpp"
 
 namespace builtin_scene
 {
@@ -83,6 +86,9 @@ namespace builtin_scene
       // Render the objects (opaques, transparents).
       renderPass(roots, RenderPass::kOpaques, renderTarget);
       renderPass(roots, RenderPass::kTransparents, renderTarget);
+
+      // Render Gaussian splats (after transparents for proper blending)
+      renderGaussianSplats(renderTarget);
 
       // TODO(yorkie): Render the particles and other post-processing effects.
     }
@@ -423,5 +429,110 @@ namespace builtin_scene
       return needsUpdate;
     };
     instancedMesh.iterateInstances(updateInstanceData);
+  }
+
+  void RenderSystem::renderGaussianSplats(optional<XRRenderTarget> renderTarget)
+  {
+    // Find the global GaussianSplatsMesh entity
+    auto splatsMeshEntities = queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
+                                                                { return true; });
+
+    if (splatsMeshEntities.empty())
+      return; // No Gaussian splats mesh found
+
+    auto globalSplatsMeshEntityId = splatsMeshEntities[0];
+    auto &splatsMesh = getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
+
+    // Get current camera for depth sorting
+    auto cameras = queryEntities<Camera>([](const Camera &camera) -> bool
+                                         { return camera.isEnabled(); });
+    if (cameras.empty())
+      return;
+
+    auto cameraEntity = cameras[0];
+    auto cameraTransform = getComponent<Transform>(cameraEntity);
+    if (!cameraTransform)
+      return;
+
+    // Sort splats by depth based on camera view
+    glm::mat4 viewMatrix = cameraTransform->matrix();
+    splatsMesh.sortSplatsByDepth(viewMatrix);
+
+    if (splatsMesh.getTotalSplatCount() == 0)
+      return;
+
+    // Get materials resource and create/get GaussianSplattingMaterial
+    auto materials = getResource<Materials>();
+    if (!materials)
+      return;
+
+    // Create GaussianSplattingMaterial if not exists
+    auto gaussianMaterial = materials->get<materials::GaussianSplattingMaterial>("gaussian_splatting");
+    if (!gaussianMaterial)
+    {
+      gaussianMaterial = materials->add("gaussian_splatting", std::make_shared<materials::GaussianSplattingMaterial>());
+    }
+
+    // Update material with sorted splat instances
+    gaussianMaterial->updateSplatInstances(splatsMesh.getSplatInstances());
+
+    // Get GL context and render
+    auto renderer = getResource<SceneRenderer>();
+    if (!renderer)
+      return;
+
+    auto glContext = renderer->glContext();
+    if (!glContext)
+      return;
+
+    // Initialize material if needed
+    if (!gaussianMaterial->isInitialized())
+    {
+      auto program = gaussianMaterial->createProgram(glContext);
+      if (!program)
+        return;
+      gaussianMaterial->initialize(glContext, program);
+    }
+
+    // Set up rendering state for transparency blending
+    glContext->enable(client_graphics::WebGLCapability::kBlend);
+    glContext->blendFunc(client_graphics::WebGLBlendFunc::kSrcAlpha,
+                         client_graphics::WebGLBlendFunc::kOneMinusSrcAlpha);
+    glContext->depthMask(false); // Don't write to depth buffer for transparency
+
+    // Render the splats using the mesh geometry and material
+    auto program = gaussianMaterial->getProgram();
+    if (program)
+    {
+      glContext->useProgram(program);
+
+      // Set uniforms (MVP matrix, etc.)
+      if (renderTarget.has_value())
+      {
+        // Set view and projection matrices for XR
+        // This would need to be implemented based on the XR target
+      }
+      else
+      {
+        // Set matrices for non-XR rendering
+        auto mvpLoc = glContext->getUniformLocation(program, "uMvpMatrix");
+        if (mvpLoc.has_value())
+        {
+          // Calculate MVP matrix from camera
+          // This is a simplified version - proper implementation would use camera projection
+          glm::mat4 mvp = glm::mat4(1.0f); // Identity for now
+          glContext->uniformMatrix4fv(mvpLoc.value(), 1, false, &mvp[0][0]);
+        }
+      }
+
+      // Set up vertex attributes and draw
+      gaussianMaterial->onBeforeDrawMesh(program, nullptr);
+      splatsMesh.drawInstanced(glContext);
+      gaussianMaterial->onAfterDrawMesh(program, nullptr);
+    }
+
+    // Restore rendering state
+    glContext->depthMask(true);
+    glContext->disable(client_graphics::WebGLCapability::kBlend);
   }
 }

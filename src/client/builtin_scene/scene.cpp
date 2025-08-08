@@ -2,7 +2,8 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
-#include "./renderer/model3d_renderer.hpp"
+#include "./gaussian_splats_component.hpp"
+#include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
 {
@@ -39,6 +40,8 @@ namespace builtin_scene
       app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
+      app.registerComponent<GaussianSplatsComponent>();
+      app.registerComponent<GaussianSplatsMesh>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
@@ -70,7 +73,6 @@ namespace builtin_scene
 
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
-    addPlugin<model_renderer::Model3dPlugin>();
     addPlugin<WebXRPlugin>();
     addResource(ecs::Resource::Make<SceneRenderer>(glContext_, volumeSize_));
   }
