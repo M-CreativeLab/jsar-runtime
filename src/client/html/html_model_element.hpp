@@ -147,6 +147,14 @@ namespace dom
       return false;
     }
 
+    /**
+     * Enable custom geometry for 3D model rendering instead of using WebContent.
+     */
+    bool enableCustomGeometry() const override
+    {
+      return true;
+    }
+
   private:
     std::string src_;
     std::optional<std::string> type_;

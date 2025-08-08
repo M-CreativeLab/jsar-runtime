@@ -27,8 +27,6 @@ namespace client_layout
       return true;
     }
 
-    // Adjusts the model size according to the style, and returns `false` if the size is not changed.
-    bool adjustModelSize();
     void setModelData(const std::vector<dom::HTMLModelElement::GaussianSplat> &splats);
 
   private:

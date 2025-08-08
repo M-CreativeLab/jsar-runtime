@@ -13,63 +13,10 @@ namespace client_layout
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
 
-  bool LayoutModel3d::adjustModelSize()
-  {
-    const auto &adoptedStyle = modelElement().adoptedStyleRef();
-    const auto lastFragment = fragment();
 
-    // For 3D models, we may want to use default size if no dimensions are specified
-    // TODO: Add model-specific size handling if needed
-
-    optional<Dimension> adoptedWidth = nullopt;
-    optional<Dimension> adoptedHeight = nullopt;
-
-    if (adoptedStyle.hasProperty("width"))
-    {
-      auto width = adoptedStyle.width();
-      if (!width.isAuto() &&
-          lastFragment.contentWidth() > 0)
-        adoptedWidth = width.toLayoutValue();
-    }
-    if (adoptedStyle.hasProperty("height"))
-    {
-      auto height = adoptedStyle.height();
-      if (!height.isAuto() &&
-          lastFragment.contentHeight() > 0)
-        adoptedHeight = height.toLayoutValue();
-    }
-
-    // If both width and height are specified, then use them.
-    if (adoptedWidth.has_value() && adoptedHeight.has_value())
-      return false;
-
-    // If both width and height are auto, then use default model size
-    if (!adoptedWidth.has_value() && !adoptedHeight.has_value())
-    {
-      // Use default size for 3D models (e.g., 200x200)
-      formattingContext().setContentSize(200.0f, 200.0f);
-      return true;
-    }
-
-    // If only one dimension is specified, use a square aspect ratio
-    if (adoptedWidth.has_value() && !adoptedHeight.has_value())
-    {
-      formattingContext().setContentSize(lastFragment.contentWidth(), lastFragment.contentWidth());
-      return true;
-    }
-    else if (!adoptedWidth.has_value() && adoptedHeight.has_value())
-    {
-      formattingContext().setContentSize(lastFragment.contentHeight(), lastFragment.contentHeight());
-      return true;
-    }
-
-    assert(false && "Unreachable");
-    return false;
-  }
 
   void LayoutModel3d::setModelData(const std::vector<dom::HTMLModelElement::GaussianSplat> &splats)
   {
-    adjustModelSize();
 
     auto setModelData = [this, &splats](Scene &scene)
     {
@@ -104,10 +51,6 @@ namespace client_layout
       // Update spatial information from the HTML element
       assert(dom::Node::Is<dom::HTMLModelElement>(node()));
       auto &modelElement = dom::Node::AsChecked<dom::HTMLModelElement>(node());
-
-      WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-      webContent.setSpatialized(modelElement.isSpatial());
-      webContent.setDirty(true); // Mark the content as dirty to update the texture.
 
       // Create and add GaussianSplattingMaterial component if this is a 3DGS model
       if (modelComponent.isGaussianSplatting())
@@ -156,6 +99,13 @@ namespace client_layout
       }
 
       scene.addComponent(entity, Model3d(modelElement.getSrc(), modelType));
+      
+      // Add GaussianSplattingMaterial component if this is a 3DGS model
+      if (modelType == Model3d::ModelType::GaussianSplatting)
+      {
+        auto material = std::make_shared<materials::GaussianSplattingMaterial>();
+        scene.addComponent(entity, material);
+      }
     };
     useSceneWithCallback(addModelComponent);
   }
@@ -166,7 +116,7 @@ namespace client_layout
     {
       scene.removeComponent<Model3d>(entity);
       // Also remove any material components if they exist
-      // scene.removeComponent<materials::GaussianSplattingMaterial>(entity);
+      scene.removeComponent<std::shared_ptr<materials::GaussianSplattingMaterial>>(entity);
     };
     useSceneWithCallback(removeModelComponent);
 
@@ -176,10 +126,6 @@ namespace client_layout
   void LayoutModel3d::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
     LayoutReplaced::styleWillChange(new_style);
-
-    // The model size may be changed, so we need to adjust the size.
-    if (new_style.hasProperty("width") || new_style.hasProperty("height"))
-      adjustModelSize();
   }
 
   void LayoutModel3d::didComputeLayoutOnce(const ConstraintSpace &avilable_space)
@@ -203,7 +149,6 @@ namespace client_layout
   void LayoutModel3d::sizeDidChange(const Fragment &newSize)
   {
     LayoutReplaced::sizeDidChange(newSize);
-    adjustModelSize();
   }
 
   void LayoutModel3d::layoutDidFirstReady(const Fragment &fragment)
@@ -219,18 +164,7 @@ namespace client_layout
     };
     useSceneWithCallback(setVisible);
 
-    // When the visibility is changed, we need to mark the content as dirty to update the texture altas.
-    // This optimization is to remove the textures which are invisible from the texture atlas, it keeps the consistent
-    // size of the texture atlas.
-    if (!last_visible_.has_value() || last_visible_.value() != b)
-    {
-      auto markContentDirty = [this](Scene &scene)
-      {
-        WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-        webContent.setDirty(true);
-      };
-      useSceneWithCallback(markContentDirty);
-    }
     last_visible_ = b;
+  }
   }
 }
