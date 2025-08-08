@@ -2,7 +2,14 @@
 
 **ALWAYS follow these instructions first and only fallback to additional search and context gathering if the information here is incomplete or found to be in error.**
 
-JSAR Runtime is a Web browser engine library designed for the Spatial Web, supporting WebXR, WebGL, and modern web technologies. It's a multi-language project (Rust + TypeScript + C++ + CMake) targeting multiple platforms (macOS, Android, Windows).
+JSAR Runtime is a Web browser engine library designed for the Spatial Web, supporting WebXR, WebGL, and modern web technologies. It's a multi-language project with each language serving specific roles:
+
+- **Rust**: Core runtime engine, memory-safe native performance, WebGL/WebXR bindings
+- **TypeScript**: Web APIs implementation, DOM bindings, developer-facing interfaces  
+- **C++**: Low-level graphics, platform integration, performance-critical rendering
+- **CMake**: Cross-platform build system coordination and native library compilation
+
+Development is supported on **macOS only**, with deployment targets for macOS and Android.
 
 ## Working Effectively
 
@@ -11,17 +18,13 @@ JSAR Runtime is a Web browser engine library designed for the Spatial Web, suppo
 **Prerequisites - Install these EXACT versions:**
 - Node.js v18.16.1 or later (tested with v20.19.4)
 - Rust v1.70.0 or later with nightly toolchain: `rustup toolchain install nightly-2025-01-06`
-- Platform-specific tools:
-  - macOS: Xcode Command Line Tools, CMake
-  - Linux: GCC/Clang, CMake (note: Rust builds not supported on Linux)
-  - Windows: Visual Studio Build Tools, CMake
+- macOS: Xcode Command Line Tools, CMake
 
-**Required Rust targets (install based on your needs):**
+**Required Rust targets:**
 ```bash
-rustup target add aarch64-linux-android    # For Android development
+rustup target add aarch64-linux-android    # For Android deployment
 rustup target add aarch64-apple-darwin     # For macOS ARM64
 rustup target add x86_64-apple-darwin      # For macOS x86_64
-rustup target add x86_64-pc-windows-msvc   # For Windows development
 ```
 
 ### Bootstrap and Build Process
@@ -52,15 +55,13 @@ rustup target add x86_64-pc-windows-msvc   # For Windows development
    # For specific platforms only:
    make darwin     # macOS universal binary (aarch64 + x86_64)
    make android    # Android aarch64
-   make windows    # Windows x86_64
    ```
-   - **CRITICAL**: Rust builds ONLY work on supported platforms
-   - **Linux is NOT supported** - will fail with "Unsupported target: x86_64-unknown-linux-gnu"
+   - **CRITICAL**: Rust builds ONLY work on macOS for development
    - Build options: `CLEAN=yes`, `RELEASE=yes`, `INSPECTOR=yes`, `VERBOSE=yes`
 
-4. **Test Rust code** (platform-dependent):
+4. **Test Rust code** (macOS only):
    ```bash
-   cargo test    # Only works on supported platforms
+   cargo test    # Only works on macOS
    ```
 
 ### Linting and Code Quality
@@ -98,8 +99,8 @@ npm run docs:preview  # Preview built documentation
 ### CRITICAL: Build System Issues
 - **JavaScript Bundle Build**: BROKEN - 173 TypeScript compilation errors
 - **Jest Tests**: No tests configured - `npm test` finds 0 tests
-- **Platform Support**: Limited to macOS, Android, Windows only
-- **Linux Development**: Can only lint, build docs, and work on TypeScript - NO Rust builds
+- **Platform Support**: macOS development only, Android deployment supported
+- **Deployment Targets**: macOS and Android only
 
 ### Working Components
 ✅ **npm install** - Works (with registry workaround)  
@@ -111,26 +112,26 @@ npm run docs:preview  # Preview built documentation
 ### Broken Components
 ❌ **Webpack/JS Bundle** - TypeScript compilation errors  
 ❌ **Jest Tests** - No test configuration  
-❌ **Rust builds on Linux** - Platform not supported  
+❌ **Rust builds on non-macOS** - Platform not supported  
 ❌ **Full CI pipeline** - Due to JS bundle issues  
 
 ## Validation Scenarios
 
 **When making changes, ALWAYS test these working components:**
 
-1. **Code Quality Validation** (Works on all platforms):
+1. **Code Quality Validation** (Works on macOS):
    ```bash
    npm run lint                        # Must pass
    ./tools/clang-format-check.sh      # Must pass  
    npm run docs:build                 # Must complete successfully
    ```
 
-2. **Platform-Specific Validation** (macOS/Windows/Android only):
+2. **Platform-Specific Validation** (macOS only):
    ```bash
-   # Only run on supported platforms:
+   # Only run on macOS:
    make jsbundle        # Currently broken - will fail
    make darwin          # macOS only
-   cargo test           # Platform-dependent
+   cargo test           # macOS only
    ```
 
 ## Common Development Tasks
@@ -149,8 +150,8 @@ npm run docs:preview  # Preview built documentation
 
 ### Working with Rust Code
 1. Edit files in `crates/` directory  
-2. **Linux users**: Cannot test Rust builds locally
-3. **macOS/Windows users**: Run `cargo check` then `make darwin/windows`
+2. **macOS only**: Run `cargo check` then `make darwin`
+3. Build for Android deployment: `make android`
 
 ## Repository Structure (Key Locations)
 
@@ -181,6 +182,7 @@ npm run docs:build                 # Documentation must build
 ```bash
 make jsbundle                      # Currently fails
 make darwin RELEASE=yes            # macOS builds
+make android RELEASE=yes           # Android builds
 ```
 
 ## NEVER CANCEL Commands
@@ -188,7 +190,7 @@ make darwin RELEASE=yes            # macOS builds
 Set these minimum timeouts to avoid premature cancellation:
 - `npm install`: 5+ minutes
 - `make jsbundle`: 5+ minutes (when working)
-- `make darwin/android/windows`: 10+ minutes  
+- `make darwin/android`: 10+ minutes  
 - `cargo test`: 10+ minutes
 - `./tools/clang-format-check.sh`: 2+ minutes
 
@@ -208,17 +210,15 @@ npm install
 - Build docs with `npm run docs:build`
 - Avoid `make jsbundle` until errors resolved
 
-**If on unsupported platform (Linux):**
-- Work on TypeScript/JavaScript in `lib/`
-- Modify documentation in `docs/` 
-- Use linting and formatting tools
-- Cannot test Rust builds locally
+**If on unsupported platform (non-macOS):**
+- Development and builds are not supported
+- Project requires macOS for development
 
 ## Troubleshooting
 
 **Common Issues:**
 1. **Registry timeout errors**: Use npm registry workaround above
-2. **Rust build fails**: Check if your platform is supported (macOS/Windows/Android only)
+2. **Rust build fails**: Ensure you're on macOS for development
 3. **TypeScript errors**: Expected - focus on other development tasks
 4. **No tests found**: Expected - Jest not configured
 5. **Webpack bundle errors**: Known issue - JS bundle build is broken
