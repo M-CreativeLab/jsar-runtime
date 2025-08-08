@@ -15,6 +15,7 @@
 #include "./ecs-inl.hpp"
 #include "./text.hpp"
 #include "./texture_altas.hpp"
+#include "./layers/LayerRenderer.hpp"
 
 namespace builtin_scene
 {
@@ -566,7 +567,7 @@ namespace builtin_scene
   }
 
   /**
-   * The plugin to render Web content spatially.
+   * The plugin to render Web content spatially with layered rendering support.
    */
   class WebContentPlugin final : public ecs::Plugin
   {
@@ -578,6 +579,7 @@ namespace builtin_scene
     {
       using namespace ecs;
       using namespace web_renderer;
+      using namespace layers;
 
       app.addResource(Resource::Make<WebContentContext>());
       app.registerComponent<WebContent>();
@@ -585,16 +587,21 @@ namespace builtin_scene
       auto initWebContent = System::Make<InitSystem>();
       app.addSystem(SchedulerLabel::kPostStartup, initWebContent);
 
+      // Add the new layered rendering system before the individual render systems
+      auto layeredRenderSystem = System::Make<LayeredWebContentRenderSystem>();
+
       auto renderBackground = System::Make<RenderBackgroundSystem>();
       auto renderImage = System::Make<RenderImageSystem>();
       auto renderText = System::Make<RenderTextSystem>();
       auto updateTexture = System::Make<UpdateTextureSystem>();
 
-      renderBackground
+      // Chain systems: layered rendering first, then individual systems, then texture update
+      layeredRenderSystem
+        ->chain(renderBackground)
         ->chain(renderImage)
         ->chain(renderText)
         ->chain(updateTexture);
-      app.addSystem(SchedulerLabel::kUpdate, renderBackground);
+      app.addSystem(SchedulerLabel::kUpdate, layeredRenderSystem);
     }
   };
 }
