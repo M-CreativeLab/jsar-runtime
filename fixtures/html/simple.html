@@ -11,31 +11,31 @@
       color: #6d172e;
     }
 
-    img {
+    img.float-image {
       border-bottom-right-radius: 50px;
       height: 300px;
-      transform: translate3d(0, 0, 35px);
+      transform: translate3d(0, 0, 0);
       transition: transform 0.3s ease-in-out;
     }
 
-    img:hover {
-      transform: translate3d(0, 0, 0);
+    img.float-image:hover {
+      transform: translate3d(0, 0, 35px);
     }
 
     #header {
-      font-size: 80px;
+      font-size: 100px;
       text-transform: uppercase;
-      color: rgb(227, 233, 236);
-      font-weight: bolder;
-      margin: 10px;
+      color: transparent;
+      font-weight: 1000;
       padding: 0 20px;
       margin: 20px;
-      border: 15px solid #e8b51cd8;
-      background-color: #13289dd8;
+      border: 15px solid #e84c1cd8;
+      background-color: #ca8319d8;
+      background-clip: text;
       background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
       background-blend-mode: luminosity;
-      background-origin: border-box;
-      border-radius: 5px;
+      background-origin: content-box;
+      border-radius: 12px;
       box-sizing: border-box;
       transform: translate3d(0, 0, 15px);
     }
@@ -55,7 +55,7 @@
     p {
       width: 100%;
       font-size: 30px;
-      font-weight: bold;
+      font-weight: normal;
       padding: 20px;
       box-sizing: border-box;
     }
@@ -80,6 +80,12 @@
       background-color: rgba(173, 98, 98, 0.87);
       transform: translate3d(0, 0, 20px);
     }
+
+    #stereo-image {
+      margin: 20px auto;
+      height: 500px;
+      border-radius: 0 20px 20px 0;
+    }
   </style>
   <script>
     console.log('Hello, world!');
@@ -90,9 +96,10 @@
 </head>
 
 <body>
-  <img src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten">
+  <img class="float-image" src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten">
   <div id="header">Hello World, JSAR 你好 😯</div>
-  <span class="sub">inline text</span>
+  <span id="switch" class="sub">inline text</span>
+  <img id="stereo-image" src="./images/sbs-example2.png" spatial="stereo">
   <main>
     <div style="position:absolute;left:50vw;width:50vw;height:100px;background-color:#9a9ec2; transform: translate3d(10vw, 0, 40px);">
       <p style="color: #cb1d1d; font-size: 30px; text-align: center; background-color: #6d172e;">This is an absolutely positioned div</p>
@@ -118,7 +125,7 @@
     </p>
   </main>
   <div>Footer</div>
-  <img src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten" style="margin-top: 200px;">
+  <img class="float-image" src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten" style="margin-top: 200px;">
 </body>
 
 </html>

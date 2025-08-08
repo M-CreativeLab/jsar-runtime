@@ -4,10 +4,12 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <node/uv.h>
+
+#include <client/canvas/image_codec.hpp>
+#include <client/canvas/image_source.hpp>
 #include <client/dom/geometry/dom_rect.hpp>
 
 #include "./html_element.hpp"
-#include "../canvas/image_source.hpp"
 
 namespace dom
 {
@@ -52,10 +54,14 @@ namespace dom
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue,
                                   const std::string &newValue) override;
+    void styleAdoptedCallback() override;
 
     inline geometry::DOMRect getImageClientRect() const
     {
-      return geometry::DOMRect(0, 0, naturalWidth(), naturalHeight());
+      // For spatial (stereo) images, the layout width should be half of the natural width
+      // since spatial images contain side-by-side stereo pairs
+      int layoutWidth = isSpatial() ? naturalWidth() / 2 : naturalWidth();
+      return geometry::DOMRect(0, 0, layoutWidth, naturalHeight());
     }
     bool readPixels(SkPixmap &dst) const override
     {
@@ -91,26 +97,35 @@ namespace dom
     }
 
     /**
-     * Load the image at the scriting thread, if you want to achieve the loading from other threads, you must use
-     * `loadImageAsync()`.
+     * Loads the image, containing the image data, decoding it if necessary and rendering it.
      */
     void loadImage();
 
     /**
-     * Load the image asynchronously, it must be used to schedule the image loading from the non-scripting thread.
+     * Decodes from the element's image data.
      */
-    void loadImageAsync();
+    void decodeImage();
 
   private:
-    bool decodeImage(SkBitmap &);
-    void decodeImageAsync(const SkBitmap &bitmap);
+    inline void ensureSkBitmap()
+    {
+      if (sk_bitmap_ == nullptr)
+        sk_bitmap_ = std::make_shared<SkBitmap>();
+      assert(sk_bitmap_ != nullptr &&
+             "The SkBitmap should not be null in HTMLImageElement.");
+    }
 
     void onImageDataReady(const void *imageData, size_t imageByteLength);
     void onImageDecoded(const SkBitmap &bitmap);
     void onSizeDidChange();
 
+    void layoutSizeChangedCallback(const client_layout::Fragment &) override;
+
     // Validate if the current size is valid to create bitmap.
     bool validateSizeToMakeBitmap();
+
+    // The implementation of the image decoding logic.
+    bool decodeImageImpl(SkBitmap &);
 
   public:
     /**
@@ -130,11 +145,11 @@ namespace dom
 
     inline size_t width() const override
     {
-      return width_.value_or(0);
+      return width_.value_or(natural_width_);
     }
     inline size_t height() const override
     {
-      return height_.value_or(0);
+      return height_.value_or(natural_height_);
     }
     inline void setWidth(size_t width)
     {
@@ -175,6 +190,22 @@ namespace dom
     }
 
     /**
+     * @returns The spatial rendering mode of the image (e.g., "stereo" for side-by-side stereo images).
+     */
+    inline std::string spatial() const
+    {
+      return spatial_;
+    }
+
+    /**
+     * @returns True if the image is marked as a spatial (stereo) image.
+     */
+    inline bool isSpatial() const
+    {
+      return spatial_ == "stereo";
+    }
+
+    /**
      * @returns The natural width of the image in pixels.
      */
     inline int naturalWidth() const
@@ -196,7 +227,14 @@ namespace dom
     std::optional<int> width_;
     std::optional<int> height_;
 
+    std::optional<int> decoding_width_;
+    std::optional<int> decoding_height_;
+
+    int natural_width_ = 0;
+    int natural_height_ = 0;
+
     std::optional<std::vector<char>> image_data_ = std::nullopt;
+    canvas::EncodedImageFormat image_format_;
     std::shared_ptr<SkBitmap> sk_bitmap_;
     bool is_src_image_loading = false;
     bool is_src_image_loaded_ = false;
@@ -207,5 +245,6 @@ namespace dom
 
     bool is_map_ = false;
     std::string use_map_;
+    std::string spatial_;
   };
 }

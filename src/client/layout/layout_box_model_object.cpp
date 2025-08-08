@@ -32,7 +32,6 @@ namespace client_layout
 
   void LayoutBoxModelObject::updateFromStyle()
   {
-    // TODO(yorkie): implement updateFromStyle() in LayoutBoxModelObject.
   }
 
   float LayoutBoxModelObject::getPaddingEdgeWidth(Edge index) const
@@ -59,5 +58,6 @@ namespace client_layout
     LayoutObject::styleDidChange();
 
     updateFromStyle();
+    updateLayer(true);
   }
 }

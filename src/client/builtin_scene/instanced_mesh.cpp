@@ -1,4 +1,10 @@
 #include "./instanced_mesh-inl.hpp"
+#include "./css_border_data_texture.hpp"
+
+namespace builtin_scene
+{
+  class CSSBorderDataTexture;
+}
 
 namespace builtin_scene
 {
@@ -7,15 +13,15 @@ namespace builtin_scene
 
   void Instance::randomColor()
   {
-    auto &color = data_.color;
+    glm::vec4 color(1.0f);
     color.r = glm::linearRand(0.0f, 1.0f);
     color.g = glm::linearRand(0.0f, 1.0f);
     color.b = glm::linearRand(0.0f, 1.0f);
     color.a = 1.0f;
-    notifyHolders();
+    setColor(color);
   }
 
-  bool Instance::setColor(const glm::vec4 &color, bool &hasChanged)
+  bool Instance::setColor(const glm::vec4 &color)
   {
     if (data_.color.r == color.r &&
         data_.color.g == color.g &&
@@ -24,8 +30,8 @@ namespace builtin_scene
       return false;
 
     data_.color = color;
-    notifyHolders();
-    hasChanged = true;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
     return true;
   }
 
@@ -33,49 +39,143 @@ namespace builtin_scene
   {
     auto &transform = data_.transform;
     transform = glm::translate(transform, glm::vec3(tx, ty, tz));
-    notifyHolders();
+    notifyBufferDataChanged();
   }
 
   void Instance::scale(float sx, float sy, float sz)
   {
     auto &transform = data_.transform;
     transform = glm::scale(transform, glm::vec3(sx, sy, sz));
-    notifyHolders();
+    notifyBufferDataChanged();
   }
 
-  void Instance::setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged)
+  void Instance::setTransform(const glm::mat4 &transformationMatrix)
   {
     auto &transform = data_.transform;
     if (transform == transformationMatrix)
       return; // Skip if there is no change.
 
-    transform = transformationMatrix;
-    notifyHolders();
-    hasChanged = true;
+    data_.transform = transformationMatrix;
+    notifyBufferDataChanged();
   }
 
-  void Instance::setTexture(array<float, 2> uvOffset,
-                            array<float, 2> uvScale,
-                            uint32_t layerIndex,
-                            bool &hasChanged)
+  void Instance::setTexture(TextureOffset uvOffset,
+                            TextureOffset uvOffsetR,
+                            TextureScale uvScale,
+                            uint32_t layerIndex)
   {
-    if (data_.texUvOffset.x == uvOffset[0] &&
-        data_.texUvOffset.y == uvOffset[1] &&
-        data_.texUvScale.x == uvScale[0] &&
-        data_.texUvScale.y == uvScale[1] &&
+    if (data_.texUvOffset == uvOffset &&
+        data_.texUvOffsetR == uvOffsetR &&
+        data_.texUvScale == uvScale &&
         data_.texLayerIndex == layerIndex)
+    {
+      return; // Skip if there is no change.
+    }
+
+    data_.texUvOffset = uvOffset;
+    data_.texUvOffsetR = uvOffsetR;
+    data_.texUvScale = uvScale;
+    data_.texLayerIndex = layerIndex;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
+  }
+
+  void Instance::disableTexture()
+  {
+    setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0);
+  }
+
+  void Instance::setDimensions(float width, float height)
+  {
+    if (data_.dimensions.x == width && data_.dimensions.y == height)
       return; // Skip if there is no change.
 
-    data_.texUvOffset = glm::vec2(uvOffset[0], uvOffset[1]);
-    data_.texUvScale = glm::vec2(uvScale[0], uvScale[1]);
-    data_.texLayerIndex = layerIndex;
-    notifyHolders();
-    hasChanged = true;
+    data_.dimensions = glm::vec2(width, height);
+    notifyBufferDataChanged();
   }
 
-  void Instance::disableTexture(bool &hasChanged)
+  void Instance::setBorderRadius(glm::vec4 borderRadius)
   {
-    setTexture({0.0f, 0.0f}, {0.0f, 0.0f}, 0, hasChanged);
+    if (data_.borderRadius == borderRadius)
+      return; // Skip if there is no change.
+
+    data_.borderRadius = borderRadius;
+    notifyBufferDataChanged();
+  }
+
+  void Instance::setBorderRadius(float topLeft, float topRight, float bottomRight, float bottomLeft)
+  {
+    setBorderRadius(glm::vec4(topLeft, topRight, bottomRight, bottomLeft));
+  }
+
+  void Instance::setBorderWidth(glm::vec4 borderWidth)
+  {
+    if (borderWidths_ == borderWidth)
+      return; // Skip if there is no change.
+
+    borderWidths_ = borderWidth;
+    setMaybeInvisible();
+    notifyTextureDataChanged();
+  }
+
+  void Instance::setBorderWidth(float top, float right, float bottom, float left)
+  {
+    setBorderWidth(glm::vec4(top, right, bottom, left));
+  }
+
+  void Instance::setBorderColor(glm::vec4 borderColor)
+  {
+    // Set the same color for all four sides for now
+    bool anyChanged = false;
+    for (int i = 0; i < 4; ++i)
+    {
+      if (borderColors_[i] != borderColor)
+      {
+        borderColors_[i] = borderColor;
+        anyChanged = true;
+      }
+    }
+
+    if (anyChanged)
+    {
+      setMaybeInvisible();
+      notifyTextureDataChanged();
+    }
+  }
+
+  void Instance::setBorderColor(float r, float g, float b, float a)
+  {
+    setBorderColor(glm::vec4(r, g, b, a));
+  }
+
+  void Instance::setBorderStyle(float borderStyle)
+  {
+    if (data_.borderStyle == borderStyle)
+      return; // Skip if there is no change.
+
+    data_.borderStyle = borderStyle;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
+  }
+
+  bool Instance::hasNoBorders() const
+  {
+    // Fast check for none border style.
+    if (data_.isBorderNone())
+      return true;
+
+    // Check if all border widths are zero and all border colors are transparent.
+    if (borderWidths_ == glm::vec4(0.0f) &&
+        borderColors_[0].a == 0.0f &&
+        borderColors_[1].a == 0.0f &&
+        borderColors_[2].a == 0.0f &&
+        borderColors_[3].a == 0.0f)
+    {
+      return true;
+    }
+
+    // Otherwise, there are borders.
+    return false;
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
@@ -98,27 +198,40 @@ namespace builtin_scene
                    holders_.end());
   }
 
-  void Instance::notifyHolders()
+  void Instance::notifyBufferDataChanged()
   {
     for (auto &holder : holders_)
     {
       if (auto holderPtr = holder.lock())
-        holderPtr->markAsDirty();
+        holderPtr->markBufferAsDirty();
+    }
+  }
+
+  void Instance::notifyTextureDataChanged()
+  {
+    for (auto &holder : holders_)
+    {
+      if (auto holderPtr = holder.lock())
+        holderPtr->markTextureDataAsDirty();
     }
   }
 
   bool Instance::skipToDraw() const
   {
-    // Skip if the instance is not enabled.
-    if (!enabled_)
-      return true;
-
-    // Skip if the instance is transparent and not own a texture.
-    if (data_.isTransparent() && !data_.ownTexture())
+    // Skip if the instance is disabled or maybe invisible.
+    if (!enabled_ || maybeInvisible_)
       return true;
 
     // Otherwise, the instance is ready to draw.
     return false;
+  }
+
+  void Instance::setMaybeInvisible()
+  {
+    // The instance should be invisible if it has transparent color, no texture, and no borders to draw.
+    maybeInvisible_ = data_.isTransparent() &&
+                      !data_.ownTexture() &&
+                      hasNoBorders();
   }
 
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
@@ -127,7 +240,8 @@ namespace builtin_scene
       : filter(filter)
       , vao(vao)
       , instanceVbo(instanceVbo)
-      , isDirty_(true)
+      , bufferDataDirty_(true)
+      , textureDataDirty_(true)
   {
     assert(filter != InstanceFilter::kAll);
   }
@@ -138,7 +252,7 @@ namespace builtin_scene
 
     for (auto &[id, instance] : instances)
     {
-      if (TR_UNLIKELY(instance == nullptr))
+      if (instance == nullptr) [[unlikely]]
         continue;
       if (instance->skipToDraw())
         continue;
@@ -160,21 +274,25 @@ namespace builtin_scene
     if (sortingOrder != SortingOrder::kNone && list_.size() > 1)
     {
       // Sorting the instances by z-index and the sorting order.
-      sort(list_.begin(), list_.end(), [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
-           {
-             if (auto aPtr = a.lock(); aPtr != nullptr)
-             {
-               if (auto bPtr = b.lock(); bPtr != nullptr)
-               {
-                 if (sortingOrder == SortingOrder::kFrontToBack)
-                   return aPtr->zIndex_ < bPtr->zIndex_;
-                 else if (sortingOrder == SortingOrder::kBackToFront)
-                   return aPtr->zIndex_ > bPtr->zIndex_;
-               }
-             }
-             return false; });
+      auto sortInstances = [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
+      {
+        if (auto aPtr = a.lock(); aPtr != nullptr)
+        {
+          if (auto bPtr = b.lock(); bPtr != nullptr)
+          {
+            if (sortingOrder == SortingOrder::kFrontToBack)
+              return aPtr->renderQueue_ < bPtr->renderQueue_;
+            else if (sortingOrder == SortingOrder::kBackToFront)
+              return aPtr->renderQueue_ > bPtr->renderQueue_;
+          }
+        }
+        return false;
+      };
+      sort(list_.begin(), list_.end(), sortInstances);
     }
-    isDirty_ = true;
+
+    markBufferAsDirty();
+    markTextureDataAsDirty();
   }
 
   size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
@@ -193,23 +311,50 @@ namespace builtin_scene
     return len * sizeof(InstanceData);
   }
 
-  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext)
+  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
-    if (!isDirty_)
-      return;
-
-    size_t len = 0;
-    vector<InstanceData> array;
-    if ((len = copyToArrayData(array)) > 0)
+    // Update instance VBO if structure is dirty
+    // if (true || bufferDataDirty_)
     {
-      glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
-      glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
+      size_t len = 0;
+      vector<InstanceData> array;
+      if ((len = copyToArrayData(array)) > 0)
+      {
+        glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
+        glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
+      }
+      bufferDataDirty_ = false;
     }
-    isDirty_ = false;
+
+    // Update border data texture if border data is dirty
+    if (textureDataDirty_ &&
+        borderDataTexture != nullptr &&
+        borderDataTexture->isInitialized())
+    {
+      borderDataTexture->updateBorderData(getInstances());
+      textureDataDirty_ = false;
+    }
   }
 
   void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
   {
+  }
+
+  std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
+  {
+    std::vector<std::shared_ptr<Instance>> instances;
+    for (const auto &weakInstance : list_)
+    {
+      if (!weakInstance.expired())
+      {
+        auto instance = weakInstance.lock();
+        if (instance)
+        {
+          instances.push_back(instance);
+        }
+      }
+    }
+    return instances;
   }
 
   void RenderableInstancesList::clearInstances()
@@ -224,7 +369,8 @@ namespace builtin_scene
       instancePtr->removeHolder(shared_from_this());
     }
     list_.clear();
-    isDirty_ = true;
+    bufferDataDirty_ = true;
+    textureDataDirty_ = true;
   }
 
   void RenderableInstancesList::addInstance(std::shared_ptr<Instance> instance)
@@ -233,7 +379,7 @@ namespace builtin_scene
       return;
     list_.push_back(instance);
     instance->addHolder(shared_from_this());
-    isDirty_ = true;
+    bufferDataDirty_ = true;
   }
 
   size_t InstancedMeshBase::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,
@@ -269,13 +415,30 @@ namespace builtin_scene
         else
         {
           unique_ptr<IVertexAttribute> attrib = nullptr;
-          if (name == "instanceTexUvOffset" ||
-              name == "instanceTexUvScale")
-            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
-          else if (name == "instanceLayerIndex")
+          // 1u
+          if (name == "instanceLayerIndex" ||
+              name == "instanceBorderStyle")
+          {
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
-          else
+          }
+          // 2f
+          else if (name == "instanceTexUvOffset" ||
+                   name == "instanceTexUvScale" ||
+                   name == "instanceTexUvOffsetR" ||
+                   name == "instanceDimensions")
+          {
+            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
+          }
+          // 4f
+          else if (name == "instanceColor" ||
+                   name == "instanceBorderRadius")
+          {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          }
+          else
+          {
+            assert(false && "Unknown instance attribute name.");
+          }
 
           assert(attrib != nullptr);
           callback(*attrib, instanceIndex, STRIDE, offset);
@@ -302,9 +465,9 @@ namespace builtin_scene
     shared_lock<shared_mutex> lock(mutex_);
     for (auto &[id, instance] : idToInstanceMap_)
     {
-      auto hasChanged = callback(id, *instance);
-      if (hasChanged)
-        markAsDirty();
+      auto needsUpdate = callback(id, *instance);
+      if (needsUpdate)
+        markStructureAsDirty();
     }
   }
 
@@ -337,7 +500,7 @@ namespace builtin_scene
       throw invalid_argument("The instance with the given entity id already exists.");
 
     auto &instance = idToInstanceMap_[id] = make_shared<Instance>();
-    markAsDirty();
+    markStructureAsDirty();
     return *instance;
   }
 
@@ -346,7 +509,7 @@ namespace builtin_scene
     unique_lock<shared_mutex> lock(mutex_);
     bool removed = idToInstanceMap_.erase(id) > 0;
     if (removed)
-      markAsDirty();
+      markStructureAsDirty();
     return removed;
   }
 
@@ -364,15 +527,15 @@ namespace builtin_scene
       InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
   }
 
-  void InstancedMeshBase::updateRenderQueues(bool ignoreDirty)
+  void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
   {
-    if (!isDirty_ && !ignoreDirty)
+    if (!isStructureDirty_ && !ignoreDirty)
       return;
 
     shared_lock<shared_mutex> lock(mutex_);
     opaqueInstances_->update(idToInstanceMap_);
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
-    isDirty_ = false;
+    isStructureDirty_ = false;
   }
 }

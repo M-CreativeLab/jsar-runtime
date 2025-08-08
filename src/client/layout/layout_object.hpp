@@ -62,6 +62,10 @@ namespace client_layout
     {
       return false;
     }
+    virtual bool isInput() const
+    {
+      return false;
+    }
     virtual bool isNone() const
     {
       return false;
@@ -152,6 +156,18 @@ namespace client_layout
     bool hasClip() const;
     bool isScrollContainer() const;
 
+    int layer() const
+    {
+      return layer_;
+    }
+    void setLayer(int layer)
+    {
+      layer_ = layer;
+    }
+
+    int recalcLayer() const;
+    void updateLayer(bool includeDescendants = true);
+
     inline std::shared_ptr<dom::Node> node() const
     {
       return node_.lock();
@@ -189,6 +205,9 @@ namespace client_layout
 
     std::optional<client_cssom::ComputedStyle> style() const;
     client_cssom::ComputedStyle &styleRef() const;
+
+    // Helper functions to get 3D transformations.
+    float getTranslateZ() const;
 
     // The struct to represent if two fragments has differences.
     struct FragmentDifference
@@ -430,8 +449,8 @@ namespace client_layout
     virtual void styleWillChange(client_cssom::ComputedStyle &newStyle);
     virtual void styleDidChange();
 
-    virtual void sizeWillChange(const Fragment &newSize);
-    virtual void sizeDidChange();
+    virtual void sizeWillChange(const Fragment &);
+    virtual void sizeDidChange(const Fragment &);
 
     virtual void willComputeLayout(const ConstraintSpace &);
     virtual void didComputeLayoutOnce(const ConstraintSpace &);
@@ -476,6 +495,12 @@ namespace client_layout
     std::weak_ptr<LayoutObject> parent_;
     std::weak_ptr<LayoutObject> previous_;
     std::weak_ptr<LayoutObject> next_;
+
+    /**
+     * The layer number for this layout object. 
+     * Layer 0 means in the root scrollable container, layer 1+ means inside nested scrollable containers.
+     */
+    int layer_;
 
   private: // LayoutObjectBitfields: holds all the boolean values for `LayoutObject`.
 #define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase) \

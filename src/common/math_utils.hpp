@@ -31,5 +31,18 @@ namespace transmute::common
     {
       return std::max(0.0f, value);
     }
+
+    /**
+     * Check if two floating-point numbers are approximately equal within a small epsilon.
+     * 
+     * @param a The first number.
+     * @param b The second number.
+     * @param epsilon The tolerance for comparison, default is 1e-6.
+     * @returns True if the numbers are approximately equal, false otherwise.
+     */
+    static bool ApproximatelyEqual(float a, float b, float epsilon = 1e-6)
+    {
+      return std::fabs(a - b) <= epsilon;
+    }
   };
 }

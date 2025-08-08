@@ -40,17 +40,32 @@ in vec4 instanceColor;
 #ifdef USE_UVS
 #ifdef USE_INSTANCE_TEXTURE
 in vec2 instanceTexUvOffset;
+in vec2 instanceTexUvOffsetR;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
+out vec2 vInstanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
+#endif
+
+#ifdef USE_INSTANCE_SDF
+in vec2 instanceDimensions;
+in vec4 instanceBorderRadius;
+in uint instanceBorderStyle;
+out vec2 vInstanceTexCoord;
+out vec2 vInstanceDimensions;
+out vec4 vInstanceBorderRadius;
+out float vInstanceBorderStyle;
+flat out int vInstanceId;
+out float vSdfDepthScale;
 #endif
 #endif
 
 out vec4 col;
 flat out int instance_id;
 
-void main() {
+void main()
+{
   // *** POSITION ***
   mat4 local2World = modelMatrix;
 
@@ -63,13 +78,16 @@ void main() {
 
 #ifdef PARTICLES
   worldPosition.xyz +=
-      start_position + start_velocity * time + 0.5 * acceleration * time * time;
+    start_position + start_velocity * time + 0.5 * acceleration * time * time;
 #endif
 
 #ifdef MULTIVIEW
-  if (VIEW_ID == 0u) {
+  if (VIEW_ID == 0u)
+  {
     gl_Position = viewProjection * worldPosition;
-  } else {
+  }
+  else
+  {
     gl_Position = viewProjectionR * worldPosition;
   }
 #else
@@ -102,12 +120,42 @@ void main() {
 
   // Instance Texture
 #ifdef USE_INSTANCE_TEXTURE
-  uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
+  vInstanceTexUvOffsetR = instanceTexUvOffsetR;
   vInstanceLayerIndex = float(instanceLayerIndex);
 
+#ifdef MULTIVIEW
+  // In multiview, select texture coordinates based on VIEW_ID
+  if (VIEW_ID == 0u)
+  {
+    // Left eye
+    uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
+  }
+  else
+  {
+    // Right eye
+    uvs = instanceTexUvOffsetR + instanceTexUvScale * uvs;
+  }
+#else
+  // Non-multiview: use left eye coordinates (backward compatibility)
+  uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
+#endif
+
+  // Set if texture is enabled
   float threshold = 1e-5;
   vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
                             step(threshold, abs(instanceTexUvScale.y));
+#endif
+
+  // Instance SDF
+#ifdef USE_INSTANCE_SDF
+  vInstanceTexCoord = texCoord;
+  vInstanceDimensions = instanceDimensions;
+  vInstanceBorderRadius = instanceBorderRadius;
+  vInstanceBorderStyle = float(instanceBorderStyle);
+  vInstanceId = gl_InstanceID;
+
+  // Compute the depth scale factor for SDF rendering
+  vSdfDepthScale = clamp(-gl_Position.z * 0.1, 1.0, 2.0);
 #endif
 #endif
 

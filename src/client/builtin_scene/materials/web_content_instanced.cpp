@@ -9,6 +9,7 @@
 #include <client/macros.h>
 
 #include "./web_content_instanced.hpp"
+#include "../instanced_mesh.hpp"
 
 namespace builtin_scene::materials
 {
@@ -17,14 +18,13 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : Material()
+      : Material(false)
       , width_(0.0f)
       , height_(0.0f)
       , textureAtlas_(nullptr)
       , textureOffset_(0.0f, 0.0f)
       , textureScale_(1.0f, 1.0f)
   {
-    this->isOpaque_ = true;
   }
 
   bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,
@@ -33,17 +33,29 @@ namespace builtin_scene::materials
     if (TR_UNLIKELY(!Material::initialize(glContext, program)))
       return false;
 
-#define LOAD_UNIFORM_LOCATION(name)                                               \
-  {                                                                               \
-    auto loc = glContext->getUniformLocation(program, name);                      \
-    assert(loc.has_value() && "The \"" name "\" uniform location is not found."); \
-    uniforms_.emplace(name, loc.value());                                         \
+#define LOAD_UNIFORM_LOCATION(name)                          \
+  {                                                          \
+    auto loc = glContext->getUniformLocation(program, name); \
+    if (loc.has_value())                                     \
+    {                                                        \
+      uniforms_.emplace(name, loc.value());                  \
+    }                                                        \
   }
 
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
+    LOAD_UNIFORM_LOCATION("uSdfEnabled");
+    LOAD_UNIFORM_LOCATION("borderDataTexture");
+    // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
+    LOAD_UNIFORM_LOCATION("uDimensions");
+    LOAD_UNIFORM_LOCATION("uBorderRadius");
+    LOAD_UNIFORM_LOCATION("uBorderWidth");
+    LOAD_UNIFORM_LOCATION("uBorderColor");
+    LOAD_UNIFORM_LOCATION("uBorderStyle");
 #undef LOAD_UNIFORM_LOCATION
-    glContext->uniform1f(uniform("instanceTexAltas"), 0);
+
+    glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    glContext->uniform1i(uniform("borderDataTexture"), 1);
 
     // Set the texture to be flipped by the Y-axis.
     //
@@ -54,6 +66,15 @@ namespace builtin_scene::materials
     // Initialize the texture atlas.
     assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
+
+    // Initialize border data texture manager
+    borderDataTexture_ = make_unique<CSSBorderDataTexture>();
+    if (!borderDataTexture_->initialize(glContext))
+    {
+      borderDataTexture_.reset();
+      return false;
+    }
+
     return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
 
@@ -63,12 +84,28 @@ namespace builtin_scene::materials
     assert(glContext != nullptr);
 
     // Update the uniforms
+    glContext->uniform1f(uniform("uSdfEnabled"), sdfEnabled_ ? 1.0f : 0.0f);
+    glContext->uniformMatrix3fv(uniform("textureTransformation"),
+                                false,
+                                glm::mat3(textureScale_.x,
+                                          0.0f,
+                                          0.0f,
+                                          0.0f,
+                                          textureScale_.y,
+                                          0.0f,
+                                          textureOffset_.x,
+                                          textureOffset_.y,
+                                          1.0f));
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
-    glContext->uniformMatrix3fv(uniform("textureTransformation"), false, glm::mat3(textureScale_.x, 0.0f, 0.0f, 0.0f, textureScale_.y, 0.0f, textureOffset_.x, textureOffset_.y, 1.0f));
+    glContext->uniform1i(uniform("borderDataTexture"), 1);
 
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);
     textureAtlas_->onBeforeDraw();
+
+    // Bind the border data texture
+    if (borderDataTexture_ && borderDataTexture_->isInitialized())
+      borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
   }
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
@@ -88,6 +125,16 @@ namespace builtin_scene::materials
       textureOffset_ = glm::vec2(0.0f, 0.0f);
       textureScale_ = glm::vec2(1.0f, 1.0f);
     }
+  }
+
+  void WebContentInstancedMaterial::setSdfEnabled(bool enabled)
+  {
+    sdfEnabled_ = enabled;
+  }
+
+  CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
+  {
+    return borderDataTexture_.get();
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
@@ -113,7 +160,6 @@ namespace builtin_scene::materials
       if (surface->peekPixels(&pixmap))
       {
         pixels = (unsigned char *)pixmap.addr();
-        content.setOpaque(pixmap.computeIsOpaque());
 
         // Update the texture format based on the Skia surface color type.
         SkColorType colorType = surface->imageInfo().colorType();
@@ -154,4 +200,5 @@ namespace builtin_scene::materials
     // No matter the texture update is successful or not, we will return the status.
     return TextureUpdateStatus::kSuccess;
   }
+
 } // namespace builtin_scene::materials

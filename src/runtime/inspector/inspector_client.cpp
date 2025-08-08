@@ -20,8 +20,11 @@
 #include <array>
 #include <iomanip>
 
+#include <runtime/constellation.hpp>
+#include <runtime/inspector.hpp>
+
 #include "./inspector_client.hpp"
-#include "../inspector.hpp"
+#include "./cdp_handler.hpp"
 
 using namespace std;
 
@@ -108,7 +111,20 @@ void TrInspectorClient::tick()
 
   if (connectionType_ == ConnectionType::WEBSOCKET)
   {
-    handleWebSocketFrame();
+    // Process all complete WebSocket frames available in the buffer
+    // Keep processing until no more complete frames are available
+    while (!shouldClose_ && buffer_.size() >= 2)
+    {
+      size_t bufferSizeBefore = buffer_.size();
+      handleWebSocketFrame();
+
+      // If buffer size didn't change, we don't have a complete frame
+      // or encountered an error, so break the loop
+      if (buffer_.size() == bufferSizeBefore)
+      {
+        break;
+      }
+    }
   }
   else if (connectionType_ == ConnectionType::HTTP)
   {
@@ -253,6 +269,16 @@ void TrInspectorClient::send(const string &data)
 
 void TrInspectorClient::end()
 {
+  // Notify inspector of client disconnection if this was a WebSocket connection
+  if (connectionType_ == ConnectionType::WEBSOCKET)
+  {
+    auto inspector = inspector_.lock();
+    if (inspector)
+    {
+      inspector->onClientDisconnected(*this);
+    }
+  }
+
   ::shutdown(fd_, SHUT_RDWR);
   ::close(fd_);
   fd_ = -1;
@@ -419,9 +445,15 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
 
     // Check WebSocket connection limit
     auto inspector = inspector_.lock();
-    if (inspector == nullptr)
+    if (inspector == nullptr || inspector->constellation == nullptr)
     {
       return false;
+    }
+    else
+    {
+      // Initialize CDP handler for this client
+      cdpHandler_ = make_unique<CdpHandler>(inspector->constellation, clientId_, this);
+      DEBUG(LOG_TAG_INSPECTOR, "CDP Handler initialized for client '%s'", clientId.c_str());
     }
 
     if (!inspector->canAcceptWebSocketConnection())
@@ -451,6 +483,13 @@ bool TrInspectorClient::tryUpgradeToWebSocket()
     buffer_.clear(); // Clear HTTP parsing buffer
 
     DEBUG(LOG_TAG_INSPECTOR, "WebSocket connection upgraded successfully");
+
+    // Notify inspector of client connection
+    if (inspector)
+    {
+      inspector->onClientConnected(*this);
+    }
+
     return true;
   }
 

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <skia/include/core/SkImageInfo.h>
+#include <skia/include/core/SkColorSpace.h>
 #include <client/macros.h>
 
 #include "./web_content.hpp"
@@ -57,12 +58,13 @@ namespace builtin_scene
   {
   }
 
-  WebContent::WebContent(std::string name, float initialWidth, float initialHeight)
+  WebContent::WebContent(std::string name, float initialWidth, float initialHeight, int layer)
       : name_(name)
+      , layer_(layer)
       , last_fragment_(std::nullopt)
       , content_style_()
       , background_color_(1.0f, 1.0f, 1.0f, 0.0f)
-      , device_pixel_ratio_(1.0f)
+      , device_pixel_ratio_(client_cssom::DevicePixelRatio)
   {
     resetSkSurface(initialWidth, initialHeight);
   }
@@ -71,7 +73,7 @@ namespace builtin_scene
   // nearest integer to avoid the floating point precision issue.
   inline int computeSize(float size, float devicePixelRatio, int pad)
   {
-    return static_cast<int>(round(size * devicePixelRatio));
+    return static_cast<int>(round(size * devicePixelRatio)) + pad * 2;
   }
 
   bool WebContent::resetSkSurface(float w, float h)
@@ -85,7 +87,8 @@ namespace builtin_scene
 
     // TODO: use Skia Genesh(GPU) to increase the performance.
     SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, device_pixel_ratio_, texture_pad_),
-                                                       computeSize(h, device_pixel_ratio_, texture_pad_));
+                                                       computeSize(h, device_pixel_ratio_, texture_pad_),
+                                                       SkColorSpace::MakeSRGB());
     if (surface_ != nullptr)
     {
       auto newSurface = surface_->makeSurface(imageInfo);
@@ -112,8 +115,9 @@ namespace builtin_scene
       return nullptr;
 
     SkCanvas *canvas = surface_->getCanvas();
-    canvas->setMatrix(SkMatrix::Translate(texture_pad_, texture_pad_));
-    // TODO(yorkie): support scaling the canvas.
+    SkMatrix transform = SkMatrix::Translate(texture_pad_, texture_pad_)
+                           .preScale(device_pixel_ratio_, device_pixel_ratio_);
+    canvas->setMatrix(transform);
     return canvas;
   }
 
@@ -234,13 +238,15 @@ namespace builtin_scene
     const WebContentTextStyle &sourceTextStyle = content_style_.textStyle;
     skia::textlayout::TextStyle newTextStyle;
 
-    newTextStyle.setColor(sourceTextStyle.color);
-    if (sourceTextStyle.foregroundColor.has_value())
+    SkPaint foregroundPaint;
     {
-      SkPaint foregroundPaint;
-      foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
-      newTextStyle.setForegroundColor(foregroundPaint);
+      foregroundPaint.setAntiAlias(true);
+      foregroundPaint.setColor(sourceTextStyle.color);
+      if (sourceTextStyle.foregroundColor.has_value())
+        foregroundPaint.setColor(sourceTextStyle.foregroundColor.value());
+      newTextStyle.setForegroundPaint(foregroundPaint);
     }
+
     if (sourceTextStyle.backgroundColor.has_value())
     {
       SkPaint backgroundPaint;

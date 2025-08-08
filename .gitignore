@@ -45,7 +45,9 @@ node_modules
 !/thirdparty/**/*.dll
 !/thirdparty/**/*.lib
 !/thirdparty/**/*.exe
-/build/
+/build/output
+/build/external
+/build/targets/*
 /src/proto/*
 !/src/proto/*.proto
 *.apk
@@ -55,3 +57,9 @@ node_modules
 .res_cache
 
 # Build artifacts
+./build/cmake/
+
+# VitePress build output
+docs/.vitepress/dist
+docs/.vitepress/cache
+docs/api/browser-compat-data/all.json

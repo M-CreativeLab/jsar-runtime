@@ -12,6 +12,8 @@ export default class MouseEventImpl extends Event implements MouseEvent {
   offsetY: number;
   pageX: number;
   pageY: number;
+  layerX: number;
+  layerY: number;
   relatedTarget: EventTarget;
   screenX: number;
   screenY: number;

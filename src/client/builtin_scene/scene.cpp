@@ -36,6 +36,7 @@ namespace builtin_scene
       app.registerComponent<Camera>();
       app.registerComponent<Mesh3d>();
       app.registerComponent<MeshMaterial3d>();
+      app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
 
@@ -71,7 +72,7 @@ namespace builtin_scene
     addPlugin<WebContentPlugin>();
     addPlugin<model_renderer::Model3dPlugin>();
     addPlugin<WebXRPlugin>();
-    addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
+    addResource(ecs::Resource::Make<SceneRenderer>(glContext_, volumeSize_));
   }
 
   void Scene::bootstrap()
@@ -132,6 +133,7 @@ namespace builtin_scene
         hierarchy::Children(),
         hierarchy::Root(isRootRenderable),
         BoundingBox(),
+        RenderLayer(),
         defaultTransform);
     }
     else
@@ -155,6 +157,7 @@ namespace builtin_scene
         hierarchy::Children(),
         hierarchy::Parent(parentEntity, rootEntity),
         BoundingBox(),
+        RenderLayer(),
         defaultTransform);
 
       // Update the parent's children

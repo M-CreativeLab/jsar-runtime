@@ -29,6 +29,25 @@ namespace commandbuffers
       return ss.str();
     }
 
+    /**
+     * Serialize the command buffer to a JSON object with program creation information.
+     * Program creation is critical for shader pipeline setup and GPU state management.
+     * 
+     * @param allocator The JSON allocator to use for creating the JSON object
+     * @returns A JSON object containing base command info plus program creation parameters
+     */
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &allocator) const override
+    {
+      // Get base command information with new structure
+      rapidjson::Value cmdInfo = TrCommandBufferBase::toJson(allocator);
+
+      // Add program creation parameters to the parameters array in OpenGL function order
+      rapidjson::Value &parameters = cmdInfo["parameters"];
+      parameters.PushBack(rapidjson::Value().SetUint(clientId), allocator);
+
+      return cmdInfo;
+    }
+
   public:
     uint32_t clientId;
   };

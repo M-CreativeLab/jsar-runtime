@@ -35,14 +35,18 @@ namespace dom
 
   inline HeadingLevel from_string(const std::string &input)
   {
-#define XX(LEVEL, TAG_NAME) \
-  if (input == #TAG_NAME)   \
+    std::string lower_input = input;
+    std::transform(lower_input.begin(), lower_input.end(), lower_input.begin(), ::tolower);
+
+#define XX(LEVEL, TAG_NAME)     \
+  if (lower_input == #TAG_NAME) \
     return HeadingLevel::LEVEL;
 
     HEADING_LEVEL_MAP(XX)
 #undef XX
 
-    assert(false && "Invalid heading level string");
+    std::cerr << "Invalid heading level string: " << input << std::endl;
+    return HeadingLevel::H3; // Default to H3 if invalid
   }
 
   class HTMLHeadingElement : public HTMLElement

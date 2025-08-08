@@ -265,10 +265,14 @@ namespace client_xr
       switch (update())
       {
       case XRSessionUpdateState::kSessionEnded:
-        cerr << "[session#" << id << "] " << "skipped this frame: " << "session is ended." << endl;
+        cerr << "[session#" << id << "] "
+             << "skipped this frame: "
+             << "session is ended." << endl;
         break;
       case XRSessionUpdateState::kInvalidSessionId:
-        cerr << "[session#" << id << "] " << "skipped this frame: " << "invalid session id." << endl;
+        cerr << "[session#" << id << "] "
+             << "skipped this frame: "
+             << "invalid session id." << endl;
         break;
       // Uncomment the following cases if you need to print the logs.
       // case XRSessionUpdateState::kStereoIdMismatch:

@@ -1,10 +1,11 @@
 #include <iostream>
 #include <sstream>
 #include <assert.h>
-#include "renderer.hpp"
-#include "render_api.hpp"
-#include "runtime/constellation.hpp"
-#include "runtime/content_manager.hpp"
+#include <runtime/constellation.hpp>
+#include <runtime/content_manager.hpp>
+
+#include "./renderer.hpp"
+#include "./render_api.hpp"
 #include "./content_renderer.hpp"
 
 namespace renderer
@@ -15,7 +16,7 @@ namespace renderer
   TrRenderer::TrRenderer(TrConstellation *constellation)
       : constellation(constellation)
       , rhi(nullptr)
-      , commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
+      , commandBufferChanServer(make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
   }
 
@@ -33,7 +34,7 @@ namespace renderer
     contentRenderers.clear();
 
     ostringstream threadIdStrStream;
-    threadIdStrStream << std::this_thread::get_id();
+    threadIdStrStream << this_thread::get_id();
     DEBUG(LOG_TAG_RENDERER, "Renderer(%p) is destroyed at %s", this, threadIdStrStream.str().c_str());
   }
 
@@ -72,12 +73,26 @@ namespace renderer
     return rhi;
   }
 
+  int TrRenderer::registerCommandBufferExecutionCallback(CommandBufferExecutionCallback callback)
+  {
+    unique_lock<shared_mutex> lock(callbacksMutex_);
+    int callbackId = nextCallbackId_++;
+    onExecutedCallbacks_[callbackId] = callback;
+    return callbackId;
+  }
+
+  void TrRenderer::unregisterCommandBufferExecutionCallback(int callbackId)
+  {
+    unique_lock<shared_mutex> lock(callbacksMutex_);
+    onExecutedCallbacks_.erase(callbackId);
+  }
+
   void TrRenderer::onOpaquesRenderPass(analytics::PerformanceCounter &perfCounter)
   {
     if (rhi == nullptr) [[unlikely]]
       return; // Skip if api is not ready.
 
-    tickingTimepoint = std::chrono::high_resolution_clock::now();
+    tickingTimepoint = chrono::high_resolution_clock::now();
     calcFps();
 
     shared_lock<shared_mutex> lock(contentRendererMutex);
@@ -154,7 +169,7 @@ namespace renderer
     glHostContext->restore();
   }
 
-  bool TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId)
+  bool TrRenderer::addContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId)
   {
     if (rhi == nullptr) [[unlikely]]
       return false;
@@ -184,7 +199,7 @@ namespace renderer
     return nullptr;
   }
 
-  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(std::shared_ptr<TrContentRuntime> content)
+  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(shared_ptr<TrContentRuntime> content)
   {
     TrRenderer::ContentRenderersList list;
     if (TR_UNLIKELY(content == nullptr))
@@ -316,8 +331,8 @@ namespace renderer
   void TrRenderer::startWatchers()
   {
     watcherRunning = true;
-    commandBufferClientWatcher = std::make_unique<thread>([this]()
-                                                          {
+    commandBufferClientWatcher = make_unique<thread>([this]()
+                                                     {
       SET_THREAD_NAME("TrCBWatcher");
       while (watcherRunning)
       {
@@ -350,23 +365,34 @@ namespace renderer
     auto xr_device = constellation->xrDevice.get();
     assert(xr_device != nullptr);
 
+    bool result = false;
     if (xr_device->enabled()) [[likely]]
     {
       if (xr_device->isRenderedAsMultipass())
       {
         xr::MultiPassFrame device_frame(xr_device, 0);
-        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
+        result = rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
       else
       {
         xr::SinglePassFrame device_frame(xr_device, 0);
-        return rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
+        result = rhi->ExecuteCommandBuffer(list, content_renderer, &device_frame, pass_type);
       }
     }
     else
     {
-      return rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
+      result = rhi->ExecuteCommandBuffer(list, content_renderer, nullptr, pass_type);
     }
+
+    // Notify callbacks if command buffers were executed successfully
+    if (!onExecutedCallbacks_.empty())
+    {
+      shared_lock<shared_mutex> lock(callbacksMutex_);
+      for (const auto &[callbackId, callback] : onExecutedCallbacks_)
+        callback(list, content_renderer);
+    }
+
+    return result;
   }
 
   void TrRenderer::calcFps()

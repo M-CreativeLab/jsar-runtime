@@ -14,6 +14,8 @@
 #include "./ecs.hpp"
 #include "./meshes/builder.hpp"
 #include "./mesh_base.hpp"
+#include "./render_queue.hpp"
+#include "./render_layer.hpp"
 
 namespace builtin_scene
 {
@@ -27,15 +29,23 @@ namespace builtin_scene
         : transform(1.0f)
         , color(1.0f, 1.0f, 1.0f, 0.0f)
         , texUvOffset(0.0f, 0.0f)
+        , texUvOffsetR(0.0f, 0.0f)
         , texUvScale(1.0f, 1.0f)
         , texLayerIndex(0)
+        , dimensions(0.0f, 0.0f)
+        , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
+        , borderStyle(0.0f)
     {
     }
-    glm::mat4 transform;   /** 16 */
-    glm::vec4 color;       /** 20 */
-    glm::vec2 texUvOffset; /** 22 */
-    glm::vec2 texUvScale;  /** 24 */
-    uint32_t texLayerIndex;
+    glm::mat4 transform;    /** element transformation */
+    glm::vec4 color;        /** background color */
+    glm::vec2 texUvOffset;  /** Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR; /** Right eye texture coordinates */
+    glm::vec2 texUvScale;   /** Shared texture scale for both eyes */
+    uint32_t texLayerIndex; /** Shared texture layer for both eyes */
+    glm::vec2 dimensions;   /** The dimensions */
+    glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -45,6 +55,10 @@ namespace builtin_scene
          << "  texUvOffset=" << math3d::to_string(data.texUvOffset) << std::endl
          << "  texUvScale=" << math3d::to_string(data.texUvScale) << std::endl
          << "  texLayerIndex=" << data.texLayerIndex << std::endl
+         << "  texUvOffsetR=" << math3d::to_string(data.texUvOffsetR) << std::endl
+         << "  dimensions=" << math3d::to_string(data.dimensions) << std::endl
+         << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
+         << "  borderStyle=" << data.borderStyle << std::endl
          << ")";
       return os;
     }
@@ -55,10 +69,16 @@ namespace builtin_scene
       return color.a == 0.0f;
     }
 
+    // If the instance has a none border style.
+    inline bool isBorderNone() const
+    {
+      return borderStyle == 0;
+    }
+
     // If the instance own texture to draw.
     inline bool ownTexture() const
     {
-      return texUvScale.x > 0.0f || texUvScale.y > 0.0f;
+      return (texUvScale.x > 0.0f || texUvScale.y > 0.0f);
     }
   };
 
@@ -67,20 +87,87 @@ namespace builtin_scene
     friend class InstancedMeshBase;
     friend class RenderableInstancesList;
 
+  private:
+    class TextureCoordBase : public std::array<float, 2>
+    {
+    public:
+      TextureCoordBase()
+          : std::array<float, 2>({0.0f, 0.0f})
+      {
+      }
+      TextureCoordBase(const std::array<float, 2> &array)
+          : std::array<float, 2>(array)
+      {
+      }
+
+    public:
+      inline float u() const
+      {
+        return (*this)[0];
+      }
+      inline float v() const
+      {
+        return (*this)[1];
+      }
+
+      operator glm::vec2() const
+      {
+        return glm::vec2(u(), v());
+      }
+      bool operator==(const TextureCoordBase &other) const
+      {
+        return (u() == other.u() && v() == other.v());
+      }
+      bool operator==(const glm::vec2 &other) const
+      {
+        return (u() == other.x && v() == other.y);
+      }
+    };
+
+  public:
+    class TextureScale : public TextureCoordBase
+    {
+      using TextureCoordBase::TextureCoordBase;
+
+    public:
+      void setHalfWidth()
+      {
+        (*this)[0] *= 0.5f;
+      }
+    };
+    class TextureOffset : public TextureCoordBase
+    {
+      using TextureCoordBase::TextureCoordBase;
+
+    public:
+      void setForRight(const TextureScale &scale)
+      {
+        (*this)[0] += scale.u() * 0.5f; // Offset right eye UVs by half the width
+      }
+    };
+
   public:
     Instance() = default;
 
   public:
     void randomColor();
-    bool setColor(const glm::vec4 &color, bool &hasChanged);
+    bool setColor(const glm::vec4 &color);
     void translate(float tx, float ty, float tz);
     void scale(float sx, float sy, float sz);
-    void setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged);
-    void setTexture(std::array<float, 2> uvOffset,
-                    std::array<float, 2> uvScale,
-                    uint32_t layerIndex,
-                    bool &hasChanged);
-    void disableTexture(bool &hasChanged);
+    void setTransform(const glm::mat4 &transformationMatrix);
+    void setTexture(TextureOffset uvOffset,
+                    TextureOffset uvOffsetR,
+                    TextureScale uvScale,
+                    uint32_t layerIndex);
+    void disableTexture();
+    void setDimensions(float width, float height);
+    void setBorderRadius(glm::vec4 borderRadius);
+    void setBorderRadius(float topLeft, float topRight, float bottomRight, float bottomLeft);
+    void setBorderWidth(glm::vec4 borderWidth);
+    void setBorderWidth(float top, float right, float bottom, float left);
+    void setBorderColor(glm::vec4 borderColor);
+    void setBorderColor(float r, float g, float b, float a);
+    void setBorderStyle(float borderStyle);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -88,7 +175,7 @@ namespace builtin_scene
     if (PRIV_FIELD != value)                \
     {                                       \
       PRIV_FIELD = value;                   \
-      notifyHolders();                      \
+      notifyBufferDataChanged();            \
       return true;                          \
     }                                       \
     else                                    \
@@ -99,25 +186,73 @@ namespace builtin_scene
 
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
-    IMPL_SETTER(ZIndex, zIndex_, uint32_t)
+    IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
+
+    // Getter for RenderQueue
+    inline const RenderQueue &getRenderQueue() const
+    {
+      return renderQueue_;
+    }
+
+    // Returns if the instance might be invisible based on its properties.
+    inline bool maybeInvisible() const
+    {
+      return maybeInvisible_;
+    }
+
+    // Getter for instance data
+    inline const InstanceData &data() const
+    {
+      return data_;
+    }
+
+    // Getters for border fields
+    inline const glm::vec4 &getBorderWidths() const
+    {
+      return borderWidths_;
+    }
+
+    inline const glm::vec4 &getBorderColor(int side) const
+    {
+      return borderColors_[side % 4];
+    }
+
+    inline const glm::vec4 *getBorderColors() const
+    {
+      return borderColors_;
+    }
+
+    // Returns if this instance has no borders to draw.
+    bool hasNoBorders() const;
 
   private:
     // Add a holder to the instance.
     void addHolder(std::shared_ptr<RenderableInstancesList> holder);
     // Remove a holder from the instance.
     void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
-    // Notify the holders that the instance data is updated.
-    void notifyHolders();
+    // Notify the holders that buffer data has changed.
+    void notifyBufferDataChanged();
+    // Notify the holders that texture data has changed.
+    void notifyTextureDataChanged();
     // Returns `true` if the instance should be skipped to draw.
     bool skipToDraw() const;
+    // Set the instance as maybe invisible based on the state of the instance, such as if it has a transparent color,
+    // no texture, and no borders to draw, etc.
+    //
+    // This method should be called when related properties are changed, such as color, texture, border, etc.
+    void setMaybeInvisible();
 
   private:
     InstanceData data_;
+    glm::vec4 borderWidths_;
+    glm::vec4 borderColors_[4];
+    RenderQueue renderQueue_;
+    RenderLayer renderLayer_;
     bool enabled_ = false;
+    bool maybeInvisible_ = true;
     bool isOpaque_ = false;
-    uint32_t zIndex_ = 0;
 
   private:
     std::vector<std::weak_ptr<RenderableInstancesList>> holders_;
@@ -156,9 +291,13 @@ namespace builtin_scene
     {
       return list_.size();
     }
-    inline bool isDirty() const
+    inline bool isBufferDataDirty() const
     {
-      return isDirty_;
+      return bufferDataDirty_;
+    }
+    inline bool isTextureDataDirty() const
+    {
+      return textureDataDirty_;
     }
     /**
      * Update the renderable instances list with the given instances.
@@ -171,20 +310,30 @@ namespace builtin_scene
     /**
      * Called before the instanced draw.
      */
-    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext);
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                             class CSSBorderDataTexture *borderDataTexture = nullptr);
     /**
      * Called after the instanced draw.
      */
     void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
+
+    /**
+     * Get the current instances as a vector (for border data updates).
+     */
+    std::vector<std::shared_ptr<Instance>> getInstances() const;
 
   private:
     // Clear the instances.
     void clearInstances();
     // Add an instance to the list.
     void addInstance(std::shared_ptr<Instance> instance);
-    inline void markAsDirty()
+    inline void markBufferAsDirty()
     {
-      isDirty_ = true;
+      bufferDataDirty_ = true;
+    }
+    inline void markTextureDataAsDirty()
+    {
+      textureDataDirty_ = true;
     }
 
   public:
@@ -194,21 +343,26 @@ namespace builtin_scene
 
   private:
     std::vector<std::weak_ptr<Instance>> list_;
-    bool isDirty_ = true;
+    bool bufferDataDirty_ = true;
+    bool textureDataDirty_ = true;
   };
 
   class InstancedMeshBase
   {
-    friend class Renderer;
+    friend class SceneRenderer;
     friend class RenderSystem;
 
   public:
-    static constexpr size_t STRIDE = sizeof(float) * 24 + sizeof(uint32_t) * 1;
+    static constexpr size_t STRIDE = sizeof(InstanceData);
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {"instanceTransform",
                                                                   "instanceColor",
                                                                   "instanceTexUvOffset",
+                                                                  "instanceTexUvOffsetR",
                                                                   "instanceTexUvScale",
-                                                                  "instanceLayerIndex"};
+                                                                  "instanceLayerIndex",
+                                                                  "instanceDimensions",
+                                                                  "instanceBorderRadius",
+                                                                  "instanceBorderStyle"};
 
   public:
     InstancedMeshBase() = default;
@@ -235,6 +389,9 @@ namespace builtin_scene
     int instanceCount() const;
     /**
      * Iterate the instances with the given callback.
+     * 
+     * @param callback The callback to call for each instance. The callback should return `true` if the instance needs 
+     *                 to update the structure, otherwise `false`.
      */
     void iterateInstances(std::function<bool(ecs::EntityId, Instance &)> callback);
     /**
@@ -262,6 +419,7 @@ namespace builtin_scene
      * Remove the instance with the given entity id.
      */
     bool removeInstance(ecs::EntityId id);
+
     inline RenderableInstancesList &getOpaqueInstancesList() const
     {
       return *opaqueInstances_;
@@ -269,6 +427,24 @@ namespace builtin_scene
     inline RenderableInstancesList &getTransparentInstancesList() const
     {
       return *transparentInstances_;
+    }
+
+    /**
+     * Whether to dispatch a depth-only pass for transparent objects which writes the transparent objects' depth
+     * to the depth buffer.
+     * 
+     * It's mostly used for the collision detection of transparent objects such as GUI elements, we do a depth buffer
+     * based collision detection to search for the hit point of the opaque objects and GUI elements, within the flag,
+     * we can write the depth buffer of the transparent objects after rendering them, so that the collision detectior
+     * can read the correct depth value for the GUI elements.
+     */
+    inline bool isDepthOnlyPassEnabled() const
+    {
+      return isDepthOnlyPassEnabled_;
+    }
+    inline void enableDepthOnlyPass(bool value = true)
+    {
+      isDepthOnlyPassEnabled_ = value;
     }
 
   protected:
@@ -284,16 +460,16 @@ namespace builtin_scene
                std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
                std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
     /**
-     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList` the queues.
+     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
      * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
-    void updateRenderQueues(bool ignoreDirty = false);
+    void updateInstancesList(bool ignoreDirty = false);
 
   private:
-    inline void markAsDirty()
+    inline void markStructureAsDirty()
     {
-      isDirty_ = true;
+      isStructureDirty_ = true;
     }
 
   protected:
@@ -304,7 +480,8 @@ namespace builtin_scene
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
-    bool isDirty_ = true;
+    bool isDepthOnlyPassEnabled_ = false;
+    bool isStructureDirty_ = true;
   };
 
   /**

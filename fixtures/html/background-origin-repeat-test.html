@@ -6,16 +6,17 @@
   <title>Background Origin and Repeat Test</title>
   <style>
     body {
-      background-color: #fff;
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
     }
 
     .test-container {
       margin: 20px 0;
       padding: 10px;
       border: 1px solid #ccc;
+      background-color: antiquewhite;
     }
 
     h1 {
@@ -140,11 +141,9 @@
 
 <body>
   <h1>CSS Background Origin and Repeat Properties Test</h1>
-
   <div class="test-container">
     <h2>Background Origin Tests</h2>
     <p>These tests demonstrate how background-origin affects where the background image is positioned:</p>
-    
     <div class="test-row">
       <div>
         <div class="bg-origin-border-box"></div>
@@ -164,7 +163,7 @@
   <div class="test-container">
     <h2>Background Repeat Tests</h2>
     <p>These tests demonstrate different background-repeat values:</p>
-    
+
     <div class="test-row">
       <div>
         <div class="bg-repeat"></div>
@@ -188,11 +187,12 @@
   <div class="test-container">
     <h2>Combined Test</h2>
     <p>This test combines both properties:</p>
-    
+
     <div class="test-row">
       <div>
         <div class="combined-test"></div>
-        <div class="test-description">background-origin: content-box<br>background-repeat: repeat-x<br>(orange border shows content vs border area)</div>
+        <div class="test-description">background-origin: content-box<br>background-repeat: repeat-x<br>(orange border
+          shows content vs border area)</div>
       </div>
     </div>
   </div>

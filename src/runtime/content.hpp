@@ -247,7 +247,10 @@ private:
   void recvEvent();
   void recvMediaRequest();
   bool recvXRCommand(int timeout = 0);
+
   bool tryDispatchRequest();
+  void prepareRequest(events_comm::TrDocumentRequest &);
+
   bool tickOnFrame();
   void release();
 
@@ -275,16 +278,16 @@ public:
    * `ContentRenderer` is going to be created.
    */
   std::atomic<int> pid = INVALID_PID;
+  /**
+   * The content's initialization options.
+   */
+  TrDocumentRequestInit requestInit;
 
 private:
   /**
    * The content manager.
    */
   TrContentManager *contentManager;
-  /**
-   * The content's initialization options.
-   */
-  TrDocumentRequestInit requestInit;
   /**
    * The previous received `DocumentEvent` timestamp in milliseconds, this is used to calculate the duration between two events.
    */
