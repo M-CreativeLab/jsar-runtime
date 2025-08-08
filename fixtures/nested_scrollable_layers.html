@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nested Scrollable Container Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            border: 2px solid #333;
+            margin: 10px;
+            background-color: #f0f0f0;
+        }
+        
+        .outer-container {
+            width: 400px;
+            height: 300px;
+            overflow: hidden;
+            background-color: #e0e0e0;
+        }
+        
+        .scrollable-container {
+            width: 200px;
+            height: 150px;
+            overflow: auto;
+            background-color: #d0d0d0;
+            margin: 10px;
+            border: 2px solid #666;
+        }
+        
+        .inner-content {
+            width: 180px;
+            height: 100px;
+            background-color: #c0c0c0;
+            margin: 5px;
+            border: 1px solid #999;
+            overflow: hidden;
+        }
+        
+        .content-item {
+            padding: 10px;
+            margin: 5px;
+            background-color: #b0b0b0;
+            border: 1px solid #888;
+        }
+        
+        .large-content {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .description {
+            background-color: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="description">
+        <h2>Nested Scrollable Container Test Fixture</h2>
+        <p>This fixture demonstrates the layered rendering requirements:</p>
+        <ul>
+            <li><strong>Layer 0 (Outer Container):</strong> Fixed 400x300 viewport with overflow:hidden</li>
+            <li><strong>Layer 1 (Scrollable Container):</strong> 200x150 scrollable area with overflow:auto</li>
+            <li><strong>Layer 2 (Inner Content):</strong> 180x100 content area with overflow:hidden</li>
+        </ul>
+        <p>Expected rendering order: Layer 0 → Layer 1 → Layer 2 (painter's order)</p>
+        <p>Clipping hierarchy: Each layer clips its children to its bounds</p>
+    </div>
+
+    <!-- Layer 0: Outer container (overflow: hidden) -->
+    <div class="container outer-container" data-layer="0">
+        <h3>Layer 0: Outer Container (400x300)</h3>
+        <p>This layer has overflow:hidden and should clip its children.</p>
+        
+        <!-- Layer 1: Scrollable container (overflow: auto) -->
+        <div class="container scrollable-container" data-layer="1">
+            <h4>Layer 1: Scrollable Area (200x150)</h4>
+            <p>This scrollable area contains large content that overflows.</p>
+            
+            <!-- Large content that exceeds the scrollable container -->
+            <div class="large-content">
+                <h5>Large Content Area</h5>
+                <p>This content is 400x400, much larger than the 200x150 scrollable container.</p>
+                <p>Scrolling should work correctly with proper clipping.</p>
+                
+                <!-- Layer 2: Inner content area (overflow: hidden) -->
+                <div class="container inner-content" data-layer="2">
+                    <h6>Layer 2: Inner Content (180x100)</h6>
+                    <div class="content-item">Content Item 1</div>
+                    <div class="content-item">Content Item 2</div>
+                    <div class="content-item">Content Item 3</div>
+                    <div class="content-item">This content should be clipped</div>
+                </div>
+                
+                <p>More content below the inner container...</p>
+                <div class="content-item">Additional scrollable content</div>
+                <div class="content-item">More scrollable content</div>
+                <div class="content-item">Even more content</div>
+            </div>
+        </div>
+        
+        <p>Content below the scrollable container (should be clipped by outer container).</p>
+    </div>
+
+    <div class="description">
+        <h3>Layer Rendering Validation</h3>
+        <p>For correct layered rendering, the system should:</p>
+        <ol>
+            <li>Render Layer 0 background first</li>
+            <li>Apply Layer 0 clipping (400x300 bounds)</li>
+            <li>Render Layer 1 with scroll transform</li>
+            <li>Apply Layer 1 clipping (200x150 bounds)</li>
+            <li>Render Layer 2 content</li>
+            <li>Apply Layer 2 clipping (180x100 bounds)</li>
+            <li>Pop clipping states in reverse order</li>
+        </ol>
+        
+        <h3>Expected Render Commands</h3>
+        <pre>
+1. PushClip (Layer 0: 400x300)
+2. RenderWebContent (Layer 0)
+3. PushTransform (Layer 1: scroll offset)
+4. PushClip (Layer 1: 200x150)  
+5. RenderWebContent (Layer 1)
+6. PushClip (Layer 2: 180x100)
+7. RenderWebContent (Layer 2)
+8. PopClip (Layer 2)
+9. PopClip (Layer 1)
+10. PopTransform (Layer 1)
+11. PopClip (Layer 0)
+        </pre>
+    </div>
+
+    <script>
+        // Demonstrate scrolling behavior
+        const scrollableContainer = document.querySelector('.scrollable-container');
+        scrollableContainer.addEventListener('scroll', function(e) {
+            console.log('Scroll offset:', e.target.scrollLeft, e.target.scrollTop);
+        });
+        
+        // Add some visual indicators
+        function addLayerIndicators() {
+            const layers = document.querySelectorAll('[data-layer]');
+            layers.forEach(layer => {
+                const layerNum = layer.getAttribute('data-layer');
+                const indicator = document.createElement('div');
+                indicator.style.cssText = `
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                    background: rgba(255, 0, 0, 0.8);
+                    color: white;
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    z-index: 1000;
+                `;
+                indicator.textContent = `L${layerNum}`;
+                layer.style.position = 'relative';
+                layer.appendChild(indicator);
+            });
+        }
+        
+        addLayerIndicators();
+    </script>
+</body>
+</html>

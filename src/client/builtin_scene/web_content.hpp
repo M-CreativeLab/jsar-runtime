@@ -574,6 +574,22 @@ namespace builtin_scene
   public:
     using ecs::Plugin::Plugin;
 
+    /**
+     * Configure layered rendering options.
+     */
+    void configureLayeredRendering(const layers::LayerRenderConfig &config)
+    {
+      layerConfig_ = config;
+    }
+
+    /**
+     * Enable or disable debug overlay for layers.
+     */
+    void setDebugOverlayEnabled(bool enabled)
+    {
+      layerConfig_.enableDebugOverlay = enabled;
+    }
+
   protected:
     void build(ecs::App &app) override
     {
@@ -603,5 +619,8 @@ namespace builtin_scene
         ->chain(updateTexture);
       app.addSystem(SchedulerLabel::kUpdate, layeredRenderSystem);
     }
+
+  private:
+    layers::LayerRenderConfig layerConfig_;
   };
 }
