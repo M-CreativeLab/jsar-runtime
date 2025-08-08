@@ -57,6 +57,7 @@ namespace builtin_scene::model_renderer
 
   private:
     void render(ecs::EntityId entity) override;
+    void render(ecs::EntityId entity, std::shared_ptr<client_graphics::WebGL2Context> glContext);
   };
 
   /**
