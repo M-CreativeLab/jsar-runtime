@@ -82,6 +82,13 @@ namespace builtin_scene::materials
      */
     CSSBorderDataTexture *getBorderDataTexture() const;
 
+    /**
+     * Get the SDF texture atlas for text content.
+     *
+     * @return Pointer to the SDF TextureAtlas instance.
+     */
+    TextureAtlas *getSdfTextureAtlas() const;
+
   public:
     float width() const
     {
@@ -113,6 +120,7 @@ namespace builtin_scene::materials
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
     std::unique_ptr<TextureAtlas> textureAtlas_;
+    std::unique_ptr<TextureAtlas> sdfTextureAtlas_; // Separate texture atlas for SDF content
 
     // SDF rendering parameters
     bool sdfEnabled_ = true;

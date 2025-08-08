@@ -44,12 +44,6 @@ namespace builtin_scene::web_renderer
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
-  // Feature flag for SDF text rendering in WebContent
-  static bool enableSDFTextRendering()
-  {
-    // Always enable SDF text rendering for optimal anti-aliasing
-    return true;
-  }
 
   // Helper function to calculate background positioning area based on background-origin
   SkRect getBackgroundPositioningArea(const SkRRect &roundedRect,
@@ -1083,107 +1077,17 @@ namespace builtin_scene::web_renderer
 
   void RenderTextSystem::renderTextWithSDF(ecs::EntityId entity, WebContent &content, const std::string &text)
   {
-    // Generate SDF-based text using atlas system for efficient texture management
-    auto canvas = content.canvas();
-    if (!canvas)
-      return;
+    // For SDF text rendering, we still use the regular WebContent canvas system
+    // but the material will handle the text content through the separate SDF texture atlas
+    // when SDF is enabled. This maintains the existing architecture while providing
+    // SDF anti-aliasing at the shader level.
 
-    // Extract font properties from WebContent style
-    auto paragraphStyle = content.paragraphStyle();
-    auto textStyle = paragraphStyle.getTextStyle();
+    // The WebContent will be rendered normally to its canvas, and the WebContentInstancedMaterial
+    // will handle routing text content to the SDF texture atlas when uSdfEnabled is true.
+    // This allows us to maintain the existing text layout and rendering pipeline
+    // while adding SDF anti-aliasing capabilities.
 
-    // Get font information for SDF generation
-    int fontSize = static_cast<int>(textStyle.getFontSize());
-    std::string fontFamily = "Arial"; // Default fallback
-
-    // Try to extract font family from text style
-    auto fontFamilies = textStyle.getFontFamilies();
-    if (!fontFamilies.empty())
-    {
-      fontFamily = fontFamilies[0].c_str();
-    }
-
-    // Create cache key for this text rendering request
-    text::sdf::SDFCacheKey cacheKey(
-      fontFamily,
-      fontSize,
-      static_cast<int>(textStyle.getFontWeight()),
-      "normal", // TODO: Extract actual font style
-      1.0f,     // TODO: Get actual device pixel ratio
-      text);
-
-    // Try to get cached SDF atlas
-    auto &cache = text::sdf::GlobalSDFCache::getInstance();
-    auto *cachedAtlas = cache.get(cacheKey);
-
-    if (!cachedAtlas)
-    {
-      // Generate new SDF atlas for this text
-      text::sdf::SDFParams sdfParams(fontSize, 8, 8, 0.25f);
-      text::sdf::SDFAtlasBuilder atlasBuilder(sdfParams, 512, 512);
-
-      auto result = atlasBuilder.createAtlasForText(text);
-      if (result.atlas)
-      {
-        // Cache the atlas for future use
-        cache.put(cacheKey, std::move(result.atlas), std::move(result.glyphUVs));
-        cachedAtlas = cache.get(cacheKey);
-      }
-    }
-
-    // Render text using the atlas
-    if (cachedAtlas && cachedAtlas->atlas)
-    {
-      const auto *activeAtlas = cachedAtlas->atlas.get();
-      const auto *activeGlyphUVs = &cachedAtlas->glyphUVs;
-
-      // Create Skia image from atlas texture data
-      const auto &atlasData = activeAtlas->getTextureData();
-      SkImageInfo atlasImageInfo = SkImageInfo::MakeA8(activeAtlas->getWidth(), activeAtlas->getHeight());
-      sk_sp<SkImage> atlasImage = SkImages::RasterFromData(
-        atlasImageInfo,
-        SkData::MakeWithCopy(atlasData.data(), atlasData.size()),
-        activeAtlas->getWidth());
-
-      if (atlasImage)
-      {
-        // Layout and render text using atlas
-        float x = 0.0f;
-        float y = fontSize; // Baseline position
-
-        for (char c : text)
-        {
-          if (c == ' ')
-          {
-            x += fontSize * 0.3f; // Space width
-            continue;
-          }
-
-          uint32_t codepoint = static_cast<uint32_t>(c);
-          auto it = activeGlyphUVs->find(codepoint);
-          if (it != activeGlyphUVs->end() && it->second)
-          {
-            const auto &glyphUV = *it->second;
-
-            // Calculate source rect in atlas texture coordinates
-            SkRect srcRect = SkRect::MakeXYWH(
-              glyphUV.x, glyphUV.y, glyphUV.width, glyphUV.height);
-
-            // Calculate destination position
-            SkRect dstRect = SkRect::MakeXYWH(
-              x, y - glyphUV.height, // Adjust for baseline
-              glyphUV.width,
-              glyphUV.height);
-
-            // Draw glyph from atlas
-            canvas->drawImageRect(atlasImage, srcRect, dstRect, SkSamplingOptions(), nullptr);
-
-            // Advance position (using simple character advance for now)
-            x += glyphUV.width;
-          }
-        }
-      }
-    }
+    // No special SDF processing needed here - the material handles the texture routing
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

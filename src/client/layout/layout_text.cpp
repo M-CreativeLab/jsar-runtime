@@ -4,7 +4,6 @@
 #include <client/per_process.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/text.hpp>
-#include <client/builtin_scene/text/SDFTextRenderer.hpp>
 #include <client/dom/text.hpp>
 
 #include "./layout_text.hpp"
@@ -16,11 +15,6 @@ namespace client_layout
   using namespace builtin_scene;
   using namespace skia::textlayout;
 
-  // Always enable SDF text rendering for optimal anti-aliasing
-  static bool enableSDFTextRendering()
-  {
-    return true;
-  }
 
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
       : LayoutObject(textNode)
@@ -110,20 +104,11 @@ namespace client_layout
     {
       bool shouldUpdateContent = false;
 
-      // Update regular Text2d component if it exists
+      // Update Text2d component (SDF rendering is now handled at material level)
       auto textComponent = scene.getComponent<Text2d>(entity());
       if (textComponent != nullptr)
       {
         textComponent->content = transformedText();
-        shouldUpdateContent = true;
-      }
-
-      // Update SDF text component if it exists
-      auto sdfTextComponent = scene.getComponent<text::SDFText2d>(entity());
-      if (sdfTextComponent != nullptr)
-      {
-        sdfTextComponent->content = transformedText();
-        sdfTextComponent->isDirty = true;
         shouldUpdateContent = true;
       }
 

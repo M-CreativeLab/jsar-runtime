@@ -22,6 +22,7 @@ namespace builtin_scene::materials
       , width_(0.0f)
       , height_(0.0f)
       , textureAtlas_(nullptr)
+      , sdfTextureAtlas_(nullptr)
       , textureOffset_(0.0f, 0.0f)
       , textureScale_(1.0f, 1.0f)
   {
@@ -43,6 +44,7 @@ namespace builtin_scene::materials
   }
 
     LOAD_UNIFORM_LOCATION("instanceTexAltas");
+    LOAD_UNIFORM_LOCATION("sdfTextureAtlas");
     LOAD_UNIFORM_LOCATION("textureTransformation");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
     LOAD_UNIFORM_LOCATION("borderDataTexture");
@@ -67,6 +69,10 @@ namespace builtin_scene::materials
     assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
 
+    // Initialize the SDF texture atlas for text content
+    assert(sdfTextureAtlas_ == nullptr && "The SDF texture atlas is already initialized.");
+    sdfTextureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture2);
+
     // Initialize border data texture manager
     borderDataTexture_ = make_unique<CSSBorderDataTexture>();
     if (!borderDataTexture_->initialize(glContext))
@@ -75,7 +81,7 @@ namespace builtin_scene::materials
       return false;
     }
 
-    return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
+    return textureAtlas_ != nullptr && sdfTextureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
 
   void WebContentInstancedMaterial::onBeforeDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
@@ -97,11 +103,16 @@ namespace builtin_scene::materials
                                           textureOffset_.y,
                                           1.0f));
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    glContext->uniform1i(uniform("sdfTextureAtlas"), 2);
     glContext->uniform1i(uniform("borderDataTexture"), 1);
 
     // Bind the texture atlas.
     assert(textureAtlas_ != nullptr);
     textureAtlas_->onBeforeDraw();
+
+    // Bind the SDF texture atlas.
+    assert(sdfTextureAtlas_ != nullptr);
+    sdfTextureAtlas_->onBeforeDraw();
 
     // Bind the border data texture
     if (borderDataTexture_ && borderDataTexture_->isInitialized())
@@ -111,6 +122,7 @@ namespace builtin_scene::materials
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
   {
     textureAtlas_->onAfterDraw();
+    sdfTextureAtlas_->onAfterDraw();
   }
 
   void WebContentInstancedMaterial::flipTextureByY(bool flip)
@@ -135,6 +147,11 @@ namespace builtin_scene::materials
   CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
   {
     return borderDataTexture_.get();
+  }
+
+  TextureAtlas *WebContentInstancedMaterial::getSdfTextureAtlas() const
+  {
+    return sdfTextureAtlas_.get();
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
