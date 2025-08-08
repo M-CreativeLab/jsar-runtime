@@ -39,41 +39,41 @@ namespace builtin_scene::materials
     auto positionLoc = glContext->getAttribLocation(program, "a_position");
     if (positionLoc.has_value())
     {
-      glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, positionBuffer_);
+      glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, positionBuffer_);
       glContext->enableVertexAttribArray(positionLoc.value());
-      glContext->vertexAttribPointer(positionLoc.value(), 3, client_graphics::WebGL2Context::FLOAT, false, 0, 0);
+      glContext->vertexAttribPointer(positionLoc.value(), 3, WEBGL_FLOAT, false, 0, 0);
     }
 
     auto colorLoc = glContext->getAttribLocation(program, "a_color");
     if (colorLoc.has_value())
     {
-      glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, colorBuffer_);
+      glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, colorBuffer_);
       glContext->enableVertexAttribArray(colorLoc.value());
-      glContext->vertexAttribPointer(colorLoc.value(), 3, client_graphics::WebGL2Context::FLOAT, false, 0, 0);
+      glContext->vertexAttribPointer(colorLoc.value(), 3, WEBGL_FLOAT, false, 0, 0);
     }
 
     auto opacityLoc = glContext->getAttribLocation(program, "a_opacity");
     if (opacityLoc.has_value())
     {
-      glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, opacityBuffer_);
+      glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, opacityBuffer_);
       glContext->enableVertexAttribArray(opacityLoc.value());
-      glContext->vertexAttribPointer(opacityLoc.value(), 1, client_graphics::WebGL2Context::FLOAT, false, 0, 0);
+      glContext->vertexAttribPointer(opacityLoc.value(), 1, WEBGL_FLOAT, false, 0, 0);
     }
 
     auto scaleLoc = glContext->getAttribLocation(program, "a_scale");
     if (scaleLoc.has_value())
     {
-      glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, scaleBuffer_);
+      glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, scaleBuffer_);
       glContext->enableVertexAttribArray(scaleLoc.value());
-      glContext->vertexAttribPointer(scaleLoc.value(), 3, client_graphics::WebGL2Context::FLOAT, false, 0, 0);
+      glContext->vertexAttribPointer(scaleLoc.value(), 3, WEBGL_FLOAT, false, 0, 0);
     }
 
     auto rotationLoc = glContext->getAttribLocation(program, "a_rotation");
     if (rotationLoc.has_value())
     {
-      glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, rotationBuffer_);
+      glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, rotationBuffer_);
       glContext->enableVertexAttribArray(rotationLoc.value());
-      glContext->vertexAttribPointer(rotationLoc.value(), 4, client_graphics::WebGL2Context::FLOAT, false, 0, 0);
+      glContext->vertexAttribPointer(rotationLoc.value(), 4, WEBGL_FLOAT, false, 0, 0);
     }
   }
 
@@ -155,41 +155,41 @@ namespace builtin_scene::materials
     }
 
     // Upload position data
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, positionBuffer_);
-    glContext->bufferData(client_graphics::WebGL2Context::ARRAY_BUFFER,
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, positionBuffer_);
+    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
                           positions.size() * sizeof(float),
                           positions.data(),
-                          client_graphics::WebGL2Context::STATIC_DRAW);
+                          client_graphics::WebGLBufferUsage::kStaticDraw);
 
     // Upload color data
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, colorBuffer_);
-    glContext->bufferData(client_graphics::WebGL2Context::ARRAY_BUFFER,
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, colorBuffer_);
+    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
                           colors.size() * sizeof(float),
                           colors.data(),
-                          client_graphics::WebGL2Context::STATIC_DRAW);
+                          client_graphics::WebGLBufferUsage::kStaticDraw);
 
     // Upload opacity data
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, opacityBuffer_);
-    glContext->bufferData(client_graphics::WebGL2Context::ARRAY_BUFFER,
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, opacityBuffer_);
+    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
                           opacities.size() * sizeof(float),
                           opacities.data(),
-                          client_graphics::WebGL2Context::STATIC_DRAW);
+                          client_graphics::WebGLBufferUsage::kStaticDraw);
 
     // Upload scale data
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, scaleBuffer_);
-    glContext->bufferData(client_graphics::WebGL2Context::ARRAY_BUFFER,
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, scaleBuffer_);
+    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
                           scales.size() * sizeof(float),
                           scales.data(),
-                          client_graphics::WebGL2Context::STATIC_DRAW);
+                          client_graphics::WebGLBufferUsage::kStaticDraw);
 
     // Upload rotation data
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, rotationBuffer_);
-    glContext->bufferData(client_graphics::WebGL2Context::ARRAY_BUFFER,
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, rotationBuffer_);
+    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
                           rotations.size() * sizeof(float),
                           rotations.data(),
-                          client_graphics::WebGL2Context::STATIC_DRAW);
+                          client_graphics::WebGLBufferUsage::kStaticDraw);
 
     // Unbind buffer
-    glContext->bindBuffer(client_graphics::WebGL2Context::ARRAY_BUFFER, nullptr);
+    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, nullptr);
   }
 }

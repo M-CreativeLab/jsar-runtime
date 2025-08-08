@@ -40,7 +40,7 @@ namespace builtin_scene::model_renderer
     using ecs::System::System;
 
   protected:
-    virtual void render(ecs::EntityId entity);
+    virtual void render(ecs::EntityId entity, Model3d &);
   };
 
   /**
@@ -59,8 +59,7 @@ namespace builtin_scene::model_renderer
     void onExecute() override;
 
   private:
-    void render(ecs::EntityId entity) override;
-    void render(ecs::EntityId entity, std::shared_ptr<client_graphics::WebGL2Context> glContext);
+    void render(ecs::EntityId entity, Model3d &) override;
   };
 
   /**
