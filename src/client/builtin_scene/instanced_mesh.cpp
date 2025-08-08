@@ -13,15 +13,15 @@ namespace builtin_scene
 
   void Instance::randomColor()
   {
-    auto &color = data_.color;
+    glm::vec4 color(1.0f);
     color.r = glm::linearRand(0.0f, 1.0f);
     color.g = glm::linearRand(0.0f, 1.0f);
     color.b = glm::linearRand(0.0f, 1.0f);
     color.a = 1.0f;
-    // Data change - no notification needed
+    setColor(color);
   }
 
-  bool Instance::setColor(const glm::vec4 &color, bool &hasChanged)
+  bool Instance::setColor(const glm::vec4 &color)
   {
     if (data_.color.r == color.r &&
         data_.color.g == color.g &&
@@ -30,8 +30,8 @@ namespace builtin_scene
       return false;
 
     data_.color = color;
-    // Data change - no notification needed
-    hasChanged = true;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
     return true;
   }
 
@@ -39,32 +39,30 @@ namespace builtin_scene
   {
     auto &transform = data_.transform;
     transform = glm::translate(transform, glm::vec3(tx, ty, tz));
-    // Data change - no notification needed
+    notifyBufferDataChanged();
   }
 
   void Instance::scale(float sx, float sy, float sz)
   {
     auto &transform = data_.transform;
     transform = glm::scale(transform, glm::vec3(sx, sy, sz));
-    // Data change - no notification needed
+    notifyBufferDataChanged();
   }
 
-  void Instance::setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged)
+  void Instance::setTransform(const glm::mat4 &transformationMatrix)
   {
     auto &transform = data_.transform;
     if (transform == transformationMatrix)
       return; // Skip if there is no change.
 
     data_.transform = transformationMatrix;
-    // Data change - no notification needed
-    hasChanged = true;
+    notifyBufferDataChanged();
   }
 
   void Instance::setTexture(TextureOffset uvOffset,
                             TextureOffset uvOffsetR,
                             TextureScale uvScale,
-                            uint32_t layerIndex,
-                            bool &hasChanged)
+                            uint32_t layerIndex)
   {
     if (data_.texUvOffset == uvOffset &&
         data_.texUvOffsetR == uvOffsetR &&
@@ -78,64 +76,54 @@ namespace builtin_scene
     data_.texUvOffsetR = uvOffsetR;
     data_.texUvScale = uvScale;
     data_.texLayerIndex = layerIndex;
-    // Data change - no notification needed
-    hasChanged = true;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
   }
 
-  void Instance::disableTexture(bool &hasChanged)
+  void Instance::disableTexture()
   {
-    setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0, hasChanged);
+    setTexture(TextureOffset(), TextureOffset(), TextureScale(), 0);
   }
 
-  void Instance::setDimensions(float width, float height, bool &hasChanged)
+  void Instance::setDimensions(float width, float height)
   {
     if (data_.dimensions.x == width && data_.dimensions.y == height)
       return; // Skip if there is no change.
 
     data_.dimensions = glm::vec2(width, height);
-    // Data change - no notification needed
-    hasChanged = true;
+    notifyBufferDataChanged();
   }
 
-  void Instance::setBorderRadius(glm::vec4 borderRadius, bool &hasChanged)
+  void Instance::setBorderRadius(glm::vec4 borderRadius)
   {
     if (data_.borderRadius == borderRadius)
       return; // Skip if there is no change.
 
     data_.borderRadius = borderRadius;
-    // Data change - no notification needed
-    hasChanged = true;
+    notifyBufferDataChanged();
   }
 
-  void Instance::setBorderRadius(float topLeft,
-                                 float topRight,
-                                 float bottomRight,
-                                 float bottomLeft,
-                                 bool &hasChanged)
+  void Instance::setBorderRadius(float topLeft, float topRight, float bottomRight, float bottomLeft)
   {
-    setBorderRadius(glm::vec4(topLeft, topRight, bottomRight, bottomLeft), hasChanged);
+    setBorderRadius(glm::vec4(topLeft, topRight, bottomRight, bottomLeft));
   }
 
-  void Instance::setBorderWidth(glm::vec4 borderWidth, bool &hasChanged)
+  void Instance::setBorderWidth(glm::vec4 borderWidth)
   {
     if (borderWidths_ == borderWidth)
       return; // Skip if there is no change.
 
     borderWidths_ = borderWidth;
-    notifyBorderDataChanged();
-    hasChanged = true;
+    setMaybeInvisible();
+    notifyTextureDataChanged();
   }
 
-  void Instance::setBorderWidth(float top,
-                                float right,
-                                float bottom,
-                                float left,
-                                bool &hasChanged)
+  void Instance::setBorderWidth(float top, float right, float bottom, float left)
   {
-    setBorderWidth(glm::vec4(top, right, bottom, left), hasChanged);
+    setBorderWidth(glm::vec4(top, right, bottom, left));
   }
 
-  void Instance::setBorderColor(glm::vec4 borderColor, bool &hasChanged)
+  void Instance::setBorderColor(glm::vec4 borderColor)
   {
     // Set the same color for all four sides for now
     bool anyChanged = false;
@@ -150,24 +138,44 @@ namespace builtin_scene
 
     if (anyChanged)
     {
-      notifyBorderDataChanged();
-      hasChanged = true;
+      setMaybeInvisible();
+      notifyTextureDataChanged();
     }
   }
 
-  void Instance::setBorderColor(float r, float g, float b, float a, bool &hasChanged)
+  void Instance::setBorderColor(float r, float g, float b, float a)
   {
-    setBorderColor(glm::vec4(r, g, b, a), hasChanged);
+    setBorderColor(glm::vec4(r, g, b, a));
   }
 
-  void Instance::setBorderStyle(float borderStyle, bool &hasChanged)
+  void Instance::setBorderStyle(float borderStyle)
   {
     if (data_.borderStyle == borderStyle)
       return; // Skip if there is no change.
 
     data_.borderStyle = borderStyle;
-    notifyBorderDataChanged();
-    hasChanged = true;
+    setMaybeInvisible();
+    notifyBufferDataChanged();
+  }
+
+  bool Instance::hasNoBorders() const
+  {
+    // Fast check for none border style.
+    if (data_.isBorderNone())
+      return true;
+
+    // Check if all border widths are zero and all border colors are transparent.
+    if (borderWidths_ == glm::vec4(0.0f) &&
+        borderColors_[0].a == 0.0f &&
+        borderColors_[1].a == 0.0f &&
+        borderColors_[2].a == 0.0f &&
+        borderColors_[3].a == 0.0f)
+    {
+      return true;
+    }
+
+    // Otherwise, there are borders.
+    return false;
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
@@ -190,42 +198,40 @@ namespace builtin_scene
                    holders_.end());
   }
 
-  void Instance::notifyHolders()
-  {
-    // This method is kept for general data changes that don't affect structure or border data
-    // For now, it does nothing to avoid triggering unnecessary updates
-  }
-
-  void Instance::notifyBorderDataChanged()
+  void Instance::notifyBufferDataChanged()
   {
     for (auto &holder : holders_)
     {
       if (auto holderPtr = holder.lock())
-        holderPtr->markBorderDataAsDirty();
+        holderPtr->markBufferAsDirty();
     }
   }
 
-  void Instance::notifyStructureChanged()
+  void Instance::notifyTextureDataChanged()
   {
     for (auto &holder : holders_)
     {
       if (auto holderPtr = holder.lock())
-        holderPtr->markStructureAsDirty();
+        holderPtr->markTextureDataAsDirty();
     }
   }
 
   bool Instance::skipToDraw() const
   {
-    // Skip if the instance is not enabled.
-    if (!enabled_)
-      return true;
-
-    // Skip if the instance is transparent and not own a texture.
-    if (data_.isTransparent() && !data_.ownTexture())
+    // Skip if the instance is disabled or maybe invisible.
+    if (!enabled_ || maybeInvisible_)
       return true;
 
     // Otherwise, the instance is ready to draw.
     return false;
+  }
+
+  void Instance::setMaybeInvisible()
+  {
+    // The instance should be invisible if it has transparent color, no texture, and no borders to draw.
+    maybeInvisible_ = data_.isTransparent() &&
+                      !data_.ownTexture() &&
+                      hasNoBorders();
   }
 
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
@@ -234,8 +240,8 @@ namespace builtin_scene
       : filter(filter)
       , vao(vao)
       , instanceVbo(instanceVbo)
-      , structureDirty_(true)
-      , borderDataDirty_(true)
+      , bufferDataDirty_(true)
+      , textureDataDirty_(true)
   {
     assert(filter != InstanceFilter::kAll);
   }
@@ -246,7 +252,7 @@ namespace builtin_scene
 
     for (auto &[id, instance] : instances)
     {
-      if (TR_UNLIKELY(instance == nullptr))
+      if (instance == nullptr) [[unlikely]]
         continue;
       if (instance->skipToDraw())
         continue;
@@ -268,21 +274,25 @@ namespace builtin_scene
     if (sortingOrder != SortingOrder::kNone && list_.size() > 1)
     {
       // Sorting the instances by z-index and the sorting order.
-      sort(list_.begin(), list_.end(), [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
-           {
-             if (auto aPtr = a.lock(); aPtr != nullptr)
-             {
-               if (auto bPtr = b.lock(); bPtr != nullptr)
-               {
-                 if (sortingOrder == SortingOrder::kFrontToBack)
-                   return aPtr->renderQueue_ < bPtr->renderQueue_;
-                 else if (sortingOrder == SortingOrder::kBackToFront)
-                   return aPtr->renderQueue_ > bPtr->renderQueue_;
-               }
-             }
-             return false; });
+      auto sortInstances = [sortingOrder](const weak_ptr<Instance> &a, const weak_ptr<Instance> &b)
+      {
+        if (auto aPtr = a.lock(); aPtr != nullptr)
+        {
+          if (auto bPtr = b.lock(); bPtr != nullptr)
+          {
+            if (sortingOrder == SortingOrder::kFrontToBack)
+              return aPtr->renderQueue_ < bPtr->renderQueue_;
+            else if (sortingOrder == SortingOrder::kBackToFront)
+              return aPtr->renderQueue_ > bPtr->renderQueue_;
+          }
+        }
+        return false;
+      };
+      sort(list_.begin(), list_.end(), sortInstances);
     }
-    structureDirty_ = true;
+
+    markBufferAsDirty();
+    markTextureDataAsDirty();
   }
 
   size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
@@ -304,7 +314,7 @@ namespace builtin_scene
   void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
     // Update instance VBO if structure is dirty
-    if (structureDirty_)
+    // if (true || bufferDataDirty_)
     {
       size_t len = 0;
       vector<InstanceData> array;
@@ -313,14 +323,16 @@ namespace builtin_scene
         glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
         glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
       }
-      structureDirty_ = false;
+      bufferDataDirty_ = false;
     }
 
     // Update border data texture if border data is dirty
-    if (borderDataDirty_ && borderDataTexture != nullptr && borderDataTexture->isInitialized())
+    if (textureDataDirty_ &&
+        borderDataTexture != nullptr &&
+        borderDataTexture->isInitialized())
     {
       borderDataTexture->updateBorderData(getInstances());
-      borderDataDirty_ = false;
+      textureDataDirty_ = false;
     }
   }
 
@@ -357,7 +369,8 @@ namespace builtin_scene
       instancePtr->removeHolder(shared_from_this());
     }
     list_.clear();
-    structureDirty_ = true;
+    bufferDataDirty_ = true;
+    textureDataDirty_ = true;
   }
 
   void RenderableInstancesList::addInstance(std::shared_ptr<Instance> instance)
@@ -366,7 +379,7 @@ namespace builtin_scene
       return;
     list_.push_back(instance);
     instance->addHolder(shared_from_this());
-    structureDirty_ = true;
+    bufferDataDirty_ = true;
   }
 
   size_t InstancedMeshBase::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,
@@ -452,9 +465,9 @@ namespace builtin_scene
     shared_lock<shared_mutex> lock(mutex_);
     for (auto &[id, instance] : idToInstanceMap_)
     {
-      auto hasChanged = callback(id, *instance);
-      // Do not automatically mark as dirty - let individual setters handle notifications
-      // based on the type of change (structure vs data vs border data)
+      auto needsUpdate = callback(id, *instance);
+      if (needsUpdate)
+        markStructureAsDirty();
     }
   }
 
@@ -516,13 +529,13 @@ namespace builtin_scene
 
   void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
   {
-    if (!structureDirty_ && !ignoreDirty)
+    if (!isStructureDirty_ && !ignoreDirty)
       return;
 
     shared_lock<shared_mutex> lock(mutex_);
     opaqueInstances_->update(idToInstanceMap_);
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
-    structureDirty_ = false;
+    isStructureDirty_ = false;
   }
 }

@@ -268,26 +268,65 @@ namespace builtin_scene
   void RenderSystem::updateInstancedMeshData(const Mesh3d &meshComponent, optional<XRRenderTarget> renderTarget)
   {
     assert(meshComponent.isInstancedMesh());
-
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
+
+    /**
+     * This function should return a `boolean` value, that indicates whether the `InstancedMesh` needs to refresh its
+     * renderable lists (opaque and transparent) after this iteration. Refreshing the renderable lists is used to update
+     * the instances for opaque and transparent rendering passes, so we only need to achieve it when the lists might be
+     * changed, the following conditions might change the lists:
+     * 
+     * 1. When there is a new instance added or an existing instance removed, this is handled by the `InstancedMesh` 
+     *    itself.
+     * 2. When an instance's `enabled` state changes, it might affect whether the instance should be rendered.
+     * 3. When an instance's `isOpaque` state changes, it might affect which render pass (opaque or transparent) the
+     *    instance belongs to.
+     * 4. When an instance's `renderQueue` changes, it might affect the order of rendering within its render pass.
+     * 5. When an instance's `maybeInvisible` state changes, it might affect whether the instance should be rendered.
+     * 
+     * Other property changes, such as transformation matrix, texture, color, border, etc., do not affect the
+     * renderable lists, so they do not require refreshing the lists.
+     * 
+     * The `maybeInvisible` state is dynamically determined based on the instance's properties, such as if it has a
+     * transparent color, no texture, and no borders to draw. If an instance's `maybeInvisible` state changes,
+     * it might affect whether the instance should be rendered, so we need to refresh the renderable lists in that case.
+     */
     auto updateInstanceData = [this, &renderTarget](ecs::EntityId id, Instance &instance) -> bool
     {
-      bool hasChanged = false;
+      bool needsUpdate = false;
       auto transformComponent = getComponent<Transform>(id);
       auto webContentComponent = getComponent<WebContent>(id);
 
+      // Record the maybe invisible state before updating
+      bool maybeInvisibleBeforeUpdating = instance.maybeInvisible();
+
+      // Update for instance transformation
+      // TODO(yorkie): consider improving the performance of getting transformation matrix
       if (TR_LIKELY(transformComponent != nullptr))
       {
         auto currentMatrix = getTransformationMatrix(id);
-        instance.setTransform(currentMatrix, hasChanged);
+        instance.setTransform(currentMatrix);
         transformComponent->setComputedMatrix(currentMatrix);
       }
+
+      // Update for web content component
       if (TR_LIKELY(webContentComponent != nullptr))
       {
         if (instance.setEnabled(true))
-          hasChanged = true;
+          needsUpdate = true;
         if (instance.setOpaque(webContentComponent->isOpaque()))
-          hasChanged = true;
+          needsUpdate = true;
+
+        // Update instance render queue
+        auto elementComponent = getComponent<hierarchy::Element>(id);
+        if (elementComponent != nullptr &&
+            elementComponent->node != nullptr &&
+            elementComponent->node->isElementOrText())
+        {
+          const auto &elementRenderQueue = elementComponent->node->getRenderQueue();
+          if (instance.setRenderQueue(elementComponent->node->getRenderQueue()))
+            needsUpdate = true;
+        }
 
         // Update instance border data from computed style
         const auto &style = webContentComponent->style();
@@ -295,17 +334,15 @@ namespace builtin_scene
         const auto &borderWidth = fragment->border();
 
         // Update instance basic shape data
-        instance.setBorderRadius(webContentComponent->borderRadius(), hasChanged);
+        instance.setBorderRadius(webContentComponent->borderRadius());
         instance.setDimensions(fragment->contentWidth() + borderWidth.left() + borderWidth.right(),
-                               fragment->contentHeight() + borderWidth.top() + borderWidth.bottom(),
-                               hasChanged);
+                               fragment->contentHeight() + borderWidth.top() + borderWidth.bottom());
 
         // Extract border width (top, right, bottom, left)
-        instance.setBorderWidth(borderWidth.top(),    // top
-                                borderWidth.right(),  // right
-                                borderWidth.bottom(), // bottom
-                                borderWidth.left(),   // left
-                                hasChanged);
+        instance.setBorderWidth(borderWidth.top(),
+                                borderWidth.right(),
+                                borderWidth.bottom(),
+                                borderWidth.left());
 
         // Extract border color (use top border color for now, could be extended for per-side colors)
         const auto &borderColor = style.borderColor();
@@ -316,13 +353,12 @@ namespace builtin_scene
           instance.setBorderColor(SkColorGetR(skColor) / 255.0f,
                                   SkColorGetG(skColor) / 255.0f,
                                   SkColorGetB(skColor) / 255.0f,
-                                  SkColorGetA(skColor) / 255.0f,
-                                  hasChanged);
+                                  SkColorGetA(skColor) / 255.0f);
         }
         else
         {
           // Default to transparent if color is not absolute
-          instance.setBorderColor(0.0f, 0.0f, 0.0f, 0.0f, hasChanged);
+          instance.setBorderColor(0.0f, 0.0f, 0.0f, 0.0f);
         }
 
         // Extract border style (use top border style, convert to float)
@@ -333,24 +369,14 @@ namespace builtin_scene
           borderStyleValue = 1; // solid
         else if (borderStyle.isDashed())
           borderStyleValue = 2; // dashed
-        instance.setBorderStyle(borderStyleValue, hasChanged);
-
-        // Update instance render queue
-        auto elementComponent = getComponent<hierarchy::Element>(id);
-        if (elementComponent != nullptr &&
-            elementComponent->node != nullptr &&
-            elementComponent->node->isElementOrText())
-        {
-          if (instance.setRenderQueue(elementComponent->node->getRenderQueue()))
-            hasChanged = true;
-        }
+        instance.setBorderStyle(borderStyleValue);
 
         // Update instance texture data
         auto textureRect = webContentComponent->textureRect();
         if (textureRect != nullptr)
         {
           int texturePad = webContentComponent->texturePad();
-          instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
+          instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
 
           // Calculate left and right eye texture coordinates for spatial images
           Instance::TextureOffset uvOffset = textureRect->getUvOffset(texturePad);
@@ -380,16 +406,21 @@ namespace builtin_scene
           instance.setTexture(uvOffset,
                               uvOffsetR,
                               uvScale,
-                              textureRect->layer,
-                              hasChanged);
+                              textureRect->layer);
         }
         else
         {
-          instance.setColor(webContentComponent->backgroundColor(), hasChanged);
-          instance.disableTexture(hasChanged);
+          instance.setColor(webContentComponent->backgroundColor());
+          instance.disableTexture();
         }
       }
-      return hasChanged;
+
+      // When the visible state changes, we need to update the renderable list.
+      if (maybeInvisibleBeforeUpdating != instance.maybeInvisible())
+        needsUpdate = true;
+
+      // Return if the instance data needs to trigger the renderable list update.
+      return needsUpdate;
     };
     instancedMesh.iterateInstances(updateInstanceData);
   }

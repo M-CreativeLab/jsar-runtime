@@ -69,6 +69,12 @@ namespace builtin_scene
       return color.a == 0.0f;
     }
 
+    // If the instance has a none border style.
+    inline bool isBorderNone() const
+    {
+      return borderStyle == 0;
+    }
+
     // If the instance own texture to draw.
     inline bool ownTexture() const
     {
@@ -145,32 +151,23 @@ namespace builtin_scene
 
   public:
     void randomColor();
-    bool setColor(const glm::vec4 &color, bool &hasChanged);
+    bool setColor(const glm::vec4 &color);
     void translate(float tx, float ty, float tz);
     void scale(float sx, float sy, float sz);
-    void setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged);
+    void setTransform(const glm::mat4 &transformationMatrix);
     void setTexture(TextureOffset uvOffset,
                     TextureOffset uvOffsetR,
                     TextureScale uvScale,
-                    uint32_t layerIndex,
-                    bool &hasChanged);
-    void disableTexture(bool &hasChanged);
-    void setDimensions(float width, float height, bool &hasChanged);
-    void setBorderRadius(glm::vec4 borderRadius, bool &hasChanged);
-    void setBorderRadius(float topLeft,
-                         float topRight,
-                         float bottomRight,
-                         float bottomLeft,
-                         bool &hasChanged);
-    void setBorderWidth(glm::vec4 borderWidth, bool &hasChanged);
-    void setBorderWidth(float top,
-                        float right,
-                        float bottom,
-                        float left,
-                        bool &hasChanged);
-    void setBorderColor(glm::vec4 borderColor, bool &hasChanged);
-    void setBorderColor(float r, float g, float b, float a, bool &hasChanged);
-    void setBorderStyle(float borderStyle, bool &hasChanged);
+                    uint32_t layerIndex);
+    void disableTexture();
+    void setDimensions(float width, float height);
+    void setBorderRadius(glm::vec4 borderRadius);
+    void setBorderRadius(float topLeft, float topRight, float bottomRight, float bottomLeft);
+    void setBorderWidth(glm::vec4 borderWidth);
+    void setBorderWidth(float top, float right, float bottom, float left);
+    void setBorderColor(glm::vec4 borderColor);
+    void setBorderColor(float r, float g, float b, float a);
+    void setBorderStyle(float borderStyle);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -178,7 +175,7 @@ namespace builtin_scene
     if (PRIV_FIELD != value)                \
     {                                       \
       PRIV_FIELD = value;                   \
-      notifyStructureChanged();             \
+      notifyBufferDataChanged();            \
       return true;                          \
     }                                       \
     else                                    \
@@ -192,6 +189,18 @@ namespace builtin_scene
     IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
+
+    // Getter for RenderQueue
+    inline const RenderQueue &getRenderQueue() const
+    {
+      return renderQueue_;
+    }
+
+    // Returns if the instance might be invisible based on its properties.
+    inline bool maybeInvisible() const
+    {
+      return maybeInvisible_;
+    }
 
     // Getter for instance data
     inline const InstanceData &data() const
@@ -215,19 +224,25 @@ namespace builtin_scene
       return borderColors_;
     }
 
+    // Returns if this instance has no borders to draw.
+    bool hasNoBorders() const;
+
   private:
     // Add a holder to the instance.
     void addHolder(std::shared_ptr<RenderableInstancesList> holder);
     // Remove a holder from the instance.
     void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
-    // Notify the holders that the instance data is updated.
-    void notifyHolders();
-    // Notify the holders that border data has changed.
-    void notifyBorderDataChanged();
-    // Notify the holders that structure has changed (enable/disable, opaque/transparent).
-    void notifyStructureChanged();
+    // Notify the holders that buffer data has changed.
+    void notifyBufferDataChanged();
+    // Notify the holders that texture data has changed.
+    void notifyTextureDataChanged();
     // Returns `true` if the instance should be skipped to draw.
     bool skipToDraw() const;
+    // Set the instance as maybe invisible based on the state of the instance, such as if it has a transparent color,
+    // no texture, and no borders to draw, etc.
+    //
+    // This method should be called when related properties are changed, such as color, texture, border, etc.
+    void setMaybeInvisible();
 
   private:
     InstanceData data_;
@@ -236,6 +251,7 @@ namespace builtin_scene
     RenderQueue renderQueue_;
     RenderLayer renderLayer_;
     bool enabled_ = false;
+    bool maybeInvisible_ = true;
     bool isOpaque_ = false;
 
   private:
@@ -275,13 +291,13 @@ namespace builtin_scene
     {
       return list_.size();
     }
-    inline bool isStructureDirty() const
+    inline bool isBufferDataDirty() const
     {
-      return structureDirty_;
+      return bufferDataDirty_;
     }
-    inline bool isBorderDataDirty() const
+    inline bool isTextureDataDirty() const
     {
-      return borderDataDirty_;
+      return textureDataDirty_;
     }
     /**
      * Update the renderable instances list with the given instances.
@@ -311,13 +327,13 @@ namespace builtin_scene
     void clearInstances();
     // Add an instance to the list.
     void addInstance(std::shared_ptr<Instance> instance);
-    inline void markStructureAsDirty()
+    inline void markBufferAsDirty()
     {
-      structureDirty_ = true;
+      bufferDataDirty_ = true;
     }
-    inline void markBorderDataAsDirty()
+    inline void markTextureDataAsDirty()
     {
-      borderDataDirty_ = true;
+      textureDataDirty_ = true;
     }
 
   public:
@@ -327,8 +343,8 @@ namespace builtin_scene
 
   private:
     std::vector<std::weak_ptr<Instance>> list_;
-    bool structureDirty_ = true;
-    bool borderDataDirty_ = true;
+    bool bufferDataDirty_ = true;
+    bool textureDataDirty_ = true;
   };
 
   class InstancedMeshBase
@@ -373,6 +389,9 @@ namespace builtin_scene
     int instanceCount() const;
     /**
      * Iterate the instances with the given callback.
+     * 
+     * @param callback The callback to call for each instance. The callback should return `true` if the instance needs 
+     *                 to update the structure, otherwise `false`.
      */
     void iterateInstances(std::function<bool(ecs::EntityId, Instance &)> callback);
     /**
@@ -450,7 +469,7 @@ namespace builtin_scene
   private:
     inline void markStructureAsDirty()
     {
-      structureDirty_ = true;
+      isStructureDirty_ = true;
     }
 
   protected:
@@ -462,7 +481,7 @@ namespace builtin_scene
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool isDepthOnlyPassEnabled_ = false;
-    bool structureDirty_ = true;
+    bool isStructureDirty_ = true;
   };
 
   /**
