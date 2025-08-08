@@ -253,9 +253,7 @@ namespace dom
       std::vector<builtin_scene::GaussianSplat> parsedSplats;
       if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
       {
-        cout << "Parsed " << parsedSplats.size() << " splats from .ksplat file." << endl;
-
-        // model.setSplats(parsedSplats);
+        model.setSplats(std::move(parsedSplats));
         model.setLoaded(true);
         DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsedSplats.size());
       }
