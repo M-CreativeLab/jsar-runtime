@@ -55,7 +55,7 @@ namespace builtin_scene::model_renderer
       string ext = src.substr(dotPos + 1);
       transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
       
-      if (ext == "gsplat" || ext == "ply") {
+      if (ext == "ksplat") {
         return Model3d::ModelType::GaussianSplatting;
       } else if (ext == "gltf") {
         return Model3d::ModelType::GLTF;

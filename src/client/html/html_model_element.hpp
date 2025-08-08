@@ -13,7 +13,7 @@ namespace dom
    *
    * This element supports various 3D model formats including:
    * - GLTF/GLB models
-   * - 3DGS (3D Gaussian Splatting) models (.gsplat, .ply)
+   * - 3DGS (3D Gaussian Splatting) models (.ksplat)
    */
   class HTMLModelElement : public HTMLElement
   {

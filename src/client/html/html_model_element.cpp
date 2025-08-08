@@ -2,7 +2,7 @@
 #include <client/dom/document.hpp>
 #include <client/builtin_scene/model_3d.hpp>
 #include <client/builtin_scene/model_3d_renderer.hpp>
-#include <client/builtin_scene/ply_parser.hpp>
+#include <client/builtin_scene/ksplat_parser.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/per_process.hpp>
@@ -245,7 +245,7 @@ namespace dom
       std::string ext = src.substr(dotPos + 1);
       std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
       
-      if (ext == "gsplat" || ext == "ply")
+      if (ext == "ksplat")
       {
         return Model3d::ModelType::GaussianSplatting;
       }
@@ -300,18 +300,18 @@ namespace dom
     
     if (modelType == Model3d::ModelType::GaussianSplatting)
     {
-      // Use PLY parser to parse the model data
+      // Use Ksplat parser to parse the model data
       std::vector<model_renderer::GaussianSplat> parsedSplats;
       
-      if (model_renderer::PlyParser::parse(modelData, parsedSplats))
+      if (model_renderer::KsplatParser::parse(modelData, parsedSplats))
       {
         model.setSplats(parsedSplats);
         model.setLoaded(true);
-        DEBUG("HTMLModelElement", "Successfully parsed PLY file with %zu splats", parsedSplats.size());
+        DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsedSplats.size());
       }
       else
       {
-        std::cerr << "PLY parsing failed" << std::endl;
+        std::cerr << "Ksplat parsing failed" << std::endl;
       }
     }
     else

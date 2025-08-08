@@ -29,7 +29,7 @@ namespace builtin_scene
       Unknown,
       GLTF,
       GLB,
-      GaussianSplatting  // For .gsplat and .ply files
+      GaussianSplatting  // For .ksplat files
     };
 
     Model3d(const std::string &src, ModelType type)
