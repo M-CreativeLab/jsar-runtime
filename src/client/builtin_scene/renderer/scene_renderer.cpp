@@ -383,10 +383,10 @@ namespace builtin_scene
   }
 
   void SceneRenderer::drawInstancedMeshImpl(const Mesh3d &mesh,
-                                            std::shared_ptr<MeshMaterial3d> material,
+                                            shared_ptr<MeshMaterial3d> material,
                                             const client_graphics::WebGLProgramScope &programScope,
                                             RenderPass renderPass,
-                                            std::optional<XRRenderTarget> renderTarget)
+                                            optional<XRRenderTarget> renderTarget)
   {
     assert((renderPass == RenderPass::kOpaques || renderPass == RenderPass::kTransparents) &&
            "RenderPass must be either Opaques or Transparents for instanced meshes.");
