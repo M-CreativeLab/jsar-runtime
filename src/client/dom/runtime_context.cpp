@@ -1,5 +1,6 @@
 #include <node/v8.h>
 #include "./runtime_context.hpp"
+#include "../per_process.hpp"
 
 namespace dom
 {
@@ -100,8 +101,46 @@ namespace dom
 
   v8::Local<v8::Value> RuntimeContext::fetchResourceSync(const string &url, const string &responseType)
   {
-    assert(false && "fetchResourceSync is not implemented");
-    return v8::Local<v8::Value>();
+    assert(inScriptingThread() &&
+           "fetchResourceSync() must be called in the scripting thread");
+
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::EscapableHandleScope handleScope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope contextScope(context);
+
+    // Call the fetch function to get a promise
+    v8::Local<v8::Value> promiseValue = callFetchFunction(url, responseType);
+    if (!promiseValue->IsPromise())
+    {
+      auto message = v8::String::NewFromUtf8(isolate, "Fetch function must return a promise").ToLocalChecked();
+      isolate->ThrowException(v8::Exception::TypeError(message));
+      return v8::Local<v8::Value>();
+    }
+
+    v8::Local<v8::Promise> fetchPromise = promiseValue.As<v8::Promise>();
+    
+    // Wait for the promise to settle by running the event loop
+    while (fetchPromise->State() == v8::Promise::kPending)
+    {
+      // Process microtasks and run the event loop once
+      v8::MicrotasksScope microtasksScope(isolate, v8::MicrotasksScope::kRunMicrotasks);
+      uv_run(TrClientContextPerProcess::Get()->getScriptingEventLoop(), UV_RUN_ONCE);
+      
+      // Process any pending V8 tasks
+      isolate->PerformMicrotaskCheckpoint();
+    }
+
+    // Check if the promise was rejected
+    if (fetchPromise->State() == v8::Promise::kRejected)
+    {
+      v8::Local<v8::Value> rejectValue = fetchPromise->Result();
+      isolate->ThrowException(rejectValue);
+      return v8::Local<v8::Value>();
+    }
+
+    // Promise was fulfilled, return the result
+    return handleScope.Escape(fetchPromise->Result());
   }
 
   void RuntimeContext::fetchTextSourceResource(const string &url,

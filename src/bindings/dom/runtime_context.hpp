@@ -23,6 +23,7 @@ namespace dombinding
       using T = RuntimeContextBase<ObjectType, ContextType>;
       return {
         T::InstanceMethod("setResourceLoader", &T::SetResourceLoader),
+        T::InstanceMethod("fetchResourceSync", &T::FetchResourceSync),
       };
     }
     RuntimeContextBase(const Napi::CallbackInfo &info)
@@ -54,6 +55,46 @@ namespace dombinding
       else
       {
         Napi::TypeError::New(env, "Expected an object with a fetch function.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+
+    Napi::Value FetchResourceSync(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 2)
+      {
+        Napi::TypeError::New(env, "Expected at least 2 arguments: url and responseType").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      if (!info[0].IsString() || !info[1].IsString())
+      {
+        Napi::TypeError::New(env, "Expected string arguments").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      std::string url = info[0].As<Napi::String>();
+      std::string responseType = info[1].As<Napi::String>();
+
+      try
+      {
+        v8::Local<v8::Value> result = contextImpl->fetchResourceSync(url, responseType);
+        if (result.IsEmpty())
+        {
+          return env.Undefined();
+        }
+
+        // Convert V8 value to NAPI value
+        napi_value napiResult;
+        memcpy(&napiResult, static_cast<void *>(&result), sizeof(result));
+        return Napi::Value(env, napiResult);
+      }
+      catch (const std::exception &e)
+      {
+        Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
         return env.Undefined();
       }
     }

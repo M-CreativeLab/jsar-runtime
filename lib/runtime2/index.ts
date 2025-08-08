@@ -238,7 +238,7 @@ export class TransmuteRuntime2 extends EventTarget {
   /**
    * Parse HTML and inline external scripts to ensure synchronous execution.
    */
-  private async inlineExternalScripts(htmlContent: string, baseUrl: string): Promise<string> {
+  private inlineExternalScripts(htmlContent: string, baseUrl: string): string {
     // Simple regex to find script tags with src attributes
     const scriptRegex = /<script([^>]*)\s+src\s*=\s*['"]([^'"]+)['"]([^>]*)>(\s*<\/script>)?/gi;
     const matches = Array.from(htmlContent.matchAll(scriptRegex));
@@ -265,8 +265,8 @@ export class TransmuteRuntime2 extends EventTarget {
         const resolvedUrl = new URL(scriptUrl, baseUrl).href;
         console.info(`Inlining script: ${resolvedUrl}`);
 
-        // Fetch the script content
-        const scriptContent = await this.#resourceLoader.fetch(resolvedUrl, {}, 'string');
+        // Use synchronous fetch via BrowsingContext
+        const scriptContent = this.#browsingContext.fetchResourceSync(resolvedUrl, 'string');
 
         // Create inline script tag (remove src attribute)
         const inlineScript = `<script${attributesBefore}${attributesAfter}>\n${scriptContent}\n</script>`;

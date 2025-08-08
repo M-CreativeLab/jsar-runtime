@@ -265,6 +265,15 @@ declare namespace Transmute {
      * @param loader the resource loader.
      */
     setResourceLoader(loader: ResourceLoader): void;
+
+    /**
+     * Fetch a resource synchronously.
+     * 
+     * @param url The URL of the resource to fetch.
+     * @param responseType The type of the response to expect: "string", "arraybuffer" or "json".
+     * @returns The fetched resource.
+     */
+    fetchResourceSync<AsType extends keyof ResourceResponseTypesMap>(url: string, responseType: AsType): ResourceResponseTypesMap[AsType];
   }
 
   /**
