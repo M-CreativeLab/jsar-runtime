@@ -102,7 +102,14 @@ namespace builtin_scene::model_loaders
         splats.push_back(splat);
       }
 
-      DEBUG(LOG_TAG, "Successfully loaded .ksplat file with %zu splats", splats.size());
+      // Sort splats by depth (z-coordinate) for proper transparency blending
+      // This is essential for 3D Gaussian Splatting rendering
+      std::sort(splats.begin(), splats.end(), [](const model_renderer::GaussianSplat &a, const model_renderer::GaussianSplat &b)
+                {
+                  return a.position[2] < b.position[2]; // Sort by z-coordinate (depth)
+                });
+
+      DEBUG(LOG_TAG, "Successfully loaded .ksplat file with %zu splats (sorted by depth)", splats.size());
       return true;
     }
     catch (const std::exception &e)
