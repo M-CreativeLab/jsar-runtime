@@ -13,14 +13,17 @@ namespace builtin_scene::model_renderer
 
   bool KsplatParser::parse(const std::vector<char> &data, std::vector<GaussianSplat> &splats)
   {
-    try {
+    try
+    {
       uint32_t vertexCount;
-      if (!validateHeader(data, vertexCount)) {
+      if (!validateHeader(data, vertexCount))
+      {
         DEBUG(LOG_TAG, "Invalid .ksplat header");
         return false;
       }
 
-      if (vertexCount == 0) {
+      if (vertexCount == 0)
+      {
         DEBUG(LOG_TAG, "No vertices found in .ksplat file");
         return false;
       }
@@ -32,28 +35,30 @@ namespace builtin_scene::model_renderer
 
       // .ksplat format stores data in the following order for each vertex:
       // - Position: 3 floats (x, y, z)
-      // - Scale: 3 floats (sx, sy, sz) 
+      // - Scale: 3 floats (sx, sy, sz)
       // - Color: 4 bytes (r, g, b, opacity) as packed uint8_t values
       // - Rotation: 4 floats (quaternion: x, y, z, w)
-      
-      const size_t vertexSize = 3 * sizeof(float) + // position
-                               3 * sizeof(float) + // scale  
-                               4 * sizeof(uint8_t) + // color + opacity
-                               4 * sizeof(float); // rotation quaternion
 
-      if (data.size() < 8 + vertexCount * vertexSize) {
-        DEBUG(LOG_TAG, "Insufficient data in .ksplat file. Expected %zu bytes, got %zu", 
-              8 + vertexCount * vertexSize, data.size());
+      const size_t vertexSize = 3 * sizeof(float) +   // position
+                                3 * sizeof(float) +   // scale
+                                4 * sizeof(uint8_t) + // color + opacity
+                                4 * sizeof(float);    // rotation quaternion
+
+      if (data.size() < 8 + vertexCount * vertexSize)
+      {
+        DEBUG(LOG_TAG, "Insufficient data in .ksplat file. Expected %zu bytes, got %zu", 8 + vertexCount * vertexSize, data.size());
         return false;
       }
 
-      for (uint32_t i = 0; i < vertexCount; ++i) {
+      for (uint32_t i = 0; i < vertexCount; ++i)
+      {
         GaussianSplat splat;
 
         // Read position (3 floats)
         if (!readBinary(data, offset, splat.position[0]) ||
             !readBinary(data, offset, splat.position[1]) ||
-            !readBinary(data, offset, splat.position[2])) {
+            !readBinary(data, offset, splat.position[2]))
+        {
           DEBUG(LOG_TAG, "Failed to read position for vertex %u", i);
           return false;
         }
@@ -61,7 +66,8 @@ namespace builtin_scene::model_renderer
         // Read scale (3 floats)
         if (!readBinary(data, offset, splat.scale[0]) ||
             !readBinary(data, offset, splat.scale[1]) ||
-            !readBinary(data, offset, splat.scale[2])) {
+            !readBinary(data, offset, splat.scale[2]))
+        {
           DEBUG(LOG_TAG, "Failed to read scale for vertex %u", i);
           return false;
         }
@@ -71,7 +77,8 @@ namespace builtin_scene::model_renderer
         if (!readBinary(data, offset, colorData[0]) ||
             !readBinary(data, offset, colorData[1]) ||
             !readBinary(data, offset, colorData[2]) ||
-            !readBinary(data, offset, colorData[3])) {
+            !readBinary(data, offset, colorData[3]))
+        {
           DEBUG(LOG_TAG, "Failed to read color for vertex %u", i);
           return false;
         }
@@ -86,7 +93,8 @@ namespace builtin_scene::model_renderer
         if (!readBinary(data, offset, splat.rotation[0]) ||
             !readBinary(data, offset, splat.rotation[1]) ||
             !readBinary(data, offset, splat.rotation[2]) ||
-            !readBinary(data, offset, splat.rotation[3])) {
+            !readBinary(data, offset, splat.rotation[3]))
+        {
           DEBUG(LOG_TAG, "Failed to read rotation for vertex %u", i);
           return false;
         }
@@ -96,17 +104,19 @@ namespace builtin_scene::model_renderer
 
       DEBUG(LOG_TAG, "Successfully parsed .ksplat file with %zu splats", splats.size());
       return true;
-
-    } catch (const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
       DEBUG(LOG_TAG, "Error parsing .ksplat file: %s", e.what());
       return false;
     }
   }
 
-  template<typename T>
+  template <typename T>
   bool KsplatParser::readBinary(const std::vector<char> &data, size_t &offset, T &value)
   {
-    if (offset + sizeof(T) > data.size()) {
+    if (offset + sizeof(T) > data.size())
+    {
       return false;
     }
 
@@ -117,19 +127,22 @@ namespace builtin_scene::model_renderer
 
   bool KsplatParser::validateHeader(const std::vector<char> &data, uint32_t &vertexCount)
   {
-    if (data.size() < 8) {
+    if (data.size() < 8)
+    {
       return false;
     }
 
     // Check magic number
     uint32_t magic;
     size_t offset = 0;
-    if (!readBinary(data, offset, magic) || magic != KSPLAT_MAGIC) {
+    if (!readBinary(data, offset, magic) || magic != KSPLAT_MAGIC)
+    {
       return false;
     }
 
     // Read vertex count
-    if (!readBinary(data, offset, vertexCount)) {
+    if (!readBinary(data, offset, vertexCount))
+    {
       return false;
     }
 
@@ -137,7 +150,7 @@ namespace builtin_scene::model_renderer
   }
 
   // Explicit template instantiations for the types we use
-  template bool KsplatParser::readBinary<float>(const std::vector<char>&, size_t&, float&);
-  template bool KsplatParser::readBinary<uint8_t>(const std::vector<char>&, size_t&, uint8_t&);
-  template bool KsplatParser::readBinary<uint32_t>(const std::vector<char>&, size_t&, uint32_t&);
+  template bool KsplatParser::readBinary<float>(const std::vector<char> &, size_t &, float &);
+  template bool KsplatParser::readBinary<uint8_t>(const std::vector<char> &, size_t &, uint8_t &);
+  template bool KsplatParser::readBinary<uint32_t>(const std::vector<char> &, size_t &, uint32_t &);
 }

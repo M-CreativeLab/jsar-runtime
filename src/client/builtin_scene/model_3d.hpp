@@ -29,7 +29,7 @@ namespace builtin_scene
       Unknown,
       GLTF,
       GLB,
-      GaussianSplatting  // For .ksplat files
+      GaussianSplatting // For .ksplat files
     };
 
     Model3d(const std::string &src, ModelType type)
@@ -42,40 +42,76 @@ namespace builtin_scene
 
   public:
     // Accessors
-    inline const std::string &src() const { return src_; }
-    inline ModelType type() const { return type_; }
-    inline bool isLoaded() const { return loaded_; }
-    inline bool visible() const { return visible_; }
-    inline void setVisible(bool visible) { visible_ = visible; }
+    inline const std::string &src() const
+    {
+      return src_;
+    }
+    inline ModelType type() const
+    {
+      return type_;
+    }
+    inline bool isLoaded() const
+    {
+      return loaded_;
+    }
+    inline bool visible() const
+    {
+      return visible_;
+    }
+    inline void setVisible(bool visible)
+    {
+      visible_ = visible;
+    }
 
     // 3D Gaussian Splatting specific methods
-    inline bool isGaussianSplatting() const { return type_ == ModelType::GaussianSplatting; }
-    inline const std::vector<GaussianSplat> &getSplats() const { return splats_; }
-    inline size_t getSplatCount() const { return splats_.size(); }
+    inline bool isGaussianSplatting() const
+    {
+      return type_ == ModelType::GaussianSplatting;
+    }
+    inline const std::vector<GaussianSplat> &getSplats() const
+    {
+      return splats_;
+    }
+    inline size_t getSplatCount() const
+    {
+      return splats_.size();
+    }
 
     // Model loading
-    void setLoaded(bool loaded) { loaded_ = loaded; }
-    void setSplats(std::vector<GaussianSplat> &&splats) 
-    { 
+    void setLoaded(bool loaded)
+    {
+      loaded_ = loaded;
+    }
+    void setSplats(std::vector<GaussianSplat> &&splats)
+    {
       splats_ = std::move(splats);
       loaded_ = !splats_.empty();
     }
 
     // WebGL rendering context
-    inline bool hasWebGLTexture() const { return webglTextureId_ != 0; }
-    inline unsigned int getWebGLTextureId() const { return webglTextureId_; }
-    inline void setWebGLTextureId(unsigned int textureId) { webglTextureId_ = textureId; }
+    inline bool hasWebGLTexture() const
+    {
+      return webglTextureId_ != 0;
+    }
+    inline unsigned int getWebGLTextureId() const
+    {
+      return webglTextureId_;
+    }
+    inline void setWebGLTextureId(unsigned int textureId)
+    {
+      webglTextureId_ = textureId;
+    }
 
   private:
     std::string src_;
     ModelType type_;
     bool loaded_;
     bool visible_;
-    
+
     // 3DGS data
     std::vector<GaussianSplat> splats_;
-    
-    // WebGL rendering resources  
+
+    // WebGL rendering resources
     unsigned int webglTextureId_ = 0;
   };
 }

@@ -30,7 +30,7 @@ namespace builtin_scene::model_renderer
      * @param value Output value
      * @return true if read was successful, false if out of bounds
      */
-    template<typename T>
+    template <typename T>
     static bool readBinary(const std::vector<char> &data, size_t &offset, T &value);
 
     /**

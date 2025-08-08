@@ -36,9 +36,6 @@ namespace dom
     {
     }
 
-    HTMLModelElement(const HTMLModelElement &) = delete;
-    HTMLModelElement &operator=(const HTMLModelElement &) = delete;
-
     // HTMLElement lifecycle callbacks
     void createdCallback(bool from_scripting) override;
     void connectedCallback() override;
@@ -109,11 +106,6 @@ namespace dom
      * `loadModelAsync()`.
      */
     void loadModel();
-
-    /**
-     * Load the model asynchronously, it must be used to schedule the model loading from the non-scripting thread.
-     */
-    void loadModelAsync();
 
     /**
      * Returns a boolean value that is true if the user agent has finished fetching the model, whether successful or

@@ -42,7 +42,7 @@ namespace dom
   void HTMLModelElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
-    
+
     // Create the Model3d component for this element
     createModelComponent();
   }
@@ -83,17 +83,18 @@ namespace dom
   {
     if (src_ == src)
       return;
-      
+
     // Reset loading state when src changes
     is_src_model_loaded_ = false;
     is_src_model_decoded_ = false;
-    
+
     src_ = src;
     setAttribute("src", src, false);
-    
+
     // Start loading if eager loading is enabled
-    if (loading_ == LoadingHint::kLoadingEager && !src.empty())
-      loadModel();
+    // if (loading_ == LoadingHint::kLoadingEager && !src.empty())
+    //   loadModel();
+    loadModel();
   }
 
   std::optional<std::string> HTMLModelElement::type() const
@@ -129,11 +130,16 @@ namespace dom
 
   std::string HTMLModelElement::loadingString() const
   {
-    switch (loading_) {
-      case LoadingHint::kLoadingLazy: return "lazy";
-      case LoadingHint::kLoadingEager: return "eager";
-      case LoadingHint::kLoadingAuto: return "auto";
-      default: return "auto";
+    switch (loading_)
+    {
+    case LoadingHint::kLoadingLazy:
+      return "lazy";
+    case LoadingHint::kLoadingEager:
+      return "eager";
+    case LoadingHint::kLoadingAuto:
+      return "auto";
+    default:
+      return "auto";
     }
   }
 
@@ -155,77 +161,19 @@ namespace dom
       return;
 
     is_src_model_loading_ = true;
-    fetchResource(src(), [this](const void *data, size_t length)
-                  { this->onModelDataReady(data, length); });
-  }
-
-  void HTMLModelElement::loadModelAsync()
-  {
-    if (is_src_model_loading_ || is_src_model_loaded_)
-      return;
-
-    // Schedule the model loading on the scripting thread.
-    is_src_model_loading_ = true;
-    fetchResourceThreadSafe(src(), [this](const void *data, size_t length)
-                            { this->onModelDataReady(data, length); });
+    cout << "Loading model from: " << src() << endl;
+    fetchArrayBufferLikeResource(src(), [this](const void *data, size_t length)
+                                 { this->onModelDataReady(data, length); });
   }
 
   void HTMLModelElement::createModelComponent()
   {
-    // Get the layout object for this element
-    auto layoutObject = getLayoutObject();
-    if (!layoutObject)
-      return;
-
-    // Create Model3d component with detected type
-    Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
-    auto model3d = std::make_shared<Model3d>(src_, modelType);
-    
-    // Add the component to the ECS entity associated with this element
-    // This follows the same pattern as HTMLImageElement
-    auto entityId = layoutObject->getEntityId();
-    if (entityId != ecs::INVALID_ENTITY_ID)
-    {
-      auto &ecs = builtin_scene::ecs::ECS::getInstance();
-      ecs.addComponent(entityId, model3d);
-      
-      DEBUG("HTMLModelElement", "Created Model3d component for entity %u with type %d", 
-            entityId, static_cast<int>(modelType));
-    }
+    // TODO
   }
 
   void HTMLModelElement::updateModelComponent()
   {
-    auto layoutObject = getLayoutObject();
-    if (!layoutObject)
-      return;
-
-    auto entityId = layoutObject->getEntityId();
-    if (entityId == ecs::INVALID_ENTITY_ID)
-      return;
-
-    auto &ecs = builtin_scene::ecs::ECS::getInstance();
-    auto model3d = ecs.getComponent<Model3d>(entityId);
-    
-    if (!model3d)
-    {
-      // Create new component if it doesn't exist
-      createModelComponent();
-      return;
-    }
-
-    // Update existing component with new source and type
-    Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
-    *model3d = Model3d(src_, modelType);
-    
-    // Mark associated WebContent as dirty to trigger re-rendering
-    auto webContent = ecs.getComponent<WebContent>(entityId);
-    if (webContent)
-    {
-      webContent->setDirty(true);
-    }
-
-    DEBUG("HTMLModelElement", "Updated Model3d component for entity %u", entityId);
+    // TODO
   }
 
   Model3d::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
@@ -244,7 +192,7 @@ namespace dom
     {
       std::string ext = src.substr(dotPos + 1);
       std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-      
+
       if (ext == "ksplat")
       {
         return Model3d::ModelType::GaussianSplatting;
@@ -267,6 +215,7 @@ namespace dom
     model_data_ = std::vector<char>(modelByteLength);
     model_data_->assign(static_cast<const char *>(modelData),
                         static_cast<const char *>(modelData) + modelByteLength);
+    cout << "Model data received, size: " << modelByteLength << " bytes" << endl;
 
     // Mark the model as loaded.
     is_src_model_loading_ = false;
@@ -290,22 +239,23 @@ namespace dom
 
     // Detect model type
     Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
-    
+
     // Create new model with detected type
     model = Model3d(src_, modelType);
-    
+
     // Parse the model data based on type
     // This is where the actual file parsing would happen
     // For now, we'll create a placeholder implementation
-    
+
     if (modelType == Model3d::ModelType::GaussianSplatting)
     {
       // Use Ksplat parser to parse the model data
-      std::vector<model_renderer::GaussianSplat> parsedSplats;
-      
+      std::vector<builtin_scene::GaussianSplat> parsedSplats;
       if (model_renderer::KsplatParser::parse(modelData, parsedSplats))
       {
-        model.setSplats(parsedSplats);
+        cout << "Parsed " << parsedSplats.size() << " splats from .ksplat file." << endl;
+
+        // model.setSplats(parsedSplats);
         model.setLoaded(true);
         DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsedSplats.size());
       }
@@ -316,20 +266,20 @@ namespace dom
     }
     else
     {
-      std::cerr << "Model type not supported yet: " << typeHint << std::endl;
+      std::cerr << "Model type not supported yet: " << std::endl;
       std::cerr << "GLTF/GLB parsing not yet implemented" << std::endl;
       // Model loading failed - do not set as loaded
     }
 
     is_src_model_decoded_ = true;
-    
+
     // Clear model data after parsing
     if (model_data_.has_value())
     {
       model_data_->clear();
       model_data_.reset();
     }
-    
+
     return is_src_model_decoded_;
   }
 
@@ -340,16 +290,16 @@ namespace dom
       if (handle != nullptr && handle->data != nullptr)
       {
         auto modelElement = static_cast<HTMLModelElement *>(handle->data);
-        
+
         // Create a temporary model to parse into
         Model3d tempModel("", Model3d::ModelType::Unknown);
         modelElement->parseModel(modelElement->model_data_.value(), tempModel);
-        
+
         // Store the parsed model in the element (this is not thread-safe, but matches HTMLImageElement pattern)
         // In a real implementation, we'd need better synchronization
       }
     };
-    
+
     auto afterWork = [](uv_work_t *handle, int status)
     {
       if (handle != nullptr && handle->data != nullptr)
@@ -387,7 +337,7 @@ namespace dom
   {
     // Update the ECS component with the parsed model
     updateModelComponent();
-    
+
     // Dispatch load event
     complete = true;
     dispatchEvent(DOMEventType::Load);

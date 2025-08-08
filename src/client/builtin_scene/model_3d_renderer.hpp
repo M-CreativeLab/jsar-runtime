@@ -18,7 +18,13 @@ namespace builtin_scene::model_renderer
    */
   class InitSystem : public ecs::System
   {
+    using ecs::System::System;
+
   public:
+    const std::string name() const override
+    {
+      return "model_renderer.InitSystem";
+    }
     void onExecute() override;
   };
 
@@ -28,24 +34,10 @@ namespace builtin_scene::model_renderer
    */
   class RenderBaseSystem : public ecs::System
   {
+    using ecs::System::System;
+
   protected:
-    void render(ecs::EntityId entity, WebContent &content);
-  };
-
-  /**
-   * System to load 3D model files (GLTF, GLB, 3DGS formats).
-   * Handles asynchronous loading and file format detection.
-   */
-  class LoadModelSystem : public RenderBaseSystem
-  {
-  public:
-    void onExecute() override;
-
-  private:
-    void render(ecs::EntityId entity, WebContent &content) override;
-    
-    // File format detection
-    Model3d::ModelType detectModelType(const std::string &src, const std::string &typeHint = "");
+    virtual void render(ecs::EntityId entity);
   };
 
   /**
@@ -54,40 +46,17 @@ namespace builtin_scene::model_renderer
    */
   class RenderGaussianSplattingSystem : public RenderBaseSystem
   {
-  public:
-    RenderGaussianSplattingSystem();
-    ~RenderGaussianSplattingSystem() = default;
+    using RenderBaseSystem::RenderBaseSystem;
 
+  public:
+    const std::string name() const override
+    {
+      return "model_renderer.RenderGaussianSplattingSystem";
+    }
     void onExecute() override;
 
   private:
-    void render(ecs::EntityId entity, WebContent &content) override;
-  };
-
-  /**
-   * System to render traditional 3D models (GLTF/GLB).
-   * Placeholder for future GLTF rendering implementation.
-   */
-  class RenderGLTFSystem : public RenderBaseSystem
-  {
-  public:
-    void onExecute() override;
-
-  private:
-    void render(ecs::EntityId entity, WebContent &content) override;
-  };
-
-  /**
-   * System to update WebGL textures for 3D models.
-   * Similar to UpdateTextureSystem in web_content_renderer.cpp
-   */
-  class UpdateTextureSystem : public RenderBaseSystem
-  {
-  public:
-    void onExecute() override;
-
-  private:
-    void render(ecs::EntityId entity, WebContent &content) override;
+    void render(ecs::EntityId entity) override;
   };
 
   /**
@@ -112,18 +81,8 @@ namespace builtin_scene::model_renderer
       auto initModel = System::Make<InitSystem>();
       app.addSystem(SchedulerLabel::kPostStartup, initModel);
 
-      auto loadModel = System::Make<LoadModelSystem>();
       auto render3DGS = System::Make<RenderGaussianSplattingSystem>();
-      auto renderGLTF = System::Make<RenderGLTFSystem>();
-      auto updateTexture = System::Make<UpdateTextureSystem>();
-
-      // Chain systems for proper execution order
-      loadModel
-        ->chain(render3DGS)
-        ->chain(renderGLTF)
-        ->chain(updateTexture);
-      
-      app.addSystem(SchedulerLabel::kUpdate, loadModel);
+      app.addSystem(SchedulerLabel::kUpdate, render3DGS);
     }
   };
 }
