@@ -574,10 +574,24 @@ namespace builtin_scene::web_renderer
 
     float top = 0.0f;
     float left = 0.0f;
+    float width = fragment->contentWidth();
+    float height = fragment->contentHeight();
 
-    SkRect rect = SkRect::MakeXYWH(left, top, content.logicalWidth() - 2 * left, content.logicalHeight() - 2 * top);
+    SkRect rect = SkRect::MakeXYWH(left, top, width, height);
     SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
+    if (drawRoundedRect)
+    {
+      // TODO(yorkie): support radius for xy
+      content.setBorderRadius(roundedRect.radii(SkRRect::kUpperLeft_Corner).x(),
+                              roundedRect.radii(SkRRect::kUpperRight_Corner).x(),
+                              roundedRect.radii(SkRRect::kLowerRight_Corner).x(),
+                              roundedRect.radii(SkRRect::kLowerLeft_Corner).x());
+    }
+    else
+    {
+      content.resetBorderRadius();
+    }
 
     ClippingArea clipInfo;
     if (style.backgroundClip().isText())
@@ -604,28 +618,20 @@ namespace builtin_scene::web_renderer
       clipInfo = ClippingArea(clippingArea);
     }
 
-    bool textureRequired = false;
-    auto backgroundPaint = drawBackground(canvas,
-                                          roundedRect,
-                                          clipInfo,
-                                          fragment.value(),
-                                          style,
-                                          textureRequired);
-    if (backgroundPaint.has_value())
+    if (style.hasBackgroundColor())
     {
-      auto fillPaint = backgroundPaint.value();
-      if (!textureRequired && !drawRoundedRect) // Disable using texture if the background is not rounded.
-      {
-        content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
-        content.setBackgroundColor(fillPaint.getColor4f());
-      }
-      else
-      {
-        content.setTextureUsing(true);
-      }
+      auto color = style.backgroundColor().resolveToAbsoluteColor();
+      content.setBackgroundColor(SkColor4f::FromColor(color));
     }
-    if (drawBorders(canvas, roundedRect, fragment.value(), style))
-      content.setTextureUsing(true); // enable texture when there are borders.
+
+    bool textureRequired = false;
+    drawBackground(canvas,
+                   roundedRect,
+                   clipInfo,
+                   fragment.value(),
+                   style,
+                   textureRequired);
+    content.setTextureUsing(textureRequired);
   }
 
   SkRRect RenderBackgroundSystem::getBackgroundClippingArea(const SkRRect &roundedRect,
@@ -779,27 +785,8 @@ namespace builtin_scene::web_renderer
     if (!clipInfo.isEmpty())
       textureRequired = true;
 
-    // TODO(yorkie): Skip if there is no color or image?
     SkRRect roundedRect;
-    {
-      // The offset factor is used to adjust the rectangle size for the background, this is to ensure that there are no
-      // gaps between the background and the border.
-      static float offsetFactor = 0.8;
-      const SkRect &originalRect = originalRRect.rect();
-      float insetTop = fragment.border().top() * offsetFactor;
-      float insetRight = fragment.border().right() * offsetFactor;
-      float insetBottom = fragment.border().bottom() * offsetFactor;
-      float insetLeft = fragment.border().left() * offsetFactor;
-
-      SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
-                                     originalRect.fTop + insetTop,
-                                     originalRect.width() - insetLeft - insetRight,
-                                     originalRect.height() - insetTop - insetBottom);
-      SkVector radii[4];
-      for (int i = 0; i < 4; i++)
-        radii[i] = originalRRect.radii(static_cast<SkRRect::Corner>(i));
-      roundedRect.setRectRadii(rect, radii);
-    }
+    roundedRect.setRect(originalRRect.rect());
 
     if (style.hasBackgroundColor())
     {

@@ -1,6 +1,7 @@
 #include <array>
 #include <chrono>
 #include <client/builtin_scene/materials.hpp>
+#include <client/builtin_scene/materials/web_content_instanced.hpp>
 #include "./scene_renderer.hpp"
 
 namespace builtin_scene
@@ -228,7 +229,7 @@ namespace builtin_scene
       WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
       if (mesh->isInstancedMesh())
       {
-        drawInstancedMeshImpl(*mesh, programScope, renderPass, renderTarget);
+        drawInstancedMeshImpl(*mesh, material, programScope, renderPass, renderTarget);
       }
       else
       {
@@ -382,9 +383,10 @@ namespace builtin_scene
   }
 
   void SceneRenderer::drawInstancedMeshImpl(const Mesh3d &mesh,
+                                            shared_ptr<MeshMaterial3d> material,
                                             const client_graphics::WebGLProgramScope &programScope,
                                             RenderPass renderPass,
-                                            std::optional<XRRenderTarget> renderTarget)
+                                            optional<XRRenderTarget> renderTarget)
   {
     assert((renderPass == RenderPass::kOpaques || renderPass == RenderPass::kTransparents) &&
            "RenderPass must be either Opaques or Transparents for instanced meshes.");
@@ -399,19 +401,27 @@ namespace builtin_scene
     // Update the render queues for opaque and transparent instances.
     instancedMesh.updateInstancesList();
 
+    // Update border data texture if using WebContentInstancedMaterial
+    CSSBorderDataTexture *borderDataTexture = nullptr;
+    auto webContentMaterial = material->material<materials::WebContentInstancedMaterial>();
+    if (webContentMaterial)
+      borderDataTexture = webContentMaterial->getBorderDataTexture();
+
     // Draw the opaque instances
     if (renderPass == RenderPass::kOpaques)
     {
       RenderableInstancesList &instances = instancedMesh.getOpaqueInstancesList();
       if (instances.count() > 0)
       {
+        WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
+
         glContext.depthMask(true);
         glContext.disable(WEBGL_BLEND);
 
         auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
         glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
 
-        instances.beforeInstancedDraw(glContext);
+        instances.beforeInstancedDraw(glContext, nullptr);
         glContext.drawElementsInstanced(mesh.primitiveTopology(),
                                         meshIndicesCount,
                                         WEBGL_UNSIGNED_INT,
@@ -434,7 +444,7 @@ namespace builtin_scene
         glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
 
         // Draw
-        instances.beforeInstancedDraw(glContext);
+        instances.beforeInstancedDraw(glContext, borderDataTexture);
         {
           // Draw transparent instances to color attachment
           glContext.depthMask(false);

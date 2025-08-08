@@ -47,6 +47,17 @@ out vec2 vInstanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
 #endif
+
+#ifdef USE_INSTANCE_SDF
+in vec2 instanceDimensions;
+in vec4 instanceBorderRadius;
+in uint instanceBorderStyle;
+out vec2 vInstanceTexCoord;
+out vec2 vInstanceDimensions;
+out vec4 vInstanceBorderRadius;
+out float vInstanceBorderStyle;
+flat out int vInstanceId;
+#endif
 #endif
 
 out vec4 col;
@@ -132,6 +143,15 @@ void main()
   float threshold = 1e-5;
   vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
                             step(threshold, abs(instanceTexUvScale.y));
+#endif
+
+  // Instance SDF
+#ifdef USE_INSTANCE_SDF
+  vInstanceTexCoord = texCoord;
+  vInstanceDimensions = instanceDimensions;
+  vInstanceBorderRadius = instanceBorderRadius;
+  vInstanceBorderStyle = float(instanceBorderStyle);
+  vInstanceId = gl_InstanceID;
 #endif
 #endif
 
