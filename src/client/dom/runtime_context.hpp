@@ -6,6 +6,8 @@
 #include <functional>
 #include <deque>
 #include <shared_mutex>
+#include <condition_variable>
+#include <mutex>
 #include <v8.h>
 #include <node/uv.h>
 

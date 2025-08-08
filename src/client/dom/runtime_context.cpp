@@ -1,4 +1,6 @@
 #include <node/v8.h>
+#include <chrono>
+#include <thread>
 #include "./runtime_context.hpp"
 #include "../per_process.hpp"
 
@@ -120,18 +122,41 @@ namespace dom
 
     v8::Local<v8::Promise> fetchPromise = promiseValue.As<v8::Promise>();
     
-    // Wait for the promise to settle by running the event loop
-    while (fetchPromise->State() == v8::Promise::kPending)
+    // If promise is already resolved, return immediately
+    if (fetchPromise->State() != v8::Promise::kPending)
     {
-      // Process microtasks and run the event loop once
-      v8::MicrotasksScope microtasksScope(isolate, v8::MicrotasksScope::kRunMicrotasks);
-      uv_run(TrClientContextPerProcess::Get()->getScriptingEventLoop(), UV_RUN_ONCE);
-      
-      // Process any pending V8 tasks
-      isolate->PerformMicrotaskCheckpoint();
+      if (fetchPromise->State() == v8::Promise::kRejected)
+      {
+        v8::Local<v8::Value> rejectValue = fetchPromise->Result();
+        isolate->ThrowException(rejectValue);
+        return v8::Local<v8::Value>();
+      }
+      return handleScope.Escape(fetchPromise->Result());
     }
 
-    // Check if the promise was rejected
+    // For pending promises, we cannot safely wait in the scripting thread
+    // because running the event loop recursively can cause deadlocks.
+    // Instead, try processing microtasks a few times and then give up.
+    int maxAttempts = 100; // Limited attempts to avoid hanging
+    int attempts = 0;
+    
+    while (fetchPromise->State() == v8::Promise::kPending && attempts < maxAttempts)
+    {
+      // Process microtasks to allow immediate promise resolution
+      isolate->PerformMicrotaskCheckpoint();
+      attempts++;
+    }
+
+    // If still pending after microtask processing, the fetch requires I/O
+    // which cannot be done synchronously from the scripting thread
+    if (fetchPromise->State() == v8::Promise::kPending)
+    {
+      auto message = v8::String::NewFromUtf8(isolate, 
+        "Cannot perform synchronous fetch from scripting thread - operation requires I/O").ToLocalChecked();
+      isolate->ThrowException(v8::Exception::Error(message));
+      return v8::Local<v8::Value>();
+    }
+
     if (fetchPromise->State() == v8::Promise::kRejected)
     {
       v8::Local<v8::Value> rejectValue = fetchPromise->Result();
