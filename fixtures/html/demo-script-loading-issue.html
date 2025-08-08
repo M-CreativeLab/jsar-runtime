@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Script Loading Issue Demonstration</title>
+</head>
+<body>
+  <h1>Script Loading Test</h1>
+  <div id="output"></div>
+
+  <!-- External script that defines a function -->
+  <script src="./test-import.js"></script>
+  
+  <!-- Inline script that tries to use the function -->
+  <script>
+    const output = document.getElementById('output');
+    
+    function log(message) {
+      console.log(message);
+      if (output) {
+        const p = document.createElement('p');
+        p.textContent = message;
+        output.appendChild(p);
+      }
+    }
+    
+    log('Checking if testImport function is available...');
+    log('testImport type: ' + typeof testImport);
+    
+    if (typeof testImport === 'function') {
+      log('SUCCESS: testImport function is available!');
+      testImport();
+    } else {
+      log('FAIL: testImport function is undefined - external script not loaded yet');
+    }
+  </script>
+</body>
+</html>

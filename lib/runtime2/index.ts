@@ -209,8 +209,18 @@ export class TransmuteRuntime2 extends EventTarget {
   /**
    * Process HTML content to handle external scripts synchronously.
    * This method fetches external scripts and inlines them to ensure proper execution order.
+   * Can be disabled by setting JSAR_DISABLE_SCRIPT_INLINING=yes environment variable.
    */
   private async processHtmlForSynchronousScripts(codeOrUrl: string, urlObj: URL): Promise<string> {
+    // Check if script inlining is disabled
+    if (process.env.JSAR_DISABLE_SCRIPT_INLINING === 'yes') {
+      console.info('Script inlining is disabled via JSAR_DISABLE_SCRIPT_INLINING environment variable');
+      if (codeOrUrl.startsWith('http:') || codeOrUrl.startsWith('https:') || codeOrUrl.startsWith('file:')) {
+        return this.#resourceLoader.fetch(codeOrUrl, {}, 'string');
+      }
+      return codeOrUrl;
+    }
+
     let htmlContent: string;
 
     // If codeOrUrl is a URL, fetch the HTML content
@@ -269,6 +279,7 @@ export class TransmuteRuntime2 extends EventTarget {
         console.info(`Successfully inlined script: ${scriptUrl}`);
       } catch (error) {
         console.error(`Failed to inline script ${scriptUrl}:`, error);
+        console.warn(`Keeping original script tag for ${scriptUrl} - it will load asynchronously`);
         // Keep the original script tag if inlining fails
       }
     }
