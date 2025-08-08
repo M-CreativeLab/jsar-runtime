@@ -31,6 +31,8 @@
 #include "./image.hpp"
 #include "./xr.hpp"
 #include "./text/sdf/TinySDF.hpp"
+#include "./text/sdf/Atlas.hpp"
+#include "./text/sdf/Cache.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -1067,25 +1069,8 @@ namespace builtin_scene::web_renderer
 
     string &text = textComponent->content;
 
-    if (enableSDFTextRendering())
-    {
-      // Render text using SDF for anti-aliasing
-      renderTextWithSDF(entity, content, text);
-    }
-    else
-    {
-      // Use traditional Skia text rendering
-      auto paragraphStyle = content.paragraphStyle();
-      auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
-      paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-      paragraphBuilder->addText(text.c_str(), text.size());
-      paragraphBuilder->pop();
-
-      auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
-      auto paragraph = paragraphBuilder->Build();
-      paragraph->layout(layoutWidth);
-      paragraph->paint(content.canvas(), 0.0f, 0.0f);
-    }
+    // Always render text using SDF for anti-aliasing
+    renderTextWithSDF(entity, content, text);
 
     content.setTextureUsing(true);
   }
@@ -1098,9 +1083,7 @@ namespace builtin_scene::web_renderer
 
   void RenderTextSystem::renderTextWithSDF(ecs::EntityId entity, WebContent &content, const std::string &text)
   {
-    // Generate SDF-based text and render it to the WebContent canvas
-    // This provides anti-aliasing for text when rendered as instance textures
-
+    // Generate SDF-based text using atlas system for efficient texture management
     auto canvas = content.canvas();
     if (!canvas)
       return;
@@ -1120,48 +1103,87 @@ namespace builtin_scene::web_renderer
       fontFamily = fontFamilies[0].c_str();
     }
 
-    // Create SDF parameters
-    text::sdf::SDFParams sdfParams(fontSize, 8, 8, 0.25f);
+    // Create cache key for this text rendering request
+    text::sdf::SDFCacheKey cacheKey(
+      fontFamily,
+      fontSize,
+      static_cast<int>(textStyle.getFontWeight()),
+      "normal", // TODO: Extract actual font style
+      1.0f,     // TODO: Get actual device pixel ratio
+      text);
 
-    // Generate SDF for the text
-    text::sdf::TinySDF sdfGenerator(sdfParams);
+    // Try to get cached SDF atlas
+    auto &cache = text::sdf::GlobalSDFCache::getInstance();
+    auto *cachedAtlas = cache.get(cacheKey);
 
-    // For now, render individual characters and composite them
-    // TODO: Implement proper text layout and SDF atlas generation
-
-    float x = 0.0f;
-    float y = fontSize; // Baseline position
-
-    for (char c : text)
+    if (!cachedAtlas)
     {
-      if (c == ' ')
-      {
-        x += fontSize * 0.3f; // Space width
-        continue;
-      }
+      // Generate new SDF atlas for this text
+      text::sdf::SDFParams sdfParams(fontSize, 8, 8, 0.25f);
+      text::sdf::SDFAtlasBuilder atlasBuilder(sdfParams, 512, 512);
 
-      // Generate SDF for this character
-      auto sdfGlyph = sdfGenerator.generateSDF(static_cast<uint32_t>(c), fontFamily);
-      if (sdfGlyph && !sdfGlyph->data.empty())
+      auto result = atlasBuilder.createAtlasForText(text);
+      if (result.atlas)
       {
-        // Create a bitmap from SDF data and draw it
-        SkImageInfo imageInfo = SkImageInfo::MakeA8(sdfGlyph->width, sdfGlyph->height);
-        sk_sp<SkImage> sdfImage = SkImages::RasterFromData(
-          imageInfo,
-          SkData::MakeWithCopy(sdfGlyph->data.data(), sdfGlyph->data.size()),
-          sdfGlyph->width);
-
-        if (sdfImage)
-        {
-          // Draw the SDF glyph
-          canvas->drawImage(sdfImage, x + sdfGlyph->left, y - sdfGlyph->top);
-          x += sdfGlyph->advance;
-        }
+        // Cache the atlas for future use
+        cache.put(cacheKey, std::move(result.atlas), std::move(result.glyphUVs));
+        cachedAtlas = cache.get(cacheKey);
       }
     }
 
-    // Enable SDF mode in the material for anti-aliasing
-    // This will be processed when the texture is updated in UpdateTextureSystem
+    // Render text using the atlas
+    if (cachedAtlas && cachedAtlas->atlas)
+    {
+      const auto *activeAtlas = cachedAtlas->atlas.get();
+      const auto *activeGlyphUVs = &cachedAtlas->glyphUVs;
+
+      // Create Skia image from atlas texture data
+      const auto &atlasData = activeAtlas->getTextureData();
+      SkImageInfo atlasImageInfo = SkImageInfo::MakeA8(activeAtlas->getWidth(), activeAtlas->getHeight());
+      sk_sp<SkImage> atlasImage = SkImages::RasterFromData(
+        atlasImageInfo,
+        SkData::MakeWithCopy(atlasData.data(), atlasData.size()),
+        activeAtlas->getWidth());
+
+      if (atlasImage)
+      {
+        // Layout and render text using atlas
+        float x = 0.0f;
+        float y = fontSize; // Baseline position
+
+        for (char c : text)
+        {
+          if (c == ' ')
+          {
+            x += fontSize * 0.3f; // Space width
+            continue;
+          }
+
+          uint32_t codepoint = static_cast<uint32_t>(c);
+          auto it = activeGlyphUVs->find(codepoint);
+          if (it != activeGlyphUVs->end() && it->second)
+          {
+            const auto &glyphUV = *it->second;
+
+            // Calculate source rect in atlas texture coordinates
+            SkRect srcRect = SkRect::MakeXYWH(
+              glyphUV.x, glyphUV.y, glyphUV.width, glyphUV.height);
+
+            // Calculate destination position
+            SkRect dstRect = SkRect::MakeXYWH(
+              x, y - glyphUV.height, // Adjust for baseline
+              glyphUV.width,
+              glyphUV.height);
+
+            // Draw glyph from atlas
+            canvas->drawImageRect(atlasImage, srcRect, dstRect, SkSamplingOptions(), nullptr);
+
+            // Advance position (using simple character advance for now)
+            x += glyphUV.width;
+          }
+        }
+      }
+    }
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
@@ -1172,9 +1194,9 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
-      // Enable SDF mode for text when SDF text rendering is enabled
+      // Always enable SDF mode for text entities
       auto textComponent = getComponent<Text2d>(entity);
-      if (textComponent && enableSDFTextRendering())
+      if (textComponent)
       {
         webContentMaterial->setSdfEnabled(true);
       }

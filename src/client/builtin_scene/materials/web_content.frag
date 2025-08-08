@@ -147,6 +147,20 @@ void main()
   if (vInstanceTextureEnabled == 1.0)
   {
     vec4 textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
+    
+    // Check if this is SDF text content and process accordingly
+    if (uSdfEnabled > 0.5)
+    {
+      // For SDF text, the texture contains distance field data in the alpha channel
+      // Apply SDF distance field rendering for smooth text anti-aliasing
+      float sdfDistance = textureColor.r - 0.5; // Convert from [0,1] to [-0.5,0.5] range
+      float sdfWidth = max(fwidth(sdfDistance), 0.01);
+      float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, sdfDistance);
+      
+      // Use the original color with SDF-computed alpha for crisp text edges
+      textureColor = vec4(textureColor.rgb, sdfAlpha * textureColor.a);
+    }
+    
     outColor = mix(outColor, textureColor, textureColor.a);
   }
 #endif
