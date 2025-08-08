@@ -5,6 +5,7 @@
 #include "./material_base.hpp"
 #include "./materials/color.hpp"
 #include "./materials/normal.hpp"
+#include "./materials/sdf_text.hpp"
 #include "./materials/web_content_instanced.hpp"
 
 namespace builtin_scene

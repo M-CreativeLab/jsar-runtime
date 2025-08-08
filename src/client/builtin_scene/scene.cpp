@@ -2,6 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
+#include "./text/SDFTextRenderer.hpp"
 
 namespace builtin_scene
 {
@@ -37,12 +38,14 @@ namespace builtin_scene
       app.registerComponent<MeshMaterial3d>();
       app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
+      app.registerComponent<text::SDFText2d>();
       app.registerComponent<Image2d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
       app.addSystem(SchedulerLabel::kStartup, System::Make<RenderStartupSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
+      app.addSystem(SchedulerLabel::kPreUpdate, System::Make<text::SDFTextSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
       auto renderScene = System::Make<RenderSystem>();

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SDF Text Rendering Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(45deg, #1e3c72, #2a5298);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .text-container {
+      text-align: center;
+      color: white;
+      max-width: 800px;
+    }
+
+    .title {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .subtitle {
+      font-size: 24px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    .demo-text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .size-demo {
+      margin: 20px 0;
+    }
+
+    .size-small { font-size: 12px; }
+    .size-medium { font-size: 18px; }
+    .size-large { font-size: 32px; }
+    .size-xlarge { font-size: 48px; }
+
+    .transform-demo {
+      margin: 20px 0;
+    }
+
+    .transform-demo .scaled {
+      transform: scale(2);
+      display: inline-block;
+      margin: 10px;
+    }
+
+    .transform-demo .rotated {
+      transform: rotate(15deg);
+      display: inline-block;
+      margin: 10px;
+    }
+
+    .instructions {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="text-container">
+    <h1 class="title">SDF Text Rendering</h1>
+    <p class="subtitle">Crisp, scalable text in 3D space</p>
+    
+    <div class="demo-text">
+      This demonstration showcases SDF (Signed Distance Field) based text rendering 
+      in the JSAR runtime. SDF text remains crisp and clean at any scale or distance, 
+      making it ideal for spatial computing and 3D user interfaces.
+    </div>
+
+    <div class="size-demo">
+      <div class="size-small">Small text (12px) - Testing SDF clarity</div>
+      <div class="size-medium">Medium text (18px) - Testing SDF clarity</div>
+      <div class="size-large">Large text (32px) - Testing SDF clarity</div>
+      <div class="size-xlarge">XL text (48px) - Testing SDF clarity</div>
+    </div>
+
+    <div class="transform-demo">
+      <div>Normal text</div>
+      <div class="scaled">Scaled 2x</div>
+      <div class="rotated">Rotated 15°</div>
+    </div>
+
+    <div class="demo-text">
+      SDF text supports various features:
+      <br>• Smooth edges at any scale
+      <br>• Efficient GPU rendering
+      <br>• Configurable thickness and softness
+      <br>• Font family and style support
+      <br>• Unicode character support: 你好世界 🌍 ñáméş
+    </div>
+
+    <div class="instructions">
+      <strong>To enable SDF text rendering:</strong><br>
+      Set the environment variable <code>JSAR_ENABLE_SDF_TEXT=1</code> before running the application.
+      <br><br>
+      <strong>Performance benefits:</strong><br>
+      • No pixelation when scaling text
+      • Reduced texture memory usage
+      • Batched rendering for multiple text elements
+      • LRU cache prevents redundant SDF generation
+    </div>
+  </div>
+
+  <script>
+    // Add some interactivity for demonstration
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('SDF Text Demo loaded');
+      console.log('Environment: JSAR_ENABLE_SDF_TEXT =', 
+        typeof process !== 'undefined' && process.env ? 
+        process.env.JSAR_ENABLE_SDF_TEXT : 'not set');
+      
+      // Add dynamic text scaling animation
+      const title = document.querySelector('.title');
+      let scale = 1;
+      let growing = true;
+      
+      setInterval(() => {
+        if (growing) {
+          scale += 0.01;
+          if (scale >= 1.2) growing = false;
+        } else {
+          scale -= 0.01;
+          if (scale <= 1) growing = true;
+        }
+        title.style.transform = `scale(${scale})`;
+      }, 50);
+    });
+  </script>
+</body>
+</html>

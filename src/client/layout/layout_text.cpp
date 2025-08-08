@@ -4,6 +4,7 @@
 #include <client/per_process.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/text.hpp>
+#include <client/builtin_scene/text/SDFTextRenderer.hpp>
 #include <client/dom/text.hpp>
 
 #include "./layout_text.hpp"
@@ -14,6 +15,18 @@ namespace client_layout
   using namespace std;
   using namespace builtin_scene;
   using namespace skia::textlayout;
+
+  // Feature flag for SDF text rendering
+  // TODO: This could be made configurable via environment variable or settings
+  static bool enableSDFTextRendering()
+  {
+    static bool enabled = []()
+    {
+      const char *env = getenv("JSAR_ENABLE_SDF_TEXT");
+      return env && (strcmp(env, "1") == 0 || strcmp(env, "true") == 0);
+    }();
+    return enabled;
+  }
 
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
       : LayoutObject(textNode)
@@ -102,10 +115,21 @@ namespace client_layout
     auto updateText = [this](Scene &scene)
     {
       bool shouldUpdateContent = false;
+
+      // Update regular Text2d component if it exists
       auto textComponent = scene.getComponent<Text2d>(entity());
       if (textComponent != nullptr)
       {
         textComponent->content = transformedText();
+        shouldUpdateContent = true;
+      }
+
+      // Update SDF text component if it exists
+      auto sdfTextComponent = scene.getComponent<text::SDFText2d>(entity());
+      if (sdfTextComponent != nullptr)
+      {
+        sdfTextComponent->content = transformedText();
+        sdfTextComponent->isDirty = true;
         shouldUpdateContent = true;
       }
 
@@ -128,7 +152,49 @@ namespace client_layout
 
     auto appendText = [this, &entity](Scene &scene)
     {
-      scene.addComponent(entity, Text2d(transformedText()));
+      if (enableSDFTextRendering())
+      {
+        // Create SDF text component instead of regular Text2d
+        text::SDFText2d sdfText(transformedText());
+        sdfText.isDirty = true;
+
+        // Extract font properties from computed style if available
+        if (hasAdoptedStyle())
+        {
+          const auto &style = adoptedStyleRef();
+          if (style.hasProperty("font-family"))
+            sdfText.fontFamily = style.getPropertyValue("font-family");
+          if (style.hasProperty("font-size"))
+          {
+            // Parse font size - simplified parsing
+            string fontSizeStr = style.getPropertyValue("font-size");
+            if (!fontSizeStr.empty() && isdigit(fontSizeStr[0]))
+            {
+              sdfText.fontSize = std::max(8, std::min(128, std::stoi(fontSizeStr)));
+            }
+          }
+          if (style.hasProperty("font-weight"))
+          {
+            string fontWeightStr = style.getPropertyValue("font-weight");
+            if (fontWeightStr == "bold")
+              sdfText.fontWeight = 700;
+            else if (fontWeightStr == "normal")
+              sdfText.fontWeight = 400;
+            else if (!fontWeightStr.empty() && isdigit(fontWeightStr[0]))
+              sdfText.fontWeight = std::stoi(fontWeightStr);
+          }
+          if (style.hasProperty("font-style"))
+            sdfText.fontStyle = style.getPropertyValue("font-style");
+        }
+
+        scene.addComponent(entity, std::move(sdfText));
+      }
+      else
+      {
+        // Use regular Text2d component
+        scene.addComponent(entity, Text2d(transformedText()));
+      }
+
       formattingContext().setIsEmpty(isEmptyText());
     };
     useSceneWithCallback(appendText);
@@ -138,7 +204,9 @@ namespace client_layout
   {
     auto removeText = [&entity](Scene &scene)
     {
+      // Remove both types of text components (only one will exist)
       scene.removeComponent<Text2d>(entity);
+      scene.removeComponent<text::SDFText2d>(entity);
     };
     useSceneWithCallback(removeText);
 
@@ -162,9 +230,18 @@ namespace client_layout
       transformed_text_ = transformAndSecureText(plainText());
       is_text_content_dirty_ = true;
 
+      // Update regular Text2d component if it exists
       auto textComponent = getSceneComponent<Text2d>();
       if (textComponent != nullptr)
         textComponent->content = transformedText();
+
+      // Update SDF text component if it exists
+      auto sdfTextComponent = getSceneComponent<text::SDFText2d>();
+      if (sdfTextComponent != nullptr)
+      {
+        sdfTextComponent->content = transformedText();
+        sdfTextComponent->isDirty = true;
+      }
     }
 
     // Update the text content if the text is empty.
