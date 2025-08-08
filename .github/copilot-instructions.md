@@ -4,12 +4,15 @@
 
 JSAR Runtime is a Web browser engine library designed for the Spatial Web, supporting WebXR, WebGL, and modern web technologies. It's a multi-language project with each language serving specific roles:
 
-- **Rust**: Core runtime engine, memory-safe native performance, WebGL/WebXR bindings
-- **TypeScript**: Web APIs implementation, DOM bindings, developer-facing interfaces  
-- **C++**: Low-level graphics, platform integration, performance-critical rendering
-- **CMake**: Cross-platform build system coordination and native library compilation
+- **C/C++**: Core rendering server implementation, web process management, low-level graphics, performance-critical rendering operations, and Web APIs implementation
+- **Rust**: Integration with [Servo][] components like [stylo][] and [cssparser][] for CSS parsing and styling
+- **TypeScript**: High-level application code
 
 Development is supported on **macOS only**, with deployment targets for macOS and Android.
+
+[Servo]: https://github.com/servo/servo
+[stylo]: https://crates.io/crates/stylo
+[cssparser]: https://crates.io/crates/cssparser
 
 ## Working Effectively
 
@@ -142,7 +145,7 @@ npm run docs:preview  # Preview built documentation
 3. **DO NOT** run `make jsbundle` until TypeScript errors are fixed
 4. Build documentation: `npm run docs:build`
 
-### Modifying C++ Code  
+### Modifying C/C++ Code  
 1. Edit files in `src/` directory
 2. Run `./tools/clang-format-check.sh` 
 3. Fix formatting with `./tools/clang-format-fix.sh` if needed
@@ -161,6 +164,7 @@ npm run docs:preview  # Preview built documentation
 ├── crates/             # Rust workspace (jsbindings, runtime_apis)
 ├── build/              # Build configuration and scripts
 ├── docs/               # VitePress documentation
+├── fixtures/           # Test fixtures
 ├── tools/              # Development scripts
 ├── tests/              # C++ tests (Catch2)
 ├── .github/workflows/  # CI configuration
@@ -182,7 +186,6 @@ npm run docs:build                 # Documentation must build
 ```bash
 make jsbundle                      # Currently fails
 make darwin RELEASE=yes            # macOS builds
-make android RELEASE=yes           # Android builds
 ```
 
 ## NEVER CANCEL Commands
