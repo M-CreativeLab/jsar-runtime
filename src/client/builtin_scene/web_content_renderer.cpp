@@ -45,12 +45,8 @@ namespace builtin_scene::web_renderer
   // Feature flag for SDF text rendering in WebContent
   static bool enableSDFTextRendering()
   {
-    static bool enabled = []()
-    {
-      const char *env = getenv("JSAR_ENABLE_SDF_TEXT");
-      return env && (strcmp(env, "1") == 0 || strcmp(env, "true") == 0);
-    }();
-    return enabled;
+    // Always enable SDF text rendering for optimal anti-aliasing
+    return true;
   }
 
   // Helper function to calculate background positioning area based on background-origin

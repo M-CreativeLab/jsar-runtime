@@ -6,8 +6,8 @@ This implementation provides Signed Distance Field (SDF) based text rendering fo
 
 - **Integrated SDF rendering** through existing `RenderTextSystem::render()` method
 - **WebContent material support** for SDF anti-aliasing via instance textures
-- **Environment variable control** via `JSAR_ENABLE_SDF_TEXT=1`
-- **Backward compatibility** - existing text rendering unchanged when disabled
+- **Always enabled** for optimal text quality and anti-aliasing
+- **Seamless integration** - existing text rendering enhanced with SDF support
 - **Generic SDF support** - can extend to SVG images and other instance textures
 - **CPU-based SDF generation** using TinySDF algorithm (when needed)
 
@@ -17,7 +17,7 @@ This implementation provides Signed Distance Field (SDF) based text rendering fo
 
 Instead of a separate SDF rendering system, this implementation enhances the existing text rendering pipeline:
 
-1. **`RenderTextSystem::render()`** - Enhanced to optionally generate SDF-based text when `JSAR_ENABLE_SDF_TEXT=1`
+1. **`RenderTextSystem::render()`** - Enhanced to generate SDF-based text for optimal anti-aliasing
 2. **`WebContentInstancedMaterial`** - Extended to support SDF anti-aliasing for instance textures
 3. **Existing `Text2d` components** - No separate component types needed
 4. **WebContent texture pipeline** - SDF text rendered to same texture system as regular content
@@ -27,7 +27,7 @@ Instead of a separate SDF rendering system, this implementation enhances the exi
 1. **Enhanced RenderTextSystem** (`src/client/builtin_scene/web_content_renderer.cpp`)
    - `renderTextWithSDF()` method for SDF text generation
    - Integration with existing Skia text layout
-   - Automatic SDF mode detection via environment variable
+   - Always enabled for optimal text quality
 
 2. **WebContentInstancedMaterial** (`src/client/builtin_scene/materials/web_content_instanced.cpp`)
    - `setSdfEnabled()` method for SDF mode control
@@ -50,22 +50,18 @@ The existing `web_content.frag` shader already supports SDF rendering:
 
 ## Usage
 
-### Enabling SDF Text
+### Usage
 
-Set the environment variable to enable SDF text rendering:
+Text anti-aliasing is now always enabled through the integrated SDF approach. No configuration is needed as SDF rendering is automatically applied to all text content for optimal quality.
 
-```bash
-export JSAR_ENABLE_SDF_TEXT=1
-```
-
-When enabled, all text rendered through `RenderTextSystem::render()` will use SDF anti-aliasing via the `WebContentInstancedMaterial`.
+All text rendered through `RenderTextSystem::render()` will use SDF anti-aliasing via the `WebContentInstancedMaterial`.
 
 ### Integration Details
 
 The SDF text system integrates seamlessly with existing code:
 
 1. **Layout System**: Always creates `Text2d` components (no separate component types)
-2. **Render System**: `RenderTextSystem::render()` automatically detects SDF mode
+2. **Render System**: `RenderTextSystem::render()` automatically uses SDF rendering
 3. **Material System**: `WebContentInstancedMaterial::setSdfEnabled()` enables SDF anti-aliasing
 4. **Texture System**: SDF text rendered to same instance texture atlas as other content
 
@@ -93,9 +89,9 @@ webContentMaterial->setSdfEnabled(true);  // Enable SDF anti-aliasing
 
 ## Performance Considerations
 
-- **Backward Compatibility**: Zero performance impact when `JSAR_ENABLE_SDF_TEXT=1` is not set
-- **Instance Texture Integration**: SDF text uses same atlas/batching as other content
-- **Shader Efficiency**: Single shader handles both SDF and non-SDF content
+- **Always Enabled**: SDF text anti-aliasing is now always enabled for optimal text quality
+- **Instance Texture Integration**: SDF text uses same atlas/batching as other content  
+- **Shader Efficiency**: Single shader handles SDF content with optimal performance
 - **Generic SDF Support**: Infrastructure can extend to SVG images and other content types
 
 ## Testing
@@ -110,8 +106,8 @@ Test SDF text integration:
 View demonstration:
 
 ```bash
-# Open fixtures/html/sdf-text-demo.html in JSAR runtime
-# Set JSAR_ENABLE_SDF_TEXT=1 to see SDF rendering
+# Open fixtures/html/text-antialiasing.html in JSAR runtime
+# SDF text anti-aliasing is always enabled for optimal quality
 ```
 
 ## Limitations

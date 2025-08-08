@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SDF Text Rendering Demo - Integrated Approach</title>
+  <title>Text Anti-aliasing - Integrated SDF Approach</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -77,20 +77,20 @@
 </head>
 <body>
   <div class="text-container">
-    <h1 class="title">SDF Text Rendering - Integrated</h1>
-    <p class="subtitle">Enhanced WebContent texture pipeline with SDF anti-aliasing</p>
+    <h1 class="title">Text Anti-aliasing</h1>
+    <p class="subtitle">Integrated SDF approach for crisp text rendering</p>
     
     <div class="demo-text">
-      This demonstration showcases the integrated SDF text rendering approach in the 
-      JSAR runtime. Instead of a separate SDF system, SDF anti-aliasing is integrated 
-      into the existing RenderTextSystem and WebContentInstancedMaterial pipeline.
+      This demonstration showcases the integrated SDF text anti-aliasing approach in the 
+      JSAR runtime. Text rendering uses the existing RenderTextSystem and WebContentInstancedMaterial 
+      pipeline with built-in SDF anti-aliasing for crisp, scalable text.
     </div>
 
     <div class="size-demo">
-      <div class="size-small">Small text (12px) - Testing SDF clarity</div>
-      <div class="size-medium">Medium text (18px) - Testing SDF clarity</div>
-      <div class="size-large">Large text (32px) - Testing SDF clarity</div>
-      <div class="size-xlarge">XL text (48px) - Testing SDF clarity</div>
+      <div class="size-small">Small text (12px) - Testing anti-aliasing clarity</div>
+      <div class="size-medium">Medium text (18px) - Testing anti-aliasing clarity</div>
+      <div class="size-large">Large text (32px) - Testing anti-aliasing clarity</div>
+      <div class="size-xlarge">XL text (48px) - Testing anti-aliasing clarity</div>
     </div>
 
     <div class="transform-demo">
@@ -100,34 +100,32 @@
     </div>
 
     <div class="demo-text">
-      Integrated SDF approach benefits:
-      <br>• Uses existing Text2d components
-      <br>• Works through WebContent instance textures  
+      Integrated text anti-aliasing benefits:
+      <br>• Uses existing Text2d components and RenderTextSystem
+      <br>• Works through WebContent instance textures and materials  
       <br>• No separate rendering system needed
       <br>• Extends to SVG images and other content
-      <br>• Backward compatible - no impact when disabled
+      <br>• Always enabled for optimal text quality
       <br>• Unicode character support: 你好世界 🌍 ñáméş
     </div>
 
     <div class="instructions">
-      <strong>To enable integrated SDF text rendering:</strong><br>
-      Set the environment variable <code>JSAR_ENABLE_SDF_TEXT=1</code> before running the application.
+      <strong>Text Anti-aliasing Integration:</strong><br>
+      Text rendering now always uses SDF-based anti-aliasing through the existing WebContent material system.
       <br><br>
       <strong>Integration details:</strong><br>
-      • RenderTextSystem::render() detects SDF mode automatically
-      • WebContentInstancedMaterial enables SDF anti-aliasing
+      • RenderTextSystem::render() uses enhanced text rendering pipeline
+      • WebContentInstancedMaterial provides SDF anti-aliasing automatically
       • Same texture atlas and batching as other content
-      • Generic infrastructure for future SDF content types
+      • Generic infrastructure supports future SDF content types like SVG
     </div>
   </div>
 
   <script>
     // Add some interactivity for demonstration
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('SDF Text Demo loaded');
-      console.log('Environment: JSAR_ENABLE_SDF_TEXT =', 
-        typeof process !== 'undefined' && process.env ? 
-        process.env.JSAR_ENABLE_SDF_TEXT : 'not set');
+      console.log('Text Anti-aliasing Demo loaded');
+      console.log('SDF text anti-aliasing is always enabled in the integrated approach');
       
       // Add dynamic text scaling animation
       const title = document.querySelector('.title');

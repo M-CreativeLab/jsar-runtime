@@ -16,16 +16,10 @@ namespace client_layout
   using namespace builtin_scene;
   using namespace skia::textlayout;
 
-  // Feature flag for SDF text rendering
-  // TODO: This could be made configurable via environment variable or settings
+  // Always enable SDF text rendering for optimal anti-aliasing
   static bool enableSDFTextRendering()
   {
-    static bool enabled = []()
-    {
-      const char *env = getenv("JSAR_ENABLE_SDF_TEXT");
-      return env && (strcmp(env, "1") == 0 || strcmp(env, "true") == 0);
-    }();
-    return enabled;
+    return true;
   }
 
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
