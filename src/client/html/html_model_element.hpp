@@ -20,6 +20,15 @@ namespace dom
     using HTMLElement::HTMLElement;
 
   public:
+    // Forward declarations for data structures that can be shared with layout
+    struct GaussianSplat
+    {
+      float position[3];
+      float color[3];
+      float opacity;
+      float scale[3];
+      float rotation[4];
+    };
     enum LoadingHint
     {
       // Loads the model immediately, regardless of whether or not the model is currently within the visible viewport
@@ -113,6 +122,31 @@ namespace dom
      */
     bool complete = false;
 
+    /**
+     * Get the source URL of the model (for internal use).
+     */
+    std::string getSrc() const
+    {
+      return src_;
+    }
+
+    /**
+     * Get the type hint of the model (for internal use).
+     */
+    std::string getType() const
+    {
+      return type_.value_or("");
+    }
+
+    /**
+     * Check if the model is spatial (for WebXR or stereoscopic rendering).
+     */
+    bool isSpatial() const
+    {
+      // TODO: Add spatial attribute support if needed
+      return false;
+    }
+
   private:
     std::string src_;
     std::optional<std::string> type_;
@@ -124,6 +158,9 @@ namespace dom
     bool is_src_model_loading_ = false;
     bool is_src_model_loaded_ = false;
     bool is_src_model_decoded_ = false;
+
+    // Parsed model data (ready for layout)
+    std::optional<std::vector<GaussianSplat>> parsed_splats_ = std::nullopt;
 
     /**
      * Create the Model3d component for this HTML element.

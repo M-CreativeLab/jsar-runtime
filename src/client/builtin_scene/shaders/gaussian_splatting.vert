@@ -1,20 +1,20 @@
 // Base quad attributes (per vertex)
-attribute vec2 a_position;
+attribute vec2 position;
 
 // Instanced attributes (per splat)
-attribute vec3 a_splatPosition;
-attribute vec3 a_splatColor;
-attribute float a_splatOpacity;
-attribute vec3 a_splatScale;
-attribute vec4 a_splatRotation;
+attribute vec3 splatPosition;
+attribute vec3 splatColor;
+attribute float splatOpacity;
+attribute vec3 splatScale;
+attribute vec4 splatRotation;
 
-uniform mat4 u_mvpMatrix;
-uniform mat4 u_viewMatrix;
-uniform vec2 u_quadSize;
+uniform mat4 uMvpMatrix;
+uniform mat4 uViewMatrix;
+uniform vec2 uQuadSize;
 
-varying vec3 v_color;
-varying float v_opacity;
-varying vec2 v_texCoord;
+varying vec3 vColor;
+varying float vOpacity;
+varying vec2 vTexCoord;
 
 // Rotate a vector by a quaternion
 vec3 rotateByQuaternion(vec3 v, vec4 q) {
@@ -23,22 +23,22 @@ vec3 rotateByQuaternion(vec3 v, vec4 q) {
 
 void main() {
   // Pass texture coordinate from base quad position
-  v_texCoord = a_position + vec2(0.5, 0.5);
+  vTexCoord = position + vec2(0.5, 0.5);
   
   // Create billboard quad in world space
-  vec3 localPos = vec3(a_position * u_quadSize, 0.0);
+  vec3 localPos = vec3(position * uQuadSize, 0.0);
   
   // Apply splat scaling
-  localPos *= a_splatScale;
+  localPos *= splatScale;
   
   // Apply splat rotation
-  vec3 rotatedPos = rotateByQuaternion(localPos, a_splatRotation);
+  vec3 rotatedPos = rotateByQuaternion(localPos, splatRotation);
   
   // Translate to splat position
-  vec3 worldPos = a_splatPosition + rotatedPos;
+  vec3 worldPos = splatPosition + rotatedPos;
   
-  gl_Position = u_mvpMatrix * vec4(worldPos, 1.0);
+  gl_Position = uMvpMatrix * vec4(worldPos, 1.0);
   
-  v_color = a_splatColor;
-  v_opacity = a_splatOpacity;
+  vColor = splatColor;
+  vOpacity = splatOpacity;
 }

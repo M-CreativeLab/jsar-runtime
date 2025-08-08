@@ -12,6 +12,7 @@
 #include "./layout_flexible_box.hpp"
 #include "./layout_grid.hpp"
 #include "./layout_image.hpp"
+#include "./layout_model3d.hpp"
 #include "./layout_html_canvas.hpp"
 #include "./layout_html_input.hpp"
 
@@ -260,6 +261,8 @@ namespace client_layout
     // TODO(yorkie): support <picture> element and content case.
     if (dom::Node::Is<dom::HTMLImageElement>(element))
       boxObject = make_unique<LayoutImage>(element);
+    else if (dom::Node::Is<dom::HTMLModelElement>(element))
+      boxObject = make_unique<LayoutModel3d>(element);
     else if (dom::Node::Is<dom::HTMLCanvasElement>(element))
       boxObject = make_unique<LayoutHTMLCanvas>(element);
     else if (dom::Node::Is<dom::HTMLInputElement>(element))

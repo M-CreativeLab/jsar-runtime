@@ -82,6 +82,10 @@ namespace client_layout
     {
       return false;
     }
+    virtual bool isLayoutModel3d() const
+    {
+      return false;
+    }
     virtual bool isLayoutView() const
     {
       return false;

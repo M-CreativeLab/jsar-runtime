@@ -1,10 +1,11 @@
 #include "./html_model_element.hpp"
 #include <client/dom/document.hpp>
 #include <client/builtin_scene/model_3d.hpp>
-#include <client/builtin_scene/model_3d_renderer.hpp>
+#include <client/builtin_scene/renderer/model3d_renderer.hpp>
 #include <client/builtin_scene/model_loaders/ksplat_loader.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>
+#include <client/layout/layout_model3d.hpp>
 #include <client/per_process.hpp>
 #include <common/debug.hpp>
 #include <algorithm>
@@ -173,7 +174,18 @@ namespace dom
 
   void HTMLModelElement::updateModelComponent()
   {
-    // TODO
+    // Get the layout object associated with this element
+    auto layoutObject = this->layoutObject();
+    if (!layoutObject || !layoutObject->isLayoutModel3d())
+      return;
+
+    auto layoutModel3d = static_cast<client_layout::LayoutModel3d *>(layoutObject);
+
+    // Set the parsed model data in the layout object
+    if (parsed_splats_.has_value())
+    {
+      layoutModel3d->setModelData(parsed_splats_.value());
+    }
   }
 
   Model3d::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
@@ -253,9 +265,37 @@ namespace dom
       std::vector<builtin_scene::GaussianSplat> parsedSplats;
       if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
       {
+        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
+        std::vector<GaussianSplat> elementSplats;
+        elementSplats.reserve(parsedSplats.size());
+
+        for (const auto &splat : parsedSplats)
+        {
+          GaussianSplat elementSplat;
+          elementSplat.position[0] = splat.position[0];
+          elementSplat.position[1] = splat.position[1];
+          elementSplat.position[2] = splat.position[2];
+          elementSplat.color[0] = splat.color[0];
+          elementSplat.color[1] = splat.color[1];
+          elementSplat.color[2] = splat.color[2];
+          elementSplat.opacity = splat.opacity;
+          elementSplat.scale[0] = splat.scale[0];
+          elementSplat.scale[1] = splat.scale[1];
+          elementSplat.scale[2] = splat.scale[2];
+          elementSplat.rotation[0] = splat.rotation[0];
+          elementSplat.rotation[1] = splat.rotation[1];
+          elementSplat.rotation[2] = splat.rotation[2];
+          elementSplat.rotation[3] = splat.rotation[3];
+          elementSplats.push_back(elementSplat);
+        }
+
+        // Store parsed splats for layout
+        parsed_splats_ = std::move(elementSplats);
+
+        // Also set in the temporary model for compatibility
         model.setSplats(std::move(parsedSplats));
         model.setLoaded(true);
-        DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsedSplats.size());
+        DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsed_splats_->size());
       }
       else
       {

@@ -2,7 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
-#include "./model_3d_renderer.hpp"
+#include "./renderer/model3d_renderer.hpp"
 
 namespace builtin_scene
 {
