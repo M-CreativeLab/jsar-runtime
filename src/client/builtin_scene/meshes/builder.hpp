@@ -2,11 +2,6 @@
 
 #include <memory>
 
-namespace builtin_scene
-{
-  class GaussianSplatsMesh;
-}
-
 namespace builtin_scene::meshes
 {
   class MeshBuilder
@@ -20,11 +15,5 @@ namespace builtin_scene::meshes
      * The implemetor should build the mesh's vertices and indices in this method.
      */
     virtual void build() = 0;
-
-    /**
-     * Create a GaussianSplatsMesh for rendering Gaussian splats.
-     * This is a global mesh that manages all splats across the scene.
-     */
-    static std::shared_ptr<GaussianSplatsMesh> CreateGaussianSplatsMesh();
   };
 }

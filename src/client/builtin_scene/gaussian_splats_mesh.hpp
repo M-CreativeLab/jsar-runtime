@@ -7,7 +7,8 @@
 
 #include <client/graphics/webgl_context.hpp>
 #include "./ecs.hpp"
-#include "./gaussian_splats_component.hpp"
+#include "./gaussian_splatting.hpp"
+#include "./meshes/splat.hpp"
 
 namespace builtin_scene
 {
@@ -41,18 +42,13 @@ namespace builtin_scene
    * This class manages all splats from all model entities, handles sorting,
    * and performs instanced rendering with the base quad geometry.
    */
-  class GaussianSplatsMesh : public ecs::Component
+  class GaussianSplatsMesh : public meshes::Splat
   {
   public:
     GaussianSplatsMesh();
     virtual ~GaussianSplatsMesh() = default;
 
   public:
-    /**
-     * Initialize the quad geometry buffers.
-     */
-    bool initializeGeometry(std::shared_ptr<client_graphics::WebGL2Context> glContext);
-
     /**
      * Add splats from a model entity to the global rendering system.
      */
@@ -111,7 +107,7 @@ namespace builtin_scene
      */
     inline bool isGeometryInitialized() const
     {
-      return geometryInitialized_;
+      return !isDirty();
     }
 
     /**
@@ -125,11 +121,6 @@ namespace builtin_scene
      */
     void rebuildSortedSplats();
 
-    /**
-     * Create the base quad geometry for splat rendering.
-     */
-    void createQuadGeometry(std::shared_ptr<client_graphics::WebGL2Context> glContext);
-
   private:
     // Map from entity ID to its splats
     std::unordered_map<ecs::EntityId, std::vector<GaussianSplat>> entitySplats_;
@@ -137,13 +128,8 @@ namespace builtin_scene
     // Sorted splats for rendering (rebuilt when entities change or camera moves)
     std::vector<SplatInstanceData> sortedSplats_;
 
-    // Base quad geometry buffers
-    std::shared_ptr<client_graphics::WebGLBuffer> quadVertexBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> quadIndexBuffer_;
-
     // Flags
     bool needsRebuild_;
     bool needsSorting_;
-    bool geometryInitialized_;
   };
 }

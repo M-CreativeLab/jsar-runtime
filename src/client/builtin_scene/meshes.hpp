@@ -13,9 +13,13 @@
 #include "./meshes/box.hpp"
 #include "./meshes/plane.hpp"
 #include "./meshes/sphere.hpp"
+#include "./meshes/splat.hpp"
 
 namespace builtin_scene
 {
+  // Forward declaration
+  class GaussianSplatsMesh;
+
   class Meshes : public asset::Assets<Mesh>
   {
   public:
@@ -294,6 +298,12 @@ namespace builtin_scene
     {
       return CreateAndBuild<meshes::UvSphere>(radius, sectors, stacks);
     }
+
+    /**
+     * Create a GaussianSplatsMesh for rendering Gaussian splats.
+     * This is a global mesh that manages all splats across the scene.
+     */
+    static std::shared_ptr<GaussianSplatsMesh> CreateGaussianSplatsMesh();
 
   private:
     /**

@@ -6,64 +6,10 @@
 namespace builtin_scene
 {
   GaussianSplatsMesh::GaussianSplatsMesh()
-      : needsRebuild_(false)
+      : meshes::Splat()
+      , needsRebuild_(false)
       , needsSorting_(false)
-      , geometryInitialized_(false)
   {
-  }
-
-  bool GaussianSplatsMesh::initializeGeometry(std::shared_ptr<client_graphics::WebGL2Context> glContext)
-  {
-    if (geometryInitialized_)
-      return true;
-
-    quadVertexBuffer_ = glContext->createBuffer();
-    quadIndexBuffer_ = glContext->createBuffer();
-
-    createQuadGeometry(glContext);
-    geometryInitialized_ = true;
-    return true;
-  }
-
-  void GaussianSplatsMesh::createQuadGeometry(std::shared_ptr<client_graphics::WebGL2Context> glContext)
-  {
-    // Create a simple quad (-0.5 to 0.5) for each splat
-    // This will be instanced for each gaussian splat
-    float vertices[] = {
-      // Position (x, y)
-      -0.5f,
-      -0.5f, // Bottom-left
-      0.5f,
-      -0.5f, // Bottom-right
-      0.5f,
-      0.5f, // Top-right
-      -0.5f,
-      0.5f // Top-left
-    };
-
-    unsigned int indices[] = {
-      0, 1, 2, // First triangle
-      2,
-      3,
-      0 // Second triangle
-    };
-
-    // Upload vertex data
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, quadVertexBuffer_);
-    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                          sizeof(vertices),
-                          vertices,
-                          client_graphics::WebGLBufferUsage::kStaticDraw);
-
-    // Upload index data
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, quadIndexBuffer_);
-    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
-                          sizeof(indices),
-                          indices,
-                          client_graphics::WebGLBufferUsage::kStaticDraw);
-
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, nullptr);
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, nullptr);
   }
 
   void GaussianSplatsMesh::addSplatsFromEntity(ecs::EntityId entityId, const std::vector<GaussianSplat> &splats)

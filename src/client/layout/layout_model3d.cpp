@@ -1,6 +1,6 @@
 #include <optional>
 #include <client/builtin_scene/scene.hpp>
-#include <client/builtin_scene/gaussian_splats_component.hpp>
+#include <client/builtin_scene/gaussian_splatting.hpp>
 #include <client/builtin_scene/gaussian_splats_mesh.hpp>
 #include <client/builtin_scene/materials/gaussian_splatting.hpp>
 #include <client/builtin_scene/meshes/builder.hpp>
@@ -20,7 +20,7 @@ namespace client_layout
   {
     auto setModelData = [this, &splats](Scene &scene)
     {
-      GaussianSplatsComponent &splatComponent = scene.getComponentChecked<GaussianSplatsComponent>(entity());
+      GaussianSplattingModel &splatComponent = scene.getComponentChecked<GaussianSplattingModel>(entity());
 
       // Convert HTMLModelElement::GaussianSplat to builtin_scene::GaussianSplat
       std::vector<builtin_scene::GaussianSplat> convertedSplats;
@@ -86,8 +86,8 @@ namespace client_layout
       assert(dom::Node::Is<dom::HTMLModelElement>(node()));
       auto &modelElement = dom::Node::AsChecked<dom::HTMLModelElement>(node());
 
-      // Create GaussianSplatsComponent for this entity
-      scene.addComponent(entity, GaussianSplatsComponent(modelElement.getSrc()));
+      // Create GaussianSplattingModel for this entity
+      scene.addComponent(entity, GaussianSplattingModel(modelElement.getSrc()));
     };
     useSceneWithCallback(addSplatComponent);
   }
@@ -106,7 +106,7 @@ namespace client_layout
         globalSplatsMesh.removeSplatsFromEntity(entity);
       }
 
-      scene.removeComponent<GaussianSplatsComponent>(entity);
+      scene.removeComponent<GaussianSplattingModel>(entity);
     };
     useSceneWithCallback(removeSplatComponent);
 
@@ -149,7 +149,7 @@ namespace client_layout
   {
     auto setVisible = [this, &b](Scene &scene)
     {
-      GaussianSplatsComponent &splatComponent = scene.getComponentChecked<GaussianSplatsComponent>(entity());
+      GaussianSplattingModel &splatComponent = scene.getComponentChecked<GaussianSplattingModel>(entity());
       splatComponent.setVisible(b);
     };
     useSceneWithCallback(setVisible);

@@ -2,7 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
-#include "./gaussian_splats_component.hpp"
+#include "./gaussian_splatting.hpp"
 #include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
@@ -40,7 +40,7 @@ namespace builtin_scene
       app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
-      app.registerComponent<GaussianSplatsComponent>();
+      app.registerComponent<GaussianSplattingModel>();
       app.registerComponent<GaussianSplatsMesh>();
 
       // Systems

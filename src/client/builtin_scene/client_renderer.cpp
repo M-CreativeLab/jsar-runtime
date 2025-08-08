@@ -8,7 +8,7 @@
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
-#include "./gaussian_splats_component.hpp"
+#include "./gaussian_splatting.hpp"
 #include "./gaussian_splats_mesh.hpp"
 #include "./camera.hpp"
 
@@ -443,19 +443,41 @@ namespace builtin_scene
     auto globalSplatsMeshEntityId = splatsMeshEntities[0];
     auto &splatsMesh = getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
 
-    // Get current camera for depth sorting
-    auto cameras = queryEntities<Camera>([](const Camera &camera) -> bool
-                                         { return camera.isEnabled(); });
-    if (cameras.empty())
-      return;
+    // Get view matrix for depth sorting
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
 
-    auto cameraEntity = cameras[0];
-    auto cameraTransform = getComponent<Transform>(cameraEntity);
-    if (!cameraTransform)
-      return;
+    // Try to get view matrix from WebXR experience first
+    if (xrExperience_ != nullptr)
+    {
+      auto xrViewerPose = xrExperience_->viewerPose();
+      if (xrViewerPose != nullptr)
+      {
+        auto &views = xrViewerPose->views();
+        if (!views.empty())
+        {
+          // Use the first view's view matrix for depth sorting
+          viewMatrix = views[0]->viewMatrix();
+        }
+      }
+    }
 
-    // Sort splats by depth based on camera view
-    glm::mat4 viewMatrix = cameraTransform->matrix();
+    // Fallback to camera transform if XR is not available
+    if (viewMatrix == glm::mat4(1.0f))
+    {
+      auto cameras = queryEntities<Camera>([](const Camera &camera) -> bool
+                                           { return camera.isEnabled(); });
+      if (cameras.empty())
+        return;
+
+      auto cameraEntity = cameras[0];
+      auto cameraTransform = getComponent<Transform>(cameraEntity);
+      if (!cameraTransform)
+        return;
+
+      viewMatrix = cameraTransform->matrix();
+    }
+
+    // Sort splats by depth based on view matrix
     splatsMesh.sortSplatsByDepth(viewMatrix);
 
     if (splatsMesh.getTotalSplatCount() == 0)

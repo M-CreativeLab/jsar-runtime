@@ -20,10 +20,10 @@ namespace builtin_scene
    * Component for storing Gaussian splats data for individual model entities.
    * This component preserves the splats for each HTMLModelElement entity.
    */
-  class GaussianSplatsComponent : public ecs::Component
+  class GaussianSplattingModel : public ecs::Component
   {
   public:
-    GaussianSplatsComponent(const std::string &src)
+    GaussianSplattingModel(const std::string &src)
         : src_(src)
         , loaded_(false)
         , visible_(true)
