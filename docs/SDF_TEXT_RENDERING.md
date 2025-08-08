@@ -1,53 +1,50 @@
 # SDF Text Rendering
 
-This implementation provides Signed Distance Field (SDF) based text rendering for the JSAR runtime, enabling crisp, scalable text in 3D environments.
+This implementation provides Signed Distance Field (SDF) based text rendering for the JSAR runtime, enabling crisp, scalable text in 3D environments through integration with the existing WebContent texture system.
 
 ## Features
 
-- **CPU-based SDF generation** using TinySDF algorithm
-- **Texture atlas packing** for efficient GPU memory usage
-- **LRU cache** to avoid regenerating SDF textures
-- **OpenGL shader** with configurable thickness and softness
-- **ECS integration** following existing JSAR patterns
-- **Unicode support** via existing Skia font system
+- **Integrated SDF rendering** through existing `RenderTextSystem::render()` method
+- **WebContent material support** for SDF anti-aliasing via instance textures
+- **Environment variable control** via `JSAR_ENABLE_SDF_TEXT=1`
+- **Backward compatibility** - existing text rendering unchanged when disabled
+- **Generic SDF support** - can extend to SVG images and other instance textures
+- **CPU-based SDF generation** using TinySDF algorithm (when needed)
 
 ## Architecture
 
+### Integration Approach
+
+Instead of a separate SDF rendering system, this implementation enhances the existing text rendering pipeline:
+
+1. **`RenderTextSystem::render()`** - Enhanced to optionally generate SDF-based text when `JSAR_ENABLE_SDF_TEXT=1`
+2. **`WebContentInstancedMaterial`** - Extended to support SDF anti-aliasing for instance textures
+3. **Existing `Text2d` components** - No separate component types needed
+4. **WebContent texture pipeline** - SDF text rendered to same texture system as regular content
+
 ### Core Components
 
-1. **TinySDF** (`src/client/builtin_scene/text/sdf/TinySDF.cpp`)
-   - CPU-based SDF generation from font glyphs
-   - Uses Skia for font rasterization and metrics
-   - Configurable distance field parameters
+1. **Enhanced RenderTextSystem** (`src/client/builtin_scene/web_content_renderer.cpp`)
+   - `renderTextWithSDF()` method for SDF text generation
+   - Integration with existing Skia text layout
+   - Automatic SDF mode detection via environment variable
 
-2. **Atlas** (`src/client/builtin_scene/text/sdf/Atlas.cpp`)
-   - Bin-packing algorithm for texture atlas creation
-   - UV coordinate mapping for glyph positioning
-   - Efficient memory layout for GPU upload
+2. **WebContentInstancedMaterial** (`src/client/builtin_scene/materials/web_content_instanced.cpp`)
+   - `setSdfEnabled()` method for SDF mode control
+   - Shader support for SDF anti-aliasing
+   - Works with existing instance texture system
 
-3. **Cache** (`src/client/builtin_scene/text/sdf/Cache.cpp`)
-   - LRU cache for SDF textures
-   - Keyed by font properties and text content
-   - Configurable memory limits
+3. **TinySDF Utilities** (`src/client/builtin_scene/text/sdf/`)
+   - `TinySDF.cpp` - CPU-based SDF generation from font glyphs
+   - `Atlas.cpp` - Bin-packing for texture atlas creation  
+   - `Cache.cpp` - LRU cache for SDF textures
 
-4. **SDFTextRenderer** (`src/client/builtin_scene/text/SDFTextRenderer.cpp`)
-   - Main integration point with ECS system
-   - Mesh generation for text quads
-   - GPU texture management
+### Shader Integration
 
-5. **SDFTextMaterial** (`src/client/builtin_scene/materials/sdf_text.cpp`)
-   - OpenGL material for SDF text rendering
-   - Shader uniforms for appearance control
-   - Integration with existing material system
-
-### Shaders
-
-- **Vertex Shader** (`src/client/builtin_scene/shaders/sdf_text.vert`)
-  - Standard vertex transformation
-  - UV coordinate passing
-
-- **Fragment Shader** (`src/client/builtin_scene/shaders/sdf_text.frag`)
-  - SDF sampling and distance-based alpha calculation
+The existing `web_content.frag` shader already supports SDF rendering:
+- `uSdfEnabled` uniform controls SDF anti-aliasing mode
+- SDF distance-based alpha calculation for smooth edges
+- Works with instance textures for batched rendering
   - Configurable edge softness and thickness
   - Color and opacity control
 
@@ -61,43 +58,49 @@ Set the environment variable to enable SDF text rendering:
 export JSAR_ENABLE_SDF_TEXT=1
 ```
 
-When enabled, all text nodes will use SDF rendering instead of regular text rendering.
+When enabled, all text rendered through `RenderTextSystem::render()` will use SDF anti-aliasing via the `WebContentInstancedMaterial`.
+
+### Integration Details
+
+The SDF text system integrates seamlessly with existing code:
+
+1. **Layout System**: Always creates `Text2d` components (no separate component types)
+2. **Render System**: `RenderTextSystem::render()` automatically detects SDF mode
+3. **Material System**: `WebContentInstancedMaterial::setSdfEnabled()` enables SDF anti-aliasing
+4. **Texture System**: SDF text rendered to same instance texture atlas as other content
 
 ### Configuration
 
-SDF generation parameters can be configured via `SDFParams`:
+SDF generation parameters are configured automatically based on text style:
 
 ```cpp
-sdf::SDFParams params;
-params.fontSize = 24;    // Font size in pixels
-params.buffer = 8;       // Buffer around glyph
-params.radius = 8;       // Distance field radius
-params.cutoff = 0.25f;   // Alpha cutoff for edge detection
+// Font size and family extracted from existing WebContent style
+auto textStyle = content.paragraphStyle().getTextStyle();
+int fontSize = static_cast<int>(textStyle.getFontSize());
+
+// SDF parameters derived from font size
+text::sdf::SDFParams sdfParams(fontSize, 8, 8, 0.25f);
 ```
 
 ### Material Properties
 
-SDF text appearance can be controlled via material properties:
+SDF anti-aliasing is controlled via the WebContent material:
 
 ```cpp
-auto material = materials::SDFTextMaterial::create(textureId);
-material->setSDFSpread(8.0f);        // Distance field spread
-material->setSDFThickness(0.5f);     // Text thickness (0.5 = normal)
-material->setSDFSoftness(1.0f);      // Edge softness
-material->setTextColor(1.0f, 1.0f, 1.0f, 1.0f);  // RGBA color
-material->setOpacity(1.0f);          // Additional opacity
+auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
+webContentMaterial->setSdfEnabled(true);  // Enable SDF anti-aliasing
 ```
 
 ## Performance Considerations
 
-- **Cache Efficiency**: SDF textures are cached by font and content hash
-- **Memory Management**: LRU eviction prevents unlimited memory growth  
-- **Batch Rendering**: Multiple glyphs can be rendered in single draw call
-- **Asynchronous Generation**: SDF generation could be moved to background thread
+- **Backward Compatibility**: Zero performance impact when `JSAR_ENABLE_SDF_TEXT=1` is not set
+- **Instance Texture Integration**: SDF text uses same atlas/batching as other content
+- **Shader Efficiency**: Single shader handles both SDF and non-SDF content
+- **Generic SDF Support**: Infrastructure can extend to SVG images and other content types
 
 ## Testing
 
-Run SDF text tests:
+Test SDF text integration:
 
 ```bash
 # Build and run tests (when build system is configured)

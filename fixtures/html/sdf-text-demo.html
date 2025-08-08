@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SDF Text Rendering Demo</title>
+  <title>SDF Text Rendering Demo - Integrated Approach</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -77,13 +77,13 @@
 </head>
 <body>
   <div class="text-container">
-    <h1 class="title">SDF Text Rendering</h1>
-    <p class="subtitle">Crisp, scalable text in 3D space</p>
+    <h1 class="title">SDF Text Rendering - Integrated</h1>
+    <p class="subtitle">Enhanced WebContent texture pipeline with SDF anti-aliasing</p>
     
     <div class="demo-text">
-      This demonstration showcases SDF (Signed Distance Field) based text rendering 
-      in the JSAR runtime. SDF text remains crisp and clean at any scale or distance, 
-      making it ideal for spatial computing and 3D user interfaces.
+      This demonstration showcases the integrated SDF text rendering approach in the 
+      JSAR runtime. Instead of a separate SDF system, SDF anti-aliasing is integrated 
+      into the existing RenderTextSystem and WebContentInstancedMaterial pipeline.
     </div>
 
     <div class="size-demo">
@@ -100,23 +100,24 @@
     </div>
 
     <div class="demo-text">
-      SDF text supports various features:
-      <br>• Smooth edges at any scale
-      <br>• Efficient GPU rendering
-      <br>• Configurable thickness and softness
-      <br>• Font family and style support
+      Integrated SDF approach benefits:
+      <br>• Uses existing Text2d components
+      <br>• Works through WebContent instance textures  
+      <br>• No separate rendering system needed
+      <br>• Extends to SVG images and other content
+      <br>• Backward compatible - no impact when disabled
       <br>• Unicode character support: 你好世界 🌍 ñáméş
     </div>
 
     <div class="instructions">
-      <strong>To enable SDF text rendering:</strong><br>
+      <strong>To enable integrated SDF text rendering:</strong><br>
       Set the environment variable <code>JSAR_ENABLE_SDF_TEXT=1</code> before running the application.
       <br><br>
-      <strong>Performance benefits:</strong><br>
-      • No pixelation when scaling text
-      • Reduced texture memory usage
-      • Batched rendering for multiple text elements
-      • LRU cache prevents redundant SDF generation
+      <strong>Integration details:</strong><br>
+      • RenderTextSystem::render() detects SDF mode automatically
+      • WebContentInstancedMaterial enables SDF anti-aliasing
+      • Same texture atlas and batching as other content
+      • Generic infrastructure for future SDF content types
     </div>
   </div>
 

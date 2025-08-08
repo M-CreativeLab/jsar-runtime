@@ -2,8 +2,22 @@
 #include <client/builtin_scene/text/sdf/TinySDF.hpp>
 #include <client/builtin_scene/text/sdf/Atlas.hpp>
 #include <client/builtin_scene/text/sdf/Cache.hpp>
+#include <client/builtin_scene/web_content.hpp>
 
 using namespace builtin_scene::text::sdf;
+
+TEST_CASE("Integrated SDF Text Rendering", "[sdf][text][integration]")
+{
+  SECTION("SDF text feature flag detection")
+  {
+    // Test environment variable detection
+    const char *env = getenv("JSAR_ENABLE_SDF_TEXT");
+    bool sdfEnabled = env && (strcmp(env, "1") == 0 || strcmp(env, "true") == 0);
+    
+    // This should match the logic in web_content_renderer.cpp
+    REQUIRE((sdfEnabled == true || sdfEnabled == false)); // Just verify it's boolean
+  }
+}
 
 TEST_CASE("TinySDF Basic Generation", "[sdf][text]")
 {

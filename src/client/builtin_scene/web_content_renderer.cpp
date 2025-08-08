@@ -9,6 +9,9 @@
 #include <skia/include/core/SkRect.h>
 #include <skia/include/core/SkColor.h>
 #include <skia/include/core/SkPathEffect.h>
+#include <skia/include/core/SkData.h>
+#include <skia/include/core/SkImage.h>
+#include <skia/include/core/SkImageInfo.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
 
@@ -1106,18 +1109,60 @@ namespace builtin_scene::web_renderer
     if (!canvas)
       return;
 
-    // TODO: Implement SDF text generation and rendering
-    // For now, fall back to regular text rendering but enable SDF mode in the material
+    // Extract font properties from WebContent style
     auto paragraphStyle = content.paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(text.c_str(), text.size());
-    paragraphBuilder->pop();
+    auto textStyle = paragraphStyle.getTextStyle();
 
-    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(layoutWidth);
-    paragraph->paint(canvas, 0.0f, 0.0f);
+    // Get font information for SDF generation
+    int fontSize = static_cast<int>(textStyle.getFontSize());
+    std::string fontFamily = "Arial"; // Default fallback
+
+    // Try to extract font family from text style
+    auto fontFamilies = textStyle.getFontFamilies();
+    if (!fontFamilies.empty())
+    {
+      fontFamily = fontFamilies[0].c_str();
+    }
+
+    // Create SDF parameters
+    text::sdf::SDFParams sdfParams(fontSize, 8, 8, 0.25f);
+
+    // Generate SDF for the text
+    text::sdf::TinySDF sdfGenerator(sdfParams);
+
+    // For now, render individual characters and composite them
+    // TODO: Implement proper text layout and SDF atlas generation
+
+    float x = 0.0f;
+    float y = fontSize; // Baseline position
+
+    for (char c : text)
+    {
+      if (c == ' ')
+      {
+        x += fontSize * 0.3f; // Space width
+        continue;
+      }
+
+      // Generate SDF for this character
+      auto sdfGlyph = sdfGenerator.generateSDF(static_cast<uint32_t>(c), fontFamily);
+      if (sdfGlyph && !sdfGlyph->data.empty())
+      {
+        // Create a bitmap from SDF data and draw it
+        SkImageInfo imageInfo = SkImageInfo::MakeA8(sdfGlyph->width, sdfGlyph->height);
+        sk_sp<SkImage> sdfImage = SkImages::RasterFromData(
+          imageInfo,
+          SkData::MakeWithCopy(sdfGlyph->data.data(), sdfGlyph->data.size()),
+          sdfGlyph->width);
+
+        if (sdfImage)
+        {
+          // Draw the SDF glyph
+          canvas->drawImage(sdfImage, x + sdfGlyph->left, y - sdfGlyph->top);
+          x += sdfGlyph->advance;
+        }
+      }
+    }
 
     // Enable SDF mode in the material for anti-aliasing
     // This will be processed when the texture is updated in UpdateTextureSystem
