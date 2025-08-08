@@ -23,14 +23,11 @@ namespace builtin_scene
 
   bool CSSBorderDataTexture::initialize(shared_ptr<WebGL2Context> glContext)
   {
-    if (TR_UNLIKELY(!glContext))
-      return false;
+    assert(glContext != nullptr && "WebGL2Context must not be null");
 
     glContext_ = glContext;
     borderDataTexture_ = glContext_->createTexture();
-
-    if (TR_UNLIKELY(!borderDataTexture_))
-      return false;
+    assert(borderDataTexture_ && "Failed to create WebGL texture");
 
     // Initialize with default size of 100 instances
     currentTextureHeight_ = 100;

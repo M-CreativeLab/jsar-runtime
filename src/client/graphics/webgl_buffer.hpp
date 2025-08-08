@@ -16,7 +16,6 @@ namespace client_graphics
     kCopyWriteBuffer = WEBGL2_COPY_WRITE_BUFFER,
     kTransformFeedbackBuffer = WEBGL2_TRANSFORM_FEEDBACK_BUFFER,
     kUniformBuffer = WEBGL2_UNIFORM_BUFFER,
-    kShaderStorageBuffer = WEBGL2_SHADER_STORAGE_BUFFER,
     kPixelPackBuffer = WEBGL2_PIXEL_PACK_BUFFER,
     kPixelUnpackBuffer = WEBGL2_PIXEL_UNPACK_BUFFER,
   };

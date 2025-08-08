@@ -171,7 +171,7 @@ void main()
     float borderStyle = uBorderStyle;
 #endif
 
-    // Use original texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
+    // Use instance texture coordinates for SDF calculations (not the transformed uvs used for atlas sampling)
     vec2 planeCoord = uvToPlaneCoord(vInstanceTexCoord, dimensions);
 
     // Calculate SDF distance for rounded rectangle (for content area clipping)
