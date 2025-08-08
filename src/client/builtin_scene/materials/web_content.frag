@@ -14,6 +14,7 @@ in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
 in float vInstanceBorderStyle;
 flat in int vInstanceId;
+in float vSdfDepthScale;
 
 // Texture-based border data storage
 uniform sampler2D borderDataTexture;
@@ -83,9 +84,10 @@ vec4 getBorderLeftColor(int instanceId)
 }
 
 // Smooth step anti-aliasing based on SDF distance
-float sdfAntiAlias(float dist)
+float sdfAntiAlias(float dist, float depthScale)
 {
-  float width = max(fwidth(dist), 0.01);
+  float width = max(fwidth(dist), 0.01) * depthScale;
+  // TODO(yorkie): use gradient-based width for better quality on high-end devices?
   return 1.0 - smoothstep(-width * 0.5, width * 0.5, dist);
 }
 
@@ -176,7 +178,7 @@ void main()
 
     // Calculate SDF distance for rounded rectangle (for content area clipping)
     float sdfDist = sdfRoundedBox(planeCoord, dimensions * 0.5, borderRadius);
-    float contentAlpha = sdfAntiAlias(sdfDist);
+    float contentAlpha = sdfAntiAlias(sdfDist, vSdfDepthScale);
 
     // Apply content alpha for crisp edges
     outColor.a *= contentAlpha;
@@ -188,7 +190,7 @@ void main()
       float borderDist = sdfBorder(planeCoord, dimensions, borderRadius, borderWidth);
 
       // Apply SDF anti-aliasing to border
-      float borderAlpha = sdfAntiAlias(borderDist);
+      float borderAlpha = sdfAntiAlias(borderDist, vSdfDepthScale);
 
       // Apply border style
       if (borderStyle > 1.0) // Dashed style
