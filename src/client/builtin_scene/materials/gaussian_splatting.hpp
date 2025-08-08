@@ -8,7 +8,7 @@
 namespace builtin_scene::materials
 {
   /**
-   * Material for rendering 3D Gaussian Splatting models.
+   * Material for rendering 3D Gaussian Splatting models using instanced rendering.
    */
   class GaussianSplattingMaterial : public Material
   {
@@ -57,7 +57,7 @@ namespace builtin_scene::materials
 
   public:
     /**
-     * Update the gaussian splats data for rendering.
+     * Update the gaussian splats data for instanced rendering.
      */
     void updateSplats(const std::vector<GaussianSplat> &splats);
 
@@ -69,16 +69,29 @@ namespace builtin_scene::materials
       return splats_.size();
     }
 
+    /**
+     * Draw the splats using instanced rendering.
+     */
+    void drawInstanced(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                       std::shared_ptr<client_graphics::WebGLProgram> program);
+
   private:
     std::vector<GaussianSplat> splats_;
 
-    // WebGL buffer objects
-    std::shared_ptr<client_graphics::WebGLBuffer> positionBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> colorBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> opacityBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> scaleBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> rotationBuffer_;
+    // WebGL buffer objects for instanced data
+    std::shared_ptr<client_graphics::WebGLBuffer> splatPositionBuffer_;
+    std::shared_ptr<client_graphics::WebGLBuffer> splatColorBuffer_;
+    std::shared_ptr<client_graphics::WebGLBuffer> splatOpacityBuffer_;
+    std::shared_ptr<client_graphics::WebGLBuffer> splatScaleBuffer_;
+    std::shared_ptr<client_graphics::WebGLBuffer> splatRotationBuffer_;
+
+    // Base quad geometry buffer
+    std::shared_ptr<client_graphics::WebGLBuffer> quadVertexBuffer_;
+    std::shared_ptr<client_graphics::WebGLBuffer> quadIndexBuffer_;
 
     bool buffersInitialized_ = false;
+    bool quadGeometryCreated_ = false;
+
+    void createQuadGeometry(std::shared_ptr<client_graphics::WebGL2Context> glContext);
   };
 }
