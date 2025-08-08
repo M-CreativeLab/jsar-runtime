@@ -1,17 +1,17 @@
-#include "./ksplat_parser.hpp"
+#include "./ksplat_loader.hpp"
 #include <common/debug.hpp>
 #include <cstring>
 #include <algorithm>
 
-namespace builtin_scene::model_renderer
+namespace builtin_scene::model_loaders
 {
-  static const char *LOG_TAG = "KsplatParser";
+  static const char *LOG_TAG = "KsplatLoader";
 
   // .ksplat format constants
   static const uint32_t KSPLAT_MAGIC = 0x6B73706C; // "kspl" in little endian
   static const uint32_t KSPLAT_VERSION = 1;
 
-  bool KsplatParser::parse(const std::vector<char> &data, std::vector<GaussianSplat> &splats)
+  bool KsplatLoader::load(const std::vector<char> &data, std::vector<model_renderer::GaussianSplat> &splats)
   {
     try
     {
@@ -52,7 +52,7 @@ namespace builtin_scene::model_renderer
 
       for (uint32_t i = 0; i < vertexCount; ++i)
       {
-        GaussianSplat splat;
+        model_renderer::GaussianSplat splat;
 
         // Read position (3 floats)
         if (!readBinary(data, offset, splat.position[0]) ||
@@ -102,18 +102,18 @@ namespace builtin_scene::model_renderer
         splats.push_back(splat);
       }
 
-      DEBUG(LOG_TAG, "Successfully parsed .ksplat file with %zu splats", splats.size());
+      DEBUG(LOG_TAG, "Successfully loaded .ksplat file with %zu splats", splats.size());
       return true;
     }
     catch (const std::exception &e)
     {
-      DEBUG(LOG_TAG, "Error parsing .ksplat file: %s", e.what());
+      DEBUG(LOG_TAG, "Error loading .ksplat file: %s", e.what());
       return false;
     }
   }
 
   template <typename T>
-  bool KsplatParser::readBinary(const std::vector<char> &data, size_t &offset, T &value)
+  bool KsplatLoader::readBinary(const std::vector<char> &data, size_t &offset, T &value)
   {
     if (offset + sizeof(T) > data.size())
     {
@@ -125,7 +125,7 @@ namespace builtin_scene::model_renderer
     return true;
   }
 
-  bool KsplatParser::validateHeader(const std::vector<char> &data, uint32_t &vertexCount)
+  bool KsplatLoader::validateHeader(const std::vector<char> &data, uint32_t &vertexCount)
   {
     if (data.size() < 8)
     {
@@ -150,7 +150,7 @@ namespace builtin_scene::model_renderer
   }
 
   // Explicit template instantiations for the types we use
-  template bool KsplatParser::readBinary<float>(const std::vector<char> &, size_t &, float &);
-  template bool KsplatParser::readBinary<uint8_t>(const std::vector<char> &, size_t &, uint8_t &);
-  template bool KsplatParser::readBinary<uint32_t>(const std::vector<char> &, size_t &, uint32_t &);
+  template bool KsplatLoader::readBinary<float>(const std::vector<char> &, size_t &, float &);
+  template bool KsplatLoader::readBinary<uint8_t>(const std::vector<char> &, size_t &, uint8_t &);
+  template bool KsplatLoader::readBinary<uint32_t>(const std::vector<char> &, size_t &, uint32_t &);
 }

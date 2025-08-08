@@ -2,7 +2,7 @@
 #include <client/dom/document.hpp>
 #include <client/builtin_scene/model_3d.hpp>
 #include <client/builtin_scene/model_3d_renderer.hpp>
-#include <client/builtin_scene/ksplat_parser.hpp>
+#include <client/builtin_scene/model_loaders/ksplat_loader.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/per_process.hpp>
@@ -251,7 +251,7 @@ namespace dom
     {
       // Use Ksplat parser to parse the model data
       std::vector<builtin_scene::GaussianSplat> parsedSplats;
-      if (model_renderer::KsplatParser::parse(modelData, parsedSplats))
+      if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
       {
         cout << "Parsed " << parsedSplats.size() << " splats from .ksplat file." << endl;
 

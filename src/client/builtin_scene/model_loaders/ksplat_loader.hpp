@@ -3,24 +3,24 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "./model_3d_renderer.hpp"
+#include "../model_3d_renderer.hpp"
 
-namespace builtin_scene::model_renderer
+namespace builtin_scene::model_loaders
 {
   /**
-   * Ksplat file parser for 3D Gaussian Splatting models.
-   * Supports parsing compact binary .ksplat files with vertex data including position, color, opacity, scale, and rotation.
+   * Ksplat file loader for 3D Gaussian Splatting models.
+   * Supports loading compact binary .ksplat files with vertex data including position, color, opacity, scale, and rotation.
    */
-  class KsplatParser
+  class KsplatLoader
   {
   public:
     /**
-     * Parse a .ksplat file from data buffer and extract Gaussian splats.
+     * Load a .ksplat file from data buffer and extract Gaussian splats.
      * @param data Raw .ksplat file data
-     * @param splats Output vector to store parsed splats
-     * @return true if parsing was successful, false otherwise
+     * @param splats Output vector to store loaded splats
+     * @return true if loading was successful, false otherwise
      */
-    static bool parse(const std::vector<char> &data, std::vector<GaussianSplat> &splats);
+    static bool load(const std::vector<char> &data, std::vector<model_renderer::GaussianSplat> &splats);
 
   private:
     /**
