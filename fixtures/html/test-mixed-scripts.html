@@ -1,0 +1,18 @@
+<html>
+<head>
+  <title>Mixed Scripts Test</title>
+</head>
+<script>
+  console.log('Inline script 1 executed');
+  var inlineVar = 'defined in inline script';
+</script>
+<script src="./test-import.js"></script>
+<script>
+  console.log('Inline script 2 executed');
+  console.log('inlineVar:', inlineVar);
+  console.log('testImport:', typeof testImport);
+  if (typeof testImport === 'function') {
+    testImport();
+  }
+</script>
+</html>

@@ -1,0 +1,19 @@
+<html>
+<head>
+  <title>Multiple Scripts Test</title>
+</head>
+<script src="./lib1.js"></script>
+<script src="./lib2.js"></script>
+<script>
+  // Test that both functions are available
+  console.log('lib1Function:', typeof lib1Function);
+  console.log('lib2Function:', typeof lib2Function);
+  if (typeof lib1Function === 'function' && typeof lib2Function === 'function') {
+    lib1Function();
+    lib2Function();
+    console.log('SUCCESS: All functions are available');
+  } else {
+    console.log('FAIL: Some functions are undefined');
+  }
+</script>
+</html>
