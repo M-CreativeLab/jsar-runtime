@@ -152,49 +152,8 @@ namespace client_layout
 
     auto appendText = [this, &entity](Scene &scene)
     {
-      if (enableSDFTextRendering())
-      {
-        // Create SDF text component instead of regular Text2d
-        text::SDFText2d sdfText(transformedText());
-        sdfText.isDirty = true;
-
-        // Extract font properties from computed style if available
-        if (hasAdoptedStyle())
-        {
-          const auto &style = adoptedStyleRef();
-          if (style.hasProperty("font-family"))
-            sdfText.fontFamily = style.getPropertyValue("font-family");
-          if (style.hasProperty("font-size"))
-          {
-            // Parse font size - simplified parsing
-            string fontSizeStr = style.getPropertyValue("font-size");
-            if (!fontSizeStr.empty() && isdigit(fontSizeStr[0]))
-            {
-              sdfText.fontSize = std::max(8, std::min(128, std::stoi(fontSizeStr)));
-            }
-          }
-          if (style.hasProperty("font-weight"))
-          {
-            string fontWeightStr = style.getPropertyValue("font-weight");
-            if (fontWeightStr == "bold")
-              sdfText.fontWeight = 700;
-            else if (fontWeightStr == "normal")
-              sdfText.fontWeight = 400;
-            else if (!fontWeightStr.empty() && isdigit(fontWeightStr[0]))
-              sdfText.fontWeight = std::stoi(fontWeightStr);
-          }
-          if (style.hasProperty("font-style"))
-            sdfText.fontStyle = style.getPropertyValue("font-style");
-        }
-
-        scene.addComponent(entity, std::move(sdfText));
-      }
-      else
-      {
-        // Use regular Text2d component
-        scene.addComponent(entity, Text2d(transformedText()));
-      }
-
+      // Always use regular Text2d component - SDF rendering will be handled in RenderTextSystem
+      scene.addComponent(entity, Text2d(transformedText()));
       formattingContext().setIsEmpty(isEmptyText());
     };
     useSceneWithCallback(appendText);

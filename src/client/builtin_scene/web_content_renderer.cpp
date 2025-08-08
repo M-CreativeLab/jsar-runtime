@@ -27,6 +27,7 @@
 #include "./web_content.hpp"
 #include "./image.hpp"
 #include "./xr.hpp"
+#include "./text/sdf/TinySDF.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -37,6 +38,17 @@ namespace builtin_scene::web_renderer
 
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
+
+  // Feature flag for SDF text rendering in WebContent
+  static bool enableSDFTextRendering()
+  {
+    static bool enabled = []()
+    {
+      const char *env = getenv("JSAR_ENABLE_SDF_TEXT");
+      return env && (strcmp(env, "1") == 0 || strcmp(env, "true") == 0);
+    }();
+    return enabled;
+  }
 
   // Helper function to calculate background positioning area based on background-origin
   SkRect getBackgroundPositioningArea(const SkRRect &roundedRect,
@@ -1055,6 +1067,47 @@ namespace builtin_scene::web_renderer
       return;
 
     string &text = textComponent->content;
+
+    if (enableSDFTextRendering())
+    {
+      // Render text using SDF for anti-aliasing
+      renderTextWithSDF(entity, content, text);
+    }
+    else
+    {
+      // Use traditional Skia text rendering
+      auto paragraphStyle = content.paragraphStyle();
+      auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+      paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+      paragraphBuilder->addText(text.c_str(), text.size());
+      paragraphBuilder->pop();
+
+      auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
+      auto paragraph = paragraphBuilder->Build();
+      paragraph->layout(layoutWidth);
+      paragraph->paint(content.canvas(), 0.0f, 0.0f);
+    }
+
+    content.setTextureUsing(true);
+  }
+
+  float RenderTextSystem::getLayoutWidthForText(WebContent &content)
+  {
+    const auto &fragment = content.fragment();
+    return fragment->contentWidth();
+  }
+
+  void RenderTextSystem::renderTextWithSDF(ecs::EntityId entity, WebContent &content, const std::string &text)
+  {
+    // Generate SDF-based text and render it to the WebContent canvas
+    // This provides anti-aliasing for text when rendered as instance textures
+
+    auto canvas = content.canvas();
+    if (!canvas)
+      return;
+
+    // TODO: Implement SDF text generation and rendering
+    // For now, fall back to regular text rendering but enable SDF mode in the material
     auto paragraphStyle = content.paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
     paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
@@ -1064,14 +1117,10 @@ namespace builtin_scene::web_renderer
     auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(layoutWidth);
-    paragraph->paint(content.canvas(), 0.0f, 0.0f);
-    content.setTextureUsing(true);
-  }
+    paragraph->paint(canvas, 0.0f, 0.0f);
 
-  float RenderTextSystem::getLayoutWidthForText(WebContent &content)
-  {
-    const auto &fragment = content.fragment();
-    return fragment->contentWidth();
+    // Enable SDF mode in the material for anti-aliasing
+    // This will be processed when the texture is updated in UpdateTextureSystem
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
@@ -1082,6 +1131,13 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
+      // Enable SDF mode for text when SDF text rendering is enabled
+      auto textComponent = getComponent<Text2d>(entity);
+      if (textComponent && enableSDFTextRendering())
+      {
+        webContentMaterial->setSdfEnabled(true);
+      }
+
       // Check if this is a spatial image and set the spatial flag
       auto imageComponent = getComponent<Image2d>(entity);
       // Use the same texture update method for both spatial and non-spatial images
