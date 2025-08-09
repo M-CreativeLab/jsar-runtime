@@ -25,8 +25,30 @@ namespace builtin_scene::materials
     return true;
   }
 
-  void GaussianSplattingMaterial::onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                                   std::shared_ptr<Mesh3d> mesh)
+  void GaussianSplattingMaterial::drawMeshImpl(shared_ptr<client_graphics::WebGLProgram> program,
+                                               const Mesh3d &,
+                                               RenderPass,
+                                               optional<XRRenderTarget>)
+  {
+    auto glContext = glContext_.lock();
+    if (!glContext)
+      return;
+
+    // Only handle drawing if we have splats to render
+    if (splatInstances_.empty() || !buffersInitialized_)
+      return;
+
+    // Do the instanced draw call
+    glContext->drawElementsInstanced(
+      client_graphics::WebGLDrawMode::kTriangles,
+      6, // 6 indices for quad (2 triangles)
+      WEBGL_UNSIGNED_INT,
+      0,
+      splatInstances_.size());
+  }
+
+  void GaussianSplattingMaterial::onBeforeDrawMesh(shared_ptr<client_graphics::WebGLProgram> program,
+                                                   shared_ptr<Mesh3d> mesh)
   {
     Material::onBeforeDrawMesh(program, mesh);
 
@@ -50,28 +72,6 @@ namespace builtin_scene::materials
         }
       }
     }
-  }
-
-  bool GaussianSplattingMaterial::drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                               std::shared_ptr<Mesh3d> mesh)
-  {
-    auto glContext = glContext_.lock();
-    if (!glContext)
-      return false;
-
-    // Only handle drawing if we have splats to render
-    if (splatInstances_.empty() || !buffersInitialized_)
-      return false;
-
-    // Do the instanced draw call
-    glContext->drawElementsInstanced(
-      client_graphics::WebGLDrawMode::kTriangles,
-      6, // 6 indices for quad (2 triangles)
-      client_graphics::WebGLDataType::kUnsignedInt,
-      0,
-      splatInstances_.size());
-
-    return true; // We handled the drawing
   }
 
   void GaussianSplattingMaterial::setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,

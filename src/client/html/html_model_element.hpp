@@ -3,7 +3,6 @@
 #include <string>
 #include <optional>
 #include <client/html/html_element.hpp>
-#include <client/builtin_scene/model_3d.hpp>
 
 namespace dom
 {

@@ -32,14 +32,10 @@ namespace builtin_scene
     renderer->setVolumeMask(entity);
 
     // Create the global GaussianSplatsMesh entity for rendering all Gaussian splats
-    auto gaussianSplatsMesh = meshes->add(MeshBuilder::CreateGaussianSplatsMesh());
-    auto gaussianSplattingMaterial = materials->add(materials::GaussianSplattingMaterial());
-
-    auto globalSplatsEntity = spawn(
-      Mesh3d(gaussianSplatsMesh, false),         // Enable rendering with the GaussianSplatsMesh handle
-      MeshMaterial3d(gaussianSplattingMaterial), // Transparent material
-      Transform::FromXYZ(0.0f, 0.0f, 0.0f)       // Identity transform
-    );
+    auto guassianSplattingEntity = spawn(
+      Mesh3d(meshes->add(MeshBuilder::CreateGaussianSplatsMesh()), false),
+      MeshMaterial3d(materials->add(materials::GaussianSplattingMaterial::Default())),
+      Transform::FromXYZ(0.0f, 0.0f, 0.0f));
   }
 
   void RenderSystem::onExecute()
@@ -497,23 +493,7 @@ namespace builtin_scene
         if (!views.empty())
         {
           // Use the first view's view matrix for depth sorting
-          viewMatrix = views[0]->viewMatrix();
-        }
-      }
-    }
-
-    // Fallback to camera transform if XR is not available
-    if (viewMatrix == glm::mat4(1.0f))
-    {
-      auto cameras = queryEntities<Camera>([](const Camera &camera) -> bool
-                                           { return camera.isEnabled(); });
-      if (!cameras.empty())
-      {
-        auto cameraEntity = cameras[0];
-        auto cameraTransform = getComponent<Transform>(cameraEntity);
-        if (cameraTransform)
-        {
-          viewMatrix = cameraTransform->matrix();
+          // viewMatrix = views[0]->viewMatrix();
         }
       }
     }

@@ -1,7 +1,5 @@
 #include "./html_model_element.hpp"
 #include <client/dom/document.hpp>
-#include <client/builtin_scene/model_3d.hpp>
-#include <client/builtin_scene/renderer/model3d_renderer.hpp>
 #include <client/builtin_scene/meshes/loaders/ksplat_loader.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>

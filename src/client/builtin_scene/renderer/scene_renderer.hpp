@@ -173,13 +173,6 @@ namespace builtin_scene
     void disableVolumeMask();
 
   private:
-    void drawInstancedMeshImpl(const Mesh3d &mesh,
-                               std::shared_ptr<MeshMaterial3d> material,
-                               const client_graphics::WebGLProgramScope &,
-                               RenderPass renderPass,
-                               std::optional<XRRenderTarget> renderTarget);
-
-  private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     math::Size3 volumeSize_;
     std::optional<ecs::EntityId> volumeMask_;

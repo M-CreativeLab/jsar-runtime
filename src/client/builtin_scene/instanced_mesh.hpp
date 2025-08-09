@@ -22,6 +22,10 @@ namespace builtin_scene
   // Forward declarations
   class Mesh3d;
   class RenderableInstancesList;
+  namespace materials
+  {
+    class WebContentInstancedMaterial;
+  }
 
   struct InstanceData
   {
@@ -349,8 +353,8 @@ namespace builtin_scene
 
   class InstancedMeshBase
   {
-    friend class SceneRenderer;
     friend class RenderSystem;
+    friend class materials::WebContentInstancedMaterial;
 
   public:
     static constexpr size_t STRIDE = sizeof(InstanceData);
@@ -510,5 +514,9 @@ namespace builtin_scene
     {
       return 0.0f;
     }
+
+  public:
+    void onMesh3dInitialized(const Mesh3d &mesh3d,
+                             std::shared_ptr<client_graphics::WebGL2Context> glContext) override;
   };
 }

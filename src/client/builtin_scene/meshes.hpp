@@ -28,7 +28,6 @@ namespace builtin_scene
 
   class Mesh3d : public ecs::Component
   {
-  public:
     using ecs::Component::Component;
 
   public:
@@ -115,6 +114,13 @@ namespace builtin_scene
       return vbo_;
     }
     /**
+     * @returns The element buffer object.
+     */
+    inline std::shared_ptr<client_graphics::WebGLBuffer> elementBufferObject() const
+    {
+      return ebo_;
+    }
+    /**
      * Set if the mesh3d is initialized.
      *
      * @param glContext The WebGL context.
@@ -123,20 +129,24 @@ namespace builtin_scene
      */
     inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                            std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                           std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+                           std::shared_ptr<client_graphics::WebGLBuffer> vbo,
+                           std::shared_ptr<client_graphics::WebGLBuffer> ebo)
     {
       if (vao == nullptr)
         throw std::runtime_error("The vertex array object is not initialized.");
 
       vao_ = vao;
       vbo_ = vbo;
+      ebo_ = ebo;
       glContext_ = glContext;
       initialized_ = true;
+
+      handle_->onMesh3dInitialized(*this, glContext);
     }
     /**
      * @returns If the mesh3d is initialized.
      */
-    inline bool initialized()
+    inline bool initialized() const
     {
       return initialized_;
     }
@@ -220,6 +230,7 @@ namespace builtin_scene
     std::shared_ptr<Mesh> handle_ = nullptr;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
     std::shared_ptr<client_graphics::WebGLBuffer> vbo_;
+    std::shared_ptr<client_graphics::WebGLBuffer> ebo_;
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
     bool disableRendering_ = true;

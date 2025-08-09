@@ -49,6 +49,10 @@ namespace builtin_scene::materials
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override;
+    void drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
+                      const Mesh3d &mesh,
+                      RenderPass renderPass,
+                      std::optional<XRRenderTarget> renderTarget) override;
     void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
                           std::shared_ptr<Mesh3d> mesh) override;
     void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
