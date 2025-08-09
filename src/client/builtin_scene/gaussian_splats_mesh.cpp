@@ -2,6 +2,8 @@
 #include <functional>
 #include <glm/gtc/matrix_transform.hpp>
 #include <client/graphics/webgl_context.hpp>
+
+#include "./meshes.hpp"
 #include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
@@ -111,16 +113,16 @@ namespace builtin_scene
       return;
 
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
-
     size_t offset = 0;
 
     // splatPosition (vec3)
     auto positionLoc = glContext->getAttribLocation(program, "splatPosition");
     if (positionLoc.has_value())
     {
-      glContext->enableVertexAttribArray(positionLoc.value());
-      glContext->vertexAttribPointer(positionLoc.value(), 3, WEBGL_FLOAT, false, SPLAT_STRIDE, reinterpret_cast<void *>(offset));
-      glContext->vertexAttribDivisor(positionLoc.value(), 1);
+      int index = positionLoc.value().index.value_or(-1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, SPLAT_STRIDE, offset);
+      glContext->vertexAttribDivisor(index, 1);
     }
     offset += sizeof(glm::vec3);
 
@@ -128,9 +130,10 @@ namespace builtin_scene
     auto colorLoc = glContext->getAttribLocation(program, "splatColor");
     if (colorLoc.has_value())
     {
-      glContext->enableVertexAttribArray(colorLoc.value());
-      glContext->vertexAttribPointer(colorLoc.value(), 3, WEBGL_FLOAT, false, SPLAT_STRIDE, reinterpret_cast<void *>(offset));
-      glContext->vertexAttribDivisor(colorLoc.value(), 1);
+      int index = colorLoc.value().index.value_or(-1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, SPLAT_STRIDE, offset);
+      glContext->vertexAttribDivisor(index, 1);
     }
     offset += sizeof(glm::vec3);
 
@@ -138,9 +141,10 @@ namespace builtin_scene
     auto opacityLoc = glContext->getAttribLocation(program, "splatOpacity");
     if (opacityLoc.has_value())
     {
-      glContext->enableVertexAttribArray(opacityLoc.value());
-      glContext->vertexAttribPointer(opacityLoc.value(), 1, WEBGL_FLOAT, false, SPLAT_STRIDE, reinterpret_cast<void *>(offset));
-      glContext->vertexAttribDivisor(opacityLoc.value(), 1);
+      int index = opacityLoc.value().index.value_or(-1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index, 1, WEBGL_FLOAT, false, SPLAT_STRIDE, offset);
+      glContext->vertexAttribDivisor(index, 1);
     }
     offset += sizeof(float);
 
@@ -148,9 +152,10 @@ namespace builtin_scene
     auto scaleLoc = glContext->getAttribLocation(program, "splatScale");
     if (scaleLoc.has_value())
     {
-      glContext->enableVertexAttribArray(scaleLoc.value());
-      glContext->vertexAttribPointer(scaleLoc.value(), 3, WEBGL_FLOAT, false, SPLAT_STRIDE, reinterpret_cast<void *>(offset));
-      glContext->vertexAttribDivisor(scaleLoc.value(), 1);
+      int index = scaleLoc.value().index.value_or(-1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, SPLAT_STRIDE, offset);
+      glContext->vertexAttribDivisor(index, 1);
     }
     offset += sizeof(glm::vec3);
 
@@ -158,9 +163,10 @@ namespace builtin_scene
     auto rotationLoc = glContext->getAttribLocation(program, "splatRotation");
     if (rotationLoc.has_value())
     {
-      glContext->enableVertexAttribArray(rotationLoc.value());
-      glContext->vertexAttribPointer(rotationLoc.value(), 4, WEBGL_FLOAT, false, SPLAT_STRIDE, reinterpret_cast<void *>(offset));
-      glContext->vertexAttribDivisor(rotationLoc.value(), 1);
+      int index = rotationLoc.value().index.value_or(-1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index, 4, WEBGL_FLOAT, false, SPLAT_STRIDE, offset);
+      glContext->vertexAttribDivisor(index, 1);
     }
 
     // Set the quad size uniform
@@ -178,6 +184,6 @@ namespace builtin_scene
     Mesh::onMesh3dInitialized(mesh3d, glContext);
 
     // Initialize the splat buffer
-    setupSplatBuffer(glContext, nullptr);
+    setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
   }
 }
