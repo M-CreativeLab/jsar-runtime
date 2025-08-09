@@ -86,24 +86,5 @@ namespace builtin_scene
     std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
   };
 
-  class GaussianSplatsManagerSystem final : public ecs::System
-  {
-    using ecs::System::System;
 
-  public:
-    const std::string name() const override
-    {
-      return "GaussianSplatsManagerSystem";
-    }
-    void onExecute() override;
-
-  private:
-    /**
-     * Collect splats from all GaussianSplattingModel3d entities and update the global GaussianSplatsMesh.
-     */
-    void updateGlobalSplatsMesh();
-
-  private:
-    std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
-  };
 }

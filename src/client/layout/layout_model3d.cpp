@@ -69,14 +69,20 @@ namespace client_layout
   {
     auto removeSplatComponent = [&entity](Scene &scene)
     {
-      // Remove splats from global mesh before destroying component
-      auto globalSplatsMeshEntities = scene.template queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
-                                                                                       { return true; });
-      if (!globalSplatsMeshEntities.empty())
+      // Remove splats from global mesh before destroying component using GaussianSplattingContext
+      auto gaussianSplattingCtx = scene.getResource<GaussianSplattingContext>();
+      if (gaussianSplattingCtx != nullptr)
       {
-        auto globalSplatsMeshEntityId = globalSplatsMeshEntities[0];
-        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
-        globalSplatsMesh.removeSplatsFromEntity(entity);
+        auto globalSplatsMeshEntityId = gaussianSplattingCtx->globalSplatsMeshEntity();
+        auto meshComponent = scene.getComponent<Mesh3d>(globalSplatsMeshEntityId);
+        if (meshComponent != nullptr)
+        {
+          auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
+          if (splatsMesh != nullptr)
+          {
+            splatsMesh->removeSplatsFromEntity(entity);
+          }
+        }
       }
       scene.removeComponent<GaussianSplattingModel3d>(entity);
     };

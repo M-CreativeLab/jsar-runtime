@@ -1,11 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include "./ecs.hpp"
 
 namespace builtin_scene
 {
+  // Forward declarations
+  class WebXRExperience;
+
   // Forward declarations for 3DGS data structures
   struct GaussianSplat
   {
@@ -78,4 +82,67 @@ namespace builtin_scene
     // 3DGS data
     std::vector<GaussianSplat> splats_;
   };
+
+  /**
+   * Resource for managing Gaussian splatting context and shared state.
+   * Similar to WebContentContext for managing the global Gaussian splats mesh entity.
+   */
+  class GaussianSplattingContext : public ecs::Resource
+  {
+    friend class GaussianSplattingInitSystem;
+
+  public:
+    ecs::EntityId globalSplatsMeshEntity() const
+    {
+      return globalSplatsMeshEntity_;
+    }
+
+  private:
+    ecs::EntityId globalSplatsMeshEntity_;
+  };
+
+  namespace gaussian_splatting
+  {
+    /**
+     * System for initializing the global Gaussian splats mesh entity.
+     * This system creates the global entity with Root component for rendering all splats.
+     */
+    class GaussianSplattingInitSystem final : public ecs::System
+    {
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override
+      {
+        return "GaussianSplattingInitSystem";
+      }
+      void onExecute() override;
+    };
+
+    /**
+     * System for managing and sorting Gaussian splats from individual model entities.
+     * This system runs before RenderSystem to collect splats from all GaussianSplattingModel3d
+     * entities and update the global GaussianSplatsMesh with proper depth sorting.
+     */
+    class GaussianSplatsManagerSystem final : public ecs::System
+    {
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override
+      {
+        return "GaussianSplatsManagerSystem";
+      }
+      void onExecute() override;
+
+    private:
+      /**
+       * Collect splats from all GaussianSplattingModel3d entities and update the global GaussianSplatsMesh.
+       */
+      void updateGlobalSplatsMesh();
+
+    private:
+      std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
+    };
+  }
 }
