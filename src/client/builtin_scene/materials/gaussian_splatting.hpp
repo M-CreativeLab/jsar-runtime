@@ -58,35 +58,14 @@ namespace builtin_scene::materials
 
   public:
     /**
-     * Update the gaussian splats instance data for instanced rendering.
-     */
-    void updateSplatInstances(const std::vector<SplatInstanceData> &instances);
-
-    /**
      * Get the current number of splat instances.
      */
     size_t getSplatInstanceCount() const
     {
-      return splatInstances_.size();
+      return splatInstanceCount_;
     }
 
   private:
-    /**
-     * Setup instanced vertex attributes for splat rendering.
-     */
-    void setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                  std::shared_ptr<client_graphics::WebGL2Context> glContext);
-
-  private:
-    std::vector<SplatInstanceData> splatInstances_;
-
-    // WebGL buffer objects for instanced data
-    std::shared_ptr<client_graphics::WebGLBuffer> splatPositionBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> splatColorBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> splatOpacityBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> splatScaleBuffer_;
-    std::shared_ptr<client_graphics::WebGLBuffer> splatRotationBuffer_;
-
-    bool buffersInitialized_ = false;
+    size_t splatInstanceCount_ = 0;
   };
 }

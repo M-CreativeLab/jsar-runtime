@@ -16,16 +16,17 @@ namespace builtin_scene
 {
   /**
    * Data structure for a single splat instance in the global rendering system.
+   * Packed for efficient single-buffer upload.
    */
   struct SplatInstanceData
   {
-    glm::vec3 position;
-    glm::vec3 color;
-    float opacity;
-    glm::vec3 scale;
-    glm::vec4 rotation;
-    float depth;                // For sorting
-    ecs::EntityId sourceEntity; // Which model entity this splat came from
+    glm::vec3 position;         // 12 bytes
+    glm::vec3 color;            // 12 bytes
+    float opacity;              // 4 bytes
+    glm::vec3 scale;            // 12 bytes
+    glm::vec4 rotation;         // 16 bytes
+    float depth;                // 4 bytes (for sorting, not uploaded to GPU)
+    ecs::EntityId sourceEntity; // 8 bytes (not uploaded to GPU)
 
     SplatInstanceData()
         : position(0.0f)
@@ -37,6 +38,12 @@ namespace builtin_scene
         , sourceEntity(0)
     {
     }
+
+    // Get the size of GPU-uploadable data (excluding depth and sourceEntity)
+    static constexpr size_t getGPUDataSize()
+    {
+      return sizeof(glm::vec3) + sizeof(glm::vec3) + sizeof(float) + sizeof(glm::vec3) + sizeof(glm::vec4);
+    }
   };
 
   /**
@@ -46,6 +53,17 @@ namespace builtin_scene
    */
   class GaussianSplatsMesh : public meshes::Splat
   {
+  public:
+    // Splat instance attributes layout for GPU buffer
+    static constexpr size_t SPLAT_STRIDE = SplatInstanceData::getGPUDataSize();
+    static inline std::vector<std::string> SPLAT_ATTRIBUTES = {
+      "splatPosition", // vec3
+      "splatColor",    // vec3
+      "splatOpacity",  // float
+      "splatScale",    // vec3
+      "splatRotation"  // vec4
+    };
+
   public:
     GaussianSplatsMesh();
     virtual ~GaussianSplatsMesh() = default;
@@ -140,6 +158,31 @@ namespace builtin_scene
       return !isDirty();
     }
 
+    /**
+     * Setup the splat buffer and vertex attributes for instanced rendering.
+     * Should be called when the mesh is initialized with WebGL context.
+     */
+    void setupSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                          std::shared_ptr<client_graphics::WebGLVertexArray> vao);
+
+    /**
+     * Update the splat instance buffer with current splat data.
+     * This uploads the splat data to GPU for rendering.
+     */
+    void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext);
+
+    /**
+     * Setup vertex attributes for splat rendering with the given program.
+     */
+    void setupSplatAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+                              std::shared_ptr<client_graphics::WebGL2Context> glContext);
+
+    /**
+     * Initialize the splat buffer when the mesh is set up with WebGL context.
+     */
+    void onMesh3dInitialized(const Mesh3d &mesh3d,
+                             std::shared_ptr<client_graphics::WebGL2Context> glContext) override;
+
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.
@@ -181,9 +224,13 @@ namespace builtin_scene
     // Sorted splats for rendering (rebuilt when entities change or camera moves)
     std::vector<SplatInstanceData> sortedSplats_;
 
+    // WebGL buffer for instanced splat data
+    std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
+
     // Flags
     bool needsRebuild_;
     bool needsSorting_;
+    bool bufferInitialized_;
 
     // Empty indices to prevent normal draw call
     static const Indices<uint32_t> emptyIndices_;
