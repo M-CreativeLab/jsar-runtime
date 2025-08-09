@@ -11,7 +11,6 @@
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
-#include "./instanced_mesh.hpp"
 
 namespace builtin_scene
 {
@@ -52,8 +51,7 @@ namespace builtin_scene
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
    */
-  class GaussianSplatsMesh : public meshes::Splat,
-                             public InstancedMeshBase
+  class GaussianSplatsMesh : public meshes::Splat
   {
   public:
     // Splat instance attributes layout for GPU buffer (matching InstancedMeshBase pattern)
@@ -180,6 +178,14 @@ namespace builtin_scene
                               std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
+     * Get the splat instance buffer for attribute configuration.
+     */
+    inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const
+    {
+      return splatInstanceBuffer_;
+    }
+
+    /**
      * Initialize the splat buffer when the mesh is set up with WebGL context.
      */
     void onMesh3dInitialized(const Mesh3d &mesh3d,
@@ -194,13 +200,6 @@ namespace builtin_scene
                                                         int,
                                                         size_t,
                                                         size_t)> callback) const;
-
-  protected:
-    /**
-     * Initialize the RenderableInstancesList for splat rendering.
-     */
-    void initializeInstancesList(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                                 std::shared_ptr<client_graphics::WebGLVertexArray> vao);
 
   private:
     /**

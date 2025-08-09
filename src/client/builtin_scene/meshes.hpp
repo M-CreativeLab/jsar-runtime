@@ -62,7 +62,8 @@ namespace builtin_scene
      */
     inline bool isInstancedMesh() const
     {
-      return std::dynamic_pointer_cast<InstancedMeshBase>(handle_) != nullptr;
+      return std::dynamic_pointer_cast<InstancedMeshBase>(handle_) != nullptr ||
+             std::dynamic_pointer_cast<GaussianSplatsMesh>(handle_) != nullptr;
     }
     /**
      * Get the handle of the mesh as the given type.

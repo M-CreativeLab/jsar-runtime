@@ -189,22 +189,8 @@ namespace builtin_scene
     // Store the glContext for iterateInstanceAttributes
     glContext_ = glContext;
 
-    // Initialize the splat buffer first
+    // Initialize the splat buffer
     setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
-
-    // Initialize the RenderableInstancesList for InstancedMeshBase compatibility
-    initializeInstancesList(glContext, mesh3d.vertexArrayObject());
-  }
-
-  void GaussianSplatsMesh::initializeInstancesList(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                                                   std::shared_ptr<client_graphics::WebGLVertexArray> vao)
-  {
-    // Create a RenderableInstancesList for compatibility with SceneRenderer
-    // Since splats are always transparent, we only need the transparent list
-    opaqueInstances_ = std::make_shared<RenderableInstancesList>(
-      InstanceFilter::kOpaque, vao, glContext->createBuffer());
-    transparentInstances_ = std::make_shared<RenderableInstancesList>(
-      InstanceFilter::kTransparent, vao, splatInstanceBuffer_);
   }
 
   size_t GaussianSplatsMesh::iterateInstanceAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,

@@ -8,6 +8,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/meshes.hpp>
 #include <client/builtin_scene/mesh_material.hpp>
+#include <client/builtin_scene/gaussian_splats_mesh.hpp>
 #include <client/builtin_scene/transform.hpp>
 #include <client/builtin_scene/xr.hpp>
 

@@ -98,7 +98,6 @@ namespace builtin_scene
     // Configure the instance vbo and related attributes if it's an instanced mesh.
     if (mesh3d->isInstancedMesh())
     {
-      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
       /**
        * Configure the instance attributes.
        */
@@ -117,25 +116,54 @@ namespace builtin_scene
         glContext_->vertexAttribDivisor(index, 1);
       };
 
-      // Configure for the opaque instances.
+      // Handle GaussianSplatsMesh specifically
+      if (mesh3d->is<GaussianSplatsMesh>())
       {
-        auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
-        WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
+        auto &gaussianMesh = mesh3d->getHandleCheckedAsRef<GaussianSplatsMesh>();
 
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
-        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
-      }
+        // Configure for Gaussian splats (they use the main VAO)
+        WebGLVertexArrayScope vaoScope(glContext_, mesh3d->vertexArrayObject());
 
-      // Configure for the transparent instances.
-      {
-        auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
-        WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
-
+        // First configure vertex attributes
         glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
         mesh3d->iterateEnabledAttributes(program, configureAttribute);
 
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
-        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        // Then configure instance attributes
+        gaussianMesh.setupSplatBuffer(glContext_, mesh3d->vertexArrayObject());
+
+        // Bind the splat instance buffer and configure instance attributes
+        auto splatBuffer = gaussianMesh.getSplatInstanceBuffer();
+        if (splatBuffer)
+        {
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatBuffer);
+          gaussianMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
+      }
+      else
+      {
+        // Handle regular InstancedMeshBase
+        auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
+
+        // Configure for the opaque instances.
+        {
+          auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
+          WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
+
+        // Configure for the transparent instances.
+        {
+          auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
+          WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+          mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
       }
     }
   }
