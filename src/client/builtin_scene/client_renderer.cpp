@@ -492,35 +492,11 @@ namespace builtin_scene
         auto &views = xrViewerPose->views();
         if (!views.empty())
         {
-          // Use the first view's view matrix for depth sorting
-          // viewMatrix = views[0]->viewMatrix();
+          auto firstView = views[0];
+          viewMatrix = firstView->transform().matrix();
         }
       }
     }
-
-    // Sort splats by depth
-    splatsMesh->sortSplatsByDepth(viewMatrix);
-  }
-
-  void GaussianSplatsManagerSystem::sortSplatsByDepth(glm::mat4 viewMatrix)
-  {
-    // Find the global GaussianSplatsMesh entity (has Mesh3d with GaussianSplatsMesh handle)
-    auto meshEntities = queryEntities<Mesh3d>([](const Mesh3d &mesh) -> bool
-                                              { return mesh.is<GaussianSplatsMesh>(); });
-
-    if (!meshEntities.empty())
-    {
-      auto globalSplatsMeshEntityId = meshEntities[0];
-      auto meshComponent = getComponent<Mesh3d>(globalSplatsMeshEntityId);
-      if (meshComponent)
-      {
-        auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
-        if (splatsMesh)
-        {
-          // Sort splats by depth using the view matrix
-          splatsMesh->sortSplatsByDepth(viewMatrix);
-        }
-      }
-    }
+    // splatsMesh->sortSplatsByDepth(viewMatrix);
   }
 }

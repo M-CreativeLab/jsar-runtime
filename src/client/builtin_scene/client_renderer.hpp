@@ -103,11 +103,6 @@ namespace builtin_scene
      */
     void updateGlobalSplatsMesh();
 
-    /**
-     * Sort splats by depth using the current view matrix.
-     */
-    void sortSplatsByDepth(glm::mat4 viewMatrix);
-
   private:
     std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
   };

@@ -55,8 +55,6 @@ namespace builtin_scene::materials
                       std::optional<XRRenderTarget> renderTarget) override;
     void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
                           std::shared_ptr<Mesh3d> mesh) override;
-    void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
-                         std::shared_ptr<Mesh3d> mesh) override;
 
   public:
     /**

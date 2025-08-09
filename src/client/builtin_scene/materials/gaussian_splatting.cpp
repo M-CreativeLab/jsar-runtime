@@ -53,7 +53,7 @@ namespace builtin_scene::materials
     Material::onBeforeDrawMesh(program, mesh);
 
     auto glContext = glContext_.lock();
-    if (!glContext)
+    if (!glContext) [[unlikely]]
       return;
 
     // Get the GaussianSplatsMesh from the Mesh3d component
@@ -130,51 +130,6 @@ namespace builtin_scene::materials
     {
       glContext->uniform2f(quadSizeLoc.value(), 1.0f, 1.0f); // Base size, scaled by splat scale
     }
-  }
-
-  void GaussianSplattingMaterial::onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                                  std::shared_ptr<Mesh3d> mesh)
-  {
-    auto glContext = glContext_.lock();
-    if (glContext)
-    {
-      auto splatPositionLoc = glContext->getAttribLocation(program, "splatPosition");
-      if (splatPositionLoc.has_value())
-      {
-        glContext->disableVertexAttribArray(splatPositionLoc.value());
-        glContext->vertexAttribDivisor(splatPositionLoc.value(), 0);
-      }
-
-      auto splatColorLoc = glContext->getAttribLocation(program, "splatColor");
-      if (splatColorLoc.has_value())
-      {
-        glContext->disableVertexAttribArray(splatColorLoc.value());
-        glContext->vertexAttribDivisor(splatColorLoc.value(), 0);
-      }
-
-      auto splatOpacityLoc = glContext->getAttribLocation(program, "splatOpacity");
-      if (splatOpacityLoc.has_value())
-      {
-        glContext->disableVertexAttribArray(splatOpacityLoc.value());
-        glContext->vertexAttribDivisor(splatOpacityLoc.value(), 0);
-      }
-
-      auto splatScaleLoc = glContext->getAttribLocation(program, "splatScale");
-      if (splatScaleLoc.has_value())
-      {
-        glContext->disableVertexAttribArray(splatScaleLoc.value());
-        glContext->vertexAttribDivisor(splatScaleLoc.value(), 0);
-      }
-
-      auto splatRotationLoc = glContext->getAttribLocation(program, "splatRotation");
-      if (splatRotationLoc.has_value())
-      {
-        glContext->disableVertexAttribArray(splatRotationLoc.value());
-        glContext->vertexAttribDivisor(splatRotationLoc.value(), 0);
-      }
-    }
-
-    Material::onAfterDrawMesh(program, mesh);
   }
 
   void GaussianSplattingMaterial::updateSplatInstances(const std::vector<SplatInstanceData> &instances)
