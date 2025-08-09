@@ -55,7 +55,10 @@ namespace builtin_scene::text::sdf
    * TinySDF - CPU-based SDF generator for text glyphs
    * 
    * This class generates signed distance field textures from font glyphs
-   * using a CPU-based implementation similar to TinySDF.js
+   * using a CPU-based implementation inspired by TinySDF.js from Mapbox.
+   * 
+   * Reference: https://github.com/mapbox/tiny-sdf
+   * Original implementation by Mapbox under BSD 2-Clause License
    */
   class TinySDF
   {

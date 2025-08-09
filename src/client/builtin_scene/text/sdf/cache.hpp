@@ -4,7 +4,7 @@
 #include <list>
 #include <memory>
 #include <string>
-#include "./Atlas.hpp"
+#include "./atlas.hpp"
 
 namespace builtin_scene::text::sdf
 {

@@ -1,4 +1,4 @@
-#include "./Cache.hpp"
+#include "./cache.hpp"
 #include <algorithm>
 
 namespace builtin_scene::text::sdf

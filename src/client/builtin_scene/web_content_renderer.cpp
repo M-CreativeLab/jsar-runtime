@@ -30,9 +30,9 @@
 #include "./web_content.hpp"
 #include "./image.hpp"
 #include "./xr.hpp"
-#include "./text/sdf/TinySDF.hpp"
-#include "./text/sdf/Atlas.hpp"
-#include "./text/sdf/Cache.hpp"
+#include "./text/sdf/tiny_sdf.hpp"
+#include "./text/sdf/atlas.hpp"
+#include "./text/sdf/cache.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -1064,7 +1064,7 @@ namespace builtin_scene::web_renderer
     string &text = textComponent->content;
 
     // Always render text using SDF for anti-aliasing
-    renderTextWithSDF(entity, content, text);
+    generateSDFTextureForText(entity, content, text);
 
     content.setTextureUsing(true);
   }
@@ -1075,19 +1075,15 @@ namespace builtin_scene::web_renderer
     return fragment->contentWidth();
   }
 
-  void RenderTextSystem::renderTextWithSDF(ecs::EntityId entity, WebContent &content, const std::string &text)
+  void RenderTextSystem::generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text)
   {
-    // For SDF text rendering, we still use the regular WebContent canvas system
-    // but the material will handle the text content through the separate SDF texture atlas
-    // when SDF is enabled. This maintains the existing architecture while providing
-    // SDF anti-aliasing at the shader level.
-
+    // Generate SDF texture for web content's text at RenderTextSystem level.
     // The WebContent will be rendered normally to its canvas, and the WebContentInstancedMaterial
     // will handle routing text content to the SDF texture atlas when uSdfEnabled is true.
     // This allows us to maintain the existing text layout and rendering pipeline
-    // while adding SDF anti-aliasing capabilities.
+    // while adding SDF anti-aliasing capabilities through the separate texture atlas system.
 
-    // No special SDF processing needed here - the material handles the texture routing
+    // SDF texture generation will be implemented here to work with the atlas system
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

@@ -1,4 +1,4 @@
-#include "./Atlas.hpp"
+#include "./atlas.hpp"
 #include <algorithm>
 #include <cstring>
 #include <cassert>

@@ -1,4 +1,4 @@
-#include "./TinySDF.hpp"
+#include "./tiny_sdf.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>

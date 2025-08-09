@@ -542,7 +542,7 @@ namespace builtin_scene
 
     private:
       float getLayoutWidthForText(WebContent &content);
-      void renderTextWithSDF(ecs::EntityId entity, WebContent &content, const std::string &text);
+      void generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text);
 
     private:
       TrClientContextPerProcess *clientContext_;

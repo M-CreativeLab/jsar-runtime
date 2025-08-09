@@ -104,7 +104,6 @@ namespace client_layout
     {
       bool shouldUpdateContent = false;
 
-      // Update Text2d component (SDF rendering is now handled at material level)
       auto textComponent = scene.getComponent<Text2d>(entity());
       if (textComponent != nullptr)
       {
@@ -131,7 +130,6 @@ namespace client_layout
 
     auto appendText = [this, &entity](Scene &scene)
     {
-      // Always use regular Text2d component - SDF rendering will be handled in RenderTextSystem
       scene.addComponent(entity, Text2d(transformedText()));
       formattingContext().setIsEmpty(isEmptyText());
     };
@@ -142,9 +140,7 @@ namespace client_layout
   {
     auto removeText = [&entity](Scene &scene)
     {
-      // Remove both types of text components (only one will exist)
       scene.removeComponent<Text2d>(entity);
-      scene.removeComponent<text::SDFText2d>(entity);
     };
     useSceneWithCallback(removeText);
 
@@ -168,18 +164,9 @@ namespace client_layout
       transformed_text_ = transformAndSecureText(plainText());
       is_text_content_dirty_ = true;
 
-      // Update regular Text2d component if it exists
       auto textComponent = getSceneComponent<Text2d>();
       if (textComponent != nullptr)
         textComponent->content = transformedText();
-
-      // Update SDF text component if it exists
-      auto sdfTextComponent = getSceneComponent<text::SDFText2d>();
-      if (sdfTextComponent != nullptr)
-      {
-        sdfTextComponent->content = transformedText();
-        sdfTextComponent->isDirty = true;
-      }
     }
 
     // Update the text content if the text is empty.

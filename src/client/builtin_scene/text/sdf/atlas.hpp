@@ -4,7 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <cstdint>
-#include "./TinySDF.hpp"
+#include "./tiny_sdf.hpp"
 
 namespace builtin_scene::text::sdf
 {
