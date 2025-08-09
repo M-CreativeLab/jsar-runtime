@@ -1,5 +1,5 @@
 <div align="center">
-  <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="300">
+  <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="500">
   <p align="center">
     JSAR: a <b>Browser Engine Library</b> designed for The Spatial Web.
     <br>
