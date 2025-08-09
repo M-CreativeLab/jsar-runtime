@@ -61,11 +61,8 @@ namespace builtin_scene::materials
         // Update buffer with current splat data
         splatsMesh->updateSplatBuffer(glContext);
 
-        // Setup vertex attributes for rendering
-        if (splatInstanceCount_ > 0)
-        {
-          splatsMesh->setupSplatAttributes(program, glContext);
-        }
+        // Note: Vertex attributes are now configured by SceneRenderer::configureMeshVertexData
+        // since GaussianSplatsMesh inherits from InstancedMeshBase
       }
     }
   }

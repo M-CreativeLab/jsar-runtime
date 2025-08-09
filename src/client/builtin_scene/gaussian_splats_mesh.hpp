@@ -11,6 +11,7 @@
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
+#include "./instanced_mesh.hpp"
 
 namespace builtin_scene
 {
@@ -51,12 +52,13 @@ namespace builtin_scene
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
    */
-  class GaussianSplatsMesh : public meshes::Splat
+  class GaussianSplatsMesh : public meshes::Splat,
+                             public InstancedMeshBase
   {
   public:
-    // Splat instance attributes layout for GPU buffer
-    static constexpr size_t SPLAT_STRIDE = SplatInstanceData::getGPUDataSize();
-    static inline std::vector<std::string> SPLAT_ATTRIBUTES = {
+    // Splat instance attributes layout for GPU buffer (matching InstancedMeshBase pattern)
+    static constexpr size_t STRIDE = SplatInstanceData::getGPUDataSize();
+    static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {
       "splatPosition", // vec3
       "splatColor",    // vec3
       "splatOpacity",  // float
@@ -183,6 +185,23 @@ namespace builtin_scene
     void onMesh3dInitialized(const Mesh3d &mesh3d,
                              std::shared_ptr<client_graphics::WebGL2Context> glContext) override;
 
+    /**
+     * Iterate over instance attributes for proper configuration.
+     * This follows the same pattern as InstancedMesh for standard attribute setup.
+     */
+    size_t iterateInstanceAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                     std::function<void(const IVertexAttribute &,
+                                                        int,
+                                                        size_t,
+                                                        size_t)> callback) const;
+
+  protected:
+    /**
+     * Initialize the RenderableInstancesList for splat rendering.
+     */
+    void initializeInstancesList(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                                 std::shared_ptr<client_graphics::WebGLVertexArray> vao);
+
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.
@@ -226,6 +245,9 @@ namespace builtin_scene
 
     // WebGL buffer for instanced splat data
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
+
+    // WebGL context reference (needed for iterateInstanceAttributes)
+    std::weak_ptr<client_graphics::WebGL2Context> glContext_;
 
     // Flags
     bool needsRebuild_;
