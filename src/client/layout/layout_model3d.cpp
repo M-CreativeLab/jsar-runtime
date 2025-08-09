@@ -61,6 +61,22 @@ namespace client_layout
 
       // Create GaussianSplattingModel3d for this entity
       scene.addComponent(entity, GaussianSplattingModel3d(modelElement.getSrc()));
+
+      // Add this entity to the global splats mesh using GaussianSplattingContext
+      auto gaussianSplattingCtx = scene.getResource<GaussianSplattingContext>();
+      if (gaussianSplattingCtx != nullptr)
+      {
+        auto globalSplatsMeshEntityId = gaussianSplattingCtx->globalSplatsMeshEntity();
+        auto meshComponent = scene.getComponent<Mesh3d>(globalSplatsMeshEntityId);
+        if (meshComponent != nullptr)
+        {
+          auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
+          if (splatsMesh != nullptr)
+          {
+            splatsMesh->addSplatsEntity(entity);
+          }
+        }
+      }
     };
     useSceneWithCallback(addSplatComponent);
   }
@@ -80,7 +96,7 @@ namespace client_layout
           auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
           if (splatsMesh != nullptr)
           {
-            splatsMesh->removeSplatsFromEntity(entity);
+            splatsMesh->removeSplatsEntity(entity);
           }
         }
       }

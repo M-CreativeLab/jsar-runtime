@@ -63,11 +63,8 @@ namespace builtin_scene::gaussian_splatting
 
     for (auto entityId : modelEntities)
     {
-      auto &model = getComponentChecked<GaussianSplattingModel3d>(entityId);
-      const auto &splats = model.getSplats();
-
-      // Update this model's splats in the global mesh
-      splatsMesh->updateSplatsFromEntity(entityId, splats);
+      // Add/update this entity in the global mesh
+      splatsMesh->updateSplatsEntity(entityId);
     }
 
     // Get view matrix for depth sorting
@@ -87,6 +84,9 @@ namespace builtin_scene::gaussian_splatting
         }
       }
     }
-    // splatsMesh->sortSplatsByDepth(viewMatrix);
+
+    // Sort splats by depth using the first view (or identity matrix if no XR)
+    splatsMesh->sortSplatsByDepth(viewMatrix, [this](ecs::EntityId entityId) -> GaussianSplattingModel3d *
+                                  { return getComponent<GaussianSplattingModel3d>(entityId); });
   }
 }
