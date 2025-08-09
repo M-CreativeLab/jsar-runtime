@@ -94,7 +94,7 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::drawInstanced(std::shared_ptr<client_graphics::WebGL2Context> glContext)
   {
-    if (!geometryInitialized_ || sortedSplats_.empty())
+    if (sortedSplats_.empty())
       return;
 
     // Bind the index buffer for the quad
@@ -115,12 +115,5 @@ namespace builtin_scene
     // Unbind buffers
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, nullptr);
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, nullptr);
-  }
-
-  const Indices<uint32_t> &GaussianSplatsMesh::indices() const
-  {
-    // Return empty indices to prevent normal draw call
-    // The actual instanced draw call is handled by the material
-    return emptyIndices_;
   }
 }

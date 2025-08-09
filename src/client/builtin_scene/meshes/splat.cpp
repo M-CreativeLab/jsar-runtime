@@ -49,19 +49,15 @@ namespace builtin_scene::meshes
     };
 
     // Quad indices for two triangles
-    std::vector<uint32_t> indices = {
+    // clang-format off
+    Indices<uint32_t> indices = {
       0, 1, 2, // First triangle
-      0,
-      2,
-      3 // Second triangle
+      0, 2, 3 // Second triangle
     };
+    // clang-format on
 
-    // Set up vertex attributes
-    vertexBuffer().enableAttribute("position", AttributeType::kFloat2, 0);
-    vertexBuffer().enableAttribute("texCoord", AttributeType::kFloat2, 2 * sizeof(float));
-
-    // Upload vertex data
-    vertexBuffer().setVertexData(vertices);
-    indices_.setData(indices);
+    updateIndices(indices);
+    enableAttribute(Vertex::ATTRIBUTE_POSITION);
+    enableAttribute(Vertex::ATTRIBUTE_UV0);
   }
 }
