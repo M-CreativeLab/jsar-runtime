@@ -30,18 +30,16 @@ namespace builtin_scene::gaussian_splatting
       Transform::FromXYZ(0.0f, 0.0f, 0.0f));
   }
 
-  void GaussianSplatsManagerSystem::onExecute()
+  void GaussianSplatsUpdateSystem::onExecute()
   {
     // Initialize XR experience reference if not already done
     if (!xrExperience_)
-    {
       xrExperience_ = getResource<WebXRExperience>();
-    }
 
     updateGlobalSplatsMesh();
   }
 
-  void GaussianSplatsManagerSystem::updateGlobalSplatsMesh()
+  void GaussianSplatsUpdateSystem::updateGlobalSplatsMesh()
   {
     // Find the global GaussianSplatsMesh entity (has Mesh3d with GaussianSplatsMesh handle)
     auto meshEntities = queryEntities<Mesh3d>([](const Mesh3d &mesh) -> bool

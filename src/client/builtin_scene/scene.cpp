@@ -49,9 +49,11 @@ namespace builtin_scene
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
-      auto manageSplats = System::Make<gaussian_splatting::GaussianSplatsManagerSystem>();
+      auto updateSplats = System::Make<gaussian_splatting::GaussianSplatsUpdateSystem>();
       auto renderScene = System::Make<RenderSystem>();
-      updateCamera->chain(manageSplats)->chain(renderScene);
+      updateCamera
+        ->chain(updateSplats)
+        ->chain(renderScene);
       app.addSystem(SchedulerLabel::kUpdate, updateCamera);
     }
   };

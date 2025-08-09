@@ -20,6 +20,51 @@ namespace builtin_scene
     float rotation[4];
   };
 
+  namespace gaussian_splatting
+  {
+    /**
+     * System for initializing the global Gaussian splats mesh entity.
+     * This system creates the global entity with Root component for rendering all splats.
+     */
+    class GaussianSplattingInitSystem final : public ecs::System
+    {
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override
+      {
+        return "GaussianSplattingInitSystem";
+      }
+      void onExecute() override;
+    };
+
+    /**
+     * System for updating Gaussian splats from individual model entities.
+     * This system runs before RenderSystem to collect splats from all GaussianSplattingModel3d
+     * entities and update the global GaussianSplatsMesh with proper depth sorting.
+     */
+    class GaussianSplatsUpdateSystem final : public ecs::System
+    {
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override
+      {
+        return "GaussianSplatsUpdateSystem";
+      }
+      void onExecute() override;
+
+    private:
+      /**
+       * Collect splats from all GaussianSplattingModel3d entities and update the global GaussianSplatsMesh.
+       */
+      void updateGlobalSplatsMesh();
+
+    private:
+      std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
+    };
+  }
+
   /**
    * Component for storing Gaussian splats data for individual model entities.
    * This component preserves the splats for each HTMLModelElement entity.
@@ -89,7 +134,7 @@ namespace builtin_scene
    */
   class GaussianSplattingContext : public ecs::Resource
   {
-    friend class GaussianSplattingInitSystem;
+    friend class gaussian_splatting::GaussianSplattingInitSystem;
 
   public:
     ecs::EntityId globalSplatsMeshEntity() const
@@ -100,49 +145,4 @@ namespace builtin_scene
   private:
     ecs::EntityId globalSplatsMeshEntity_;
   };
-
-  namespace gaussian_splatting
-  {
-    /**
-     * System for initializing the global Gaussian splats mesh entity.
-     * This system creates the global entity with Root component for rendering all splats.
-     */
-    class GaussianSplattingInitSystem final : public ecs::System
-    {
-      using ecs::System::System;
-
-    public:
-      const std::string name() const override
-      {
-        return "GaussianSplattingInitSystem";
-      }
-      void onExecute() override;
-    };
-
-    /**
-     * System for managing and sorting Gaussian splats from individual model entities.
-     * This system runs before RenderSystem to collect splats from all GaussianSplattingModel3d
-     * entities and update the global GaussianSplatsMesh with proper depth sorting.
-     */
-    class GaussianSplatsManagerSystem final : public ecs::System
-    {
-      using ecs::System::System;
-
-    public:
-      const std::string name() const override
-      {
-        return "GaussianSplatsManagerSystem";
-      }
-      void onExecute() override;
-
-    private:
-      /**
-       * Collect splats from all GaussianSplattingModel3d entities and update the global GaussianSplatsMesh.
-       */
-      void updateGlobalSplatsMesh();
-
-    private:
-      std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
-    };
-  }
 }

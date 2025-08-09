@@ -425,6 +425,4 @@ namespace builtin_scene
     };
     instancedMesh.iterateInstances(updateInstanceData);
   }
-
-
 }
