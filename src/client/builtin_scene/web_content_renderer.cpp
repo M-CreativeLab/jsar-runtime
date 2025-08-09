@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
@@ -28,6 +29,7 @@
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./web_content.hpp"
+#include "./text/sdf/tiny_sdf.hpp"
 #include "./image.hpp"
 #include "./xr.hpp"
 #include "./text/sdf/tiny_sdf.hpp"
@@ -1063,7 +1065,19 @@ namespace builtin_scene::web_renderer
 
     string &text = textComponent->content;
 
-    // Always render text using SDF for anti-aliasing
+    // First, render text normally using the original paragraph rendering
+    auto paragraphStyle = content.paragraphStyle();
+    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+    paragraphBuilder->addText(text.c_str(), text.size());
+    paragraphBuilder->pop();
+
+    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
+    auto paragraph = paragraphBuilder->Build();
+    paragraph->layout(layoutWidth);
+    paragraph->paint(content.canvas(), 0.0f, 0.0f);
+
+    // Then generate SDF texture from the painted canvas for anti-aliasing
     generateSDFTextureForText(entity, content, text);
 
     content.setTextureUsing(true);
@@ -1077,36 +1091,48 @@ namespace builtin_scene::web_renderer
 
   void RenderTextSystem::generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text)
   {
-    // Generate SDF texture for web content's text instead of regular SkCanvas pixels.
-    // This replaces the standard canvas rendering with SDF-based texture generation
-    // that provides superior anti-aliasing for text content.
-
     if (text.empty())
     {
       return; // Nothing to render
     }
 
-    // Get text properties for SDF generation
-    auto textComponent = getComponent<Text2d>(entity);
-    if (!textComponent)
+    // Get the painted canvas and generate SDF texture from it
+    auto canvas = content.canvas();
+    if (!canvas)
     {
       return;
     }
 
-    // Use TinySDF to generate distance field texture data
-    // This will create SDF texture data that can be uploaded to the shared texture atlas
-    // instead of the regular SkCanvas-rendered pixels
+    // Use TinySDF to convert the painted canvas to SDF texture
+    builtin_scene::text::sdf::TinySDF sdfGenerator;
+    auto sdfData = sdfGenerator.generateFromCanvas(canvas);
 
-    // For now, we'll still use the existing SkCanvas rendering as the base
-    // In a full implementation, this would use the TinySDF library to generate
-    // proper SDF texture data and replace the canvas pixel data
+    if (!sdfData.empty())
+    {
+      // Replace the canvas content with SDF data
+      // Get the surface to create a new bitmap with SDF data
+      auto surface = canvas->getSurface();
+      if (surface)
+      {
+        int width = surface->width();
+        int height = surface->height();
 
-    // TODO: Implement full SDF texture generation using TinySDF
-    // 1. Extract font information from the text component
-    // 2. Generate SDF glyphs using TinySDF
-    // 3. Create a texture atlas layout for the text
-    // 4. Generate SDF texture data
-    // 5. Store it so updateTexture can use it instead of SkCanvas pixels
+        // Create a new bitmap with SDF data
+        SkBitmap sdfBitmap;
+        sdfBitmap.allocPixels(SkImageInfo::MakeA8(width, height));
+
+        // Copy SDF data to bitmap
+        if (sdfData.size() >= static_cast<size_t>(width * height))
+        {
+          void *pixels = sdfBitmap.getPixels();
+          memcpy(pixels, sdfData.data(), width * height);
+
+          // Clear the canvas and draw the SDF bitmap
+          canvas->clear(SK_ColorTRANSPARENT);
+          canvas->drawImage(sdfBitmap.asImage(), 0, 0);
+        }
+      }
+    }
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

@@ -2,13 +2,9 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <skia/include/core/SkCanvas.h>
-#include <skia/include/core/SkPaint.h>
-#include <skia/include/core/SkTypeface.h>
-#include <skia/include/core/SkFont.h>
-#include <skia/include/core/SkBitmap.h>
-#include <skia/include/core/SkPixmap.h>
-#include <client/per_process.hpp>
+#include "include/core/SkPixmap.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkSurface.h"
 
 namespace builtin_scene::text::sdf
 {
@@ -17,117 +13,91 @@ namespace builtin_scene::text::sdf
   {
   }
 
-  void TinySDF::setParams(const SDFParams &params)
+  std::vector<uint8_t> TinySDF::generateFromBitmap(const SkBitmap &bitmap)
   {
-    params_ = params;
-  }
-
-  std::unique_ptr<SDFGlyph> TinySDF::generateGlyph(uint32_t codepoint)
-  {
-    int width, height, left, top, advance;
-    auto bitmap = rasterizeGlyph(codepoint, width, height, left, top, advance);
-
     if (bitmap.empty())
-      return nullptr;
-
-    auto sdfData = generateSDF(bitmap, width, height);
-
-    auto glyph = std::make_unique<SDFGlyph>(codepoint, width, height, left, top, advance);
-    glyph->data = std::move(sdfData);
-
-    return glyph;
-  }
-
-  std::vector<std::unique_ptr<SDFGlyph>> TinySDF::generateGlyphs(const std::vector<uint32_t> &codepoints)
-  {
-    std::vector<std::unique_ptr<SDFGlyph>> result;
-    result.reserve(codepoints.size());
-
-    for (uint32_t codepoint : codepoints)
-    {
-      auto glyph = generateGlyph(codepoint);
-      if (glyph)
-        result.push_back(std::move(glyph));
-    }
-
-    return result;
-  }
-
-  std::vector<uint8_t> TinySDF::rasterizeGlyph(uint32_t codepoint, int &width, int &height, int &left, int &top, int &advance)
-  {
-    // Get default typeface from the font cache manager
-    auto fontManager = TrClientContextPerProcess::Get()->getFontCacheManager();
-    auto typeface = fontManager->matchFamilyStyle("", SkFontStyle());
-
-    if (!typeface)
-    {
-      // Fallback to default typeface
-      typeface = SkTypeface::MakeDefault();
-    }
-
-    SkFont font(typeface, static_cast<float>(params_.fontSize));
-    font.setHinting(SkFontHinting::kNone);
-    font.setSubpixel(false);
-
-    // Get glyph metrics
-    SkGlyphID glyphId = font.unicharToGlyph(codepoint);
-    if (glyphId == 0)
-      return {}; // Glyph not found
-
-    // Get glyph bounds and metrics
-    SkRect bounds;
-    font.getBounds(&glyphId, 1, &bounds, nullptr);
-
-    SkScalar advanceWidth;
-    font.getWidths(&glyphId, 1, &advanceWidth);
-    advance = static_cast<int>(std::round(advanceWidth));
-
-    // Calculate rendering dimensions with buffer
-    int glyphWidth = static_cast<int>(std::ceil(bounds.width())) + 2 * params_.buffer;
-    int glyphHeight = static_cast<int>(std::ceil(bounds.height())) + 2 * params_.buffer;
-
-    if (glyphWidth <= 0 || glyphHeight <= 0)
       return {};
 
-    width = glyphWidth;
-    height = glyphHeight;
-    left = static_cast<int>(bounds.left()) - params_.buffer;
-    top = static_cast<int>(bounds.top()) - params_.buffer;
+    auto alphaData = extractAlphaChannel(bitmap);
+    if (alphaData.empty())
+      return {};
 
-    // Create bitmap and canvas for rasterization
+    return generateSDF(alphaData, bitmap.width(), bitmap.height());
+  }
+
+  std::vector<uint8_t> TinySDF::generateFromCanvas(SkCanvas *canvas)
+  {
+    if (!canvas)
+      return {};
+
+    // Get the surface from the canvas to extract bitmap
+    auto surface = canvas->getSurface();
+    if (!surface)
+      return {};
+
     SkBitmap bitmap;
-    bitmap.allocPixels(SkImageInfo::MakeA8(width, height));
-    bitmap.eraseColor(SK_ColorTRANSPARENT);
+    if (!surface->makeImageSnapshot()->asLegacyBitmap(&bitmap))
+      return {};
 
-    SkCanvas canvas(bitmap);
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColor(SK_ColorWHITE);
+    return generateFromBitmap(bitmap);
+  }
 
-    // Position the glyph
-    float x = params_.buffer - bounds.left();
-    float y = params_.buffer - bounds.top();
-
-    canvas.drawSimpleText(&codepoint, sizeof(codepoint), SkTextEncoding::kUTF32, x, y, font, paint);
-
-    // Extract bitmap data
+  std::vector<uint8_t> TinySDF::extractAlphaChannel(const SkBitmap &bitmap)
+  {
     SkPixmap pixmap;
     if (!bitmap.peekPixels(&pixmap))
       return {};
 
-    const uint8_t *pixels = static_cast<const uint8_t *>(pixmap.addr());
-    int stride = pixmap.rowBytes();
+    int width = bitmap.width();
+    int height = bitmap.height();
+    std::vector<uint8_t> alphaData(width * height);
 
-    std::vector<uint8_t> result(width * height);
+    // Extract alpha channel based on color type
+    SkColorType colorType = pixmap.colorType();
+    const void *pixels = pixmap.addr();
+    int rowBytes = pixmap.rowBytes();
+
     for (int y = 0; y < height; ++y)
     {
       for (int x = 0; x < width; ++x)
       {
-        result[y * width + x] = pixels[y * stride + x];
+        uint8_t alpha = 0;
+
+        switch (colorType)
+        {
+        case kAlpha_8_SkColorType:
+        {
+          const uint8_t *row = static_cast<const uint8_t *>(pixels) + y * rowBytes;
+          alpha = row[x];
+          break;
+        }
+        case kRGBA_8888_SkColorType:
+        case kBGRA_8888_SkColorType:
+        {
+          const uint32_t *row = reinterpret_cast<const uint32_t *>(static_cast<const uint8_t *>(pixels) + y * rowBytes);
+          uint32_t pixel = row[x];
+          alpha = (pixel >> 24) & 0xFF; // Extract alpha from ARGB
+          break;
+        }
+        case kRGB_888x_SkColorType:
+        {
+          alpha = 255; // No alpha channel, assume fully opaque
+          break;
+        }
+        default:
+        {
+          // For other formats, use Skia's color extraction
+          SkColor color = pixmap.getColor(x, y);
+          alpha = SkColorGetA(color);
+          break;
+        }
+        }
+
+        alphaData[y * width + x] = alpha;
       }
     }
 
-    return result;
+    return alphaData;
   }
 
   std::vector<uint8_t> TinySDF::generateSDF(const std::vector<uint8_t> &bitmap, int width, int height)

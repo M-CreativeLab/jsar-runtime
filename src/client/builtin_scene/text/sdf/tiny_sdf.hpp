@@ -3,58 +3,31 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
 
 namespace builtin_scene::text::sdf
 {
   /**
-   * Configuration parameters for SDF generation
+   * Configuration parameters for SDF generation from bitmaps
    */
   struct SDFParams
   {
-    int fontSize = 24;    // Font size in pixels
-    int buffer = 8;       // Buffer around glyph
     int radius = 8;       // Distance field radius
-    float cutoff = 0.25f; // Alpha cutoff
+    float cutoff = 0.25f; // Alpha cutoff for edge detection
 
     SDFParams() = default;
-    SDFParams(int fontSize, int buffer, int radius, float cutoff = 0.25f)
-        : fontSize(fontSize)
-        , buffer(buffer)
-        , radius(radius)
+    SDFParams(int radius, float cutoff = 0.25f)
+        : radius(radius)
         , cutoff(cutoff)
     {
     }
   };
 
   /**
-   * Represents a single glyph with its SDF data
-   */
-  struct SDFGlyph
-  {
-    uint32_t codepoint;        // Unicode codepoint
-    int width;                 // Glyph width
-    int height;                // Glyph height
-    int left;                  // Left bearing
-    int top;                   // Top bearing
-    int advance;               // Advance width
-    std::vector<uint8_t> data; // SDF bitmap data (single channel)
-
-    SDFGlyph() = default;
-    SDFGlyph(uint32_t cp, int w, int h, int l, int t, int adv)
-        : codepoint(cp)
-        , width(w)
-        , height(h)
-        , left(l)
-        , top(t)
-        , advance(adv)
-    {
-    }
-  };
-
-  /**
-   * TinySDF - CPU-based SDF generator for text glyphs
+   * TinySDF - CPU-based SDF generator for bitmap textures
    * 
-   * This class generates signed distance field textures from font glyphs
+   * This class generates signed distance field textures from SkBitmap/SkCanvas
    * using a CPU-based implementation inspired by TinySDF.js from Mapbox.
    * 
    * Reference: https://github.com/mapbox/tiny-sdf
@@ -73,18 +46,18 @@ namespace builtin_scene::text::sdf
     TinySDF &operator=(TinySDF &&) = default;
 
     /**
-     * Generate SDF for a single glyph
-     * @param codepoint Unicode codepoint
-     * @return SDFGlyph with generated SDF data, or nullptr if failed
+     * Generate SDF from SkBitmap
+     * @param bitmap Input bitmap to convert to SDF
+     * @return SDF bitmap data (single channel), or empty vector if failed
      */
-    std::unique_ptr<SDFGlyph> generateGlyph(uint32_t codepoint);
+    std::vector<uint8_t> generateFromBitmap(const SkBitmap &bitmap);
 
     /**
-     * Generate SDF for multiple glyphs
-     * @param codepoints Vector of Unicode codepoints
-     * @return Vector of SDFGlyph pointers
+     * Generate SDF from SkCanvas content
+     * @param canvas Input canvas to convert to SDF
+     * @return SDF bitmap data (single channel), or empty vector if failed
      */
-    std::vector<std::unique_ptr<SDFGlyph>> generateGlyphs(const std::vector<uint32_t> &codepoints);
+    std::vector<uint8_t> generateFromCanvas(SkCanvas *canvas);
 
     /**
      * Get current SDF parameters
@@ -95,18 +68,21 @@ namespace builtin_scene::text::sdf
     }
 
     /**
-     * Update SDF parameters (will require regenerating glyphs)
+     * Update SDF parameters
      */
-    void setParams(const SDFParams &params);
+    void setParams(const SDFParams &params)
+    {
+      params_ = params;
+    }
 
   private:
     SDFParams params_;
 
     // Internal methods for SDF generation
-    std::vector<uint8_t> rasterizeGlyph(uint32_t codepoint, int &width, int &height, int &left, int &top, int &advance);
     std::vector<uint8_t> generateSDF(const std::vector<uint8_t> &bitmap,
                                      int width,
                                      int height);
     double distanceToEdge(const std::vector<uint8_t> &bitmap, int width, int height, int x, int y, bool inside);
+    std::vector<uint8_t> extractAlphaChannel(const SkBitmap &bitmap);
   };
 }
