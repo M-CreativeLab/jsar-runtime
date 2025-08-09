@@ -29,30 +29,24 @@ namespace builtin_scene::meshes
 
     // Quad vertices: position (x, y) and texture coordinates (u, v)
     std::vector<float> vertices = {
-      // Positions   // Texture coords
-      -0.5f,
-      -0.5f,
-      0.0f,
-      0.0f, // Bottom left
+      -0.5f, -0.5f, // bottom-left
       0.5f,
+      -0.5f, // bottom-right
+      0.5f,
+      0.5f, // top-right
       -0.5f,
-      1.0f,
-      0.0f, // Bottom right
-      0.5f,
-      0.5f,
-      1.0f,
-      1.0f, // Top right
-      -0.5f,
-      0.5f,
-      0.0f,
-      1.0f // Top left
+      0.5f // top-left
     };
+    insertVertex(glm::vec3(vertices[0], vertices[1], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
+    insertVertex(glm::vec3(vertices[2], vertices[3], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+    insertVertex(glm::vec3(vertices[4], vertices[5], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f));
+    insertVertex(glm::vec3(vertices[6], vertices[7], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
 
     // Quad indices for two triangles
     // clang-format off
     Indices<uint32_t> indices = {
       0, 1, 2, // First triangle
-      0, 2, 3 // Second triangle
+      2, 3, 0  // Second triangle
     };
     // clang-format on
 

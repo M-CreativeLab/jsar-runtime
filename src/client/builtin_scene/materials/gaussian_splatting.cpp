@@ -3,6 +3,7 @@
 #include <client/graphics/webgl_context.hpp>
 #include <client/graphics/webgl_program.hpp>
 #include <client/graphics/webgl_buffer.hpp>
+
 #include "./gaussian_splatting.hpp"
 #include "../meshes.hpp"
 
@@ -14,15 +15,31 @@ namespace builtin_scene::materials
     if (TR_UNLIKELY(!Material::initialize(glContext, program)))
       return false;
 
+#define LOAD_UNIFORM_LOCATION(name)                          \
+  {                                                          \
+    auto loc = glContext->getUniformLocation(program, name); \
+    if (loc.has_value())                                     \
+    {                                                        \
+      uniforms_.emplace(name, loc.value());                  \
+    }                                                        \
+  }
+    LOAD_UNIFORM_LOCATION("quadSize");
+#undef LOAD_UNIFORM_LOCATION
+
+    glContext->uniform2f(uniform("quadSize"), 1.0f, 1.0f);
+
     // No buffer initialization needed - handled by GaussianSplatsMesh
     return true;
   }
 
   void GaussianSplattingMaterial::drawMeshImpl(shared_ptr<client_graphics::WebGLProgram> program,
-                                               const Mesh3d &,
-                                               RenderPass,
+                                               const Mesh3d &mesh,
+                                               RenderPass renderPass,
                                                optional<XRRenderTarget>)
   {
+    assert(renderPass == RenderPass::kTransparents &&
+           "GaussianSplattingMaterial should only be used in the transparent render pass.");
+
     auto glContext = glContext_.lock();
     if (!glContext)
       return;
@@ -33,8 +50,8 @@ namespace builtin_scene::materials
 
     // Do the instanced draw call
     glContext->drawElementsInstanced(
-      client_graphics::WebGLDrawMode::kTriangles,
-      6, // 6 indices for quad (2 triangles)
+      mesh.primitiveTopology(),
+      mesh.indices().size(),
       WEBGL_UNSIGNED_INT,
       0,
       splatInstanceCount_);
@@ -60,9 +77,6 @@ namespace builtin_scene::materials
 
         // Update buffer with current splat data
         splatsMesh->updateSplatBuffer(glContext);
-
-        // Note: Vertex attributes are now configured by SceneRenderer::configureMeshVertexData
-        // since GaussianSplatsMesh inherits from InstancedMeshBase
       }
     }
   }

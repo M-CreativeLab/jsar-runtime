@@ -172,12 +172,6 @@ namespace builtin_scene
     void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
-     * Setup vertex attributes for splat rendering with the given program.
-     */
-    void setupSplatAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                              std::shared_ptr<client_graphics::WebGL2Context> glContext);
-
-    /**
      * Get the splat instance buffer for attribute configuration.
      */
     inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const

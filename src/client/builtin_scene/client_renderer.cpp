@@ -226,7 +226,7 @@ namespace builtin_scene
 
         // Update the data for renderable mesh components.
         // TODO(yorkie): update transformation matrix here?
-        if (mesh->isInstancedMesh())
+        if (mesh->is<InstancedMeshBase>())
           updateInstancedMeshData(*mesh, renderTarget);
 
         num++;
@@ -268,7 +268,6 @@ namespace builtin_scene
 
   void RenderSystem::updateInstancedMeshData(const Mesh3d &meshComponent, optional<XRRenderTarget> renderTarget)
   {
-    assert(meshComponent.isInstancedMesh());
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
 
     /**

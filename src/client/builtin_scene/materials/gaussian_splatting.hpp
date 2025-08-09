@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
+
 #include <glm/glm.hpp>
 #include "../material_base.hpp"
 #include "../gaussian_splats_mesh.hpp"
@@ -66,6 +68,16 @@ namespace builtin_scene::materials
     }
 
   private:
+    inline client_graphics::WebGLUniformLocation uniform(const std::string &name) const
+    {
+      auto it = uniforms_.find(name);
+      if (it == uniforms_.end())
+        throw std::runtime_error("The uniform " + name + " is not found.");
+      return it->second;
+    }
+
+  private:
     size_t splatInstanceCount_ = 0;
+    std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
   };
 }

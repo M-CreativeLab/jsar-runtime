@@ -1,5 +1,14 @@
+uniform mat4 viewProjection;
+#ifdef MULTIVIEW
+uniform mat4 viewProjectionR;
+#endif
+uniform mat4 modelMatrix;
+uniform vec2 quadSize;
+
 // Base quad attributes (per vertex)
-in vec2 position;
+in vec3 position;
+in vec3 normal;
+in vec2 texCoord;
 
 // Instanced attributes (per splat)
 in vec3 splatPosition;
@@ -7,13 +16,6 @@ in vec3 splatColor;
 in float splatOpacity;
 in vec3 splatScale;
 in vec4 splatRotation;
-
-uniform mat4 viewProjection;
-#ifdef MULTIVIEW
-uniform mat4 viewProjectionR;
-#endif
-uniform mat4 modelMatrix;
-uniform vec2 quadSize;
 
 out vec3 vColor;
 out float vOpacity;
@@ -26,24 +28,24 @@ vec3 rotateByQuaternion(vec3 v, vec4 q) {
 
 void main() {
   // Pass texture coordinate from base quad position
-  vTexCoord = position + vec2(0.5, 0.5);
-  
+  vTexCoord = position.xy + vec2(0.5, 0.5);
+
   // Create billboard quad in world space
-  vec3 localPos = vec3(position * quadSize, 0.0);
-  
+  vec3 localPos = vec3(position.xy * quadSize, 0.0);
+
   // Apply splat scaling
   localPos *= splatScale;
-  
+
   // Apply splat rotation
   vec3 rotatedPos = rotateByQuaternion(localPos, splatRotation);
-  
+
   // Translate to splat position
   vec3 worldPos = splatPosition + rotatedPos;
-  
+
   // Apply model matrix then view-projection matrix
   vec4 modelPos = modelMatrix * vec4(worldPos, 1.0);
   gl_Position = viewProjection * modelPos;
-  
+
   vColor = splatColor;
   vOpacity = splatOpacity;
 }

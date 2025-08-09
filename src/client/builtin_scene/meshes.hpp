@@ -8,12 +8,13 @@
 #include "./ecs.hpp"
 #include "./mesh_base.hpp"
 #include "./mesh_material.hpp"
-#include "./instanced_mesh.hpp"
 #include "./meshes/builder.hpp"
 #include "./meshes/box.hpp"
 #include "./meshes/plane.hpp"
 #include "./meshes/sphere.hpp"
 #include "./meshes/splat.hpp"
+#include "./instanced_mesh.hpp"
+#include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
 {
@@ -52,8 +53,10 @@ namespace builtin_scene
      * @returns If the mesh's handle is the given type.
      */
     template <typename MeshType>
-      requires std::is_base_of<Mesh, MeshType>::value
-    inline bool is() const
+      requires std::is_same<InstancedMeshBase, MeshType>::value ||
+               std::is_same<Mesh, MeshType>::value ||
+               std::is_base_of<Mesh, MeshType>::value
+    bool is() const
     {
       return std::dynamic_pointer_cast<MeshType>(handle_) != nullptr;
     }
@@ -62,8 +65,7 @@ namespace builtin_scene
      */
     inline bool isInstancedMesh() const
     {
-      return std::dynamic_pointer_cast<InstancedMeshBase>(handle_) != nullptr ||
-             std::dynamic_pointer_cast<GaussianSplatsMesh>(handle_) != nullptr;
+      return is<InstancedMeshBase>() || is<GaussianSplatsMesh>();
     }
     /**
      * Get the handle of the mesh as the given type.
@@ -96,8 +98,7 @@ namespace builtin_scene
     MeshType &getHandleCheckedAsRef() const
     {
       auto mesh = getHandleAs<MeshType>();
-      if (mesh == nullptr)
-        throw std::runtime_error("The mesh is not valid.");
+      assert(mesh != nullptr && "The mesh handle is not valid.");
       return *mesh;
     }
     /**

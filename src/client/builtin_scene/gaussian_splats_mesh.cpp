@@ -66,7 +66,10 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext)
   {
-    if (!glContext || !bufferInitialized_ || sortedSplats_.empty())
+    if (!glContext ||
+        !bufferInitialized_ ||
+        sortedSplats_.empty() ||
+        !isDirty())
       return;
 
     // Prepare a contiguous array of GPU data (excluding depth and sourceEntity)
@@ -107,77 +110,7 @@ namespace builtin_scene
                           gpuData.size() * sizeof(float),
                           gpuData.data(),
                           client_graphics::WebGLBufferUsage::kDynamicDraw);
-  }
-
-  void GaussianSplatsMesh::setupSplatAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                                std::shared_ptr<client_graphics::WebGL2Context> glContext)
-  {
-    if (!glContext || !bufferInitialized_)
-      return;
-
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
-    size_t offset = 0;
-
-    // splatPosition (vec3)
-    auto positionLoc = glContext->getAttribLocation(program, "splatPosition");
-    if (positionLoc.has_value())
-    {
-      int index = positionLoc.value().index.value_or(-1);
-      glContext->enableVertexAttribArray(index);
-      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, STRIDE, offset);
-      glContext->vertexAttribDivisor(index, 1);
-    }
-    offset += sizeof(glm::vec3);
-
-    // splatColor (vec3)
-    auto colorLoc = glContext->getAttribLocation(program, "splatColor");
-    if (colorLoc.has_value())
-    {
-      int index = colorLoc.value().index.value_or(-1);
-      glContext->enableVertexAttribArray(index);
-      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, STRIDE, offset);
-      glContext->vertexAttribDivisor(index, 1);
-    }
-    offset += sizeof(glm::vec3);
-
-    // splatOpacity (float)
-    auto opacityLoc = glContext->getAttribLocation(program, "splatOpacity");
-    if (opacityLoc.has_value())
-    {
-      int index = opacityLoc.value().index.value_or(-1);
-      glContext->enableVertexAttribArray(index);
-      glContext->vertexAttribPointer(index, 1, WEBGL_FLOAT, false, STRIDE, offset);
-      glContext->vertexAttribDivisor(index, 1);
-    }
-    offset += sizeof(float);
-
-    // splatScale (vec3)
-    auto scaleLoc = glContext->getAttribLocation(program, "splatScale");
-    if (scaleLoc.has_value())
-    {
-      int index = scaleLoc.value().index.value_or(-1);
-      glContext->enableVertexAttribArray(index);
-      glContext->vertexAttribPointer(index, 3, WEBGL_FLOAT, false, STRIDE, offset);
-      glContext->vertexAttribDivisor(index, 1);
-    }
-    offset += sizeof(glm::vec3);
-
-    // splatRotation (vec4)
-    auto rotationLoc = glContext->getAttribLocation(program, "splatRotation");
-    if (rotationLoc.has_value())
-    {
-      int index = rotationLoc.value().index.value_or(-1);
-      glContext->enableVertexAttribArray(index);
-      glContext->vertexAttribPointer(index, 4, WEBGL_FLOAT, false, STRIDE, offset);
-      glContext->vertexAttribDivisor(index, 1);
-    }
-
-    // Set the quad size uniform
-    auto quadSizeLoc = glContext->getUniformLocation(program, "quadSize");
-    if (quadSizeLoc.has_value())
-    {
-      glContext->uniform2f(quadSizeLoc.value(), 1.0f, 1.0f);
-    }
+    setDirty(false);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
@@ -220,17 +153,17 @@ namespace builtin_scene
         if (name == "splatPosition" || name == "splatColor" || name == "splatScale")
         {
           // vec3 attributes
-          attrib = std::make_unique<VertexAttribute<float, 3>>(name, instanceIndex, VertexFormat::kFloat32x3);
+          attrib = make_unique<VertexAttribute<float, 3>>(name, instanceIndex, VertexFormat::kFloat32x3);
         }
         else if (name == "splatOpacity")
         {
           // float attribute
-          attrib = std::make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
+          attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
         }
         else if (name == "splatRotation")
         {
           // vec4 attribute
-          attrib = std::make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
         }
         else
         {
@@ -244,7 +177,7 @@ namespace builtin_scene
       }
       else
       {
-        std::cerr << "The splat instance attribute " << name << " is not found." << std::endl;
+        cerr << "The splat instance attribute " << name << " is not found." << endl;
       }
     }
 

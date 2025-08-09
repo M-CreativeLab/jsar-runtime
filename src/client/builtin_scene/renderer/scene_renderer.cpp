@@ -124,11 +124,7 @@ namespace builtin_scene
         // Configure for Gaussian splats (they use the main VAO)
         WebGLVertexArrayScope vaoScope(glContext_, mesh3d->vertexArrayObject());
 
-        // First configure vertex attributes
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
-        mesh3d->iterateEnabledAttributes(program, configureAttribute);
-
-        // Then configure instance attributes
+        // Configure instance attributes
         gaussianMesh.setupSplatBuffer(glContext_, mesh3d->vertexArrayObject());
 
         // Bind the splat instance buffer and configure instance attributes
