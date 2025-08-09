@@ -1,20 +1,23 @@
 // Base quad attributes (per vertex)
-attribute vec2 position;
+in vec2 position;
 
 // Instanced attributes (per splat)
-attribute vec3 splatPosition;
-attribute vec3 splatColor;
-attribute float splatOpacity;
-attribute vec3 splatScale;
-attribute vec4 splatRotation;
+in vec3 splatPosition;
+in vec3 splatColor;
+in float splatOpacity;
+in vec3 splatScale;
+in vec4 splatRotation;
 
-uniform mat4 uMvpMatrix;
-uniform mat4 uViewMatrix;
+uniform mat4 viewProjection;
+#ifdef MULTIVIEW
+uniform mat4 viewProjectionR;
+#endif
+uniform mat4 modelMatrix;
 uniform vec2 uQuadSize;
 
-varying vec3 vColor;
-varying float vOpacity;
-varying vec2 vTexCoord;
+out vec3 vColor;
+out float vOpacity;
+out vec2 vTexCoord;
 
 // Rotate a vector by a quaternion
 vec3 rotateByQuaternion(vec3 v, vec4 q) {
@@ -37,7 +40,9 @@ void main() {
   // Translate to splat position
   vec3 worldPos = splatPosition + rotatedPos;
   
-  gl_Position = uMvpMatrix * vec4(worldPos, 1.0);
+  // Apply model matrix then view-projection matrix
+  vec4 modelPos = modelMatrix * vec4(worldPos, 1.0);
+  gl_Position = viewProjection * modelPos;
   
   vColor = splatColor;
   vOpacity = splatOpacity;

@@ -121,6 +121,15 @@ namespace builtin_scene
                                   std::shared_ptr<Mesh3d> mesh)
     {
     }
+    /**
+     * Custom drawing implementation for materials that need special rendering logic.
+     * Return true if the material handled the drawing, false to use default drawing.
+     */
+    virtual bool drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
+                              std::shared_ptr<Mesh3d> mesh)
+    {
+      return false; // Default: use standard drawing
+    }
     virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
                                  std::shared_ptr<Mesh3d> mesh)
     {

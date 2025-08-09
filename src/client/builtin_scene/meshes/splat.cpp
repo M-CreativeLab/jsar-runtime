@@ -63,8 +63,5 @@ namespace builtin_scene::meshes
     // Upload vertex data
     vertexBuffer().setVertexData(vertices);
     indices_.setData(indices);
-
-    // Mark as clean
-    markAsClean();
   }
 }

@@ -141,6 +141,17 @@ namespace builtin_scene
       material_->onBeforeDrawMesh(program_, mesh);
     }
     /**
+     * Custom drawing implementation for materials that need special rendering logic.
+     * Return true if the material handled the drawing, false to use default drawing.
+     * 
+     * @param mesh The mesh to draw.
+     */
+    inline bool drawMeshImpl(std::shared_ptr<Mesh3d> mesh)
+    {
+      assert(material_ != nullptr);
+      return material_->drawMeshImpl(program_, mesh);
+    }
+    /**
      * Called after drawing the mesh with the material.
      * 
      * @param mesh The mesh to draw.

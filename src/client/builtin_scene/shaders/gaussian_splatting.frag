@@ -1,8 +1,10 @@
 precision mediump float;
 
-varying vec3 vColor;
-varying float vOpacity;
-varying vec2 vTexCoord;
+in vec3 vColor;
+in float vOpacity;
+in vec2 vTexCoord;
+
+out vec4 fragColor;
 
 void main() {
   // Calculate distance from center of quad (0.5, 0.5)
@@ -17,5 +19,5 @@ void main() {
     discard;
   }
   
-  gl_FragColor = vec4(vColor * alpha, alpha);
+  fragColor = vec4(vColor * alpha, alpha);
 }

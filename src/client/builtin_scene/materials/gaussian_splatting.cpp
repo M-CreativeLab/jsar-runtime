@@ -1,7 +1,9 @@
-#include "./gaussian_splatting.hpp"
+#include <memory>
+#include <vector>
 #include <client/graphics/webgl_context.hpp>
 #include <client/graphics/webgl_program.hpp>
 #include <client/graphics/webgl_buffer.hpp>
+#include "./gaussian_splatting.hpp"
 #include "../meshes.hpp"
 
 namespace builtin_scene::materials
@@ -41,22 +43,35 @@ namespace builtin_scene::materials
         // Update splat instances from the mesh
         updateSplatInstances(splatsMesh->getSplatInstances());
 
-        // If we have splats to render, do the instanced draw call here
+        // Setup instanced vertex attributes for rendering
         if (!splatInstances_.empty() && buffersInitialized_)
         {
-          // Setup instanced vertex attributes
           setupInstancedAttributes(program, glContext);
-
-          // Do the instanced draw call
-          glContext->drawElementsInstanced(
-            client_graphics::WebGLDrawMode::kTriangles,
-            6, // 6 indices for quad (2 triangles)
-            client_graphics::WebGLDataType::kUnsignedInt,
-            0,
-            splatInstances_.size());
         }
       }
     }
+  }
+
+  bool GaussianSplattingMaterial::drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                               std::shared_ptr<Mesh3d> mesh)
+  {
+    auto glContext = glContext_.lock();
+    if (!glContext)
+      return false;
+
+    // Only handle drawing if we have splats to render
+    if (splatInstances_.empty() || !buffersInitialized_)
+      return false;
+
+    // Do the instanced draw call
+    glContext->drawElementsInstanced(
+      client_graphics::WebGLDrawMode::kTriangles,
+      6, // 6 indices for quad (2 triangles)
+      client_graphics::WebGLDataType::kUnsignedInt,
+      0,
+      splatInstances_.size());
+
+    return true; // We handled the drawing
   }
 
   void GaussianSplattingMaterial::setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,

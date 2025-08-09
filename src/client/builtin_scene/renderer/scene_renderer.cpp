@@ -233,10 +233,15 @@ namespace builtin_scene
       }
       else
       {
-        glContext_->drawElements(mesh->primitiveTopology(),
-                                 mesh->indices().size(),
-                                 WEBGL_UNSIGNED_INT,
-                                 0);
+        // Check if material has custom drawing implementation
+        if (!material->drawMeshImpl(mesh))
+        {
+          // Use default drawing
+          glContext_->drawElements(mesh->primitiveTopology(),
+                                   mesh->indices().size(),
+                                   WEBGL_UNSIGNED_INT,
+                                   0);
+        }
       }
     }
 

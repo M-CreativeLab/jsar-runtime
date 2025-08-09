@@ -1,7 +1,7 @@
-#include "./gaussian_splats_mesh.hpp"
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include <client/graphics/webgl_context.hpp>
+#include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
 {
