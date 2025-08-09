@@ -155,14 +155,14 @@ void main()
       // Use SDF texture from instance texture atlas
       textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
       
-      // For SDF text, the texture contains distance field data in the red channel
+      // For SDF text, the texture contains distance field data in the alpha channel
       // Apply SDF distance field rendering for smooth text anti-aliasing
-      float sdfDistance = textureColor.r - 0.5; // Convert from [0,1] to [-0.5,0.5] range
+      float sdfDistance = textureColor.a - 0.5; // Convert from [0,1] to [-0.5,0.5] range
       float sdfWidth = max(fwidth(sdfDistance), 0.01);
       float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, sdfDistance);
       
-      // Use the original color with SDF-computed alpha for crisp text edges
-      textureColor = vec4(textureColor.rgb, sdfAlpha * textureColor.a);
+      // Use black color with SDF-computed alpha for crisp text edges
+      textureColor = vec4(0.0, 0.0, 0.0, sdfAlpha);
     }
     else
     {

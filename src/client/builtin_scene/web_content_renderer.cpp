@@ -32,9 +32,6 @@
 #include "./text/sdf/tiny_sdf.hpp"
 #include "./image.hpp"
 #include "./xr.hpp"
-#include "./text/sdf/tiny_sdf.hpp"
-#include "./text/sdf/atlas.hpp"
-#include "./text/sdf/cache.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -1103,36 +1100,11 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    // Use TinySDF to convert the painted canvas to SDF texture
+    // Use TinySDF to convert the painted canvas to SDF texture in place
+    // This modifies the alpha channel to contain distance field data
+    // while preserving RGB channels as zero for SDF texture
     builtin_scene::text::sdf::TinySDF sdfGenerator;
-    auto sdfData = sdfGenerator.generateFromCanvas(canvas);
-
-    if (!sdfData.empty())
-    {
-      // Replace the canvas content with SDF data
-      // Get the surface to create a new bitmap with SDF data
-      auto surface = canvas->getSurface();
-      if (surface)
-      {
-        int width = surface->width();
-        int height = surface->height();
-
-        // Create a new bitmap with SDF data
-        SkBitmap sdfBitmap;
-        sdfBitmap.allocPixels(SkImageInfo::MakeA8(width, height));
-
-        // Copy SDF data to bitmap
-        if (sdfData.size() >= static_cast<size_t>(width * height))
-        {
-          void *pixels = sdfBitmap.getPixels();
-          memcpy(pixels, sdfData.data(), width * height);
-
-          // Clear the canvas and draw the SDF bitmap
-          canvas->clear(SK_ColorTRANSPARENT);
-          canvas->drawImage(sdfBitmap.asImage(), 0, 0);
-        }
-      }
-    }
+    sdfGenerator.generateFromCanvasInPlace(canvas);
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

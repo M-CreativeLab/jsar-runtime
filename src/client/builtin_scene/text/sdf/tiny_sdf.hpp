@@ -46,18 +46,18 @@ namespace builtin_scene::text::sdf
     TinySDF &operator=(TinySDF &&) = default;
 
     /**
-     * Generate SDF from SkBitmap
-     * @param bitmap Input bitmap to convert to SDF
-     * @return SDF bitmap data (single channel), or empty vector if failed
+     * Generate SDF from SkBitmap and update alpha channel in place
+     * @param bitmap Input bitmap to convert to SDF (modified in place)
+     * @return true if SDF generation succeeded, false otherwise
      */
-    std::vector<uint8_t> generateFromBitmap(const SkBitmap &bitmap);
+    bool generateFromBitmapInPlace(SkBitmap &bitmap);
 
     /**
-     * Generate SDF from SkCanvas content
-     * @param canvas Input canvas to convert to SDF
-     * @return SDF bitmap data (single channel), or empty vector if failed
+     * Generate SDF from SkCanvas content and update alpha channel in place
+     * @param canvas Input canvas to convert to SDF (modified in place)
+     * @return true if SDF generation succeeded, false otherwise
      */
-    std::vector<uint8_t> generateFromCanvas(SkCanvas *canvas);
+    bool generateFromCanvasInPlace(SkCanvas *canvas);
 
     /**
      * Get current SDF parameters
@@ -82,6 +82,7 @@ namespace builtin_scene::text::sdf
     std::vector<uint8_t> generateSDF(const std::vector<uint8_t> &bitmap,
                                      int width,
                                      int height);
+    bool updateAlphaChannelWithSDF(SkBitmap &bitmap, const std::vector<uint8_t> &sdfData);
     double distanceToEdge(const std::vector<uint8_t> &bitmap, int width, int height, int x, int y, bool inside);
     std::vector<uint8_t> extractAlphaChannel(const SkBitmap &bitmap);
   };
