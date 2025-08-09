@@ -38,6 +38,14 @@ namespace dom
       kLoadingAuto,
     };
 
+    enum class ModelType
+    {
+      Unknown,
+      GLTF,
+      GLB,
+      GaussianSplatting
+    };
+
   public:
     HTMLModelElement(std::shared_ptr<Document> ownerDocument)
         : HTMLElement("MODEL", ownerDocument)
@@ -182,7 +190,7 @@ namespace dom
     /**
      * Detect the model type from source URL and type hint.
      */
-    builtin_scene::Model3d::ModelType detectModelType(const std::string &src, const std::string &typeHint);
+    ModelType detectModelType(const std::string &src, const std::string &typeHint);
 
     /**
      * Called when model data is ready after fetch.
@@ -190,9 +198,9 @@ namespace dom
     void onModelDataReady(const void *modelData, size_t modelByteLength);
 
     /**
-     * Parse the model data and create Model3d components.
+     * Parse the model data and extract splats.
      */
-    bool parseModel(const std::vector<char> &modelData, builtin_scene::Model3d &model);
+    bool parseModel(const std::vector<char> &modelData);
 
     /**
      * Parse model data asynchronously.
@@ -202,7 +210,7 @@ namespace dom
     /**
      * Called when model is successfully parsed.
      */
-    void onModelParsed(const builtin_scene::Model3d &model);
+    void onModelParsed();
 
     // UV work handle for async model parsing
     uv_work_t parse_work_handle_;

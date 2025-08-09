@@ -42,7 +42,7 @@ namespace dom
   {
     HTMLElement::connectedCallback();
 
-    // Create the Model3d component for this element
+    // Create the model component for this element
     createModelComponent();
   }
 
@@ -186,13 +186,13 @@ namespace dom
     }
   }
 
-  Model3d::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
+  HTMLModelElement::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
   {
     if (!typeHint.empty())
     {
       if (typeHint == "3dgs" || typeHint == "gaussian-splatting")
       {
-        return Model3d::ModelType::GaussianSplatting;
+        return ModelType::GaussianSplatting;
       }
     }
 
@@ -205,19 +205,19 @@ namespace dom
 
       if (ext == "ksplat")
       {
-        return Model3d::ModelType::GaussianSplatting;
+        return ModelType::GaussianSplatting;
       }
       else if (ext == "gltf")
       {
-        return Model3d::ModelType::GLTF;
+        return ModelType::GLTF;
       }
       else if (ext == "glb")
       {
-        return Model3d::ModelType::GLB;
+        return ModelType::GLB;
       }
     }
 
-    return Model3d::ModelType::Unknown;
+    return ModelType::Unknown;
   }
 
   void HTMLModelElement::onModelDataReady(const void *modelData, size_t modelByteLength)
@@ -242,22 +242,16 @@ namespace dom
     parseModelAsync(model_data_.value());
   }
 
-  bool HTMLModelElement::parseModel(const std::vector<char> &modelData, Model3d &model)
+  bool HTMLModelElement::parseModel(const std::vector<char> &modelData)
   {
     if (is_src_model_decoded_)
       return true;
 
     // Detect model type
-    Model3d::ModelType modelType = detectModelType(src_, type_.value_or(""));
-
-    // Create new model with detected type
-    model = Model3d(src_, modelType);
+    ModelType modelType = detectModelType(src_, type_.value_or(""));
 
     // Parse the model data based on type
-    // This is where the actual file parsing would happen
-    // For now, we'll create a placeholder implementation
-
-    if (modelType == Model3d::ModelType::GaussianSplatting)
+    if (modelType == ModelType::GaussianSplatting)
     {
       // Use Ksplat parser to parse the model data
       std::vector<builtin_scene::GaussianSplat> parsedSplats;
@@ -289,10 +283,6 @@ namespace dom
 
         // Store parsed splats for layout
         parsed_splats_ = std::move(elementSplats);
-
-        // Also set in the temporary model for compatibility
-        model.setSplats(std::move(parsedSplats));
-        model.setLoaded(true);
         DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsed_splats_->size());
       }
       else
@@ -327,9 +317,8 @@ namespace dom
       {
         auto modelElement = static_cast<HTMLModelElement *>(handle->data);
 
-        // Create a temporary model to parse into
-        Model3d tempModel("", Model3d::ModelType::Unknown);
-        modelElement->parseModel(modelElement->model_data_.value(), tempModel);
+        // Parse the model data
+        modelElement->parseModel(modelElement->model_data_.value());
 
         // Store the parsed model in the element (this is not thread-safe, but matches HTMLImageElement pattern)
         // In a real implementation, we'd need better synchronization
@@ -343,7 +332,7 @@ namespace dom
         auto modelElement = static_cast<HTMLModelElement *>(handle->data);
         if (modelElement->is_src_model_decoded_)
         {
-          // Create/update the Model3d component
+          // Create/update the model component
           modelElement->updateModelComponent();
 
           // Mark the model as completed.
@@ -369,7 +358,7 @@ namespace dom
                   afterWork);
   }
 
-  void HTMLModelElement::onModelParsed(const Model3d &model)
+  void HTMLModelElement::onModelParsed()
   {
     // Update the ECS component with the parsed model
     updateModelComponent();

@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "../model_3d.hpp"
+#include "../../gaussian_splatting.hpp"
 
 namespace builtin_scene::model_loaders
 {
