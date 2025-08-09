@@ -77,7 +77,6 @@ namespace builtin_scene::materials
   void GaussianSplattingMaterial::setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
                                                            std::shared_ptr<client_graphics::WebGL2Context> glContext)
   {
-
     // Set up instanced vertex attributes (per splat)
     auto splatPositionLoc = glContext->getAttribLocation(program, "splatPosition");
     if (splatPositionLoc.has_value())
