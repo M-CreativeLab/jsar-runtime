@@ -30,6 +30,19 @@ namespace builtin_scene
       Transform::FromXYZ(0.0f, 0.0f, 0.0f)
         .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
     renderer->setVolumeMask(entity);
+
+    // Create the global GaussianSplatsMesh entity for rendering all Gaussian splats
+    auto gaussianSplatsMesh = MeshBuilder::CreateGaussianSplatsMesh();
+    auto gaussianSplattingMaterial = std::make_shared<materials::GaussianSplattingMaterial>();
+
+    auto globalSplatsEntity = spawn(
+      Mesh3d(gaussianSplatsMesh, false),         // Enable rendering with the GaussianSplatsMesh handle
+      MeshMaterial3d(gaussianSplattingMaterial), // Transparent material
+      Transform::FromXYZ(0.0f, 0.0f, 0.0f)       // Identity transform
+    );
+
+    // Add the material to the materials resource
+    materials->add("gaussian_splatting", gaussianSplattingMaterial);
   }
 
   void RenderSystem::onExecute()
@@ -86,9 +99,6 @@ namespace builtin_scene
       // Render the objects (opaques, transparents).
       renderPass(roots, RenderPass::kOpaques, renderTarget);
       renderPass(roots, RenderPass::kTransparents, renderTarget);
-
-      // Render Gaussian splats (after transparents for proper blending)
-      renderGaussianSplats(renderTarget);
 
       // TODO(yorkie): Render the particles and other post-processing effects.
     }
@@ -431,17 +441,51 @@ namespace builtin_scene
     instancedMesh.iterateInstances(updateInstanceData);
   }
 
-  void RenderSystem::renderGaussianSplats(optional<XRRenderTarget> renderTarget)
+  //////////////////////////////////////////////////////////////////////////////
+  // GaussianSplatsManagerSystem
+  //////////////////////////////////////////////////////////////////////////////
+
+  void GaussianSplatsManagerSystem::onExecute()
   {
-    // Find the global GaussianSplatsMesh entity
-    auto splatsMeshEntities = queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
-                                                                { return true; });
+    // Initialize XR experience reference if not already done
+    if (!xrExperience_)
+    {
+      xrExperience_ = getResource<WebXRExperience>();
+    }
 
-    if (splatsMeshEntities.empty())
-      return; // No Gaussian splats mesh found
+    updateGlobalSplatsMesh();
+  }
 
-    auto globalSplatsMeshEntityId = splatsMeshEntities[0];
-    auto &splatsMesh = getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
+  void GaussianSplatsManagerSystem::updateGlobalSplatsMesh()
+  {
+    // Find the global GaussianSplatsMesh entity (has Mesh3d with GaussianSplatsMesh handle)
+    auto meshEntities = queryEntities<Mesh3d>([](const Mesh3d &mesh) -> bool
+                                              { return mesh.is<GaussianSplatsMesh>(); });
+
+    if (meshEntities.empty())
+      return; // No global splats mesh found
+
+    auto globalSplatsMeshEntityId = meshEntities[0];
+    auto meshComponent = getComponent<Mesh3d>(globalSplatsMeshEntityId);
+    if (!meshComponent)
+      return;
+
+    auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
+    if (!splatsMesh)
+      return;
+
+    // Update splats from all GaussianSplattingModel3d entities
+    auto modelEntities = queryEntities<GaussianSplattingModel3d>([](const GaussianSplattingModel3d &model) -> bool
+                                                                 { return model.isLoaded() && model.visible(); });
+
+    for (auto entityId : modelEntities)
+    {
+      auto &model = getComponentChecked<GaussianSplattingModel3d>(entityId);
+      const auto &splats = model.getSplats();
+
+      // Update this model's splats in the global mesh
+      splatsMesh->updateSplatsFromEntity(entityId, splats);
+    }
 
     // Get view matrix for depth sorting
     glm::mat4 viewMatrix = glm::mat4(1.0f);
@@ -466,95 +510,40 @@ namespace builtin_scene
     {
       auto cameras = queryEntities<Camera>([](const Camera &camera) -> bool
                                            { return camera.isEnabled(); });
-      if (cameras.empty())
-        return;
-
-      auto cameraEntity = cameras[0];
-      auto cameraTransform = getComponent<Transform>(cameraEntity);
-      if (!cameraTransform)
-        return;
-
-      viewMatrix = cameraTransform->matrix();
-    }
-
-    // Sort splats by depth based on view matrix
-    splatsMesh.sortSplatsByDepth(viewMatrix);
-
-    if (splatsMesh.getTotalSplatCount() == 0)
-      return;
-
-    // Get materials resource and create/get GaussianSplattingMaterial
-    auto materials = getResource<Materials>();
-    if (!materials)
-      return;
-
-    // Create GaussianSplattingMaterial if not exists
-    auto gaussianMaterial = materials->get<materials::GaussianSplattingMaterial>("gaussian_splatting");
-    if (!gaussianMaterial)
-    {
-      gaussianMaterial = materials->add("gaussian_splatting", std::make_shared<materials::GaussianSplattingMaterial>());
-    }
-
-    // Update material with sorted splat instances
-    gaussianMaterial->updateSplatInstances(splatsMesh.getSplatInstances());
-
-    // Get GL context and render
-    auto renderer = getResource<SceneRenderer>();
-    if (!renderer)
-      return;
-
-    auto glContext = renderer->glContext();
-    if (!glContext)
-      return;
-
-    // Initialize material if needed
-    if (!gaussianMaterial->isInitialized())
-    {
-      auto program = gaussianMaterial->createProgram(glContext);
-      if (!program)
-        return;
-      gaussianMaterial->initialize(glContext, program);
-    }
-
-    // Set up rendering state for transparency blending
-    glContext->enable(client_graphics::WebGLCapability::kBlend);
-    glContext->blendFunc(client_graphics::WebGLBlendFunc::kSrcAlpha,
-                         client_graphics::WebGLBlendFunc::kOneMinusSrcAlpha);
-    glContext->depthMask(false); // Don't write to depth buffer for transparency
-
-    // Render the splats using the mesh geometry and material
-    auto program = gaussianMaterial->getProgram();
-    if (program)
-    {
-      glContext->useProgram(program);
-
-      // Set uniforms (MVP matrix, etc.)
-      if (renderTarget.has_value())
+      if (!cameras.empty())
       {
-        // Set view and projection matrices for XR
-        // This would need to be implemented based on the XR target
-      }
-      else
-      {
-        // Set matrices for non-XR rendering
-        auto mvpLoc = glContext->getUniformLocation(program, "uMvpMatrix");
-        if (mvpLoc.has_value())
+        auto cameraEntity = cameras[0];
+        auto cameraTransform = getComponent<Transform>(cameraEntity);
+        if (cameraTransform)
         {
-          // Calculate MVP matrix from camera
-          // This is a simplified version - proper implementation would use camera projection
-          glm::mat4 mvp = glm::mat4(1.0f); // Identity for now
-          glContext->uniformMatrix4fv(mvpLoc.value(), 1, false, &mvp[0][0]);
+          viewMatrix = cameraTransform->matrix();
         }
       }
-
-      // Set up vertex attributes and draw
-      gaussianMaterial->onBeforeDrawMesh(program, nullptr);
-      splatsMesh.drawInstanced(glContext);
-      gaussianMaterial->onAfterDrawMesh(program, nullptr);
     }
 
-    // Restore rendering state
-    glContext->depthMask(true);
-    glContext->disable(client_graphics::WebGLCapability::kBlend);
+    // Sort splats by depth
+    splatsMesh->sortSplatsByDepth(viewMatrix);
+  }
+
+  void GaussianSplatsManagerSystem::sortSplatsByDepth(glm::mat4 viewMatrix)
+  {
+    // Find the global GaussianSplatsMesh entity (has Mesh3d with GaussianSplatsMesh handle)
+    auto meshEntities = queryEntities<Mesh3d>([](const Mesh3d &mesh) -> bool
+                                              { return mesh.is<GaussianSplatsMesh>(); });
+
+    if (!meshEntities.empty())
+    {
+      auto globalSplatsMeshEntityId = meshEntities[0];
+      auto meshComponent = getComponent<Mesh3d>(globalSplatsMeshEntityId);
+      if (meshComponent)
+      {
+        auto splatsMesh = meshComponent->getHandleAs<GaussianSplatsMesh>();
+        if (splatsMesh)
+        {
+          // Sort splats by depth using the view matrix
+          splatsMesh->sortSplatsByDepth(viewMatrix);
+        }
+      }
+    }
   }
 }

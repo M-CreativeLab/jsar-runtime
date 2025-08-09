@@ -15,7 +15,10 @@ namespace builtin_scene::materials
   class GaussianSplattingMaterial : public Material
   {
   public:
-    GaussianSplattingMaterial() = default;
+    GaussianSplattingMaterial()
+        : Material(false)
+    {
+    } // Make transparent
 
   public:
     const std::string name() const override
@@ -60,6 +63,13 @@ namespace builtin_scene::materials
     {
       return splatInstances_.size();
     }
+
+  private:
+    /**
+     * Setup instanced vertex attributes for splat rendering.
+     */
+    void setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                  std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
   private:
     std::vector<SplatInstanceData> splatInstances_;

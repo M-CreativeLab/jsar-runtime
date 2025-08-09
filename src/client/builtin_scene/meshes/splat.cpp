@@ -3,9 +3,8 @@
 namespace builtin_scene::meshes
 {
   Splat::Splat()
-      : Mesh()
+      : Mesh("Splat", PrimitiveTopology::kTriangles)
   {
-    primitiveTopology = PrimitiveTopology::kTriangles;
   }
 
   void Splat::build()

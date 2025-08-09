@@ -40,8 +40,7 @@ namespace builtin_scene
       app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
-      app.registerComponent<GaussianSplattingModel>();
-      app.registerComponent<GaussianSplatsMesh>();
+      app.registerComponent<GaussianSplattingModel3d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
@@ -49,8 +48,9 @@ namespace builtin_scene
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
+      auto manageSplats = System::Make<GaussianSplatsManagerSystem>();
       auto renderScene = System::Make<RenderSystem>();
-      updateCamera->chain(renderScene);
+      updateCamera->chain(manageSplats)->chain(renderScene);
       app.addSystem(SchedulerLabel::kUpdate, updateCamera);
     }
   };

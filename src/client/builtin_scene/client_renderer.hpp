@@ -71,13 +71,6 @@ namespace builtin_scene
                     const RenderPass,
                     std::optional<XRRenderTarget>);
 
-    /**
-     * Render all Gaussian splats in the scene using the global GaussianSplatsMesh.
-     *
-     * @param renderTarget The XR render target.
-     */
-    void renderGaussianSplats(std::optional<XRRenderTarget> renderTarget);
-
     void onBeforeRender(std::optional<XRRenderTarget>);
     void onAfterRender(std::optional<XRRenderTarget>);
 
@@ -90,6 +83,32 @@ namespace builtin_scene
 
   private:
     std::shared_ptr<SceneRenderer> renderer_ = nullptr;
+    std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
+  };
+
+  class GaussianSplatsManagerSystem final : public ecs::System
+  {
+    using ecs::System::System;
+
+  public:
+    const std::string name() const override
+    {
+      return "GaussianSplatsManagerSystem";
+    }
+    void onExecute() override;
+
+  private:
+    /**
+     * Collect splats from all GaussianSplattingModel3d entities and update the global GaussianSplatsMesh.
+     */
+    void updateGlobalSplatsMesh();
+
+    /**
+     * Sort splats by depth using the current view matrix.
+     */
+    void sortSplatsByDepth(glm::mat4 viewMatrix);
+
+  private:
     std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
   };
 }

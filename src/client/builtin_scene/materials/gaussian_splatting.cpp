@@ -28,12 +28,40 @@ namespace builtin_scene::materials
   {
     Material::onBeforeDrawMesh(program, mesh);
 
-    if (!buffersInitialized_ || splatInstances_.empty())
-      return;
-
     auto glContext = glContext_.lock();
     if (!glContext)
       return;
+
+    // Get the GaussianSplatsMesh from the Mesh3d component
+    if (mesh != nullptr)
+    {
+      auto splatsMesh = mesh->getHandleAs<GaussianSplatsMesh>();
+      if (splatsMesh != nullptr)
+      {
+        // Update splat instances from the mesh
+        updateSplatInstances(splatsMesh->getSplatInstances());
+
+        // If we have splats to render, do the instanced draw call here
+        if (!splatInstances_.empty() && buffersInitialized_)
+        {
+          // Setup instanced vertex attributes
+          setupInstancedAttributes(program, glContext);
+
+          // Do the instanced draw call
+          glContext->drawElementsInstanced(
+            client_graphics::WebGLDrawMode::kTriangles,
+            6, // 6 indices for quad (2 triangles)
+            client_graphics::WebGLDataType::kUnsignedInt,
+            0,
+            splatInstances_.size());
+        }
+      }
+    }
+  }
+
+  void GaussianSplattingMaterial::setupInstancedAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                                           std::shared_ptr<client_graphics::WebGL2Context> glContext)
+  {
 
     // Set up instanced vertex attributes (per splat)
     auto splatPositionLoc = glContext->getAttribLocation(program, "splatPosition");

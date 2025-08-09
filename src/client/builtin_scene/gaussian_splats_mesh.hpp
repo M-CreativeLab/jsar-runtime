@@ -115,6 +115,12 @@ namespace builtin_scene
      */
     void drawInstanced(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
+    /**
+     * Override indices() to return empty indices during rendering to prevent normal draw call.
+     * The actual instanced draw call is handled by the material.
+     */
+    const Indices<uint32_t> &indices() const override;
+
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.
@@ -131,5 +137,8 @@ namespace builtin_scene
     // Flags
     bool needsRebuild_;
     bool needsSorting_;
+
+    // Empty indices to prevent normal draw call
+    static const Indices<uint32_t> emptyIndices_;
   };
 }

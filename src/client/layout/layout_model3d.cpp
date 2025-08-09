@@ -20,7 +20,7 @@ namespace client_layout
   {
     auto setModelData = [this, &splats](Scene &scene)
     {
-      GaussianSplattingModel &splatComponent = scene.getComponentChecked<GaussianSplattingModel>(entity());
+      GaussianSplattingModel3d &splatComponent = scene.getComponentChecked<GaussianSplattingModel3d>(entity());
 
       // Convert HTMLModelElement::GaussianSplat to builtin_scene::GaussianSplat
       std::vector<builtin_scene::GaussianSplat> convertedSplats;
@@ -86,8 +86,8 @@ namespace client_layout
       assert(dom::Node::Is<dom::HTMLModelElement>(node()));
       auto &modelElement = dom::Node::AsChecked<dom::HTMLModelElement>(node());
 
-      // Create GaussianSplattingModel for this entity
-      scene.addComponent(entity, GaussianSplattingModel(modelElement.getSrc()));
+      // Create GaussianSplattingModel3d for this entity
+      scene.addComponent(entity, GaussianSplattingModel3d(modelElement.getSrc()));
     };
     useSceneWithCallback(addSplatComponent);
   }
@@ -106,7 +106,7 @@ namespace client_layout
         globalSplatsMesh.removeSplatsFromEntity(entity);
       }
 
-      scene.removeComponent<GaussianSplattingModel>(entity);
+      scene.removeComponent<GaussianSplattingModel3d>(entity);
     };
     useSceneWithCallback(removeSplatComponent);
 
@@ -149,7 +149,7 @@ namespace client_layout
   {
     auto setVisible = [this, &b](Scene &scene)
     {
-      GaussianSplattingModel &splatComponent = scene.getComponentChecked<GaussianSplattingModel>(entity());
+      GaussianSplattingModel3d &splatComponent = scene.getComponentChecked<GaussianSplattingModel3d>(entity());
       splatComponent.setVisible(b);
     };
     useSceneWithCallback(setVisible);

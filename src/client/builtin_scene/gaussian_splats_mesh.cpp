@@ -5,6 +5,9 @@
 
 namespace builtin_scene
 {
+  // Static member for empty indices
+  const Indices<uint32_t> GaussianSplatsMesh::emptyIndices_;
+
   GaussianSplatsMesh::GaussianSplatsMesh()
       : meshes::Splat()
       , needsRebuild_(false)
@@ -112,5 +115,12 @@ namespace builtin_scene
     // Unbind buffers
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, nullptr);
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, nullptr);
+  }
+
+  const Indices<uint32_t> &GaussianSplatsMesh::indices() const
+  {
+    // Return empty indices to prevent normal draw call
+    // The actual instanced draw call is handled by the material
+    return emptyIndices_;
   }
 }
