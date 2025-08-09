@@ -32,17 +32,14 @@ namespace builtin_scene
     renderer->setVolumeMask(entity);
 
     // Create the global GaussianSplatsMesh entity for rendering all Gaussian splats
-    auto gaussianSplatsMesh = MeshBuilder::CreateGaussianSplatsMesh();
-    auto gaussianSplattingMaterial = std::make_shared<materials::GaussianSplattingMaterial>();
+    auto gaussianSplatsMesh = meshes->add(MeshBuilder::CreateGaussianSplatsMesh());
+    auto gaussianSplattingMaterial = materials->add(materials::GaussianSplattingMaterial());
 
     auto globalSplatsEntity = spawn(
       Mesh3d(gaussianSplatsMesh, false),         // Enable rendering with the GaussianSplatsMesh handle
       MeshMaterial3d(gaussianSplattingMaterial), // Transparent material
       Transform::FromXYZ(0.0f, 0.0f, 0.0f)       // Identity transform
     );
-
-    // Add the material to the materials resource
-    materials->add("gaussian_splatting", gaussianSplattingMaterial);
   }
 
   void RenderSystem::onExecute()

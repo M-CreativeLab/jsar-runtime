@@ -110,11 +110,6 @@ namespace builtin_scene
       return !isDirty();
     }
 
-    /**
-     * Draw the splats using instanced rendering.
-     */
-    void drawInstanced(std::shared_ptr<client_graphics::WebGL2Context> glContext);
-
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.

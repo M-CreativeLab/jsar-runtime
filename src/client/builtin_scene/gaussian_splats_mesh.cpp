@@ -91,29 +91,4 @@ namespace builtin_scene
 
     needsSorting_ = false;
   }
-
-  void GaussianSplatsMesh::drawInstanced(std::shared_ptr<client_graphics::WebGL2Context> glContext)
-  {
-    if (sortedSplats_.empty())
-      return;
-
-    // Bind the index buffer for the quad
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, quadIndexBuffer_);
-
-    // Set up base quad vertex attributes (per vertex)
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, quadVertexBuffer_);
-
-    // Draw instanced quads - one for each splat
-    glContext->drawElementsInstanced(
-      client_graphics::WebGLDrawMode::kTriangles, // Draw mode
-      6,                                          // Number of indices per quad
-      WEBGL_UNSIGNED_INT,                         // Index type
-      0,                                          // Offset
-      static_cast<int>(sortedSplats_.size())      // Instance count
-    );
-
-    // Unbind buffers
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, nullptr);
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, nullptr);
-  }
 }

@@ -125,7 +125,7 @@ namespace builtin_scene::materials
     }
 
     // Set the quad size uniform
-    auto quadSizeLoc = glContext->getUniformLocation(program, "uQuadSize");
+    auto quadSizeLoc = glContext->getUniformLocation(program, "quadSize");
     if (quadSizeLoc.has_value())
     {
       glContext->uniform2f(quadSizeLoc.value(), 1.0f, 1.0f); // Base size, scaled by splat scale

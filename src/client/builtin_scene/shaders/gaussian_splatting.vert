@@ -13,7 +13,7 @@ uniform mat4 viewProjection;
 uniform mat4 viewProjectionR;
 #endif
 uniform mat4 modelMatrix;
-uniform vec2 uQuadSize;
+uniform vec2 quadSize;
 
 out vec3 vColor;
 out float vOpacity;
@@ -29,7 +29,7 @@ void main() {
   vTexCoord = position + vec2(0.5, 0.5);
   
   // Create billboard quad in world space
-  vec3 localPos = vec3(position * uQuadSize, 0.0);
+  vec3 localPos = vec3(position * quadSize, 0.0);
   
   // Apply splat scaling
   localPos *= splatScale;
