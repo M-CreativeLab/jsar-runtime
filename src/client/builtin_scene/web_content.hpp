@@ -264,6 +264,25 @@ namespace builtin_scene
         is_texture_using_ = value;
     }
 
+    /**
+     * Set the web content to use SDF texture rendering or not.
+     *
+     * @param value Whether to use SDF texture rendering for anti-aliasing.
+     */
+    inline void setTextureAsSDF(bool value)
+    {
+      if (is_sdf_texture_ != value)
+        is_sdf_texture_ = value;
+    }
+
+    /**
+     * @returns Whether the content uses SDF texture rendering.
+     */
+    inline bool isSDFTexture() const
+    {
+      return is_sdf_texture_;
+    }
+
     // Web content must be transparent objects.
     inline bool isOpaque() const
     {
@@ -325,6 +344,7 @@ namespace builtin_scene
     bool is_visible_ = true;
     bool is_dirty_ = true;
     bool is_spatialized_ = false;
+    bool is_sdf_texture_ = false;
   };
 
   class WebContentContext : public ecs::Resource
@@ -542,7 +562,7 @@ namespace builtin_scene
 
     private:
       float getLayoutWidthForText(WebContent &content);
-      void generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text);
+      void rewriteSignedDistanceOnAlpha(WebContent &content);
 
     private:
       TrClientContextPerProcess *clientContext_;

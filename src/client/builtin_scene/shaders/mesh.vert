@@ -43,7 +43,7 @@ in vec2 instanceTexUvOffset;
 in vec2 instanceTexUvOffsetR;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
-in float instanceUseSDFTexture;
+in uint instanceUseSDFTexture;
 out vec2 vInstanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;

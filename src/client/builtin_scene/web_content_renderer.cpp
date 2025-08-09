@@ -1075,7 +1075,9 @@ namespace builtin_scene::web_renderer
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
 
     // Then generate SDF texture from the painted canvas for anti-aliasing
-    generateSDFTextureForText(entity, content, text);
+    rewriteSignedDistanceOnAlpha(content);
+
+    content.setTextureAsSDF(true);
 
     content.setTextureUsing(true);
   }
@@ -1086,13 +1088,8 @@ namespace builtin_scene::web_renderer
     return fragment->contentWidth();
   }
 
-  void RenderTextSystem::generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text)
+  void RenderTextSystem::rewriteSignedDistanceOnAlpha(WebContent &content)
   {
-    if (text.empty())
-    {
-      return; // Nothing to render
-    }
-
     // Get the painted canvas and generate SDF texture from it
     auto canvas = content.canvas();
     if (!canvas)
