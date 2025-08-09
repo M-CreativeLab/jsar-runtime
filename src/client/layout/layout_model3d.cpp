@@ -45,34 +45,7 @@ namespace client_layout
         convertedSplat.rotation[3] = splat.rotation[3];
         convertedSplats.push_back(convertedSplat);
       }
-
       splatComponent.setSplats(std::move(convertedSplats));
-
-      // Add splats to the global GaussianSplatsMesh
-      // Find the global GaussianSplatsMesh entity
-      auto globalSplatsMeshEntities = scene.template queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
-                                                                                       { return true; });
-      if (!globalSplatsMeshEntities.empty())
-      {
-        auto globalSplatsMeshEntityId = globalSplatsMeshEntities[0];
-        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
-        globalSplatsMesh.addSplatsFromEntity(entity(), splatComponent.getSplats());
-      }
-      else
-      {
-        // Create global GaussianSplatsMesh if it doesn't exist
-        auto globalEntity = scene.spawn();
-        scene.addComponent(globalEntity, GaussianSplatsMesh());
-        auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalEntity);
-
-        // Initialize the mesh with GL context from renderer resource
-        auto renderer = scene.template getResource<SceneRenderer>();
-        if (renderer)
-        {
-          globalSplatsMesh.initializeGeometry(renderer->glContext());
-        }
-        globalSplatsMesh.addSplatsFromEntity(entity(), splatComponent.getSplats());
-      }
     };
     useSceneWithCallback(setModelData);
   }
@@ -94,7 +67,7 @@ namespace client_layout
 
   void LayoutModel3d::entityWillBeDestroyed(ecs::EntityId entity)
   {
-    auto removeSplatComponent = [this, &entity](Scene &scene)
+    auto removeSplatComponent = [&entity](Scene &scene)
     {
       // Remove splats from global mesh before destroying component
       auto globalSplatsMeshEntities = scene.template queryEntities<GaussianSplatsMesh>([](const GaussianSplatsMesh &mesh) -> bool
@@ -105,7 +78,6 @@ namespace client_layout
         auto &globalSplatsMesh = scene.getComponentChecked<GaussianSplatsMesh>(globalSplatsMeshEntityId);
         globalSplatsMesh.removeSplatsFromEntity(entity);
       }
-
       scene.removeComponent<GaussianSplattingModel3d>(entity);
     };
     useSceneWithCallback(removeSplatComponent);
@@ -156,10 +128,4 @@ namespace client_layout
 
     last_visible_ = b;
   }
-
-  bool LayoutModel3d::enableCustomGeometry() const
-  {
-    return true;
-  }
-}
 }

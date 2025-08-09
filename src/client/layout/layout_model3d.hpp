@@ -26,7 +26,6 @@ namespace client_layout
     {
       return true;
     }
-    bool enableCustomGeometry() const override;
 
     void setModelData(const std::vector<dom::HTMLModelElement::GaussianSplat> &splats);
 

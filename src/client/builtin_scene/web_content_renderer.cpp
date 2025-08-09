@@ -20,7 +20,7 @@
 
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
-#include "./instanced_mesh.hpp"
+#include "./instanced_mesh-inl.hpp"
 #include "./mesh_material.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"

@@ -173,17 +173,16 @@ namespace dom
   void HTMLModelElement::updateModelComponent()
   {
     // Get the layout object associated with this element
-    auto layoutObject = this->layoutObject();
+    auto layoutObject = this->principalBox();
     if (!layoutObject || !layoutObject->isLayoutModel3d())
       return;
 
-    auto layoutModel3d = static_cast<client_layout::LayoutModel3d *>(layoutObject);
+    auto layoutModel3d = dynamic_pointer_cast<client_layout::LayoutModel3d>(layoutObject);
+    assert(layoutModel3d != nullptr && "LayoutModel3d should not be null");
 
     // Set the parsed model data in the layout object
     if (parsed_splats_.has_value())
-    {
       layoutModel3d->setModelData(parsed_splats_.value());
-    }
   }
 
   HTMLModelElement::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)

@@ -114,7 +114,7 @@ namespace builtin_scene
     return cachedData_;
   }
 
-  inline size_t Mesh::iterateEnabledAttributes(std::function<void(const IVertexAttribute &)> callback)
+  size_t Mesh::iterateEnabledAttributes(std::function<void(const IVertexAttribute &)> callback)
   {
     size_t attribsCount = 0;
     for (auto &item : vertexBuffer_.attributes())

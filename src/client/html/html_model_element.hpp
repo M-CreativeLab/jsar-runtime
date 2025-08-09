@@ -146,18 +146,21 @@ namespace dom
     }
 
     /**
-     * Check if the model is spatial (for WebXR or stereoscopic rendering).
+     * Returns if this model element should be rendered spatially:
+     * 
+     * - `true`: represents the model as a three-dimensional object in the scene.
+     * - `false`: draws the model (even though it is a three-dimensional object) on a two-dimensional plane.
      */
-    bool isSpatial() const
+    inline bool isSpatial() const
     {
-      // TODO: Add spatial attribute support if needed
-      return false;
+      // TODO(yorkie): support 2D model rendering in the future.
+      return true;
     }
 
     /**
      * Enable custom geometry for 3D model rendering instead of using WebContent.
      */
-    bool enableCustomGeometry() const override
+    inline bool enableCustomGeometry() const override
     {
       return true;
     }
