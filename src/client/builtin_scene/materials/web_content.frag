@@ -1,8 +1,8 @@
 #ifdef USE_INSTANCE_TEXTURE
 uniform sampler2DArray instanceTexAltas;
-uniform sampler2DArray sdfTextureAtlas;  // Separate texture atlas for SDF content
 in float vInstanceLayerIndex;
 in float vInstanceTextureEnabled;
+in float vInstanceUseSDFTexture;
 #endif
 
 #ifdef USE_UVS
@@ -149,11 +149,11 @@ void main()
   {
     vec4 textureColor;
     
-    // Check if this is SDF text content and use appropriate texture
-    if (uSdfEnabled > 0.5)
+    // Check if this instance uses SDF texture rendering
+    if (vInstanceUseSDFTexture > 0.5)
     {
-      // Use SDF texture atlas for text content
-      textureColor = texture(sdfTextureAtlas, vec3(uvs, vInstanceLayerIndex));
+      // Use SDF texture from instance texture atlas
+      textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
       
       // For SDF text, the texture contains distance field data in the red channel
       // Apply SDF distance field rendering for smooth text anti-aliasing
@@ -166,7 +166,7 @@ void main()
     }
     else
     {
-      // Use regular texture atlas for image content
+      // Use regular texture from instance texture atlas
       textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
     }
     

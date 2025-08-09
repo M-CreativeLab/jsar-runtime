@@ -43,9 +43,11 @@ in vec2 instanceTexUvOffset;
 in vec2 instanceTexUvOffsetR;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
+in float instanceUseSDFTexture;
 out vec2 vInstanceTexUvOffsetR;
 out float vInstanceLayerIndex;
 out float vInstanceTextureEnabled;
+out float vInstanceUseSDFTexture;
 #endif
 
 #ifdef USE_INSTANCE_SDF
@@ -121,6 +123,7 @@ void main()
 #ifdef USE_INSTANCE_TEXTURE
   vInstanceTexUvOffsetR = instanceTexUvOffsetR;
   vInstanceLayerIndex = float(instanceLayerIndex);
+  vInstanceUseSDFTexture = instanceUseSDFTexture;
 
 #ifdef MULTIVIEW
   // In multiview, select texture coordinates based on VIEW_ID

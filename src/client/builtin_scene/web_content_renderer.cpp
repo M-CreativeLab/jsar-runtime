@@ -1077,13 +1077,36 @@ namespace builtin_scene::web_renderer
 
   void RenderTextSystem::generateSDFTextureForText(ecs::EntityId entity, WebContent &content, const std::string &text)
   {
-    // Generate SDF texture for web content's text at RenderTextSystem level.
-    // The WebContent will be rendered normally to its canvas, and the WebContentInstancedMaterial
-    // will handle routing text content to the SDF texture atlas when uSdfEnabled is true.
-    // This allows us to maintain the existing text layout and rendering pipeline
-    // while adding SDF anti-aliasing capabilities through the separate texture atlas system.
+    // Generate SDF texture for web content's text instead of regular SkCanvas pixels.
+    // This replaces the standard canvas rendering with SDF-based texture generation
+    // that provides superior anti-aliasing for text content.
 
-    // SDF texture generation will be implemented here to work with the atlas system
+    if (text.empty())
+    {
+      return; // Nothing to render
+    }
+
+    // Get text properties for SDF generation
+    auto textComponent = getComponent<Text2d>(entity);
+    if (!textComponent)
+    {
+      return;
+    }
+
+    // Use TinySDF to generate distance field texture data
+    // This will create SDF texture data that can be uploaded to the shared texture atlas
+    // instead of the regular SkCanvas-rendered pixels
+
+    // For now, we'll still use the existing SkCanvas rendering as the base
+    // In a full implementation, this would use the TinySDF library to generate
+    // proper SDF texture data and replace the canvas pixel data
+
+    // TODO: Implement full SDF texture generation using TinySDF
+    // 1. Extract font information from the text component
+    // 2. Generate SDF glyphs using TinySDF
+    // 3. Create a texture atlas layout for the text
+    // 4. Generate SDF texture data
+    // 5. Store it so updateTexture can use it instead of SkCanvas pixels
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
@@ -1094,16 +1117,22 @@ namespace builtin_scene::web_renderer
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
     if (webContentMaterial)
     {
-      // Always enable SDF mode for text entities
+      // Set SDF flag on instance for text entities
       auto textComponent = getComponent<Text2d>(entity);
       if (textComponent)
       {
-        webContentMaterial->setSdfEnabled(true);
+        // Get the instance and mark it for SDF texture usage
+        auto &instance = material3d->getInstance(entity);
+        instance.setUseSDFTexture(true);
+      }
+      else
+      {
+        // For non-text entities, ensure SDF is disabled
+        auto &instance = material3d->getInstance(entity);
+        instance.setUseSDFTexture(false);
       }
 
-      // Check if this is a spatial image and set the spatial flag
-      auto imageComponent = getComponent<Image2d>(entity);
-      // Use the same texture update method for both spatial and non-spatial images
+      // Use the same texture update method for both text and image content
       auto status = webContentMaterial->updateTexture(content);
       if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
         content.setDirty(false);

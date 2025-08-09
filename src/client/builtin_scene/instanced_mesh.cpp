@@ -158,6 +158,16 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
+  void Instance::setUseSDFTexture(bool useSDFTexture)
+  {
+    float sdfFlag = useSDFTexture ? 1.0f : 0.0f;
+    if (data_.useSDFTexture == sdfFlag)
+      return; // Skip if there is no change.
+
+    data_.useSDFTexture = sdfFlag;
+    notifyBufferDataChanged();
+  }
+
   bool Instance::hasNoBorders() const
   {
     // Fast check for none border style.
@@ -420,6 +430,11 @@ namespace builtin_scene
               name == "instanceBorderStyle")
           {
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
+          }
+          // 1f
+          else if (name == "instanceUseSDFTexture")
+          {
+            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
           // 2f
           else if (name == "instanceTexUvOffset" ||
