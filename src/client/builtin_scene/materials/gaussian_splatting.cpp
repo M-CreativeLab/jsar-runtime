@@ -24,12 +24,31 @@ namespace builtin_scene::materials
       uniforms_.emplace(name, loc.value());                  \
     }                                                        \
   }
-    LOAD_UNIFORM_LOCATION("quadSize");
+    // Load uniforms for improved 3DGS rendering
+    LOAD_UNIFORM_LOCATION("renderSize");
+    LOAD_UNIFORM_LOCATION("maxStdDev");
+    LOAD_UNIFORM_LOCATION("minAlpha");
 #undef LOAD_UNIFORM_LOCATION
 
-    glContext->uniform2f(uniform("quadSize"), 2.0f, 2.0f);
+    // Set default values for 3DGS parameters
+    auto renderSizeOpt = glContext->getUniformLocation(program, "renderSize");
+    if (renderSizeOpt.has_value())
+    {
+      glContext->uniform2f(renderSizeOpt.value(), 1920.0f, 1080.0f); // Default render size
+    }
 
-    // No buffer initialization needed - handled by GaussianSplatsMesh
+    auto maxStdDevOpt = glContext->getUniformLocation(program, "maxStdDev");
+    if (maxStdDevOpt.has_value())
+    {
+      glContext->uniform1f(maxStdDevOpt.value(), 3.0f); // Standard deviations to render
+    }
+
+    auto minAlphaOpt = glContext->getUniformLocation(program, "minAlpha");
+    if (minAlphaOpt.has_value())
+    {
+      glContext->uniform1f(minAlphaOpt.value(), 0.01f); // Minimum alpha threshold
+    }
+
     return true;
   }
 
