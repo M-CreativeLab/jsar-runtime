@@ -28,6 +28,8 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("renderSize");
     LOAD_UNIFORM_LOCATION("maxStdDev");
     LOAD_UNIFORM_LOCATION("minAlpha");
+    LOAD_UNIFORM_LOCATION("maxPixelRadius");
+    // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
     // Set default values for 3DGS parameters
@@ -47,6 +49,12 @@ namespace builtin_scene::materials
     if (minAlphaOpt.has_value())
     {
       glContext->uniform1f(minAlphaOpt.value(), 0.01f); // Minimum alpha threshold
+    }
+
+    auto maxPixelRadiusOpt = glContext->getUniformLocation(program, "maxPixelRadius");
+    if (maxPixelRadiusOpt.has_value())
+    {
+      glContext->uniform1f(maxPixelRadiusOpt.value(), 100.0f); // Maximum pixel radius for splats
     }
 
     return true;
