@@ -173,6 +173,10 @@ namespace builtin_scene
      */
     void disableVolumeMask();
 
+  public:
+    void onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget);
+    void onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget);
+
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     math::Size3 volumeSize_;

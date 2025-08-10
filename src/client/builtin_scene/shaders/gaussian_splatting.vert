@@ -7,8 +7,6 @@ uniform vec2 quadSize;
 
 // Base quad attributes (per vertex)
 in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
 
 // Instanced attributes (per splat)
 in vec3 splatPosition;

@@ -374,4 +374,30 @@ namespace builtin_scene
   {
     glContext_->disable(WEBGL_STENCIL_TEST);
   }
+
+  void SceneRenderer::onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
+  {
+    if (isVolumeMaskEnabled())
+      enableVolumeMask();
+
+    if (renderPass == RenderPass::kOpaques)
+    {
+      glContext_->enable(WEBGL_DEPTH_TEST);
+      glContext_->depthFunc(WEBGL_LEQUAL);
+      glContext_->depthMask(true);
+      glContext_->disable(WEBGL_BLEND);
+    }
+    else if (renderPass == RenderPass::kTransparents)
+    {
+      glContext_->enable(WEBGL_DEPTH_TEST);
+      glContext_->depthMask(false);
+      glContext_->enable(WEBGL_BLEND);
+      glContext_->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+    }
+  }
+  void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
+  {
+    if (isVolumeMaskEnabled())
+      disableVolumeMask();
+  }
 }

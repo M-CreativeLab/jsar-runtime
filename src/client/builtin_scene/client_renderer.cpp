@@ -131,7 +131,7 @@ namespace builtin_scene
     if (entities.size() > 0)
     {
       renderVolumeMask(renderPass, renderTarget);
-      onBeforeRender(renderTarget);
+      onBeforeRender(renderPass, renderTarget);
       for (const auto &entity : entities)
       {
         renderMesh(entity.id,
@@ -140,7 +140,7 @@ namespace builtin_scene
                    renderPass,
                    renderTarget);
       }
-      onAfterRender(renderTarget);
+      onAfterRender(renderPass, renderTarget);
     }
   }
 
@@ -186,16 +186,14 @@ namespace builtin_scene
                           renderTarget);
   }
 
-  void RenderSystem::onBeforeRender(optional<XRRenderTarget> renderTarget)
+  void RenderSystem::onBeforeRender(const RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
-    if (renderer_->isVolumeMaskEnabled())
-      renderer_->enableVolumeMask();
+    renderer_->onBeforeRender(renderPass, renderTarget);
   }
 
-  void RenderSystem::onAfterRender(optional<XRRenderTarget> renderTarget)
+  void RenderSystem::onAfterRender(const RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
-    if (renderer_->isVolumeMaskEnabled())
-      renderer_->disableVolumeMask();
+    renderer_->onAfterRender(renderPass, renderTarget);
   }
 
   void RenderSystem::traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&exec)
