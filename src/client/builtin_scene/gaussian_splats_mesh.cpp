@@ -111,6 +111,8 @@ namespace builtin_scene
                           gpuData.data(),
                           client_graphics::WebGLBufferUsage::kDynamicDraw);
     setDirty(false);
+
+    DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu splats (%zu floats)", sortedSplats_.size(), gpuData.size());
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,

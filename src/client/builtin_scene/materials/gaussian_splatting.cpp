@@ -3,6 +3,7 @@
 #include <client/graphics/webgl_context.hpp>
 #include <client/graphics/webgl_program.hpp>
 #include <client/graphics/webgl_buffer.hpp>
+#include <common/debug.hpp>
 
 #include "./gaussian_splatting.hpp"
 #include "../meshes.hpp"
@@ -26,7 +27,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("quadSize");
 #undef LOAD_UNIFORM_LOCATION
 
-    glContext->uniform2f(uniform("quadSize"), 1.0f, 1.0f);
+    glContext->uniform2f(uniform("quadSize"), 2.0f, 2.0f);
 
     // No buffer initialization needed - handled by GaussianSplatsMesh
     return true;
@@ -46,7 +47,12 @@ namespace builtin_scene::materials
 
     // Only handle drawing if we have splats to render
     if (splatInstanceCount_ == 0)
+    {
+      DEBUG("GaussianSplattingMaterial", "No splats to render, skipping draw call");
       return;
+    }
+
+    DEBUG("GaussianSplattingMaterial", "Rendering %zu splat instances", splatInstanceCount_);
 
     // Do the instanced draw call
     glContext->drawElementsInstanced(

@@ -96,13 +96,7 @@ namespace builtin_scene::model_loaders
         }
       }
 
-      // Sort splats by depth (z-coordinate) for proper transparency blending
-      std::sort(splats.begin(), splats.end(), [](const builtin_scene::GaussianSplat &a, const builtin_scene::GaussianSplat &b)
-                {
-                  return a.position[2] < b.position[2]; // Sort by z-coordinate (depth)
-                });
-
-      DEBUG(LOG_TAG, "Successfully loaded KSplat file with %zu splats (sorted by depth)", splats.size());
+      DEBUG(LOG_TAG, "Successfully loaded KSplat file with %zu splats", splats.size());
       return true;
     }
     catch (const std::exception &e)

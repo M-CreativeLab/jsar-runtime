@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include <client/graphics/webgl_context.hpp>
+#include <common/debug.hpp>
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
@@ -116,6 +117,9 @@ namespace builtin_scene
                 });
 
       needsSorting_ = false;
+
+      // Mark the mesh as dirty so the GPU buffer gets updated with new sorting
+      setDirty(true);
     }
 
     /**
@@ -227,6 +231,13 @@ namespace builtin_scene
       }
 
       needsRebuild_ = false;
+      needsSorting_ = true; // After rebuilding, we need to sort the splats
+
+      // Mark the mesh as dirty so the GPU buffer gets updated
+      setDirty(true);
+
+      // Debug output
+      DEBUG("GaussianSplatsMesh", "Rebuilt splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
     }
 
   private:

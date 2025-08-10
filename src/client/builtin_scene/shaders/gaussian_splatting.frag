@@ -15,7 +15,7 @@ void main() {
   float alpha = exp(-dist * 8.0) * vOpacity;
 
   // Discard pixels with very low alpha to improve performance
-  if(alpha < 0.0001) {
+  if(alpha < 0.001) {
     discard;
   }
 
