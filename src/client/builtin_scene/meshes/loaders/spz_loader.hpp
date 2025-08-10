@@ -9,11 +9,13 @@
 namespace builtin_scene::model_loaders
 {
   /**
-   * Ksplat file loader for 3D Gaussian Splatting models.
+   * SPZ file loader for 3D Gaussian Splatting models.
    * Follows the Spark implementation pattern:
-   * https://github.com/sparkjsdev/spark/blob/main/src/ksplat.ts
+   * https://github.com/sparkjsdev/spark/blob/main/src/spz.ts
+   * 
+   * SPZ is a compressed format (gzip) with fixed-point encoding optimized for file size.
    */
-  class KsplatLoader
+  class SpzLoader
   {
   public:
     /**
@@ -24,49 +26,40 @@ namespace builtin_scene::model_loaders
       int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)>;
 
     /**
-     * Decode .ksplat file from data buffer using callback-based approach.
-     * @param fileBytes Raw .ksplat file data
+     * Decode .spz file from data buffer using callback-based approach.
+     * @param fileBytes Raw .spz file data (gzip compressed)
      * @param initNumSplats Callback called with total number of splats
      * @param splatCallback Callback called for each splat
      * @return true if loading was successful, false otherwise
      */
-    static bool decodeKsplat(
+    static bool decodeSpz(
       const std::vector<char> &fileBytes,
       std::function<void(int numSplats)> initNumSplats,
       SplatCallback splatCallback);
 
     /**
      * Convenience method to load splats into a vector (for backward compatibility).
-     * @param data Raw .ksplat file data
+     * @param data Raw .spz file data
      * @param splats Output vector to store loaded splats
      * @return true if loading was successful, false otherwise
      */
     static bool load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
 
   private:
-    // KSplat format constants following Spark implementation
-    static constexpr size_t HEADER_BYTES = 4096;
-    static constexpr size_t SECTION_BYTES = 1024;
-
-    // Compression level definitions
-    struct KsplatCompression
-    {
-      int bytesPerCenter;
-      int bytesPerScale;
-      int bytesPerRotation;
-      int bytesPerColor;
-      int bytesPerSphericalHarmonicsComponent;
-      int scaleOffsetBytes;
-      int rotationOffsetBytes;
-      int colorOffsetBytes;
-      int sphericalHarmonicsOffsetBytes;
-      int scaleRange;
-    };
-
-    static const KsplatCompression KSPLAT_COMPRESSION[3];
+    // SPZ format constants following Spark implementation
+    static constexpr uint32_t SPZ_MAGIC = 0x5053474e; // NGSP = Niantic gaussian splat
+    static constexpr float SH_C0 = 0.28209479177387814f;
 
     /**
-     * Convert from half-float to float (for compression level 1).
+     * Simple gzip decompression using zlib.
+     * @param compressedData Gzip compressed data
+     * @param decompressedData Output decompressed data
+     * @return true if decompression was successful
+     */
+    static bool decompressGzip(const std::vector<char> &compressedData, std::vector<char> &decompressedData);
+
+    /**
+     * Convert from half-float to float (for SPZ version 1).
      * @param value Half-float value as uint16_t
      * @return Full float value
      */

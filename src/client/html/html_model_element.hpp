@@ -43,7 +43,9 @@ namespace dom
       Unknown,
       GLTF,
       GLB,
-      GaussianSplatting
+      GaussianSplatting,
+      KSplat,
+      SPZ
     };
 
   public:

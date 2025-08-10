@@ -1,6 +1,7 @@
 #include "./html_model_element.hpp"
 #include <client/dom/document.hpp>
 #include <client/builtin_scene/meshes/loaders/ksplat_loader.hpp>
+#include <client/builtin_scene/meshes/loaders/spz_loader.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/layout/layout_model3d.hpp>
@@ -193,6 +194,14 @@ namespace dom
       {
         return ModelType::GaussianSplatting;
       }
+      else if (typeHint == "ksplat")
+      {
+        return ModelType::KSplat;
+      }
+      else if (typeHint == "spz")
+      {
+        return ModelType::SPZ;
+      }
     }
 
     // Auto-detect from file extension
@@ -204,7 +213,11 @@ namespace dom
 
       if (ext == "ksplat")
       {
-        return ModelType::GaussianSplatting;
+        return ModelType::KSplat;
+      }
+      else if (ext == "spz")
+      {
+        return ModelType::SPZ;
       }
       else if (ext == "gltf")
       {
@@ -250,7 +263,7 @@ namespace dom
     ModelType modelType = detectModelType(src_, type_.value_or(""));
 
     // Parse the model data based on type
-    if (modelType == ModelType::GaussianSplatting)
+    if (modelType == ModelType::KSplat || modelType == ModelType::GaussianSplatting)
     {
       // Use Ksplat parser to parse the model data
       std::vector<builtin_scene::GaussianSplat> parsedSplats;
@@ -287,6 +300,45 @@ namespace dom
       else
       {
         std::cerr << "Ksplat parsing failed" << std::endl;
+      }
+    }
+    else if (modelType == ModelType::SPZ)
+    {
+      // Use SPZ parser to parse the model data
+      std::vector<builtin_scene::GaussianSplat> parsedSplats;
+      if (model_loaders::SpzLoader::load(modelData, parsedSplats))
+      {
+        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
+        std::vector<GaussianSplat> elementSplats;
+        elementSplats.reserve(parsedSplats.size());
+
+        for (const auto &splat : parsedSplats)
+        {
+          GaussianSplat elementSplat;
+          elementSplat.position[0] = splat.position[0];
+          elementSplat.position[1] = splat.position[1];
+          elementSplat.position[2] = splat.position[2];
+          elementSplat.color[0] = splat.color[0];
+          elementSplat.color[1] = splat.color[1];
+          elementSplat.color[2] = splat.color[2];
+          elementSplat.opacity = splat.opacity;
+          elementSplat.scale[0] = splat.scale[0];
+          elementSplat.scale[1] = splat.scale[1];
+          elementSplat.scale[2] = splat.scale[2];
+          elementSplat.rotation[0] = splat.rotation[0];
+          elementSplat.rotation[1] = splat.rotation[1];
+          elementSplat.rotation[2] = splat.rotation[2];
+          elementSplat.rotation[3] = splat.rotation[3];
+          elementSplats.push_back(elementSplat);
+        }
+
+        // Store parsed splats for layout
+        parsed_splats_ = std::move(elementSplats);
+        DEBUG("HTMLModelElement", "Successfully parsed .spz file with %zu splats", parsed_splats_->size());
+      }
+      else
+      {
+        std::cerr << "SPZ parsing failed" << std::endl;
       }
     }
     else

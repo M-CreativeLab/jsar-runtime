@@ -1,421 +1,330 @@
-#include "./ksplat_loader.hpp"
 #include <common/debug.hpp>
 #include <cstring>
 #include <algorithm>
 #include <cmath>
 
+#include "./ksplat_loader.hpp"
+
 namespace builtin_scene::model_loaders
 {
   static const char *LOG_TAG = "KsplatLoader";
 
-  // Compression level definitions from SplatBuffer.CompressionLevels
-  const KsplatLoader::CompressionLevel KsplatLoader::COMPRESSION_LEVELS[3] = {
+  // Compression level definitions following Spark implementation
+  const KsplatLoader::KsplatCompression KsplatLoader::KSPLAT_COMPRESSION[3] = {
     // Level 0: Uncompressed
     {
       .bytesPerCenter = 12,
       .bytesPerScale = 12,
       .bytesPerRotation = 16,
       .bytesPerColor = 4,
+      .bytesPerSphericalHarmonicsComponent = 4,
       .scaleOffsetBytes = 12,
       .rotationOffsetBytes = 24,
       .colorOffsetBytes = 40,
       .sphericalHarmonicsOffsetBytes = 44,
       .scaleRange = 1,
-      .bytesPerSphericalHarmonicsComponent = 4,
-      .sphericalHarmonicsOffsetFloat = 11},
+    },
     // Level 1: Half-float compression
     {
       .bytesPerCenter = 6,
       .bytesPerScale = 6,
       .bytesPerRotation = 8,
       .bytesPerColor = 4,
+      .bytesPerSphericalHarmonicsComponent = 2,
       .scaleOffsetBytes = 6,
       .rotationOffsetBytes = 12,
       .colorOffsetBytes = 20,
       .sphericalHarmonicsOffsetBytes = 24,
       .scaleRange = 32767,
-      .bytesPerSphericalHarmonicsComponent = 2,
-      .sphericalHarmonicsOffsetFloat = 12},
+    },
     // Level 2: 8-bit compression
     {
       .bytesPerCenter = 6,
       .bytesPerScale = 6,
       .bytesPerRotation = 8,
       .bytesPerColor = 4,
+      .bytesPerSphericalHarmonicsComponent = 1,
       .scaleOffsetBytes = 6,
       .rotationOffsetBytes = 12,
       .colorOffsetBytes = 20,
       .sphericalHarmonicsOffsetBytes = 24,
       .scaleRange = 32767,
-      .bytesPerSphericalHarmonicsComponent = 1,
-      .sphericalHarmonicsOffsetFloat = 12}};
+    }};
 
-  bool KsplatLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
+  bool KsplatLoader::decodeKsplat(
+    const std::vector<char> &fileBytes,
+    std::function<void(int numSplats)> initNumSplats,
+    SplatCallback splatCallback)
   {
     try
     {
-      // Parse the main header
-      KSplatHeader header;
-      if (!parseHeader(data, header))
+      if (fileBytes.size() < HEADER_BYTES)
       {
-        DEBUG(LOG_TAG, "Failed to parse KSplat header");
+        DEBUG(LOG_TAG, "File too small for KSplat header. Expected %zu bytes, got %zu", HEADER_BYTES, fileBytes.size());
         return false;
       }
 
-      if (!checkVersion(header))
+      // Parse header following Spark implementation
+      const uint8_t *data = reinterpret_cast<const uint8_t *>(fileBytes.data());
+      size_t headerOffset = 0;
+
+      const uint8_t versionMajor = data[0];
+      const uint8_t versionMinor = data[1];
+      if (versionMajor != 0 || versionMinor < 1)
       {
-        DEBUG(LOG_TAG, "Unsupported KSplat version: v%d.%d", header.versionMajor, header.versionMinor);
+        DEBUG(LOG_TAG, "Unsupported .ksplat version: %d.%d", versionMajor, versionMinor);
         return false;
       }
 
-      if (header.splatCount == 0)
+      uint32_t maxSectionCount, splatCount;
+      uint16_t compressionLevel;
+      memcpy(&maxSectionCount, &data[4], sizeof(uint32_t));
+      memcpy(&splatCount, &data[16], sizeof(uint32_t));
+      memcpy(&compressionLevel, &data[20], sizeof(uint16_t));
+
+      if (compressionLevel < 0 || compressionLevel > 2)
+      {
+        DEBUG(LOG_TAG, "Invalid .ksplat compression level: %d", compressionLevel);
+        return false;
+      }
+
+      if (splatCount == 0)
       {
         DEBUG(LOG_TAG, "No splats found in KSplat file");
         return false;
       }
 
-      // Parse section headers
-      std::vector<KSplatSectionHeader> sectionHeaders;
-      if (!parseSectionHeaders(data, header, sectionHeaders))
-      {
-        DEBUG(LOG_TAG, "Failed to parse KSplat section headers");
-        return false;
-      }
+      // Initialize with total splat count
+      initNumSplats(splatCount);
 
-      // Clear output and reserve space
-      splats.clear();
-      splats.reserve(header.splatCount);
+      headerOffset = HEADER_BYTES;
+      size_t sectionBase = HEADER_BYTES + maxSectionCount * SECTION_BYTES;
 
-      // Extract splats from each section
-      for (const auto &sectionHeader : sectionHeaders)
+      // Process each section
+      for (uint32_t section = 0; section < maxSectionCount; ++section)
       {
-        if (!extractSectionSplats(data, header, sectionHeader, splats))
+        if (headerOffset + SECTION_BYTES > fileBytes.size())
         {
-          DEBUG(LOG_TAG, "Failed to extract splats from section");
+          DEBUG(LOG_TAG, "File too small for section header");
           return false;
         }
+
+        const uint8_t *sectionData = &data[headerOffset];
+        headerOffset += SECTION_BYTES;
+
+        uint32_t sectionSplatCount, sectionMaxSplatCount, bucketSize, bucketCount;
+        float bucketBlockSize;
+        uint16_t bucketStorageSizeBytes;
+        uint32_t compressionScaleRange, fullBucketCount, partiallyFilledBucketCount;
+
+        memcpy(&sectionSplatCount, &sectionData[0], sizeof(uint32_t));
+        memcpy(&sectionMaxSplatCount, &sectionData[4], sizeof(uint32_t));
+        memcpy(&bucketSize, &sectionData[8], sizeof(uint32_t));
+        memcpy(&bucketCount, &sectionData[12], sizeof(uint32_t));
+        memcpy(&bucketBlockSize, &sectionData[16], sizeof(float));
+        memcpy(&bucketStorageSizeBytes, &sectionData[20], sizeof(uint16_t));
+        memcpy(&compressionScaleRange, &sectionData[24], sizeof(uint32_t));
+        memcpy(&fullBucketCount, &sectionData[32], sizeof(uint32_t));
+        memcpy(&partiallyFilledBucketCount, &sectionData[36], sizeof(uint32_t));
+
+        // Use default scale range if not specified
+        if (compressionScaleRange == 0)
+        {
+          compressionScaleRange = KSPLAT_COMPRESSION[compressionLevel].scaleRange;
+        }
+
+        const auto &compression = KSPLAT_COMPRESSION[compressionLevel];
+        const size_t bytesPerSplat = compression.bytesPerCenter +
+                                     compression.bytesPerScale +
+                                     compression.bytesPerRotation +
+                                     compression.bytesPerColor;
+
+        const size_t bucketsMetaDataSizeBytes = partiallyFilledBucketCount * 4;
+        const size_t bucketsStorageSizeBytes = bucketStorageSizeBytes * bucketCount + bucketsMetaDataSizeBytes;
+        const size_t splatDataStorageSizeBytes = bytesPerSplat * sectionMaxSplatCount;
+
+        if (sectionSplatCount == 0)
+        {
+          sectionBase += splatDataStorageSizeBytes + bucketsStorageSizeBytes;
+          continue;
+        }
+
+        const float compressionScaleFactor = bucketBlockSize / 2.0f / compressionScaleRange;
+        const size_t bucketsBase = sectionBase + bucketsMetaDataSizeBytes;
+        const size_t dataBase = sectionBase + bucketsStorageSizeBytes;
+
+        if (dataBase + splatDataStorageSizeBytes > fileBytes.size())
+        {
+          DEBUG(LOG_TAG, "File too small for section data");
+          return false;
+        }
+
+        const uint8_t *splatData = &data[dataBase];
+        const float *bucketArray = reinterpret_cast<const float *>(&data[bucketsBase]);
+        const uint32_t *partiallyFilledBucketLengths = reinterpret_cast<const uint32_t *>(&data[sectionBase]);
+
+        const uint32_t fullBucketSplats = fullBucketCount * bucketSize;
+        uint32_t partialBucketIndex = fullBucketCount;
+        uint32_t partialBucketBase = fullBucketSplats;
+
+        // Process each splat in this section
+        for (uint32_t i = 0; i < sectionSplatCount; ++i)
+        {
+          const size_t splatOffset = i * bytesPerSplat;
+
+          // Determine bucket index
+          uint32_t bucketIndex;
+          if (i < fullBucketSplats)
+          {
+            bucketIndex = i / bucketSize;
+          }
+          else
+          {
+            const uint32_t bucketLength = partiallyFilledBucketLengths[partialBucketIndex - fullBucketCount];
+            if (i >= partialBucketBase + bucketLength)
+            {
+              partialBucketIndex += 1;
+              partialBucketBase += bucketLength;
+            }
+            bucketIndex = partialBucketIndex;
+          }
+
+          // Read position
+          float x, y, z;
+          if (compressionLevel == 0)
+          {
+            memcpy(&x, &splatData[splatOffset + 0], sizeof(float));
+            memcpy(&y, &splatData[splatOffset + 4], sizeof(float));
+            memcpy(&z, &splatData[splatOffset + 8], sizeof(float));
+          }
+          else
+          {
+            uint16_t compressedX, compressedY, compressedZ;
+            memcpy(&compressedX, &splatData[splatOffset + 0], sizeof(uint16_t));
+            memcpy(&compressedY, &splatData[splatOffset + 2], sizeof(uint16_t));
+            memcpy(&compressedZ, &splatData[splatOffset + 4], sizeof(uint16_t));
+
+            x = (compressedX - compressionScaleRange) * compressionScaleFactor + bucketArray[3 * bucketIndex + 0];
+            y = (compressedY - compressionScaleRange) * compressionScaleFactor + bucketArray[3 * bucketIndex + 1];
+            z = (compressedZ - compressionScaleRange) * compressionScaleFactor + bucketArray[3 * bucketIndex + 2];
+          }
+
+          // Read scale
+          float scaleX, scaleY, scaleZ;
+          if (compressionLevel == 0)
+          {
+            memcpy(&scaleX, &splatData[splatOffset + compression.scaleOffsetBytes + 0], sizeof(float));
+            memcpy(&scaleY, &splatData[splatOffset + compression.scaleOffsetBytes + 4], sizeof(float));
+            memcpy(&scaleZ, &splatData[splatOffset + compression.scaleOffsetBytes + 8], sizeof(float));
+          }
+          else
+          {
+            uint16_t compressedScaleX, compressedScaleY, compressedScaleZ;
+            memcpy(&compressedScaleX, &splatData[splatOffset + compression.scaleOffsetBytes + 0], sizeof(uint16_t));
+            memcpy(&compressedScaleY, &splatData[splatOffset + compression.scaleOffsetBytes + 2], sizeof(uint16_t));
+            memcpy(&compressedScaleZ, &splatData[splatOffset + compression.scaleOffsetBytes + 4], sizeof(uint16_t));
+
+            scaleX = fromHalf(compressedScaleX);
+            scaleY = fromHalf(compressedScaleY);
+            scaleZ = fromHalf(compressedScaleZ);
+          }
+
+          // Read rotation (quaternion) - Spark uses W,X,Y,Z order
+          float quatW, quatX, quatY, quatZ;
+          if (compressionLevel == 0)
+          {
+            memcpy(&quatW, &splatData[splatOffset + compression.rotationOffsetBytes + 0], sizeof(float));
+            memcpy(&quatX, &splatData[splatOffset + compression.rotationOffsetBytes + 4], sizeof(float));
+            memcpy(&quatY, &splatData[splatOffset + compression.rotationOffsetBytes + 8], sizeof(float));
+            memcpy(&quatZ, &splatData[splatOffset + compression.rotationOffsetBytes + 12], sizeof(float));
+          }
+          else
+          {
+            uint16_t compressedQuatW, compressedQuatX, compressedQuatY, compressedQuatZ;
+            memcpy(&compressedQuatW, &splatData[splatOffset + compression.rotationOffsetBytes + 0], sizeof(uint16_t));
+            memcpy(&compressedQuatX, &splatData[splatOffset + compression.rotationOffsetBytes + 2], sizeof(uint16_t));
+            memcpy(&compressedQuatY, &splatData[splatOffset + compression.rotationOffsetBytes + 4], sizeof(uint16_t));
+            memcpy(&compressedQuatZ, &splatData[splatOffset + compression.rotationOffsetBytes + 6], sizeof(uint16_t));
+
+            quatW = fromHalf(compressedQuatW);
+            quatX = fromHalf(compressedQuatX);
+            quatY = fromHalf(compressedQuatY);
+            quatZ = fromHalf(compressedQuatZ);
+          }
+
+          // Read color (always 4 uint8 values: R, G, B, A)
+          const uint8_t r = splatData[splatOffset + compression.colorOffsetBytes + 0];
+          const uint8_t g = splatData[splatOffset + compression.colorOffsetBytes + 1];
+          const uint8_t b = splatData[splatOffset + compression.colorOffsetBytes + 2];
+          const uint8_t a = splatData[splatOffset + compression.colorOffsetBytes + 3];
+
+          // Call the splat callback with normalized values
+          splatCallback(
+            i,
+            x,
+            y,
+            z,
+            scaleX,
+            scaleY,
+            scaleZ,
+            quatX,
+            quatY,
+            quatZ,
+            quatW,
+            a / 255.0f, // opacity
+            r / 255.0f, // red
+            g / 255.0f, // green
+            b / 255.0f  // blue
+          );
+        }
+
+        sectionBase += splatDataStorageSizeBytes + bucketsStorageSizeBytes;
       }
 
-      DEBUG(LOG_TAG, "Successfully loaded KSplat file with %zu splats", splats.size());
+      DEBUG(LOG_TAG, "Successfully decoded KSplat file with %u splats", splatCount);
       return true;
     }
     catch (const std::exception &e)
     {
-      DEBUG(LOG_TAG, "Error loading KSplat file: %s", e.what());
+      DEBUG(LOG_TAG, "Error decoding KSplat file: %s", e.what());
       return false;
     }
   }
 
-  bool KsplatLoader::parseHeader(const std::vector<char> &data, KSplatHeader &header)
+  bool KsplatLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
-    if (data.size() < HEADER_SIZE_BYTES)
-    {
-      DEBUG(LOG_TAG, "File too small for KSplat header. Expected %zu bytes, got %zu", HEADER_SIZE_BYTES, data.size());
-      return false;
-    }
+    splats.clear();
 
-    // Parse header following SplatBuffer.parseHeader structure
-    const uint8_t *headerArrayUint8 = reinterpret_cast<const uint8_t *>(data.data());
-    const uint16_t *headerArrayUint16 = reinterpret_cast<const uint16_t *>(data.data());
-    const uint32_t *headerArrayUint32 = reinterpret_cast<const uint32_t *>(data.data());
-    const float *headerArrayFloat32 = reinterpret_cast<const float *>(data.data());
-
-    header.versionMajor = headerArrayUint8[0];
-    header.versionMinor = headerArrayUint8[1];
-    header.maxSectionCount = headerArrayUint32[1];
-    header.sectionCount = headerArrayUint32[2];
-    header.maxSplatCount = headerArrayUint32[3];
-    header.splatCount = headerArrayUint32[4];
-    header.compressionLevel = headerArrayUint16[10];
-
-    header.sceneCenter[0] = headerArrayFloat32[6];
-    header.sceneCenter[1] = headerArrayFloat32[7];
-    header.sceneCenter[2] = headerArrayFloat32[8];
-
-    // Default spherical harmonics coefficients if not present
-    header.minSphericalHarmonicsCoeff = headerArrayFloat32[9] != 0.0f ? headerArrayFloat32[9] : -7.5f;
-    header.maxSphericalHarmonicsCoeff = headerArrayFloat32[10] != 0.0f ? headerArrayFloat32[10] : 7.5f;
-
-    return true;
+    return decodeKsplat(
+      data,
+      [&splats](int numSplats)
+      {
+        splats.reserve(numSplats);
+      },
+      [&splats](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
+      {
+        builtin_scene::GaussianSplat splat;
+        splat.position[0] = x;
+        splat.position[1] = y;
+        splat.position[2] = z;
+        splat.scale[0] = scaleX;
+        splat.scale[1] = scaleY;
+        splat.scale[2] = scaleZ;
+        splat.rotation[0] = quatX;
+        splat.rotation[1] = quatY;
+        splat.rotation[2] = quatZ;
+        splat.rotation[3] = quatW;
+        splat.color[0] = r;
+        splat.color[1] = g;
+        splat.color[2] = b;
+        splat.opacity = opacity;
+        splats.push_back(splat);
+      });
   }
 
-  bool KsplatLoader::parseSectionHeaders(const std::vector<char> &data, const KSplatHeader &header, std::vector<KSplatSectionHeader> &sectionHeaders)
+  float KsplatLoader::fromHalf(uint16_t value)
   {
-    const size_t sectionHeadersOffset = HEADER_SIZE_BYTES;
-    const size_t sectionHeadersSize = header.maxSectionCount * SECTION_HEADER_SIZE_BYTES;
-
-    if (data.size() < sectionHeadersOffset + sectionHeadersSize)
-    {
-      DEBUG(LOG_TAG, "File too small for section headers. Expected %zu bytes, got %zu", sectionHeadersOffset + sectionHeadersSize, data.size());
-      return false;
-    }
-
-    sectionHeaders.clear();
-    sectionHeaders.reserve(header.maxSectionCount);
-
-    const uint16_t *sectionHeaderArrayUint16 = reinterpret_cast<const uint16_t *>(data.data() + sectionHeadersOffset);
-    const uint32_t *sectionHeaderArrayUint32 = reinterpret_cast<const uint32_t *>(data.data() + sectionHeadersOffset);
-    const float *sectionHeaderArrayFloat32 = reinterpret_cast<const float *>(data.data() + sectionHeadersOffset);
-
-    size_t sectionBase = HEADER_SIZE_BYTES + header.maxSectionCount * SECTION_HEADER_SIZE_BYTES;
-    size_t splatCountOffset = 0;
-
-    for (uint32_t i = 0; i < header.maxSectionCount; i++)
-    {
-      const size_t sectionHeaderBase = i * SECTION_HEADER_SIZE_BYTES;
-      const size_t sectionHeaderBaseUint16 = sectionHeaderBase / 2;
-      const size_t sectionHeaderBaseUint32 = sectionHeaderBase / 4;
-
-      KSplatSectionHeader sectionHeader;
-
-      sectionHeader.splatCount = sectionHeaderArrayUint32[sectionHeaderBaseUint32];
-      sectionHeader.maxSplatCount = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 1];
-      sectionHeader.bucketSize = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 2];
-      sectionHeader.bucketCount = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 3];
-      sectionHeader.bucketBlockSize = sectionHeaderArrayFloat32[sectionHeaderBaseUint32 + 4];
-      sectionHeader.bucketStorageSizeBytes = sectionHeaderArrayUint16[sectionHeaderBaseUint16 + 10];
-      sectionHeader.compressionScaleRange = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 6];
-      sectionHeader.storageSizeBytes = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 7];
-      sectionHeader.fullBucketCount = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 8];
-      sectionHeader.partiallyFilledBucketCount = sectionHeaderArrayUint32[sectionHeaderBaseUint32 + 9];
-      sectionHeader.sphericalHarmonicsDegree = sectionHeaderArrayUint16[sectionHeaderBaseUint16 + 20];
-
-      // Calculate derived fields
-      const CompressionLevel &compressionInfo = COMPRESSION_LEVELS[header.compressionLevel];
-
-      // For simplicity, assume degree 0 spherical harmonics (no SH)
-      const size_t sphericalHarmonicsComponentsPerSplat = 0; // Degree 0 = no SH components
-      const size_t sphericalHarmonicsBytesPerSplat = compressionInfo.bytesPerSphericalHarmonicsComponent * sphericalHarmonicsComponentsPerSplat;
-
-      sectionHeader.bytesPerSplat = compressionInfo.bytesPerCenter +
-                                    compressionInfo.bytesPerScale +
-                                    compressionInfo.bytesPerRotation +
-                                    compressionInfo.bytesPerColor +
-                                    sphericalHarmonicsBytesPerSplat;
-
-      sectionHeader.splatCountOffset = splatCountOffset;
-      sectionHeader.halfBucketBlockSize = sectionHeader.bucketBlockSize / 2.0f;
-
-      if (header.compressionLevel >= 1 && sectionHeader.compressionScaleRange > 0)
-      {
-        sectionHeader.compressionScaleFactor = sectionHeader.halfBucketBlockSize / (float)sectionHeader.compressionScaleRange;
-      }
-      else
-      {
-        sectionHeader.compressionScaleFactor = 1.0f;
-      }
-
-      const size_t bucketsMetaDataSizeBytes = sectionHeader.partiallyFilledBucketCount * 4;
-      const size_t bucketsStorageSizeBytes = sectionHeader.bucketStorageSizeBytes * sectionHeader.bucketCount + bucketsMetaDataSizeBytes;
-
-      sectionHeader.base = sectionBase;
-      sectionHeader.bucketsBase = sectionBase + bucketsMetaDataSizeBytes;
-      sectionHeader.dataBase = sectionBase + bucketsStorageSizeBytes;
-
-      sectionHeaders.push_back(sectionHeader);
-
-      sectionBase += sectionHeader.storageSizeBytes;
-      splatCountOffset += sectionHeader.maxSplatCount;
-    }
-
-    return true;
-  }
-
-  bool KsplatLoader::extractSectionSplats(const std::vector<char> &data, const KSplatHeader &header, const KSplatSectionHeader &sectionHeader, std::vector<builtin_scene::GaussianSplat> &splats)
-  {
-    if (sectionHeader.splatCount == 0)
-    {
-      return true; // Empty section is valid
-    }
-
-    const size_t sectionDataEnd = sectionHeader.dataBase + sectionHeader.splatCount * sectionHeader.bytesPerSplat;
-    if (data.size() < sectionDataEnd)
-    {
-      DEBUG(LOG_TAG, "File too small for section data. Expected %zu bytes, got %zu", sectionDataEnd, data.size());
-      return false;
-    }
-
-    const CompressionLevel &compressionInfo = COMPRESSION_LEVELS[header.compressionLevel];
-
-    // For compression level >= 1, we need bucket information
-    const float *bucketArray = nullptr;
-    const uint32_t *partiallyFilledBucketLengths = nullptr;
-
-    if (header.compressionLevel >= 1)
-    {
-      bucketArray = reinterpret_cast<const float *>(data.data() + sectionHeader.bucketsBase);
-      if (sectionHeader.partiallyFilledBucketCount > 0)
-      {
-        partiallyFilledBucketLengths = reinterpret_cast<const uint32_t *>(data.data() + sectionHeader.base);
-      }
-    }
-
-    // Extract splats
-    for (uint32_t localSplatIndex = 0; localSplatIndex < sectionHeader.splatCount; localSplatIndex++)
-    {
-      builtin_scene::GaussianSplat splat;
-
-      const size_t splatOffset = sectionHeader.dataBase + localSplatIndex * sectionHeader.bytesPerSplat;
-
-      // Read position (center)
-      if (header.compressionLevel == 0)
-      {
-        // Uncompressed: direct float values
-        if (!readBinary(data, splatOffset, splat.position[0]) ||
-            !readBinary(data, splatOffset + 4, splat.position[1]) ||
-            !readBinary(data, splatOffset + 8, splat.position[2]))
-        {
-          DEBUG(LOG_TAG, "Failed to read position for splat %u", localSplatIndex);
-          return false;
-        }
-      }
-      else
-      {
-        // Compressed: need to decompress relative to bucket center
-        uint16_t compressedX, compressedY, compressedZ;
-        if (!readBinary(data, splatOffset, compressedX) ||
-            !readBinary(data, splatOffset + 2, compressedY) ||
-            !readBinary(data, splatOffset + 4, compressedZ))
-        {
-          DEBUG(LOG_TAG, "Failed to read compressed position for splat %u", localSplatIndex);
-          return false;
-        }
-
-        // Find bucket for this splat
-        uint32_t bucketIndex = 0;
-        const uint32_t maxSplatIndexInFullBuckets = sectionHeader.fullBucketCount * sectionHeader.bucketSize;
-
-        if (localSplatIndex < maxSplatIndexInFullBuckets)
-        {
-          bucketIndex = localSplatIndex / sectionHeader.bucketSize;
-        }
-        else
-        {
-          // Handle partially filled buckets
-          uint32_t bucketSplatIndex = maxSplatIndexInFullBuckets;
-          bucketIndex = sectionHeader.fullBucketCount;
-          uint32_t partiallyFullBucketIndex = 0;
-
-          while (bucketSplatIndex < sectionHeader.splatCount)
-          {
-            uint32_t currentPartiallyFilledBucketSize = partiallyFilledBucketLengths[partiallyFullBucketIndex];
-            if (localSplatIndex >= bucketSplatIndex && localSplatIndex < bucketSplatIndex + currentPartiallyFilledBucketSize)
-            {
-              break;
-            }
-            bucketSplatIndex += currentPartiallyFilledBucketSize;
-            bucketIndex++;
-            partiallyFullBucketIndex++;
-          }
-        }
-
-        // Decompress position relative to bucket center
-        const float bucketCenterX = bucketArray[bucketIndex * 3];
-        const float bucketCenterY = bucketArray[bucketIndex * 3 + 1];
-        const float bucketCenterZ = bucketArray[bucketIndex * 3 + 2];
-
-        const float sf = sectionHeader.compressionScaleFactor;
-        const float sr = (float)sectionHeader.compressionScaleRange;
-
-        splat.position[0] = (compressedX - sr) * sf + bucketCenterX;
-        splat.position[1] = (compressedY - sr) * sf + bucketCenterY;
-        splat.position[2] = (compressedZ - sr) * sf + bucketCenterZ;
-      }
-
-      // Read scale
-      const size_t scaleOffset = splatOffset + compressionInfo.scaleOffsetBytes;
-      if (header.compressionLevel == 0)
-      {
-        float scaleValues[3];
-        if (!readBinary(data, scaleOffset, scaleValues[0]) ||
-            !readBinary(data, scaleOffset + 4, scaleValues[1]) ||
-            !readBinary(data, scaleOffset + 8, scaleValues[2]))
-        {
-          DEBUG(LOG_TAG, "Failed to read scale for splat %u", localSplatIndex);
-          return false;
-        }
-        splat.scale[0] = scaleValues[0];
-        splat.scale[1] = scaleValues[1];
-        splat.scale[2] = scaleValues[2];
-      }
-      else
-      {
-        uint16_t scaleValues[3];
-        if (!readBinary(data, scaleOffset, scaleValues[0]) ||
-            !readBinary(data, scaleOffset + 2, scaleValues[1]) ||
-            !readBinary(data, scaleOffset + 4, scaleValues[2]))
-        {
-          DEBUG(LOG_TAG, "Failed to read compressed scale for splat %u", localSplatIndex);
-          return false;
-        }
-        splat.scale[0] = fromHalfFloat(scaleValues[0]);
-        splat.scale[1] = fromHalfFloat(scaleValues[1]);
-        splat.scale[2] = fromHalfFloat(scaleValues[2]);
-      }
-
-      // Read rotation (quaternion: x, y, z, w)
-      const size_t rotationOffset = splatOffset + compressionInfo.rotationOffsetBytes;
-      if (header.compressionLevel == 0)
-      {
-        float rotationValues[4];
-        if (!readBinary(data, rotationOffset, rotationValues[0]) ||
-            !readBinary(data, rotationOffset + 4, rotationValues[1]) ||
-            !readBinary(data, rotationOffset + 8, rotationValues[2]) ||
-            !readBinary(data, rotationOffset + 12, rotationValues[3]))
-        {
-          DEBUG(LOG_TAG, "Failed to read rotation for splat %u", localSplatIndex);
-          return false;
-        }
-        splat.rotation[0] = rotationValues[0]; // x
-        splat.rotation[1] = rotationValues[1]; // y
-        splat.rotation[2] = rotationValues[2]; // z
-        splat.rotation[3] = rotationValues[3]; // w
-      }
-      else
-      {
-        uint16_t rotationValues[4];
-        if (!readBinary(data, rotationOffset, rotationValues[0]) ||
-            !readBinary(data, rotationOffset + 2, rotationValues[1]) ||
-            !readBinary(data, rotationOffset + 4, rotationValues[2]) ||
-            !readBinary(data, rotationOffset + 6, rotationValues[3]))
-        {
-          DEBUG(LOG_TAG, "Failed to read compressed rotation for splat %u", localSplatIndex);
-          return false;
-        }
-        splat.rotation[0] = fromHalfFloat(rotationValues[0]); // x
-        splat.rotation[1] = fromHalfFloat(rotationValues[1]); // y
-        splat.rotation[2] = fromHalfFloat(rotationValues[2]); // z
-        splat.rotation[3] = fromHalfFloat(rotationValues[3]); // w
-      }
-
-      // Read color (always 4 uint8 values: R, G, B, A)
-      const size_t colorOffset = splatOffset + compressionInfo.colorOffsetBytes;
-      uint8_t colorValues[4];
-      if (!readBinary(data, colorOffset, colorValues[0]) ||
-          !readBinary(data, colorOffset + 1, colorValues[1]) ||
-          !readBinary(data, colorOffset + 2, colorValues[2]) ||
-          !readBinary(data, colorOffset + 3, colorValues[3]))
-      {
-        DEBUG(LOG_TAG, "Failed to read color for splat %u", localSplatIndex);
-        return false;
-      }
-
-      // Convert from 0-255 to 0.0-1.0 range
-      splat.color[0] = colorValues[0] / 255.0f;
-      splat.color[1] = colorValues[1] / 255.0f;
-      splat.color[2] = colorValues[2] / 255.0f;
-      splat.opacity = colorValues[3] / 255.0f;
-
-      splats.push_back(splat);
-    }
-
-    return true;
-  }
-
-  float KsplatLoader::fromHalfFloat(uint16_t value)
-  {
-    // Simple half-float to float conversion
-    // This is a basic implementation; a proper implementation would use IEEE 754 conversion
+    // IEEE 754 half-float to single-float conversion
     uint32_t sign = (value & 0x8000) << 16;
     uint32_t exponent = (value & 0x7C00) >> 10;
     uint32_t mantissa = value & 0x03FF;
@@ -465,24 +374,6 @@ namespace builtin_scene::model_loaders
 
     std::memcpy(&value, &data[offset], sizeof(T));
     return true;
-  }
-
-  bool KsplatLoader::checkVersion(const KSplatHeader &header)
-  {
-    // Support version 0.1 and later (as per the JavaScript reference)
-    const uint8_t minVersionMajor = 0;
-    const uint8_t minVersionMinor = 1;
-
-    if (header.versionMajor == minVersionMajor && header.versionMinor >= minVersionMinor)
-    {
-      return true;
-    }
-    else if (header.versionMajor > minVersionMajor)
-    {
-      return true;
-    }
-
-    return false;
   }
 
   // Explicit template instantiations for the types we use
