@@ -2,7 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
-// #include <zlib.h> // TODO: Add zlib dependency to build system
+#include <zlib.h>
 
 #include "./spz_loader.hpp"
 
@@ -278,13 +278,12 @@ namespace builtin_scene::model_loaders
 
   bool SpzLoader::decompressGzip(const std::vector<char> &compressedData, std::vector<char> &decompressedData)
   {
-    DEBUG(LOG_TAG, "SPZ loader requires zlib for gzip decompression. Please ensure zlib is installed and linked.");
-    // TODO: Implement gzip decompression using zlib or add zlib dependency to build system
-    // For now, return false to indicate unsupported functionality
-    return false;
+    if (compressedData.empty())
+    {
+      DEBUG(LOG_TAG, "Empty compressed data");
+      return false;
+    }
 
-    /*
-    // NOTE: This code requires zlib to be linked. Uncomment after adding zlib dependency to build system.
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 
@@ -335,8 +334,8 @@ namespace builtin_scene::model_loaders
       return false;
     }
 
+    DEBUG(LOG_TAG, "Successfully decompressed gzip data: %zu -> %zu bytes", compressedData.size(), decompressedData.size());
     return true;
-    */
   }
 
   float SpzLoader::fromHalf(uint16_t value)
