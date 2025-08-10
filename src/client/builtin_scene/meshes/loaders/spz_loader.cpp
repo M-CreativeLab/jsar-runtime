@@ -2,7 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
-#include <zlib.h>
+#include <node/zlib.h>
 
 #include "./spz_loader.hpp"
 

@@ -61,11 +61,6 @@ tr_target_link_library(TransmuteClientLibrary ${TR_CRATE_BUILD_PATH} jsar_jsbind
 tr_target_link_thirdparty_library(TransmuteClientLibrary node)
 tr_target_link_skia_library(TransmuteClientLibrary)
 
-# Link zlib for SPZ format support
-find_package(ZLIB REQUIRED)
-target_link_libraries(TransmuteClientLibrary PRIVATE ${ZLIB_LIBRARIES})
-target_include_directories(TransmuteClientLibrary PRIVATE ${ZLIB_INCLUDE_DIRS})
-
 if(APPLE)
     target_link_libraries(TransmuteClientLibrary PRIVATE "-framework CoreFoundation")
     target_link_libraries(TransmuteClientLibrary PRIVATE "-framework Carbon")
