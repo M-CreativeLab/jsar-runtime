@@ -242,47 +242,66 @@ namespace builtin_scene
   {
     assert(program != nullptr);
 
-    auto viewProjection = glContext_->getUniformLocation(program, "viewProjection");
-    if (!viewProjection.has_value())
-      throw runtime_error("The viewProjection uniform location is not found.");
+    // forcibly set to right-handed
+    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED;
 
-    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED; // focily set to right-handed.
-    if (renderTarget != nullopt)
+    // Update `viewMatrix` if present
+    auto viewMatrix = glContext_->getUniformLocation(program, "viewMatrix");
+    if (viewMatrix.has_value())
     {
-      if (renderTarget->isMultiview())
-      {
-        auto viewProjectionR = glContext_->getUniformLocation(program, "viewProjectionR");
-        if (!viewProjectionR.has_value())
-          throw runtime_error("The viewProjectionR uniform location is not found in multiview mode.");
-
-        {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
-        }
-        {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-          glContext_->uniformMatrix4fv(viewProjectionR.value(), false, graph);
-        }
-        return;
-      }
-      else
-      {
-        auto view = renderTarget->view();
-        assert(view != nullptr);
-
-        if (view->eye() == XREye::kRight)
-        {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
-          return;
-        }
-      }
+      MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewMatrix, handedness);
+      glContext_->uniformMatrix4fv(viewMatrix.value(), false, graph);
     }
 
-    // Default view projection matrix
+    // Update `projectionMatrix` if present
+    auto projectionMatrix = glContext_->getUniformLocation(program, "projectionMatrix");
+    if (projectionMatrix.has_value())
     {
-      MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-      glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+      MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ProjectionMatrix, handedness);
+      glContext_->uniformMatrix4fv(projectionMatrix.value(), false, graph);
+    }
+
+    // Update `viewProjection`.
+    auto viewProjection = glContext_->getUniformLocation(program, "viewProjection");
+    if (viewProjection.has_value())
+    {
+      if (renderTarget != nullopt)
+      {
+        if (renderTarget->isMultiview())
+        {
+          auto viewProjectionR = glContext_->getUniformLocation(program, "viewProjectionR");
+          if (!viewProjectionR.has_value())
+            throw runtime_error("The viewProjectionR uniform location is not found in multiview mode.");
+
+          {
+            MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
+            glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+          }
+          {
+            MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
+            glContext_->uniformMatrix4fv(viewProjectionR.value(), false, graph);
+          }
+          return;
+        }
+        else
+        {
+          auto view = renderTarget->view();
+          assert(view != nullptr);
+
+          if (view->eye() == XREye::kRight)
+          {
+            MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
+            glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+            return;
+          }
+        }
+      }
+
+      // Default view projection matrix
+      {
+        MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
+        glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+      }
     }
   }
 
@@ -292,6 +311,12 @@ namespace builtin_scene
                                                                 bool forceUpdate)
   {
     assert(program != nullptr);
+
+    auto loc = glContext_->getUniformLocation(program, "modelMatrix");
+    if (!loc.has_value())
+    {
+      return nullopt;
+    }
 
     glm::mat4 matToUpdate;
     if (transform == nullptr || !transform->isDirty())
@@ -322,9 +347,6 @@ namespace builtin_scene
     }
     matToUpdate = postMat * matToUpdate;
 
-    auto loc = glContext_->getUniformLocation(program, "modelMatrix");
-    if (!loc.has_value())
-      throw runtime_error("The modelMatrix uniform location is not found.");
     glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
     return matToUpdate;
   }

@@ -28,15 +28,15 @@ namespace builtin_scene::meshes
     // Each splat will be rendered as an instanced quad
 
     // Quad vertices: position (x, y) and texture coordinates (u, v)
-    std::vector<float> vertices = {
-      -0.5f, -0.5f, // bottom-left
-      0.5f,
-      -0.5f, // bottom-right
-      0.5f,
-      0.5f, // top-right
-      -0.5f,
-      0.5f // top-left
+    // clang-format off
+    vector<float> vertices = {
+      -0.5f, -0.5f,
+      +0.5f, -0.5f,
+      +0.5f, +0.5f,
+      -0.5f, +0.5f
     };
+    // clang-format on
+
     insertVertex(glm::vec3(vertices[0], vertices[1], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
     insertVertex(glm::vec3(vertices[2], vertices[3], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     insertVertex(glm::vec3(vertices[4], vertices[5], 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f));

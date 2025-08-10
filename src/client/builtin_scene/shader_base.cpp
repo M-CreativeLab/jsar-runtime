@@ -1,6 +1,7 @@
 #include <client/graphics/webgl_shader.hpp>
 #include "./shader_base.hpp"
 #include "./material_base.hpp"
+#include "./shaders_store.gen.hpp"
 
 namespace builtin_scene
 {
@@ -46,5 +47,12 @@ namespace builtin_scene
     for (const auto &line : lines)
       r += line + "\n";
     return r + source;
+  }
+
+  ShaderSource ShaderRef::shader(const std::vector<std::string> &defines) const
+  {
+    if (shaders::SHADERS_STORE.find(name) == shaders::SHADERS_STORE.end())
+      throw std::runtime_error("The shader is not found: " + name);
+    return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
   }
 }

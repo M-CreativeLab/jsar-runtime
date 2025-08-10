@@ -112,10 +112,7 @@ namespace builtin_scene
           return false;
 
         auto material = getComponent<MeshMaterial3d>(entity);
-        assert(material != nullptr &&
-               "The material component must be valid on renderable mesh");
-
-        if (material->matchesPass(renderPass))
+        if (material && material->matchesPass(renderPass))
           entities.push_back({entity, mesh, material});
       }
 

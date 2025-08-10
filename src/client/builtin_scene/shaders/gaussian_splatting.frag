@@ -6,17 +6,19 @@ in vec3 vNdc;
 
 out vec4 fragColor;
 
-void main() {
+void main()
+{
   // Calculate distance from center - improved Gaussian falloff
   float dist = dot(vSplatUv, vSplatUv);
-  
+
   // Better Gaussian falloff for 3D Gaussian Splatting
-  float alpha = exp(-0.5 * dist) * vRgba.a;
-  
+  float alpha = exp(-0.5 * dist) * vRgba.a; // Adjusted for sharper falloff
+
   // Discard pixels with very low alpha
-  if (alpha < 0.001) {
+  if (alpha < 0.001)
+  {
     discard;
   }
-  
+
   fragColor = vec4(vRgba.rgb, alpha);
 }

@@ -42,7 +42,7 @@ namespace builtin_scene::materials
     auto maxStdDevOpt = glContext->getUniformLocation(program, "maxStdDev");
     if (maxStdDevOpt.has_value())
     {
-      glContext->uniform1f(maxStdDevOpt.value(), 3.0f); // Standard deviations to render
+      glContext->uniform1f(maxStdDevOpt.value(), 2.8f); // Standard deviations to render
     }
 
     auto minAlphaOpt = glContext->getUniformLocation(program, "minAlpha");
@@ -54,7 +54,7 @@ namespace builtin_scene::materials
     auto maxPixelRadiusOpt = glContext->getUniformLocation(program, "maxPixelRadius");
     if (maxPixelRadiusOpt.has_value())
     {
-      glContext->uniform1f(maxPixelRadiusOpt.value(), 100.0f); // Maximum pixel radius for splats
+      glContext->uniform1f(maxPixelRadiusOpt.value(), 1.0f); // Maximum pixel radius for splats
     }
 
     return true;
