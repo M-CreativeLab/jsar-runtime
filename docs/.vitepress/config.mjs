@@ -71,6 +71,7 @@ export default defineConfig({
         text: 'API Reference',
         link: '/api/browser-compat-data',
       },
+      { text: 'Articles', link: '/articles/spatial-browser-engine' },
       { text: 'Download', link: '/download' },
       { text: 'Changelog', link: '/changelogs/alpha' },
       { text: 'Blog', link: '/blog' },
@@ -186,6 +187,14 @@ export default defineConfig({
                 { text: 'Unity APIs', link: '/manual/references/embedder-guides/unity-apis' }
               ]
             }
+          ]
+        }
+      ],
+      '/articles/': [
+        {
+          text: 'Technical Articles',
+          items: [
+            { text: 'Understanding the Spatial Web Browser Engine', link: '/articles/spatial-browser-engine' },
           ]
         }
       ],
