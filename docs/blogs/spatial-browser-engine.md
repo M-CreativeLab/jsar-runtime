@@ -72,24 +72,70 @@ A Spatial Web Browser Engine is the runnable core (parsing, layout, styling, scr
 ### 4.4 XR & 3D Integration
 **Concept**: Native support for immersive viewing modes and spatial interaction paradigms.
 
-**JSAR Implementation**:
-- **Stereo Rendering**: Mono/stereo modes for flat screens and XR headsets
-- **Spatial Audio**: 3D audio spatialization enabled by default for all `<audio>` elements
-- **Spatial Images**: `spatial="stereo"` attribute for stereoscopic images
-- **Input Sources**: WebXR input sources (gaze, hand tracking, controllers)
+#### 4.4.1 Stereo Rendering
+**Introduction**: JSAR supports both mono and stereo rendering modes to provide immersive experiences across different display types, from traditional flat screens to advanced XR headsets.
 
-**Example**: An `<audio>` element automatically spatializes based on its 3D position, and users can hear where the sound is coming from as they move around.
+**JSAR Implementation**: The engine automatically detects the display capabilities and switches between mono rendering for standard displays and stereo rendering for VR/AR headsets, ensuring optimal visual fidelity for each platform.
+
+**Example**:
+```javascript
+// JSAR automatically handles stereo rendering based on device capabilities
+const canvas = document.createElement('canvas');
+canvas.style.transform = 'translate3d(0, 0, -2m)';
+// Content renders in stereo when viewed through VR headset
+```
+
+#### 4.4.2 Spatial Audio System
+**Introduction**: JSAR provides automatic 3D audio spatialization for all audio elements without requiring complex Web Audio API setup, making spatial audio accessible to all web developers.
+
+**JSAR Implementation**: Every `<audio>` element automatically gains spatial properties based on its 3D transform position, with distance attenuation, directional audio, and environmental acoustics applied automatically.
+
+**Example**:
+```html
+<audio src="ambient.ogg" autoplay loop 
+       style="transform: translate3d(-5m, 2m, 0);"></audio>
+<!-- Audio automatically plays from the left side, 2 meters up -->
+```
+
+#### 4.4.3 Spatial Images
+**Introduction**: JSAR supports stereoscopic images that provide true depth perception in XR environments through the `spatial="stereo"` attribute extension.
+
+**JSAR Implementation**: Images can be marked as stereoscopic, and JSAR handles the proper rendering to each eye for depth effects, supporting both side-by-side and over-under stereo formats.
+
+**Example**:
+```html
+<img src="stereo-photo.jpg" spatial="stereo" 
+     style="transform: translate3d(0, 1.5m, -3m);" />
+<!-- Displays with proper depth separation in VR -->
+```
+
+#### 4.4.4 WebXR Input Sources
+**Introduction**: JSAR integrates seamlessly with WebXR Device API to support various input methods including gaze tracking, hand tracking, and motion controllers.
+
+**JSAR Implementation**: Standard WebXR input events work naturally with spatial DOM elements, allowing developers to use familiar web APIs for spatial interactions.
+
+**Example**:
+```javascript
+// Standard WebXR input works with spatial elements
+document.querySelector('.spatial-button').addEventListener('click', (event) => {
+  // Triggered by gaze, hand tracking, or controller input
+  console.log('Spatial button clicked:', event.inputSource.handedness);
+});
+```
 
 ### 4.5 Performance Batching
 **Concept**: Aggressive optimization to minimize GPU draw calls despite rich spatial UI.
 
+**Why This Is Possible**: JSAR achieves exceptional batching performance because all HTML elements—whether `<div>`, `<p>`, `<img>`, or even text nodes—are fundamentally rendered as textured quads in 3D space. Since every element shares the same underlying geometric primitive (a quad), they can be efficiently batched together with just different positions, sizes, and textures/materials. This unified rendering approach allows hundreds of diverse DOM elements to be drawn in a single GPU call.
+
 **JSAR Implementation**:
 - Target ≤10 draw calls per frame (vs hundreds/thousands in classic browsers)
 - Renderer refactors from v0.8.x→v0.9.0 with layer calculation optimization
-- Dynamic batching of similar spatial elements
+- Dynamic batching of similar spatial elements using shared quad geometry
 - Offscreen pass refinement for static vs dynamic content
+- Texture atlasing for multiple elements sharing similar styling
 
-**Example**: A complex spatial dashboard with 50+ UI panels batches into just 3-5 GPU draw calls, maintaining 90Hz in VR.
+**Example**: A complex spatial dashboard with 50+ UI panels batches into just 3-5 GPU draw calls, maintaining 90Hz in VR because all panels are quads with different transforms and textures.
 
 ### 4.6 Developer Experience
 **Concept**: Familiar debugging tools work in spatial environments.
