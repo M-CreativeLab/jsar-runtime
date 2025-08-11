@@ -258,28 +258,25 @@ namespace builtin_scene::model_loaders
           const uint8_t b = splatData[splatOffset + compression.colorOffsetBytes + 2];
           const uint8_t a = splatData[splatOffset + compression.colorOffsetBytes + 3];
 
-          // Convert from 3DGS coordinate system (Y-down) to OpenGL coordinate system (Y-up)
-          // This fixes the Y-axis flip issue commonly seen when loading 3DGS datasets
-          float convertedY = -y;
-          float convertedZ = -z;
+          // Debug logging for first few splats to check values
+          if (i < 5)
+          {
+            DEBUG(LOG_TAG, "Splat %d: pos=(%.3f,%.3f,%.3f) scale=(%.3f,%.3f,%.3f) quat=(%.3f,%.3f,%.3f,%.3f) color=(%.3f,%.3f,%.3f,%.3f)", i, x, y, z, scaleX, scaleY, scaleZ, quatX, quatY, quatZ, quatW, r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+          }
 
-          // For rotation quaternion, we need to adjust for the Y-flip
-          // When flipping Y-axis, we need to negate the Y and Z components of the quaternion
-          float convertedQuatY = -quatY;
-          float convertedQuatZ = -quatZ;
-
-          // Call the splat callback with converted coordinates
+          // Call the splat callback with original coordinates (no conversion)
+          // Unlike SPZ format, some ksplat files may already be in OpenGL coordinate system
           splatCallback(
             i,
             x,
-            convertedY,
-            convertedZ,
+            y,
+            z,
             scaleX,
             scaleY,
             scaleZ,
             quatX,
-            convertedQuatY,
-            convertedQuatZ,
+            quatY,
+            quatZ,
             quatW,
             a / 255.0f, // opacity
             r / 255.0f, // red
