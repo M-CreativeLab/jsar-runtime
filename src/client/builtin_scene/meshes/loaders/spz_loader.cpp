@@ -220,6 +220,7 @@ namespace builtin_scene::model_loaders
         // Convert from 3DGS coordinate system (Y-down) to OpenGL coordinate system (Y-up)
         // This fixes the Y-axis flip issue commonly seen when loading 3DGS datasets
         float convertedY = -centers[i3 + 1];
+        float convertedZ = -centers[i3 + 2];
 
         // For rotation quaternion, we need to adjust for the Y-flip
         // When flipping Y-axis, we need to negate the Y and Z components of the quaternion
@@ -230,7 +231,7 @@ namespace builtin_scene::model_loaders
           i,
           centers[i3],
           convertedY,
-          centers[i3 + 2],
+          convertedZ,
           scales[i3],
           scales[i3 + 1],
           scales[i3 + 2],

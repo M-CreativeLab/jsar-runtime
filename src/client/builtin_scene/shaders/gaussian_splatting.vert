@@ -56,12 +56,62 @@ vec4 mat3ToQuat(mat3 m) {
 }
 
 mat3 quatToMat(vec4 q) {
-    // assumes q normalized
   float x = q.x, y = q.y, z = q.z, w = q.w;
   float xx = x * x, yy = y * y, zz = z * z;
   float xy = x * y, xz = x * z, yz = y * z;
   float wx = w * x, wy = w * y, wz = w * z;
   return mat3(1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy), 2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx), 2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy));
+}
+
+vec3 quatVec(vec4 q, vec3 v) {
+  vec3 t = 2.0 * cross(q.xyz, v);
+  return v + q.w * t + cross(q.xyz, t);
+}
+
+vec4 quatQuat(vec4 q1, vec4 q2) {
+  return vec4(
+    q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+    q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+    q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
+    q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+  );
+}
+
+void decomposeViewMatrix(
+  mat4 viewMatrix,
+  out vec3 viewPosition,
+  out vec4 viewQuaternion
+) {
+  mat3 viewRotMatrix = mat3(viewMatrix);
+  mat3 worldRotMatrix = transpose(viewRotMatrix);
+  float det = determinant(viewRotMatrix);
+
+  if (det > 0.0) 
+  {
+    viewQuaternion = mat3ToQuat(worldRotMatrix);
+  }
+  else
+  {
+    worldRotMatrix[2] = -worldRotMatrix[2];
+    viewQuaternion = mat3ToQuat(worldRotMatrix);
+  }
+
+  viewPosition = viewMatrix[3].xyz;
+}
+
+mat3 scaleQuaternionToMatrix(vec3 s, vec4 q) {
+  // Compute the matrix of scaling by s then rotating by q
+  return mat3(
+      s.x * (1.0 - 2.0 * (q.y * q.y + q.z * q.z)),
+      s.x * (2.0 * (q.x * q.y + q.w * q.z)),
+      s.x * (2.0 * (q.x * q.z - q.w * q.y)),
+      s.y * (2.0 * (q.x * q.y - q.w * q.z)),
+      s.y * (1.0 - 2.0 * (q.x * q.x + q.z * q.z)),
+      s.y * (2.0 * (q.y * q.z + q.w * q.x)),
+      s.z * (2.0 * (q.x * q.z + q.w * q.y)),
+      s.z * (2.0 * (q.y * q.z - q.w * q.x)),
+      s.z * (1.0 - 2.0 * (q.x * q.x + q.y * q.y))
+  );
 }
 
 void eigenDecomposeSym2(
@@ -101,9 +151,12 @@ void main() {
     return;
   }
 
+  vec3 renderToViewPos;
+  vec4 renderToViewQuat;
+  decomposeViewMatrix(viewMatrix, renderToViewPos, renderToViewQuat);
+
   // Transform splat center to world space then view space
-  vec3 viewCenter = quatVec(renderToViewQuat, center) + renderToViewPos;
-  // vec3 viewCenter = (viewMatrix * vec4(splatPosition, 1.0)).xyz;
+  vec3 viewCenter = quatVec(renderToViewQuat, splatPosition) + renderToViewPos;
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera
@@ -121,12 +174,8 @@ void main() {
     return;
   }
 
-  // Compute the 3D covariance matrix of the splat
-  mat3 viewRotationMatrix = mat3(viewMatrix);
-  mat3 splatRotationMatrix = quatToMat(normalize(splatRotation));
-  mat3 S = mat3(splatScale.x, 0.0, 0.0, 0.0, splatScale.y, 0.0, 0.0, 0.0, splatScale.z);
-
-  mat3 RS = viewRotationMatrix * (splatRotationMatrix * S);
+  vec4 viewQuaternion = quatQuat(renderToViewQuat, splatRotation);
+  mat3 RS = scaleQuaternionToMatrix(splatScale, viewQuaternion);
   mat3 cov3D = RS * transpose(RS);
 
   // Compute the Jacobian of the splat's projection at its center
@@ -176,13 +225,12 @@ void main() {
   vec2 pixelOffset = ev1 * (position.x * radius1) + ev2 * (position.y * radius2);
 
   // Compute the NDC coordinates for the ellipsoid's diagonal axes.
-  vec2 ndcOffset = pixelOffset / (0.5 * scaledRenderSize);
+  vec2 ndcOffset = (2.0 / scaledRenderSize) * pixelOffset;
   vec3 ndcCenter = clipCenter.xyz / clipCenter.w;
   vec3 ndc = vec3(ndcCenter.xy + ndcOffset, ndcCenter.z);
 
   // Pass data to fragment shader
   vSplatUv = position.xy * maxStdDev;
-  vRgba.rgb *= vRgba.a; // Premultiply alpha
   vNdc = ndc;
   gl_Position = vec4(ndc.xy * clipCenter.w, clipCenter.zw);
 }

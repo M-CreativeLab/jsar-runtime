@@ -107,7 +107,7 @@ namespace builtin_scene
       for (auto &splat : sortedSplats_)
       {
         glm::vec4 viewPos = viewMatrix * glm::vec4(splat.position, 1.0f);
-        splat.depth = viewPos.z; // Depth in view space
+        splat.depth = -viewPos.z; // Depth in view space
       }
 
       // Sort by depth (back to front for transparency blending)
