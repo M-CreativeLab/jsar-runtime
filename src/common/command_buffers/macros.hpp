@@ -139,7 +139,6 @@
   XX(GET_STRING, GetStringCommandBufferRequest, "GL::GetString")                                                                 \
   XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferRequest, "GL::GetShaderPrecisionFormat")                  \
   XX(GET_ERROR, GetErrorCommandBufferRequest, "GL::GetError")                                                                    \
-  XX(READ_PIXELS, ReadPixelsCommandBufferRequest, "GL::ReadPixels")                                                              \
   XX(CREATE_SAMPLER, CreateSamplerCommandBufferRequest, "GL::CreateSampler")                                                     \
   XX(DELETE_SAMPLER, DeleteSamplerCommandBufferRequest, "GL::DeleteSampler")                                                     \
   XX(BIND_SAMPLER, BindSamplerCommandBufferRequest, "GL::BindSampler")                                                           \
@@ -172,4 +171,3 @@
   XX(GET_STRING, GetStringCommandBufferResponse, "GL::GetString")                                                \
   XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse, "GL::GetShaderPrecisionFormat") \
   XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")                                                        \
-  XX(READ_PIXELS, ReadPixelsCommandBufferResponse, "GL::ReadPixels")

@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "../canvas/image_bitmap.hpp"
@@ -2658,40 +2659,6 @@ namespace webgl
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
       .ThrowAsJavaScriptException();
-  }
-
-  template <typename ObjectType, typename ContextType>
-  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::ReadPixels(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    if (info.Length() < 7)
-    {
-      Napi::TypeError::New(env, "readPixels() takes 7 arguments.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    int x = info[0].As<Napi::Number>().Int32Value();
-    int y = info[1].As<Napi::Number>().Int32Value();
-    int width = info[2].As<Napi::Number>().Int32Value();
-    int height = info[3].As<Napi::Number>().Int32Value();
-    uint32_t format = info[4].As<Napi::Number>().Uint32Value();
-    uint32_t type = info[5].As<Napi::Number>().Uint32Value();
-
-    if (!info[6].IsTypedArray())
-    {
-      Napi::TypeError::New(env, "readPixels() 7th argument(pixels) must be a TypedArray.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    auto typedArray = info[6].As<Napi::TypedArray>();
-    void* pixels = typedArray.ArrayBuffer().Data();
-    size_t offset = typedArray.ByteOffset();
-    void* pixelsWithOffset = static_cast<char*>(pixels) + offset;
-
-    glContext_->readPixels(x, y, width, height, format, type, pixelsWithOffset);
-    return env.Undefined();
   }
 
   template <typename ObjectType, typename ContextType>

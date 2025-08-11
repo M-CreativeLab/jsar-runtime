@@ -112,5 +112,6 @@ init(async () => {
 
   mesh = new THREE.Mesh(sphere, material);
   mesh.position.set(0.5, 0, -1.5);
+  scene.background = cubeTexture;
   scene.add(mesh);
 });

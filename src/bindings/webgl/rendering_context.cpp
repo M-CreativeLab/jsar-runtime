@@ -791,8 +791,7 @@ namespace webgl
     InstanceMethod("getParameter", &T::GetParameter),                           \
     InstanceMethod("getShaderPrecisionFormat", &T::GetShaderPrecisionFormat),   \
     InstanceMethod("getError", &T::GetError),                                   \
-    InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions),       \
-    InstanceMethod("readPixels", &T::ReadPixels)
+    InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions)
 
 #define WEBGL2_METHODS(T)                                                                 \
   InstanceMethod("readBuffer", &T::ReadBuffer),                                           \
@@ -1563,8 +1562,8 @@ namespace webgl
 
     auto typedArray = info[1].As<Napi::TypedArray>();
     auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const int32_t*>(static_cast<uint8_t*>(arrayBuffer.Data()) + typedArray.ByteOffset());
-    
+    auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+
     // Convert pointer to vector
     std::vector<int> values(data, data + 4);
     glContext_->vertexAttribI4iv(static_cast<int>(index), values);
@@ -1593,8 +1592,8 @@ namespace webgl
 
     auto typedArray = info[1].As<Napi::TypedArray>();
     auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const uint32_t*>(static_cast<uint8_t*>(arrayBuffer.Data()) + typedArray.ByteOffset());
-    
+    auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+
     // Convert pointer to vector
     std::vector<uint> values(data, data + 4);
     glContext_->vertexAttribI4uiv(static_cast<int>(index), values);
@@ -1824,19 +1823,21 @@ namespace webgl
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
     auto typedArray = info[2].As<Napi::TypedArray>();
     auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const float*>(static_cast<uint8_t*>(arrayBuffer.Data()) + typedArray.ByteOffset());
+    auto data = reinterpret_cast<const float *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
     size_t length = typedArray.ByteLength() / sizeof(float);
     std::vector<float> values(data, data + length);
-    
+
     // Debug output to check values received from JavaScript
     printf("[JS_BINDING_DEBUG] ClearBufferfv: buffer=%u, drawbuffer=%d, length=%zu, values=[", buffer, drawbuffer, length);
-    for (size_t i = 0; i < length && i < 4; i++) {
-      if (i > 0) printf(",");
+    for (size_t i = 0; i < length && i < 4; i++)
+    {
+      if (i > 0)
+        printf(",");
       printf("%f", values[i]);
     }
     printf("]\n");
     fflush(stdout);
-    
+
     glContext_->clearBufferfv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
     return env.Undefined();
   }
@@ -1875,7 +1876,7 @@ namespace webgl
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
     auto typedArray = info[2].As<Napi::TypedArray>();
     auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const int32_t*>(static_cast<uint8_t*>(arrayBuffer.Data()) + typedArray.ByteOffset());
+    auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
     size_t length = typedArray.ByteLength() / sizeof(int32_t);
     std::vector<int> values(data, data + length);
     glContext_->clearBufferiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
@@ -1916,7 +1917,7 @@ namespace webgl
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
     auto typedArray = info[2].As<Napi::TypedArray>();
     auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const uint32_t*>(static_cast<uint8_t*>(arrayBuffer.Data()) + typedArray.ByteOffset());
+    auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
     size_t length = typedArray.ByteLength() / sizeof(uint32_t);
     std::vector<unsigned int> values(data, data + length);
     glContext_->clearBufferuiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);

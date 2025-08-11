@@ -2231,19 +2231,6 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::readPixels(int x, int y, int width, int height, uint32_t format, uint32_t type, void* pixels)
-  {
-    auto req = ReadPixelsCommandBufferRequest(x, y, width, height, format, type);
-    sendCommandBufferRequest(req, true);
-    
-    // Wait for the response
-    auto response = recvResponse<ReadPixelsCommandBufferResponse>(COMMAND_BUFFER_READ_PIXELS_RES, req, 3000);
-    if (response != nullptr && response->pixelData != nullptr && pixels != nullptr)
-    {
-      memcpy(pixels, response->pixelData, response->pixelDataSize);
-    }
-  }
-
   void WebGL2Context::renderbufferStorageMultisample(
     WebGLRenderbufferBindingTarget target,
     int samples,

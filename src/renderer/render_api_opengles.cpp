@@ -2667,92 +2667,6 @@ private:
       DEBUG(DEBUG_TAG, "[%d] GL::GetError() => %d", options.isDefaultQueue(), res.error);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
-  TR_OPENGL_FUNC void OnReadPixels(ReadPixelsCommandBufferRequest *req,
-                                   renderer::TrContentRenderer *reqContentRenderer,
-                                   ApiCallOptions &options)
-  {
-    // Calculate the size of pixel data based on format and type
-    size_t pixelSize = 0;
-    switch (req->format) {
-      case GL_RGBA:
-      case GL_RGBA_INTEGER:
-        pixelSize = 4;
-        break;
-      case GL_RGB:
-      case GL_RGB_INTEGER:
-        pixelSize = 3;
-        break;
-      case GL_RG:
-      case GL_RG_INTEGER:
-        pixelSize = 2;
-        break;
-      case GL_RED:
-      case GL_RED_INTEGER:
-      case GL_ALPHA:
-      case WEBGL_LUMINANCE:
-      case GL_DEPTH_COMPONENT:
-      case GL_DEPTH_STENCIL:
-        pixelSize = 1;
-        break;
-      default:
-        pixelSize = 4; // Default to RGBA
-        break;
-    }
-    
-    size_t typeSize = 0;
-    switch (req->type) {
-      case GL_UNSIGNED_BYTE:
-      case GL_BYTE:
-        typeSize = 1;
-        break;
-      case GL_UNSIGNED_SHORT:
-      case GL_SHORT:
-      case GL_HALF_FLOAT:
-        typeSize = 2;
-        break;
-      case GL_UNSIGNED_INT:
-      case GL_INT:
-      case GL_FLOAT:
-        typeSize = 4;
-        break;
-      case GL_UNSIGNED_SHORT_5_6_5:
-      case GL_UNSIGNED_SHORT_4_4_4_4:
-      case GL_UNSIGNED_SHORT_5_5_5_1:
-        typeSize = 2;
-        pixelSize = 1; // These are packed formats
-        break;
-      case GL_UNSIGNED_INT_24_8:
-      case GL_UNSIGNED_INT_2_10_10_10_REV:
-        typeSize = 4;
-        pixelSize = 1; // These are packed formats
-        break;
-      default:
-        typeSize = 1; // Default to byte
-        break;
-    }
-    
-    size_t totalSize = req->width * req->height * pixelSize * typeSize;
-    void *pixelData = malloc(totalSize);
-    
-    if (pixelData != nullptr) {
-      glReadPixels(req->x, req->y, req->width, req->height, req->format, req->type, pixelData);
-      
-      ReadPixelsCommandBufferResponse res(req);
-      res.setPixelData(pixelData, totalSize);
-      
-      if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall)) {
-        DEBUG(DEBUG_TAG, "[%d] GL::ReadPixels(%d, %d, %d, %d, 0x%x, 0x%x)", 
-              options.isDefaultQueue(), req->x, req->y, req->width, req->height, req->format, req->type);
-      }
-      
-      reqContentRenderer->sendCommandBufferResponse(res);
-      free(pixelData);
-    } else {
-      // Handle memory allocation failure
-      ReadPixelsCommandBufferResponse res(req);
-      reqContentRenderer->sendCommandBufferResponse(res);
-    }
-  }
 };
 
 void RHI_OpenGL::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
@@ -3091,7 +3005,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
                                  GetShaderPrecisionFormatCommandBufferRequest,
                                  GetShaderPrecisionFormat)
       ADD_COMMAND_BUFFER_HANDLER(GET_ERROR, GetErrorCommandBufferRequest, GetError)
-      ADD_COMMAND_BUFFER_HANDLER(READ_PIXELS, ReadPixelsCommandBufferRequest, ReadPixels)
 #undef ADD_COMMAND_BUFFER_HANDLER
 #undef ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME
 

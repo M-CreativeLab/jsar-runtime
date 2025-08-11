@@ -533,7 +533,6 @@ namespace client_graphics
     std::vector<std::string> &getSupportedExtensions();
     bool supportsExtension(const std::string &extension);
     bool makeXRCompatible();
-    void readPixels(int x, int y, int width, int height, uint32_t format, uint32_t type, void* pixels);
 
   public:
     /**

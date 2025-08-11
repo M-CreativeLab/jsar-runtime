@@ -135,7 +135,19 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     if (urlObj == null) {
-      urlObj = new URL(codeOrUrl);
+      try {
+        urlObj = new URL(codeOrUrl);
+      } catch (error) {
+        // If codeOrUrl is not a valid URL (e.g., relative path), 
+        // treat it as a relative path and create a file:// URL
+        if (error instanceof TypeError && error.message.includes('Invalid URL')) {
+          console.warn(`Invalid URL detected: ${codeOrUrl}, treating as relative path`);
+          urlObj = new URL(codeOrUrl, 'file://');
+          codeOrUrl = urlObj.href;
+        } else {
+          throw error;
+        }
+      }
     }
 
     /**

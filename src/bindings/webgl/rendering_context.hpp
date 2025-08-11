@@ -180,7 +180,6 @@ namespace webgl
     Napi::Value GetShaderPrecisionFormat(const Napi::CallbackInfo &info);
     Napi::Value GetError(const Napi::CallbackInfo &info);
     Napi::Value GetSupportedExtensions(const Napi::CallbackInfo &info);
-    Napi::Value ReadPixels(const Napi::CallbackInfo &info);
 
   public:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);
