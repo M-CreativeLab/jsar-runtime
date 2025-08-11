@@ -30,10 +30,10 @@ namespace builtin_scene::meshes
     // Quad vertices: position (x, y) and texture coordinates (u, v)
     // clang-format off
     vector<float> vertices = {
-      -0.5f, -0.5f,
-      +0.5f, -0.5f,
-      +0.5f, +0.5f,
-      -0.5f, +0.5f
+      -1.0f, -1.0f,
+      +1.0f, -1.0f,
+      +1.0f, +1.0f,
+      -1.0f, +1.0f
     };
     // clang-format on
 
