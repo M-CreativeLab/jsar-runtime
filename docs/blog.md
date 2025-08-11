@@ -9,6 +9,20 @@ Technical insights, community updates, and deep dives into the spatial web revol
 
 ## Latest Posts
 
+### [Understanding the Spatial Web Browser Engine (JSAR)](./blogs/spatial-browser-engine.md)
+*August 2025 • Technical Architecture • Deep Dive*
+
+A comprehensive technical article explaining the core concepts, architectural decisions, and implementation details behind JSAR as a spatial web browser engine. Learn what makes a spatial browser different from traditional browsers and why JSAR was built from scratch.
+
+**What's covered:**
+- What is a Spatial Web Browser and how it differs from traditional browsers
+- Why existing browser engines aren't suitable for spatial computing
+- Core architectural pillars and implementation details
+- Performance considerations for XR environments
+- Real-world examples and code samples
+
+---
+
 ### [I Added Stereo `<img>` Rendering to Our Browser Engine — With Copilot](./blogs/stereo-img-rendering-copilot.md)
 *January 2025 • Technical Deep Dive • AI Collaboration*
 
