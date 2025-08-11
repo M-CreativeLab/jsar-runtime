@@ -55,14 +55,6 @@ vec4 mat3ToQuat(mat3 m) {
   return normalize(q);
 }
 
-mat3 quatToMat(vec4 q) {
-  float x = q.x, y = q.y, z = q.z, w = q.w;
-  float xx = x * x, yy = y * y, zz = z * z;
-  float xy = x * y, xz = x * z, yz = y * z;
-  float wx = w * x, wy = w * y, wz = w * z;
-  return mat3(1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy), 2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx), 2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy));
-}
-
 vec3 quatVec(vec4 q, vec3 v) {
   vec3 t = 2.0 * cross(q.xyz, v);
   return v + q.w * t + cross(q.xyz, t);
@@ -156,7 +148,8 @@ void main() {
   decomposeViewMatrix(viewMatrix, renderToViewPos, renderToViewQuat);
 
   // Transform splat center to world space then view space
-  vec3 viewCenter = quatVec(renderToViewQuat, splatPosition) + renderToViewPos;
+  vec3 worldCenter = (modelMatrix * vec4(splatPosition, 1.0)).xyz;
+  vec3 viewCenter = quatVec(renderToViewQuat, worldCenter) + renderToViewPos;
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera
@@ -174,8 +167,23 @@ void main() {
     return;
   }
 
-  vec4 viewQuaternion = quatQuat(renderToViewQuat, splatRotation);
-  mat3 RS = scaleQuaternionToMatrix(splatScale, viewQuaternion);
+  mat3 modelRotationScale = mat3(modelMatrix);
+  vec3 modelScale = vec3(
+      length(modelRotationScale[0]),
+      length(modelRotationScale[1]),
+      length(modelRotationScale[2])
+  );
+  vec3 transformedScale = splatScale * modelScale;
+  mat3 modelRotation = mat3(
+    modelRotationScale[0] / modelScale.x,
+    modelRotationScale[1] / modelScale.y,
+    modelRotationScale[2] / modelScale.z
+  );
+  vec4 modelQuat = mat3ToQuat(modelRotation);
+  vec4 transformedRotation = quatQuat(modelQuat, splatRotation);
+
+  vec4 viewQuaternion = quatQuat(renderToViewQuat, transformedRotation);
+  mat3 RS = scaleQuaternionToMatrix(transformedScale, viewQuaternion);
   mat3 cov3D = RS * transpose(RS);
 
   // Compute the Jacobian of the splat's projection at its center

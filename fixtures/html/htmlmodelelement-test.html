@@ -5,14 +5,29 @@
   <title>HTMLModelElement Test</title>
   <meta charset="UTF-8">
   <style>
-    input {
-      background-color: #f0f0f0;
+    body {
+      padding: 20px;
+      background-color: #ffffff94;
+      transform: translateZ(20px) translateY(100px);
+      border-radius: 50px;
+    }
+
+    h1 {
+      font-size: 80px;
+    }
+
+    p {
+      font-size: 40px;
     }
   </style>
 </head>
 
 <body>
-  <model src="https://sparkjs.dev/assets/splats/cat.spz" id="test-model"></model>
+  <h1>3D Gaussian Splatting</h1>
+  <p>https://sparkjs.dev/assets/splats/cat.spz</p>
+  <div style="height: 30px; width: 30px;">
+    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="test-model"></model>
+  </div>
 </body>
 
 </html>
