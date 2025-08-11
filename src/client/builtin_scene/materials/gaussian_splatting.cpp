@@ -29,33 +29,30 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("maxStdDev");
     LOAD_UNIFORM_LOCATION("minAlpha");
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
+    LOAD_UNIFORM_LOCATION("clipXY");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
     // Set default values for 3DGS parameters
     auto renderSizeOpt = glContext->getUniformLocation(program, "renderSize");
     if (renderSizeOpt.has_value())
-    {
       glContext->uniform2f(renderSizeOpt.value(), 1600.0f, 900.0f); // Default render size
-    }
 
     auto maxStdDevOpt = glContext->getUniformLocation(program, "maxStdDev");
     if (maxStdDevOpt.has_value())
-    {
       glContext->uniform1f(maxStdDevOpt.value(), sqrt(8)); // Standard deviations to render
-    }
 
     auto minAlphaOpt = glContext->getUniformLocation(program, "minAlpha");
     if (minAlphaOpt.has_value())
-    {
       glContext->uniform1f(minAlphaOpt.value(), 0.5f * (1.0f / 255.0f)); // Minimum alpha threshold
-    }
 
     auto maxPixelRadiusOpt = glContext->getUniformLocation(program, "maxPixelRadius");
     if (maxPixelRadiusOpt.has_value())
-    {
       glContext->uniform1f(maxPixelRadiusOpt.value(), 512.0f); // Maximum pixel radius for splats
-    }
+
+    auto clipXYOpt = glContext->getUniformLocation(program, "clipXY");
+    if (clipXYOpt.has_value())
+      glContext->uniform1f(clipXYOpt.value(), 1.4f);
 
     return true;
   }

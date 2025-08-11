@@ -7,6 +7,7 @@ uniform vec2 renderSize;
 uniform float maxStdDev;
 uniform float minAlpha;
 uniform float maxPixelRadius;
+uniform float clipXY;
 
 // Base quad attributes (per vertex)
 in vec3 position;
@@ -67,42 +68,27 @@ void eigenDecomposeSym2(
   float a,
   float b,
   float d,
+  float det,
   out float l1,
   out float l2,
   out vec2 v1,
   out vec2 v2
 ) {
   float trace = a + d;
-  float det   = a*d - b*b;
   float mid = 0.5 * trace;
-  float disc = mid*mid - det;
-  if (disc < 0.0) disc = 0.0;
+  float disc = max(0.0, mid * mid - det);
   float root = sqrt(disc);
   l1 = mid + root;
   l2 = mid - root;
-
-  vec2 v;
-  if (abs(b) > 1e-12) {
-    if (abs(l1 - a) > abs(b)) {
-      v = vec2(l1 - d, b);
-    } else {
-      v = vec2(b, l1 - a);
-    }
-  } else {
-    v = (a >= d) ? vec2(1,0) : vec2(0,1);
-  }
-
-  float len2 = dot(v,v);
-  if (len2 < 1e-24) {
-    v = vec2(1,0);
-  }
-  v1 = v * inversesqrt(max(len2, 1e-24));
+  
+  v1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, l1 - a));
   v2 = vec2(-v1.y, v1.x);
 }
 
 void main() {
   // Default to outside the frustum so it's discarded if we return early
   gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+  vRgba = vec4(splatColor, splatOpacity);
 
   // Early alpha test
   if (splatOpacity < minAlpha) {
@@ -110,21 +96,28 @@ void main() {
   }
 
   // Check for zero scales
-  if (length(splatScale) < 0.001) {
+  bvec3 zeroScales = equal(splatScale, vec3(0.0));
+  if (all(zeroScales)) {
     return;
   }
 
   // Transform splat center to world space then view space
-  vec3 viewCenter = (viewMatrix * vec4(splatPosition, 1.0)).xyz;
+  vec3 viewCenter = quatVec(renderToViewQuat, center) + renderToViewPos;
+  // vec3 viewCenter = (viewMatrix * vec4(splatPosition, 1.0)).xyz;
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera
-  if(viewCenter.z >= 0.0) {
+  if (viewCenter.z >= 0.0) {
     return;
   }
 
   // Discard splats outside near/far planes
   if (abs(clipCenter.z) >= clipCenter.w) {
+    return;
+  }
+
+  float clip = clipXY * clipCenter.w;
+  if (abs(clipCenter.x) > clip || abs(clipCenter.y) > clip) {
     return;
   }
 
@@ -150,39 +143,46 @@ void main() {
   mat3 cov2D = transpose(J) * cov3D * J;
   float a = cov2D[0][0];
   float d = cov2D[1][1];
-  float b = 0.5 * (cov2D[0][1] + cov2D[1][0]);
+  float b = cov2D[0][1];
 
   a = max(a, 0.0);
   d = max(d, 0.0);
 
+  // Store the original determinant for later
+  float origDet = a * d - b * b;
+
   // Add small blur amount for anti-aliasing
-  float blurAmount = 0.3;
+  float blurAmount = 0.15;
   a += blurAmount;
   d += blurAmount;
+
+  // Compute the determinant of the 2D covariance matrix after adjustment
+  float det = a * d - b * b;
+
+  // Compute anti-aliasing intensity scaling factor
+  float blurAdjust = sqrt(max(0.0, origDet / det));
+  vRgba.a *= blurAdjust;
+  if (vRgba.a < minAlpha) {
+    return;
+  }
 
   // Compute the eigenvalue and eigenvectors of the 2D covariance matrix
   float l1, l2;
   vec2 ev1, ev2;
-  eigenDecomposeSym2(a, b, d, l1, l2, ev1, ev2);
+  eigenDecomposeSym2(a, b, d, det, l1, l2, ev1, ev2);
 
-  l1 = max(l1, 0.0);
-  l2 = max(l2, 0.0);
-
-  float s1 = sqrt(l1);
-  float s2 = sqrt(l2);
-
-  float radius1 = min(maxPixelRadius, maxStdDev * s1);
-  float radius2 = min(maxPixelRadius, maxStdDev * s2);
+  float radius1 = min(maxPixelRadius, maxStdDev * sqrt(l1));
+  float radius2 = min(maxPixelRadius, maxStdDev * sqrt(l2));
   vec2 pixelOffset = ev1 * (position.x * radius1) + ev2 * (position.y * radius2);
 
   // Compute the NDC coordinates for the ellipsoid's diagonal axes.
   vec2 ndcOffset = pixelOffset / (0.5 * scaledRenderSize);
-  vec2 ndcCenter = clipCenter.xy / clipCenter.w;
-  vec3 ndc = vec3(ndcCenter + ndcOffset, clipCenter.z / clipCenter.w);
+  vec3 ndcCenter = clipCenter.xyz / clipCenter.w;
+  vec3 ndc = vec3(ndcCenter.xy + ndcOffset, ndcCenter.z);
 
   // Pass data to fragment shader
-  vRgba = vec4(splatColor, splatOpacity);
   vSplatUv = position.xy * maxStdDev;
+  vRgba.rgb *= vRgba.a; // Premultiply alpha
   vNdc = ndc;
   gl_Position = vec4(ndc.xy * clipCenter.w, clipCenter.zw);
 }
