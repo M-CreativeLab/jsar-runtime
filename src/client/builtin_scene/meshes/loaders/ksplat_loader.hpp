@@ -4,13 +4,14 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include "../../gaussian_splatting.hpp"
+#include <unordered_map>
+#include <client/builtin_scene/gaussian_splatting.hpp>
 
 namespace builtin_scene::model_loaders
 {
   /**
    * Ksplat file loader for 3D Gaussian Splatting models.
-   * Follows the Spark implementation pattern:
+   * Follows the Spark implementation pattern with correct endianness handling:
    * https://github.com/sparkjsdev/spark/blob/main/src/ksplat.ts
    */
   class KsplatLoader
@@ -19,9 +20,25 @@ namespace builtin_scene::model_loaders
     /**
      * Callback function type for processing each splat during loading.
      * Parameters: index, x, y, z, scaleX, scaleY, scaleZ, quatX, quatY, quatZ, quatW, opacity, r, g, b
+     *
+     * Note: the returned values are in the OpenGL coordinate system (Y-up).
      */
     using SplatCallback = std::function<void(
-      int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)>;
+      int index,
+      float x,
+      float y,
+      float z,
+      float scaleX,
+      float scaleY,
+      float scaleZ,
+      float quatX,
+      float quatY,
+      float quatZ,
+      float quatW,
+      float opacity,
+      float r,
+      float g,
+      float b)>;
 
     /**
      * Decode .ksplat file from data buffer using callback-based approach.
@@ -44,10 +61,6 @@ namespace builtin_scene::model_loaders
     static bool load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
 
   private:
-    // KSplat format constants following Spark implementation
-    static constexpr size_t HEADER_BYTES = 4096;
-    static constexpr size_t SECTION_BYTES = 1024;
-
     // Compression level definitions
     struct KsplatCompression
     {
@@ -64,6 +77,13 @@ namespace builtin_scene::model_loaders
     };
 
     static const KsplatCompression KSPLAT_COMPRESSION[3];
+    static const std::unordered_map<uint16_t, uint32_t> KSPLAT_SH_DEGREE_TO_COMPONENTS;
+
+    // Little-endian data reading functions (matching JavaScript DataView with littleEndian=true)
+    static float readFloat32LE(const uint8_t *data, size_t offset);
+    static uint32_t readUint32LE(const uint8_t *data, size_t offset);
+    static uint16_t readUint16LE(const uint8_t *data, size_t offset);
+    static uint8_t readUint8(const uint8_t *data, size_t offset);
 
     /**
      * Convert from half-float to float (for compression level 1).

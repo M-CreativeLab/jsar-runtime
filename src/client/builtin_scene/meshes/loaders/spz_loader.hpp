@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 #include <functional>
-#include "../../gaussian_splatting.hpp"
+#include <client/builtin_scene/gaussian_splatting.hpp>
 
 namespace builtin_scene::model_loaders
 {
@@ -23,7 +23,21 @@ namespace builtin_scene::model_loaders
      * Parameters: index, x, y, z, scaleX, scaleY, scaleZ, quatX, quatY, quatZ, quatW, opacity, r, g, b
      */
     using SplatCallback = std::function<void(
-      int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)>;
+      int index,
+      float x,
+      float y,
+      float z,
+      float scaleX,
+      float scaleY,
+      float scaleZ,
+      float quatX,
+      float quatY,
+      float quatZ,
+      float quatW,
+      float opacity,
+      float r,
+      float g,
+      float b)>;
 
     /**
      * Decode .spz file from data buffer using callback-based approach.

@@ -217,28 +217,30 @@ namespace builtin_scene::model_loaders
         const uint32_t i3 = i * 3;
         const uint32_t i4 = i * 4;
 
+        float x = centers[i3];
+        float y = centers[i3 + 1];
+        float z = centers[i3 + 2];
+        float scaleX = scales[i3];
+        float scaleY = scales[i3 + 1];
+        float scaleZ = scales[i3 + 2];
+        float quatX = quaternions[i4];
+        float quatY = quaternions[i4 + 1];
+        float quatZ = quaternions[i4 + 2];
+        float quatW = quaternions[i4 + 3];
+
         // Convert from 3DGS coordinate system (Y-down) to OpenGL coordinate system (Y-up)
-        // This fixes the Y-axis flip issue commonly seen when loading 3DGS datasets
-        float convertedY = -centers[i3 + 1];
-        float convertedZ = -centers[i3 + 2];
-
-        // For rotation quaternion, we need to adjust for the Y-flip
-        // When flipping Y-axis, we need to negate the Y and Z components of the quaternion
-        float convertedQuatY = -quaternions[i4 + 1];
-        float convertedQuatZ = -quaternions[i4 + 2];
-
         splatCallback(
           i,
-          centers[i3],
-          convertedY,
-          convertedZ,
-          scales[i3],
-          scales[i3 + 1],
-          scales[i3 + 2],
-          quaternions[i4],
-          convertedQuatY,
-          convertedQuatZ,
-          quaternions[i4 + 3],
+          x,
+          -y,
+          -z,
+          scaleX,
+          scaleY,
+          scaleZ,
+          quatX,
+          -quatY,
+          -quatZ,
+          quatW,
           alphas[i],
           colors[i3],
           colors[i3 + 1],
