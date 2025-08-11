@@ -14,5 +14,6 @@
 #include "./details/clear.hpp"
 #include "./details/states.hpp"
 #include "./details/properties.hpp"
+#include "./details/read_pixels.hpp"
 #include "./details/xr.hpp"
 #include "./details/metrics.hpp"

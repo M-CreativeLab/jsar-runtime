@@ -1490,6 +1490,88 @@ namespace webgl
   }
 
   template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib1f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "vertexAttrib1f() takes 2 arguments: index, x.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib1f(index, x);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib2f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "vertexAttrib2f() takes 3 arguments: index, x, y.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib2f(index, x, y);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib3f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "vertexAttrib3f() takes 4 arguments: index, x, y, z.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+    auto z = info[3].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib3f(index, x, y, z);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib4f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "vertexAttrib4f() takes 5 arguments: index, x, y, z, w.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+    auto z = info[3].As<Napi::Number>().FloatValue();
+    auto w = info[4].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib4f(index, x, y, z, w);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
   Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::GetActiveAttrib(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -2576,6 +2658,40 @@ namespace webgl
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
       .ThrowAsJavaScriptException();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::ReadPixels(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 7)
+    {
+      Napi::TypeError::New(env, "readPixels() takes 7 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int x = info[0].As<Napi::Number>().Int32Value();
+    int y = info[1].As<Napi::Number>().Int32Value();
+    int width = info[2].As<Napi::Number>().Int32Value();
+    int height = info[3].As<Napi::Number>().Int32Value();
+    uint32_t format = info[4].As<Napi::Number>().Uint32Value();
+    uint32_t type = info[5].As<Napi::Number>().Uint32Value();
+
+    if (!info[6].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "readPixels() 7th argument(pixels) must be a TypedArray.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto typedArray = info[6].As<Napi::TypedArray>();
+    void* pixels = typedArray.ArrayBuffer().Data();
+    size_t offset = typedArray.ByteOffset();
+    void* pixelsWithOffset = static_cast<char*>(pixels) + offset;
+
+    glContext_->readPixels(x, y, width, height, format, type, pixelsWithOffset);
+    return env.Undefined();
   }
 
   template <typename ObjectType, typename ContextType>

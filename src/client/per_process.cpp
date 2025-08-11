@@ -723,8 +723,12 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(cl
 
   auto after = chrono::steady_clock::now();
   auto duration = chrono::duration_cast<chrono::milliseconds>(after - before).count();
-  cerr << "Received command buffer response(" << commandTypeToStr(resp->type) << ") "
-       << "in " << duration << "ms which blocks the main thread." << endl;
+  if (resp != nullptr) {
+    cerr << "Received command buffer response(" << commandTypeToStr(resp->type) << ") "
+         << "in " << duration << "ms which blocks the main thread." << endl;
+  } else {
+    cerr << "Failed to receive command buffer response after " << duration << "ms timeout." << endl;
+  }
   return resp;
 }
 
