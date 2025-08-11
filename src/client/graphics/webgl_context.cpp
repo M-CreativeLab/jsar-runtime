@@ -1895,13 +1895,15 @@ namespace client_graphics
   {
     // Debug output to check values before creating command buffer request
     printf("[WEBGL_CONTEXT_DEBUG] clearBufferfv: buffer=%u, drawbuffer=%d, values.size()=%zu, values=[", static_cast<uint32_t>(buffer), drawbuffer, values.size());
-    for (size_t i = 0; i < values.size() && i < 4; i++) {
-      if (i > 0) printf(",");
+    for (size_t i = 0; i < values.size() && i < 4; i++)
+    {
+      if (i > 0)
+        printf(",");
       printf("%f", values[i]);
     }
     printf("]\n");
     fflush(stdout);
-    
+
     auto req = ClearBufferfvCommandBufferRequest(static_cast<uint32_t>(buffer), drawbuffer, values);
     printf("[WEBGL_CONTEXT_DEBUG] Sending clearBufferfv command buffer request\n");
     fflush(stdout);
@@ -2391,60 +2393,60 @@ namespace client_graphics
   }
 
   void WebGL2Context::vertexAttribI4i(const WebGLAttribLocation &loc, int x, int y, int z, int w)
-{
-  auto req = VertexAttribI4iCommandBufferRequest(loc.programId, loc.name, x, y, z, w);
-  if (loc.index.has_value())
-    req.setLoc(loc.index.value());
-  sendCommandBufferRequest(req);
-}
+  {
+    auto req = VertexAttribI4iCommandBufferRequest(loc.programId, loc.name, x, y, z, w);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
+    sendCommandBufferRequest(req);
+  }
 
-void WebGL2Context::vertexAttribI4i(int index, int x, int y, int z, int w)
-{
-  auto req = VertexAttribI4iCommandBufferRequest(0, index, x, y, z, w);
-  sendCommandBufferRequest(req);
-}
+  void WebGL2Context::vertexAttribI4i(int index, int x, int y, int z, int w)
+  {
+    auto req = VertexAttribI4iCommandBufferRequest(0, index, x, y, z, w);
+    sendCommandBufferRequest(req);
+  }
 
   void WebGL2Context::vertexAttribI4ui(const WebGLAttribLocation &loc, uint x, uint y, uint z, uint w)
-{
-  auto req = VertexAttribI4uiCommandBufferRequest(loc.programId, loc.name, x, y, z, w);
-  if (loc.index.has_value())
-    req.setLoc(loc.index.value());
-  sendCommandBufferRequest(req);
-}
+  {
+    auto req = VertexAttribI4uiCommandBufferRequest(loc.programId, loc.name, x, y, z, w);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
+    sendCommandBufferRequest(req);
+  }
 
-void WebGL2Context::vertexAttribI4ui(int index, uint x, uint y, uint z, uint w)
-{
-  auto req = VertexAttribI4uiCommandBufferRequest(0, index, x, y, z, w);
-  sendCommandBufferRequest(req);
-}
+  void WebGL2Context::vertexAttribI4ui(int index, uint x, uint y, uint z, uint w)
+  {
+    auto req = VertexAttribI4uiCommandBufferRequest(0, index, x, y, z, w);
+    sendCommandBufferRequest(req);
+  }
 
   void WebGL2Context::vertexAttribI4iv(const WebGLAttribLocation &loc, const vector<int> values)
-{
-  auto req = VertexAttribI4ivCommandBufferRequest(loc.programId, loc.name, values);
-  if (loc.index.has_value())
-    req.setLoc(loc.index.value());
-  sendCommandBufferRequest(req);
-}
+  {
+    auto req = VertexAttribI4ivCommandBufferRequest(loc.programId, loc.name, values);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
+    sendCommandBufferRequest(req);
+  }
 
-void WebGL2Context::vertexAttribI4iv(int index, const vector<int> values)
-{
-  auto req = VertexAttribI4ivCommandBufferRequest(0, index, values);
-  sendCommandBufferRequest(req);
-}
+  void WebGL2Context::vertexAttribI4iv(int index, const vector<int> values)
+  {
+    auto req = VertexAttribI4ivCommandBufferRequest(0, index, values);
+    sendCommandBufferRequest(req);
+  }
 
   void WebGL2Context::vertexAttribI4uiv(const WebGLAttribLocation &loc, const vector<uint> values)
-{
-  auto req = VertexAttribI4uivCommandBufferRequest(loc.programId, loc.name, values);
-  if (loc.index.has_value())
-    req.setLoc(loc.index.value());
-  sendCommandBufferRequest(req);
-}
+  {
+    auto req = VertexAttribI4uivCommandBufferRequest(loc.programId, loc.name, values);
+    if (loc.index.has_value())
+      req.setLoc(loc.index.value());
+    sendCommandBufferRequest(req);
+  }
 
-void WebGL2Context::vertexAttribI4uiv(int index, const vector<uint> values)
-{
-  auto req = VertexAttribI4uivCommandBufferRequest(0, index, values);
-  sendCommandBufferRequest(req);
-}
+  void WebGL2Context::vertexAttribI4uiv(int index, const vector<uint> values)
+  {
+    auto req = VertexAttribI4uivCommandBufferRequest(0, index, values);
+    sendCommandBufferRequest(req);
+  }
 
   void WebGL2Context::vertexAttribIPointer(const WebGLAttribLocation &loc,
                                            int size,
