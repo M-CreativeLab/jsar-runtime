@@ -217,17 +217,26 @@ namespace builtin_scene::model_loaders
         const uint32_t i3 = i * 3;
         const uint32_t i4 = i * 4;
 
+        // Convert from 3DGS coordinate system (Y-down) to OpenGL coordinate system (Y-up)
+        // This fixes the Y-axis flip issue commonly seen when loading 3DGS datasets
+        float convertedY = -centers[i3 + 1];
+
+        // For rotation quaternion, we need to adjust for the Y-flip
+        // When flipping Y-axis, we need to negate the Y and Z components of the quaternion
+        float convertedQuatY = -quaternions[i4 + 1];
+        float convertedQuatZ = -quaternions[i4 + 2];
+
         splatCallback(
           i,
           centers[i3],
-          centers[i3 + 1],
+          convertedY,
           centers[i3 + 2],
           scales[i3],
           scales[i3 + 1],
           scales[i3 + 2],
           quaternions[i4],
-          quaternions[i4 + 1],
-          quaternions[i4 + 2],
+          convertedQuatY,
+          convertedQuatZ,
           quaternions[i4 + 3],
           alphas[i],
           colors[i3],
@@ -258,6 +267,7 @@ namespace builtin_scene::model_loaders
       [&splats](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
       {
         builtin_scene::GaussianSplat splat;
+        // Note: Coordinate conversion is already applied in the callback from decodeSpz
         splat.position[0] = x;
         splat.position[1] = y;
         splat.position[2] = z;
