@@ -31,15 +31,87 @@ A Spatial Web Browser Engine is the runnable core (parsing, layout, styling, scr
 - **Developer Tooling**: Chrome DevTools Protocol (Runtime domain), WebSocket inspector, statistics endpoints
 
 ## 4. Core Pillars (Mapped to JSAR Capabilities)
-| Pillar | Spatial Meaning | JSAR Implementation Signals |
-| ------ | --------------- | --------------------------- |
-| Spatialized DOM | Elements carry 3D transforms intrinsically | CSS transform functions; layer field per LayoutObject (v0.9.0) |
-| Unified Graphics Pipeline | Mixed HTML/SVG/UI + 3D assets in one frame | Layered rendering, offscreen pass + computation graph |
-| Standards Compatibility | Reuse Web knowledge | HTML5 subset, CSS3 partial, WebGL1/2, WebXR spaces & input |
-| XR & 3D Integration | Stereo, multi-view, spatial inputs | Mono/stereo modes, WebXR input sources (gaze, hand, controller) |
-| Performance Batching | Low draw calls despite rich UI | Renderer refactors v0.8.x→v0.9.0; layer calculation |
-| Developer Experience | Familiar debugging in XR | CDP Runtime domain, inspector logs & statistics |
-| Extensibility | Host engine embedding | Unity loader OK; Unreal planned |
+
+### 4.1 Spatialized DOM
+**Concept**: Every HTML element carries intrinsic 3D spatial properties, not just 2D positioning.
+
+**JSAR Implementation**: 
+- CSS transform functions work natively in 3D space (`translate3d()`, `rotateX/Y/Z()`, `scale3d()`)
+- Layer field metadata per LayoutObject (introduced in v0.9.0) for depth ordering
+- Elements can be positioned using spatial units conceptually (meters, not just pixels)
+
+**Example**:
+```css
+.spatial-panel {
+  transform: translate3d(2m, 1.5m, -3m) rotateY(15deg);
+  /* Panel positioned 2m right, 1.5m up, 3m forward, rotated 15° */
+}
+```
+
+### 4.2 Unified Graphics Pipeline
+**Concept**: HTML/CSS content and 3D assets render together in a single cohesive frame.
+
+**JSAR Implementation**:
+- Layered rendering system with discrete passes
+- Offscreen pass + computation graph for mixed content
+- WebGL canvas elements seamlessly integrate with HTML DOM elements
+
+**Example**: A virtual museum where `<div>` info panels, `<canvas>` WebGL artifacts, and `<audio>` narration all exist in the same 3D scene with proper depth ordering.
+
+### 4.3 Standards Compatibility
+**Concept**: Developers can reuse existing Web knowledge instead of learning proprietary 3D APIs.
+
+**JSAR Implementation**:
+- HTML5 subset: `<canvas>`, `<img>`, `<audio>`, form elements, semantic sections
+- CSS3 partial: transforms, gradients, grid layout, text styling
+- JavaScript APIs: DOM manipulation, WebGL1/2, WebXR Device API
+- Modern standards: ECMAScript modules, Web Workers, WebAssembly
+
+**Example**: Existing web developers can create spatial UIs using familiar `<div>`, CSS Grid, and JavaScript without learning Unity or Unreal Engine-specific APIs.
+
+### 4.4 XR & 3D Integration
+**Concept**: Native support for immersive viewing modes and spatial interaction paradigms.
+
+**JSAR Implementation**:
+- **Stereo Rendering**: Mono/stereo modes for flat screens and XR headsets
+- **Spatial Audio**: 3D audio spatialization enabled by default for all `<audio>` elements
+- **Spatial Images**: `spatial="stereo"` attribute for stereoscopic images
+- **Input Sources**: WebXR input sources (gaze, hand tracking, controllers)
+
+**Example**: An `<audio>` element automatically spatializes based on its 3D position, and users can hear where the sound is coming from as they move around.
+
+### 4.5 Performance Batching
+**Concept**: Aggressive optimization to minimize GPU draw calls despite rich spatial UI.
+
+**JSAR Implementation**:
+- Target ≤10 draw calls per frame (vs hundreds/thousands in classic browsers)
+- Renderer refactors from v0.8.x→v0.9.0 with layer calculation optimization
+- Dynamic batching of similar spatial elements
+- Offscreen pass refinement for static vs dynamic content
+
+**Example**: A complex spatial dashboard with 50+ UI panels batches into just 3-5 GPU draw calls, maintaining 90Hz in VR.
+
+### 4.6 Developer Experience
+**Concept**: Familiar debugging tools work in spatial environments.
+
+**JSAR Implementation**:
+- Chrome DevTools Protocol (CDP) integration with Runtime domain
+- WebSocket inspector endpoints for real-time debugging
+- Statistics and log endpoints for performance monitoring
+- MDN-compatible API documentation structure
+
+**Example**: Developers can inspect DOM elements, modify CSS, and debug JavaScript in a spatial app using familiar Chrome DevTools.
+
+### 4.7 Extensibility
+**Concept**: The browser engine embeds as a library into existing 3D engines and workflows.
+
+**JSAR Implementation**:
+- Unity loader available for Unity 3D integration
+- Unreal Engine support planned
+- Native APIs for custom embedder integration
+- Configurable rendering backends (OpenGL, Metal, D3D11)
+
+**Example**: A Unity VR game can embed a JSAR web browser as a virtual computer screen or floating UI panel within the game world.
 
 ## 5. How JSAR Realizes the Concept
 Drawn from changelog (alpha) & README:
@@ -50,15 +122,55 @@ Drawn from changelog (alpha) & README:
 - **Tooling & Debugging**: Chrome DevTools Protocol integration, WebSocket endpoints, MDN-compatible compatibility data structure, statistics/log endpoints.
 
 ## 6. Architectural Comparison (Classic vs Spatial)
-| Aspect | Classic Browser | JSAR Spatial Engine |
-| ------ | --------------- | ------------------- |
-| Primary Surface | 2D viewport composited to screen | 3D world / XR reference spaces |
-| Transform Stage | Late compositor layer transforms | Native element spatial transform ownership |
-| Hit Testing | 2D box model + stacking contexts | Ray/volume intersections w/ depth-aware ordering |
-| Draw Submission | Many layers & paints | Intentional batching (≤ ~10 UI draws) |
-| Input Sources | Mouse, touch, keyboard | Gaze, hand, controller, (future) eye, anchors |
-| Embedding | System window/tab | Library embedded in host 3D engine |
-| Pipeline Control | Limited per-pass hooks | Explicit pass lifecycle APIs |
+
+### 6.1 Primary Surface Differences
+**Classic Browser**: The fundamental rendering target is a 2D rectangular viewport that gets composited to the screen. All content is ultimately flattened onto this 2D surface, even when CSS 3D transforms are applied.
+
+**JSAR Spatial Engine**: The primary surface is a 3D world coordinate system or WebXR reference spaces. Content exists natively in 3D space with true volumetric positioning, not flattened projections.
+
+*Impact*: This architectural difference enables true spatial interfaces where UI elements can exist behind, in front of, or alongside 3D objects with proper occlusion and depth relationships.
+
+### 6.2 Transform Stage Processing
+**Classic Browser**: 3D transforms are applied late in the rendering pipeline at the compositor stage. The layout engine still operates in 2D, with 3D effects added as a post-processing step.
+
+**JSAR Spatial Engine**: Elements have native spatial transform ownership from the layout stage. The transform is part of the element's core spatial identity, not an aftereffect.
+
+*Impact*: This enables true spatial hit-testing, depth-aware interactions, and eliminates the disconnect between layout space and visual space.
+
+### 6.3 Hit Testing Methods
+**Classic Browser**: Uses 2D box model calculations with stacking context ordering. Ray casting is simulated by projecting 3D transforms back to 2D coordinates.
+
+**JSAR Spatial Engine**: Implements true ray/volume intersection testing with depth-aware ordering. Spatial elements can be tested for intersection in 3D space using their actual geometric bounds.
+
+*Impact*: Enables natural spatial interaction paradigms like gaze-based selection, hand tracking, and controller pointing with accurate depth perception.
+
+### 6.4 Draw Submission Strategy
+**Classic Browser**: Generates hundreds to thousands of GPU draw calls per frame due to layer-based rendering optimization for 2D painting and invalidation. Each CSS layer, text run, and visual effect can create separate draw calls.
+
+**JSAR Spatial Engine**: Employs intentional batching strategies targeting ≤10 draw calls per frame for spatial UI elements. Uses aggressive batching, instancing, and spatial culling to meet XR performance requirements (90-120Hz).
+
+*Impact*: This dramatic reduction in draw calls is essential for XR headsets where GPU budget is limited and frame rate drops cause motion sickness.
+
+### 6.5 Input Source Architecture
+**Classic Browser**: Designed around mouse, touch, and keyboard input. XR inputs are emulated by synthesizing mouse events from controller positions.
+
+**JSAR Spatial Engine**: Native support for spatial input sources including gaze rays, articulated hand tracking, 6-DOF controllers, and future technologies like eye tracking and spatial anchors.
+
+*Impact*: Enables natural multimodal interaction in spatial environments without the limitations of mouse event emulation.
+
+### 6.6 Embedding Model
+**Classic Browser**: Operates as a system-level application creating windows or tabs. Designed to be the primary application rather than a component.
+
+**JSAR Spatial Engine**: Functions as a library that embeds within host 3D engines (Unity, Unreal, custom). The spatial browser becomes a component within larger 3D applications.
+
+*Impact*: Allows existing 3D applications and games to incorporate web content as spatial UI elements or information panels.
+
+### 6.7 Pipeline Control Granularity
+**Classic Browser**: Provides limited hooks into the rendering pipeline. Developers can influence layout and styling but have minimal control over the actual rendering passes.
+
+**JSAR Spatial Engine**: Exposes explicit pass lifecycle APIs (`onBeforeRendering`, `onOpaquesRenderPass`, `onTransparentsRenderPass`, `onAfterRendering`) allowing fine-grained integration with host rendering systems.
+
+*Impact*: Enables advanced rendering techniques like custom depth sorting, multi-pass effects, and integration with existing 3D engine rendering pipelines.
 
 ## 7. Example Scenarios
 ### 7.1 Virtual Museum Exhibit
@@ -120,15 +232,66 @@ Multiple document contexts (future `<iframe>`) arranged on a curved console; bac
 - **Security & Sandboxing**: Multi-document via `<iframe>` with isolation boundaries
 - **High-Level Spatial UI Primitives**: Radial menus, volumetric scrollers, anchored HUD frameworks
 
-## 11. Conclusion
-A Spatial Web Browser redefines "page" as a spatial scene graph of standard Web elements. JSAR implements a Spatial Web Browser Engine from first principles to achieve deep 3D integration, performance-focused batching, and XR-native input—all while keeping Web standards familiar. Rewriting (instead of retrofitting) yields architectural clarity and long-term agility.
+## 11. JSAR-Specific Spatial Features
 
-## 12. Next Steps
-For more technical details and hands-on guides:
-1. Explore the [User Manual](/manual/introduction) for practical implementation guidance
-2. Check the [API Reference](/api/embedder) for integration details  
-3. Review the [Changelog](/changelogs/alpha) for recent developments
-4. Try the [Unity Loader](https://github.com/M-CreativeLab/jsar-loader-unity) for Unity integration
+### 11.1 Spatial Audio System
+JSAR provides automatic **3D audio spatialization** for all audio content without requiring complex Web Audio API setup.
+
+**Key Features**:
+- **Automatic Positioning**: Every `<audio>` element is automatically positioned in 3D space based on its containing element's spatial transform
+- **No Manual Setup**: Unlike traditional browsers that require `AudioListener` and `PannerNode` configuration, JSAR handles spatialization automatically
+- **Natural Audio Falloff**: Audio volume and stereo positioning change naturally as users move through the spatial environment
+
+**Example**:
+```html
+<!-- Audio automatically positioned at the panel's 3D location -->
+<div class="info-panel" style="transform: translate3d(2m, 1m, -3m);">
+  <h2>Historical Artifact</h2>
+  <audio src="narration.mp3" autoplay loop></audio>
+</div>
+```
+
+As users move around the spatial scene, they can naturally locate the audio source by ear, creating intuitive spatial navigation and immersive audio experiences.
+
+### 11.2 Spatial Images (Stereoscopic Support)
+JSAR natively supports **spatial images** that display different content to each eye for true 3D stereoscopic effects.
+
+**Key Features**:
+- **Stereo Attribute**: Simple `spatial="stereo"` attribute on standard `<img>` elements
+- **Side-by-Side Format**: Uses standard side-by-side stereo image format (left half for left eye, right half for right eye)
+- **Graceful Fallback**: Displays as regular images in non-stereo environments
+- **Standard Integration**: Works with all normal image features (CSS styling, JavaScript manipulation)
+
+**Example**:
+```html
+<!-- Regular image -->
+<img src="regular-photo.jpg" style="width: 300px; height: 200px;" />
+
+<!-- Spatial stereo image -->
+<img src="stereo-landscape.jpg" 
+     spatial="stereo" 
+     style="width: 300px; height: 150px;" 
+     alt="3D landscape view" />
+```
+
+**JavaScript API**:
+```javascript
+// Create spatial images dynamically
+const spatialImg = document.createElement('img');
+spatialImg.src = 'stereo-content.jpg';
+spatialImg.setAttribute('spatial', 'stereo');
+document.body.appendChild(spatialImg);
+
+// Check if image is spatial
+if (img.getAttribute('spatial') === 'stereo') {
+  console.log('This image has 3D depth');
+}
+```
+
+These spatial images enable developers to create immersive photo galleries, 3D documentation, and stereoscopic user interfaces using familiar HTML image elements.
+
+## 12. Conclusion
+A Spatial Web Browser redefines "page" as a spatial scene graph of standard Web elements. JSAR implements a Spatial Web Browser Engine from first principles to achieve deep 3D integration, performance-focused batching, and XR-native input—all while keeping Web standards familiar. Rewriting (instead of retrofitting) yields architectural clarity and long-term agility.
 
 ---
 *Prepared referencing README and `docs/changelogs/alpha.md`.*
