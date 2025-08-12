@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
-#include "include/core/SkBitmap.h"
-#include "include/core/SkCanvas.h"
+#include <skia/include/core/SkBitmap.h>
+#include <skia/include/core/SkCanvas.h>
 
 namespace builtin_scene::text::sdf
 {
@@ -78,12 +78,15 @@ namespace builtin_scene::text::sdf
   private:
     SDFParams params_;
 
-    // Internal methods for SDF generation
-    std::vector<uint8_t> generateSDF(const std::vector<uint8_t> &bitmap,
-                                     int width,
-                                     int height);
-    bool updateAlphaChannelWithSDF(SkBitmap &bitmap, const std::vector<uint8_t> &sdfData);
-    double distanceToEdge(const std::vector<uint8_t> &bitmap, int width, int height, int x, int y, bool inside);
+    // Internal methods for SDF generation using EDT algorithm
     std::vector<uint8_t> extractAlphaChannel(const SkBitmap &bitmap);
+    bool generateSDFFromGrids(SkBitmap &bitmap,
+                              const std::vector<double> &gridOuter,
+                              const std::vector<double> &gridInner);
+
+    // Euclidean Distance Transform (EDT) algorithm implementation
+    // Based on "Distance Transforms of Sampled Functions" by Felzenszwalb & Huttenlocher
+    void edt(std::vector<double> &data, int x0, int y0, int width, int height, int gridSize, std::vector<double> &f, std::vector<int> &v, std::vector<double> &z);
+    void edt1d(std::vector<double> &grid, int offset, int stride, int length, std::vector<double> &f, std::vector<int> &v, std::vector<double> &z);
   };
 }

@@ -1075,7 +1075,7 @@ namespace builtin_scene::web_renderer
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
 
     // Then generate SDF texture from the painted canvas for anti-aliasing
-    // rewriteSignedDistanceOnAlpha(content);
+    rewriteSignedDistanceOnAlpha(content);
     content.setTextureAsSDF(true);
     content.setTextureUsing(true);
   }
