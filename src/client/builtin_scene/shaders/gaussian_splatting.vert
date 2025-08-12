@@ -32,18 +32,54 @@ out vec3 vNdc;
 
 const int TEXELS_PER_SPLAT = 4;
 
-// Compute texel coordinate for (splatIndex, texelOffsetInsideSplat)
+// Compute texel coordinate for (splatIndex, texelOffsetInsideSplat) using bit operations
 ivec2 _splatTexelCoord(int splatIndex, int localOffset) {
   ivec2 ts = textureSize(splatDataTexture, 0);
   int linear = splatIndex * TEXELS_PER_SPLAT + localOffset;
-  int x = linear % ts.x;
-  int y = linear / ts.x;
+  
+  // Check bounds to prevent out-of-bounds access
+  int maxTexels = ts.x * ts.y;
+  if (linear >= maxTexels) {
+    return ivec2(-1, -1); // Return invalid coordinate for out-of-bounds
+  }
+  
+  // Use bit operations if texture width is power of 2, otherwise fallback to division
+  int x, y;
+  if ((ts.x & (ts.x - 1)) == 0) {
+    // Width is power of 2, use bit operations for efficiency
+    int widthBits = 0;
+    int tempWidth = ts.x;
+    while (tempWidth > 1) {
+      tempWidth >>= 1;
+      widthBits++;
+    }
+    x = linear & (ts.x - 1);           // Equivalent to linear % ts.x
+    y = linear >> widthBits;           // Equivalent to linear / ts.x
+  } else {
+    // Width is not power of 2, use standard operations
+    x = linear % ts.x;
+    y = linear / ts.x;
+  }
+  
   return ivec2(x, y);
 }
 
-// Safe fetch (optionally you can add bounds checks)
+// Safe fetch with bounds checking
 vec4 _splatFetch(int splatIndex, int localOffset) {
-  return texelFetch(splatDataTexture, _splatTexelCoord(splatIndex, localOffset), 0);
+  // Bounds check for splatSortedIndex
+  int totalSplats = textureSize(splatDataTexture, 0).x * textureSize(splatDataTexture, 0).y / TEXELS_PER_SPLAT;
+  if (splatIndex >= totalSplats || splatIndex < 0) {
+    return vec4(0.0); // Return zero for invalid splat index
+  }
+  
+  ivec2 coord = _splatTexelCoord(splatIndex, localOffset);
+  
+  // Return zero for invalid coordinates (out of bounds)
+  if (coord.x < 0 || coord.y < 0) {
+    return vec4(0.0);
+  }
+  
+  return texelFetch(splatDataTexture, coord, 0);
 }
 
 // 1. Position (vec3 + padding)
