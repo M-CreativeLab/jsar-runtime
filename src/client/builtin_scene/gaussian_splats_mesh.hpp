@@ -105,10 +105,10 @@ namespace builtin_scene
         if (directIndex < directSplatData_.size())
         {
           const auto &direct = directSplatData_[directIndex];
-          
+
           // Use direct position data for depth calculation
           glm::vec3 position(direct.position[0], direct.position[1], direct.position[2]);
-          
+
           glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
           splat.depth = -viewPos.z; // Depth in view space
         }
@@ -331,10 +331,10 @@ namespace builtin_scene
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
 
     // WebGL 2D textures for separate splat data
-    std::shared_ptr<client_graphics::WebGLTexture> splatCentersTexture_;  // RGB for positions
-    std::shared_ptr<client_graphics::WebGLTexture> splatColorsTexture_;   // RGBA for colors
-    std::shared_ptr<client_graphics::WebGLTexture> splatScalesTexture_;   // RGB for scales
-    std::shared_ptr<client_graphics::WebGLTexture> splatQuatTexture_;     // RGBA for quaternions
+    std::shared_ptr<client_graphics::WebGLTexture> splatCentersTexture_; // RGB for positions
+    std::shared_ptr<client_graphics::WebGLTexture> splatColorsTexture_;  // RGBA for colors
+    std::shared_ptr<client_graphics::WebGLTexture> splatScalesTexture_;  // RGB for scales
+    std::shared_ptr<client_graphics::WebGLTexture> splatQuatTexture_;    // RGBA for quaternions
 
     // WebGL context reference (needed for iterateInstanceAttributes)
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

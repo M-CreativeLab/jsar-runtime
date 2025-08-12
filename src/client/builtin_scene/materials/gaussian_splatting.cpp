@@ -32,7 +32,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("clipXY");
     LOAD_UNIFORM_LOCATION("focalAdjustment");
     LOAD_UNIFORM_LOCATION("splatCenters");
-    LOAD_UNIFORM_LOCATION("splatColors"); 
+    LOAD_UNIFORM_LOCATION("splatColors");
     LOAD_UNIFORM_LOCATION("splatScales");
     LOAD_UNIFORM_LOCATION("splatQuat");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context

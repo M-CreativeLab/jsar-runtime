@@ -40,7 +40,7 @@ namespace builtin_scene::materials
 
     ShaderRef vertexShader() override
     {
-      return ShaderRef(ShaderType::kVertex, "shaders/gaussian_splatting_packed.vert");
+      return ShaderRef(ShaderType::kVertex, "shaders/gaussian_splatting_direct.vert");
     }
 
     ShaderRef fragmentShader() override

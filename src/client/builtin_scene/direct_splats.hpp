@@ -8,7 +8,7 @@
 namespace builtin_scene
 {
   // Direct splat storage constants (power of 2 textures)
-  constexpr uint32_t SPLAT_TEX_WIDTH_BITS = 10u;  // 1024 width
+  constexpr uint32_t SPLAT_TEX_WIDTH_BITS = 10u; // 1024 width
   constexpr uint32_t SPLAT_TEX_WIDTH = 1u << SPLAT_TEX_WIDTH_BITS;
   constexpr uint32_t SPLAT_TEX_WIDTH_MASK = SPLAT_TEX_WIDTH - 1u;
 
@@ -33,9 +33,17 @@ namespace builtin_scene
     // Convert from Splat struct to DirectSplat
     DirectSplat convertSplat(
       float px, float py, float pz, // position
-      float sx, float sy, float sz, // scale
-      float qx, float qy, float qz, float qw, // quaternion
-      float r, float g, float b, float a // color + opacity
+      float sx,
+      float sy,
+      float sz, // scale
+      float qx,
+      float qy,
+      float qz,
+      float qw, // quaternion
+      float r,
+      float g,
+      float b,
+      float a // color + opacity
     );
   }
 }

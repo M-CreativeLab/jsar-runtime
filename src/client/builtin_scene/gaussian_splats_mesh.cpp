@@ -113,8 +113,8 @@ namespace builtin_scene
 
     // Calculate texture dimensions using direct method
     auto textureSize = direct_splat_utils::getTextureSize(static_cast<uint32_t>(directSplatData_.size()));
-    uint32_t width = textureSize[0];   // 1024
-    uint32_t height = textureSize[1];  // power of 2 height
+    uint32_t width = textureSize[0];  // 1024
+    uint32_t height = textureSize[1]; // power of 2 height
     uint32_t maxSplats = textureSize[2];
 
     // Create textures if not initialized
@@ -124,39 +124,39 @@ namespace builtin_scene
       splatColorsTexture_ = glContext->createTexture();
       splatScalesTexture_ = glContext->createTexture();
       splatQuatTexture_ = glContext->createTexture();
-      
+
       if (!splatCentersTexture_ || !splatColorsTexture_ || !splatScalesTexture_ || !splatQuatTexture_)
         return;
       textureInitialized_ = true;
     }
 
     // Prepare texture data arrays
-    vector<float> centersData(maxSplats * 3, 0.0f);  // RGB for position
-    vector<float> colorsData(maxSplats * 4, 0.0f);   // RGBA for color+opacity
-    vector<float> scalesData(maxSplats * 3, 0.0f);   // RGB for scale
-    vector<float> quatData(maxSplats * 4, 0.0f);     // RGBA for quaternion
+    vector<float> centersData(maxSplats * 3, 0.0f); // RGB for position
+    vector<float> colorsData(maxSplats * 4, 0.0f);  // RGBA for color+opacity
+    vector<float> scalesData(maxSplats * 3, 0.0f);  // RGB for scale
+    vector<float> quatData(maxSplats * 4, 0.0f);    // RGBA for quaternion
 
     // Fill texture data from direct splats
     for (size_t i = 0; i < directSplatData_.size(); ++i)
     {
       const auto &direct = directSplatData_[i];
-      
+
       // Centers (RGB)
       centersData[i * 3 + 0] = direct.position[0];
       centersData[i * 3 + 1] = direct.position[1];
       centersData[i * 3 + 2] = direct.position[2];
-      
+
       // Colors (RGBA)
       colorsData[i * 4 + 0] = direct.color[0];
       colorsData[i * 4 + 1] = direct.color[1];
       colorsData[i * 4 + 2] = direct.color[2];
       colorsData[i * 4 + 3] = direct.color[3];
-      
+
       // Scales (RGB)
       scalesData[i * 3 + 0] = direct.scale[0];
       scalesData[i * 3 + 1] = direct.scale[1];
       scalesData[i * 3 + 2] = direct.scale[2];
-      
+
       // Quaternion (RGBA)
       quatData[i * 4 + 0] = direct.quaternion[0];
       quatData[i * 4 + 1] = direct.quaternion[1];
@@ -167,30 +167,22 @@ namespace builtin_scene
     // Upload centers texture (RGB32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatCentersTexture_);
     glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGB32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height,
-                             WebGLTextureFormat::kRGB, WebGLPixelType::kFloat,
-                             (unsigned char *)centersData.data());
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)centersData.data());
 
     // Upload colors texture (RGBA32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatColorsTexture_);
     glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGBA32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height,
-                             WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat,
-                             (unsigned char *)colorsData.data());
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)colorsData.data());
 
     // Upload scales texture (RGB32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatScalesTexture_);
     glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGB32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height,
-                             WebGLTextureFormat::kRGB, WebGLPixelType::kFloat,
-                             (unsigned char *)scalesData.data());
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)scalesData.data());
 
     // Upload quaternion texture (RGBA32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatQuatTexture_);
     glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGBA32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height,
-                             WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat,
-                             (unsigned char *)quatData.data());
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)quatData.data());
 
     // Set texture parameters for all textures (nearest sampling for discrete data)
     for (auto texture : {splatCentersTexture_, splatColorsTexture_, splatScalesTexture_, splatQuatTexture_})
