@@ -11,6 +11,9 @@
 
 namespace builtin_scene
 {
+  using namespace std;
+  using namespace client_graphics;
+
   // Static member for empty indices
   const Indices<uint32_t> GaussianSplatsMesh::emptyIndices_;
 
@@ -50,8 +53,7 @@ namespace builtin_scene
     }
   }
 
-  void GaussianSplatsMesh::setupSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                                            std::shared_ptr<client_graphics::WebGLVertexArray> vao)
+  void GaussianSplatsMesh::setupSplatBuffer(shared_ptr<WebGL2Context> glContext, shared_ptr<WebGLVertexArray> vao)
   {
     if (!glContext || bufferInitialized_)
       return;
@@ -65,7 +67,7 @@ namespace builtin_scene
     }
   }
 
-  void GaussianSplatsMesh::updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext)
+  void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext)
   {
     if (!glContext ||
         !bufferInitialized_ ||
@@ -74,7 +76,7 @@ namespace builtin_scene
       return;
 
     // Prepare a contiguous array of sorted indices (only uint32_t values now)
-    std::vector<uint32_t> indexData;
+    vector<uint32_t> indexData;
     indexData.reserve(sortedSplats_.size());
 
     for (const auto &splat : sortedSplats_)
@@ -83,17 +85,17 @@ namespace builtin_scene
     }
 
     // Upload to GPU
-    glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
-    glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
+    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
+    glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
                           indexData.size() * sizeof(uint32_t),
                           indexData.data(),
-                          client_graphics::WebGLBufferUsage::kDynamicDraw);
+                          WebGLBufferUsage::kDynamicDraw);
     setDirty(false);
 
     DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());
   }
 
-  void GaussianSplatsMesh::updateSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext)
+  void GaussianSplatsMesh::updateSplatTexture(std::shared_ptr<WebGL2Context> glContext)
   {
     if (!glContext || splatTextureData_.empty())
       return;
@@ -155,36 +157,36 @@ namespace builtin_scene
     }
 
     // Upload texture data
-    glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, splatDataTexture_);
-    glContext->texImage2D(client_graphics::WebGLTexture2DTarget::kTexture2D,
+    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatDataTexture_);
+    glContext->texImage2D(WebGLTexture2DTarget::kTexture2D,
                           0,              // level
                           WEBGL2_RGBA32F, // internal format
                           textureWidth,
                           textureHeight,
-                          0,           // border
-                          WEBGL_RGBA,  // format
-                          WEBGL_FLOAT, // type
-                          textureData.data());
+                          0,
+                          WebGLTextureFormat::kRGBA,
+                          WebGLPixelType::kFloat,
+                          (unsigned char *)textureData.data());
 
     // Set texture parameters for point sampling (no filtering)
-    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
-                             WEBGL_TEXTURE_MIN_FILTER,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                             WebGLTextureParameterName::kTextureMinFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
-                             WEBGL_TEXTURE_MAG_FILTER,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                             WebGLTextureParameterName::kTextureMagFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
-                             WEBGL_TEXTURE_WRAP_S,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                             WebGLTextureParameterName::kTextureWrapS,
                              WEBGL_CLAMP_TO_EDGE);
-    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
-                             WEBGL_TEXTURE_WRAP_T,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                             WebGLTextureParameterName::kTextureWrapT,
                              WEBGL_CLAMP_TO_EDGE);
 
     DEBUG("GaussianSplatsMesh", "Updated splat data texture: %zu splats, %zux%zu texture", splatTextureData_.size(), textureWidth, textureHeight);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
-                                               std::shared_ptr<client_graphics::WebGL2Context> glContext)
+                                               std::shared_ptr<WebGL2Context> glContext)
   {
     // Call parent implementation first
     Mesh::onMesh3dInitialized(mesh3d, glContext);
@@ -196,7 +198,7 @@ namespace builtin_scene
     setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
   }
 
-  size_t GaussianSplatsMesh::iterateInstanceAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+  size_t GaussianSplatsMesh::iterateInstanceAttributes(std::shared_ptr<WebGLProgram> program,
                                                        std::function<void(const IVertexAttribute &,
                                                                           int,
                                                                           size_t,
