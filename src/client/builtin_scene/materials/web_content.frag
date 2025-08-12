@@ -147,29 +147,20 @@ void main()
 #ifdef USE_INSTANCE_TEXTURE
   if (vInstanceTextureEnabled == 1.0)
   {
-    vec4 textureColor;
-    
+    vec4 textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
+
     // Check if this instance uses SDF texture rendering
     if (vInstanceUseSDFTexture > 0.5)
     {
-      // Use SDF texture from instance texture atlas
-      textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
-
-      // For SDF text, the texture contains distance field data in the alpha channel
+      // For SDF text or other texture, the `textureColor` contains distance field data in the alpha channel
       // Apply SDF distance field rendering for smooth text anti-aliasing
-      float sdfDistance = textureColor.a - 0.5; // Convert from [0,1] to [-0.5,0.5] range
-      float sdfWidth = max(fwidth(sdfDistance), 0.01);
-      float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, sdfDistance);
+      float texDist = textureColor.a - 0.5; // Convert from [0,1] to [-0.5,0.5] range
+      float sdfWidth = max(fwidth(texDist), 0.01);
+      float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, texDist);
 
       // Use black color with SDF-computed alpha for crisp text edges
       textureColor.a *= sdfAlpha;
     }
-    else
-    {
-      // Use regular texture from instance texture atlas
-      textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
-    }
-
     outColor = mix(outColor, textureColor, textureColor.a);
   }
 #endif

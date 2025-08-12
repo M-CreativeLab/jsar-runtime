@@ -1119,7 +1119,7 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    unsigned char *pixels = static_cast<unsigned char *>(bitmap.getPixels());
+    unsigned char *pixels = (unsigned char *)pixmap.writable_addr();
     if (!pixels)
     {
       return;
@@ -1133,12 +1133,10 @@ namespace builtin_scene::web_renderer
     // while preserving existing RGB channels
     builtin_scene::text::sdf::TinySDF sdfGenerator;
     bool success = sdfGenerator.generateFromPixelsInPlace(pixels, width, height);
-
     if (success)
     {
       // Update the canvas with the modified bitmap
-      canvas->clear(SK_ColorTRANSPARENT);
-      canvas->drawImage(bitmap.asImage(), 0, 0);
+      canvas->writePixels(bitmap, 0, 0);
     }
   }
 
