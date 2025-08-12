@@ -92,7 +92,7 @@ namespace builtin_scene::gaussian_splatting
     }
 
     // Sort splats by depth using the first view (or identity matrix if no XR)
-    splatsMesh->markNeedsSorting();
+    // splatsMesh->markNeedsSorting();
     splatsMesh->sortSplatsByDepth(viewMatrix, [this](ecs::EntityId entityId) -> GaussianSplattingModel3d *
                                   { return getComponent<GaussianSplattingModel3d>(entityId).get(); });
   }

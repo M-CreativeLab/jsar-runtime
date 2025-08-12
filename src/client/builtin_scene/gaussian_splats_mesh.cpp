@@ -166,22 +166,22 @@ namespace builtin_scene
 
     // Upload centers texture (RGB32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatCentersTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGB32F, width, height);
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGB32F, width, height);
     glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)centersData.data());
 
     // Upload colors texture (RGBA32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatColorsTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGBA32F, width, height);
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32F, width, height);
     glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)colorsData.data());
 
     // Upload scales texture (RGB32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatScalesTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGB32F, width, height);
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGB32F, width, height);
     glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)scalesData.data());
 
     // Upload quaternion texture (RGBA32F)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatQuatTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL_RGBA32F, width, height);
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32F, width, height);
     glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)quatData.data());
 
     // Set texture parameters for all textures (nearest sampling for discrete data)

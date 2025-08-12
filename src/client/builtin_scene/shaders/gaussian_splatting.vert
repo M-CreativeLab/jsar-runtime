@@ -1,5 +1,7 @@
 precision highp float;
+precision highp int;
 
+// Uniforms
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
@@ -10,121 +12,82 @@ uniform float maxPixelRadius;
 uniform float clipXY;
 uniform float focalAdjustment;
 
-// Splat data texture
-uniform sampler2D splatDataTexture;
+// Separate textures for splat data (no pack/unpack needed)
+uniform sampler2D splatCenters;  // RGB for XYZ position
+uniform sampler2D splatColors;   // RGBA for splat color and opacity  
+uniform sampler2D splatScales;   // RGB for XYZ scale values
+uniform sampler2D splatQuat;     // RGBA for rotation quaternion
 
-// Base quad attributes (per vertex)
-in vec3 position;
+// Texture size constants (power of 2)
+const int TEXTURE_WIDTH_BITS = 10;  // 1024 width
+const int TEXTURE_WIDTH = 1 << TEXTURE_WIDTH_BITS;
+const int TEXTURE_WIDTH_MASK = TEXTURE_WIDTH - 1;
 
-// Instanced attributes (per splat) - only the sorted index now
-in int splatSortedIndex;
+// Vertex attributes
+in vec3 position;        // quad position (-1 to 1)
+in uint splatIndex;      // splat index (sorted)
 
+// Outputs
 out vec4 vRgba;
 out vec2 vSplatUv;
 out vec3 vNdc;
 
-// Texture lookup functions for splat data
-// Each splat uses 4 texels in RGBA32F format:
-// Texel 0: position.xyz
-// Texel 1: color.rgb, opacity
-// Texel 2: scale.xyz
-// Texel 3: rotation.xyzw
-
-const int TEXELS_PER_SPLAT = 4;
-
-// Compute texel coordinate for (splatIndex, texelOffsetInsideSplat) using bit operations
-ivec2 _splatTexelCoord(int splatIndex, int localOffset) {
-  ivec2 ts = textureSize(splatDataTexture, 0);
-  int linear = splatIndex * TEXELS_PER_SPLAT + localOffset;
-  
-  // Check bounds to prevent out-of-bounds access
-  int maxTexels = ts.x * ts.y;
-  if (linear >= maxTexels) {
-    return ivec2(-1, -1); // Return invalid coordinate for out-of-bounds
-  }
-  
-  // Use bit operations if texture width is power of 2, otherwise fallback to division
-  int x, y;
-  if ((ts.x & (ts.x - 1)) == 0) {
-    // Width is power of 2, use bit operations for efficiency
-    int widthBits = 0;
-    int tempWidth = ts.x;
-    while (tempWidth > 1) {
-      tempWidth >>= 1;
-      widthBits++;
-    }
-    x = linear & (ts.x - 1);           // Equivalent to linear % ts.x
-    y = linear >> widthBits;           // Equivalent to linear / ts.x
-  } else {
-    // Width is not power of 2, use standard operations
-    x = linear % ts.x;
-    y = linear / ts.x;
-  }
-  
+// Efficient texture coordinate calculation using bit operations
+ivec2 getSplatTexCoord(int index)
+{
+  int x = index & TEXTURE_WIDTH_MASK;  // x = index & (1024 - 1)
+  int y = index >> TEXTURE_WIDTH_BITS; // y = index >> 10
   return ivec2(x, y);
 }
 
-// Safe fetch with bounds checking
-vec4 _splatFetch(int splatIndex, int localOffset) {
-  // Bounds check for splatSortedIndex
-  int totalSplats = textureSize(splatDataTexture, 0).x * textureSize(splatDataTexture, 0).y / TEXELS_PER_SPLAT;
-  if (splatIndex >= totalSplats || splatIndex < 0) {
-    return vec4(0.0); // Return zero for invalid splat index
-  }
-  
-  ivec2 coord = _splatTexelCoord(splatIndex, localOffset);
-  
-  // Return zero for invalid coordinates (out of bounds)
-  if (coord.x < 0 || coord.y < 0) {
-    return vec4(0.0);
-  }
-  
-  return texelFetch(splatDataTexture, coord, 0);
+// SparkJS quaternion functions (unchanged)
+vec3 quatVec(vec4 q, vec3 v)
+{
+  vec3 t = 2.0 * cross(q.xyz, v);
+  return v + q.w * t + cross(q.xyz, t);
 }
 
-// 1. Position (vec3 + padding)
-vec3 getSplatPosition(int splatIndex) {
-  return _splatFetch(splatIndex, 0).xyz;
+vec4 quatQuat(vec4 q1, vec4 q2)
+{
+  return vec4(q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y, q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x, q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w, q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z);
 }
 
-// 2. RGBA (vec4)
-vec4 getSplatRgba(int splatIndex) {
-  return _splatFetch(splatIndex, 1);
+mat3 scaleQuaternionToMatrix(vec3 s, vec4 q)
+{
+  return mat3(s.x * (1.0 - 2.0 * (q.y * q.y + q.z * q.z)), s.x * (2.0 * (q.x * q.y + q.w * q.z)), s.x * (2.0 * (q.x * q.z - q.w * q.y)), s.y * (2.0 * (q.x * q.y - q.w * q.z)), s.y * (1.0 - 2.0 * (q.x * q.x + q.z * q.z)), s.y * (2.0 * (q.y * q.z + q.w * q.x)), s.z * (2.0 * (q.x * q.z + q.w * q.y)), s.z * (2.0 * (q.y * q.z - q.w * q.x)), s.z * (1.0 - 2.0 * (q.x * q.x + q.y * q.y)));
 }
 
-// 3. Scale (vec3 + padding)
-vec3 getSplatScale(int splatIndex) {
-  return _splatFetch(splatIndex, 2).xyz;
-}
-
-// 4. Rotation quaternion (vec4)
-vec4 getSplatRotation(int splatIndex) {
-  return _splatFetch(splatIndex, 3);
-}
-
-vec4 mat3ToQuat(mat3 m) {
+vec4 mat3ToQuat(mat3 m)
+{
   float trace = m[0][0] + m[1][1] + m[2][2];
   vec4 q;
 
-  if(trace > 0.0) {
+  if (trace > 0.0)
+  {
     float s = sqrt(trace + 1.0) * 2.0;
     q.w = 0.25 * s;
     q.x = (m[2][1] - m[1][2]) / s;
     q.y = (m[0][2] - m[2][0]) / s;
     q.z = (m[1][0] - m[0][1]) / s;
-  } else if((m[0][0] > m[1][1]) && (m[0][0] > m[2][2])) {
+  }
+  else if ((m[0][0] > m[1][1]) && (m[0][0] > m[2][2]))
+  {
     float s = sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2.0;
     q.w = (m[2][1] - m[1][2]) / s;
     q.x = 0.25 * s;
     q.y = (m[0][1] + m[1][0]) / s;
     q.z = (m[0][2] + m[2][0]) / s;
-  } else if(m[1][1] > m[2][2]) {
+  }
+  else if (m[1][1] > m[2][2])
+  {
     float s = sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2.0;
     q.w = (m[0][2] - m[2][0]) / s;
     q.x = (m[0][1] + m[1][0]) / s;
     q.y = 0.25 * s;
     q.z = (m[1][2] + m[2][1]) / s;
-  } else {
+  }
+  else
+  {
     float s = sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2.0;
     q.w = (m[1][0] - m[0][1]) / s;
     q.x = (m[0][2] + m[2][0]) / s;
@@ -134,30 +97,17 @@ vec4 mat3ToQuat(mat3 m) {
   return normalize(q);
 }
 
-vec3 quatVec(vec4 q, vec3 v) {
-  vec3 t = 2.0 * cross(q.xyz, v);
-  return v + q.w * t + cross(q.xyz, t);
-}
-
-vec4 quatQuat(vec4 q1, vec4 q2) {
-  return vec4(
-    q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
-    q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
-    q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
-    q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
-  );
-}
-
 void decomposeViewMatrix(
   mat4 viewMatrix,
   out vec3 viewPosition,
   out vec4 viewQuaternion
-) {
+)
+{
   mat3 viewRotMatrix = mat3(viewMatrix);
   mat3 worldRotMatrix = transpose(viewRotMatrix);
   float det = determinant(viewRotMatrix);
 
-  if (det > 0.0) 
+  if (det > 0.0)
   {
     viewQuaternion = mat3ToQuat(worldRotMatrix);
   }
@@ -170,42 +120,38 @@ void decomposeViewMatrix(
   viewPosition = viewMatrix[3].xyz;
 }
 
-mat3 scaleQuaternionToMatrix(vec3 s, vec4 q) {
-  // Compute the matrix of scaling by s then rotating by q
-  return mat3(
-      s.x * (1.0 - 2.0 * (q.y * q.y + q.z * q.z)),
-      s.x * (2.0 * (q.x * q.y + q.w * q.z)),
-      s.x * (2.0 * (q.x * q.z - q.w * q.y)),
-      s.y * (2.0 * (q.x * q.y - q.w * q.z)),
-      s.y * (1.0 - 2.0 * (q.x * q.x + q.z * q.z)),
-      s.y * (2.0 * (q.y * q.z + q.w * q.x)),
-      s.z * (2.0 * (q.x * q.z + q.w * q.y)),
-      s.z * (2.0 * (q.y * q.z - q.w * q.x)),
-      s.z * (1.0 - 2.0 * (q.x * q.x + q.y * q.y))
-  );
-}
-
-// Removed eigenDecomposeSym2 function - using Spark's direct calculation instead
-
-void main() {
-  // Retrieve splat data from texture using sorted index
-  vec3 splatPosition = getSplatPosition(splatSortedIndex);
-  vec4 splatRgba = getSplatRgba(splatSortedIndex);
-  vec3 splatScale = getSplatScale(splatSortedIndex);
-  vec4 splatRotation = getSplatRotation(splatSortedIndex);
-
+void main()
+{
   // Default to outside the frustum so it's discarded if we return early
   gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-  vRgba = splatRgba;
+
+    // Handle special value for "no splat"
+  if (splatIndex == 0xffffffffu)
+  {
+    return;
+  }
+
+  // Get texture coordinate using efficient bit operations
+  ivec2 texCoord = getSplatTexCoord(int(splatIndex));
+
+  // Direct texture fetches - no pack/unpack needed!
+  vec3 center = texelFetch(splatCenters, texCoord, 0).rgb;
+  vec4 rgba = texelFetch(splatColors, texCoord, 0);
+  vec3 scales = texelFetch(splatScales, texCoord, 0).xyz;
+  vec4 quaternion = texelFetch(splatQuat, texCoord, 0);
+
+  vRgba = rgba;
 
   // Early alpha test
-  if (vRgba.a < minAlpha) {
+  if (rgba.a < minAlpha)
+  {
     return;
   }
 
   // Check for zero scales
-  bvec3 zeroScales = equal(splatScale, vec3(0.0));
-  if (all(zeroScales)) {
+  bvec3 zeroScales = equal(scales, vec3(0.0));
+  if (all(zeroScales))
+  {
     return;
   }
 
@@ -214,39 +160,34 @@ void main() {
   decomposeViewMatrix(viewMatrix, renderToViewPos, renderToViewQuat);
 
   // Transform splat center to world space then view space
-  vec3 worldCenter = (modelMatrix * vec4(splatPosition, 1.0)).xyz;
+  vec3 worldCenter = (modelMatrix * vec4(center, 1.0)).xyz;
   vec3 viewCenter = quatVec(renderToViewQuat, worldCenter) + renderToViewPos;
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera
-  if (viewCenter.z >= 0.0) {
+  if (viewCenter.z >= 0.0)
+  {
     return;
   }
 
-  // Discard splats outside near/far planes
-  if (abs(clipCenter.z) >= clipCenter.w) {
+    // Discard splats outside near/far planes
+  if (abs(clipCenter.z) >= clipCenter.w)
+  {
     return;
   }
 
   float clip = clipXY * clipCenter.w;
-  if (abs(clipCenter.x) > clip || abs(clipCenter.y) > clip) {
+  if (abs(clipCenter.x) > clip || abs(clipCenter.y) > clip)
+  {
     return;
   }
 
   mat3 modelRotationScale = mat3(modelMatrix);
-  vec3 modelScale = vec3(
-      length(modelRotationScale[0]),
-      length(modelRotationScale[1]),
-      length(modelRotationScale[2])
-  );
-  vec3 transformedScale = splatScale * modelScale;
-  mat3 modelRotation = mat3(
-    modelRotationScale[0] / modelScale.x,
-    modelRotationScale[1] / modelScale.y,
-    modelRotationScale[2] / modelScale.z
-  );
+  vec3 modelScale = vec3(length(modelRotationScale[0]), length(modelRotationScale[1]), length(modelRotationScale[2]));
+  vec3 transformedScale = scales * modelScale;
+  mat3 modelRotation = mat3(modelRotationScale[0] / modelScale.x, modelRotationScale[1] / modelScale.y, modelRotationScale[2] / modelScale.z);
   vec4 modelQuat = mat3ToQuat(modelRotation);
-  vec4 transformedRotation = quatQuat(modelQuat, splatRotation);
+  vec4 transformedRotation = quatQuat(modelQuat, quaternion);
 
   vec4 viewQuaternion = quatQuat(renderToViewQuat, transformedRotation);
   mat3 RS = scaleQuaternionToMatrix(transformedScale, viewQuaternion);
@@ -284,7 +225,8 @@ void main() {
   // Compute anti-aliasing intensity scaling factor
   float blurAdjust = sqrt(max(0.0, origDet / det));
   vRgba.a *= blurAdjust;
-  if (vRgba.a < minAlpha) {
+  if (vRgba.a < minAlpha)
+  {
     return;
   }
 
