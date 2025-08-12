@@ -19,6 +19,7 @@ namespace builtin_scene
       , needsRebuild_(false)
       , needsSorting_(false)
       , bufferInitialized_(false)
+      , textureInitialized_(false)
   {
   }
 
@@ -72,47 +73,114 @@ namespace builtin_scene
         !isDirty())
       return;
 
-    // Prepare a contiguous array of GPU data (excluding depth and sourceEntity)
-    std::vector<float> gpuData;
-    size_t floatsPerSplat = STRIDE / sizeof(float);
-    gpuData.reserve(sortedSplats_.size() * floatsPerSplat);
+    // Prepare a contiguous array of sorted indices (only uint32_t values now)
+    std::vector<uint32_t> indexData;
+    indexData.reserve(sortedSplats_.size());
 
     for (const auto &splat : sortedSplats_)
     {
-      // Position (vec3)
-      gpuData.push_back(splat.position.x);
-      gpuData.push_back(splat.position.y);
-      gpuData.push_back(splat.position.z);
-
-      // Color (vec3)
-      gpuData.push_back(splat.color.r);
-      gpuData.push_back(splat.color.g);
-      gpuData.push_back(splat.color.b);
-
-      // Opacity (float)
-      gpuData.push_back(splat.opacity);
-
-      // Scale (vec3)
-      gpuData.push_back(splat.scale.x);
-      gpuData.push_back(splat.scale.y);
-      gpuData.push_back(splat.scale.z);
-
-      // Rotation (vec4)
-      gpuData.push_back(splat.rotation.x);
-      gpuData.push_back(splat.rotation.y);
-      gpuData.push_back(splat.rotation.z);
-      gpuData.push_back(splat.rotation.w);
+      indexData.push_back(splat.sortedIndex);
     }
 
     // Upload to GPU
     glContext->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
     glContext->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                          gpuData.size() * sizeof(float),
-                          gpuData.data(),
+                          indexData.size() * sizeof(uint32_t),
+                          indexData.data(),
                           client_graphics::WebGLBufferUsage::kDynamicDraw);
     setDirty(false);
 
-    DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu splats (%zu floats)", sortedSplats_.size(), gpuData.size());
+    DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());
+  }
+
+  void GaussianSplatsMesh::updateSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext)
+  {
+    if (!glContext || splatTextureData_.empty())
+      return;
+
+    // Create texture if not initialized
+    if (!textureInitialized_)
+    {
+      splatDataTexture_ = glContext->createTexture();
+      if (!splatDataTexture_)
+        return;
+      textureInitialized_ = true;
+    }
+
+    // Calculate texture dimensions
+    // Each splat needs 56 bytes (14 floats): position(3) + color(3) + opacity(1) + scale(3) + rotation(4)
+    // We'll pack this into RGBA32F format, so we need ceil(14/4) = 4 texels per splat
+    size_t texelsPerSplat = 4; // 4 RGBA32F texels = 16 floats, enough for 14 floats + 2 padding
+    size_t totalTexels = splatTextureData_.size() * texelsPerSplat;
+
+    // Choose texture dimensions (prefer square-ish textures)
+    size_t textureWidth = static_cast<size_t>(std::ceil(std::sqrt(static_cast<float>(totalTexels))));
+    size_t textureHeight = (totalTexels + textureWidth - 1) / textureWidth; // Ceiling division
+
+    // Ensure minimum size
+    textureWidth = std::max(textureWidth, size_t(1));
+    textureHeight = std::max(textureHeight, size_t(1));
+
+    // Prepare texture data
+    std::vector<float> textureData(textureWidth * textureHeight * 4, 0.0f); // RGBA format
+
+    for (size_t i = 0; i < splatTextureData_.size(); ++i)
+    {
+      const auto &splat = splatTextureData_[i];
+      size_t baseIndex = i * texelsPerSplat * 4; // 4 components per texel
+
+      // Texel 0: position + opacity
+      textureData[baseIndex + 0] = splat.position.x;
+      textureData[baseIndex + 1] = splat.position.y;
+      textureData[baseIndex + 2] = splat.position.z;
+      textureData[baseIndex + 3] = splat.opacity;
+
+      // Texel 1: color + scale.x
+      textureData[baseIndex + 4] = splat.color.r;
+      textureData[baseIndex + 5] = splat.color.g;
+      textureData[baseIndex + 6] = splat.color.b;
+      textureData[baseIndex + 7] = splat.scale.x;
+
+      // Texel 2: scale.yz + rotation.xy
+      textureData[baseIndex + 8] = splat.scale.y;
+      textureData[baseIndex + 9] = splat.scale.z;
+      textureData[baseIndex + 10] = splat.rotation.x;
+      textureData[baseIndex + 11] = splat.rotation.y;
+
+      // Texel 3: rotation.zw + padding
+      textureData[baseIndex + 12] = splat.rotation.z;
+      textureData[baseIndex + 13] = splat.rotation.w;
+      textureData[baseIndex + 14] = 0.0f; // padding
+      textureData[baseIndex + 15] = 0.0f; // padding
+    }
+
+    // Upload texture data
+    glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, splatDataTexture_);
+    glContext->texImage2D(client_graphics::WebGLTexture2DTarget::kTexture2D,
+                          0,              // level
+                          WEBGL2_RGBA32F, // internal format
+                          textureWidth,
+                          textureHeight,
+                          0,           // border
+                          WEBGL_RGBA,  // format
+                          WEBGL_FLOAT, // type
+                          textureData.data());
+
+    // Set texture parameters for point sampling (no filtering)
+    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
+                             WEBGL_TEXTURE_MIN_FILTER,
+                             WEBGL_NEAREST);
+    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
+                             WEBGL_TEXTURE_MAG_FILTER,
+                             WEBGL_NEAREST);
+    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
+                             WEBGL_TEXTURE_WRAP_S,
+                             WEBGL_CLAMP_TO_EDGE);
+    glContext->texParameteri(client_graphics::WebGLTextureTarget::kTexture2D,
+                             WEBGL_TEXTURE_WRAP_T,
+                             WEBGL_CLAMP_TO_EDGE);
+
+    DEBUG("GaussianSplatsMesh", "Updated splat data texture: %zu splats, %zux%zu texture", splatTextureData_.size(), textureWidth, textureHeight);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
@@ -152,20 +220,10 @@ namespace builtin_scene
         std::unique_ptr<IVertexAttribute> attrib = nullptr;
 
         // Configure based on attribute name and type
-        if (name == "splatPosition" || name == "splatColor" || name == "splatScale")
+        if (name == "splatSortedIndex")
         {
-          // vec3 attributes
-          attrib = make_unique<VertexAttribute<float, 3>>(name, instanceIndex, VertexFormat::kFloat32x3);
-        }
-        else if (name == "splatOpacity")
-        {
-          // float attribute
-          attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
-        }
-        else if (name == "splatRotation")
-        {
-          // vec4 attribute
-          attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          // uint32 attribute for texture index
+          attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
         }
         else
         {

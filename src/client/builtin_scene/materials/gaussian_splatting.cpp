@@ -30,14 +30,11 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("minAlpha");
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
     LOAD_UNIFORM_LOCATION("clipXY");
+    LOAD_UNIFORM_LOCATION("splatDataTexture");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
-    // Set default values for 3DGS parameters
-    auto renderSizeOpt = glContext->getUniformLocation(program, "renderSize");
-    if (renderSizeOpt.has_value())
-      glContext->uniform2f(renderSizeOpt.value(), 1600.0f, 900.0f); // Default render size
-
+    // Set default values for 3DGS parameters (excluding renderSize which is set per frame)
     auto maxStdDevOpt = glContext->getUniformLocation(program, "maxStdDev");
     if (maxStdDevOpt.has_value())
       glContext->uniform1f(maxStdDevOpt.value(), sqrt(8)); // Standard deviations to render
@@ -96,6 +93,15 @@ namespace builtin_scene::materials
     if (!glContext) [[unlikely]]
       return;
 
+    // Update render size from drawing buffer
+    auto renderSizeOpt = glContext->getUniformLocation(program, "renderSize");
+    if (renderSizeOpt.has_value())
+    {
+      float width = static_cast<float>(glContext->drawingBufferWidth());
+      float height = static_cast<float>(glContext->drawingBufferHeight());
+      glContext->uniform2f(renderSizeOpt.value(), width, height);
+    }
+
     // Get the GaussianSplatsMesh from the Mesh3d component
     if (mesh != nullptr)
     {
@@ -105,8 +111,26 @@ namespace builtin_scene::materials
         // Update splat count for drawing
         splatInstanceCount_ = splatsMesh->getTotalSplatCount();
 
-        // Update buffer with current splat data
+        // Update texture with splat data
+        splatsMesh->updateSplatTexture(glContext);
+
+        // Update buffer with sorted indices
         splatsMesh->updateSplatBuffer(glContext);
+
+        // Bind splat data texture to texture unit 0
+        auto splatDataTexture = splatsMesh->getSplatDataTexture();
+        if (splatDataTexture)
+        {
+          glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture0);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, splatDataTexture);
+
+          // Set the splatDataTexture uniform if it exists
+          auto splatDataTextureOpt = glContext->getUniformLocation(program, "splatDataTexture");
+          if (splatDataTextureOpt.has_value())
+          {
+            glContext->uniform1i(splatDataTextureOpt.value(), 0); // Texture unit 0
+          }
+        }
       }
     }
   }
