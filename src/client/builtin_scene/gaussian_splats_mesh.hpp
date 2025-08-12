@@ -13,7 +13,7 @@
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
-#include "./packed_splats.hpp"
+#include "./direct_splats.hpp"
 
 namespace builtin_scene
 {
@@ -46,7 +46,7 @@ namespace builtin_scene
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
    * 
-   * Uses SparkJS-compatible packed splat encoding with 3D array texture storage.
+   * Uses direct splat storage with separate 2D textures for each property.
    */
   class GaussianSplatsMesh : public meshes::Splat
   {
@@ -89,7 +89,7 @@ namespace builtin_scene
       {
         rebuildSortedSplats(getComponent);
         // Update texture after rebuilding splat data
-        updatePackedSplatTextureIfNeeded();
+        updateSplatTexturesIfNeeded();
       }
 
       if (!needsSorting_)
@@ -97,23 +97,18 @@ namespace builtin_scene
         return;
       }
 
-      // Calculate depth for each splat using packed splat data
+      // Calculate depth for each splat using direct splat data
       for (auto &splat : sortedSplats_)
       {
-        // Unpack position from packed data to calculate depth
-        uint32_t packedIndex = splat.index;
-        if (packedIndex < packedSplatData_.size())
+        // Get position from direct splat data to calculate depth
+        uint32_t directIndex = splat.index;
+        if (directIndex < directSplatData_.size())
         {
-          const auto &packed = packedSplatData_[packedIndex];
-
-          // Extract position from packed data (word1 = XY float16, word2 = Z float16 + quat data)
-          // For now, use simpler unpacking for depth calculation
-          // TODO: Implement proper float16 unpacking if needed for precise depth sorting
-
-          // Use texture center position for depth calculation
-          auto texCoord = packed_splat_utils::getSplatTexCoord(packedIndex);
-          glm::vec3 position = extractPositionFromPacked(packed);
-
+          const auto &direct = directSplatData_[directIndex];
+          
+          // Use direct position data for depth calculation
+          glm::vec3 position(direct.position[0], direct.position[1], direct.position[2]);
+          
           glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
           splat.depth = -viewPos.z; // Depth in view space
         }
@@ -190,30 +185,45 @@ namespace builtin_scene
     void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
-     * Update the packed splat data texture with all splat properties.
-     * This uploads the packed splat data to a 3D array texture for shader access.
+     * Update the splat data textures with all splat properties.
+     * This uploads direct splat data to separate 2D textures for shader access.
      */
-    void updatePackedSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext);
+    void updateSplatTextures(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
-     * Update packed splat texture if needed based on flags.
+     * Update splat textures if needed based on flags.
      */
-    void updatePackedSplatTextureIfNeeded();
+    void updateSplatTexturesIfNeeded();
 
     /**
-     * Get the packed splat data texture containing all compressed splat properties.
+     * Get the splat data textures containing all splat properties.
      */
-    inline std::shared_ptr<client_graphics::WebGLTexture> getPackedSplatTexture() const
+    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatCentersTexture() const
     {
-      return packedSplatTexture_;
+      return splatCentersTexture_;
+    }
+
+    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatColorsTexture() const
+    {
+      return splatColorsTexture_;
+    }
+
+    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatScalesTexture() const
+    {
+      return splatScalesTexture_;
+    }
+
+    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatQuatTexture() const
+    {
+      return splatQuatTexture_;
     }
 
     /**
-     * Get the total number of packed splats stored in the texture.
+     * Get the total number of direct splats stored in the textures.
      */
-    inline size_t getTotalPackedSplats() const
+    inline size_t getTotalDirectSplats() const
     {
-      return packedSplatData_.size();
+      return directSplatData_.size();
     }
 
     /**
@@ -242,23 +252,23 @@ namespace builtin_scene
 
   private:
     /**
-     * Extract position from packed splat data for depth calculations.
+     * Extract position from direct splat data for depth calculations.
      */
-    glm::vec3 extractPositionFromPacked(const PackedSplat &packed) const;
+    glm::vec3 extractPositionFromDirect(const DirectSplat &direct) const;
 
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.
-     * This rebuilds both the packed texture data and the sorted indices.
+     * This rebuilds both the direct texture data and the sorted indices.
      */
     template <typename QueryFunc>
     void rebuildSortedSplats(QueryFunc getComponent)
     {
-      packedSplatData_.clear();
+      directSplatData_.clear();
       sortedSplats_.clear();
 
       // Collect all splats from all entities by iterating entity IDs
-      uint32_t packedIndex = 0;
+      uint32_t directIndex = 0;
       for (ecs::EntityId entityId : splatEntities_)
       {
         auto *model = getComponent(entityId);
@@ -267,8 +277,8 @@ namespace builtin_scene
           const auto &splats = model->getSplats();
           for (const auto &splat : splats)
           {
-            // Pack splat data using SparkJS-compatible encoding
-            PackedSplat packed = packed_splat_utils::packSplat(
+            // Convert splat data to direct format (no packing needed)
+            DirectSplat direct = direct_splat_utils::convertSplat(
               splat.position[0], splat.position[1], splat.position[2], // position
               splat.scale[0],
               splat.scale[1],
@@ -283,36 +293,36 @@ namespace builtin_scene
               splat.opacity // color + opacity
             );
 
-            packedSplatData_.push_back(packed);
+            directSplatData_.push_back(direct);
 
             // Add to sorted instances (only index and sorting data)
             SplatInstanceData instance;
-            instance.index = packedIndex;
+            instance.index = directIndex;
             instance.sourceEntity = entityId;
             sortedSplats_.push_back(instance);
 
-            packedIndex++;
+            directIndex++;
           }
         }
       }
 
       needsRebuild_ = false;
       needsSorting_ = true;       // After rebuilding, we need to sort the splats
-      needsTextureUpdate_ = true; // After rebuilding, we need to update the texture
+      needsTextureUpdate_ = true; // After rebuilding, we need to update the textures
 
       // Mark the mesh as dirty so the GPU buffer gets updated
       setDirty(true);
 
       // Debug output
-      DEBUG("GaussianSplatsMesh", "Rebuilt packed splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
+      DEBUG("GaussianSplatsMesh", "Rebuilt direct splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
     }
 
   private:
     // Vector of entity IDs that have GaussianSplattingModel3d components
     std::vector<ecs::EntityId> splatEntities_;
 
-    // Packed splat data (SparkJS-compatible compressed format, stable during sorting)
-    std::vector<PackedSplat> packedSplatData_;
+    // Direct splat data (no packing, stable during sorting)
+    std::vector<DirectSplat> directSplatData_;
 
     // Sorted splat indices for rendering (rebuilt when entities change or camera moves)
     std::vector<SplatInstanceData> sortedSplats_;
@@ -320,8 +330,11 @@ namespace builtin_scene
     // WebGL buffer for instanced splat indices
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
 
-    // WebGL 3D array texture for packed splat data (RGBA32UI format)
-    std::shared_ptr<client_graphics::WebGLTexture> packedSplatTexture_;
+    // WebGL 2D textures for separate splat data
+    std::shared_ptr<client_graphics::WebGLTexture> splatCentersTexture_;  // RGB for positions
+    std::shared_ptr<client_graphics::WebGLTexture> splatColorsTexture_;   // RGBA for colors
+    std::shared_ptr<client_graphics::WebGLTexture> splatScalesTexture_;   // RGB for scales
+    std::shared_ptr<client_graphics::WebGLTexture> splatQuatTexture_;     // RGBA for quaternions
 
     // WebGL context reference (needed for iterateInstanceAttributes)
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

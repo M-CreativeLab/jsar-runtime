@@ -31,8 +31,10 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
     LOAD_UNIFORM_LOCATION("clipXY");
     LOAD_UNIFORM_LOCATION("focalAdjustment");
-    LOAD_UNIFORM_LOCATION("packedSplats");
-    LOAD_UNIFORM_LOCATION("rgbMinMaxLnScaleMinMax");
+    LOAD_UNIFORM_LOCATION("splatCenters");
+    LOAD_UNIFORM_LOCATION("splatColors"); 
+    LOAD_UNIFORM_LOCATION("splatScales");
+    LOAD_UNIFORM_LOCATION("splatQuat");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
@@ -117,31 +119,41 @@ namespace builtin_scene::materials
         // Update buffer with sorted indices
         splatsMesh->updateSplatBuffer(glContext);
 
-        // Set rgbMinMaxLnScaleMinMax uniform (SparkJS encoding parameters)
-        auto rgbMinMaxOpt = glContext->getUniformLocation(program, "rgbMinMaxLnScaleMinMax");
-        if (rgbMinMaxOpt.has_value())
-        {
-          // Use SparkJS default encoding ranges
-          glContext->uniform4f(rgbMinMaxOpt.value(),
-                               0.0f,
-                               1.0f, // RGB min/max
-                               -12.0f,
-                               9.0f); // LN_SCALE_MIN/MAX
-        }
+        // Bind separate splat data textures to texture units 0-3
+        auto centersTexture = splatsMesh->getSplatCentersTexture();
+        auto colorsTexture = splatsMesh->getSplatColorsTexture();
+        auto scalesTexture = splatsMesh->getSplatScalesTexture();
+        auto quatTexture = splatsMesh->getSplatQuatTexture();
 
-        // Bind packed splat data texture to texture unit 0
-        auto packedSplatTexture = splatsMesh->getPackedSplatTexture();
-        if (packedSplatTexture)
+        if (centersTexture && colorsTexture && scalesTexture && quatTexture)
         {
+          // Bind centers texture to unit 0
           glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture0);
-          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2DArray, packedSplatTexture);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, centersTexture);
+          auto centersOpt = glContext->getUniformLocation(program, "splatCenters");
+          if (centersOpt.has_value())
+            glContext->uniform1i(centersOpt.value(), 0);
 
-          // Set the packedSplats uniform if it exists
-          auto packedSplatsOpt = glContext->getUniformLocation(program, "packedSplats");
-          if (packedSplatsOpt.has_value())
-          {
-            glContext->uniform1i(packedSplatsOpt.value(), 0); // Texture unit 0
-          }
+          // Bind colors texture to unit 1
+          glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture1);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, colorsTexture);
+          auto colorsOpt = glContext->getUniformLocation(program, "splatColors");
+          if (colorsOpt.has_value())
+            glContext->uniform1i(colorsOpt.value(), 1);
+
+          // Bind scales texture to unit 2
+          glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture2);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, scalesTexture);
+          auto scalesOpt = glContext->getUniformLocation(program, "splatScales");
+          if (scalesOpt.has_value())
+            glContext->uniform1i(scalesOpt.value(), 2);
+
+          // Bind quaternion texture to unit 3
+          glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture3);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, quatTexture);
+          auto quatOpt = glContext->getUniformLocation(program, "splatQuat");
+          if (quatOpt.has_value())
+            glContext->uniform1i(quatOpt.value(), 3);
         }
       }
     }
