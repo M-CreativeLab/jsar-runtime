@@ -127,18 +127,20 @@ namespace builtin_scene
     uint32_t depth = textureSize[2];
     uint32_t maxSplats = textureSize[3];
 
-    // Prepare texture data - RGBA32UI format (4 uint32 per texel = 1 packed splat)
-    vector<uint32_t> textureData(maxSplats * 4, 0); // 4 uint32 per splat
+    // Prepare texture data - RGBA32F format (4 float per texel = 1 packed splat)
+    // Convert uint32 to normalized float [0,1] for compatibility with regular samplers
+    vector<float> textureData(maxSplats * 4, 0.0f); // 4 float per splat
 
     for (size_t i = 0; i < packedSplatData_.size(); ++i)
     {
       const auto &packed = packedSplatData_[i];
-      size_t baseIndex = i * 4; // 4 uint32 values per packed splat
+      size_t baseIndex = i * 4; // 4 float values per packed splat
 
-      textureData[baseIndex + 0] = packed.word0;
-      textureData[baseIndex + 1] = packed.word1;
-      textureData[baseIndex + 2] = packed.word2;
-      textureData[baseIndex + 3] = packed.word3;
+      // Convert uint32 to normalized float [0,1]
+      textureData[baseIndex + 0] = static_cast<float>(packed.word0) / 4294967295.0f; // 2^32 - 1
+      textureData[baseIndex + 1] = static_cast<float>(packed.word1) / 4294967295.0f;
+      textureData[baseIndex + 2] = static_cast<float>(packed.word2) / 4294967295.0f;
+      textureData[baseIndex + 3] = static_cast<float>(packed.word3) / 4294967295.0f;
     }
 
     // Upload 3D array texture data
@@ -146,8 +148,8 @@ namespace builtin_scene
 
     // Set texture storage
     glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray,
-                            1,               // levels
-                            WEBGL2_RGBA32UI, // internal format (RGBA32UI)
+                            1,             // levels
+                            WEBGL_RGBA32F, // internal format (RGBA32F for compatibility)
                             width,
                             height,
                             depth);
@@ -160,12 +162,12 @@ namespace builtin_scene
                              0, // xoffset, yoffset, zoffset
                              width,
                              height,
-                             depth,                            // width, height, depth
-                             WebGLTextureFormat::kRGBAInteger, // format
-                             WebGLPixelType::kUnsignedInt,     // type
+                             depth,                     // width, height, depth
+                             WebGLTextureFormat::kRGBA, // format (RGBA for float data)
+                             WebGLPixelType::kFloat,    // type (float instead of unsigned int)
                              (unsigned char *)textureData.data());
 
-    // Set texture parameters for point sampling (no filtering needed for integer textures)
+    // Set texture parameters for point sampling (no filtering needed for packed data)
     glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureMinFilter,
                              WEBGL_NEAREST);

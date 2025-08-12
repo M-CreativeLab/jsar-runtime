@@ -1,6 +1,5 @@
 precision highp float;
 precision highp int;
-precision highp usampler2DArray;
 
 // SparkJS-compatible constants and defines
 const float LN_SCALE_MIN = -12.0;
@@ -30,7 +29,7 @@ uniform float maxPixelRadius;
 uniform float clipXY;
 uniform float focalAdjustment;
 
-uniform usampler2DArray packedSplats;
+uniform sampler2DArray packedSplats;
 uniform vec4 rgbMinMaxLnScaleMinMax;
 
 // Vertex attributes
@@ -201,7 +200,10 @@ void main() {
 
     // Get texture coordinate using SparkJS method
     ivec3 texCoord = splatTexCoord(int(splatIndex));
-    uvec4 packed = texelFetch(packedSplats, texCoord, 0);
+    vec4 packedFloat = texelFetch(packedSplats, texCoord, 0);
+    
+    // Convert float values back to uint32 (since we're using regular sampler)
+    uvec4 packed = uvec4(packedFloat * 4294967295.0); // 2^32 - 1
 
     // Unpack splat data using SparkJS method
     vec3 center, scales;
