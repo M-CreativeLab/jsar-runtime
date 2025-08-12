@@ -3,8 +3,6 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
-#include <skia/include/core/SkBitmap.h>
-#include <skia/include/core/SkCanvas.h>
 
 namespace builtin_scene::text::sdf
 {
@@ -25,9 +23,9 @@ namespace builtin_scene::text::sdf
   };
 
   /**
-   * TinySDF - CPU-based SDF generator for bitmap textures
+   * TinySDF - CPU-based SDF generator for raw pixel data
    * 
-   * This class generates signed distance field textures from SkBitmap/SkCanvas
+   * This class generates signed distance field textures from raw pixel data
    * using a CPU-based implementation inspired by TinySDF.js from Mapbox.
    * 
    * Reference: https://github.com/mapbox/tiny-sdf
@@ -46,18 +44,14 @@ namespace builtin_scene::text::sdf
     TinySDF &operator=(TinySDF &&) = default;
 
     /**
-     * Generate SDF from SkBitmap and update alpha channel in place
-     * @param bitmap Input bitmap to convert to SDF (modified in place)
+     * Generate SDF from raw pixel data and update alpha channel in place
+     * Only modifies the alpha channel, preserving RGB channels
+     * @param pixels Raw pixel data (RGBA format, modified in place)
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
      * @return true if SDF generation succeeded, false otherwise
      */
-    bool generateFromBitmapInPlace(SkBitmap &bitmap);
-
-    /**
-     * Generate SDF from SkCanvas content and update alpha channel in place
-     * @param canvas Input canvas to convert to SDF (modified in place)
-     * @return true if SDF generation succeeded, false otherwise
-     */
-    bool generateFromCanvasInPlace(SkCanvas *canvas);
+    bool generateFromPixelsInPlace(unsigned char *pixels, int width, int height);
 
     /**
      * Get current SDF parameters
@@ -79,10 +73,8 @@ namespace builtin_scene::text::sdf
     SDFParams params_;
 
     // Internal methods for SDF generation using EDT algorithm
-    std::vector<uint8_t> extractAlphaChannel(const SkBitmap &bitmap);
-    bool generateSDFFromGrids(SkBitmap &bitmap,
-                              const std::vector<double> &gridOuter,
-                              const std::vector<double> &gridInner);
+    std::vector<uint8_t> extractAlphaChannel(const unsigned char *pixels, int width, int height);
+    bool generateSDFFromGrids(unsigned char *pixels, int width, int height, const std::vector<double> &gridOuter, const std::vector<double> &gridInner);
 
     // Euclidean Distance Transform (EDT) algorithm implementation
     // Based on "Distance Transforms of Sampled Functions" by Felzenszwalb & Huttenlocher

@@ -13,6 +13,9 @@
 #include <skia/include/core/SkData.h>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkImageInfo.h>
+#include <skia/include/core/SkBitmap.h>
+#include <skia/include/core/SkPixmap.h>
+#include <skia/include/core/SkSurface.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
 
@@ -1095,11 +1098,48 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    // Use TinySDF to convert the painted canvas to SDF texture in place
-    // This modifies the alpha channel to contain distance field data
-    // while preserving RGB channels as zero for SDF texture
+    // Get the surface from the canvas to extract pixel data
+    auto surface = canvas->getSurface();
+    if (!surface)
+    {
+      return;
+    }
+
+    // Create a bitmap from the surface
+    SkBitmap bitmap;
+    if (!surface->makeImageSnapshot()->asLegacyBitmap(&bitmap))
+    {
+      return;
+    }
+
+    // Get writable pixel data
+    SkPixmap pixmap;
+    if (!bitmap.peekPixels(&pixmap))
+    {
+      return;
+    }
+
+    unsigned char *pixels = static_cast<unsigned char *>(bitmap.getPixels());
+    if (!pixels)
+    {
+      return;
+    }
+
+    int width = bitmap.width();
+    int height = bitmap.height();
+
+    // Use TinySDF to convert the pixel data to SDF texture in place
+    // This modifies only the alpha channel to contain distance field data
+    // while preserving existing RGB channels
     builtin_scene::text::sdf::TinySDF sdfGenerator;
-    sdfGenerator.generateFromCanvasInPlace(canvas);
+    bool success = sdfGenerator.generateFromPixelsInPlace(pixels, width, height);
+
+    if (success)
+    {
+      // Update the canvas with the modified bitmap
+      canvas->clear(SK_ColorTRANSPARENT);
+      canvas->drawImage(bitmap.asImage(), 0, 0);
+    }
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

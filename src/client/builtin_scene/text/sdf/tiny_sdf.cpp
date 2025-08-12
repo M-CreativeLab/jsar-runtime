@@ -2,9 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <skia/include/core/SkPixmap.h>
-#include <skia/include/core/SkImageInfo.h>
-#include <skia/include/core/SkSurface.h>
 
 namespace builtin_scene::text::sdf
 {
@@ -15,17 +12,15 @@ namespace builtin_scene::text::sdf
   {
   }
 
-  bool TinySDF::generateFromBitmapInPlace(SkBitmap &bitmap)
+  bool TinySDF::generateFromPixelsInPlace(unsigned char *pixels, int width, int height)
   {
-    if (bitmap.empty())
+    if (!pixels || width <= 0 || height <= 0)
       return false;
 
-    int width = bitmap.width();
-    int height = bitmap.height();
     int len = width * height;
 
-    // Extract alpha channel from bitmap
-    auto alphaData = extractAlphaChannel(bitmap);
+    // Extract alpha channel from pixel data
+    auto alphaData = extractAlphaChannel(pixels, width, height);
     if (alphaData.empty())
       return false;
 
@@ -69,87 +64,24 @@ namespace builtin_scene::text::sdf
     edt(gridOuter, 0, 0, width, height, width, f, v, z);
     edt(gridInner, 0, 0, width, height, width, f, v, z);
 
-    // Generate SDF and update bitmap alpha channel
-    return generateSDFFromGrids(bitmap, gridOuter, gridInner);
+    // Generate SDF and update pixel alpha channel
+    return generateSDFFromGrids(pixels, width, height, gridOuter, gridInner);
   }
 
-  bool TinySDF::generateFromCanvasInPlace(SkCanvas *canvas)
+  std::vector<uint8_t> TinySDF::extractAlphaChannel(const unsigned char *pixels, int width, int height)
   {
-    if (!canvas)
-      return false;
-
-    // Get the surface from the canvas to extract bitmap
-    auto surface = canvas->getSurface();
-    if (!surface)
-      return false;
-
-    SkBitmap bitmap;
-    if (!surface->makeImageSnapshot()->asLegacyBitmap(&bitmap))
-      return false;
-
-    // Generate SDF in place on the bitmap
-    bool success = generateFromBitmapInPlace(bitmap);
-    if (success)
-    {
-      // Update the canvas with the modified bitmap
-      canvas->clear(SK_ColorTRANSPARENT);
-      canvas->drawImage(bitmap.asImage(), 0, 0);
-    }
-
-    return success;
-  }
-
-  std::vector<uint8_t> TinySDF::extractAlphaChannel(const SkBitmap &bitmap)
-  {
-    SkPixmap pixmap;
-    if (!bitmap.peekPixels(&pixmap))
+    if (!pixels || width <= 0 || height <= 0)
       return {};
 
-    int width = bitmap.width();
-    int height = bitmap.height();
     std::vector<uint8_t> alphaData(width * height);
 
-    // Extract alpha channel based on color type
-    SkColorType colorType = pixmap.colorType();
-    const void *pixels = pixmap.addr();
-    int rowBytes = pixmap.rowBytes();
-
+    // Assume RGBA format (4 bytes per pixel)
     for (int y = 0; y < height; ++y)
     {
       for (int x = 0; x < width; ++x)
       {
-        uint8_t alpha = 0;
-
-        switch (colorType)
-        {
-        case kAlpha_8_SkColorType:
-        {
-          const uint8_t *row = static_cast<const uint8_t *>(pixels) + y * rowBytes;
-          alpha = row[x];
-          break;
-        }
-        case kRGBA_8888_SkColorType:
-        case kBGRA_8888_SkColorType:
-        {
-          const uint32_t *row = reinterpret_cast<const uint32_t *>(static_cast<const uint8_t *>(pixels) + y * rowBytes);
-          uint32_t pixel = row[x];
-          alpha = (pixel >> 24) & 0xFF; // Extract alpha from ARGB
-          break;
-        }
-        case kRGB_888x_SkColorType:
-        {
-          alpha = 255; // No alpha channel, assume fully opaque
-          break;
-        }
-        default:
-        {
-          // For other formats, use Skia's color extraction
-          SkColor color = pixmap.getColor(x, y);
-          alpha = SkColorGetA(color);
-          break;
-        }
-        }
-
+        const int pixelIndex = (y * width + x) * 4;
+        const uint8_t alpha = pixels[pixelIndex + 3]; // Alpha is 4th component
         alphaData[y * width + x] = alpha;
       }
     }
@@ -157,30 +89,18 @@ namespace builtin_scene::text::sdf
     return alphaData;
   }
 
-  bool TinySDF::generateSDFFromGrids(SkBitmap &bitmap,
-                                     const std::vector<double> &gridOuter,
-                                     const std::vector<double> &gridInner)
+  bool TinySDF::generateSDFFromGrids(unsigned char *pixels, int width, int height, const std::vector<double> &gridOuter, const std::vector<double> &gridInner)
   {
-    SkPixmap pixmap;
-    if (!bitmap.peekPixels(&pixmap))
+    if (!pixels || width <= 0 || height <= 0)
       return false;
 
-    int width = bitmap.width();
-    int height = bitmap.height();
     int len = width * height;
 
     if (gridOuter.size() != static_cast<size_t>(len) ||
         gridInner.size() != static_cast<size_t>(len))
       return false;
 
-    // Get writable pixels
-    void *pixels = bitmap.getPixels();
-    if (!pixels)
-      return false;
-
-    SkColorType colorType = pixmap.colorType();
-    int rowBytes = pixmap.rowBytes();
-
+    // Update only the alpha channel, preserving RGB channels
     for (int i = 0; i < len; i++)
     {
       // Combine outer and inner distance fields to create signed distance
@@ -190,39 +110,10 @@ namespace builtin_scene::text::sdf
       const double sdfValue = 255.0 - 255.0 * (d / params_.radius + params_.cutoff);
       const uint8_t sdfByte = static_cast<uint8_t>(std::round(std::clamp(sdfValue, 0.0, 255.0)));
 
-      int y = i / width;
-      int x = i % width;
-
-      switch (colorType)
-      {
-      case kAlpha_8_SkColorType:
-      {
-        uint8_t *row = static_cast<uint8_t *>(pixels) + y * rowBytes;
-        row[x] = sdfByte;
-        break;
-      }
-      case kRGBA_8888_SkColorType:
-      {
-        uint32_t *row = reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(pixels) + y * rowBytes);
-        // Set RGB channels to 0 for SDF texture, alpha to SDF value
-        row[x] = static_cast<uint32_t>(sdfByte) << 24;
-        break;
-      }
-      case kBGRA_8888_SkColorType:
-      {
-        uint32_t *row = reinterpret_cast<uint32_t *>(static_cast<uint8_t *>(pixels) + y * rowBytes);
-        // For BGRA, alpha is still in the top 8 bits
-        row[x] = static_cast<uint32_t>(sdfByte) << 24;
-        break;
-      }
-      default:
-      {
-        // For other formats, set pixel color with SDF value as alpha
-        SkColor sdfColor = SkColorSetA(SK_ColorBLACK, sdfByte);
-        *bitmap.getAddr32(x, y) = sdfColor;
-        break;
-      }
-      }
+      // Update only alpha channel (4th component in RGBA)
+      const int pixelIndex = i * 4;
+      pixels[pixelIndex + 3] = sdfByte;
+      // RGB channels (pixels[pixelIndex], pixels[pixelIndex + 1], pixels[pixelIndex + 2]) remain unchanged
     }
 
     return true;
