@@ -23,19 +23,25 @@ namespace builtin_scene
       , needsSorting_(false)
       , bufferInitialized_(false)
       , textureInitialized_(false)
+      , needsTextureUpdate_(false)
   {
   }
 
   void GaussianSplatsMesh::addSplatsEntity(ecs::EntityId entityId)
   {
-    splatEntities_.insert(entityId);
-    needsRebuild_ = true;
-    needsSorting_ = true;
+    // Check if entity already exists to avoid duplicates
+    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
+    if (it == splatEntities_.end())
+    {
+      splatEntities_.push_back(entityId);
+      needsRebuild_ = true;
+      needsSorting_ = true;
+    }
   }
 
   void GaussianSplatsMesh::removeSplatsEntity(ecs::EntityId entityId)
   {
-    auto it = splatEntities_.find(entityId);
+    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
     if (it != splatEntities_.end())
     {
       splatEntities_.erase(it);
@@ -46,7 +52,8 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::updateSplatsEntity(ecs::EntityId entityId)
   {
-    if (splatEntities_.count(entityId) > 0)
+    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
+    if (it != splatEntities_.end())
     {
       needsRebuild_ = true;
       needsSorting_ = true;
@@ -182,7 +189,22 @@ namespace builtin_scene
                              WebGLTextureParameterName::kTextureWrapT,
                              WEBGL_CLAMP_TO_EDGE);
 
+    // Reset the flag since texture has been updated
+    needsTextureUpdate_ = false;
+
     DEBUG("GaussianSplatsMesh", "Updated splat data texture: %zu splats, %zux%zu texture", splatTextureData_.size(), textureWidth, textureHeight);
+  }
+
+  void GaussianSplatsMesh::updateSplatTextureIfNeeded()
+  {
+    if (needsTextureUpdate_)
+    {
+      auto glContext = glContext_.lock();
+      if (glContext)
+      {
+        updateSplatTexture(glContext);
+      }
+    }
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,

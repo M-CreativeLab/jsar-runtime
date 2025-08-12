@@ -111,9 +111,6 @@ namespace builtin_scene::materials
         // Update splat count for drawing
         splatInstanceCount_ = splatsMesh->getTotalSplatCount();
 
-        // Update texture with splat data
-        splatsMesh->updateSplatTexture(glContext);
-
         // Update buffer with sorted indices
         splatsMesh->updateSplatBuffer(glContext);
 

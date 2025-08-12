@@ -108,6 +108,8 @@ namespace builtin_scene
       if (needsRebuild_)
       {
         rebuildSortedSplats(getComponent);
+        // Update texture after rebuilding splat data
+        updateSplatTextureIfNeeded();
       }
 
       if (!needsSorting_)
@@ -196,6 +198,11 @@ namespace builtin_scene
     void updateSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
+     * Update splat texture if needed based on flags.
+     */
+    void updateSplatTextureIfNeeded();
+
+    /**
      * Get the splat instance buffer for attribute configuration.
      */
     inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const
@@ -277,9 +284,10 @@ namespace builtin_scene
       }
 
       needsRebuild_ = false;
-      needsSorting_ = true; // After rebuilding, we need to sort the splats
+      needsSorting_ = true;       // After rebuilding, we need to sort the splats
+      needsTextureUpdate_ = true; // After rebuilding, we need to update the texture
 
-      // Mark the mesh as dirty so the GPU buffer and texture get updated
+      // Mark the mesh as dirty so the GPU buffer gets updated
       setDirty(true);
 
       // Debug output
@@ -287,8 +295,8 @@ namespace builtin_scene
     }
 
   private:
-    // Set of entity IDs that have GaussianSplattingModel3d components
-    std::unordered_set<ecs::EntityId> splatEntities_;
+    // Vector of entity IDs that have GaussianSplattingModel3d components
+    std::vector<ecs::EntityId> splatEntities_;
 
     // Splat texture data (stable, doesn't change during sorting)
     std::vector<SplatTextureData> splatTextureData_;
@@ -310,6 +318,7 @@ namespace builtin_scene
     bool needsSorting_;
     bool bufferInitialized_;
     bool textureInitialized_;
+    bool needsTextureUpdate_;
 
     // Empty indices to prevent normal draw call
     static const Indices<uint32_t> emptyIndices_;
