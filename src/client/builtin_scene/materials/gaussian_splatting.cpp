@@ -68,10 +68,7 @@ namespace builtin_scene::materials
 
     // Only handle drawing if we have splats to render
     if (splatInstanceCount_ == 0)
-    {
-      DEBUG("GaussianSplattingMaterial", "No splats to render, skipping draw call");
       return;
-    }
 
     DEBUG("GaussianSplattingMaterial", "Rendering %zu splat instances", splatInstanceCount_);
 

@@ -96,7 +96,7 @@ namespace builtin_scene
 
     for (const auto &splat : sortedSplats_)
     {
-      indexData.push_back(splat.sortedIndex);
+      indexData.push_back(splat.index);
     }
 
     // Upload to GPU
@@ -146,29 +146,29 @@ namespace builtin_scene
       const auto &splat = splatTextureData_[i];
       size_t baseIndex = i * texelsPerSplat * 4; // 4 components per texel
 
-      // Texel 0: position + opacity
+      // Texel 0: position
       textureData[baseIndex + 0] = splat.position.x;
       textureData[baseIndex + 1] = splat.position.y;
       textureData[baseIndex + 2] = splat.position.z;
-      textureData[baseIndex + 3] = splat.opacity;
+      textureData[baseIndex + 3] = 0.0f;
 
-      // Texel 1: color + scale.x
+      // Texel 1: color + opacity
       textureData[baseIndex + 4] = splat.color.r;
       textureData[baseIndex + 5] = splat.color.g;
       textureData[baseIndex + 6] = splat.color.b;
-      textureData[baseIndex + 7] = splat.scale.x;
+      textureData[baseIndex + 7] = splat.opacity;
 
-      // Texel 2: scale.yz + rotation.xy
-      textureData[baseIndex + 8] = splat.scale.y;
-      textureData[baseIndex + 9] = splat.scale.z;
-      textureData[baseIndex + 10] = splat.rotation.x;
-      textureData[baseIndex + 11] = splat.rotation.y;
+      // Texel 2: scale
+      textureData[baseIndex + 8] = splat.scale.x;
+      textureData[baseIndex + 9] = splat.scale.y;
+      textureData[baseIndex + 10] = splat.scale.z;
+      textureData[baseIndex + 11] = 0.0f;
 
-      // Texel 3: rotation.zw + padding
-      textureData[baseIndex + 12] = splat.rotation.z;
-      textureData[baseIndex + 13] = splat.rotation.w;
-      textureData[baseIndex + 14] = 0.0f; // padding
-      textureData[baseIndex + 15] = 0.0f; // padding
+      // Texel 3: rotation
+      textureData[baseIndex + 12] = splat.rotation.x;
+      textureData[baseIndex + 13] = splat.rotation.y;
+      textureData[baseIndex + 14] = splat.rotation.z;
+      textureData[baseIndex + 15] = splat.rotation.w;
     }
 
     // Upload texture data

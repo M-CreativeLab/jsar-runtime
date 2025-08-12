@@ -24,72 +24,45 @@ out vec3 vNdc;
 
 // Texture lookup functions for splat data
 // Each splat uses 4 texels in RGBA32F format:
-// Texel 0: position.xyz, opacity
-// Texel 1: color.rgb, scale.x
-// Texel 2: scale.yz, rotation.xy
-// Texel 3: rotation.zw, padding
+// Texel 0: position.xyz
+// Texel 1: color.rgb, opacity
+// Texel 2: scale.xyz
+// Texel 3: rotation.xyzw
 
-vec3 getSplatPosition(uint index) {
-  ivec2 texSize = textureSize(splatDataTexture, 0);
-  uint texelIndex = index * 4u; // 4 texels per splat
-  int x = int(texelIndex) % texSize.x;
-  int y = int(texelIndex) / texSize.x;
-  vec4 data = texelFetch(splatDataTexture, ivec2(x, y), 0);
-  return data.xyz;
+const int TEXELS_PER_SPLAT = 4;
+
+// Compute texel coordinate for (splatIndex, texelOffsetInsideSplat)
+ivec2 _splatTexelCoord(uint splatIndex, int localOffset) {
+  ivec2 ts = textureSize(splatDataTexture, 0);
+  int linear = int(splatIndex) * TEXELS_PER_SPLAT + localOffset;
+  int x = linear % ts.x;
+  int y = linear / ts.x;
+  return ivec2(x, y);
 }
 
-float getSplatOpacity(uint index) {
-  ivec2 texSize = textureSize(splatDataTexture, 0);
-  uint texelIndex = index * 4u; // 4 texels per splat
-  int x = int(texelIndex) % texSize.x;
-  int y = int(texelIndex) / texSize.x;
-  vec4 data = texelFetch(splatDataTexture, ivec2(x, y), 0);
-  return data.w;
+// Safe fetch (optionally you can add bounds checks)
+vec4 _splatFetch(uint splatIndex, int localOffset) {
+  return texelFetch(splatDataTexture, _splatTexelCoord(splatIndex, localOffset), 0);
 }
 
-vec3 getSplatColor(uint index) {
-  ivec2 texSize = textureSize(splatDataTexture, 0);
-  uint texelIndex = index * 4u + 1u; // Second texel
-  int x = int(texelIndex) % texSize.x;
-  int y = int(texelIndex) / texSize.x;
-  vec4 data = texelFetch(splatDataTexture, ivec2(x, y), 0);
-  return data.xyz;
+// 1. Position (vec3 + padding)
+vec3 getSplatPosition(uint splatIndex) {
+  return _splatFetch(splatIndex, 0).xyz;
 }
 
-vec3 getSplatScale(uint index) {
-  ivec2 texSize = textureSize(splatDataTexture, 0);
-  
-  // scale.x from texel 1
-  uint texelIndex1 = index * 4u + 1u;
-  int x1 = int(texelIndex1) % texSize.x;
-  int y1 = int(texelIndex1) / texSize.x;
-  vec4 data1 = texelFetch(splatDataTexture, ivec2(x1, y1), 0);
-  
-  // scale.yz from texel 2
-  uint texelIndex2 = index * 4u + 2u;
-  int x2 = int(texelIndex2) % texSize.x;
-  int y2 = int(texelIndex2) / texSize.x;
-  vec4 data2 = texelFetch(splatDataTexture, ivec2(x2, y2), 0);
-  
-  return vec3(data1.w, data2.xy);
+// 2. RGBA (vec4)
+vec4 getSplatRgba(uint splatIndex) {
+  return _splatFetch(splatIndex, 1);
 }
 
-vec4 getSplatRotation(uint index) {
-  ivec2 texSize = textureSize(splatDataTexture, 0);
-  
-  // rotation.xy from texel 2
-  uint texelIndex2 = index * 4u + 2u;
-  int x2 = int(texelIndex2) % texSize.x;
-  int y2 = int(texelIndex2) / texSize.x;
-  vec4 data2 = texelFetch(splatDataTexture, ivec2(x2, y2), 0);
-  
-  // rotation.zw from texel 3
-  uint texelIndex3 = index * 4u + 3u;
-  int x3 = int(texelIndex3) % texSize.x;
-  int y3 = int(texelIndex3) / texSize.x;
-  vec4 data3 = texelFetch(splatDataTexture, ivec2(x3, y3), 0);
-  
-  return vec4(data2.zw, data3.xy);
+// 3. Scale (vec3 + padding)
+vec3 getSplatScale(uint splatIndex) {
+  return _splatFetch(splatIndex, 2).xyz;
+}
+
+// 4. Rotation quaternion (vec4)
+vec4 getSplatRotation(uint splatIndex) {
+  return _splatFetch(splatIndex, 3);
 }
 
 vec4 mat3ToQuat(mat3 m) {
@@ -191,7 +164,6 @@ void eigenDecomposeSym2(
   float root = sqrt(disc);
   l1 = mid + root;
   l2 = mid - root;
-  
   v1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, l1 - a));
   v2 = vec2(-v1.y, v1.x);
 }
@@ -199,17 +171,16 @@ void eigenDecomposeSym2(
 void main() {
   // Retrieve splat data from texture using sorted index
   vec3 splatPosition = getSplatPosition(splatSortedIndex);
-  vec3 splatColor = getSplatColor(splatSortedIndex);
-  float splatOpacity = getSplatOpacity(splatSortedIndex);
+  vec4 splatRgba = getSplatRgba(splatSortedIndex);
   vec3 splatScale = getSplatScale(splatSortedIndex);
   vec4 splatRotation = getSplatRotation(splatSortedIndex);
 
   // Default to outside the frustum so it's discarded if we return early
   gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-  vRgba = vec4(splatColor, splatOpacity);
+  vRgba = splatRgba;
 
   // Early alpha test
-  if (splatOpacity < minAlpha) {
+  if (vRgba.a < minAlpha) {
     return;
   }
 

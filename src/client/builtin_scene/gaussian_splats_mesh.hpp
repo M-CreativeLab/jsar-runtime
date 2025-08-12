@@ -45,12 +45,12 @@ namespace builtin_scene
    */
   struct SplatInstanceData
   {
-    uint32_t sortedIndex;       // Index into the splat texture
+    uint32_t index;             // Index into the splat texture
     float depth;                // For sorting (not uploaded to GPU)
     ecs::EntityId sourceEntity; // Not uploaded to GPU
 
     SplatInstanceData()
-        : sortedIndex(0)
+        : index(0)
         , depth(0.0f)
         , sourceEntity(0)
     {
@@ -120,8 +120,8 @@ namespace builtin_scene
       // Calculate depth for each splat using texture data positions
       for (auto &splat : sortedSplats_)
       {
-        const auto &textureData = splatTextureData_[splat.sortedIndex];
-        glm::vec4 viewPos = viewMatrix * glm::vec4(textureData.position, 1.0f);
+        const auto &splatData = splatTextureData_[splat.index];
+        glm::vec4 viewPos = viewMatrix * glm::vec4(splatData.position, 1.0f);
         splat.depth = -viewPos.z; // Depth in view space
       }
 
@@ -274,7 +274,7 @@ namespace builtin_scene
 
             // Add to sorted instances (only index and sorting data)
             SplatInstanceData instance;
-            instance.sortedIndex = textureIndex;
+            instance.index = textureIndex;
             instance.sourceEntity = entityId;
             sortedSplats_.push_back(instance);
 
