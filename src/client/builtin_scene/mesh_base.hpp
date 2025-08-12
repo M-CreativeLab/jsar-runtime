@@ -63,6 +63,7 @@ namespace builtin_scene
   enum class VertexFormat
   {
     kUnknown,
+    kFloat32,
     kFloat32x2,
     kFloat32x3,
     kFloat32x4,
@@ -132,6 +133,14 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kUnknown;
     static const int type = 0;
+  };
+
+  template <>
+  class VertexAttributeTraits<float, 1>
+  {
+  public:
+    static const VertexFormat format = VertexFormat::kFloat32;
+    static const int type = WEBGL_FLOAT;
   };
 
   template <>

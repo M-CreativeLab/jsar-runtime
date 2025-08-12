@@ -45,7 +45,6 @@ namespace builtin_scene::text::sdf
 
     // Generate SDF in place on the bitmap
     bool success = generateFromBitmapInPlace(bitmap);
-
     if (success)
     {
       // Update the canvas with the modified bitmap

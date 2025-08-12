@@ -1075,10 +1075,8 @@ namespace builtin_scene::web_renderer
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
 
     // Then generate SDF texture from the painted canvas for anti-aliasing
-    rewriteSignedDistanceOnAlpha(content);
-
+    // rewriteSignedDistanceOnAlpha(content);
     content.setTextureAsSDF(true);
-
     content.setTextureUsing(true);
   }
 
@@ -1113,19 +1111,8 @@ namespace builtin_scene::web_renderer
     if (webContentMaterial)
     {
       // Set SDF flag on instance for text entities
-      auto textComponent = getComponent<Text2d>(entity);
-      if (textComponent)
-      {
-        // Get the instance and mark it for SDF texture usage
-        auto &instance = material3d->getInstance(entity);
-        instance.setUseSDFTexture(true);
-      }
-      else
-      {
-        // For non-text entities, ensure SDF is disabled
-        auto &instance = material3d->getInstance(entity);
-        instance.setUseSDFTexture(false);
-      }
+      // Check if this is a spatial image and set the spatial flag
+      auto imageComponent = getComponent<Image2d>(entity);
 
       // Use the same texture update method for both text and image content
       auto status = webContentMaterial->updateTexture(content);
