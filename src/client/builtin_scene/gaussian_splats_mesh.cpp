@@ -75,11 +75,8 @@ namespace builtin_scene
 
     // Create the instance buffer for splat data
     splatInstanceBuffer_ = glContext->createBuffer();
-
-    if (splatInstanceBuffer_)
-    {
+    if (splatInstanceBuffer_) [[likely]]
       bufferInitialized_ = true;
-    }
   }
 
   void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext)
@@ -91,18 +88,16 @@ namespace builtin_scene
       return;
 
     // Prepare a contiguous array of sorted indices (only uint32_t values now)
-    vector<uint32_t> indexData;
+    vector<int32_t> indexData;
     indexData.reserve(sortedSplats_.size());
 
     for (const auto &splat : sortedSplats_)
-    {
       indexData.push_back(splat.index);
-    }
 
     // Upload to GPU
     glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
     glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
-                          indexData.size() * sizeof(uint32_t),
+                          indexData.size() * sizeof(int32_t),
                           indexData.data(),
                           WebGLBufferUsage::kDynamicDraw);
     setDirty(false);
@@ -131,15 +126,15 @@ namespace builtin_scene
     size_t totalTexels = splatTextureData_.size() * texelsPerSplat;
 
     // Choose texture dimensions (prefer square-ish textures)
-    size_t textureWidth = static_cast<size_t>(std::ceil(std::sqrt(static_cast<float>(totalTexels))));
+    size_t textureWidth = static_cast<size_t>(ceil(sqrt(static_cast<float>(totalTexels))));
     size_t textureHeight = (totalTexels + textureWidth - 1) / textureWidth; // Ceiling division
 
     // Ensure minimum size
-    textureWidth = std::max(textureWidth, size_t(1));
-    textureHeight = std::max(textureHeight, size_t(1));
+    textureWidth = max(textureWidth, size_t(1));
+    textureHeight = max(textureHeight, size_t(1));
 
     // Prepare texture data
-    std::vector<float> textureData(textureWidth * textureHeight * 4, 0.0f); // RGBA format
+    vector<float> textureData(textureWidth * textureHeight * 4, 0.0f); // RGBA format
 
     for (size_t i = 0; i < splatTextureData_.size(); ++i)
     {
@@ -249,13 +244,13 @@ namespace builtin_scene
       if (attribLocation.has_value())
       {
         auto instanceIndex = attribLocation.value().index.value_or(-1);
-        std::unique_ptr<IVertexAttribute> attrib = nullptr;
+        unique_ptr<IVertexAttribute> attrib = nullptr;
 
         // Configure based on attribute name and type
         if (name == "splatSortedIndex")
         {
           // uint32 attribute for texture index
-          attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
+          attrib = make_unique<VertexAttribute<int32_t, 1>>(name, instanceIndex, VertexFormat::kInt32);
         }
         else
         {

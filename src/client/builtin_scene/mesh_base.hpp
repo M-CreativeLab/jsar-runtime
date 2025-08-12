@@ -73,6 +73,7 @@ namespace builtin_scene
     kUint16x2,
     kUint16x4,
     kUint32,
+    kInt32,
     // More formats?
   };
 
@@ -192,6 +193,14 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kUint32;
     static const int type = WEBGL_UNSIGNED_INT;
+  };
+
+  template <>
+  class VertexAttributeTraits<int32_t, 1>
+  {
+  public:
+    static const VertexFormat format = VertexFormat::kInt32;
+    static const int type = WEBGL_INT;
   };
 
   /**

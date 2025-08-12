@@ -17,7 +17,7 @@ uniform sampler2D splatDataTexture;
 in vec3 position;
 
 // Instanced attributes (per splat) - only the sorted index now
-in uint splatSortedIndex;
+in int splatSortedIndex;
 
 out vec4 vRgba;
 out vec2 vSplatUv;
@@ -33,36 +33,36 @@ out vec3 vNdc;
 const int TEXELS_PER_SPLAT = 4;
 
 // Compute texel coordinate for (splatIndex, texelOffsetInsideSplat)
-ivec2 _splatTexelCoord(uint splatIndex, int localOffset) {
+ivec2 _splatTexelCoord(int splatIndex, int localOffset) {
   ivec2 ts = textureSize(splatDataTexture, 0);
-  int linear = int(splatIndex) * TEXELS_PER_SPLAT + localOffset;
+  int linear = splatIndex * TEXELS_PER_SPLAT + localOffset;
   int x = linear % ts.x;
   int y = linear / ts.x;
   return ivec2(x, y);
 }
 
 // Safe fetch (optionally you can add bounds checks)
-vec4 _splatFetch(uint splatIndex, int localOffset) {
+vec4 _splatFetch(int splatIndex, int localOffset) {
   return texelFetch(splatDataTexture, _splatTexelCoord(splatIndex, localOffset), 0);
 }
 
 // 1. Position (vec3 + padding)
-vec3 getSplatPosition(uint splatIndex) {
+vec3 getSplatPosition(int splatIndex) {
   return _splatFetch(splatIndex, 0).xyz;
 }
 
 // 2. RGBA (vec4)
-vec4 getSplatRgba(uint splatIndex) {
+vec4 getSplatRgba(int splatIndex) {
   return _splatFetch(splatIndex, 1);
 }
 
 // 3. Scale (vec3 + padding)
-vec3 getSplatScale(uint splatIndex) {
+vec3 getSplatScale(int splatIndex) {
   return _splatFetch(splatIndex, 2).xyz;
 }
 
 // 4. Rotation quaternion (vec4)
-vec4 getSplatRotation(uint splatIndex) {
+vec4 getSplatRotation(int splatIndex) {
   return _splatFetch(splatIndex, 3);
 }
 
@@ -259,7 +259,7 @@ void main() {
   float eigen2 = eigenAvg - eigenDelta;
 
   vec2 eigenVec1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, eigen1 - a));
-  vec2 eigenVec2 = vec2(eigenVec1.y, -eigenVec1.x);
+  vec2 eigenVec2 = vec2(-eigenVec1.y, eigenVec1.x);
 
   float scale1 = position.x * min(maxPixelRadius, maxStdDev * sqrt(eigen1));
   float scale2 = position.y * min(maxPixelRadius, maxStdDev * sqrt(eigen2));

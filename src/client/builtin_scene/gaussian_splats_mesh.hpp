@@ -45,7 +45,7 @@ namespace builtin_scene
    */
   struct SplatInstanceData
   {
-    uint32_t index;             // Index into the splat texture
+    int32_t index;              // Index into the splat texture
     float depth;                // For sorting (not uploaded to GPU)
     ecs::EntityId sourceEntity; // Not uploaded to GPU
 
@@ -59,7 +59,7 @@ namespace builtin_scene
     // Get the size of GPU-uploadable data (only the sorted index)
     static constexpr size_t getGPUDataSize()
     {
-      return sizeof(uint32_t);
+      return sizeof(int32_t);
     }
   };
 
@@ -254,7 +254,7 @@ namespace builtin_scene
       sortedSplats_.clear();
 
       // Collect all splats from all entities by iterating entity IDs
-      uint32_t textureIndex = 0;
+      int32_t textureIndex = 0;
       for (ecs::EntityId entityId : splatEntities_)
       {
         auto *model = getComponent(entityId);
