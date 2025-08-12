@@ -163,7 +163,7 @@ namespace builtin_scene
                              depth,                            // width, height, depth
                              WebGLTextureFormat::kRGBAInteger, // format
                              WebGLPixelType::kUnsignedInt,     // type
-                             textureData.data());
+                             (unsigned char *)textureData.data());
 
     // Set texture parameters for point sampling (no filtering needed for integer textures)
     glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
@@ -257,7 +257,7 @@ namespace builtin_scene
         if (name == "splatIndex")
         {
           // uint32 attribute for texture index
-          attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUInt32);
+          attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
         }
         else
         {

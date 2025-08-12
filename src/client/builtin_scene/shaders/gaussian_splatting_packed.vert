@@ -34,8 +34,8 @@ uniform usampler2DArray packedSplats;
 uniform vec4 rgbMinMaxLnScaleMinMax;
 
 // Vertex attributes
-attribute vec3 position;        // quad position (-1 to 1)
-attribute uint splatIndex;      // splat index (sorted)
+in vec3 position;        // quad position (-1 to 1)
+in uint splatIndex;      // splat index (sorted)
 
 // Outputs
 out vec4 vRgba;

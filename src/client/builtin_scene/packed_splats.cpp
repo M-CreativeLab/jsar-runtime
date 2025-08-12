@@ -9,6 +9,8 @@
 
 namespace builtin_scene::packed_splat_utils
 {
+  using namespace std;
+
   // Helper union for float16 conversion
   union FloatInt
   {
@@ -121,7 +123,7 @@ namespace builtin_scene::packed_splat_utils
     }
 
     // Folded Octahedral Mapping
-    float sum = std::abs(axis_x) + std::abs(axis_y) + std::abs(axis_z);
+    float sum = abs(axis_x) + abs(axis_y) + abs(axis_z);
     float p_x = axis_x / sum;
     float p_y = axis_y / sum;
 
@@ -129,8 +131,8 @@ namespace builtin_scene::packed_splat_utils
     if (axis_z < 0.0f)
     {
       float oldPx = p_x;
-      p_x = (1.0f - std::abs(p_y)) * (p_x >= 0.0f ? 1.0f : -1.0f);
-      p_y = (1.0f - std::abs(oldPx)) * (p_y >= 0.0f ? 1.0f : -1.0f);
+      p_x = (1.0f - abs(p_y)) * (p_x >= 0.0f ? 1.0f : -1.0f);
+      p_y = (1.0f - abs(oldPx)) * (p_y >= 0.0f ? 1.0f : -1.0f);
     }
 
     // Remap from [-1,1] to [0,1]
@@ -138,11 +140,11 @@ namespace builtin_scene::packed_splat_utils
     float v_f = p_y * 0.5f + 0.5f;
 
     // Quantize to 8 bits (0 to 255)
-    uint32_t quantU = static_cast<uint32_t>(std::clamp(std::round(u_f * 255.0f), 0.0f, 255.0f));
-    uint32_t quantV = static_cast<uint32_t>(std::clamp(std::round(v_f * 255.0f), 0.0f, 255.0f));
+    uint32_t quantU = static_cast<uint32_t>(clamp(round(u_f * 255.0f), 0.0f, 255.0f));
+    uint32_t quantV = static_cast<uint32_t>(clamp(round(v_f * 255.0f), 0.0f, 255.0f));
 
     // Angle Quantization - quantize θ ∈ [0,π] to 8 bits (0 to 255)
-    uint32_t angleInt = static_cast<uint32_t>(std::clamp(std::round((theta / M_PI) * 255.0f), 0.0f, 255.0f));
+    uint32_t angleInt = static_cast<uint32_t>(clamp(static_cast<float>(round((theta / M_PI) * 255.0f)), 0.0f, 255.0f));
 
     // Pack bits: bits [0–7]: quantU, [8–15]: quantV, [16–23]: angleInt
     return (angleInt << 16u) | (quantV << 8u) | quantU;
@@ -166,10 +168,10 @@ namespace builtin_scene::packed_splat_utils
     PackedSplat packed;
 
     // Word 0: RGBA as 4 x uint8
-    uint32_t uR = static_cast<uint32_t>(std::clamp(std::round(r * 255.0f), 0.0f, 255.0f));
-    uint32_t uG = static_cast<uint32_t>(std::clamp(std::round(g * 255.0f), 0.0f, 255.0f));
-    uint32_t uB = static_cast<uint32_t>(std::clamp(std::round(b * 255.0f), 0.0f, 255.0f));
-    uint32_t uA = static_cast<uint32_t>(std::clamp(std::round(a * 255.0f), 0.0f, 255.0f));
+    uint32_t uR = static_cast<uint32_t>(clamp(round(r * 255.0f), 0.0f, 255.0f));
+    uint32_t uG = static_cast<uint32_t>(clamp(round(g * 255.0f), 0.0f, 255.0f));
+    uint32_t uB = static_cast<uint32_t>(clamp(round(b * 255.0f), 0.0f, 255.0f));
+    uint32_t uA = static_cast<uint32_t>(clamp(round(a * 255.0f), 0.0f, 255.0f));
     packed.word0 = uR | (uG << 8u) | (uB << 16u) | (uA << 24u);
 
     // Word 1: Center XY as 2 x float16
@@ -186,13 +188,12 @@ namespace builtin_scene::packed_splat_utils
 
     // Encode scales in three uint8s, where 0=>0.0 and 1..=255 stores log scale
     float lnScaleScale = 254.0f / (LN_SCALE_MAX - LN_SCALE_MIN);
-    uint32_t uScaleX = (sx == 0.0f) ? 0u : static_cast<uint32_t>(std::clamp(std::round((std::log(sx) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
-    uint32_t uScaleY = (sy == 0.0f) ? 0u : static_cast<uint32_t>(std::clamp(std::round((std::log(sy) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
-    uint32_t uScaleZ = (sz == 0.0f) ? 0u : static_cast<uint32_t>(std::clamp(std::round((std::log(sz) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
+    uint32_t uScaleX = (sx == 0.0f) ? 0u : static_cast<uint32_t>(clamp(round((log(sx) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
+    uint32_t uScaleY = (sy == 0.0f) ? 0u : static_cast<uint32_t>(clamp(round((log(sy) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
+    uint32_t uScaleZ = (sz == 0.0f) ? 0u : static_cast<uint32_t>(clamp(round((log(sz) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
 
     // Word 3: Scales as 3 x uint8 + remaining quaternion
     packed.word3 = uScaleX | (uScaleY << 8u) | (uScaleZ << 16u) | (uQuat2 << 24u);
-
     return packed;
   }
 
