@@ -31,6 +31,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
     LOAD_UNIFORM_LOCATION("clipXY");
     LOAD_UNIFORM_LOCATION("focalAdjustment");
+    LOAD_UNIFORM_LOCATION("maxDistance");
     LOAD_UNIFORM_LOCATION("splatCenters");
     LOAD_UNIFORM_LOCATION("splatColors");
     LOAD_UNIFORM_LOCATION("splatScales");
@@ -58,6 +59,10 @@ namespace builtin_scene::materials
     auto focalAdjustmentOpt = glContext->getUniformLocation(program, "focalAdjustment");
     if (focalAdjustmentOpt.has_value())
       glContext->uniform1f(focalAdjustmentOpt.value(), 1.0f);
+
+    auto maxDistanceOpt = glContext->getUniformLocation(program, "maxDistance");
+    if (maxDistanceOpt.has_value())
+      glContext->uniform1f(maxDistanceOpt.value(), 2.0f); // Default 2 meters
 
     return true;
   }

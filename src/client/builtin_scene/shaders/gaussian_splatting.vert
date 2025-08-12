@@ -11,6 +11,7 @@ uniform float minAlpha;
 uniform float maxPixelRadius;
 uniform float clipXY;
 uniform float focalAdjustment;
+uniform float maxDistance;
 
 // Separate textures for splat data (no pack/unpack needed)
 uniform sampler2D splatCenters;  // RGB for XYZ position
@@ -162,6 +163,14 @@ void main()
   // Transform splat center to world space then view space
   vec3 worldCenter = (modelMatrix * vec4(center, 1.0)).xyz;
   vec3 viewCenter = quatVec(renderToViewQuat, worldCenter) + renderToViewPos;
+  
+  // Early distance culling to reduce GPU overdraw
+  float distanceToCamera = length(viewCenter);
+  if (distanceToCamera > maxDistance)
+  {
+    return;
+  }
+  
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera
