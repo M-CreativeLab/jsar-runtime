@@ -1490,6 +1490,88 @@ namespace webgl
   }
 
   template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib1f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "vertexAttrib1f() takes 2 arguments: index, x.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib1f(index, x);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib2f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "vertexAttrib2f() takes 3 arguments: index, x, y.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib2f(index, x, y);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib3f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "vertexAttrib3f() takes 4 arguments: index, x, y, z.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+    auto z = info[3].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib3f(index, x, y, z);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib4f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "vertexAttrib4f() takes 5 arguments: index, x, y, z, w.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto y = info[2].As<Napi::Number>().FloatValue();
+    auto z = info[3].As<Napi::Number>().FloatValue();
+    auto w = info[4].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib4f(index, x, y, z, w);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
   Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::GetActiveAttrib(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
