@@ -106,7 +106,7 @@ namespace builtin_scene
     DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());
   }
 
-  void GaussianSplatsMesh::updateSplatTextures(std::shared_ptr<WebGL2Context> glContext)
+  void GaussianSplatsMesh::updateSplatTextures(shared_ptr<WebGL2Context> glContext)
   {
     if (!glContext || directSplatData_.empty())
       return;
@@ -227,7 +227,7 @@ namespace builtin_scene
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
-                                               std::shared_ptr<WebGL2Context> glContext)
+                                               shared_ptr<WebGL2Context> glContext)
   {
     // Call parent implementation first
     Mesh::onMesh3dInitialized(mesh3d, glContext);
@@ -239,11 +239,11 @@ namespace builtin_scene
     setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
   }
 
-  size_t GaussianSplatsMesh::iterateInstanceAttributes(std::shared_ptr<WebGLProgram> program,
-                                                       std::function<void(const IVertexAttribute &,
-                                                                          int,
-                                                                          size_t,
-                                                                          size_t)> callback) const
+  size_t GaussianSplatsMesh::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,
+                                                       function<void(const IVertexAttribute &,
+                                                                     int,
+                                                                     size_t,
+                                                                     size_t)> callback) const
   {
     // We need a weak reference to glContext for attribute location queries
     auto glContext = glContext_.lock();
