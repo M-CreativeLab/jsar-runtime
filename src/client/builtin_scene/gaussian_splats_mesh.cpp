@@ -30,7 +30,7 @@ namespace builtin_scene
   void GaussianSplatsMesh::addSplatsEntity(ecs::EntityId entityId)
   {
     // Check if entity already exists to avoid duplicates
-    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
+    auto it = find(splatEntities_.begin(), splatEntities_.end(), entityId);
     if (it == splatEntities_.end())
     {
       splatEntities_.push_back(entityId);
@@ -41,7 +41,7 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::removeSplatsEntity(ecs::EntityId entityId)
   {
-    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
+    auto it = find(splatEntities_.begin(), splatEntities_.end(), entityId);
     if (it != splatEntities_.end())
     {
       splatEntities_.erase(it);
@@ -52,7 +52,7 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::updateSplatsEntity(ecs::EntityId entityId)
   {
-    auto it = std::find(splatEntities_.begin(), splatEntities_.end(), entityId);
+    auto it = find(splatEntities_.begin(), splatEntities_.end(), entityId);
     if (it != splatEntities_.end())
     {
       needsRebuild_ = true;
