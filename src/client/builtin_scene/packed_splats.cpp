@@ -11,12 +11,26 @@ namespace builtin_scene::packed_splat_utils
 {
   using namespace std;
 
-  // Helper union for float16 conversion
+  // Helper union for float/uint32 conversion
   union FloatInt
   {
     float f;
     uint32_t i;
   };
+
+  float uint32ToFloat(uint32_t value)
+  {
+    FloatInt fi;
+    fi.i = value;
+    return fi.f;
+  }
+
+  uint32_t floatToUint32(float value)
+  {
+    FloatInt fi;
+    fi.f = value;
+    return fi.i;
+  }
 
   uint16_t packHalf(float value)
   {
@@ -172,10 +186,12 @@ namespace builtin_scene::packed_splat_utils
     uint32_t uG = static_cast<uint32_t>(clamp(round(g * 255.0f), 0.0f, 255.0f));
     uint32_t uB = static_cast<uint32_t>(clamp(round(b * 255.0f), 0.0f, 255.0f));
     uint32_t uA = static_cast<uint32_t>(clamp(round(a * 255.0f), 0.0f, 255.0f));
-    packed.word0 = uR | (uG << 8u) | (uB << 16u) | (uA << 24u);
+    uint32_t word0_bits = uR | (uG << 8u) | (uB << 16u) | (uA << 24u);
+    packed.word0 = uint32ToFloat(word0_bits);
 
     // Word 1: Center XY as 2 x float16
-    packed.word1 = packHalf2(px, py);
+    uint32_t word1_bits = packHalf2(px, py);
+    packed.word1 = uint32ToFloat(word1_bits);
 
     // Encode quaternion using octahedral method
     uint32_t uQuat = encodeQuatOctXy88R8(qx, qy, qz, qw);
@@ -184,7 +200,8 @@ namespace builtin_scene::packed_splat_utils
     uint32_t uQuat2 = (uQuat >> 16u) & 0xffu; // bits 16-23
 
     // Word 2: Center Z as float16 + partial quaternion
-    packed.word2 = packHalf2(pz, 0.0f) | (uQuat0 << 16u) | (uQuat1 << 24u);
+    uint32_t word2_bits = packHalf2(pz, 0.0f) | (uQuat0 << 16u) | (uQuat1 << 24u);
+    packed.word2 = uint32ToFloat(word2_bits);
 
     // Encode scales in three uint8s, where 0=>0.0 and 1..=255 stores log scale
     float lnScaleScale = 254.0f / (LN_SCALE_MAX - LN_SCALE_MIN);
@@ -193,7 +210,9 @@ namespace builtin_scene::packed_splat_utils
     uint32_t uScaleZ = (sz == 0.0f) ? 0u : static_cast<uint32_t>(clamp(round((log(sz) - LN_SCALE_MIN) * lnScaleScale), 0.0f, 254.0f)) + 1u;
 
     // Word 3: Scales as 3 x uint8 + remaining quaternion
-    packed.word3 = uScaleX | (uScaleY << 8u) | (uScaleZ << 16u) | (uQuat2 << 24u);
+    uint32_t word3_bits = uScaleX | (uScaleY << 8u) | (uScaleZ << 16u) | (uQuat2 << 24u);
+    packed.word3 = uint32ToFloat(word3_bits);
+
     return packed;
   }
 

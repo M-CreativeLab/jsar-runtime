@@ -128,7 +128,7 @@ namespace builtin_scene
     uint32_t maxSplats = textureSize[3];
 
     // Prepare texture data - RGBA32F format (4 float per texel = 1 packed splat)
-    // Convert uint32 to normalized float [0,1] for compatibility with regular samplers
+    // Use float values directly from PackedSplat structure
     vector<float> textureData(maxSplats * 4, 0.0f); // 4 float per splat
 
     for (size_t i = 0; i < packedSplatData_.size(); ++i)
@@ -136,11 +136,11 @@ namespace builtin_scene
       const auto &packed = packedSplatData_[i];
       size_t baseIndex = i * 4; // 4 float values per packed splat
 
-      // Convert uint32 to normalized float [0,1]
-      textureData[baseIndex + 0] = static_cast<float>(packed.word0) / 4294967295.0f; // 2^32 - 1
-      textureData[baseIndex + 1] = static_cast<float>(packed.word1) / 4294967295.0f;
-      textureData[baseIndex + 2] = static_cast<float>(packed.word2) / 4294967295.0f;
-      textureData[baseIndex + 3] = static_cast<float>(packed.word3) / 4294967295.0f;
+      // Use float values directly (no conversion needed)
+      textureData[baseIndex + 0] = packed.word0;
+      textureData[baseIndex + 1] = packed.word1;
+      textureData[baseIndex + 2] = packed.word2;
+      textureData[baseIndex + 3] = packed.word3;
     }
 
     // Upload 3D array texture data
@@ -207,10 +207,14 @@ namespace builtin_scene
     // Extract position from packed data
     // Word1 contains XY as float16, Word2 contains Z as float16 (low 16 bits)
 
+    // Convert float back to uint32 to access bit patterns
+    uint32_t word1_bits = packed_splat_utils::floatToUint32(packed.word1);
+    uint32_t word2_bits = packed_splat_utils::floatToUint32(packed.word2);
+
     // Use utility functions to unpack float16 values
-    uint16_t hx = static_cast<uint16_t>(packed.word1 & 0xFFFFu);
-    uint16_t hy = static_cast<uint16_t>(packed.word1 >> 16u);
-    uint16_t hz = static_cast<uint16_t>(packed.word2 & 0xFFFFu);
+    uint16_t hx = static_cast<uint16_t>(word1_bits & 0xFFFFu);
+    uint16_t hy = static_cast<uint16_t>(word1_bits >> 16u);
+    uint16_t hz = static_cast<uint16_t>(word2_bits & 0xFFFFu);
 
     float x = packed_splat_utils::unpackHalf(hx);
     float y = packed_splat_utils::unpackHalf(hy);

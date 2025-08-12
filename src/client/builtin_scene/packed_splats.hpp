@@ -25,18 +25,25 @@ namespace builtin_scene
   constexpr float LN_SCALE_MIN = -12.0f;
   constexpr float LN_SCALE_MAX = 9.0f;
 
-  // Packed splat structure - exactly 4 uint32 values (16 bytes)
+  // Packed splat structure - exactly 4 float values (16 bytes)
+  // Each float contains bit-packed data compatible with RGBA32F texture format
   struct PackedSplat
   {
-    uint32_t word0; // RGBA as 4 x uint8
-    uint32_t word1; // Center XY as 2 x float16
-    uint32_t word2; // Center Z as float16 + partial quaternion
-    uint32_t word3; // Scales as 3 x uint8 + remaining quaternion
+    float word0; // RGBA as 4 x uint8 (stored as float)
+    float word1; // Center XY as 2 x float16 (stored as float)
+    float word2; // Center Z as float16 + partial quaternion (stored as float)
+    float word3; // Scales as 3 x uint8 + remaining quaternion (stored as float)
   };
 
   // Utility functions for packing/unpacking
   namespace packed_splat_utils
   {
+    // Convert uint32 to float preserving bit pattern (for packed data)
+    float uint32ToFloat(uint32_t value);
+
+    // Convert float to uint32 preserving bit pattern (for unpacking)
+    uint32_t floatToUint32(float value);
+
     // Pack a float to half precision (float16)
     uint16_t packHalf(float value);
 

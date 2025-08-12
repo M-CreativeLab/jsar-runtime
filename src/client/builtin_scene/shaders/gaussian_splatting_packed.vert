@@ -202,8 +202,11 @@ void main() {
     ivec3 texCoord = splatTexCoord(int(splatIndex));
     vec4 packedFloat = texelFetch(packedSplats, texCoord, 0);
     
-    // Convert float values back to uint32 (since we're using regular sampler)
-    uvec4 packed = uvec4(packedFloat * 4294967295.0); // 2^32 - 1
+    // Convert float values to uint32 for bit manipulation (reinterpret bits)
+    uvec4 packed = uvec4(floatBitsToUint(packedFloat.x), 
+                         floatBitsToUint(packedFloat.y),
+                         floatBitsToUint(packedFloat.z),
+                         floatBitsToUint(packedFloat.w));
 
     // Unpack splat data using SparkJS method
     vec3 center, scales;
