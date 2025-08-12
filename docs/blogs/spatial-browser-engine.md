@@ -1,4 +1,4 @@
-# Understanding the Spatial Web Browser Engine (JSAR)
+# Understanding the Spatial Web Browser Engine
 
 ## 1. What Is a Spatial Web Browser?
 
@@ -9,6 +9,10 @@ A Spatial Web Browser is a user agent that loads, interprets, and presents Web c
 - Composed alongside native 3D assets ([GLTF][GLTF] models, environment maps) in one unified frame loop
 
 In short: a Spatial Web Browser lets "regular Web pages" become immersive 3D experiences without abandoning open Web standards.
+
+<div style="text-align: center; margin: 2rem auto;">
+  <img src="https://ar.rokidcdn.com/web-assets/pages/screenshot-spatial-browsing-mono.png" alt="Spatial Browsing in JSAR" style="width: 50%;" />
+</div>
 
 ## 2. Why Not Just Extend an Existing (Classic) Browser?
 
@@ -25,12 +29,30 @@ Both approaches ultimately converge toward the same goal: enabling web developer
 ## 3. Definition: Spatial Web Browser Engine
 
 A Spatial Web Browser Engine is the runnable core (parsing, layout, styling, scripting, rendering, device integration) specialized for spatial presentation. In JSAR this means:
-- **Standards Alignment**: [HTML5][HTML5] subset, [CSS3][CSS3] partial, [DOM APIs][DOM], [WebGL1/2][WebGL], [WebXR][WebXR] spaces & inputs
-- **Spatialized DOM**: Each element resolves to a layout object enriched with layer + transform metadata
-- **Unified Render Passes**: Discrete passes (`onBeforeRendering`, `onOpaquesRenderPass`, `onTransparentsRenderPass`, `onAfterRendering`) integrate seamlessly with host 3D engines
-- **Efficient Batching**: Aggressive draw-call minimization for stereoscopic + high-refresh headsets
-- **Embeddability**: Loaders ([Unity][Unity] available, [Unreal][Unreal] planned) treat the engine as a library
-- **Developer Tooling**: [Chrome DevTools Protocol][CDP] (Runtime domain), [WebSocket][WebSocket] inspector
+
+**Standards Alignment**
+
+[HTML5][HTML5] subset, [CSS3][CSS3] partial, [DOM APIs][DOM], [WebGL1/2][WebGL], [WebXR][WebXR] spaces & inputs.
+
+**Spatialized DOM**
+
+Each element resolves to a layout object enriched with layer + transform metadata.
+
+**Unified Render Passes**
+
+Discrete passes (`onBeforeRendering`, `onOpaquesRenderPass`, `onTransparentsRenderPass`, `onAfterRendering`) integrate seamlessly with host 3D engines.
+
+**Efficient Batching**
+
+Aggressive draw-call minimization for stereoscopic + high-refresh headsets.
+
+**Embeddability**
+
+Loaders ([Unity][Unity] available, [Unreal][Unreal] planned) treat the engine as a library.
+
+**Developer Tooling**
+
+[Chrome DevTools Protocol][CDP] (Runtime domain) with [WebSocket][WebSocket] server implementation to enable Chrome DevTools and other CDP clients for web application debugging. Future plans include rendering debugging tools spatially for enhanced visualization capabilities in specific use cases.
 
 ## 4. Core Capabilities
 
@@ -66,6 +88,7 @@ Unlike traditional browsers where you request a canvas element and draw scenes o
 
 ```html
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Virtual Museum - JSAR Spatial Browser</title>
@@ -86,68 +109,85 @@ Unlike traditional browsers where you request a canvas element and draw scenes o
       width: 300px;
       transform: translateZ(100px);
     }
+
     .artifact-info {
       left: 50px;
       top: 100px;
     }
+
     .controls {
       right: 50px;
       top: 100px;
     }
   </style>
 </head>
+
 <body>
   <!-- HTML UI Panels for Interactive Information -->
   <div class="info-panel artifact-info">
     <h3>Ancient Vase</h3>
     <p>Ming Dynasty ceramic vase from 1368-1644 CE</p>
-    <button>Highlight</button>
   </div>
-  
+
   <div class="info-panel controls">
     <h3>Museum Controls</h3>
-    <button>Next Exhibit</button>
   </div>
 
   <script type="module">
     import * as THREE from 'three';
-    
+
     let scene, camera, renderer;
     let artifactMesh;
-    
+
     async function init() {
       // Initialize Three.js with navigator.gl (no canvas needed)
       const gl = navigator.gl;
-      
+
       try {
-        const session = await navigator.xr.requestSession('immersive-ar', {});
-        const baseLayer = new XRWebGLLayer(session, gl);
-        session.updateRenderState({ baseLayer });
-        
-        renderer = new THREE.WebGLRenderer({
-          canvas: { addEventListener() {} },
-          context: gl,
-        });
-        renderer.xr.enabled = true;
-        renderer.xr.setSession(session);
-        
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        
+        renderer = new THREE.WebGLRenderer({
+          canvas: { addEventListener() { } },
+          context: gl,
+        });
+
         // Create 3D artifact (vase)
-        const geometry = new THREE.CylinderGeometry(0.5, 0.3, 1, 32);
+        const geometry = new THREE.BoxGeometry(0.5);
         const material = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
         artifactMesh = new THREE.Mesh(geometry, material);
-        artifactMesh.position.set(0, 0, -2);
+        artifactMesh.position.set(0, 0, 0);
         scene.add(artifactMesh);
-        
+
+        // Fit the scene to the proper size
+        function fitTo(scene, targetSize = 1) {
+          const box = new THREE.Box3();
+          scene.traverse(object => {
+            if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
+              box.expandByObject(object);
+            }
+          });
+          const size = box.getSize(new THREE.Vector3());
+          const scale = targetSize / Math.max(size.x, size.y, size.z);
+          scene.scale.set(scale, scale, scale);
+        }
+        fitTo(scene, 0.2);
+
         // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(1, 1, 1);
         scene.add(ambientLight);
         scene.add(directionalLight);
-        
+
+        // Set up XR session
+        const session = await navigator.xr.requestSession('immersive-ar', {});
+        const baseLayer = new XRWebGLLayer(session, gl);
+        session.updateRenderState({ baseLayer });
+
+        renderer.xr.enabled = true;
+        renderer.xr.setReferenceSpaceType('local');
+        renderer.xr.setSession(session);
+
         // Start render loop
         renderer.setAnimationLoop(animate);
       } catch (err) {
@@ -163,10 +203,15 @@ Unlike traditional browsers where you request a canvas element and draw scenes o
     init();
   </script>
 </body>
+
 </html>
 ```
 
 This example demonstrates how HTML `<div>` panels provide interactive UI controls and [Three.js][Three.js] renders 3D artifacts using `navigator.gl` instead of canvas - both coexisting in the same 3D scene with proper depth ordering and spatial relationships.
+
+<div style="text-align: center; margin: 2rem auto;">
+  <img src="https://ar.rokidcdn.com/web-assets/pages/screenshot-example-html-with-threejs.png" alt="JSAR Example for HTML with Three.js" style="width: 50%;" />
+</div>
 
 ### 4.3 Standards Compatibility
 
@@ -184,6 +229,10 @@ Developers can reuse existing Web knowledge instead of learning proprietary 3D A
 Native support for immersive viewing modes and spatial interaction paradigms.
 
 #### 4.4.1 Stereo Rendering
+
+<div style="text-align: center; margin: 2rem auto;">
+  <img src="https://ar.rokidcdn.com/web-assets/pages/screenshot-spatial-browsing-stereo.png" alt="Spatial Browsing in JSAR" style="width: 80%;" />
+</div>
 
 JSAR supports both mono and stereo rendering modes to provide immersive experiences across different display types and platforms:
 
@@ -214,6 +263,10 @@ JSAR supports stereoscopic images that provide true depth perception in XR envir
 <img src="stereo-photo.jpg" spatial="stereo" />
 <!-- Displays with proper depth separation in VR -->
 ```
+
+<div style="text-align: center; margin: 2rem auto;">
+  <img src="https://ar.rokidcdn.com/web-assets/pages/screenshot-spatial-images-00.png" alt="Spatial Browsing in JSAR" style="width: 80%;" />
+</div>
 
 #### 4.4.4 WebXR Input Sources
 
@@ -286,14 +339,14 @@ JSAR currently supports only Unity SDK integration. However, as described above,
 
 *Impact*: Enables natural multimodal interaction in spatial environments without the limitations of mouse event emulation.
 
-### 5.6 Embedding Model
+### 5.4 Embedding Model
 **Classic Browser**: Operates as a system-level application creating windows or tabs. Designed to be the primary application rather than a component.
 
 **Spatial Browser**: Functions as a library that embeds within host 3D engines ([Unity][Unity], [Unreal][Unreal], custom). The spatial browser becomes a component within larger 3D applications.
 
 *Impact*: Allows existing 3D applications and games to incorporate web content as spatial UI elements or information panels.
 
-### 5.7 Pipeline Control Granularity
+### 5.5 Pipeline Control Granularity
 **Classic Browser**: Provides limited hooks into the rendering pipeline. Developers can influence layout and styling but have minimal control over the actual rendering passes.
 
 **Spatial Browser**: Exposes explicit pass lifecycle APIs (`onBeforeRendering`, `onOpaquesRenderPass`, `onTransparentsRenderPass`, `onAfterRendering`) allowing fine-grained integration with host rendering systems.
@@ -330,16 +383,13 @@ Spatial Web Browser isn't limited to XR devices. On desktop platforms, it enable
 
 ## 7. Conclusion
 
-JSAR represents a fundamental paradigm shift in web browsing, transforming the traditional 2D document model into a truly spatial computing platform. By reimagining every HTML element as an inherently 3D entity, JSAR bridges the gap between familiar web development practices and immersive spatial experiences.
+JSAR represents a fundamental paradigm shift in web browsing, transforming the traditional 2D document model into spatial browsing experiences across all platforms. Supporting XR devices and desktop platforms (with future consideration for mobile platforms), JSAR bridges the gap between familiar web development practices and immersive spatial web browsing by reimagining every HTML element as an inherently 3D entity.
 
 The engine's architectural innovations—from spatialized DOM with true depth ordering to unified graphics pipelines that seamlessly blend HTML and WebGL content—demonstrate that spatial web applications need not abandon web standards. Through comprehensive WebXR integration, automatic spatial audio positioning, and intelligent input source abstraction, JSAR enables developers to create immersive experiences using the same HTML, CSS, and JavaScript skills they already possess.
 
 JSAR's embedding model as a library within existing 3D engines like Unity, combined with its aggressive batching optimizations and cross-platform support (macOS/Android with OpenGL/GLES3), positions it as a practical solution for both XR applications and desktop innovation. Whether enabling traditional web developers to spatialize existing applications, empowering WebXR developers with familiar GUI toolkits, or unlocking novel interaction patterns like 3D infinite canvas on desktop platforms, JSAR makes spatial computing accessible without sacrificing the open, standards-based nature of the web.
 
 By choosing ground-up architectural design over retrofitting existing browser engines, JSAR achieves the clarity and performance necessary for the next generation of spatial web experiences, while maintaining the developer accessibility and cross-platform compatibility that make the web universal.
-
----
-*Prepared referencing README and `docs/changelogs/alpha.md`.*
 
 [HTML]: https://developer.mozilla.org/en-US/docs/Web/HTML
 [CSS]: https://developer.mozilla.org/en-US/docs/Web/CSS
