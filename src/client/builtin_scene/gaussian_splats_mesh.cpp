@@ -8,6 +8,7 @@
 #include "./mesh_base.hpp"
 #include "./meshes.hpp"
 #include "./gaussian_splats_mesh.hpp"
+#include "./packed_splats.hpp"
 
 namespace builtin_scene
 {
@@ -88,7 +89,7 @@ namespace builtin_scene
       return;
 
     // Prepare a contiguous array of sorted indices (only uint32_t values now)
-    vector<int32_t> indexData;
+    vector<uint32_t> indexData;
     indexData.reserve(sortedSplats_.size());
 
     for (const auto &splat : sortedSplats_)
@@ -97,7 +98,7 @@ namespace builtin_scene
     // Upload to GPU
     glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
     glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
-                          indexData.size() * sizeof(int32_t),
+                          indexData.size() * sizeof(uint32_t),
                           indexData.data(),
                           WebGLBufferUsage::kDynamicDraw);
     setDirty(false);
@@ -105,109 +106,115 @@ namespace builtin_scene
     DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());
   }
 
-  void GaussianSplatsMesh::updateSplatTexture(std::shared_ptr<WebGL2Context> glContext)
+  void GaussianSplatsMesh::updatePackedSplatTexture(std::shared_ptr<WebGL2Context> glContext)
   {
-    if (!glContext || splatTextureData_.empty())
+    if (!glContext || packedSplatData_.empty())
       return;
 
-    // Create texture if not initialized
+    // Create 3D array texture if not initialized
     if (!textureInitialized_)
     {
-      splatDataTexture_ = glContext->createTexture();
-      if (!splatDataTexture_)
+      packedSplatTexture_ = glContext->createTexture();
+      if (!packedSplatTexture_)
         return;
       textureInitialized_ = true;
     }
 
-    // Calculate texture dimensions
-    // Each splat needs 56 bytes (14 floats): position(3) + color(3) + opacity(1) + scale(3) + rotation(4)
-    // We'll pack this into RGBA32F format, so we need ceil(14/4) = 4 texels per splat
-    size_t texelsPerSplat = 4; // 4 RGBA32F texels = 16 floats, enough for 14 floats + 2 padding
-    size_t totalTexels = splatTextureData_.size() * texelsPerSplat;
+    // Calculate texture dimensions using SparkJS method
+    auto textureSize = packed_splat_utils::getTextureSize(static_cast<uint32_t>(packedSplatData_.size()));
+    uint32_t width = textureSize[0];
+    uint32_t height = textureSize[1];
+    uint32_t depth = textureSize[2];
+    uint32_t maxSplats = textureSize[3];
 
-    // Choose texture dimensions (prefer square-ish textures)
-    size_t textureWidth = static_cast<size_t>(ceil(sqrt(static_cast<float>(totalTexels))));
-    size_t textureHeight = (totalTexels + textureWidth - 1) / textureWidth; // Ceiling division
+    // Prepare texture data - RGBA32UI format (4 uint32 per texel = 1 packed splat)
+    vector<uint32_t> textureData(maxSplats * 4, 0); // 4 uint32 per splat
 
-    // Ensure minimum size
-    textureWidth = max(textureWidth, size_t(1));
-    textureHeight = max(textureHeight, size_t(1));
-
-    // Prepare texture data
-    vector<float> textureData(textureWidth * textureHeight * 4, 0.0f); // RGBA format
-
-    for (size_t i = 0; i < splatTextureData_.size(); ++i)
+    for (size_t i = 0; i < packedSplatData_.size(); ++i)
     {
-      const auto &splat = splatTextureData_[i];
-      size_t baseIndex = i * texelsPerSplat * 4; // 4 components per texel
+      const auto &packed = packedSplatData_[i];
+      size_t baseIndex = i * 4; // 4 uint32 values per packed splat
 
-      // Texel 0: position
-      textureData[baseIndex + 0] = splat.position.x;
-      textureData[baseIndex + 1] = splat.position.y;
-      textureData[baseIndex + 2] = splat.position.z;
-      textureData[baseIndex + 3] = 0.0f;
-
-      // Texel 1: color + opacity
-      textureData[baseIndex + 4] = splat.color.r;
-      textureData[baseIndex + 5] = splat.color.g;
-      textureData[baseIndex + 6] = splat.color.b;
-      textureData[baseIndex + 7] = splat.opacity;
-
-      // Texel 2: scale
-      textureData[baseIndex + 8] = splat.scale.x;
-      textureData[baseIndex + 9] = splat.scale.y;
-      textureData[baseIndex + 10] = splat.scale.z;
-      textureData[baseIndex + 11] = 0.0f;
-
-      // Texel 3: rotation
-      textureData[baseIndex + 12] = splat.rotation.x;
-      textureData[baseIndex + 13] = splat.rotation.y;
-      textureData[baseIndex + 14] = splat.rotation.z;
-      textureData[baseIndex + 15] = splat.rotation.w;
+      textureData[baseIndex + 0] = packed.word0;
+      textureData[baseIndex + 1] = packed.word1;
+      textureData[baseIndex + 2] = packed.word2;
+      textureData[baseIndex + 3] = packed.word3;
     }
 
-    // Upload texture data
-    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatDataTexture_);
-    glContext->texImage2D(WebGLTexture2DTarget::kTexture2D,
-                          0,              // level
-                          WEBGL2_RGBA32F, // internal format
-                          textureWidth,
-                          textureHeight,
-                          0,
-                          WebGLTextureFormat::kRGBA,
-                          WebGLPixelType::kFloat,
-                          (unsigned char *)textureData.data());
+    // Upload 3D array texture data
+    glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, packedSplatTexture_);
 
-    // Set texture parameters for point sampling (no filtering)
-    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+    // Set texture storage
+    glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray,
+                            1,               // levels
+                            WEBGL2_RGBA32UI, // internal format (RGBA32UI)
+                            width,
+                            height,
+                            depth);
+
+    // Upload texture data
+    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray,
+                             0, // level
+                             0,
+                             0,
+                             0, // xoffset, yoffset, zoffset
+                             width,
+                             height,
+                             depth,                            // width, height, depth
+                             WebGLTextureFormat::kRGBAInteger, // format
+                             WebGLPixelType::kUnsignedInt,     // type
+                             textureData.data());
+
+    // Set texture parameters for point sampling (no filtering needed for integer textures)
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureMinFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureMagFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureWrapS,
                              WEBGL_CLAMP_TO_EDGE);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureWrapT,
+                             WEBGL_CLAMP_TO_EDGE);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureWrapR,
                              WEBGL_CLAMP_TO_EDGE);
 
     // Reset the flag since texture has been updated
     needsTextureUpdate_ = false;
 
-    DEBUG("GaussianSplatsMesh", "Updated splat data texture: %zu splats, %zux%zu texture", splatTextureData_.size(), textureWidth, textureHeight);
+    DEBUG("GaussianSplatsMesh", "Updated packed splat texture: %zu splats, %ux%ux%u array texture", packedSplatData_.size(), width, height, depth);
   }
 
-  void GaussianSplatsMesh::updateSplatTextureIfNeeded()
+  void GaussianSplatsMesh::updatePackedSplatTextureIfNeeded()
   {
     if (needsTextureUpdate_)
     {
       auto glContext = glContext_.lock();
       if (glContext)
       {
-        updateSplatTexture(glContext);
+        updatePackedSplatTexture(glContext);
       }
     }
+  }
+
+  glm::vec3 GaussianSplatsMesh::extractPositionFromPacked(const PackedSplat &packed) const
+  {
+    // Extract position from packed data
+    // Word1 contains XY as float16, Word2 contains Z as float16 (low 16 bits)
+
+    // Use utility functions to unpack float16 values
+    uint16_t hx = static_cast<uint16_t>(packed.word1 & 0xFFFFu);
+    uint16_t hy = static_cast<uint16_t>(packed.word1 >> 16u);
+    uint16_t hz = static_cast<uint16_t>(packed.word2 & 0xFFFFu);
+
+    float x = packed_splat_utils::unpackHalf(hx);
+    float y = packed_splat_utils::unpackHalf(hy);
+    float z = packed_splat_utils::unpackHalf(hz);
+
+    return glm::vec3(x, y, z);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
@@ -247,10 +254,10 @@ namespace builtin_scene
         unique_ptr<IVertexAttribute> attrib = nullptr;
 
         // Configure based on attribute name and type
-        if (name == "splatSortedIndex")
+        if (name == "splatIndex")
         {
           // uint32 attribute for texture index
-          attrib = make_unique<VertexAttribute<int32_t, 1>>(name, instanceIndex, VertexFormat::kInt32);
+          attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUInt32);
         }
         else
         {

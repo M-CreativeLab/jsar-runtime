@@ -31,7 +31,8 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
     LOAD_UNIFORM_LOCATION("clipXY");
     LOAD_UNIFORM_LOCATION("focalAdjustment");
-    LOAD_UNIFORM_LOCATION("splatDataTexture");
+    LOAD_UNIFORM_LOCATION("packedSplats");
+    LOAD_UNIFORM_LOCATION("rgbMinMaxLnScaleMinMax");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
@@ -116,18 +117,30 @@ namespace builtin_scene::materials
         // Update buffer with sorted indices
         splatsMesh->updateSplatBuffer(glContext);
 
-        // Bind splat data texture to texture unit 0
-        auto splatDataTexture = splatsMesh->getSplatDataTexture();
-        if (splatDataTexture)
+        // Set rgbMinMaxLnScaleMinMax uniform (SparkJS encoding parameters)
+        auto rgbMinMaxOpt = glContext->getUniformLocation(program, "rgbMinMaxLnScaleMinMax");
+        if (rgbMinMaxOpt.has_value())
+        {
+          // Use SparkJS default encoding ranges
+          glContext->uniform4f(rgbMinMaxOpt.value(),
+                               0.0f,
+                               1.0f, // RGB min/max
+                               -12.0f,
+                               9.0f); // LN_SCALE_MIN/MAX
+        }
+
+        // Bind packed splat data texture to texture unit 0
+        auto packedSplatTexture = splatsMesh->getPackedSplatTexture();
+        if (packedSplatTexture)
         {
           glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture0);
-          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, splatDataTexture);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2DArray, packedSplatTexture);
 
-          // Set the splatDataTexture uniform if it exists
-          auto splatDataTextureOpt = glContext->getUniformLocation(program, "splatDataTexture");
-          if (splatDataTextureOpt.has_value())
+          // Set the packedSplats uniform if it exists
+          auto packedSplatsOpt = glContext->getUniformLocation(program, "packedSplats");
+          if (packedSplatsOpt.has_value())
           {
-            glContext->uniform1i(splatDataTextureOpt.value(), 0); // Texture unit 0
+            glContext->uniform1i(packedSplatsOpt.value(), 0); // Texture unit 0
           }
         }
       }

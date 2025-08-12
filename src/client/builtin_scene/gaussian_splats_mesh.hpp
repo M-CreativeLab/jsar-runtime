@@ -13,39 +13,17 @@
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
+#include "./packed_splats.hpp"
 
 namespace builtin_scene
 {
-  /**
-   * Data structure for splat data stored in texture.
-   * This contains the actual splat properties that don't change during sorting.
-   */
-  struct SplatTextureData
-  {
-    glm::vec3 position; // 12 bytes
-    glm::vec3 color;    // 12 bytes
-    float opacity;      // 4 bytes
-    glm::vec3 scale;    // 12 bytes
-    glm::vec4 rotation; // 16 bytes
-    // Total: 56 bytes per splat
-
-    SplatTextureData()
-        : position(0.0f)
-        , color(1.0f)
-        , opacity(1.0f)
-        , scale(1.0f)
-        , rotation(0.0f, 0.0f, 0.0f, 1.0f)
-    {
-    }
-  };
-
   /**
    * Data structure for a single splat instance in the global rendering system.
    * Now only contains sorting-related data and a reference to texture data.
    */
   struct SplatInstanceData
   {
-    int32_t index;              // Index into the splat texture
+    uint32_t index;             // Index into the packed splat texture (changed to uint32_t)
     float depth;                // For sorting (not uploaded to GPU)
     ecs::EntityId sourceEntity; // Not uploaded to GPU
 
@@ -59,7 +37,7 @@ namespace builtin_scene
     // Get the size of GPU-uploadable data (only the sorted index)
     static constexpr size_t getGPUDataSize()
     {
-      return sizeof(int32_t);
+      return sizeof(uint32_t);
     }
   };
 
@@ -67,6 +45,8 @@ namespace builtin_scene
    * Global mesh for rendering all Gaussian splats in the scene.
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
+   * 
+   * Uses SparkJS-compatible packed splat encoding with 3D array texture storage.
    */
   class GaussianSplatsMesh : public meshes::Splat
   {
@@ -74,7 +54,7 @@ namespace builtin_scene
     // Splat instance attributes layout for GPU buffer (only sorted index now)
     static constexpr size_t STRIDE = SplatInstanceData::getGPUDataSize();
     static inline std::vector<std::string> INSTANCE_ATTRIBUTES = {
-      "splatSortedIndex" // uint (index into splat data texture)
+      "splatIndex" // uint (sorted index into packed splat data texture array)
     };
 
   public:
@@ -109,7 +89,7 @@ namespace builtin_scene
       {
         rebuildSortedSplats(getComponent);
         // Update texture after rebuilding splat data
-        updateSplatTextureIfNeeded();
+        updatePackedSplatTextureIfNeeded();
       }
 
       if (!needsSorting_)
@@ -117,12 +97,30 @@ namespace builtin_scene
         return;
       }
 
-      // Calculate depth for each splat using texture data positions
+      // Calculate depth for each splat using packed splat data
       for (auto &splat : sortedSplats_)
       {
-        const auto &splatData = splatTextureData_[splat.index];
-        glm::vec4 viewPos = viewMatrix * glm::vec4(splatData.position, 1.0f);
-        splat.depth = -viewPos.z; // Depth in view space
+        // Unpack position from packed data to calculate depth
+        uint32_t packedIndex = splat.index;
+        if (packedIndex < packedSplatData_.size())
+        {
+          const auto &packed = packedSplatData_[packedIndex];
+
+          // Extract position from packed data (word1 = XY float16, word2 = Z float16 + quat data)
+          // For now, use simpler unpacking for depth calculation
+          // TODO: Implement proper float16 unpacking if needed for precise depth sorting
+
+          // Use texture center position for depth calculation
+          auto texCoord = packed_splat_utils::getSplatTexCoord(packedIndex);
+          glm::vec3 position = extractPositionFromPacked(packed);
+
+          glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
+          splat.depth = -viewPos.z; // Depth in view space
+        }
+        else
+        {
+          splat.depth = 0.0f; // Invalid splat
+        }
       }
 
       // Sort by depth (back to front for transparency blending)
@@ -192,15 +190,31 @@ namespace builtin_scene
     void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
-     * Update the splat data texture with all splat properties.
-     * This uploads the splat data to a texture for shader access.
+     * Update the packed splat data texture with all splat properties.
+     * This uploads the packed splat data to a 3D array texture for shader access.
      */
-    void updateSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext);
+    void updatePackedSplatTexture(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
     /**
-     * Update splat texture if needed based on flags.
+     * Update packed splat texture if needed based on flags.
      */
-    void updateSplatTextureIfNeeded();
+    void updatePackedSplatTextureIfNeeded();
+
+    /**
+     * Get the packed splat data texture containing all compressed splat properties.
+     */
+    inline std::shared_ptr<client_graphics::WebGLTexture> getPackedSplatTexture() const
+    {
+      return packedSplatTexture_;
+    }
+
+    /**
+     * Get the total number of packed splats stored in the texture.
+     */
+    inline size_t getTotalPackedSplats() const
+    {
+      return packedSplatData_.size();
+    }
 
     /**
      * Get the splat instance buffer for attribute configuration.
@@ -208,22 +222,6 @@ namespace builtin_scene
     inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const
     {
       return splatInstanceBuffer_;
-    }
-
-    /**
-     * Get the splat data texture containing all splat properties.
-     */
-    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatDataTexture() const
-    {
-      return splatDataTexture_;
-    }
-
-    /**
-     * Get the total number of splats stored in the texture.
-     */
-    inline size_t getTotalTextureSlots() const
-    {
-      return splatTextureData_.size();
     }
 
     /**
@@ -244,17 +242,23 @@ namespace builtin_scene
 
   private:
     /**
+     * Extract position from packed splat data for depth calculations.
+     */
+    glm::vec3 extractPositionFromPacked(const PackedSplat &packed) const;
+
+  private:
+    /**
      * Rebuild the sorted splats list from all entity splats.
-     * This rebuilds both the texture data and the sorted indices.
+     * This rebuilds both the packed texture data and the sorted indices.
      */
     template <typename QueryFunc>
     void rebuildSortedSplats(QueryFunc getComponent)
     {
-      splatTextureData_.clear();
+      packedSplatData_.clear();
       sortedSplats_.clear();
 
       // Collect all splats from all entities by iterating entity IDs
-      int32_t textureIndex = 0;
+      uint32_t packedIndex = 0;
       for (ecs::EntityId entityId : splatEntities_)
       {
         auto *model = getComponent(entityId);
@@ -263,22 +267,31 @@ namespace builtin_scene
           const auto &splats = model->getSplats();
           for (const auto &splat : splats)
           {
-            // Add to texture data (stable data that doesn't change during sorting)
-            SplatTextureData textureData;
-            textureData.position = glm::vec3(splat.position[0], splat.position[1], splat.position[2]);
-            textureData.color = glm::vec3(splat.color[0], splat.color[1], splat.color[2]);
-            textureData.opacity = splat.opacity;
-            textureData.scale = glm::vec3(splat.scale[0], splat.scale[1], splat.scale[2]);
-            textureData.rotation = glm::vec4(splat.rotation[0], splat.rotation[1], splat.rotation[2], splat.rotation[3]);
-            splatTextureData_.push_back(textureData);
+            // Pack splat data using SparkJS-compatible encoding
+            PackedSplat packed = packed_splat_utils::packSplat(
+              splat.position[0], splat.position[1], splat.position[2], // position
+              splat.scale[0],
+              splat.scale[1],
+              splat.scale[2], // scale
+              splat.rotation[0],
+              splat.rotation[1],
+              splat.rotation[2],
+              splat.rotation[3], // quaternion
+              splat.color[0],
+              splat.color[1],
+              splat.color[2],
+              splat.opacity // color + opacity
+            );
+
+            packedSplatData_.push_back(packed);
 
             // Add to sorted instances (only index and sorting data)
             SplatInstanceData instance;
-            instance.index = textureIndex;
+            instance.index = packedIndex;
             instance.sourceEntity = entityId;
             sortedSplats_.push_back(instance);
 
-            textureIndex++;
+            packedIndex++;
           }
         }
       }
@@ -291,15 +304,15 @@ namespace builtin_scene
       setDirty(true);
 
       // Debug output
-      DEBUG("GaussianSplatsMesh", "Rebuilt splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
+      DEBUG("GaussianSplatsMesh", "Rebuilt packed splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
     }
 
   private:
     // Vector of entity IDs that have GaussianSplattingModel3d components
     std::vector<ecs::EntityId> splatEntities_;
 
-    // Splat texture data (stable, doesn't change during sorting)
-    std::vector<SplatTextureData> splatTextureData_;
+    // Packed splat data (SparkJS-compatible compressed format, stable during sorting)
+    std::vector<PackedSplat> packedSplatData_;
 
     // Sorted splat indices for rendering (rebuilt when entities change or camera moves)
     std::vector<SplatInstanceData> sortedSplats_;
@@ -307,8 +320,8 @@ namespace builtin_scene
     // WebGL buffer for instanced splat indices
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
 
-    // WebGL texture for splat data (position, color, opacity, scale, rotation)
-    std::shared_ptr<client_graphics::WebGLTexture> splatDataTexture_;
+    // WebGL 3D array texture for packed splat data (RGBA32UI format)
+    std::shared_ptr<client_graphics::WebGLTexture> packedSplatTexture_;
 
     // WebGL context reference (needed for iterateInstanceAttributes)
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
