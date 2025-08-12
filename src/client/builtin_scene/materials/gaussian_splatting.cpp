@@ -30,6 +30,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("minAlpha");
     LOAD_UNIFORM_LOCATION("maxPixelRadius");
     LOAD_UNIFORM_LOCATION("clipXY");
+    LOAD_UNIFORM_LOCATION("focalAdjustment");
     LOAD_UNIFORM_LOCATION("splatDataTexture");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
@@ -50,6 +51,10 @@ namespace builtin_scene::materials
     auto clipXYOpt = glContext->getUniformLocation(program, "clipXY");
     if (clipXYOpt.has_value())
       glContext->uniform1f(clipXYOpt.value(), 1.4f);
+
+    auto focalAdjustmentOpt = glContext->getUniformLocation(program, "focalAdjustment");
+    if (focalAdjustmentOpt.has_value())
+      glContext->uniform1f(focalAdjustmentOpt.value(), 1.0f);
 
     return true;
   }

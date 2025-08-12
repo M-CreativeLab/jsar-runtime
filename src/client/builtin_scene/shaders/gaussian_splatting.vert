@@ -8,6 +8,7 @@ uniform float maxStdDev;
 uniform float minAlpha;
 uniform float maxPixelRadius;
 uniform float clipXY;
+uniform float focalAdjustment;
 
 // Splat data texture
 uniform sampler2D splatDataTexture;
@@ -148,25 +149,7 @@ mat3 scaleQuaternionToMatrix(vec3 s, vec4 q) {
   );
 }
 
-void eigenDecomposeSym2(
-  float a,
-  float b,
-  float d,
-  float det,
-  out float l1,
-  out float l2,
-  out vec2 v1,
-  out vec2 v2
-) {
-  float trace = a + d;
-  float mid = 0.5 * trace;
-  float disc = max(0.0, mid * mid - det);
-  float root = sqrt(disc);
-  l1 = mid + root;
-  l2 = mid - root;
-  v1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, l1 - a));
-  v2 = vec2(-v1.y, v1.x);
-}
+// Removed eigenDecomposeSym2 function - using Spark's direct calculation instead
 
 void main() {
   // Retrieve splat data from texture using sorted index
@@ -234,7 +217,6 @@ void main() {
   mat3 cov3D = RS * transpose(RS);
 
   // Compute the Jacobian of the splat's projection at its center
-  float focalAdjustment = 1.0;
   vec2 scaledRenderSize = renderSize * focalAdjustment;
   vec2 focal = 0.5 * scaledRenderSize * vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
   float invZ = 1.0 / viewCenter.z;
@@ -270,14 +252,20 @@ void main() {
     return;
   }
 
-  // Compute the eigenvalue and eigenvectors of the 2D covariance matrix
-  float l1, l2;
-  vec2 ev1, ev2;
-  eigenDecomposeSym2(a, b, d, det, l1, l2, ev1, ev2);
+  // Compute the eigenvalue and eigenvectors of the 2D covariance matrix (Spark method)
+  float eigenAvg = 0.5 * (a + d);
+  float eigenDelta = sqrt(max(0.0, eigenAvg * eigenAvg - det));
+  float eigen1 = eigenAvg + eigenDelta;
+  float eigen2 = eigenAvg - eigenDelta;
 
-  float radius1 = min(maxPixelRadius, maxStdDev * sqrt(l1));
-  float radius2 = min(maxPixelRadius, maxStdDev * sqrt(l2));
-  vec2 pixelOffset = ev1 * (position.x * radius1) + ev2 * (position.y * radius2);
+  vec2 eigenVec1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, eigen1 - a));
+  vec2 eigenVec2 = vec2(eigenVec1.y, -eigenVec1.x);
+
+  float scale1 = position.x * min(maxPixelRadius, maxStdDev * sqrt(eigen1));
+  float scale2 = position.y * min(maxPixelRadius, maxStdDev * sqrt(eigen2));
+
+  // Compute the NDC coordinates for the ellipsoid's diagonal axes.
+  vec2 pixelOffset = eigenVec1 * scale1 + eigenVec2 * scale2;
 
   // Compute the NDC coordinates for the ellipsoid's diagonal axes.
   vec2 ndcOffset = (2.0 / scaledRenderSize) * pixelOffset;
