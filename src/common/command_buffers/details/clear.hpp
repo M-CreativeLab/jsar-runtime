@@ -198,11 +198,11 @@ namespace commandbuffers
         message->addVecSegment(values);
       return message;
     }
-    
+
     void deserialize(TrCommandBufferMessage &message) override
     {
       TrCommandBufferSimpleRequest::deserialize(message);
-      
+
       auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
