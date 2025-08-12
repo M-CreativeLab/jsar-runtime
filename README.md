@@ -50,8 +50,6 @@ Key characteristics of the Spatial Web include:
 - **Contextual Awareness**: Digital experiences that understand and respond to their physical surroundings
 - **Persistent**: Digital content can remain anchored in physical space across sessions
 
-For a deeper understanding of why JSAR was built as a purpose-built spatial browser engine instead of extending existing browsers, see [Understanding the Spatial Web Browser Engine](https://m-creativelab.github.io/jsar-runtime/blogs/spatial-browser-engine.html).
-
 ### Key Features
 
 - **Designed for the spatial Web** - Every HTML element (including 2D & 3D) is spatially rendered in the browser.
