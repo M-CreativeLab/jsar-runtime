@@ -170,7 +170,7 @@ void main()
   {
     return;
   }
-  
+
   vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
 
   // Discard splats behind the camera

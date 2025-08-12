@@ -62,7 +62,7 @@ namespace builtin_scene::materials
 
     auto maxDistanceOpt = glContext->getUniformLocation(program, "maxDistance");
     if (maxDistanceOpt.has_value())
-      glContext->uniform1f(maxDistanceOpt.value(), 2.0f); // Default 2 meters
+      glContext->uniform1f(maxDistanceOpt.value(), 1.0f); // Default 1 meters
 
     return true;
   }
