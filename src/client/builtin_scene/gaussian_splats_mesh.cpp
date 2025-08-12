@@ -55,6 +55,14 @@ namespace builtin_scene
     auto it = find(splatEntities_.begin(), splatEntities_.end(), entityId);
     if (it != splatEntities_.end())
     {
+      // Entity exists, mark for rebuild
+      needsRebuild_ = true;
+      needsSorting_ = true;
+    }
+    else
+    {
+      // Entity doesn't exist, add it
+      splatEntities_.push_back(entityId);
       needsRebuild_ = true;
       needsSorting_ = true;
     }

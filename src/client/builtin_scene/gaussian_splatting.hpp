@@ -76,6 +76,7 @@ namespace builtin_scene
         : src_(src)
         , loaded_(false)
         , visible_(true)
+        , dirty_(true) // Initially dirty to ensure first render
     {
     }
 
@@ -95,7 +96,21 @@ namespace builtin_scene
     }
     inline void setVisible(bool visible)
     {
-      visible_ = visible;
+      if (visible_ != visible)
+      {
+        visible_ = visible;
+        dirty_ = true; // Mark as dirty when visibility changes
+      }
+    }
+
+    // Dirty flag methods
+    inline bool isDirty() const
+    {
+      return dirty_;
+    }
+    inline void clearDirty()
+    {
+      dirty_ = false;
     }
 
     // Splat data methods
@@ -111,18 +126,24 @@ namespace builtin_scene
     // Model loading
     void setLoaded(bool loaded)
     {
-      loaded_ = loaded;
+      if (loaded_ != loaded)
+      {
+        loaded_ = loaded;
+        dirty_ = true; // Mark as dirty when load state changes
+      }
     }
     void setSplats(std::vector<GaussianSplat> &&splats)
     {
       splats_ = std::move(splats);
       loaded_ = !splats_.empty();
+      dirty_ = true; // Mark as dirty when splat data changes
     }
 
   private:
     std::string src_;
     bool loaded_;
     bool visible_;
+    bool dirty_; // Flag to track when splat data has changed
 
     // 3DGS data
     std::vector<GaussianSplat> splats_;

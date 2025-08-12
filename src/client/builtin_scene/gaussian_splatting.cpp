@@ -64,8 +64,13 @@ namespace builtin_scene::gaussian_splatting
 
     for (auto entityId : modelEntities)
     {
-      // Add/update this entity in the global mesh
-      splatsMesh->updateSplatsEntity(entityId);
+      auto modelComponent = getComponent<GaussianSplattingModel3d>(entityId);
+      if (modelComponent && modelComponent->isDirty())
+      {
+        // Update/add entity in the global mesh (handles both new and existing entities)
+        splatsMesh->updateSplatsEntity(entityId);
+        modelComponent->clearDirty();
+      }
     }
 
     // Get view matrix for depth sorting
