@@ -1,10 +1,11 @@
-precision highp float;
-precision highp int;
+precision mediump float;
+precision mediump int;
 
 // Uniforms
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+
 uniform vec2 renderSize;
 uniform float maxStdDev;
 uniform float minAlpha;
@@ -31,7 +32,6 @@ in uint splatIndex;      // splat index (sorted)
 // Outputs
 out vec4 vRgba;
 out vec2 vSplatUv;
-out vec3 vNdc;
 
 // Efficient texture coordinate calculation using bit operations
 ivec2 getSplatTexCoord(int index)
@@ -50,12 +50,27 @@ vec3 quatVec(vec4 q, vec3 v)
 
 vec4 quatQuat(vec4 q1, vec4 q2)
 {
-  return vec4(q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y, q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x, q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w, q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z);
+  return vec4(
+    q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+    q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+    q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
+    q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+  );
 }
 
-mat3 scaleQuaternionToMatrix(vec3 s, vec4 q)
+mat3 scaleQuaternionToMat3(vec3 s, vec4 q)
 {
-  return mat3(s.x * (1.0 - 2.0 * (q.y * q.y + q.z * q.z)), s.x * (2.0 * (q.x * q.y + q.w * q.z)), s.x * (2.0 * (q.x * q.z - q.w * q.y)), s.y * (2.0 * (q.x * q.y - q.w * q.z)), s.y * (1.0 - 2.0 * (q.x * q.x + q.z * q.z)), s.y * (2.0 * (q.y * q.z + q.w * q.x)), s.z * (2.0 * (q.x * q.z + q.w * q.y)), s.z * (2.0 * (q.y * q.z - q.w * q.x)), s.z * (1.0 - 2.0 * (q.x * q.x + q.y * q.y)));
+  return mat3(
+    s.x * (1.0 - 2.0 * (q.y * q.y + q.z * q.z)),
+    s.x * (2.0 * (q.x * q.y + q.w * q.z)),
+    s.x * (2.0 * (q.x * q.z - q.w * q.y)),
+    s.y * (2.0 * (q.x * q.y - q.w * q.z)),
+    s.y * (1.0 - 2.0 * (q.x * q.x + q.z * q.z)),
+    s.y * (2.0 * (q.y * q.z + q.w * q.x)),
+    s.z * (2.0 * (q.x * q.z + q.w * q.y)),
+    s.z * (2.0 * (q.y * q.z - q.w * q.x)),
+    s.z * (1.0 - 2.0 * (q.x * q.x + q.y * q.y))
+  );
 }
 
 vec4 mat3ToQuat(mat3 m)
@@ -98,27 +113,12 @@ vec4 mat3ToQuat(mat3 m)
   return normalize(q);
 }
 
-void decomposeViewMatrix(
-  mat4 viewMatrix,
-  out vec3 viewPosition,
-  out vec4 viewQuaternion
-)
+mat3 computeCov3D(mat4 viewMatrix, mat4 modelMatrix, vec4 splatQuat, vec3 splatScale)
 {
-  mat3 viewRotMatrix = mat3(viewMatrix);
-  mat3 worldRotMatrix = transpose(viewRotMatrix);
-  float det = determinant(viewRotMatrix);
-
-  if (det > 0.0)
-  {
-    viewQuaternion = mat3ToQuat(worldRotMatrix);
-  }
-  else
-  {
-    worldRotMatrix[2] = -worldRotMatrix[2];
-    viewQuaternion = mat3ToQuat(worldRotMatrix);
-  }
-
-  viewPosition = viewMatrix[3].xyz;
+  mat3 RS = scaleQuaternionToMat3(splatScale, splatQuat);
+  mat3 VM = mat3(viewMatrix * modelMatrix);
+  mat3 T = VM * RS;
+  return T * transpose(T);
 }
 
 void main()
@@ -126,7 +126,7 @@ void main()
   // Default to outside the frustum so it's discarded if we return early
   gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
 
-    // Handle special value for "no splat"
+  // Handle special value for "no splat"
   if (splatIndex == 0xffffffffu)
   {
     return;
@@ -136,12 +136,8 @@ void main()
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
   // Direct texture fetches - no pack/unpack needed!
-  vec3 center = texelFetch(splatCenters, texCoord, 0).rgb;
   vec4 rgba = texelFetch(splatColors, texCoord, 0);
   vec3 scales = texelFetch(splatScales, texCoord, 0).xyz;
-  vec4 quaternion = texelFetch(splatQuat, texCoord, 0);
-
-  vRgba = rgba;
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -156,30 +152,27 @@ void main()
     return;
   }
 
-  vec3 renderToViewPos;
-  vec4 renderToViewQuat;
-  decomposeViewMatrix(viewMatrix, renderToViewPos, renderToViewQuat);
+  vRgba = rgba;
+  vSplatUv = position.xy * maxStdDev;
+
+  // Calculate the viewModel matrix
+  mat4 viewModelMatrix = modelMatrix * viewMatrix;
 
   // Transform splat center to world space then view space
-  vec3 worldCenter = (modelMatrix * vec4(center, 1.0)).xyz;
-  vec3 viewCenter = quatVec(renderToViewQuat, worldCenter) + renderToViewPos;
-  
-  // Early distance culling to reduce GPU overdraw
-  float distanceToCamera = length(viewCenter);
-  if (distanceToCamera > maxDistance)
+  vec3 center = texelFetch(splatCenters, texCoord, 0).rgb;
+  vec4 viewCenter4 = viewModelMatrix * vec4(center, 1.0);
+  vec3 viewCenter = viewCenter4.xyz;
+
+  // Discard splats that are behind the camera or too far away
+  if (viewCenter.z >= 0.0 || length(viewCenter) > maxDistance)
   {
     return;
   }
 
-  vec4 clipCenter = projectionMatrix * vec4(viewCenter, 1.0);
+  vec4 clipCenter = projectionMatrix * viewCenter4;
+  // TODO(yorkie): handle multiview
 
-  // Discard splats behind the camera
-  if (viewCenter.z >= 0.0)
-  {
-    return;
-  }
-
-    // Discard splats outside near/far planes
+  // Discard splats outside near/far planes
   if (abs(clipCenter.z) >= clipCenter.w)
   {
     return;
@@ -191,16 +184,9 @@ void main()
     return;
   }
 
-  mat3 modelRotationScale = mat3(modelMatrix);
-  vec3 modelScale = vec3(length(modelRotationScale[0]), length(modelRotationScale[1]), length(modelRotationScale[2]));
-  vec3 transformedScale = scales * modelScale;
-  mat3 modelRotation = mat3(modelRotationScale[0] / modelScale.x, modelRotationScale[1] / modelScale.y, modelRotationScale[2] / modelScale.z);
-  vec4 modelQuat = mat3ToQuat(modelRotation);
-  vec4 transformedRotation = quatQuat(modelQuat, quaternion);
-
-  vec4 viewQuaternion = quatQuat(renderToViewQuat, transformedRotation);
-  mat3 RS = scaleQuaternionToMatrix(transformedScale, viewQuaternion);
-  mat3 cov3D = RS * transpose(RS);
+  // Compute the 3D covariance matrix for the splat
+  vec4 quaternion = texelFetch(splatQuat, texCoord, 0);
+  mat3 cov3D = computeCov3D(viewMatrix, modelMatrix, quaternion, scales);
 
   // Compute the Jacobian of the splat's projection at its center
   vec2 scaledRenderSize = renderSize * focalAdjustment;
@@ -209,7 +195,11 @@ void main()
 
   vec2 J1 = focal * invZ;
   vec2 J2 = -(J1 * viewCenter.xy) * invZ;
-  mat3 J = mat3(J1.x, 0.0, J2.x, 0.0, J1.y, J2.y, 0.0, 0.0, 0.0);
+  mat3 J = mat3(
+    J1.x, 0.0, J2.x,
+    0.0, J1.y, J2.y,
+    0.0, 0.0, 0.0
+  );
 
   // Compute the 2D covariance by projecting the 3D covariance
   mat3 cov2D = transpose(J) * cov3D * J;
@@ -258,9 +248,5 @@ void main()
   vec2 ndcOffset = (2.0 / scaledRenderSize) * pixelOffset;
   vec3 ndcCenter = clipCenter.xyz / clipCenter.w;
   vec3 ndc = vec3(ndcCenter.xy + ndcOffset, ndcCenter.z);
-
-  // Pass data to fragment shader
-  vSplatUv = position.xy * maxStdDev;
-  vNdc = ndc;
   gl_Position = vec4(ndc.xy * clipCenter.w, clipCenter.zw);
 }

@@ -27,8 +27,8 @@ namespace builtin_scene::gaussian_splatting
       hierarchy::Root(true),
       Mesh3d(meshes->add(MeshBuilder::CreateGaussianSplatsMesh()), false),
       MeshMaterial3d(materials->add(materials::GaussianSplattingMaterial::Default())),
-      Transform::FromXYZ(0.0f, -0.5f, 0.0f)
-        .FromScale(0.05f));
+      Transform::FromXYZ(0.0f, 0.0f, 0.0f)
+        .FromScale(0.01f));
   }
 
   void GaussianSplatsUpdateSystem::onExecute()

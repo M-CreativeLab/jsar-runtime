@@ -258,8 +258,8 @@ namespace xr
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto originTransform = contentLocal * math::GetOriginMatrix();
-      matrix = GetViewMatWithOffset(viewMatrixFloats, originTransform, isRightHandedSystem);
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
+      matrix = GetViewMatWithOffset(viewMatrixFloats, offsetTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {

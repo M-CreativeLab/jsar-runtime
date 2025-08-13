@@ -5,7 +5,6 @@ uniform float minAlpha;
 
 in vec4 vRgba;
 in vec2 vSplatUv;
-in vec3 vNdc;
 
 out vec4 fragColor;
 
