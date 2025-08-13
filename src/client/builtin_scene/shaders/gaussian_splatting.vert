@@ -3,8 +3,12 @@ precision mediump int;
 
 // Uniforms
 uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 view;
+uniform mat4 projection;
+#ifdef MULTIVIEW
+uniform mat4 viewR;
+uniform mat4 projectionR;
+#endif
 
 uniform vec2 renderSize;
 uniform float maxStdDev;
@@ -155,11 +159,35 @@ void main()
   vRgba = rgba;
   vSplatUv = position.xy * maxStdDev;
 
+  mat4 viewMatrix;
+  mat4 projectionMatrix;
+
+#ifdef MULTIVIEW
+  if (VIEW_ID == 0u)
+  {
+    viewMatrix = view;
+    projectionMatrix = projection;
+  }
+  else
+  {
+    viewMatrix = viewR;
+    projectionMatrix = projectionR;
+  }
+#else
+  viewMatrix = view;
+  projectionMatrix = projection;
+#endif
+
   // Calculate the viewModel matrix
   mat4 viewModelMatrix = modelMatrix * viewMatrix;
 
   // Transform splat center to world space then view space
   vec3 center = texelFetch(splatCenters, texCoord, 0).rgb;
+
+  // Scale
+  center *= 0.05;
+  scales *= 0.05;
+
   vec4 viewCenter4 = viewModelMatrix * vec4(center, 1.0);
   vec3 viewCenter = viewCenter4.xyz;
 
@@ -170,7 +198,6 @@ void main()
   }
 
   vec4 clipCenter = projectionMatrix * viewCenter4;
-  // TODO(yorkie): handle multiview
 
   // Discard splats outside near/far planes
   if (abs(clipCenter.z) >= clipCenter.w)

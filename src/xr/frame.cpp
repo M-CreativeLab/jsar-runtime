@@ -255,11 +255,21 @@ namespace xr
     {
       matrix = GetProjectionMat(projectionMatrixFloats, isRightHandedSystem);
     }
+    else if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrixForRightEye)
+    {
+      matrix = GetProjectionMat(m_ProjectionMatrixForRightEye, isRightHandedSystem);
+    }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
       auto offsetTransform = contentLocal * math::GetOriginMatrix();
       matrix = GetViewMatWithOffset(viewMatrixFloats, offsetTransform, isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrixForRightEye)
+    {
+      auto contentLocal = getLocalTransform(sessionId);
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
+      matrix = GetViewMatWithOffset(m_ViewMatrixForRightEye, offsetTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {

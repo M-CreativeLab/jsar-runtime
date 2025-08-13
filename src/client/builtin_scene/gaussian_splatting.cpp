@@ -28,7 +28,7 @@ namespace builtin_scene::gaussian_splatting
       Mesh3d(meshes->add(MeshBuilder::CreateGaussianSplatsMesh()), false),
       MeshMaterial3d(materials->add(materials::GaussianSplattingMaterial::Default())),
       Transform::FromXYZ(0.0f, 0.0f, 0.0f)
-        .FromScale(0.01f));
+        .FromScale(0.05f));
   }
 
   void GaussianSplatsUpdateSystem::onExecute()

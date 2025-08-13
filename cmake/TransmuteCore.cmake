@@ -66,40 +66,6 @@ elseif (ANDROID)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv3 EGL)
 endif()
 
-# LabSound libraries requirements
-# See https://github.com/LabSound/LabSound/blob/main/cmake/examples.cmake
-if (WIN32)
-    if(MSVC)
-        # Arch AVX is problematic for many users, so disable it until
-        # some reasonable strategy (a separate AVX target?) is determined
-        #target_compile_options(${proj} PRIVATE /arch:AVX /Zi)
-        target_compile_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE /Zi)
-    endif(MSVC)
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE __WINDOWS_WASAPI__=1)
-    # TODO: These vars are for libniquist and should be set in the find libynquist script.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SINF=1)
-elseif (APPLE)
-    set(DARWIN_LABSOUND_DEPS
-        "-framework AudioToolbox"
-        "-framework AudioUnit"
-        "-framework Accelerate"
-        "-framework CoreAudio"
-        "-framework Cocoa"
-    )
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${DARWIN_LABSOUND_DEPS})
-elseif (WIN32)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE dsound.lib dxguid.lib winmm.lib)
-elseif (ANDROID)
-    # TODO: These vars are for libnyquist and should be set in the find libynquist script.
-    # TODO: libnyquist's loadabc calls getenv and setenv. That's undesirable.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SETENV=1 HAVE_SINF=1)
-endif()
-
-# Link to the LabSound library
-tr_target_link_labsound_library(TransmuteCore LabSound)
-tr_target_link_labsound_library(TransmuteCore samplerate)
-tr_target_link_labsound_library(TransmuteCore libnyquist)
-
 if (WIN32)
     foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
         file(RELATIVE_PATH source_rel ${CMAKE_CURRENT_LIST_DIR} ${source})
