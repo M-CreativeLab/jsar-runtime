@@ -14,6 +14,7 @@
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
 #include "./direct_splats.hpp"
+#include "./compressed_splats.hpp"
 
 namespace builtin_scene
 {
@@ -46,7 +47,8 @@ namespace builtin_scene
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
    * 
-   * Uses direct splat storage with separate 2D textures for each property.
+   * Uses compressed splat storage with texture2DArray for optimal GPU performance.
+   * Each splat is stored in 2 texels (8 floats) instead of 14 floats.
    */
   class GaussianSplatsMesh : public meshes::Splat
   {
@@ -97,17 +99,17 @@ namespace builtin_scene
         return;
       }
 
-      // Calculate depth for each splat using direct splat data
+      // Calculate depth for each splat using compressed splat data
       for (auto &splat : sortedSplats_)
       {
-        // Get position from direct splat data to calculate depth
-        uint32_t directIndex = splat.index;
-        if (directIndex < directSplatData_.size())
+        // Get position from compressed splat data to calculate depth
+        uint32_t compressedIndex = splat.index;
+        if (compressedIndex < compressedSplatData_.size())
         {
-          const auto &direct = directSplatData_[directIndex];
+          const auto &compressed = compressedSplatData_[compressedIndex];
 
-          // Use direct position data for depth calculation
-          glm::vec3 position(direct.position[0], direct.position[1], direct.position[2]);
+          // Use compressed position data for depth calculation (texel0 contains position)
+          glm::vec3 position(compressed.texel0[0], compressed.texel0[1], compressed.texel0[2]);
 
           glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
           splat.depth = -viewPos.z; // Depth in view space
@@ -186,7 +188,7 @@ namespace builtin_scene
 
     /**
      * Update the splat data textures with all splat properties.
-     * This uploads direct splat data to separate 2D textures for shader access.
+     * This uploads compressed splat data to a texture2DArray for shader access.
      */
     void updateSplatTextures(std::shared_ptr<client_graphics::WebGL2Context> glContext);
 
@@ -196,34 +198,19 @@ namespace builtin_scene
     void updateSplatTexturesIfNeeded();
 
     /**
-     * Get the splat data textures containing all splat properties.
+     * Get the compressed splat texture array containing all splat properties.
      */
-    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatCentersTexture() const
+    inline std::shared_ptr<client_graphics::WebGLTexture> getCompressedSplatsTexture() const
     {
-      return splatCentersTexture_;
-    }
-
-    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatColorsTexture() const
-    {
-      return splatColorsTexture_;
-    }
-
-    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatScalesTexture() const
-    {
-      return splatScalesTexture_;
-    }
-
-    inline std::shared_ptr<client_graphics::WebGLTexture> getSplatQuatTexture() const
-    {
-      return splatQuatTexture_;
+      return compressedSplatsTexture_;
     }
 
     /**
-     * Get the total number of direct splats stored in the textures.
+     * Get the total number of compressed splats stored in the texture array.
      */
-    inline size_t getTotalDirectSplats() const
+    inline size_t getTotalCompressedSplats() const
     {
-      return directSplatData_.size();
+      return compressedSplatData_.size();
     }
 
     /**
@@ -252,23 +239,23 @@ namespace builtin_scene
 
   private:
     /**
-     * Extract position from direct splat data for depth calculations.
+     * Extract position from compressed splat data for depth calculations.
      */
-    glm::vec3 extractPositionFromDirect(const DirectSplat &direct) const;
+    glm::vec3 extractPositionFromCompressed(const CompressedSplat &compressed) const;
 
   private:
     /**
      * Rebuild the sorted splats list from all entity splats.
-     * This rebuilds both the direct texture data and the sorted indices.
+     * This rebuilds both the compressed texture data and the sorted indices.
      */
     template <typename QueryFunc>
     void rebuildSortedSplats(QueryFunc getComponent)
     {
-      directSplatData_.clear();
+      compressedSplatData_.clear();
       sortedSplats_.clear();
 
       // Collect all splats from all entities by iterating entity IDs
-      uint32_t directIndex = 0;
+      uint32_t compressedIndex = 0;
       for (ecs::EntityId entityId : splatEntities_)
       {
         auto *model = getComponent(entityId);
@@ -277,8 +264,8 @@ namespace builtin_scene
           const auto &splats = model->getSplats();
           for (const auto &splat : splats)
           {
-            // Convert splat data to direct format (no packing needed)
-            DirectSplat direct = direct_splat_utils::convertSplat(
+            // Convert splat data to compressed format (2 texels per splat)
+            CompressedSplat compressed = compressed_splat_utils::convertSplat(
               splat.position[0], splat.position[1], splat.position[2], // position
               splat.scale[0],
               splat.scale[1],
@@ -293,15 +280,15 @@ namespace builtin_scene
               splat.opacity // color + opacity
             );
 
-            directSplatData_.push_back(direct);
+            compressedSplatData_.push_back(compressed);
 
             // Add to sorted instances (only index and sorting data)
             SplatInstanceData instance;
-            instance.index = directIndex;
+            instance.index = compressedIndex;
             instance.sourceEntity = entityId;
             sortedSplats_.push_back(instance);
 
-            directIndex++;
+            compressedIndex++;
           }
         }
       }
@@ -314,15 +301,15 @@ namespace builtin_scene
       setDirty(true);
 
       // Debug output
-      DEBUG("GaussianSplatsMesh", "Rebuilt direct splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
+      DEBUG("GaussianSplatsMesh", "Rebuilt compressed splats: %zu total splats from %zu entities", sortedSplats_.size(), splatEntities_.size());
     }
 
   private:
     // Vector of entity IDs that have GaussianSplattingModel3d components
     std::vector<ecs::EntityId> splatEntities_;
 
-    // Direct splat data (no packing, stable during sorting)
-    std::vector<DirectSplat> directSplatData_;
+    // Compressed splat data (2 texels per splat, stable during sorting)
+    std::vector<CompressedSplat> compressedSplatData_;
 
     // Sorted splat indices for rendering (rebuilt when entities change or camera moves)
     std::vector<SplatInstanceData> sortedSplats_;
@@ -330,11 +317,8 @@ namespace builtin_scene
     // WebGL buffer for instanced splat indices
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
 
-    // WebGL 2D textures for separate splat data
-    std::shared_ptr<client_graphics::WebGLTexture> splatCentersTexture_; // RGB for positions
-    std::shared_ptr<client_graphics::WebGLTexture> splatColorsTexture_;  // RGBA for colors
-    std::shared_ptr<client_graphics::WebGLTexture> splatScalesTexture_;  // RGB for scales
-    std::shared_ptr<client_graphics::WebGLTexture> splatQuatTexture_;    // RGBA for quaternions
+    // WebGL texture2DArray for compressed splat data (2 layers per splat)
+    std::shared_ptr<client_graphics::WebGLTexture> compressedSplatsTexture_;
 
     // WebGL context reference (needed for iterateInstanceAttributes)
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

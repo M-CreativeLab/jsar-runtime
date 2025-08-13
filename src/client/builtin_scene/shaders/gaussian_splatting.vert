@@ -18,11 +18,8 @@ uniform float clipXY;
 uniform float focalAdjustment;
 uniform float maxDistance;
 
-// Separate textures for splat data (no pack/unpack needed)
-uniform sampler2D splatCenters;  // RGB for XYZ position
-uniform sampler2D splatColors;   // RGBA for splat color and opacity  
-uniform sampler2D splatScales;   // RGB for XYZ scale values
-uniform sampler2D splatQuat;     // RGBA for rotation quaternion
+// Compressed splat data texture array (2 layers per splat)
+uniform sampler2DArray compressedSplats;
 
 // Texture size constants (power of 2)
 const int TEXTURE_WIDTH_BITS = 10;  // 1024 width
@@ -43,6 +40,50 @@ ivec2 getSplatTexCoord(int index)
   int x = index & TEXTURE_WIDTH_MASK;  // x = index & (1024 - 1)
   int y = index >> TEXTURE_WIDTH_BITS; // y = index >> 10
   return ivec2(x, y);
+}
+
+// Decompress quaternion from single float to (x,y,z,w)
+vec4 decompressQuaternion(float compressed)
+{
+  // Extract packed value by reinterpreting float as uint
+  uint packed = floatBitsToUint(compressed);
+  
+  // Unpack x,y,z components (10 bits each, offset by 512)
+  int ix = int(packed & 0x3FFu) - 512;
+  int iy = int((packed >> 10u) & 0x3FFu) - 512;
+  int iz = int((packed >> 20u) & 0x3FFu) - 512;
+  
+  // Convert back to normalized float
+  float x = float(ix) / 511.0;
+  float y = float(iy) / 511.0;
+  float z = float(iz) / 511.0;
+  
+  // Reconstruct w using unit length constraint
+  float w_squared = 1.0 - (x*x + y*y + z*z);
+  float w = (w_squared > 0.0) ? sqrt(w_squared) : 0.0;
+  
+  return vec4(x, y, z, w);
+}
+
+// Decompress RGBA color from single float
+vec4 decompressColor(float compressed)
+{
+  // Extract packed value by reinterpreting float as uint
+  uint packed = floatBitsToUint(compressed);
+  
+  // Unpack RGBA components (8 bits each)
+  uint ir = packed & 0xFFu;
+  uint ig = (packed >> 8u) & 0xFFu;
+  uint ib = (packed >> 16u) & 0xFFu;
+  uint ia = (packed >> 24u) & 0xFFu;
+  
+  // Convert back to normalized float
+  float r = float(ir) / 255.0;
+  float g = float(ig) / 255.0;
+  float b = float(ib) / 255.0;
+  float a = float(ia) / 255.0;
+  
+  return vec4(r, g, b, a);
 }
 
 // SparkJS quaternion functions (unchanged)
@@ -139,9 +180,19 @@ void main()
   // Get texture coordinate using efficient bit operations
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
-  // Direct texture fetches - no pack/unpack needed!
-  vec4 rgba = texelFetch(splatColors, texCoord, 0);
-  vec3 scales = texelFetch(splatScales, texCoord, 0).xyz;
+  // Fetch compressed splat data from texture2DArray (2 texels per splat)
+  vec4 texel0 = texelFetch(compressedSplats, ivec3(texCoord, 0), 0); // Layer 0: pos.xyz, scale.x
+  vec4 texel1 = texelFetch(compressedSplats, ivec3(texCoord, 1), 0); // Layer 1: scale.yz, compressed_quat, compressed_color
+
+  // Decompress splat data
+  vec3 center = texel0.xyz;         // position
+  float scaleX = texel0.w;          // scale.x
+  float scaleY = texel1.x;          // scale.y
+  float scaleZ = texel1.y;          // scale.z
+  vec3 scales = vec3(scaleX, scaleY, scaleZ);
+  
+  vec4 quaternion = decompressQuaternion(texel1.z);  // decompress quaternion
+  vec4 rgba = decompressColor(texel1.w);             // decompress color
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -181,9 +232,6 @@ void main()
   // Calculate the viewModel matrix
   mat4 viewModelMatrix = modelMatrix * viewMatrix;
 
-  // Transform splat center to world space then view space
-  vec3 center = texelFetch(splatCenters, texCoord, 0).rgb;
-
   // Scale
   center *= 0.05;
   scales *= 0.05;
@@ -212,7 +260,6 @@ void main()
   }
 
   // Compute the 3D covariance matrix for the splat
-  vec4 quaternion = texelFetch(splatQuat, texCoord, 0);
   mat3 cov3D = computeCov3D(viewMatrix, modelMatrix, quaternion, scales);
 
   // Compute the Jacobian of the splat's projection at its center

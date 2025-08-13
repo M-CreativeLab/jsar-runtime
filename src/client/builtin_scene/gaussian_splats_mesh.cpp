@@ -9,6 +9,7 @@
 #include "./meshes.hpp"
 #include "./gaussian_splats_mesh.hpp"
 #include "./direct_splats.hpp"
+#include "./compressed_splats.hpp"
 
 namespace builtin_scene
 {
@@ -108,104 +109,75 @@ namespace builtin_scene
 
   void GaussianSplatsMesh::updateSplatTextures(shared_ptr<WebGL2Context> glContext)
   {
-    if (!glContext || directSplatData_.empty())
+    if (!glContext || compressedSplatData_.empty())
       return;
 
-    // Calculate texture dimensions using direct method
-    auto textureSize = direct_splat_utils::getTextureSize(static_cast<uint32_t>(directSplatData_.size()));
+    // Calculate texture dimensions using compressed method
+    auto textureSize = compressed_splat_utils::getTextureSize(static_cast<uint32_t>(compressedSplatData_.size()));
     uint32_t width = textureSize[0];  // 1024
     uint32_t height = textureSize[1]; // power of 2 height
     uint32_t maxSplats = textureSize[2];
 
-    // Create textures if not initialized
+    // Create texture2DArray if not initialized
     if (!textureInitialized_)
     {
-      splatCentersTexture_ = glContext->createTexture();
-      splatColorsTexture_ = glContext->createTexture();
-      splatScalesTexture_ = glContext->createTexture();
-      splatQuatTexture_ = glContext->createTexture();
+      compressedSplatsTexture_ = glContext->createTexture();
 
-      if (!splatCentersTexture_ || !splatColorsTexture_ || !splatScalesTexture_ || !splatQuatTexture_)
+      if (!compressedSplatsTexture_)
         return;
       textureInitialized_ = true;
     }
 
-    // Prepare texture data arrays
-    vector<float> centersData(maxSplats * 3, 0.0f); // RGB for position
-    vector<float> colorsData(maxSplats * 4, 0.0f);  // RGBA for color+opacity
-    vector<float> scalesData(maxSplats * 3, 0.0f);  // RGB for scale
-    vector<float> quatData(maxSplats * 4, 0.0f);    // RGBA for quaternion
+    // Prepare texture data arrays for 2 layers
+    vector<float> layer0Data(maxSplats * 4, 0.0f); // Texel 0: position.xyz, scale.x
+    vector<float> layer1Data(maxSplats * 4, 0.0f); // Texel 1: scale.yz, compressed_quat, compressed_color
 
-    // Fill texture data from direct splats
-    for (size_t i = 0; i < directSplatData_.size(); ++i)
+    // Fill texture data from compressed splats
+    for (size_t i = 0; i < compressedSplatData_.size(); ++i)
     {
-      const auto &direct = directSplatData_[i];
+      const auto &compressed = compressedSplatData_[i];
 
-      // Centers (RGB)
-      centersData[i * 3 + 0] = direct.position[0];
-      centersData[i * 3 + 1] = direct.position[1];
-      centersData[i * 3 + 2] = direct.position[2];
+      // Layer 0 data (texel0)
+      layer0Data[i * 4 + 0] = compressed.texel0[0]; // pos.x
+      layer0Data[i * 4 + 1] = compressed.texel0[1]; // pos.y
+      layer0Data[i * 4 + 2] = compressed.texel0[2]; // pos.z
+      layer0Data[i * 4 + 3] = compressed.texel0[3]; // scale.x
 
-      // Colors (RGBA)
-      colorsData[i * 4 + 0] = direct.color[0];
-      colorsData[i * 4 + 1] = direct.color[1];
-      colorsData[i * 4 + 2] = direct.color[2];
-      colorsData[i * 4 + 3] = direct.color[3];
-
-      // Scales (RGB)
-      scalesData[i * 3 + 0] = direct.scale[0];
-      scalesData[i * 3 + 1] = direct.scale[1];
-      scalesData[i * 3 + 2] = direct.scale[2];
-
-      // Quaternion (RGBA)
-      quatData[i * 4 + 0] = direct.quaternion[0];
-      quatData[i * 4 + 1] = direct.quaternion[1];
-      quatData[i * 4 + 2] = direct.quaternion[2];
-      quatData[i * 4 + 3] = direct.quaternion[3];
+      // Layer 1 data (texel1)
+      layer1Data[i * 4 + 0] = compressed.texel1[0]; // scale.y
+      layer1Data[i * 4 + 1] = compressed.texel1[1]; // scale.z
+      layer1Data[i * 4 + 2] = compressed.texel1[2]; // compressed_quat
+      layer1Data[i * 4 + 3] = compressed.texel1[3]; // compressed_color
     }
 
-    // Upload centers texture (RGB32F)
-    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatCentersTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGB32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)centersData.data());
+    // Upload compressed texture array (RGBA32F, 2 layers)
+    glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, compressedSplatsTexture_);
+    glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray, 1, WEBGL2_RGBA32F, width, height, 2);
 
-    // Upload colors texture (RGBA32F)
-    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatColorsTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)colorsData.data());
+    // Upload layer 0 (texel0 data)
+    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0, 0, 0, 0, width, height, 1, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)layer0Data.data());
 
-    // Upload scales texture (RGB32F)
-    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatScalesTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGB32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGB, WebGLPixelType::kFloat, (unsigned char *)scalesData.data());
+    // Upload layer 1 (texel1 data)
+    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0, 0, 0, 1, width, height, 1, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)layer1Data.data());
 
-    // Upload quaternion texture (RGBA32F)
-    glContext->bindTexture(WebGLTextureTarget::kTexture2D, splatQuatTexture_);
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32F, width, height);
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)quatData.data());
-
-    // Set texture parameters for all textures (nearest sampling for discrete data)
-    for (auto texture : {splatCentersTexture_, splatColorsTexture_, splatScalesTexture_, splatQuatTexture_})
-    {
-      glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture);
-      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                               WebGLTextureParameterName::kTextureMinFilter,
-                               WEBGL_NEAREST);
-      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                               WebGLTextureParameterName::kTextureMagFilter,
-                               WEBGL_NEAREST);
-      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                               WebGLTextureParameterName::kTextureWrapS,
-                               WEBGL_CLAMP_TO_EDGE);
-      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                               WebGLTextureParameterName::kTextureWrapT,
-                               WEBGL_CLAMP_TO_EDGE);
-    }
+    // Set texture parameters (nearest sampling for discrete data)
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureMinFilter,
+                             WEBGL_NEAREST);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureMagFilter,
+                             WEBGL_NEAREST);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureWrapS,
+                             WEBGL_CLAMP_TO_EDGE);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureWrapT,
+                             WEBGL_CLAMP_TO_EDGE);
 
     // Reset the flag since textures have been updated
     needsTextureUpdate_ = false;
 
-    DEBUG("GaussianSplatsMesh", "Updated direct splat textures: %zu splats, %ux%u 2D textures", directSplatData_.size(), width, height);
+    DEBUG("GaussianSplatsMesh", "Updated compressed splat texture array: %zu splats, %ux%ux2 texture2DArray", compressedSplatData_.size(), width, height);
   }
 
   void GaussianSplatsMesh::updateSplatTexturesIfNeeded()
@@ -220,10 +192,10 @@ namespace builtin_scene
     }
   }
 
-  glm::vec3 GaussianSplatsMesh::extractPositionFromDirect(const DirectSplat &direct) const
+  glm::vec3 GaussianSplatsMesh::extractPositionFromCompressed(const CompressedSplat &compressed) const
   {
-    // Direct position extraction - no unpacking needed
-    return glm::vec3(direct.position[0], direct.position[1], direct.position[2]);
+    // Compressed position extraction - texel0 contains position xyz
+    return glm::vec3(compressed.texel0[0], compressed.texel0[1], compressed.texel0[2]);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
