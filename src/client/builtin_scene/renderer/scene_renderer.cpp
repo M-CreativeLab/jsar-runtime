@@ -250,7 +250,6 @@ namespace builtin_scene
       glContext_->uniformMatrix4fv(loc, false, graph);
     };
     auto updateMatricesForMultiview = [this,
-                                       &handedness,
                                        &program,
                                        &renderTarget,
                                        &setUniformMatrix4x4](WebGLUniformLocation &loc,

@@ -53,7 +53,10 @@ endif()
 if(APPLE)
     set(APPLE_RENDERER_DEPS
         "-framework Foundation"
+        "-framework Carbon"
         "-framework CoreFoundation"
+        "-framework CoreAudio"
+        "-framework AudioToolbox"
         "-framework OpenGL"
         "-framework Metal"
         # The followings are required by surfman(rust).
