@@ -158,6 +158,16 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
+  void Instance::setSDFTextureEnabled(bool enabled)
+  {
+    float value = enabled ? 1.0f : 0.0f;
+    if (data_.enableSDFTexture == value)
+      return; // Skip if there is no change.
+
+    data_.enableSDFTexture = value;
+    notifyBufferDataChanged();
+  }
+
   bool Instance::hasNoBorders() const
   {
     // Fast check for none border style.
@@ -314,7 +324,7 @@ namespace builtin_scene
   void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
     // Update instance VBO if structure is dirty
-    // if (true || bufferDataDirty_)
+    if (bufferDataDirty_)
     {
       size_t len = 0;
       vector<InstanceData> array;
@@ -420,6 +430,11 @@ namespace builtin_scene
               name == "instanceBorderStyle")
           {
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
+          }
+          // 1f
+          else if (name == "instanceUseSDFTexture")
+          {
+            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
           // 2f
           else if (name == "instanceTexUvOffset" ||

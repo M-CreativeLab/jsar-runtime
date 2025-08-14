@@ -2,6 +2,7 @@
 uniform sampler2DArray instanceTexAltas;
 in float vInstanceLayerIndex;
 in float vInstanceTextureEnabled;
+in float vInstanceUseSDFTexture;
 #endif
 
 #ifdef USE_UVS
@@ -149,6 +150,19 @@ void main()
   if (vInstanceTextureEnabled == 1.0)
   {
     vec4 textureColor = texture(instanceTexAltas, vec3(uvs, vInstanceLayerIndex));
+
+    // Check if this instance uses SDF texture rendering
+    if (vInstanceUseSDFTexture > 0.5)
+    {
+      // For SDF text or other texture, the `textureColor` contains distance field data in the alpha channel
+      // Apply SDF distance field rendering for smooth text anti-aliasing
+      float texDist = textureColor.a - 0.5; // Convert from [0,1] to [-0.5,0.5] range
+      float sdfWidth = max(fwidth(texDist), 0.01);
+      float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, texDist);
+
+      // Use black color with SDF-computed alpha for crisp text edges
+      textureColor.a *= sdfAlpha;
+    }
     outColor = mix(outColor, textureColor, textureColor.a);
   }
 #endif

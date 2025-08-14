@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
@@ -9,6 +10,12 @@
 #include <skia/include/core/SkRect.h>
 #include <skia/include/core/SkColor.h>
 #include <skia/include/core/SkPathEffect.h>
+#include <skia/include/core/SkData.h>
+#include <skia/include/core/SkImage.h>
+#include <skia/include/core/SkImageInfo.h>
+#include <skia/include/core/SkBitmap.h>
+#include <skia/include/core/SkPixmap.h>
+#include <skia/include/core/SkSurface.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <skia/include/effects/SkGradientShader.h>
 
@@ -37,6 +44,7 @@ namespace builtin_scene::web_renderer
 
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
+
 
   // Helper function to calculate background positioning area based on background-origin
   SkRect getBackgroundPositioningArea(const SkRRect &roundedRect,
@@ -110,15 +118,24 @@ namespace builtin_scene::web_renderer
                                                 Transform::FromXYZ(0.0f, 0.0f, 0.0f));
   }
 
-  void RenderBaseSystem::onExecute()
+  void RenderContentBaseSystem::onExecute()
   {
-    auto list = queryEntitiesWithComponent<WebContent>([](const WebContent &content) -> bool
-                                                       { return content.canvas() != nullptr && content.isDirty(); });
+    auto selectDirtyContent = [](const WebContent &content) -> bool
+    {
+      // Only select content that has a canvas and is dirty
+      return content.canvas() != nullptr && content.isContentDirty();
+    };
+    auto list = queryEntitiesWithComponent<WebContent>(selectDirtyContent);
     if (list.size() == 0)
       return;
 
     for (auto &item : list)
-      render(item.first, *item.second);
+    {
+      ecs::EntityId entity = item.first;
+      WebContent &content = *item.second;
+      if (render(entity, content))
+        content.setSurfaceDirty(true);
+    }
   }
 
   // Create a gradient shader based on the computed image and rounded rectangle.
@@ -562,12 +579,12 @@ namespace builtin_scene::web_renderer
     return hasBorders;
   }
 
-  void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
+  bool RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
     const ComputedStyle &style = content.style();
     const auto &fragment = content.fragment();
     if (!fragment.has_value()) // No layout, no rendering.
-      return;
+      return false;
 
     auto canvas = content.canvas();
     canvas->clear(SK_ColorTRANSPARENT);
@@ -632,6 +649,7 @@ namespace builtin_scene::web_renderer
                    style,
                    textureRequired);
     content.setTextureUsing(textureRequired);
+    return true;
   }
 
   SkRRect RenderBackgroundSystem::getBackgroundClippingArea(const SkRRect &roundedRect,
@@ -995,18 +1013,18 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
+  bool RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto imageComponent = getComponent<Image2d>(entity);
     if (imageComponent == nullptr ||
         !imageComponent->hasImageData())
-      return;
+      return false;
 
     // Disable using texture if the image is not visible.
     if (!imageComponent->visible())
     {
       content.setTextureUsing(false);
-      return;
+      return true;
     }
 
     sk_sp<SkImage> skImage = imageComponent->image();
@@ -1014,7 +1032,7 @@ namespace builtin_scene::web_renderer
     {
       // Disable using texture if the image is failed to load.
       content.setTextureUsing(false);
-      return;
+      return true;
     }
 
     SkCanvas *canvas = content.canvas();
@@ -1038,34 +1056,52 @@ namespace builtin_scene::web_renderer
     }
     canvas->restore();
     content.setTextureUsing(true);
+    return true;
   }
 
   RenderTextSystem::RenderTextSystem()
-      : RenderBaseSystem()
+      : RenderContentBaseSystem()
       , clientContext_(TrClientContextPerProcess::Get())
       , fontCollection_(clientContext_->getFontCacheManager())
       , paragraphBuilder_(nullptr)
+      , sdfGenerator_(text::sdf::SDFParams(4, 0.25f))
   {
   }
 
-  void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
+  bool RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto textComponent = getComponent<Text2d>(entity);
-    if (textComponent == nullptr)
-      return;
+    if (textComponent == nullptr) [[unlikely]]
+      return false;
 
     string &text = textComponent->content;
-    auto paragraphStyle = content.paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(text.c_str(), text.size());
-    paragraphBuilder->pop();
+    SkCanvas *canvas = content.canvas();
+    if (canvas == nullptr) [[unlikely]]
+      return false;
 
-    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(layoutWidth);
-    paragraph->paint(content.canvas(), 0.0f, 0.0f);
+    // 1. Render text normally using the original paragraph rendering
+    {
+      auto paragraphStyle = content.paragraphStyle();
+      auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+      paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+      paragraphBuilder->addText(text.c_str(), text.size());
+      paragraphBuilder->pop();
+
+      auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
+      auto paragraph = paragraphBuilder->Build();
+      paragraph->layout(layoutWidth);
+      paragraph->paint(canvas, 0.0f, 0.0f);
+    }
+
+    // 2. generate SDF texture from the painted canvas for anti-aliasing
+    {
+      auto usingSdf = generateSignedDistanceOn(canvas);
+      content.setIsSDFTexture(usingSdf);
+    }
+
+    // 3. Mark the content as using texture
     content.setTextureUsing(true);
+    return true;
   }
 
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)
@@ -1074,20 +1110,57 @@ namespace builtin_scene::web_renderer
     return fragment->contentWidth();
   }
 
-  void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
+  bool RenderTextSystem::generateSignedDistanceOn(SkCanvas *canvas)
+  {
+    // Get the surface from the canvas to extract pixel data
+    auto surface = canvas->getSurface();
+    if (!surface)
+      return false;
+
+    // Get writable pixel data
+    SkPixmap pixmap;
+    if (!surface->peekPixels(&pixmap))
+      return false;
+
+    unsigned char *pixels = (unsigned char *)pixmap.writable_addr();
+    if (!pixels)
+      return false;
+
+    int width = pixmap.width();
+    int height = pixmap.height();
+
+    // Use `SDFGenerator` to generate from the pixel data to the alpha channel.
+    bool success = sdfGenerator_.generateOnPixels(pixels, width, height);
+    return success;
+  }
+
+  void UpdateTextureSystem::onExecute()
   {
     auto material3d = getInstancedMeshComponent<MeshMaterial3d>();
     assert(material3d != nullptr);
 
-    auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
-    if (webContentMaterial)
+    auto webContentInstancedMaterial = material3d->material<materials::WebContentInstancedMaterial>();
+    if (webContentInstancedMaterial == nullptr) [[unlikely]]
+      return;
+
+    auto selectContents = [](const WebContent &content) -> bool
     {
-      // Check if this is a spatial image and set the spatial flag
-      auto imageComponent = getComponent<Image2d>(entity);
-      // Use the same texture update method for both spatial and non-spatial images
-      auto status = webContentMaterial->updateTexture(content);
-      if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
-        content.setDirty(false);
+      return content.canvas() != nullptr && content.isSurfaceDirty();
+    };
+    auto list = queryEntitiesWithComponent<WebContent>(selectContents);
+    if (list.size() > 0)
+    {
+      for (auto &item : list)
+      {
+        auto content = item.second;
+        // Use the same texture update method for both text and image content
+        auto status = webContentInstancedMaterial->updateTexture(*content);
+        if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+        {
+          content->setContentDirty(false);
+          content->setSurfaceDirty(false);
+        }
+      }
     }
   }
 }

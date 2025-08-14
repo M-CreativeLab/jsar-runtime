@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
@@ -15,6 +16,7 @@
 #include "./ecs-inl.hpp"
 #include "./text.hpp"
 #include "./texture_altas.hpp"
+#include "./text/sdf/generator.hpp"
 
 namespace builtin_scene
 {
@@ -264,6 +266,23 @@ namespace builtin_scene
         is_texture_using_ = value;
     }
 
+    /**
+     * Set the texture is a signed distance field (SDF) texture or not.
+     */
+    inline void setIsSDFTexture(bool value)
+    {
+      if (is_sdf_texture_ != value)
+        is_sdf_texture_ = value;
+    }
+
+    /**
+     * @returns Whether the content uses SDF texture rendering.
+     */
+    inline bool isSDFTexture() const
+    {
+      return is_sdf_texture_;
+    }
+
     // Web content must be transparent objects.
     inline bool isOpaque() const
     {
@@ -274,21 +293,21 @@ namespace builtin_scene
       return true;
     }
 
-    /**
-     * @returns Whether the content is dirty, namely needs to be re-rendered.
-     */
-    inline bool isDirty() const
+    inline bool isContentDirty() const
     {
-      return is_dirty_;
+      return is_content_dirty_;
     }
-    /**
-     * Mark the content as dirty or not.
-     *
-     * @param dirty Whether the content is dirty.
-     */
-    inline void setDirty(bool dirty)
+    inline void setContentDirty(bool dirty)
     {
-      is_dirty_ = dirty;
+      is_content_dirty_ = dirty;
+    }
+    inline bool isSurfaceDirty() const
+    {
+      return is_surface_dirty_;
+    }
+    inline void setSurfaceDirty(bool dirty)
+    {
+      is_surface_dirty_ = dirty;
     }
 
     /**
@@ -323,8 +342,13 @@ namespace builtin_scene
     bool enabled_ = true;
     bool is_texture_using_ = false;
     bool is_visible_ = true;
-    bool is_dirty_ = true;
     bool is_spatialized_ = false;
+    bool is_sdf_texture_ = false;
+
+    // The flag to indicate if the content is dirty and needs to be rendered to the surface.
+    bool is_content_dirty_ = true;
+    // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
+    bool is_surface_dirty_ = true;
   };
 
   class WebContentContext : public ecs::Resource
@@ -348,7 +372,6 @@ namespace builtin_scene
   {
     class InitSystem final : public ecs::System
     {
-    public:
       using ecs::System::System;
 
     public:
@@ -361,14 +384,7 @@ namespace builtin_scene
 
     class RenderBaseSystem : public ecs::System
     {
-    public:
       using ecs::System::System;
-
-    public:
-      void onExecute() override final;
-
-    protected:
-      virtual void render(ecs::EntityId entity, WebContent &content) = 0;
 
     protected:
       /**
@@ -405,6 +421,24 @@ namespace builtin_scene
       std::shared_ptr<WebContentContext> webContentCtx_;
     };
 
+    class RenderContentBaseSystem : public RenderBaseSystem
+    {
+      using RenderBaseSystem::RenderBaseSystem;
+
+    public:
+      void onExecute() override final;
+
+    protected:
+      /**
+       * Render the content for the given entity.
+       * 
+       * @param entity The entity ID to render.
+       * @param content The WebContent to render.
+       * @returns Whether the surface is written successfully.
+       */
+      virtual bool render(ecs::EntityId entity, WebContent &content) = 0;
+    };
+
     /**
      * Render the background.
      *
@@ -412,10 +446,9 @@ namespace builtin_scene
      * - border
      * - radius
      */
-    class RenderBackgroundSystem final : public RenderBaseSystem
+    class RenderBackgroundSystem final : public RenderContentBaseSystem
     {
-    public:
-      using RenderBaseSystem::RenderBaseSystem;
+      using RenderContentBaseSystem::RenderContentBaseSystem;
 
     public:
       const std::string name() const override
@@ -424,7 +457,7 @@ namespace builtin_scene
       }
 
     private:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      bool render(ecs::EntityId entity, WebContent &content) override;
 
     private:
       // The clipping area for the background, it can be a path or a rounded rectangle.
@@ -501,10 +534,9 @@ namespace builtin_scene
                      const client_cssom::ComputedStyle &);
     };
 
-    class RenderImageSystem final : public RenderBaseSystem
+    class RenderImageSystem final : public RenderContentBaseSystem
     {
-    public:
-      using RenderBaseSystem::RenderBaseSystem;
+      using RenderContentBaseSystem::RenderContentBaseSystem;
 
     public:
       const std::string name() const override
@@ -513,7 +545,7 @@ namespace builtin_scene
       }
 
     private:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      bool render(ecs::EntityId entity, WebContent &content) override;
     };
 
     /**
@@ -523,10 +555,9 @@ namespace builtin_scene
      * - size
      * - color
      */
-    class RenderTextSystem final : public RenderBaseSystem
+    class RenderTextSystem final : public RenderContentBaseSystem
     {
-    public:
-      using RenderBaseSystem::RenderBaseSystem;
+      using RenderContentBaseSystem::RenderContentBaseSystem;
 
     public:
       RenderTextSystem();
@@ -538,20 +569,21 @@ namespace builtin_scene
       }
 
     private:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      bool render(ecs::EntityId entity, WebContent &content) override;
 
     private:
       float getLayoutWidthForText(WebContent &content);
+      bool generateSignedDistanceOn(SkCanvas *canvas);
 
     private:
       TrClientContextPerProcess *clientContext_;
       sk_sp<skia::textlayout::FontCollection> fontCollection_;
       std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;
+      text::sdf::SDFGenerator sdfGenerator_;
     };
 
     class UpdateTextureSystem final : public RenderBaseSystem
     {
-    public:
       using RenderBaseSystem::RenderBaseSystem;
 
     public:
@@ -561,7 +593,7 @@ namespace builtin_scene
       }
 
     public:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      void onExecute() override final;
     };
   }
 

@@ -73,7 +73,7 @@ namespace builtin_scene::materials
     TextureUpdateStatus updateTexture(WebContent &content);
 
     /**
-     * Enable or disable SDF-based anti-aliasing.
+     * Enable or disable SDF-based anti-aliasing globally.
      *
      * @param enabled Whether to enable SDF rendering.
      */

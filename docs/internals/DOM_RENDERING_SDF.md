@@ -250,6 +250,103 @@ borderTexture->bind(GL_TEXTURE1); // Binds to texture unit 1
 - **Future-Proof**: Texture-based approach scales with GPU memory increases
 - **Fallback Support**: Can disable SDF rendering for compatibility if needed
 
+## SDF Text Rendering
+
+### Overview
+
+This implementation provides Signed Distance Field (SDF) based text rendering for the JSAR runtime, enabling crisp, scalable text in 3D environments through integration with the existing WebContent texture system.
+
+### Features
+
+- **Integrated SDF rendering** through existing `RenderTextSystem::render()` method
+- **WebContent material support** for SDF anti-aliasing via separate texture atlas
+- **Always enabled** for optimal text quality and anti-aliasing
+- **Seamless integration** - existing text rendering enhanced with SDF support
+- **Generic SDF support** - can extend to SVG images and other instance textures
+- **CPU-based SDF generation** using TinySDF algorithm
+
+### Architecture Integration
+
+Instead of a separate SDF rendering system, this implementation enhances the existing text rendering pipeline:
+
+1. **`RenderTextSystem::render()`** - Enhanced to generate SDF-based text for optimal anti-aliasing
+2. **`WebContentInstancedMaterial`** - Extended to support separate SDF texture atlas for text content
+3. **Existing `Text2d` components** - No separate component types needed
+4. **Dual texture system** - Separate texture atlases for text (SDF) and image content
+
+### Core Components
+
+#### Enhanced RenderTextSystem (`src/client/builtin_scene/web_content_renderer.cpp`)
+- `generateSDFTextureForText()` method for SDF text generation
+- Integration with existing Skia text layout
+- Always enabled for optimal text quality
+
+#### WebContentInstancedMaterial
+- `setSdfEnabled()` method for SDF mode control
+- Separate `sdfTextureAtlas` uniform for text content
+- `instanceTexAltas` continues handling image content
+- Shader support for dual texture routing
+
+#### TinySDF Utilities (`src/client/builtin_scene/text/sdf/`)
+- CPU-based SDF generation from font glyphs
+- Texture atlas creation and management
+- LRU cache for SDF textures
+
+### Shader Integration
+
+The `web_content.frag` shader supports dual texture routing:
+```glsl
+// Routes to appropriate texture atlas based on content type
+if (uSdfEnabled) {
+    // Text content uses SDF texture atlas for anti-aliasing
+    color = texture(sdfTextureAtlas, vTexCoord);
+} else {
+    // Image content uses instance texture atlas  
+    color = texture(instanceTexAltas, vTexCoord);
+}
+```
+
+### Usage
+
+Text anti-aliasing is automatically enabled through the integrated SDF approach. All text rendered through `RenderTextSystem::render()` uses SDF anti-aliasing via the separate texture atlas system.
+
+#### Integration Details
+
+1. **Layout System**: Always creates `Text2d` components (no separate component types)
+2. **Render System**: `RenderTextSystem::render()` automatically calls `generateSDFTextureForText()`
+3. **Material System**: `WebContentInstancedMaterial` routes text to `sdfTextureAtlas`
+4. **Texture System**: Separate atlases for text and image content optimization
+
+### Performance Considerations
+
+- **Always Enabled**: SDF text anti-aliasing is always enabled for optimal text quality
+- **Separate Texture Atlas**: Text and image content use independent atlases for optimization
+- **Shader Efficiency**: Single shader handles both content types with conditional routing
+- **Extensible Design**: Infrastructure supports future SDF enhancement for SVG images
+
+### Testing
+
+View demonstration:
+```bash
+# Open fixtures/html/text-antialiasing.html in JSAR runtime
+# SDF text anti-aliasing is always enabled for optimal quality
+```
+
+### Limitations
+
+- Currently CPU-based SDF generation (could be GPU-accelerated)
+- Single-channel SDF (could upgrade to MSDF for better quality)
+- Basic UTF-8 support (complex scripts may need advanced shaping)
+- Font loading relies on existing Skia font system
+
+### Future Enhancements
+
+1. **MSDF Support**: Multi-channel SDF for higher quality at large scales
+2. **GPU Generation**: Move SDF generation to compute shaders
+3. **Advanced Shaping**: Integration with HarfBuzz for complex scripts
+4. **Effect Support**: Outline, drop shadow, glow effects
+5. **SVG Image Support**: Extend SDF atlas system to SVG content
+
 ## References
 
 - [SDF Rendering Techniques](https://iquilezles.org/articles/distfunctions2d/)

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text Anti-aliasing - Integrated SDF Approach</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .text-container {
+      text-align: center;
+      color: rgb(19, 16, 16);
+      max-width: 800px;
+    }
+
+    .title {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .subtitle {
+      font-size: 24px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    .demo-text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .size-demo {
+      margin: 20px 0;
+    }
+
+    .size-small { font-size: 12px; }
+    .size-medium { font-size: 18px; }
+    .size-large { font-size: 32px; }
+    .size-xlarge { font-size: 48px; }
+
+    .transform-demo {
+      margin: 20px 0;
+    }
+
+    .transform-demo .scaled {
+      transform: scale(2);
+      display: inline-block;
+      margin: 10px;
+    }
+
+    .transform-demo .rotated {
+      transform: rotate(15deg);
+      display: inline-block;
+      margin: 10px;
+    }
+
+    .instructions {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="text-container">
+    <h1 class="title">Text Anti-aliasing</h1>
+    <p class="subtitle">Integrated SDF approach for crisp text rendering</p>
+    
+    <div class="demo-text">
+      This demonstration showcases the integrated SDF text anti-aliasing approach in the 
+      JSAR runtime. Text rendering uses the existing RenderTextSystem and WebContentInstancedMaterial 
+      pipeline with built-in SDF anti-aliasing for crisp, scalable text.
+    </div>
+
+    <div class="size-demo">
+      <div class="size-small">Small text (12px) - Testing anti-aliasing clarity</div>
+      <div class="size-medium">Medium text (18px) - Testing anti-aliasing clarity</div>
+      <div class="size-large">Large text (32px) - Testing anti-aliasing clarity</div>
+      <div class="size-xlarge">XL text (48px) - Testing anti-aliasing clarity</div>
+    </div>
+
+    <div class="transform-demo">
+      <div>Normal text</div>
+      <div class="scaled">Scaled 2x</div>
+      <div class="rotated">Rotated 15°</div>
+    </div>
+
+    <div class="demo-text">
+      Integrated text anti-aliasing benefits:
+      <br>• Uses existing Text2d components and RenderTextSystem
+      <br>• Works through WebContent instance textures and materials  
+      <br>• No separate rendering system needed
+      <br>• Extends to SVG images and other content
+      <br>• Always enabled for optimal text quality
+      <br>• Unicode character support: 你好世界 🌍 ñáméş
+    </div>
+
+    <div class="instructions">
+      <strong>Text Anti-aliasing Integration:</strong><br>
+      Text rendering now always uses SDF-based anti-aliasing through the existing WebContent material system.
+      <br><br>
+      <strong>Integration details:</strong><br>
+      • RenderTextSystem::render() uses enhanced text rendering pipeline
+      • WebContentInstancedMaterial provides SDF anti-aliasing automatically
+      • Same texture atlas and batching as other content
+      • Generic infrastructure supports future SDF content types like SVG
+    </div>
+  </div>
+
+  <script>
+    // Add some interactivity for demonstration
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Text Anti-aliasing Demo loaded');
+      console.log('SDF text anti-aliasing is always enabled in the integrated approach');
+      
+      // Add dynamic text scaling animation
+      const title = document.querySelector('.title');
+      let scale = 1;
+      let growing = true;
+      
+      setInterval(() => {
+        if (growing) {
+          scale += 0.01;
+          if (scale >= 1.2) growing = false;
+        } else {
+          scale -= 0.01;
+          if (scale <= 1) growing = true;
+        }
+        title.style.transform = `scale(${scale})`;
+      }, 50);
+    });
+  </script>
+</body>
+</html>

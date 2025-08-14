@@ -408,6 +408,9 @@ namespace builtin_scene
           instance.setColor(webContentComponent->backgroundColor());
           instance.disableTexture();
         }
+
+        // Sync the SDF texture using state
+        instance.setSDFTextureEnabled(webContentComponent->isSDFTexture());
       }
 
       // When the visible state changes, we need to update the renderable list.

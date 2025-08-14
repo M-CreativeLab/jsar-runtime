@@ -886,7 +886,7 @@ namespace client_layout
           auto onImageLoaded = [this, &image](const void *data, size_t length)
           {
             image.setUrlImageData(data, length);
-            getSceneComponent<WebContent>()->setDirty(true);
+            getSceneComponent<WebContent>()->setContentDirty(true);
           };
 
           string imageUrl = image.getUrl();

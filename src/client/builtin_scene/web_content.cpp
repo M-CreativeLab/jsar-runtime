@@ -105,7 +105,8 @@ namespace builtin_scene
            surface_->height() == imageInfo.height() &&
            "The surface size must be valid.");
 
-    setDirty(true);
+    setContentDirty(true);
+    setSurfaceDirty(true);
     return true;
   }
 
@@ -188,7 +189,7 @@ namespace builtin_scene
     }
 
     // Mark the content as dirty if setting a new style.
-    setDirty(true);
+    setContentDirty(true);
   }
 
   // TODO(yorkie): consider the change of the device pixel ratio.

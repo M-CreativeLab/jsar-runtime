@@ -39,6 +39,7 @@ namespace builtin_scene
         , dimensions(0.0f, 0.0f)
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
+        , enableSDFTexture(0.0f)
     {
     }
     glm::mat4 transform;    /** element transformation */
@@ -50,6 +51,7 @@ namespace builtin_scene
     glm::vec2 dimensions;   /** The dimensions */
     glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
     uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
+    float enableSDFTexture; /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -63,6 +65,7 @@ namespace builtin_scene
          << "  dimensions=" << math3d::to_string(data.dimensions) << std::endl
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
+         << "  enableSDFTexture=" << data.enableSDFTexture << std::endl
          << ")";
       return os;
     }
@@ -82,7 +85,7 @@ namespace builtin_scene
     // If the instance own texture to draw.
     inline bool ownTexture() const
     {
-      return (texUvScale.x > 0.0f || texUvScale.y > 0.0f);
+      return texUvScale.x > 0.0f || texUvScale.y > 0.0f;
     }
   };
 
@@ -172,6 +175,7 @@ namespace builtin_scene
     void setBorderColor(glm::vec4 borderColor);
     void setBorderColor(float r, float g, float b, float a);
     void setBorderStyle(float borderStyle);
+    void setSDFTextureEnabled(bool);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -366,7 +370,8 @@ namespace builtin_scene
                                                                   "instanceLayerIndex",
                                                                   "instanceDimensions",
                                                                   "instanceBorderRadius",
-                                                                  "instanceBorderStyle"};
+                                                                  "instanceBorderStyle",
+                                                                  "instanceUseSDFTexture"};
 
   public:
     InstancedMeshBase() = default;
