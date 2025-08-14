@@ -652,8 +652,10 @@ impl From<ffi::Display> for taffy::Display {
       ffi::Display::Flex => taffy::Display::Flex,
       ffi::Display::Grid => taffy::Display::Grid,
       ffi::Display::None => taffy::Display::None,
+      // FIXED: Use Display::None for inline to avoid breaking inline flow
       // Inline display is handled by custom InlineFormattingContext, not taffy
-      ffi::Display::Inline => taffy::Display::Block, // Placeholder for taffy integration
+      // Using None prevents taffy from treating inline content as block elements
+      ffi::Display::Inline => taffy::Display::None, // Don't interfere with inline flow
       _ => taffy::Display::Block, // Default fallback
     }
   }

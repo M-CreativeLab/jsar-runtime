@@ -306,9 +306,9 @@ namespace client_layout
     FormattingContext::setLayoutStyle(style);
     needs_layout_ = true;
 
-    // Update taffy placeholder with relevant style properties
-    // Map inline style to block for taffy integration
-    style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Block());
+    // FIXED: Use Display::Inline() which maps to Display::None in taffy
+    // This prevents taffy from treating inline content as block elements
+    style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Inline());
     taffy_placeholder_->setStyle(style);
     return true;
   }
@@ -397,15 +397,21 @@ namespace client_layout
     if (!taffy_placeholder_)
       return;
 
-    // Update the taffy placeholder node with our computed inline size
+    // For inline elements, we need a different approach than setting Display::Block()
+    // which causes unwanted line breaks. Since taffy doesn't natively support inline layout,
+    // we should not try to force inline content into taffy's block-based system.
+
+    // TODO: Research the correct approach for inline/taffy integration
+    // For now, commenting out the problematic Display::Block() setting
     auto style = taffy_placeholder_->style();
 
     // Set the size based on our inline layout computation
     style.setWidth(crates::layout2::styles::Dimension::Length(computed_size_.x));
     style.setHeight(crates::layout2::styles::Dimension::Length(computed_size_.y));
 
-    // Set display type
-    style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Block());
+    // PROBLEM: Setting Display::Block() causes inline elements to break to new lines
+    // This violates CSS inline layout where elements should flow horizontally
+    // style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Block());
 
     taffy_placeholder_->setStyle(style);
     taffy_placeholder_->markDirty();
