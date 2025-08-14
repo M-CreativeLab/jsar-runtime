@@ -8,7 +8,6 @@
 #include "./mesh_base.hpp"
 #include "./meshes.hpp"
 #include "./gaussian_splats_mesh.hpp"
-#include "./direct_splats.hpp"
 #include "./compressed_splats.hpp"
 
 namespace builtin_scene

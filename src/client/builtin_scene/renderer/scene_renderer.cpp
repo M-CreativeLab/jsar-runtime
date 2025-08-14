@@ -411,8 +411,8 @@ namespace builtin_scene
 
   void SceneRenderer::onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    // if (isVolumeMaskEnabled())
-    //   enableVolumeMask();
+    if (isVolumeMaskEnabled())
+      enableVolumeMask();
 
     if (renderPass == RenderPass::kOpaques)
     {
@@ -431,7 +431,7 @@ namespace builtin_scene
   }
   void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    // if (isVolumeMaskEnabled())
-    //   disableVolumeMask();
+    if (isVolumeMaskEnabled())
+      disableVolumeMask();
   }
 }
