@@ -10,6 +10,7 @@
 #include "./layout_block_flow.hpp"
 #include "./layout_box_model_object.hpp"
 #include "./layout_text.hpp"
+#include "./layout_tree_manager.hpp"
 #include "./hit_test_cache.hpp"
 #include "./hit_test_ray.hpp"
 #include "./hit_test_result.hpp"
@@ -45,6 +46,15 @@ namespace client_layout
     {
       return *taffy_node_allocator_;
     }
+
+    /**
+     * Get the layout tree manager for the complete C++ layout tree.
+     */
+    LayoutTreeManager &layoutTreeManager() const
+    {
+      return *layout_tree_manager_;
+    }
+
     bool computeLayout(const ConstraintSpace &avilableSpace) override final;
 
     bool hitTest(const HitTestRay &, HitTestResult &);
@@ -185,8 +195,11 @@ namespace client_layout
     geometry::Viewport3d viewport;
 
   private:
-    // JSAR uses taffy for block, flex and grid layout, this allocator is used to create the taffy nodes.
+    // JSAR uses taffy for flex and grid layout computation, this allocator is used to create the taffy nodes.
     std::shared_ptr<crates::layout2::Allocator> taffy_node_allocator_;
+
+    // Layout tree manager handles the complete C++ layout tree hierarchy
+    std::shared_ptr<LayoutTreeManager> layout_tree_manager_;
 
     size_t hit_test_count_;
     size_t hit_test_cache_hits_;

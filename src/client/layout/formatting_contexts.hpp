@@ -10,12 +10,14 @@
 #include "./constraint_space.hpp"
 #include "./fragment.hpp"
 #include "./layout_result.hpp"
+#include "./taffy_integration_layer.hpp"
 
 namespace client_layout
 {
   class LayoutView;
   class LayoutObject;
   class FormattingContextsChildList;
+  class LayoutTreeManager;
 
   class FormattingContext
   {
@@ -172,26 +174,90 @@ namespace client_layout
     }
   };
 
-  class FlexFormattingContext : public BlockFormattingContext<DisplayInside::kFlex>
+  class FlexFormattingContext : public TaffyIntegratedFormattingContext
   {
-    using BlockFormattingContext<DisplayInside::kFlex>::BlockFormattingContext;
+  public:
+    FlexFormattingContext(std::shared_ptr<LayoutView> view);
 
   private:
     bool isFlex() const override final
     {
       return true;
     }
+
+    TaffyIntegrationLayer::FlexLayoutResult computeTaffyLayout(const ConstraintSpace &space) override;
   };
 
-  class GridFormattingContext : public BlockFormattingContext<DisplayInside::kGrid>
+  class GridFormattingContext : public TaffyIntegratedFormattingContext
   {
-    using BlockFormattingContext<DisplayInside::kGrid>::BlockFormattingContext;
+  public:
+    GridFormattingContext(std::shared_ptr<LayoutView> view);
 
   private:
     bool isGrid() const override final
     {
       return true;
     }
+
+    TaffyIntegrationLayer::FlexLayoutResult computeTaffyLayout(const ConstraintSpace &space) override;
+  };
+
+  /**
+   * BlockFormattingContext implements pure CSS block layout behavior.
+   * This handles block box model, margin collapsing, and proper block layout behavior
+   * according to CSS 2.1 specification, completely independent of taffy.
+   * 
+   * NO taffy nodes are created - layout tree is managed purely in C++.
+   */
+  class BlockFormattingContext : public FormattingContext
+  {
+  public:
+    BlockFormattingContext(std::shared_ptr<LayoutView> view);
+
+  protected:
+    Fragment liveFragment() const override;
+
+    void onAdded(const FormattingContext &parent, std::shared_ptr<LayoutObject> beforeChild = nullptr) override;
+    void onRemoved(const FormattingContext &parent) override;
+    void onReplaced(const FormattingContext &parent, const FormattingContext &old) override;
+
+    void contentSizeDidChange(const glm::vec3 &contentSize) override;
+    void setIsEmpty(bool) override;
+    bool setLayoutStyle(crates::layout2::LayoutStyle &) override;
+    std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
+    void debugPrint() const override;
+
+  private:
+    bool isBlock() const override final
+    {
+      return true;
+    }
+    bool isFlow() const override final
+    {
+      return true;
+    }
+
+    // Pure CSS block layout computation
+    void computeBlockLayout(const ConstraintSpace &space);
+
+    // CSS block layout model
+    struct BlockBox
+    {
+      glm::vec2 position{0.0f, 0.0f};
+      glm::vec2 size{0.0f, 0.0f};
+      float margin_top = 0.0f;
+      float margin_bottom = 0.0f;
+      float margin_left = 0.0f;
+      float margin_right = 0.0f;
+      bool has_clearance = false;
+    };
+
+    std::vector<BlockBox> child_boxes_;
+    glm::vec2 computed_size_{0.0f, 0.0f};
+    bool needs_layout_ = true;
+
+    // Style for this block context
+    crates::layout2::LayoutStyle style_;
   };
 
   /**

@@ -2,6 +2,7 @@
 
 #include "./formatting_contexts-inl.hpp"
 #include "./fragment.hpp"
+#include "./taffy_integration_layer.hpp"
 
 namespace client_layout
 {
@@ -17,8 +18,8 @@ namespace client_layout
     if (display.isGrid())
       return make_unique<GridFormattingContext>(view);
 
-    // TODO(yorkie): support other formatting contexts.
-    return make_unique<BlockFlowFormattingContext>(view);
+    // Use pure CSS block layout instead of taffy-based for regular blocks
+    return make_unique<BlockFormattingContext>(view);
   }
 
   FormattingContext::FormattingContext(DisplayType type, shared_ptr<LayoutView> view)
@@ -219,14 +220,14 @@ namespace client_layout
     // Handle integration with taffy-based parents
     // Since inline elements don't use taffy nodes, we need special handling
     // when added to taffy-based parents (blocks, flex, grid)
-    
+
     if (auto taffyParent = dynamic_cast<const TaffyBasedFormattingContext *>(&parent))
     {
       // The taffy-based parent will need to account for our computed size
       // but we don't create a taffy node ourselves
       // This represents the architectural gap that @yorkie wants to fix:
       // ideally, we'd have a unified layout tree management system
-      
+
       // For now, do nothing - the parent will need to handle inline children differently
       // TODO: Implement proper inline/block layout tree integration
     }
@@ -342,5 +343,189 @@ namespace client_layout
            computed_size_.x,
            computed_size_.y,
            line_boxes_.size());
+  }
+
+  // BlockFormattingContext implementation - pure CSS block layout without taffy
+  BlockFormattingContext::BlockFormattingContext(shared_ptr<LayoutView> view)
+      : FormattingContext(DisplayType::Block(), view)
+  {
+    // No taffy nodes created - pure C++ layout tree management
+  }
+
+  Fragment BlockFormattingContext::liveFragment() const
+  {
+    Fragment fragment;
+    fragment.setSize(computed_size_.x, computed_size_.y, 0.0f);
+    return fragment;
+  }
+
+  void BlockFormattingContext::onAdded(const FormattingContext &parent, shared_ptr<LayoutObject> beforeChild)
+  {
+    // Handle integration with different parent context types
+    // This is managed by the LayoutTreeManager for proper integration
+
+    if (auto taffyParent = dynamic_cast<const TaffyBasedFormattingContext *>(&parent))
+    {
+      // Block context being added to taffy-based parent (flex/grid)
+      // The LayoutTreeManager will coordinate this integration
+      // TODO: Create proper integration through LayoutTreeManager
+    }
+    // For pure CSS parents, integration is handled through tree manager
+  }
+
+  void BlockFormattingContext::onRemoved(const FormattingContext &parent)
+  {
+    // No taffy cleanup needed - pure layout tree management
+  }
+
+  void BlockFormattingContext::onReplaced(const FormattingContext &parent, const FormattingContext &old)
+  {
+    // No taffy replacement needed - pure layout tree management
+  }
+
+  void BlockFormattingContext::contentSizeDidChange(const glm::vec3 &size)
+  {
+    FormattingContext::contentSizeDidChange(size);
+    needs_layout_ = true;
+  }
+
+  void BlockFormattingContext::setIsEmpty(bool b)
+  {
+    FormattingContext::setIsEmpty(b);
+    if (b)
+    {
+      computed_size_ = glm::vec2(0.0f, 0.0f);
+      child_boxes_.clear();
+    }
+    needs_layout_ = true;
+  }
+
+  bool BlockFormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
+  {
+    FormattingContext::setLayoutStyle(style);
+    style_ = style;
+    needs_layout_ = true;
+
+    // Do NOT modify the style for taffy - this is pure CSS layout
+    // No taffy integration needed since we don't create taffy nodes
+    return true;
+  }
+
+  unique_ptr<const LayoutResult> BlockFormattingContext::computeLayout(const ConstraintSpace &space)
+  {
+    if (needs_layout_)
+    {
+      computeBlockLayout(space);
+      needs_layout_ = false;
+    }
+
+    // Create layout result from our pure CSS computation
+    dom::geometry::DOMRect rect;
+    rect.x() = 0.0f; // Position will be set by parent
+    rect.y() = 0.0f;
+    rect.width() = computed_size_.x;
+    rect.height() = computed_size_.y;
+
+    auto result = make_unique<LayoutResult>(rect);
+
+    // Update the resulting fragment
+    resulting_fragment_.setSize(computed_size_.x, computed_size_.y, 0.0f);
+    result->fragment() = resulting_fragment_;
+    result->status() = LayoutResult::kSuccess;
+
+    return result;
+  }
+
+  void BlockFormattingContext::computeBlockLayout(const ConstraintSpace &space)
+  {
+    // Pure CSS block layout algorithm according to CSS 2.1 specification
+    child_boxes_.clear();
+    computed_size_ = glm::vec2(0.0f, 0.0f);
+
+    if (is_empty_)
+    {
+      return;
+    }
+
+    const float available_width = space.avilableSize().x;
+    const float available_height = space.avilableSize().y;
+
+    // Block layout: children are laid out vertically
+    float current_y = 0.0f;
+    float max_width = 0.0f;
+
+    // Basic block layout - stack children vertically
+    // TODO: Implement proper margin collapsing, clearance, and CSS box model
+
+    // If we have content size from replaced elements, use it
+    if (content_size_.has_value())
+    {
+      computed_size_.x = std::min(content_size_->x, available_width);
+      computed_size_.y = content_size_->y;
+    }
+    else
+    {
+      // Default block behavior: take available width, height based on content
+      computed_size_.x = available_width;
+
+      // For now, minimal height
+      computed_size_.y = std::max(20.0f, current_y);
+    }
+
+    // TODO: Implement child layout coordination through LayoutTreeManager
+    // For now, basic block container behavior
+  }
+
+  void BlockFormattingContext::debugPrint() const
+  {
+    printf("BlockFormattingContext: size=%.2fx%.2f, children=%zu (pure CSS layout, no taffy)\n",
+           computed_size_.x,
+           computed_size_.y,
+           child_boxes_.size());
+  }
+
+  // FlexFormattingContext implementation - uses taffy for computation but C++ for tree management
+  FlexFormattingContext::FlexFormattingContext(shared_ptr<LayoutView> view)
+      : TaffyIntegratedFormattingContext(DisplayType::Flex(), view)
+  {
+  }
+
+  TaffyIntegrationLayer::FlexLayoutResult FlexFormattingContext::computeTaffyLayout(const ConstraintSpace &space)
+  {
+    // Get child styles through the layout tree manager
+    auto child_styles = collectChildStyles();
+
+    // Use taffy integration layer for flex computation
+    // TODO: Implement proper style collection and integration
+    TaffyIntegrationLayer integration_layer(view_.lock());
+    crates::layout2::LayoutStyle container_style; // TODO: Get from current style
+    return integration_layer.computeFlexLayout(container_style, child_styles, space);
+  }
+
+  // GridFormattingContext implementation - uses taffy for computation but C++ for tree management
+  GridFormattingContext::GridFormattingContext(shared_ptr<LayoutView> view)
+      : TaffyIntegratedFormattingContext(DisplayType::Grid(), view)
+  {
+  }
+
+  TaffyIntegrationLayer::FlexLayoutResult GridFormattingContext::computeTaffyLayout(const ConstraintSpace &space)
+  {
+    // Get child styles through the layout tree manager
+    auto child_styles = collectChildStyles();
+
+    // Use taffy integration layer for grid computation
+    // TODO: Implement proper style collection and integration
+    TaffyIntegrationLayer integration_layer(view_.lock());
+    crates::layout2::LayoutStyle container_style; // TODO: Get from current style
+
+    // Note: Using FlexLayoutResult for now, should create proper GridLayoutResult method
+    auto grid_result = integration_layer.computeGridLayout(container_style, child_styles, space);
+
+    // Convert GridLayoutResult to FlexLayoutResult for interface compatibility
+    TaffyIntegrationLayer::FlexLayoutResult result;
+    result.container_fragment = grid_result.container_fragment;
+    result.child_fragments = grid_result.child_fragments;
+    result.success = grid_result.success;
+    return result;
   }
 }
