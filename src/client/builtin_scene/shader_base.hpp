@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <client/graphics/webgl_shader.hpp>
-#include "./shaders_store.gen.hpp"
 
 namespace builtin_scene
 {
@@ -23,7 +22,9 @@ namespace builtin_scene
      * @param shaderType The type of the shader, such as vertex or fragment shader.
      * @return The preprocessed source code of the shader.
      */
-    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines, client_graphics::WebGLShaderType shaderType);
+    static std::string PreprocessSource(std::string source,
+                                        const std::vector<std::string> &defines,
+                                        client_graphics::WebGLShaderType shaderType);
 
     /**
      * Concatenate the source code with the given lines.
@@ -79,12 +80,7 @@ namespace builtin_scene
      * @param defines The list of defines to add to the shader.
      * @returns The `ShaderSource` object.
      */
-    ShaderSource shader(const std::vector<std::string> &defines = {}) const
-    {
-      if (shaders::SHADERS_STORE.find(name) == shaders::SHADERS_STORE.end())
-        throw std::runtime_error("The shader is not found: " + name);
-      return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
-    }
+    ShaderSource shader(const std::vector<std::string> &defines = {}) const;
 
   public:
     /**
