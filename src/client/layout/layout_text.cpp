@@ -114,7 +114,7 @@ namespace client_layout
       if (shouldUpdateContent)
       {
         auto &webContentComponent = scene.getComponentChecked<WebContent>(entity());
-        webContentComponent.setDirty(true);
+        webContentComponent.setContentDirty(true);
       }
     };
     useSceneWithCallback(updateText);

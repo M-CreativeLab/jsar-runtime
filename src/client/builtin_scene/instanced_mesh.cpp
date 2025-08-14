@@ -324,7 +324,7 @@ namespace builtin_scene
   void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
     // Update instance VBO if structure is dirty
-    // if (true || bufferDataDirty_)
+    if (bufferDataDirty_)
     {
       size_t len = 0;
       vector<InstanceData> array;

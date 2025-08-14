@@ -74,7 +74,6 @@ namespace builtin_scene::text::sdf
     SDFParams params_;
 
     // Internal methods for SDF generation using EDT algorithm
-    std::vector<uint8_t> toAlphaOnly(const unsigned char *pixels, int width, int height);
     bool writeFromGrids(unsigned char *pixels,
                         int width,
                         int height,

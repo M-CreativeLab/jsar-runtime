@@ -86,7 +86,7 @@ namespace client_layout
 
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
       webContent.setSpatialized(imageElement.isSpatial());
-      webContent.setDirty(true); // Mark the content as dirty to update the texture.
+      webContent.setContentDirty(true); // Mark the content as dirty to update the texture.
     };
     useSceneWithCallback(setBitmap);
   }
@@ -169,7 +169,7 @@ namespace client_layout
       auto markContentDirty = [this](Scene &scene)
       {
         WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-        webContent.setDirty(true);
+        webContent.setContentDirty(true);
       };
       useSceneWithCallback(markContentDirty);
     }

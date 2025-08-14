@@ -21,11 +21,6 @@ namespace builtin_scene::text::sdf
 
     int len = width * height;
 
-    // Extract alpha channel from pixel data
-    auto alphaData = toAlphaOnly(pixels, width, height);
-    if (alphaData.empty())
-      return false;
-
     // Create temporary grids for distance transform
     vector<double> gridOuter(len, INF);
     vector<double> gridInner(len, 0.0);
@@ -35,7 +30,8 @@ namespace builtin_scene::text::sdf
     {
       for (int x = 0; x < width; x++)
       {
-        const double alpha = alphaData[y * width + x] / 255.0; // Normalize to [0,1]
+        const int pixelIndex = (y * width + x) * 4;
+        const double alpha = pixels[pixelIndex + 3] / 255.0; // Normalize the alpha to [0,1]
         if (alpha == 0.0)
           continue; // Skip empty pixels
 
@@ -68,27 +64,6 @@ namespace builtin_scene::text::sdf
 
     // Write SDF and update pixel alpha channel
     return writeFromGrids(pixels, width, height, gridOuter, gridInner);
-  }
-
-  vector<uint8_t> SDFGenerator::toAlphaOnly(const unsigned char *pixels, int width, int height)
-  {
-    if (!pixels || width <= 0 || height <= 0)
-      return {};
-
-    vector<uint8_t> alphaData(width * height);
-
-    // Assume RGBA format (4 bytes per pixel)
-    for (int y = 0; y < height; ++y)
-    {
-      for (int x = 0; x < width; ++x)
-      {
-        const int pixelIndex = (y * width + x) * 4;
-        const uint8_t alpha = pixels[pixelIndex + 3]; // Alpha is 4th component
-        alphaData[y * width + x] = alpha;
-      }
-    }
-
-    return alphaData;
   }
 
   bool SDFGenerator::writeFromGrids(unsigned char *pixels,
