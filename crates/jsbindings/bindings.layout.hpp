@@ -157,6 +157,7 @@ namespace crates::layout2
   XX(Block, "block")    \
   XX(Flex, "flex")      \
   XX(Grid, "grid")      \
+  XX(Inline, "inline")  \
   XX(None, "none")
 
 #define BOX_SIZING_MAP(XX)      \
@@ -221,6 +222,10 @@ namespace crates::layout2
       static Display Grid()
       {
         return Display(holocron::layout::Display::Grid);
+      }
+      static Display Inline()
+      {
+        return Display(holocron::layout::Display::Inline);
       }
       static Display None()
       {

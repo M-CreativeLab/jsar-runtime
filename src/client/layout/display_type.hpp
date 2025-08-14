@@ -127,8 +127,9 @@ namespace client_layout
         return LayoutDisplay::Flex();
       if (isGrid())
         return LayoutDisplay::Grid();
+      if (isInline())
+        return LayoutDisplay::Inline();
 
-      // TODO: support other display types.
       // Default to block display type.
       return LayoutDisplay::Block();
     }

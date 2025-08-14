@@ -1,4 +1,4 @@
-use std::{cell::RefCell, ops::BitOr, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use paste::paste;
 use style::values::{
@@ -242,6 +242,7 @@ mod ffi {
     Block,
     Flex,
     Grid,
+    Inline,
     None,
   }
 
@@ -643,7 +644,30 @@ impl From<taffy::Rect<f32>> for ffi::NumberRect {
   }
 }
 
-impl_type_casting_simple!(Display, { Block, Flex, Grid, None }, Block);
+// Custom Display conversion to handle Inline -> Block mapping
+impl From<ffi::Display> for taffy::Display {
+  fn from(value: ffi::Display) -> Self {
+    match value {
+      ffi::Display::Block => taffy::Display::Block,
+      ffi::Display::Flex => taffy::Display::Flex,
+      ffi::Display::Grid => taffy::Display::Grid,
+      ffi::Display::Inline => taffy::Display::Block, // Map inline to block for taffy
+      ffi::Display::None => taffy::Display::None,
+      _ => taffy::Display::Block, // Default fallback
+    }
+  }
+}
+
+impl From<taffy::Display> for ffi::Display {
+  fn from(value: taffy::Display) -> Self {
+    match value {
+      taffy::Display::Block => ffi::Display::Block,
+      taffy::Display::Flex => ffi::Display::Flex,
+      taffy::Display::Grid => ffi::Display::Grid,
+      taffy::Display::None => ffi::Display::None,
+    }
+  }
+}
 impl_type_casting_simple!(BoxSizing, { ContentBox, BorderBox }, ContentBox);
 impl_type_casting_simple!(Overflow, { Visible, Clip, Hidden, Scroll }, Visible);
 impl_type_casting_simple!(Position, { Relative, Absolute }, Relative);
