@@ -6,7 +6,6 @@
 #include <client/layout/layout_object.hpp>
 #include <client/layout/layout_model3d.hpp>
 #include <client/per_process.hpp>
-#include <common/debug.hpp>
 #include <algorithm>
 #include <node/uv.h>
 
@@ -27,7 +26,7 @@ namespace dom
       setAutoplay(getAttribute("autoplay") == "true" || hasAttribute("autoplay"));
     if (hasAttribute("loading"))
     {
-      std::string loadingValue = getAttribute("loading");
+      string loadingValue = getAttribute("loading");
       if (loadingValue == "lazy")
         setLoading(LoadingHint::kLoadingLazy);
       else if (loadingValue == "eager")
@@ -47,7 +46,7 @@ namespace dom
     createModelComponent();
   }
 
-  void HTMLModelElement::attributeChangedCallback(const std::string &name, const std::string &oldValue, const std::string &newValue)
+  void HTMLModelElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
     HTMLElement::attributeChangedCallback(name, oldValue, newValue);
 
@@ -74,12 +73,12 @@ namespace dom
     }
   }
 
-  std::string HTMLModelElement::src() const
+  string HTMLModelElement::src() const
   {
     return src_;
   }
 
-  void HTMLModelElement::setSrc(const std::string &src)
+  void HTMLModelElement::setSrc(const string &src)
   {
     if (src_ == src)
       return;
@@ -97,12 +96,12 @@ namespace dom
     loadModel();
   }
 
-  std::optional<std::string> HTMLModelElement::type() const
+  optional<string> HTMLModelElement::type() const
   {
     return type_;
   }
 
-  void HTMLModelElement::setType(const std::string &type)
+  void HTMLModelElement::setType(const string &type)
   {
     type_ = type;
     updateModelComponent();
@@ -128,7 +127,7 @@ namespace dom
     loading_ = loading;
   }
 
-  std::string HTMLModelElement::loadingString() const
+  string HTMLModelElement::loadingString() const
   {
     switch (loading_)
     {
@@ -143,7 +142,7 @@ namespace dom
     }
   }
 
-  void HTMLModelElement::setLoadingString(const std::string &loading)
+  void HTMLModelElement::setLoadingString(const string &loading)
   {
     if (loading == "lazy")
       setLoading(LoadingHint::kLoadingLazy);
@@ -161,7 +160,6 @@ namespace dom
       return;
 
     is_src_model_loading_ = true;
-    cout << "Loading model from: " << src() << endl;
     fetchArrayBufferLikeResource(src(), [this](const void *data, size_t length)
                                  { this->onModelDataReady(data, length); });
   }
@@ -186,7 +184,7 @@ namespace dom
       layoutModel3d->setModelData(parsed_splats_.value());
   }
 
-  HTMLModelElement::ModelType HTMLModelElement::detectModelType(const std::string &src, const std::string &typeHint)
+  HTMLModelElement::ModelType HTMLModelElement::detectModelType(const string &src, const string &typeHint)
   {
     if (!typeHint.empty())
     {
@@ -206,10 +204,10 @@ namespace dom
 
     // Auto-detect from file extension
     size_t dotPos = src.find_last_of('.');
-    if (dotPos != std::string::npos)
+    if (dotPos != string::npos)
     {
-      std::string ext = src.substr(dotPos + 1);
-      std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+      string ext = src.substr(dotPos + 1);
+      transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
       if (ext == "ksplat")
       {
@@ -234,7 +232,7 @@ namespace dom
 
   void HTMLModelElement::onModelDataReady(const void *modelData, size_t modelByteLength)
   {
-    model_data_ = std::vector<char>(modelByteLength);
+    model_data_ = vector<char>(modelByteLength);
     model_data_->assign(static_cast<const char *>(modelData),
                         static_cast<const char *>(modelData) + modelByteLength);
     cout << "Model data received, size: " << modelByteLength << " bytes" << endl;
@@ -244,7 +242,7 @@ namespace dom
     is_src_model_loaded_ = true;
 
     // Dispatch the error event if the model data is null.
-    if (TR_UNLIKELY(model_data_ == std::nullopt))
+    if (TR_UNLIKELY(model_data_ == nullopt))
     {
       dispatchEvent(DOMEventType::Error);
       return;
@@ -254,7 +252,7 @@ namespace dom
     parseModelAsync(model_data_.value());
   }
 
-  bool HTMLModelElement::parseModel(const std::vector<char> &modelData)
+  bool HTMLModelElement::parseModel(const vector<char> &modelData)
   {
     if (is_src_model_decoded_)
       return true;
@@ -266,11 +264,11 @@ namespace dom
     if (modelType == ModelType::KSplat || modelType == ModelType::GaussianSplatting)
     {
       // Use Ksplat parser to parse the model data
-      std::vector<builtin_scene::GaussianSplat> parsedSplats;
+      vector<builtin_scene::GaussianSplat> parsedSplats;
       if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
       {
         // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
-        std::vector<GaussianSplat> elementSplats;
+        vector<GaussianSplat> elementSplats;
         elementSplats.reserve(parsedSplats.size());
 
         for (const auto &splat : parsedSplats)
@@ -294,22 +292,24 @@ namespace dom
         }
 
         // Store parsed splats for layout
-        parsed_splats_ = std::move(elementSplats);
-        DEBUG("HTMLModelElement", "Successfully parsed .ksplat file with %zu splats", parsed_splats_->size());
+        parsed_splats_ = move(elementSplats);
+        cout << "Successfully parsed .ksplat file with " << parsed_splats_->size() << " splats" << endl;
       }
       else
       {
-        std::cerr << "Ksplat parsing failed" << std::endl;
+        cerr << "Failed to parse Ksplat file"
+             << (src_.empty() ? "" : " (" + src_ + ")")
+             << ": invalid format or corrupted data" << endl;
       }
     }
     else if (modelType == ModelType::SPZ)
     {
       // Use SPZ parser to parse the model data
-      std::vector<builtin_scene::GaussianSplat> parsedSplats;
+      vector<builtin_scene::GaussianSplat> parsedSplats;
       if (model_loaders::SpzLoader::load(modelData, parsedSplats))
       {
         // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
-        std::vector<GaussianSplat> elementSplats;
+        vector<GaussianSplat> elementSplats;
         elementSplats.reserve(parsedSplats.size());
 
         for (const auto &splat : parsedSplats)
@@ -333,18 +333,18 @@ namespace dom
         }
 
         // Store parsed splats for layout
-        parsed_splats_ = std::move(elementSplats);
-        DEBUG("HTMLModelElement", "Successfully parsed .spz file with %zu splats", parsed_splats_->size());
+        parsed_splats_ = move(elementSplats);
+        cout << "Successfully parsed .spz file with " << parsed_splats_->size() << " splats" << endl;
       }
       else
       {
-        std::cerr << "SPZ parsing failed" << std::endl;
+        cerr << "SPZ parsing failed" << endl;
       }
     }
     else
     {
-      std::cerr << "Model type not supported yet: " << std::endl;
-      std::cerr << "GLTF/GLB parsing not yet implemented" << std::endl;
+      cerr << "Model type not supported: GLTF/GLB model format is not yet supported." << endl;
+      cerr << "Please use .ksplat or .spz format for 3D Gaussian Splatting models." << endl;
       // Model loading failed - do not set as loaded
     }
 
@@ -360,7 +360,7 @@ namespace dom
     return is_src_model_decoded_;
   }
 
-  void HTMLModelElement::parseModelAsync(const std::vector<char> &modelData)
+  void HTMLModelElement::parseModelAsync(const vector<char> &modelData)
   {
     auto work = [](uv_work_t *handle)
     {
