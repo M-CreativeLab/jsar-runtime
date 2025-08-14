@@ -87,17 +87,11 @@ vec3 decompressScale(float compressed)
   float ny = float(iy) / 255.0;
   float nz = float(iz) / 255.0;
 
-  // Denormalize using provided log scale bounds
-  float logX = scaleMin.x + nx * (scaleMax.x - scaleMin.x);
-  float logY = scaleMin.y + ny * (scaleMax.y - scaleMin.y);
-  float logZ = scaleMin.z + nz * (scaleMax.z - scaleMin.z);
-
-  // Convert back from log2 to linear scale
-  float x = exp2(logX);
-  float y = exp2(logY);
-  float z = exp2(logZ);
-
-  return vec3(x, y, z);
+  return vec3(
+    (nx == 0.0) ? 0.0 : exp2(scaleMin.x + nx * (scaleMax.x - scaleMin.x)),
+    (ny == 0.0) ? 0.0 : exp2(scaleMin.y + ny * (scaleMax.y - scaleMin.y)),
+    (nz == 0.0) ? 0.0 : exp2(scaleMin.z + nz * (scaleMax.z - scaleMin.z))
+  );
 }
 
 // Decompress quaternion from single float to (x,y,z,w)
@@ -127,19 +121,19 @@ vec4 decompressColor(float compressed)
 {
   // Extract packed value by reinterpreting float as uint
   uint packed = floatBitsToUint(compressed);
-  
+
   // Unpack RGBA components (8 bits each)
   uint ir = packed & 0xFFu;
   uint ig = (packed >> 8u) & 0xFFu;
   uint ib = (packed >> 16u) & 0xFFu;
   uint ia = (packed >> 24u) & 0xFFu;
-  
+
   // Convert back to normalized float
   float r = float(ir) / 255.0;
   float g = float(ig) / 255.0;
   float b = float(ib) / 255.0;
   float a = float(ia) / 255.0;
-  
+
   return vec4(r, g, b, a);
 }
 
