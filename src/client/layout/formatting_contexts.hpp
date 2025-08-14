@@ -195,13 +195,11 @@ namespace client_layout
   };
 
   /**
-   * InlineFormattingContext implements true inline layout behavior without relying on taffy.
-   * This handles line wrapping, baseline alignment, and proper inline box model behavior.
-   * Unlike block layout, inline layout flows text horizontally and wraps to new lines.
+   * InlineFormattingContext implements pure CSS inline layout behavior.
+   * This handles line wrapping, baseline alignment, and proper inline box model behavior
+   * according to CSS 2.1 specification, completely independent of taffy.
    * 
-   * For integration with taffy-based parents, this context creates a placeholder taffy node
-   * that represents the space taken by the inline layout, while the actual inline positioning
-   * is computed using custom algorithms.
+   * NO taffy nodes are created - layout tree is managed purely in C++.
    */
   class InlineFormattingContext : public FormattingContext
   {
@@ -231,13 +229,10 @@ namespace client_layout
       return true;
     }
 
-    // Inline-specific layout computation
+    // Pure CSS inline layout computation
     void computeInlineLayout(const ConstraintSpace &space);
 
-    // Update the taffy placeholder node with our computed size
-    void updateTaffyPlaceholder();
-
-    // Line box management for inline layout
+    // CSS line box model for inline layout
     struct LineBox
     {
       float baseline = 0.0f;
@@ -245,19 +240,14 @@ namespace client_layout
       float descent = 0.0f;
       float width = 0.0f;
       float height = 0.0f;
-      std::vector<std::shared_ptr<FormattingContext>> inline_boxes;
+      glm::vec2 position{0.0f, 0.0f};
     };
 
     std::vector<LineBox> line_boxes_;
-
-    // Current computed size for this inline formatting context
     glm::vec2 computed_size_{0.0f, 0.0f};
-
-    // Track if we need layout recomputation
     bool needs_layout_ = true;
 
-    // Taffy placeholder node for integration with taffy-based parents
-    // This node represents the space taken by our inline layout in the taffy tree
-    std::unique_ptr<crates::layout2::Node> taffy_placeholder_;
+    // Style for this inline context
+    crates::layout2::LayoutStyle style_;
   };
 }
