@@ -10,10 +10,10 @@
 
 #include <client/graphics/webgl_context.hpp>
 #include <common/debug.hpp>
+
 #include "./ecs.hpp"
 #include "./gaussian_splatting.hpp"
 #include "./meshes/splat.hpp"
-#include "./direct_splats.hpp"
 #include "./compressed_splats.hpp"
 
 namespace builtin_scene

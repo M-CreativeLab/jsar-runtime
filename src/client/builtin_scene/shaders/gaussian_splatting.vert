@@ -2,7 +2,6 @@ precision mediump float;
 precision mediump int;
 
 // Uniforms
-uniform mat4 modelMatrix;
 uniform mat4 view;
 uniform mat4 projection;
 #ifdef MULTIVIEW
@@ -61,7 +60,6 @@ vec4 decompressQuaternion(float compressed)
   // Reconstruct w using unit length constraint
   float w_squared = 1.0 - (x*x + y*y + z*z);
   float w = (w_squared > 0.0) ? sqrt(w_squared) : 0.0;
-  
   return vec4(x, y, z, w);
 }
 
@@ -158,11 +156,10 @@ vec4 mat3ToQuat(mat3 m)
   return normalize(q);
 }
 
-mat3 computeCov3D(mat4 viewMatrix, mat4 modelMatrix, vec4 splatQuat, vec3 splatScale)
+mat3 computeCov3D(mat4 viewMatrix, vec4 splatQuat, vec3 splatScale)
 {
   mat3 RS = scaleQuaternionToMat3(splatScale, splatQuat);
-  mat3 VM = mat3(viewMatrix * modelMatrix);
-  mat3 T = VM * RS;
+  mat3 T = mat3(viewMatrix) * RS;
   return T * transpose(T);
 }
 
@@ -190,7 +187,7 @@ void main()
   float scaleY = texel1.x;          // scale.y
   float scaleZ = texel1.y;          // scale.z
   vec3 scales = vec3(scaleX, scaleY, scaleZ);
-  
+
   vec4 quaternion = decompressQuaternion(texel1.z);  // decompress quaternion
   vec4 rgba = decompressColor(texel1.w);             // decompress color
 
@@ -229,14 +226,11 @@ void main()
   projectionMatrix = projection;
 #endif
 
-  // Calculate the viewModel matrix
-  mat4 viewModelMatrix = modelMatrix * viewMatrix;
-
-  // Scale
+  // TODO(yorkie): support set TRS dynamically
   center *= 0.05;
   scales *= 0.05;
 
-  vec4 viewCenter4 = viewModelMatrix * vec4(center, 1.0);
+  vec4 viewCenter4 = viewMatrix * vec4(center, 1.0);
   vec3 viewCenter = viewCenter4.xyz;
 
   // Discard splats that are behind the camera or too far away
@@ -260,7 +254,7 @@ void main()
   }
 
   // Compute the 3D covariance matrix for the splat
-  mat3 cov3D = computeCov3D(viewMatrix, modelMatrix, quaternion, scales);
+  mat3 cov3D = computeCov3D(viewMatrix, quaternion, scales);
 
   // Compute the Jacobian of the splat's projection at its center
   vec2 scaledRenderSize = renderSize * focalAdjustment;
