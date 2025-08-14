@@ -26,6 +26,9 @@ namespace client_layout
     auto view = make_shared<LayoutView>(document, window);
     assert(view != nullptr && "Failed to create the LayoutView for the document.");
 
+    // Initialize the layout tree manager now that we have a shared_ptr
+    view->layout_tree_manager_ = make_shared<LayoutTreeManager>(view);
+
     view->setDisplay(DisplayType::Block());
     view->createEntity();
 
@@ -42,6 +45,7 @@ namespace client_layout
       : LayoutBlockFlow(document)
       , viewport(window.innerWidth(), window.innerHeight(), window.innerDepth())
       , taffy_node_allocator_(make_shared<crates::layout2::Allocator>())
+      , layout_tree_manager_(nullptr) // Will be initialized in Make method
       , hit_test_count_(0)
       , hit_test_cache_hits_(0)
       , hit_test_cache_(make_unique<HitTestCache>())

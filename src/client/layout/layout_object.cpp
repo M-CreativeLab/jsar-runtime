@@ -295,6 +295,12 @@ namespace client_layout
   {
     destroyEntity();
 
+    // Unregister from the layout tree manager
+    if (auto layoutView = view())
+    {
+      layoutView->layoutTreeManager().unregisterLayoutObject(shared_from_this());
+    }
+
     auto children = virtualChildren();
     if (children != nullptr)
     {
@@ -486,6 +492,12 @@ namespace client_layout
     auto &parentCtx = *formattingContext_;
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
 
+    // Register the relationship with the layout tree manager
+    if (auto layoutView = view())
+    {
+      layoutView->layoutTreeManager().addChild(shared_from_this(), newChild, beforeChild);
+    }
+
     // Update layers for the new child and its descendants since hierarchy changed
     newChild->updateLayer(true);
   }
@@ -496,6 +508,13 @@ namespace client_layout
     assert(child->formattingContext_ != nullptr && "The formatting context must be set for the child.");
 
     child->formattingContext_->onRemoved(*formattingContext_);
+
+    // Unregister the relationship with the layout tree manager
+    if (auto layoutView = view())
+    {
+      layoutView->layoutTreeManager().removeChild(shared_from_this(), child);
+    }
+
     child->destroy();
 
     // FIXME(yorkie): should we update the sibling's layer?
@@ -527,7 +546,15 @@ namespace client_layout
     formattingContextWillSet(display);
     formattingContext_ = FormattingContext::Make(display, view());
     if (formattingContext_ != nullptr)
+    {
       formattingContextDidSet(*formattingContext_);
+
+      // Register with the layout tree manager
+      if (auto layoutView = view())
+      {
+        layoutView->layoutTreeManager().registerLayoutObject(shared_from_this(), formattingContext_);
+      }
+    }
   }
 
   bool LayoutObject::setStyle(ComputedStyle style)
@@ -608,6 +635,17 @@ namespace client_layout
     if (TR_UNLIKELY(formattingContext_ == nullptr))
       return false;
 
+    // For pure CSS contexts (inline, block), prefer using the LayoutTreeManager for coordination
+    if (auto layoutView = view())
+    {
+      if (formattingContext_->isInline() || formattingContext_->isBlock())
+      {
+        // Use LayoutTreeManager for coordinated layout computation
+        return layoutView->layoutTreeManager().computeLayout(shared_from_this(), avilableSpace);
+      }
+    }
+
+    // Fallback to direct formatting context computation for taffy-based contexts
     unique_ptr<const LayoutResult> result = formattingContext_->computeLayout(avilableSpace);
     if (TR_UNLIKELY(result == nullptr))
       return false;
