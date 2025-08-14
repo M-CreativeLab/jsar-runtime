@@ -10,6 +10,7 @@
 // Forward declarations
 class TrConstellation;
 class TrInspectorClient;
+class ContentDomainProxy;
 
 // CDP (Chrome DevTools Protocol) Message Structure
 struct CdpMessage
@@ -73,6 +74,8 @@ public:
 
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
+  std::unique_ptr<ContentDomainProxy> contentProxy_;
+  std::string clientId_;
 
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);

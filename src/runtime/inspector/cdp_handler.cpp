@@ -5,6 +5,7 @@
 #include <runtime/constellation.hpp>
 
 #include "./cdp_handler.hpp"
+#include "./content_domain_proxy.hpp"
 #include "./cdp_runtime_domain.hpp"
 #include "./cdp_myexample_domain.hpp"
 #include "./cdp_jsar_universal_rendering_server_domain.hpp"
@@ -124,12 +125,15 @@ string CdpResponse::event(const string &method, const rapidjson::Value &params)
 
 // CdpHandler implementation
 CdpHandler::CdpHandler(TrConstellation *constellation, const string &clientId, TrInspectorClient *inspectorClient)
+    : clientId_(clientId)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
 
-  // Create domain instances directly
-  domains_["Runtime"] = make_unique<CdpRuntimeDomain>(constellation);
-  domains_["Example"] = make_unique<CdpMyExampleDomain>();
+  // Initialize content domain proxy
+  contentProxy_ = make_unique<ContentDomainProxy>(constellation);
+
+  // Create domain instances directly (host-side domains only)
+  // Runtime and Example domains are now handled by content processes via proxy
   domains_["JSAR.UniversalRenderingServer"] = make_unique<CdpJsarUniversalRenderingServerDomain>(constellation,
                                                                                                  clientId);
 
@@ -162,7 +166,14 @@ string CdpHandler::processMessage(const string &message)
 
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain=%s, Method=%s, ID=%lld", domain.c_str(), methodName.c_str(), (long long)cdpMessage->id);
 
-  // Find domain handler
+  // Check if this domain should be forwarded to content processes
+  if (contentProxy_ && contentProxy_->shouldForwardDomain(domain))
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Forwarding domain %s to content process", domain.c_str());
+    return contentProxy_->forwardRequest(cdpMessage->method, *cdpMessage, clientId_);
+  }
+
+  // Find local domain handler
   auto domainIt = domains_.find(domain);
   if (domainIt == domains_.end())
   {
@@ -172,7 +183,7 @@ string CdpHandler::processMessage(const string &message)
 
   try
   {
-    return domainIt->second->handleMethod(methodName, *cdpMessage, ""); // clientId not needed anymore
+    return domainIt->second->handleMethod(methodName, *cdpMessage, clientId_);
   }
   catch (const exception &e)
   {
