@@ -136,10 +136,10 @@ namespace builtin_scene
       const auto &compressed = compressedSplatData_[i];
 
       // Single texel data
-      splatData[i * 4 + 0] = compressed.texel[0]; // compressed_pos
-      splatData[i * 4 + 1] = compressed.texel[1]; // compressed_scale
-      splatData[i * 4 + 2] = compressed.texel[2]; // compressed_quat
-      splatData[i * 4 + 3] = compressed.texel[3]; // compressed_color
+      splatData[i * 4 + 0] = compressed.word[0]; // compressed_pos
+      splatData[i * 4 + 1] = compressed.word[1]; // compressed_scale
+      splatData[i * 4 + 2] = compressed.word[2]; // compressed_quat
+      splatData[i * 4 + 3] = compressed.word[3]; // compressed_color
     }
 
     // Upload compressed texture (RGBA32F, single layer)
