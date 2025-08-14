@@ -2,6 +2,7 @@
 #include "./cdp_handler.hpp" // For CdpMessage and CdpResponse
 #include "../constellation.hpp"
 #include "../content.hpp"
+#include "../content_manager.hpp"
 #include "common/debug.hpp"
 #include "common/inspector/message.hpp"
 #include "common/inspector/sender.hpp"
@@ -26,14 +27,55 @@ ContentDomainProxy::~ContentDomainProxy()
 
 string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Forwarding request %s for client %s", method.c_str(), clientId.c_str());
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Synchronous forward request %s for client %s", method.c_str(), clientId.c_str());
 
+  // Use a condition variable to wait for async response
+  string result;
+  bool responseReceived = false;
+  mutex responseMutex;
+  condition_variable responseCv;
+
+  // Call the async version with a callback that stores the result
+  forwardRequestAsync(method, message, clientId, [&](const string &response)
+                      {
+    lock_guard<mutex> lock(responseMutex);
+    result = response;
+    responseReceived = true;
+    responseCv.notify_one(); });
+
+  // Wait for response with timeout
+  unique_lock<mutex> lock(responseMutex);
+  auto timeout = chrono::steady_clock::now() + chrono::seconds(30); // 30 second timeout
+
+  if (responseCv.wait_until(lock, timeout, [&]
+                            { return responseReceived; }))
+  {
+    return result;
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Request timeout for method %s, client %s", method.c_str(), clientId.c_str());
+    return CdpResponse::error(message.id, -32603, "Request timeout");
+  }
+}
+
+void ContentDomainProxy::forwardRequestAsync(const string &method, const CdpMessage &message, const string &clientId, ResponseCallback callback)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Async forward request %s for client %s", method.c_str(), clientId.c_str());
+  forwardRequestInternal(method, message, clientId, callback);
+}
+
+void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpMessage &message, const string &clientId, ResponseCallback callback)
+{
   // Find the content runtime for this client
   TrContentRuntime *contentRuntime = findContentRuntime(clientId);
   if (!contentRuntime)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Content runtime not found for client %s", clientId.c_str());
-    return CdpResponse::error(message.id, -32603, "Content process not available");
+    string errorResponse = CdpResponse::error(message.id, -32603, "Content process not available");
+    if (callback)
+      callback(errorResponse);
+    return;
   }
 
   // Generate a unique request ID for tracking
@@ -59,46 +101,68 @@ string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage
   // Create pending request tracker
   auto pendingRequest = make_unique<PendingRequest>();
   pendingRequest->requestId = requestId;
+  pendingRequest->cdpMessageId = message.id;
+  pendingRequest->callback = callback;
+  pendingRequest->timestamp = chrono::steady_clock::now();
 
   {
     lock_guard<mutex> lock(pendingRequestsMutex_);
     pendingRequests_[requestId] = move(pendingRequest);
   }
 
-  // TODO: Send request to content process via inspector IPC channel
-  // This implementation will be completed when the full IPC integration is ready.
-  // The infrastructure is in place with:
-  // - Inspector IPC message types in src/common/inspector/message.hpp
-  // - Content-side handlers in src/client/inspector/
-  // - Proxy forwarding logic here
-  //
-  // Future implementation should:
-  // 1. Look up the content runtime for the clientId
-  // 2. Send TrCdpRequest via inspector IPC channel
-  // 3. Wait for TrCdpResponse from content process
-  // 4. Return the response to the CDP client
-  //
-  // For now, return a placeholder response indicating the proxy is working
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Request %u prepared for content process, method: %s", requestId, method.c_str());
+  // Send request to content process via inspector IPC channel
+  bool success = sendCdpRequestToContent(contentRuntime, requestId, message.id, cdpMessageJson);
 
-  // Simulate processing and return a response indicating proxy functionality
-  rapidjson::Document result;
-  result.SetObject();
-  result.AddMember("proxied", rapidjson::Value().SetBool(true), allocator);
-  result.AddMember("method", rapidjson::Value(method.c_str(), allocator), allocator);
-  result.AddMember("requestId", rapidjson::Value().SetUint(requestId), allocator);
-  result.AddMember("contentId", rapidjson::Value(clientId.c_str(), allocator), allocator);
-  result.AddMember("status", rapidjson::Value("forwarded_to_content_process", allocator), allocator);
-
-  // Clean up pending request
+  if (!success)
   {
-    lock_guard<mutex> lock(pendingRequestsMutex_);
-    pendingRequests_.erase(requestId);
-  }
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Failed to send request %u to content process", requestId);
 
-  return CdpResponse::success(message.id, result);
+    // Clean up pending request and return error
+    {
+      lock_guard<mutex> lock(pendingRequestsMutex_);
+      pendingRequests_.erase(requestId);
+    }
+
+    string errorResponse = CdpResponse::error(message.id, -32603, "Failed to send request to content process");
+    if (callback)
+      callback(errorResponse);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Request %u sent to content process, method: %s", requestId, method.c_str());
+  }
 }
 
+bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntime, uint32_t requestId, uint32_t cdpMessageId, const string &cdpMessageJson)
+{
+  if (!contentRuntime)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Content runtime is null");
+    return false;
+  }
+
+  // TODO: This needs to be implemented when inspector IPC channels are added to TrContentRuntime
+  // For now, return a simulated success response after a short delay
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Simulating CDP request send to content runtime %d", contentRuntime->id);
+
+  // Create a simulated response
+  rapidjson::Document result;
+  result.SetObject();
+  auto &allocator = result.GetAllocator();
+
+  result.AddMember("proxied", rapidjson::Value().SetBool(true), allocator);
+  result.AddMember("requestId", rapidjson::Value().SetUint(requestId), allocator);
+  result.AddMember("contentId", rapidjson::Value().SetInt(contentRuntime->id), allocator);
+  result.AddMember("status", rapidjson::Value("simulated_success", allocator), allocator);
+
+  string simulatedResponse = CdpResponse::success(cdpMessageId, result);
+
+  // Simulate async response by calling handleResponse directly
+  // In a real implementation, this would be called when the IPC response is received
+  handleResponse(requestId, simulatedResponse);
+
+  return true;
+}
 bool ContentDomainProxy::shouldForwardDomain(const string &domain) const
 {
   return forwardedDomains_.find(domain) != forwardedDomains_.end();
@@ -106,19 +170,43 @@ bool ContentDomainProxy::shouldForwardDomain(const string &domain) const
 
 TrContentRuntime *ContentDomainProxy::findContentRuntime(const string &clientId)
 {
-  // TODO: Implement proper content runtime lookup
-  // This should integrate with TrConstellation to find the content runtime
-  // associated with the given clientId. The clientId typically corresponds
-  // to the content/document ID that the CDP client is debugging.
-  //
-  // Implementation should:
-  // 1. Use constellation_->getContentManager() to access content runtimes
-  // 2. Find the content runtime matching the clientId
-  // 3. Verify the content process is running and has inspector channel
-  //
-  // For now, this is a placeholder implementation
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Looking up content runtime for client %s", clientId.c_str());
-  return nullptr;
+
+  if (!constellation_ || !constellation_->contentManager)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Constellation or content manager not available");
+    return nullptr;
+  }
+
+  // Convert clientId to content ID (they should correspond to document/content IDs)
+  uint32_t contentId;
+  try
+  {
+    contentId = static_cast<uint32_t>(std::stoul(clientId));
+  }
+  catch (const std::exception &e)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Invalid client ID format: %s", clientId.c_str());
+    return nullptr;
+  }
+
+  // Look up the content runtime using the content manager
+  auto contentRuntime = constellation_->contentManager->getContent(contentId);
+  if (!contentRuntime)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Content runtime not found for ID %u", contentId);
+    return nullptr;
+  }
+
+  // Verify the content process is running and available
+  if (!contentRuntime->available.load() || contentRuntime->shouldDestroy.load())
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Content runtime %u is not available or being destroyed", contentId);
+    return nullptr;
+  }
+
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Found content runtime %u for client %s", contentId, clientId.c_str());
+  return contentRuntime.get();
 }
 
 uint32_t ContentDomainProxy::generateRequestId()
@@ -132,9 +220,57 @@ void ContentDomainProxy::handleResponse(uint32_t requestId, const string &respon
   auto it = pendingRequests_.find(requestId);
   if (it != pendingRequests_.end())
   {
-    it->second->response = response;
-    it->second->completed = true;
-    it->second->cv.notify_one();
+    auto &pendingRequest = it->second;
+    pendingRequest->response = response;
+    pendingRequest->completed = true;
+
+    // Call callback if provided (for async requests)
+    if (pendingRequest->callback)
+    {
+      pendingRequest->callback(response);
+    }
+
+    // Notify any waiting synchronous requests
+    pendingRequest->cv.notify_one();
+
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Response received for request %u", requestId);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Received response for unknown request %u", requestId);
+  }
+}
+
+void ContentDomainProxy::cleanupTimedOutRequests()
+{
+  auto now = chrono::steady_clock::now();
+  auto timeout = chrono::seconds(30); // 30 second timeout
+
+  lock_guard<mutex> lock(pendingRequestsMutex_);
+  auto it = pendingRequests_.begin();
+  while (it != pendingRequests_.end())
+  {
+    auto &pendingRequest = it->second;
+    if (!pendingRequest->completed && (now - pendingRequest->timestamp) > timeout)
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Cleaning up timed out request %u", pendingRequest->requestId);
+
+      // Call callback with timeout error if provided
+      if (pendingRequest->callback)
+      {
+        string errorResponse = CdpResponse::error(pendingRequest->cdpMessageId, -32603, "Request timeout");
+        pendingRequest->callback(errorResponse);
+      }
+
+      // Notify any waiting synchronous requests
+      pendingRequest->cv.notify_one();
+
+      it = pendingRequests_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
   }
 }
 
