@@ -25,7 +25,8 @@ namespace events_comm
   XX(RpcRequest)                 \
   XX(RpcResponse)                \
   XX(DocumentRequest)            \
-  XX(DocumentEvent)
+  XX(DocumentEvent)              \
+  XX(InputEvent)
 
   enum class TrNativeEventType
   {
@@ -240,6 +241,80 @@ namespace events_comm
   public:
     uint32_t documentId;
     TrDocumentEventType eventType;
+    long long timestamp = 0;
+
+    friend class TrEventDetailStorage;
+  };
+
+  /**
+   * Input event types for keyboard, mouse, and other input events
+   */
+  enum class TrInputEventType
+  {
+    Unknown = 0,
+    KeyboardDown,
+    KeyboardUp,
+    KeyboardPress,
+    MouseDown,
+    MouseUp,
+    MouseMove,
+    MouseWheel
+  };
+
+  /**
+   * Represents an input event from the host application to be forwarded to the DOM
+   */
+  class TrInputEvent : public TrEventDetailObject
+  {
+  public:
+    TrInputEvent() = default;
+    TrInputEvent(uint32_t documentId, TrInputEventType inputEventType, const string &eventData)
+        : documentId(documentId)
+        , inputEventType(inputEventType)
+        , eventData(eventData)
+    {
+      auto now = chrono::system_clock::now();
+      timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
+    }
+
+  protected:
+    void serialize(rapidjson::Document &destDoc) override
+    {
+      auto &allocator = destDoc.GetAllocator();
+      destDoc.AddMember("documentId", documentId, allocator);
+      destDoc.AddMember("inputEventType", static_cast<int>(inputEventType), allocator);
+      destDoc.AddMember("eventData", rapidjson::Value(eventData.c_str(), allocator), allocator);
+
+      rapidjson::Value timestampValue;
+      timestampValue.SetInt64(timestamp);
+      destDoc.AddMember("timestamp", timestampValue, allocator);
+    }
+
+    void deserialize(rapidjson::Document &srcDoc) override
+    {
+      if (!srcDoc.HasMember("documentId") || !srcDoc["documentId"].IsUint())
+        documentId = 0;
+      else
+        documentId = srcDoc["documentId"].GetUint();
+
+      if (!srcDoc.HasMember("inputEventType") || !srcDoc["inputEventType"].IsInt())
+        inputEventType = TrInputEventType::Unknown;
+      else
+        inputEventType = static_cast<TrInputEventType>(srcDoc["inputEventType"].GetInt());
+
+      if (!srcDoc.HasMember("eventData") || !srcDoc["eventData"].IsString())
+        eventData = "";
+      else
+        eventData = srcDoc["eventData"].GetString();
+
+      if (srcDoc.HasMember("timestamp") && srcDoc["timestamp"].IsInt64())
+        timestamp = srcDoc["timestamp"].GetInt64();
+    }
+
+  public:
+    uint32_t documentId;
+    TrInputEventType inputEventType;
+    string eventData; // JSON-serialized event data
     long long timestamp = 0;
 
     friend class TrEventDetailStorage;

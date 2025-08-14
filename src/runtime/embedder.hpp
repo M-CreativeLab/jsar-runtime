@@ -2,6 +2,7 @@
 
 #include <string>
 #include "./constellation.hpp"
+#include "./input-manager/input_manager.hpp"
 
 /**
  * The host engines that the JSAR runtime would be embedded with.
@@ -161,6 +162,32 @@ public:
 
 public:
   std::shared_ptr<TrConstellation> constellation;
+  std::shared_ptr<input_manager::TrInputManager> inputManager;
+
+public: // Input event injection API
+  /**
+   * Inject a keyboard event into a specific content runtime.
+   * 
+   * @param contentId The content runtime ID to send the event to
+   * @param eventData The keyboard event data
+   * @return true if the event was successfully injected, false otherwise
+   */
+  bool injectKeyboardEvent(uint32_t contentId, const input_manager::TrKeyboardEventData &eventData);
+
+  /**
+   * Inject a keyboard event to all active content runtimes.
+   * 
+   * @param eventData The keyboard event data
+   * @return number of content runtimes that received the event
+   */
+  int broadcastKeyboardEvent(const input_manager::TrKeyboardEventData &eventData);
+
+  /**
+   * Get the list of active content runtime IDs that can receive input events.
+   * 
+   * @return vector of content runtime IDs
+   */
+  std::vector<uint32_t> getActiveContentIds() const;
 
 protected:
   TrHostEngine hostEngine = TrHostEngine::None;

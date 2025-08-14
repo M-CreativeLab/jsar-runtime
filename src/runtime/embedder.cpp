@@ -19,6 +19,9 @@ TrEmbedder::TrEmbedder(TrHostEngine hostEngine)
     signal(SIGPIPE, SIG_IGN);
     DEBUG(LOG_TAG_ERROR, "Note: SIGPIPE has been ignored because the host process has no handler for it.");
   }
+
+  // Initialize InputManager after constellation is created
+  inputManager = make_shared<input_manager::TrInputManager>(constellation);
 }
 
 bool TrEmbedder::configure(string storageDirectory, string httpsProxyServer, bool enableXR)
@@ -82,4 +85,35 @@ void TrEmbedder::onTransparentsRenderPass()
 void TrEmbedder::onAfterRendering()
 {
   constellation->onAfterRendering();
+}
+
+// Input event injection API implementation
+bool TrEmbedder::injectKeyboardEvent(uint32_t contentId, const input_manager::TrKeyboardEventData &eventData)
+{
+  if (!inputManager)
+  {
+    DEBUG(LOG_TAG_ERROR, "InputManager not initialized");
+    return false;
+  }
+  return inputManager->injectKeyboardEvent(contentId, eventData);
+}
+
+int TrEmbedder::broadcastKeyboardEvent(const input_manager::TrKeyboardEventData &eventData)
+{
+  if (!inputManager)
+  {
+    DEBUG(LOG_TAG_ERROR, "InputManager not initialized");
+    return 0;
+  }
+  return inputManager->broadcastKeyboardEvent(eventData);
+}
+
+std::vector<uint32_t> TrEmbedder::getActiveContentIds() const
+{
+  if (!inputManager)
+  {
+    DEBUG(LOG_TAG_ERROR, "InputManager not initialized");
+    return {};
+  }
+  return inputManager->getActiveContentIds();
 }

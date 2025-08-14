@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSAR Runtime - Keyboard Input Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .event-log {
+            border: 1px solid #ccc;
+            background: #f8f8f8;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .input-area {
+            margin: 20px 0;
+        }
+        #testInput {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        #testInput:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .status {
+            padding: 10px;
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .clear-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .clear-btn:hover {
+            background: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSAR Runtime - Keyboard Input Demo</h1>
+        
+        <div class="status">
+            ✅ JSAR Runtime is ready to receive keyboard events from host applications.
+        </div>
+
+        <h2>Interactive Input Test</h2>
+        <div class="input-area">
+            <label for="testInput">Type here to test keyboard events:</label>
+            <input type="text" id="testInput" placeholder="Click here and type something..." />
+        </div>
+
+        <h2>Event Log</h2>
+        <button class="clear-btn" onclick="clearLog()">Clear Log</button>
+        <div class="event-log" id="eventLog">
+            Waiting for keyboard events...<br>
+        </div>
+
+        <h2>Expected Behavior</h2>
+        <ul>
+            <li>When the host application injects keyboard events via InputManager, they should appear in the log above</li>
+            <li>Events should be properly dispatched to the focused element (the input field)</li>
+            <li>Both direct typing and injected events should be captured</li>
+            <li>Modifier keys (Ctrl, Alt, Shift, Meta) should be properly handled</li>
+        </ul>
+    </div>
+
+    <script>
+        const eventLog = document.getElementById('eventLog');
+        const testInput = document.getElementById('testInput');
+        let eventCounter = 0;
+
+        function logEvent(eventType, event) {
+            eventCounter++;
+            const timestamp = new Date().toTimeString().split(' ')[0];
+            const logEntry = `[${timestamp}] #${eventCounter} ${eventType}: key="${event.key}" code="${event.code}" ` +
+                           `alt=${event.altKey} ctrl=${event.ctrlKey} meta=${event.metaKey} shift=${event.shiftKey} ` +
+                           `target=${event.target.tagName}`;
+            
+            eventLog.innerHTML += logEntry + '<br>';
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        function clearLog() {
+            eventLog.innerHTML = 'Event log cleared...<br>';
+            eventCounter = 0;
+        }
+
+        // Add keyboard event listeners to capture all keyboard events
+        document.addEventListener('keydown', function(event) {
+            logEvent('KEYDOWN', event);
+        });
+
+        document.addEventListener('keyup', function(event) {
+            logEvent('KEYUP', event);
+        });
+
+        document.addEventListener('keypress', function(event) {
+            logEvent('KEYPRESS', event);
+        });
+
+        // Focus the input field by default
+        testInput.focus();
+
+        // Add additional event listeners for input events
+        testInput.addEventListener('input', function(event) {
+            const timestamp = new Date().toTimeString().split(' ')[0];
+            eventLog.innerHTML += `[${timestamp}] INPUT: value="${event.target.value}"<br>`;
+            eventLog.scrollTop = eventLog.scrollHeight;
+        });
+
+        // Log when the demo is ready
+        window.addEventListener('load', function() {
+            const timestamp = new Date().toTimeString().split(' ')[0];
+            eventLog.innerHTML += `[${timestamp}] Demo loaded and ready for keyboard input<br>`;
+        });
+
+        console.log('JSAR Keyboard Input Demo initialized');
+        console.log('This page will display keyboard events injected by the host application via InputManager');
+    </script>
+</body>
+</html>
