@@ -1,18 +1,20 @@
-#include "./tiny_sdf.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include "./generator.hpp"
 
 namespace builtin_scene::text::sdf
 {
+  using namespace std;
+
   static constexpr double INF = 1e20;
 
-  TinySDF::TinySDF(const SDFParams &params)
+  SDFGenerator::SDFGenerator(const SDFParams &params)
       : params_(params)
   {
   }
 
-  bool TinySDF::generateFromPixelsInPlace(unsigned char *pixels, int width, int height)
+  bool SDFGenerator::generateOnPixels(unsigned char *pixels, int width, int height)
   {
     if (!pixels || width <= 0 || height <= 0)
       return false;
@@ -20,13 +22,13 @@ namespace builtin_scene::text::sdf
     int len = width * height;
 
     // Extract alpha channel from pixel data
-    auto alphaData = extractAlphaChannel(pixels, width, height);
+    auto alphaData = toAlphaOnly(pixels, width, height);
     if (alphaData.empty())
       return false;
 
     // Create temporary grids for distance transform
-    std::vector<double> gridOuter(len, INF);
-    std::vector<double> gridInner(len, 0.0);
+    vector<double> gridOuter(len, INF);
+    vector<double> gridInner(len, 0.0);
 
     // Initialize grids based on alpha values
     for (int y = 0; y < height; y++)
@@ -56,24 +58,24 @@ namespace builtin_scene::text::sdf
     }
 
     // Create temporary arrays for EDT algorithm
-    std::vector<double> f(std::max(width, height));
-    std::vector<double> z(std::max(width, height) + 1);
-    std::vector<int> v(std::max(width, height));
+    vector<double> f(max(width, height));
+    vector<double> z(max(width, height) + 1);
+    vector<int> v(max(width, height));
 
     // Apply Euclidean Distance Transform
     edt(gridOuter, 0, 0, width, height, width, f, v, z);
     edt(gridInner, 0, 0, width, height, width, f, v, z);
 
-    // Generate SDF and update pixel alpha channel
-    return generateSDFFromGrids(pixels, width, height, gridOuter, gridInner);
+    // Write SDF and update pixel alpha channel
+    return writeFromGrids(pixels, width, height, gridOuter, gridInner);
   }
 
-  std::vector<uint8_t> TinySDF::extractAlphaChannel(const unsigned char *pixels, int width, int height)
+  vector<uint8_t> SDFGenerator::toAlphaOnly(const unsigned char *pixels, int width, int height)
   {
     if (!pixels || width <= 0 || height <= 0)
       return {};
 
-    std::vector<uint8_t> alphaData(width * height);
+    vector<uint8_t> alphaData(width * height);
 
     // Assume RGBA format (4 bytes per pixel)
     for (int y = 0; y < height; ++y)
@@ -89,7 +91,11 @@ namespace builtin_scene::text::sdf
     return alphaData;
   }
 
-  bool TinySDF::generateSDFFromGrids(unsigned char *pixels, int width, int height, const std::vector<double> &gridOuter, const std::vector<double> &gridInner)
+  bool SDFGenerator::writeFromGrids(unsigned char *pixels,
+                                    int width,
+                                    int height,
+                                    const vector<double> &gridOuter,
+                                    const vector<double> &gridInner)
   {
     if (!pixels || width <= 0 || height <= 0)
       return false;
@@ -104,11 +110,11 @@ namespace builtin_scene::text::sdf
     for (int i = 0; i < len; i++)
     {
       // Combine outer and inner distance fields to create signed distance
-      const double d = std::sqrt(gridOuter[i]) - std::sqrt(gridInner[i]);
+      const double d = sqrt(gridOuter[i]) - sqrt(gridInner[i]);
 
       // Convert to SDF value in [0, 255] range
       const double sdfValue = 255.0 - 255.0 * (d / params_.radius + params_.cutoff);
-      const uint8_t sdfByte = static_cast<uint8_t>(std::round(std::clamp(sdfValue, 0.0, 255.0)));
+      const uint8_t sdfByte = static_cast<uint8_t>(round(clamp(sdfValue, 0.0, 255.0)));
 
       // Update only alpha channel (4th component in RGBA)
       const int pixelIndex = i * 4;
@@ -119,7 +125,15 @@ namespace builtin_scene::text::sdf
     return true;
   }
 
-  void TinySDF::edt(std::vector<double> &data, int x0, int y0, int width, int height, int gridSize, std::vector<double> &f, std::vector<int> &v, std::vector<double> &z)
+  void SDFGenerator::edt(vector<double> &data,
+                         int x0,
+                         int y0,
+                         int width,
+                         int height,
+                         int gridSize,
+                         vector<double> &f,
+                         vector<int> &v,
+                         vector<double> &z)
   {
     // Transform along columns
     for (int x = x0; x < x0 + width; x++)
@@ -134,7 +148,13 @@ namespace builtin_scene::text::sdf
     }
   }
 
-  void TinySDF::edt1d(std::vector<double> &grid, int offset, int stride, int length, std::vector<double> &f, std::vector<int> &v, std::vector<double> &z)
+  void SDFGenerator::edt1d(vector<double> &grid,
+                           int offset,
+                           int stride,
+                           int length,
+                           vector<double> &f,
+                           vector<int> &v,
+                           vector<double> &z)
   {
     v[0] = 0;
     z[0] = -INF;

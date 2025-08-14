@@ -409,8 +409,8 @@ namespace builtin_scene
           instance.disableTexture();
         }
 
-        // Update SDF texture state from WebContent
-        instance.setUseSDFTexture(webContentComponent->isSDFTexture());
+        // Sync the SDF texture using state
+        instance.setSDFTextureEnabled(webContentComponent->isSDFTexture());
       }
 
       // When the visible state changes, we need to update the renderable list.

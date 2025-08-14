@@ -158,13 +158,13 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
-  void Instance::setUseSDFTexture(bool useSDFTexture)
+  void Instance::setSDFTextureEnabled(bool enabled)
   {
-    float sdfFlag = useSDFTexture ? 1.0f : 0.0f;
-    if (data_.useSDFTexture == sdfFlag)
+    float value = enabled ? 1.0f : 0.0f;
+    if (data_.enableSDFTexture == value)
       return; // Skip if there is no change.
 
-    data_.useSDFTexture = sdfFlag;
+    data_.enableSDFTexture = value;
     notifyBufferDataChanged();
   }
 

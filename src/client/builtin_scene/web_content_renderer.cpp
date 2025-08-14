@@ -32,7 +32,6 @@
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./web_content.hpp"
-#include "./text/sdf/tiny_sdf.hpp"
 #include "./image.hpp"
 #include "./xr.hpp"
 
@@ -1054,32 +1053,42 @@ namespace builtin_scene::web_renderer
       , clientContext_(TrClientContextPerProcess::Get())
       , fontCollection_(clientContext_->getFontCacheManager())
       , paragraphBuilder_(nullptr)
+      , sdfGenerator_(text::sdf::SDFParams(4, 0.25f))
   {
   }
 
   void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto textComponent = getComponent<Text2d>(entity);
-    if (textComponent == nullptr)
+    if (textComponent == nullptr) [[unlikely]]
       return;
 
     string &text = textComponent->content;
+    SkCanvas *canvas = content.canvas();
+    if (canvas == nullptr) [[unlikely]]
+      return;
 
-    // First, render text normally using the original paragraph rendering
-    auto paragraphStyle = content.paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(text.c_str(), text.size());
-    paragraphBuilder->pop();
+    // 1. Render text normally using the original paragraph rendering
+    {
+      auto paragraphStyle = content.paragraphStyle();
+      auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+      paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+      paragraphBuilder->addText(text.c_str(), text.size());
+      paragraphBuilder->pop();
 
-    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(layoutWidth);
-    paragraph->paint(content.canvas(), 0.0f, 0.0f);
+      auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
+      auto paragraph = paragraphBuilder->Build();
+      paragraph->layout(layoutWidth);
+      paragraph->paint(canvas, 0.0f, 0.0f);
+    }
 
-    // Then generate SDF texture from the painted canvas for anti-aliasing
-    rewriteSignedDistanceOnAlpha(content);
-    content.setTextureAsSDF(true);
+    // 2. generate SDF texture from the painted canvas for anti-aliasing
+    {
+      auto usingSdf = generateSignedDistanceOn(canvas);
+      content.setIsSDFTexture(usingSdf);
+    }
+
+    // 3. Mark the content as using texture
     content.setTextureUsing(true);
   }
 
@@ -1089,55 +1098,35 @@ namespace builtin_scene::web_renderer
     return fragment->contentWidth();
   }
 
-  void RenderTextSystem::rewriteSignedDistanceOnAlpha(WebContent &content)
+  bool RenderTextSystem::generateSignedDistanceOn(SkCanvas *canvas)
   {
-    // Get the painted canvas and generate SDF texture from it
-    auto canvas = content.canvas();
-    if (!canvas)
-    {
-      return;
-    }
-
     // Get the surface from the canvas to extract pixel data
     auto surface = canvas->getSurface();
     if (!surface)
-    {
-      return;
-    }
+      return false;
 
     // Create a bitmap from the surface
     SkBitmap bitmap;
     if (!surface->makeImageSnapshot()->asLegacyBitmap(&bitmap))
-    {
-      return;
-    }
+      return false;
 
     // Get writable pixel data
     SkPixmap pixmap;
     if (!bitmap.peekPixels(&pixmap))
-    {
-      return;
-    }
+      return false;
 
     unsigned char *pixels = (unsigned char *)pixmap.writable_addr();
     if (!pixels)
-    {
-      return;
-    }
+      return false;
 
     int width = bitmap.width();
     int height = bitmap.height();
 
-    // Use TinySDF to convert the pixel data to SDF texture in place
-    // This modifies only the alpha channel to contain distance field data
-    // while preserving existing RGB channels
-    builtin_scene::text::sdf::TinySDF sdfGenerator;
-    bool success = sdfGenerator.generateFromPixelsInPlace(pixels, width, height);
+    // Use `SDFGenerator` to generate from the pixel data to the alpha channel.
+    bool success = sdfGenerator_.generateOnPixels(pixels, width, height);
     if (success)
-    {
-      // Update the canvas with the modified bitmap
       canvas->writePixels(bitmap, 0, 0);
-    }
+    return success;
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

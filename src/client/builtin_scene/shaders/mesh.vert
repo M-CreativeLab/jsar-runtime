@@ -124,7 +124,7 @@ void main()
 #ifdef USE_INSTANCE_TEXTURE
   vInstanceTexUvOffsetR = instanceTexUvOffsetR;
   vInstanceLayerIndex = float(instanceLayerIndex);
-  vInstanceUseSDFTexture = instanceUseSDFTexture;
+  vInstanceUseSDFTexture = float(instanceUseSDFTexture);
 
 #ifdef MULTIVIEW
   // In multiview, select texture coordinates based on VIEW_ID

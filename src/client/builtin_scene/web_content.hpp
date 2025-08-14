@@ -15,6 +15,7 @@
 #include "./ecs-inl.hpp"
 #include "./text.hpp"
 #include "./texture_altas.hpp"
+#include "./text/sdf/generator.hpp"
 
 namespace builtin_scene
 {
@@ -265,11 +266,9 @@ namespace builtin_scene
     }
 
     /**
-     * Set the web content to use SDF texture rendering or not.
-     *
-     * @param value Whether to use SDF texture rendering for anti-aliasing.
+     * Set the texture is a signed distance field (SDF) texture or not.
      */
-    inline void setTextureAsSDF(bool value)
+    inline void setIsSDFTexture(bool value)
     {
       if (is_sdf_texture_ != value)
         is_sdf_texture_ = value;
@@ -300,10 +299,9 @@ namespace builtin_scene
     {
       return is_dirty_;
     }
+
     /**
      * Mark the content as dirty or not.
-     *
-     * @param dirty Whether the content is dirty.
      */
     inline void setDirty(bool dirty)
     {
@@ -562,12 +560,13 @@ namespace builtin_scene
 
     private:
       float getLayoutWidthForText(WebContent &content);
-      void rewriteSignedDistanceOnAlpha(WebContent &content);
+      bool generateSignedDistanceOn(SkCanvas *canvas);
 
     private:
       TrClientContextPerProcess *clientContext_;
       sk_sp<skia::textlayout::FontCollection> fontCollection_;
       std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;
+      text::sdf::SDFGenerator sdfGenerator_;
     };
 
     class UpdateTextureSystem final : public RenderBaseSystem
