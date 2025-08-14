@@ -248,12 +248,6 @@ namespace builtin_scene
 
   private:
     /**
-     * Extract position from compressed splat data for depth calculations.
-     */
-    glm::vec3 extractPositionFromCompressed(const CompressedSplat &compressed) const;
-
-  private:
-    /**
      * Rebuild the sorted splats list from all entity splats.
      * This rebuilds both the compressed texture data and the sorted indices.
      */
@@ -264,7 +258,7 @@ namespace builtin_scene
       sortedSplats_.clear();
 
       // Collect all splats from all entities and compute bounds for normalization
-      std::vector<meshes::SplatData> allSplats;
+      std::vector<GaussianSplat> allSplats;
 
       for (ecs::EntityId entityId : splatEntities_)
       {

@@ -181,12 +181,6 @@ namespace builtin_scene
     }
   }
 
-  glm::vec3 GaussianSplatsMesh::extractPositionFromCompressed(const CompressedSplat &compressed) const
-  {
-    // Compressed position extraction - texel0 contains position xyz
-    return glm::vec3(compressed.texel0[0], compressed.texel0[1], compressed.texel0[2]);
-  }
-
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
                                                shared_ptr<WebGL2Context> glContext)
   {

@@ -52,17 +52,17 @@ vec3 decompressPosition(float compressed)
 {
   // Extract packed value by reinterpreting float as uint
   uint packed = floatBitsToUint(compressed);
-  
+
   // Unpack x,y,z components (8 bits each)
   uint ix = packed & 0xFFu;
   uint iy = (packed >> 8u) & 0xFFu;
   uint iz = (packed >> 16u) & 0xFFu;
-  
+
   // Convert back to normalized float [0,1]
   float nx = float(ix) / 255.0;
   float ny = float(iy) / 255.0;
   float nz = float(iz) / 255.0;
-  
+
   // Denormalize using provided bounds
   float x = posMin.x + nx * (posMax.x - posMin.x);
   float y = posMin.y + ny * (posMax.y - posMin.y);
@@ -76,27 +76,27 @@ vec3 decompressScale(float compressed)
 {
   // Extract packed value by reinterpreting float as uint
   uint packed = floatBitsToUint(compressed);
-  
+
   // Unpack x,y,z components (8 bits each)
   uint ix = packed & 0xFFu;
   uint iy = (packed >> 8u) & 0xFFu;
   uint iz = (packed >> 16u) & 0xFFu;
-  
+
   // Convert back to normalized float [0,1]
   float nx = float(ix) / 255.0;
   float ny = float(iy) / 255.0;
   float nz = float(iz) / 255.0;
-  
+
   // Denormalize using provided log scale bounds
   float logX = scaleMin.x + nx * (scaleMax.x - scaleMin.x);
   float logY = scaleMin.y + ny * (scaleMax.y - scaleMin.y);
   float logZ = scaleMin.z + nz * (scaleMax.z - scaleMin.z);
-  
+
   // Convert back from log2 to linear scale
   float x = exp2(logX);
   float y = exp2(logY);
   float z = exp2(logZ);
-  
+
   return vec3(x, y, z);
 }
 
@@ -142,8 +142,7 @@ vec4 decompressColor(float compressed)
   
   return vec4(r, g, b, a);
 }
-// SparkJS quaternion functions (unchanged)
-{
+
 vec3 quatVec(vec4 q, vec3 v)
 {
   vec3 t = 2.0 * cross(q.xyz, v);
@@ -240,11 +239,8 @@ void main()
   vec4 texel = texelFetch(compressedSplats, texCoord, 0); // compressed_pos, compressed_scale, compressed_quat, compressed_color
 
   // Decompress splat data
-  vec3 center = decompressPosition(texel.x);   // decompress position
-  vec3 scales = decompressScale(texel.y);      // decompress scale
-
-  vec4 quaternion = decompressQuaternion(texel.z);  // decompress quaternion
-  vec4 rgba = decompressColor(texel.w);             // decompress color
+  vec4 rgba = decompressColor(texel.w);
+  vec3 scales = decompressScale(texel.y);
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -281,6 +277,8 @@ void main()
   projectionMatrix = projection;
 #endif
 
+  // Decompress position
+  vec3 center = decompressPosition(texel.x);
   // TODO(yorkie): support set TRS dynamically
   center *= 0.05;
   scales *= 0.05;
@@ -307,6 +305,9 @@ void main()
   {
     return;
   }
+
+  // Decompress quaternion
+  vec4 quaternion = decompressQuaternion(texel.z);
 
   // Compute the 3D covariance matrix for the splat
   mat3 cov3D = computeCov3D(viewMatrix, quaternion, scales);
