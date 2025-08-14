@@ -33,8 +33,6 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("focalAdjustment");
     LOAD_UNIFORM_LOCATION("maxDistance");
     LOAD_UNIFORM_LOCATION("compressedSplats");
-    LOAD_UNIFORM_LOCATION("posMin");
-    LOAD_UNIFORM_LOCATION("posMax");
     LOAD_UNIFORM_LOCATION("scaleMin");
     LOAD_UNIFORM_LOCATION("scaleMax");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
@@ -135,21 +133,7 @@ namespace builtin_scene::materials
           if (compressedOpt.has_value())
             glContext->uniform1i(compressedOpt.value(), 0);
 
-          // Set normalization parameters as uniforms
-          auto posMinOpt = glContext->getUniformLocation(program, "posMin");
-          if (posMinOpt.has_value())
-          {
-            const auto &normParams = splatsMesh->getNormalizationParams();
-            glContext->uniform3f(posMinOpt.value(), normParams.posMin[0], normParams.posMin[1], normParams.posMin[2]);
-          }
-
-          auto posMaxOpt = glContext->getUniformLocation(program, "posMax");
-          if (posMaxOpt.has_value())
-          {
-            const auto &normParams = splatsMesh->getNormalizationParams();
-            glContext->uniform3f(posMaxOpt.value(), normParams.posMax[0], normParams.posMax[1], normParams.posMax[2]);
-          }
-
+          // Set normalization parameters as uniforms (only scale needed now)
           auto scaleMinOpt = glContext->getUniformLocation(program, "scaleMin");
           if (scaleMinOpt.has_value())
           {

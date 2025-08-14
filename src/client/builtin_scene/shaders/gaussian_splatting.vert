@@ -20,9 +20,7 @@ uniform float maxDistance;
 // Compressed splat data texture (single layer per splat)
 uniform sampler2D compressedSplats;
 
-// Position and scale normalization uniforms
-uniform vec3 posMin;
-uniform vec3 posMax;
+// Scale normalization uniforms (position uses half-floats, no normalization needed)
 uniform vec3 scaleMin;
 uniform vec3 scaleMax;
 
@@ -47,72 +45,129 @@ ivec2 getSplatTexCoord(int index)
   return ivec2(x, y);
 }
 
-// Decompress position from single float to (x,y,z)
-vec3 decompressPosition(float compressed)
+// Helper function to unpack half-float from 16 bits
+float unpackHalf(uint bits) {
+  uint sign = (bits >> 15u) & 1u;
+  uint exponent = (bits >> 10u) & 31u;
+  uint mantissa = bits & 1023u;
+  
+  if (exponent == 0u) {
+    if (mantissa == 0u) {
+      // Zero
+      return (sign == 1u) ? -0.0 : 0.0;
+    } else {
+      // Denormalized
+      float value = float(mantissa) / 1024.0;
+      value *= exp2(-14.0);
+      return (sign == 1u) ? -value : value;
+    }
+  } else if (exponent == 31u) {
+    // Infinity or NaN
+    return (sign == 1u) ? -1e10 : 1e10; // Clamp to large value
+  } else {
+    // Normal
+    float value = (1024.0 + float(mantissa)) / 1024.0;
+    value *= exp2(float(int(exponent) - 15));
+    return (sign == 1u) ? -value : value;
+  }
+}
+
+// Decompress position from half-floats (word0, word1) to (x,y,z)
+vec3 decompressPositionHalf(vec4 texel)
 {
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
-
-  // Unpack x,y,z components (8 bits each)
-  uint ix = packed & 0xFFu;
-  uint iy = (packed >> 8u) & 0xFFu;
-  uint iz = (packed >> 16u) & 0xFFu;
-
-  // Convert back to normalized float [0,1]
-  float nx = float(ix) / 255.0;
-  float ny = float(iy) / 255.0;
-  float nz = float(iz) / 255.0;
-
-  // Denormalize using provided bounds
-  float x = posMin.x + nx * (posMax.x - posMin.x);
-  float y = posMin.y + ny * (posMax.y - posMin.y);
-  float z = posMin.z + nz * (posMax.z - posMin.z);
+  // Extract packed values
+  uint word0 = floatBitsToUint(texel.x);
+  uint word1 = floatBitsToUint(texel.y);
+  
+  // Unpack half-floats
+  uint hx = word0 & 0xFFFFu;
+  uint hy = (word0 >> 16u) & 0xFFFFu;
+  uint hz = word1 & 0xFFFFu;
+  
+  // Convert back to floats
+  float x = unpackHalf(hx);
+  float y = unpackHalf(hy);
+  float z = unpackHalf(hz);
   
   return vec3(x, y, z);
 }
 
-// Decompress scale from single float to (x,y,z)
-vec3 decompressScale(float compressed)
+// Decompress scale from 8-bit log values to (x,y,z)
+vec3 decompressScaleLog(vec4 texel)
 {
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
+  // Extract packed value from word2
+  uint word2 = floatBitsToUint(texel.z);
 
-  // Unpack x,y,z components (8 bits each)
-  uint ix = packed & 0xFFu;
-  uint iy = (packed >> 8u) & 0xFFu;
-  uint iz = (packed >> 16u) & 0xFFu;
+  // Unpack x,y,z components from lower 24 bits (8 bits each)
+  uint ix = word2 & 0xFFu;
+  uint iy = (word2 >> 8u) & 0xFFu;
+  uint iz = (word2 >> 16u) & 0xFFu;
 
   // Convert back to normalized float [0,1]
   float nx = float(ix) / 255.0;
   float ny = float(iy) / 255.0;
   float nz = float(iz) / 255.0;
 
+  // Denormalize using provided log scale bounds
+  float logX = scaleMin.x + nx * (scaleMax.x - scaleMin.x);
+  float logY = scaleMin.y + ny * (scaleMax.y - scaleMin.y);
+  float logZ = scaleMin.z + nz * (scaleMax.z - scaleMin.z);
+
+  // Convert back from log2 to linear scale
   return vec3(
-    (nx == 0.0) ? 0.0 : exp2(scaleMin.x + nx * (scaleMax.x - scaleMin.x)),
-    (ny == 0.0) ? 0.0 : exp2(scaleMin.y + ny * (scaleMax.y - scaleMin.y)),
-    (nz == 0.0) ? 0.0 : exp2(scaleMin.z + nz * (scaleMax.z - scaleMin.z))
+    (nx == 0.0) ? 0.0 : exp2(logX),
+    (ny == 0.0) ? 0.0 : exp2(logY),
+    (nz == 0.0) ? 0.0 : exp2(logZ)
   );
 }
 
-// Decompress quaternion from single float to (x,y,z,w)
-vec4 decompressQuaternion(float compressed)
+// Helper functions for octahedral mapping
+vec2 octWrap(vec2 v) {
+  return (1.0 - abs(v.yx)) * (step(0.0, v.xy) * 2.0 - 1.0);
+}
+
+// Decompress quaternion using octahedral mapping (24-bit) to (x,y,z,w)
+vec4 decompressQuaternionOct(vec4 texel)
 {
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
+  // Extract quaternion bits from word1 (upper 16) and word2 (upper 8)
+  uint word1 = floatBitsToUint(texel.y);
+  uint word2 = floatBitsToUint(texel.z);
   
-  // Unpack x,y,z components (10 bits each, offset by 512)
-  int ix = int(packed & 0x3FFu) - 512;
-  int iy = int((packed >> 10u) & 0x3FFu) - 512;
-  int iz = int((packed >> 20u) & 0x3FFu) - 512;
+  // Reconstruct 24-bit quaternion value: 16 bits from word1 + 8 bits from word2
+  uint quatUpper16 = (word1 >> 16u) & 0xFFFFu;
+  uint quatLower8 = (word2 >> 24u) & 0xFFu;
+  uint quatBits = quatUpper16 | (quatLower8 << 16u);
+  
+  // Unpack x,y components (12 bits each, offset by 2047)
+  int octX12 = int(quatBits & 0xFFFu) - 2047;
+  int octY12 = int((quatBits >> 12u) & 0xFFFu) - 2047;
   
   // Convert back to normalized float
-  float x = float(ix) / 511.0;
-  float y = float(iy) / 511.0;
-  float z = float(iz) / 511.0;
+  float octX = float(octX12) / 2047.0;
+  float octY = float(octY12) / 2047.0;
   
-  // Reconstruct w using unit length constraint
-  float w_squared = 1.0 - (x*x + y*y + z*z);
-  float w = (w_squared > 0.0) ? sqrt(w_squared) : 0.0;
+  // Convert from octahedral to quaternion
+  float z = 1.0 - abs(octX) - abs(octY);
+  float x = octX;
+  float y = octY;
+  
+  if (z < 0.0) {
+    vec2 wrapped = octWrap(vec2(octX, octY));
+    x = wrapped.x;
+    y = wrapped.y;
+  }
+  
+  // Normalize
+  float length = sqrt(x * x + y * y + z * z);
+  if (length > 0.0) {
+    x /= length;
+    y /= length;
+    z /= length;
+  }
+  
+  // Reconstruct w
+  float w = sqrt(max(0.0, 1.0 - (x * x + y * y + z * z)));
+  
   return vec4(x, y, z, w);
 }
 
@@ -230,11 +285,12 @@ void main()
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
   // Fetch compressed splat data from texture2D (1 texel per splat)
-  vec4 texel = texelFetch(compressedSplats, texCoord, 0); // compressed_pos, compressed_scale, compressed_quat, compressed_color
+  // word0: pos.xy as half-floats, word1: pos.z + quat upper 16, word2: quat lower 8 + scale, word3: color
+  vec4 texel = texelFetch(compressedSplats, texCoord, 0);
 
-  // Decompress splat data
+  // Decompress splat data using new format
   vec4 rgba = decompressColor(texel.w);
-  vec3 scales = decompressScale(texel.y);
+  vec3 scales = decompressScaleLog(texel);
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -271,8 +327,8 @@ void main()
   projectionMatrix = projection;
 #endif
 
-  // Decompress position
-  vec3 center = decompressPosition(texel.x);
+  // Decompress position using half-floats
+  vec3 center = decompressPositionHalf(texel);
   // TODO(yorkie): support set TRS dynamically
   center *= 0.05;
   scales *= 0.05;
@@ -300,8 +356,8 @@ void main()
     return;
   }
 
-  // Decompress quaternion
-  vec4 quaternion = decompressQuaternion(texel.z);
+  // Decompress quaternion using octahedral mapping
+  vec4 quaternion = decompressQuaternionOct(texel);
 
   // Compute the 3D covariance matrix for the splat
   mat3 cov3D = computeCov3D(viewMatrix, quaternion, scales);

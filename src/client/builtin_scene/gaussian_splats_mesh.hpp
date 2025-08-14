@@ -108,8 +108,8 @@ namespace builtin_scene
         {
           const auto &compressed = compressedSplatData_[compressedIndex];
 
-          // Use compressed position data for depth calculation (texel[0] contains compressed position)
-          auto pos = compressed_splat_utils::decompressPosition(compressed.texel[0], normalizationParams_.posMin, normalizationParams_.posMax);
+          // Use compressed position data for depth calculation (word0 and word1 contain half-float position)
+          auto pos = compressed_splat_utils::decompressPositionHalf(compressed.word[0], compressed.word[1]);
           glm::vec3 position(pos[0], pos[1], pos[2]);
 
           glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
@@ -279,11 +279,7 @@ namespace builtin_scene
         return;
       }
 
-      // Compute position bounds for normalization
-      float posMin[3] = {allSplats[0].position[0], allSplats[0].position[1], allSplats[0].position[2]};
-      float posMax[3] = {allSplats[0].position[0], allSplats[0].position[1], allSplats[0].position[2]};
-
-      // Compute scale bounds for log compression
+      // Compute scale bounds for log compression (no position bounds needed for half-floats)
       float scaleMin[3] = {std::log2(std::max(0.001f, allSplats[0].scale[0])),
                            std::log2(std::max(0.001f, allSplats[0].scale[1])),
                            std::log2(std::max(0.001f, allSplats[0].scale[2]))};
@@ -291,14 +287,7 @@ namespace builtin_scene
 
       for (const auto &splat : allSplats)
       {
-        // Update position bounds
-        for (int i = 0; i < 3; i++)
-        {
-          posMin[i] = std::min(posMin[i], splat.position[i]);
-          posMax[i] = std::max(posMax[i], splat.position[i]);
-        }
-
-        // Update scale bounds (log2 space)
+        // Update scale bounds (log2 space) - no position bounds needed for half-floats
         for (int i = 0; i < 3; i++)
         {
           float logScale = std::log2(std::max(0.001f, splat.scale[i]));
@@ -307,11 +296,9 @@ namespace builtin_scene
         }
       }
 
-      // Store normalization parameters
+      // Store normalization parameters (only scale bounds needed)
       for (int i = 0; i < 3; i++)
       {
-        normalizationParams_.posMin[i] = posMin[i];
-        normalizationParams_.posMax[i] = posMax[i];
         normalizationParams_.scaleMin[i] = scaleMin[i];
         normalizationParams_.scaleMax[i] = scaleMax[i];
       }
@@ -371,7 +358,7 @@ namespace builtin_scene
     // Vector of entity IDs that have GaussianSplattingModel3d components
     std::vector<ecs::EntityId> splatEntities_;
 
-    // Compressed splat data (2 texels per splat, stable during sorting)
+    // Compressed splat data (1 texel per splat: 4 words, stable during sorting)
     std::vector<CompressedSplat> compressedSplatData_;
 
     // Sorted splat indices for rendering (rebuilt when entities change or camera moves)
