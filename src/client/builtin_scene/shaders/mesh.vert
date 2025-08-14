@@ -59,6 +59,7 @@ out vec2 vInstanceDimensions;
 out vec4 vInstanceBorderRadius;
 out float vInstanceBorderStyle;
 flat out int vInstanceId;
+out float vSdfDepthScale;
 #endif
 #endif
 
@@ -155,6 +156,9 @@ void main()
   vInstanceBorderRadius = instanceBorderRadius;
   vInstanceBorderStyle = float(instanceBorderStyle);
   vInstanceId = gl_InstanceID;
+
+  // Compute the depth scale factor for SDF rendering
+  vSdfDepthScale = clamp(-gl_Position.z * 0.1, 1.0, 2.0);
 #endif
 #endif
 

@@ -10,6 +10,9 @@
 
 namespace builtin_scene
 {
+  // Forward declarations
+  class Mesh3d;
+
   class Primitive2d
   {
   public:
@@ -70,6 +73,7 @@ namespace builtin_scene
     kUint16x2,
     kUint16x4,
     kUint32,
+    kInt32,
     // More formats?
   };
 
@@ -191,6 +195,14 @@ namespace builtin_scene
     static const int type = WEBGL_UNSIGNED_INT;
   };
 
+  template <>
+  class VertexAttributeTraits<int32_t, 1>
+  {
+  public:
+    static const VertexFormat format = VertexFormat::kInt32;
+    static const int type = WEBGL_INT;
+  };
+
   /**
    * The vertex attribute, it contains name, id and format.
    */
@@ -308,51 +320,8 @@ namespace builtin_scene
     }
 
   private:
-    void insertAttributeToCompactData(const IVertexAttribute &attribute)
-    {
-      if (attribute.is(ATTRIBUTE_POSITION))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&position),
-                            reinterpret_cast<const uint8_t *>(&position) + sizeof(position));
-      else if (attribute.is(ATTRIBUTE_NORMAL))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&normal),
-                            reinterpret_cast<const uint8_t *>(&normal) + sizeof(normal));
-      else if (attribute.is(ATTRIBUTE_UV0))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&uv0),
-                            reinterpret_cast<const uint8_t *>(&uv0) + sizeof(uv0));
-      else if (attribute.is(ATTRIBUTE_UV1))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&uv1),
-                            reinterpret_cast<const uint8_t *>(&uv1) + sizeof(uv1));
-      else if (attribute.is(ATTRIBUTE_TANGENT))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&tangent),
-                            reinterpret_cast<const uint8_t *>(&tangent) + sizeof(tangent));
-      else if (attribute.is(ATTRIBUTE_COLOR))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&color),
-                            reinterpret_cast<const uint8_t *>(&color) + sizeof(color));
-      else if (attribute.is(ATTRIBUTE_JOINT_WEIGHTS))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&jointWeights),
-                            reinterpret_cast<const uint8_t *>(&jointWeights) + sizeof(jointWeights));
-      else if (attribute.is(ATTRIBUTE_JOINT_INDEX))
-        compactData_.insert(compactData_.end(),
-                            reinterpret_cast<const uint8_t *>(&jointIndex),
-                            reinterpret_cast<const uint8_t *>(&jointIndex) + sizeof(jointIndex));
-    }
-    void update(const std::vector<MeshVertexAttribute> &enabledAttributes)
-    {
-      compactData_.clear();
-      for (auto &item : enabledAttributes)
-      {
-        std::visit([this](auto &&attrib)
-                   { this->insertAttributeToCompactData(attrib); },
-                   item);
-      }
-    }
+    void insertAttributeToCompactData(const IVertexAttribute &attribute);
+    void update(const std::vector<MeshVertexAttribute> &enabledAttributes);
 
   public:
     glm::vec3 position;
@@ -393,47 +362,17 @@ namespace builtin_scene
      * @param buffer The buffer to insert vertices from.
      * @param updateAttributes Whether to update the attributes configuration.
      */
-    void insertVertices(const MeshVertexBuffer &buffer, bool updateAttributes)
-    {
-      for (auto &vertex : buffer.vertices_)
-        vertices_.push_back(vertex);
-
-      if (updateAttributes)
-      {
-        enabledAttributes_ = buffer.enabledAttributes_;
-        stride_ = buffer.stride_;
-        isDirty_ = true;
-      }
-    }
+    void insertVertices(const MeshVertexBuffer &buffer, bool updateAttributes);
 
     /**
      * Enable a vertex attribute.
      */
-    void enableAttribute(const MeshVertexAttribute &attribute)
-    {
-      enabledAttributes_.push_back(attribute);
-      // Set the stride when enabling the attribute.
-      stride_ += std::visit([](auto &&item)
-                            { return item.byteLength(); },
-                            attribute);
-      isDirty_ = true;
-    }
+    void enableAttribute(const MeshVertexAttribute &attribute);
 
     /**
      * Disable a vertex attribute.
      */
-    void disableAttribute(const MeshVertexAttribute &attribute)
-    {
-      auto it = std::remove_if(enabledAttributes_.begin(), enabledAttributes_.end(), [&attribute](const MeshVertexAttribute &item)
-                               { return item == attribute; });
-      enabledAttributes_.erase(it, enabledAttributes_.end());
-
-      // Set the stride when disabling the attribute.
-      stride_ -= std::visit([](auto &&item)
-                            { return item.byteLength(); },
-                            attribute);
-      isDirty_ = true;
-    }
+    void disableAttribute(const MeshVertexAttribute &attribute);
 
     /**
      * Get the enabled vertex attributes.
@@ -462,38 +401,14 @@ namespace builtin_scene
     /**
      * Clear the vertex buffer.
      */
-    inline void clear()
-    {
-      vertices_.clear();
-      enabledAttributes_.clear();
-      cachedData_.clear();
-      isDirty_ = true;
-      stride_ = 0;
-    }
+    void clear();
 
     /**
      * Get a pointer to the interleaved vertex data.
      *
      * @return A pointer to the vertex data.
      */
-    const std::vector<uint8_t> &data()
-    {
-      if (!isDirty_ && cachedData_.size() > 0)
-        return cachedData_;
-
-      auto &enabledAttribs = attributes();
-      std::vector<uint8_t> data;
-      for (auto &vertex : vertices_)
-      {
-        vertex.update(enabledAttribs); // Update the vertex based on the enabled attributes.
-
-        const uint8_t *vertexData = reinterpret_cast<const uint8_t *>(vertex.data());
-        data.insert(data.end(), vertexData, vertexData + vertex.size());
-      }
-      cachedData_ = data;
-      isDirty_ = false;
-      return cachedData_;
-    }
+    const std::vector<uint8_t> &data();
 
   private:
     std::vector<Vertex> vertices_;                       // Container to store vertices
@@ -597,18 +512,8 @@ namespace builtin_scene
      * @param callback The callback to call for each attribute.
      * @returns The number of enabled attributes.
      */
-    inline size_t iterateEnabledAttributes(std::function<void(const IVertexAttribute &)> callback)
-    {
-      size_t attribsCount = 0;
-      for (auto &item : vertexBuffer_.attributes())
-      {
-        std::visit([&callback](auto &&attrib)
-                   { callback(attrib); },
-                   item);
-        attribsCount += 1;
-      }
-      return attribsCount;
-    }
+    size_t iterateEnabledAttributes(std::function<void(const IVertexAttribute &)> callback);
+
     /**
      * @returns Whether the mesh is dirty to update the vertex buffer data.
      */
@@ -623,6 +528,12 @@ namespace builtin_scene
     {
       isDirty_ = dirty;
     }
+
+  public:
+    /**
+     * When the `Mesh` has been initialized for `Mesh3d`, it's used to perform additional setup for specific mesh types.
+     */
+    virtual void onMesh3dInitialized(const Mesh3d &mesh3d, std::shared_ptr<client_graphics::WebGL2Context>);
 
   public:
     /**

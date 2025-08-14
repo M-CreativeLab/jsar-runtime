@@ -62,8 +62,11 @@ tr_target_link_thirdparty_library(TransmuteClientLibrary node)
 tr_target_link_skia_library(TransmuteClientLibrary)
 
 if(APPLE)
-    target_link_libraries(TransmuteClientLibrary PRIVATE "-framework CoreFoundation")
-    target_link_libraries(TransmuteClientLibrary PRIVATE "-framework Carbon")
+    set(APPLE_CLIENT_DEPS
+        "-framework Carbon"
+        "-framework CoreFoundation"
+    )
+    target_link_libraries(TransmuteClientLibrary PRIVATE ${APPLE_CLIENT_DEPS})
 endif()
 
 # Set properties

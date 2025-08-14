@@ -775,12 +775,8 @@ namespace client_layout
   {
     auto configEntity = [this, &entity](Scene &scene)
     {
-      if (node()->enableCustomGeometry())
-      {
-        // TODO: Support the mesh element rendering, add Mesh3d, MeshMaterial3d, etc.
-        assert(false && "The mesh element rendering is not supported yet.");
-      }
-      else
+      // Add `WebContent` component to the entity if the node is not a custom geometry such as `<model>`.
+      if (!node()->enableCustomGeometry())
       {
         auto webContextCtx = scene.getResource<WebContentContext>();
         assert(webContextCtx != nullptr && "The web content context must be set.");
@@ -872,28 +868,31 @@ namespace client_layout
 
   void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
-    // Get the `ComputedStyle` reference from the `WebContent`, which might be set at computing layout time.
-    auto &style = getSceneComponent<WebContent>()->style();
-    if (style.hasBackgroundImage())
+    if (hasSceneComponent<WebContent>())
     {
-      auto &image = style.backgroundImage();
-      if (image.isUrl())
+      // Get the `ComputedStyle` reference from the `WebContent`, which might be set at computing layout time.
+      auto &style = getSceneComponent<WebContent>()->style();
+      if (style.hasBackgroundImage())
       {
-        if (image.isUrlImageLoadingOrLoaded())
-          return; // The image is already loading or loaded.
-
-        const Fragment &fragment = this->fragment();
-        dom::HTMLElement &element = dom::Node::AsChecked<dom::HTMLElement>(node());
-
-        auto onImageLoaded = [this, &image](const void *data, size_t length)
+        auto &image = style.backgroundImage();
+        if (image.isUrl())
         {
-          image.setUrlImageData(data, length);
-          getSceneComponent<WebContent>()->setDirty(true);
-        };
+          if (image.isUrlImageLoadingOrLoaded())
+            return; // The image is already loading or loaded.
 
-        string imageUrl = image.getUrl();
-        element.fetchArrayBufferLikeResource(imageUrl, onImageLoaded);
-        image.startLoadingUrlImage();
+          const Fragment &fragment = this->fragment();
+          dom::HTMLElement &element = dom::Node::AsChecked<dom::HTMLElement>(node());
+
+          auto onImageLoaded = [this, &image](const void *data, size_t length)
+          {
+            image.setUrlImageData(data, length);
+            getSceneComponent<WebContent>()->setDirty(true);
+          };
+
+          string imageUrl = image.getUrl();
+          element.fetchArrayBufferLikeResource(imageUrl, onImageLoaded);
+          image.startLoadingUrlImage();
+        }
       }
     }
   }

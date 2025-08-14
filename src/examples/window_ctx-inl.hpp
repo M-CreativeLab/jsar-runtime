@@ -173,7 +173,7 @@ namespace jsar::example
       float maxDistance = 1.0f; // Far limit
 
       // Clamp the target position within limits
-      if (newTargetZ >= minDistance && newTargetZ <= maxDistance)
+      // if (newTargetZ >= minDistance && newTargetZ <= maxDistance)
       {
         targetViewerPosition.z = newTargetZ;
       }

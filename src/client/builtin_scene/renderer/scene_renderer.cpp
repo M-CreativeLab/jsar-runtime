@@ -50,28 +50,7 @@ namespace builtin_scene
       WebGLVertexArrayScope vaoScope(glContext_, vao);
       glContext_->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
     }
-    mesh3d->initialize(glContext_, vao, vbo);
-
-    /**
-     * If a mesh is instanced, we will use:
-     *
-     * - vao as the opaque mesh vertex array object.
-     * - creating a new VAO as the transparent mesh vertex array object.
-     */
-    if (mesh3d->isInstancedMesh())
-    {
-      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
-      auto transparentVao = glContext_->createVertexArray();
-      {
-        WebGLVertexArrayScope vaoScope(glContext_, transparentVao);
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
-      }
-      instancedMesh.setup(glContext_,
-                          vao,
-                          glContext_->createBuffer(),
-                          transparentVao,
-                          glContext_->createBuffer());
-    }
+    mesh3d->initialize(glContext_, vao, vbo, ebo);
   }
 
   void SceneRenderer::configureMeshVertexData(shared_ptr<Mesh3d> mesh3d, shared_ptr<WebGLProgram> program)
@@ -119,7 +98,6 @@ namespace builtin_scene
     // Configure the instance vbo and related attributes if it's an instanced mesh.
     if (mesh3d->isInstancedMesh())
     {
-      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
       /**
        * Configure the instance attributes.
        */
@@ -138,25 +116,50 @@ namespace builtin_scene
         glContext_->vertexAttribDivisor(index, 1);
       };
 
-      // Configure for the opaque instances.
+      // Handle GaussianSplatsMesh specifically
+      if (mesh3d->is<GaussianSplatsMesh>())
       {
-        auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
-        WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
+        auto &gaussianMesh = mesh3d->getHandleCheckedAsRef<GaussianSplatsMesh>();
 
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
-        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        // Configure for Gaussian splats (they use the main VAO)
+        WebGLVertexArrayScope vaoScope(glContext_, mesh3d->vertexArrayObject());
+
+        // Configure instance attributes
+        gaussianMesh.setupSplatBuffer(glContext_, mesh3d->vertexArrayObject());
+
+        // Bind the splat instance buffer and configure instance attributes
+        auto splatBuffer = gaussianMesh.getSplatInstanceBuffer();
+        if (splatBuffer)
+        {
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatBuffer);
+          gaussianMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
       }
-
-      // Configure for the transparent instances.
+      else
       {
-        auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
-        WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
+        // Handle regular InstancedMeshBase
+        auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
 
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
-        mesh3d->iterateEnabledAttributes(program, configureAttribute);
+        // Configure for the opaque instances.
+        {
+          auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
+          WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
 
-        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
-        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
+
+        // Configure for the transparent instances.
+        {
+          auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
+          WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+          mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
       }
     }
   }
@@ -227,17 +230,7 @@ namespace builtin_scene
     // Draw the mesh
     {
       WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
-      if (mesh->isInstancedMesh())
-      {
-        drawInstancedMeshImpl(*mesh, material, programScope, renderPass, renderTarget);
-      }
-      else
-      {
-        glContext_->drawElements(mesh->primitiveTopology(),
-                                 mesh->indices().size(),
-                                 WEBGL_UNSIGNED_INT,
-                                 0);
-      }
+      material->drawMeshImpl(mesh, renderPass, renderTarget);
     }
 
     // Call lifecycle methods
@@ -249,47 +242,78 @@ namespace builtin_scene
   {
     assert(program != nullptr);
 
-    auto viewProjection = glContext_->getUniformLocation(program, "viewProjection");
-    if (!viewProjection.has_value())
-      throw runtime_error("The viewProjection uniform location is not found.");
-
-    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED; // focily set to right-handed.
-    if (renderTarget != nullopt)
+    // forcibly set to right-handed
+    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED;
+    auto setUniformMatrix4x4 = [this, &handedness](WebGLUniformLocation &loc, WebGLMatrixPlaceholderId placeholder)
     {
-      if (renderTarget->isMultiview())
+      MatrixComputationGraph graph(placeholder, handedness);
+      glContext_->uniformMatrix4fv(loc, false, graph);
+    };
+    auto updateMatricesForMultiview = [this,
+                                       &program,
+                                       &renderTarget,
+                                       &setUniformMatrix4x4](WebGLUniformLocation &loc,
+                                                             WebGLMatrixPlaceholderId placeholder,
+                                                             const char *nameForRightEye)
+    {
+      if (renderTarget != nullopt)
       {
-        auto viewProjectionR = glContext_->getUniformLocation(program, "viewProjectionR");
-        if (!viewProjectionR.has_value())
-          throw runtime_error("The viewProjectionR uniform location is not found in multiview mode.");
+        if (renderTarget->isMultiview())
+        {
+          auto locR = glContext_->getUniformLocation(program, nameForRightEye);
+          if (!locR.has_value())
+          {
+            cerr << "The " << nameForRightEye << " uniform location is not found in multiview mode." << endl;
+            assert(false && "The right eye uniform location is not found.");
+            return;
+          }
 
-        {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+          setUniformMatrix4x4(loc, placeholder);
+          setUniformMatrix4x4(locR.value(), static_cast<WebGLMatrixPlaceholderId>((int)placeholder + 1));
         }
+        else
         {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-          glContext_->uniformMatrix4fv(viewProjectionR.value(), false, graph);
+          auto view = renderTarget->view();
+          assert(view != nullptr);
+
+          if (view->eye() == XREye::kRight)
+            setUniformMatrix4x4(loc, static_cast<WebGLMatrixPlaceholderId>((int)placeholder + 1));
+          else
+            setUniformMatrix4x4(loc, placeholder);
         }
-        return;
       }
       else
       {
-        auto view = renderTarget->view();
-        assert(view != nullptr);
-
-        if (view->eye() == XREye::kRight)
-        {
-          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
-          return;
-        }
+        // Default view projection matrix
+        setUniformMatrix4x4(loc, placeholder);
       }
+    };
+
+    // Update `view` if present
+    auto viewMatrix = glContext_->getUniformLocation(program, "view");
+    if (viewMatrix.has_value())
+    {
+      updateMatricesForMultiview(viewMatrix.value(),
+                                 WebGLMatrixPlaceholderId::ViewMatrix,
+                                 "viewR");
     }
 
-    // Default view projection matrix
+    // Update `projectionM` if present
+    auto projectionMatrix = glContext_->getUniformLocation(program, "projection");
+    if (projectionMatrix.has_value())
     {
-      MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-      glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+      updateMatricesForMultiview(projectionMatrix.value(),
+                                 WebGLMatrixPlaceholderId::ProjectionMatrix,
+                                 "projectionR");
+    }
+
+    // Update `viewProjection`.
+    auto viewProjection = glContext_->getUniformLocation(program, "viewProjection");
+    if (viewProjection.has_value())
+    {
+      updateMatricesForMultiview(viewProjection.value(),
+                                 WebGLMatrixPlaceholderId::ViewProjectionMatrix,
+                                 "viewProjectionR");
     }
   }
 
@@ -299,6 +323,12 @@ namespace builtin_scene
                                                                 bool forceUpdate)
   {
     assert(program != nullptr);
+
+    auto loc = glContext_->getUniformLocation(program, "modelMatrix");
+    if (!loc.has_value())
+    {
+      return nullopt;
+    }
 
     glm::mat4 matToUpdate;
     if (transform == nullptr || !transform->isDirty())
@@ -329,9 +359,6 @@ namespace builtin_scene
     }
     matToUpdate = postMat * matToUpdate;
 
-    auto loc = glContext_->getUniformLocation(program, "modelMatrix");
-    if (!loc.has_value())
-      throw runtime_error("The modelMatrix uniform location is not found.");
     glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
     return matToUpdate;
   }
@@ -382,102 +409,29 @@ namespace builtin_scene
     glContext_->disable(WEBGL_STENCIL_TEST);
   }
 
-  void SceneRenderer::drawInstancedMeshImpl(const Mesh3d &mesh,
-                                            shared_ptr<MeshMaterial3d> material,
-                                            const client_graphics::WebGLProgramScope &programScope,
-                                            RenderPass renderPass,
-                                            optional<XRRenderTarget> renderTarget)
+  void SceneRenderer::onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    assert((renderPass == RenderPass::kOpaques || renderPass == RenderPass::kTransparents) &&
-           "RenderPass must be either Opaques or Transparents for instanced meshes.");
+    if (isVolumeMaskEnabled())
+      enableVolumeMask();
 
-    auto &instancedMesh = mesh.getHandleCheckedAsRef<InstancedMeshBase>();
-    if (instancedMesh.instanceCount() <= 0)
-      return;
-
-    size_t meshIndicesCount = mesh.indices().size();
-    WebGL2Context &glContext = *glContext_;
-
-    // Update the render queues for opaque and transparent instances.
-    instancedMesh.updateInstancesList();
-
-    // Update border data texture if using WebContentInstancedMaterial
-    CSSBorderDataTexture *borderDataTexture = nullptr;
-    auto webContentMaterial = material->material<materials::WebContentInstancedMaterial>();
-    if (webContentMaterial)
-      borderDataTexture = webContentMaterial->getBorderDataTexture();
-
-    // Draw the opaque instances
     if (renderPass == RenderPass::kOpaques)
     {
-      RenderableInstancesList &instances = instancedMesh.getOpaqueInstancesList();
-      if (instances.count() > 0)
-      {
-        WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
-
-        glContext.depthMask(true);
-        glContext.disable(WEBGL_BLEND);
-
-        auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
-        glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
-
-        instances.beforeInstancedDraw(glContext, nullptr);
-        glContext.drawElementsInstanced(mesh.primitiveTopology(),
-                                        meshIndicesCount,
-                                        WEBGL_UNSIGNED_INT,
-                                        0,
-                                        instances.count());
-        instances.afterInstancedDraw(glContext);
-      }
+      glContext_->enable(WEBGL_DEPTH_TEST);
+      glContext_->depthFunc(WEBGL_LEQUAL);
+      glContext_->depthMask(true);
+      glContext_->disable(WEBGL_BLEND);
     }
     else if (renderPass == RenderPass::kTransparents)
     {
-      // Draw the transparent instances
-      RenderableInstancesList &instances = instancedMesh.getTransparentInstancesList();
-      if (instances.count() > 0)
-      {
-        WebGLVertexArrayScope vaoScope(glContext_, instances.vao);
-
-        // Set the base matrix, move the transparent objects +z 0.001
-        auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
-        glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-        glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
-
-        // Draw
-        instances.beforeInstancedDraw(glContext, borderDataTexture);
-        {
-          // Draw transparent instances to color attachment
-          glContext.depthMask(false);
-          glContext.enable(WEBGL_BLEND);
-          glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
-          glContext.drawElementsInstanced(mesh.primitiveTopology(),
-                                          meshIndicesCount,
-                                          WEBGL_UNSIGNED_INT,
-                                          0,
-                                          instances.count());
-
-          // Draw transparent instances to depth attachment if depth-only pass is enabled.
-          if (instancedMesh.isDepthOnlyPassEnabled())
-          {
-            glContext.colorMask(false, false, false, false);
-            glContext.depthMask(true);
-            glContext.disable(WEBGL_BLEND);
-            glContext.drawElementsInstanced(mesh.primitiveTopology(),
-                                            meshIndicesCount,
-                                            WEBGL_UNSIGNED_INT,
-                                            0,
-                                            instances.count());
-
-            // Restore the color mask state
-            glContext.colorMask(true, true, true, true);
-          }
-        }
-        instances.afterInstancedDraw(glContext);
-      }
+      glContext_->enable(WEBGL_DEPTH_TEST);
+      glContext_->depthMask(false);
+      glContext_->enable(WEBGL_BLEND);
+      glContext_->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
     }
-    else
-    {
-      assert(false && "Unreachable code: RenderPass must be either Opaques or Transparents for instanced meshes.");
-    }
+  }
+  void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
+  {
+    if (isVolumeMaskEnabled())
+      disableVolumeMask();
   }
 }

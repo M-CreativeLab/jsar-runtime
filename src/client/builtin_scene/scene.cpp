@@ -2,6 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
+#include "./gaussian_splatting.hpp"
 
 namespace builtin_scene
 {
@@ -24,6 +25,7 @@ namespace builtin_scene
       app.addResource(Resource::Make<Timer>(16));
       app.addResource(Resource::Make<Meshes>());
       app.addResource(Resource::Make<Materials>());
+      app.addResource(Resource::Make<GaussianSplattingContext>());
 
       // Components
       app.registerComponent<hierarchy::Element>();
@@ -38,15 +40,20 @@ namespace builtin_scene
       app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
+      app.registerComponent<GaussianSplattingModel3d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
       app.addSystem(SchedulerLabel::kStartup, System::Make<RenderStartupSystem>());
+      app.addSystem(SchedulerLabel::kStartup, System::Make<gaussian_splatting::GaussianSplattingInitSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
+      auto updateSplats = System::Make<gaussian_splatting::GaussianSplatsUpdateSystem>();
       auto renderScene = System::Make<RenderSystem>();
-      updateCamera->chain(renderScene);
+      updateCamera
+        ->chain(updateSplats)
+        ->chain(renderScene);
       app.addSystem(SchedulerLabel::kUpdate, updateCamera);
     }
   };

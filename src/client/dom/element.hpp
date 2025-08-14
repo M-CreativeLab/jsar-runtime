@@ -35,6 +35,7 @@
   XX("input", HTMLInputElement)       \
   XX("link", HTMLLinkElement)         \
   XX("meta", HTMLMetaElement)         \
+  XX("model", HTMLModelElement)       \
   XX("h1", HTMLHeadingElement)        \
   XX("h2", HTMLHeadingElement)        \
   XX("h3", HTMLHeadingElement)        \

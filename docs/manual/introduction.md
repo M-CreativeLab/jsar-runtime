@@ -2,6 +2,8 @@
 
 **JSAR** ([/dʒ:-sar/](https://ipa-reader.xyz/?text=d%CA%92:-sar)) is a Web browser engine designed for the spatial Web. It enables you to create and present immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and other 3D engines.
 
+> **📖 Learn More**: For a comprehensive understanding of the architectural decisions behind JSAR and how it differs from traditional browsers, read our technical article: [Understanding the Spatial Web Browser Engine](/blogs/spatial-browser-engine).
+
 [HTML5]: https://html.spec.whatwg.org/multipage/
 [CSS3]: https://www.w3.org/TR/css-2023/
 [TypeScript]: https://www.typescriptlang.org/
@@ -18,6 +20,8 @@ Key characteristics of the Spatial Web include:
 - **Natural Interaction**: Users can interact with digital content using natural gestures and movements
 - **Contextual Awareness**: Digital experiences that understand and respond to their physical surroundings
 - **Persistent**: Digital content can remain anchored in physical space across sessions
+
+> **📚 Deep Dive**: To understand why JSAR was built from scratch as a spatial browser engine rather than extending traditional browsers, explore our detailed analysis in [Understanding the Spatial Web Browser Engine](/blogs/spatial-browser-engine).
 
 ### Spatial Web on Desktop
 

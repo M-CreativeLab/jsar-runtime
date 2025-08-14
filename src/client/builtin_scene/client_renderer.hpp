@@ -71,8 +71,8 @@ namespace builtin_scene
                     const RenderPass,
                     std::optional<XRRenderTarget>);
 
-    void onBeforeRender(std::optional<XRRenderTarget>);
-    void onAfterRender(std::optional<XRRenderTarget>);
+    void onBeforeRender(const RenderPass, std::optional<XRRenderTarget>);
+    void onAfterRender(const RenderPass, std::optional<XRRenderTarget>);
 
     // Traverse the entity hierarchy in pre-order and execute the given function for each entity.
     void traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&);
@@ -85,4 +85,6 @@ namespace builtin_scene
     std::shared_ptr<SceneRenderer> renderer_ = nullptr;
     std::shared_ptr<WebXRExperience> xrExperience_ = nullptr;
   };
+
+
 }

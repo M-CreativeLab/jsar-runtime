@@ -13,6 +13,7 @@
 #include "./html_link_element.hpp"
 #include "./html_media_element.hpp"
 #include "./html_meta_element.hpp"
+#include "./html_model_element.hpp"
 #include "./html_paragraph_element.hpp"
 #include "./html_script_element.hpp"
 #include "./html_section_element.hpp"

@@ -1,5 +1,5 @@
 <div align="center">
-  <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="300">
+  <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="500">
   <p align="center">
     JSAR: a <b>Browser Engine Library</b> designed for The Spatial Web.
     <br>
@@ -36,6 +36,8 @@
 ## Introduction
 
 **JSAR** ([/dʒ:-sar/](https://ipa-reader.xyz/?text=d%CA%92:-sar)) is a **Web browser engine** designed for the spatial Web. It enables you to create and present immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and other 3D engines.
+
+To understand the architectural decisions and core concepts behind JSAR, read our comprehensive guide: [Understanding the Spatial Web Browser Engine](https://m-creativelab.github.io/jsar-runtime/blogs/spatial-browser-engine.html).
 
 ### Spatial Web
 

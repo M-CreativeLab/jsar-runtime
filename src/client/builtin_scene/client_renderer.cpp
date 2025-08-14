@@ -8,6 +8,7 @@
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
 #include "./materials.hpp"
+#include "./camera.hpp"
 
 namespace builtin_scene
 {
@@ -111,10 +112,7 @@ namespace builtin_scene
           return false;
 
         auto material = getComponent<MeshMaterial3d>(entity);
-        assert(material != nullptr &&
-               "The material component must be valid on renderable mesh");
-
-        if (material->matchesPass(renderPass))
+        if (material && material->matchesPass(renderPass))
           entities.push_back({entity, mesh, material});
       }
 
@@ -130,7 +128,7 @@ namespace builtin_scene
     if (entities.size() > 0)
     {
       renderVolumeMask(renderPass, renderTarget);
-      onBeforeRender(renderTarget);
+      onBeforeRender(renderPass, renderTarget);
       for (const auto &entity : entities)
       {
         renderMesh(entity.id,
@@ -139,7 +137,7 @@ namespace builtin_scene
                    renderPass,
                    renderTarget);
       }
-      onAfterRender(renderTarget);
+      onAfterRender(renderPass, renderTarget);
     }
   }
 
@@ -185,16 +183,14 @@ namespace builtin_scene
                           renderTarget);
   }
 
-  void RenderSystem::onBeforeRender(optional<XRRenderTarget> renderTarget)
+  void RenderSystem::onBeforeRender(const RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
-    if (renderer_->isVolumeMaskEnabled())
-      renderer_->enableVolumeMask();
+    renderer_->onBeforeRender(renderPass, renderTarget);
   }
 
-  void RenderSystem::onAfterRender(optional<XRRenderTarget> renderTarget)
+  void RenderSystem::onAfterRender(const RenderPass renderPass, optional<XRRenderTarget> renderTarget)
   {
-    if (renderer_->isVolumeMaskEnabled())
-      renderer_->disableVolumeMask();
+    renderer_->onAfterRender(renderPass, renderTarget);
   }
 
   void RenderSystem::traverse(ecs::EntityId root, std::function<bool(ecs::EntityId)> &&exec)
@@ -225,7 +221,7 @@ namespace builtin_scene
 
         // Update the data for renderable mesh components.
         // TODO(yorkie): update transformation matrix here?
-        if (mesh->isInstancedMesh())
+        if (mesh->is<InstancedMeshBase>())
           updateInstancedMeshData(*mesh, renderTarget);
 
         num++;
@@ -267,7 +263,6 @@ namespace builtin_scene
 
   void RenderSystem::updateInstancedMeshData(const Mesh3d &meshComponent, optional<XRRenderTarget> renderTarget)
   {
-    assert(meshComponent.isInstancedMesh());
     InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
 
     /**

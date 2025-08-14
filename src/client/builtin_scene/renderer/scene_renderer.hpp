@@ -8,6 +8,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/meshes.hpp>
 #include <client/builtin_scene/mesh_material.hpp>
+#include <client/builtin_scene/gaussian_splats_mesh.hpp>
 #include <client/builtin_scene/transform.hpp>
 #include <client/builtin_scene/xr.hpp>
 
@@ -172,12 +173,9 @@ namespace builtin_scene
      */
     void disableVolumeMask();
 
-  private:
-    void drawInstancedMeshImpl(const Mesh3d &mesh,
-                               std::shared_ptr<MeshMaterial3d> material,
-                               const client_graphics::WebGLProgramScope &,
-                               RenderPass renderPass,
-                               std::optional<XRRenderTarget> renderTarget);
+  public:
+    void onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget);
+    void onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget);
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;

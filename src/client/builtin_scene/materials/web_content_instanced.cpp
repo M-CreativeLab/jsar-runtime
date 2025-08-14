@@ -78,6 +78,72 @@ namespace builtin_scene::materials
     return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
 
+  void WebContentInstancedMaterial::drawMeshImpl(shared_ptr<WebGLProgram> program,
+                                                 const Mesh3d &mesh,
+                                                 RenderPass renderPass,
+                                                 optional<XRRenderTarget> renderTarget)
+  {
+    assert((renderPass == RenderPass::kTransparents) &&
+           "RenderPass must be either Transparents for instanced meshes.");
+
+    auto glContext = glContext_.lock();
+    if (glContext == nullptr) [[unlikely]]
+      return;
+
+    auto &instancedMesh = mesh.getHandleCheckedAsRef<InstancedMeshBase>();
+    if (instancedMesh.instanceCount() <= 0)
+      return;
+
+    // Update the render queues for opaque and transparent instances.
+    instancedMesh.updateInstancesList();
+
+    size_t meshIndicesCount = mesh.indices().size();
+    CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
+
+    // Draw the transparent instances
+    RenderableInstancesList &instances = instancedMesh.getTransparentInstancesList();
+    if (instances.count() > 0)
+    {
+      WebGLVertexArrayScope vaoScope(glContext, instances.vao);
+
+      // Set the base matrix, move the transparent objects +z 0.001
+      auto loc = glContext->getUniformLocation(program, "modelMatrix");
+      glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+      glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+      // Draw
+      instances.beforeInstancedDraw(*glContext, borderDataTexture);
+      {
+        // Draw transparent instances to color attachment
+        glContext->depthMask(false);
+        glContext->enable(WEBGL_BLEND);
+        glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                         meshIndicesCount,
+                                         WEBGL_UNSIGNED_INT,
+                                         0,
+                                         instances.count());
+
+        // Draw transparent instances to depth attachment if depth-only pass is enabled.
+        if (instancedMesh.isDepthOnlyPassEnabled())
+        {
+          glContext->colorMask(false, false, false, false);
+          glContext->depthMask(true);
+          glContext->disable(WEBGL_BLEND);
+          glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                           meshIndicesCount,
+                                           WEBGL_UNSIGNED_INT,
+                                           0,
+                                           instances.count());
+
+          // Restore the color mask state
+          glContext->colorMask(true, true, true, true);
+        }
+      }
+      instances.afterInstancedDraw(*glContext);
+    }
+  }
+
   void WebContentInstancedMaterial::onBeforeDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
   {
     auto glContext = glContext_.lock();
