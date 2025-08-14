@@ -15,7 +15,7 @@ TrInputManager::TrInputManager(std::shared_ptr<TrConstellation> constellation)
   TR_LOG_DEBUG("InputManager initialized");
 }
 
-bool TrInputManager::injectKeyboardEvent(uint32_t contentId, const TrKeyboardEventData &eventData)
+bool TrInputManager::dispatchKeyboardEvent(const TrKeyboardEventData &eventData)
 {
   if (!constellation_ || !constellation_->contentManager)
   {
@@ -23,61 +23,14 @@ bool TrInputManager::injectKeyboardEvent(uint32_t contentId, const TrKeyboardEve
     return false;
   }
 
-  auto content = constellation_->contentManager->getContent(contentId);
-  if (!content)
-  {
-    TR_LOG_WARNING("InputManager: Content runtime with ID {} not found", contentId);
-    return false;
-  }
-
-  return sendKeyboardEventToContent(content, eventData);
+  return sendKeyboardEventToAllContents(eventData);
 }
 
-int TrInputManager::broadcastKeyboardEvent(const TrKeyboardEventData &eventData)
+bool TrInputManager::sendKeyboardEventToAllContents(const TrKeyboardEventData &eventData)
 {
   if (!constellation_ || !constellation_->contentManager)
   {
     TR_LOG_ERROR("InputManager: No constellation or content manager available");
-    return 0;
-  }
-
-  // Since we don't have a direct getActiveContents method,
-  // we'll need to iterate through available contents
-  // For now, implement with the available API
-  TR_LOG_DEBUG("InputManager: Broadcasting keyboard event (method needs implementation)");
-  return 0; // TODO: Implement when we have access to all contents
-}
-
-std::vector<uint32_t> TrInputManager::getActiveContentIds() const
-{
-  std::vector<uint32_t> contentIds;
-
-  if (!constellation_ || !constellation_->contentManager)
-  {
-    return contentIds;
-  }
-
-  // TODO: Need to implement with available content manager API
-  return contentIds;
-}
-
-bool TrInputManager::isContentActive(uint32_t contentId) const
-{
-  if (!constellation_ || !constellation_->contentManager)
-  {
-    return false;
-  }
-
-  auto content = constellation_->contentManager->getContent(contentId);
-  return content != nullptr; // Basic check if content exists
-}
-
-bool TrInputManager::sendKeyboardEventToContent(std::shared_ptr<TrContentRuntime> content,
-                                                const TrKeyboardEventData &eventData)
-{
-  if (!content)
-  {
-    TR_LOG_WARNING("InputManager: Content runtime is null");
     return false;
   }
 
@@ -99,7 +52,7 @@ bool TrInputManager::sendKeyboardEventToContent(std::shared_ptr<TrContentRuntime
 
     // Create an input event with the serialized keyboard data
     events_comm::TrInputEvent inputEvent(
-      content->getId(),
+      0, // No specific content ID - this is a global event
       inputEventType,
       serializeKeyboardEvent(eventData));
 
@@ -107,19 +60,17 @@ bool TrInputManager::sendKeyboardEventToContent(std::shared_ptr<TrContentRuntime
     auto nativeEvent = std::make_shared<events_comm::TrNativeEvent>(events_comm::TrNativeEventType::InputEvent);
     nativeEvent->setDetail(inputEvent);
 
-    // Send the event to the content runtime
-    bool success = content->dispatchEvent(nativeEvent);
+    // Dispatch to all active content runtimes via constellation
+    // This will automatically handle broadcasting to all listening contents
+    bool success = constellation_->dispatchNativeEvent(*nativeEvent, nullptr);
 
     if (success)
     {
-      TR_LOG_DEBUG("InputManager: Keyboard event '{}' sent to content {}",
-                   eventData.type,
-                   content->getId());
+      TR_LOG_DEBUG("InputManager: Keyboard event '{}' dispatched globally", eventData.type);
     }
     else
     {
-      TR_LOG_WARNING("InputManager: Failed to dispatch keyboard event to content {}",
-                     content->getId());
+      TR_LOG_WARNING("InputManager: Failed to dispatch keyboard event globally");
     }
 
     return success;

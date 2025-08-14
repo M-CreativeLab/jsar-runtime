@@ -247,18 +247,14 @@ namespace events_comm
   };
 
   /**
-   * Input event types for keyboard, mouse, and other input events
+   * Input event types for keyboard and other input events
    */
   enum class TrInputEventType
   {
     Unknown = 0,
     KeyboardDown,
     KeyboardUp,
-    KeyboardPress,
-    MouseDown,
-    MouseUp,
-    MouseMove,
-    MouseWheel
+    KeyboardPress
   };
 
   /**

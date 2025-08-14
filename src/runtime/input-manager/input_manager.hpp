@@ -35,10 +35,11 @@ namespace input_manager
 
   /**
    * InputManager handles input events from host applications and forwards them
-   * to the appropriate JSAR content instances via IPC.
+   * to all active JSAR content instances via IPC.
    * 
    * This class provides an abstraction layer between platform-specific input
    * capture (Unity, Unreal, native, etc.) and JSAR Runtime's event system.
+   * Input events are globally dispatched to all listening content runtimes.
    */
   class TrInputManager
   {
@@ -53,49 +54,23 @@ namespace input_manager
 
   public:
     /**
-     * Inject a keyboard event from the host application.
+     * Dispatch a keyboard event from the host application to all active content runtimes.
      * This method converts the host keyboard event into JSAR's internal format
-     * and forwards it to the appropriate content runtime.
-     * 
-     * @param contentId The content runtime ID to send the event to
-     * @param eventData The keyboard event data
-     * @return true if the event was successfully injected, false otherwise
-     */
-    bool injectKeyboardEvent(uint32_t contentId, const TrKeyboardEventData &eventData);
-
-    /**
-     * Inject a keyboard event to all active content runtimes.
+     * and forwards it to all listening content instances.
      * 
      * @param eventData The keyboard event data
-     * @return number of content runtimes that received the event
+     * @return true if the event was successfully dispatched, false otherwise
      */
-    int broadcastKeyboardEvent(const TrKeyboardEventData &eventData);
-
-    /**
-     * Get the list of active content runtime IDs that can receive input events.
-     * 
-     * @return vector of content runtime IDs
-     */
-    std::vector<uint32_t> getActiveContentIds() const;
-
-    /**
-     * Check if a specific content runtime is active and can receive events.
-     * 
-     * @param contentId The content runtime ID to check
-     * @return true if the content runtime is active, false otherwise
-     */
-    bool isContentActive(uint32_t contentId) const;
+    bool dispatchKeyboardEvent(const TrKeyboardEventData &eventData);
 
   private:
     /**
-     * Send keyboard event to a specific content runtime via IPC.
+     * Send keyboard event to all active content runtimes via IPC.
      * 
-     * @param content The content runtime to send to
      * @param eventData The keyboard event data
      * @return true if successful, false otherwise
      */
-    bool sendKeyboardEventToContent(std::shared_ptr<TrContentRuntime> content,
-                                    const TrKeyboardEventData &eventData);
+    bool sendKeyboardEventToAllContents(const TrKeyboardEventData &eventData);
 
     /**
      * Convert keyboard event data to JSON for IPC transmission.
