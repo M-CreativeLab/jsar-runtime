@@ -80,8 +80,6 @@ namespace builtin_scene::materials
     if (splatInstanceCount_ == 0)
       return;
 
-    DEBUG("GaussianSplattingMaterial", "Rendering %zu splat instances", splatInstanceCount_);
-
     // Do the instanced draw call
     glContext->drawElementsInstanced(
       mesh.primitiveTopology(),
