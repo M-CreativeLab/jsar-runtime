@@ -199,4 +199,228 @@ namespace client_layout
     node_->setStyle(style);
     node_->markDirty();
   }
+
+  // InlineFormattingContext implementation - true inline layout without taffy
+  InlineFormattingContext::InlineFormattingContext(shared_ptr<LayoutView> view)
+      : FormattingContext(DisplayType::Inline(), view)
+      , taffy_placeholder_(make_unique<crates::layout2::Node>(view->taffyNodeAllocatorRef()))
+  {
+    // Initialize the taffy placeholder with block display and zero size
+    // This will be updated as we compute the inline layout
+    updateTaffyPlaceholder();
+  }
+
+  Fragment InlineFormattingContext::liveFragment() const
+  {
+    // Return a fragment based on our computed inline layout
+    if (taffy_placeholder_)
+    {
+      return Fragment(taffy_placeholder_->layout());
+    }
+
+    Fragment fragment;
+    fragment.setSize(computed_size_.x, computed_size_.y, 0.0f);
+    return fragment;
+  }
+
+  void InlineFormattingContext::onAdded(const FormattingContext &parent, shared_ptr<LayoutObject> beforeChild)
+  {
+    // For inline formatting contexts, we add our taffy placeholder to taffy-based parents
+    if (auto taffyParent = dynamic_cast<const TaffyBasedFormattingContext *>(&parent))
+    {
+      if (beforeChild != nullptr)
+      {
+        // Find the taffy node for beforeChild and insert before it
+        bool isInserted = false;
+        shared_ptr<LayoutObject> currentObject = beforeChild;
+
+        while (currentObject != nullptr)
+        {
+          auto taffyFormattingCtx = dynamic_pointer_cast<TaffyBasedFormattingContext>(currentObject->formattingContext_);
+          if (taffyFormattingCtx != nullptr)
+          {
+            taffyParent->node_->insertChild(*taffy_placeholder_, *taffyFormattingCtx->node_);
+            isInserted = true;
+            break;
+          }
+          currentObject = currentObject->nextSibling();
+        }
+
+        if (isInserted)
+          return;
+      }
+
+      // Add to the end if no beforeChild or insertion failed
+      taffyParent->node_->addChild(*taffy_placeholder_);
+    }
+    needs_layout_ = true;
+  }
+
+  void InlineFormattingContext::onRemoved(const FormattingContext &parent)
+  {
+    // Remove our taffy placeholder from taffy-based parent
+    if (auto taffyParent = dynamic_cast<const TaffyBasedFormattingContext *>(&parent))
+    {
+      taffyParent->node_->removeChild(*taffy_placeholder_);
+    }
+    needs_layout_ = true;
+  }
+
+  void InlineFormattingContext::onReplaced(const FormattingContext &parent, const FormattingContext &old)
+  {
+    // Handle replacement in taffy-based parent
+    if (auto taffyParent = dynamic_cast<const TaffyBasedFormattingContext *>(&parent))
+    {
+      if (auto oldTaffy = dynamic_cast<const TaffyBasedFormattingContext *>(&old))
+      {
+        taffyParent->node_->replaceChild(*oldTaffy->node_, *taffy_placeholder_, true);
+      }
+      else if (auto oldInline = dynamic_cast<const InlineFormattingContext *>(&old))
+      {
+        taffyParent->node_->replaceChild(*oldInline->taffy_placeholder_, *taffy_placeholder_, true);
+      }
+    }
+    needs_layout_ = true;
+  }
+
+  void InlineFormattingContext::contentSizeDidChange(const glm::vec3 &size)
+  {
+    FormattingContext::contentSizeDidChange(size);
+    needs_layout_ = true;
+  }
+
+  void InlineFormattingContext::setIsEmpty(bool b)
+  {
+    FormattingContext::setIsEmpty(b);
+    if (b)
+    {
+      computed_size_ = glm::vec2(0.0f, 0.0f);
+      line_boxes_.clear();
+    }
+    needs_layout_ = true;
+    updateTaffyPlaceholder();
+  }
+
+  bool InlineFormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
+  {
+    FormattingContext::setLayoutStyle(style);
+    needs_layout_ = true;
+
+    // Update taffy placeholder with relevant style properties
+    // Map inline style to block for taffy integration
+    style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Block());
+    taffy_placeholder_->setStyle(style);
+    return true;
+  }
+
+  unique_ptr<const LayoutResult> InlineFormattingContext::computeLayout(const ConstraintSpace &space)
+  {
+    if (needs_layout_)
+    {
+      computeInlineLayout(space);
+      updateTaffyPlaceholder();
+      needs_layout_ = false;
+    }
+
+    // Get the actual layout from our taffy placeholder (which has the correct position from parent)
+    crates::layout2::Layout layout = taffy_placeholder_->layout();
+    dom::geometry::DOMRect rect;
+    rect.x() = layout.left();
+    rect.y() = layout.top();
+    rect.width() = computed_size_.x;  // Use our computed inline width
+    rect.height() = computed_size_.y; // Use our computed inline height
+
+    auto result = make_unique<LayoutResult>(rect);
+    result->fragment().setBorder(layout.border());
+    result->fragment().setPadding(layout.padding());
+
+    // Set the status by comparing with previous layout
+    if (result->needsRelayout(resulting_fragment_))
+      result->status() = LayoutResult::kRelayoutRequired;
+    else
+      result->status() = LayoutResult::kSuccess;
+
+    // Update the resulting fragment
+    resulting_fragment_ = result->fragment();
+    return result;
+  }
+
+  void InlineFormattingContext::computeInlineLayout(const ConstraintSpace &space)
+  {
+    // Basic inline layout algorithm
+    // In a real implementation, this would handle:
+    // - Line breaking and wrapping
+    // - Baseline alignment
+    // - Inline box positioning
+    // - Text measurement and positioning
+
+    line_boxes_.clear();
+
+    // For now, implement a simplified inline layout
+    // This is a starting point that can be expanded with proper inline algorithms
+
+    float available_width = space.width();
+    float current_line_width = 0.0f;
+    float line_height = 16.0f; // Default line height, should come from style
+    float total_height = 0.0f;
+
+    LineBox current_line;
+    current_line.height = line_height;
+    current_line.baseline = line_height * 0.8f; // Simplified baseline calculation
+
+    // TODO: Iterate through inline children and perform proper line breaking
+    // For now, create a simple single-line layout
+
+    // If we have content size from text or replaced elements, use it
+    if (content_size_.has_value())
+    {
+      current_line.width = std::min(content_size_->x, available_width);
+      current_line.height = std::max(current_line.height, content_size_->y);
+    }
+    else
+    {
+      // Minimal size for empty inline elements
+      current_line.width = 0.0f;
+    }
+
+    line_boxes_.push_back(current_line);
+
+    // Compute final size
+    computed_size_.x = current_line.width;
+    computed_size_.y = current_line.height;
+
+    // TODO: Handle multiple lines, proper text metrics, etc.
+  }
+
+  void InlineFormattingContext::updateTaffyPlaceholder()
+  {
+    if (!taffy_placeholder_)
+      return;
+
+    // Update the taffy placeholder node with our computed inline size
+    auto style = taffy_placeholder_->style();
+
+    // Set the size based on our inline layout computation
+    style.setWidth(crates::layout2::styles::Dimension::Length(computed_size_.x));
+    style.setHeight(crates::layout2::styles::Dimension::Length(computed_size_.y));
+
+    // Set display type
+    style.setDisplay(is_empty_ ? crates::layout2::styles::Display::None() : crates::layout2::styles::Display::Block());
+
+    taffy_placeholder_->setStyle(style);
+    taffy_placeholder_->markDirty();
+  }
+
+  void InlineFormattingContext::debugPrint() const
+  {
+    printf("InlineFormattingContext: size=%.2fx%.2f, lines=%zu\n",
+           computed_size_.x,
+           computed_size_.y,
+           line_boxes_.size());
+    if (taffy_placeholder_)
+    {
+      printf("  Taffy placeholder: ");
+      taffy_placeholder_->debugPrint();
+    }
+  }
 }

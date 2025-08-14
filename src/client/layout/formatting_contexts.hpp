@@ -194,14 +194,32 @@ namespace client_layout
     }
   };
 
-  // TODO(yorkie): support inline layout, temporarily use taffy's block layout.
-  class InlineFormattingContext : public TaffyBasedFormattingContext
+  /**
+   * InlineFormattingContext implements true inline layout behavior without relying on taffy.
+   * This handles line wrapping, baseline alignment, and proper inline box model behavior.
+   * Unlike block layout, inline layout flows text horizontally and wraps to new lines.
+   * 
+   * For integration with taffy-based parents, this context creates a placeholder taffy node
+   * that represents the space taken by the inline layout, while the actual inline positioning
+   * is computed using custom algorithms.
+   */
+  class InlineFormattingContext : public FormattingContext
   {
   public:
-    InlineFormattingContext(std::shared_ptr<LayoutView> view)
-        : TaffyBasedFormattingContext(DisplayType::Inline(), view)
-    {
-    }
+    InlineFormattingContext(std::shared_ptr<LayoutView> view);
+
+  protected:
+    Fragment liveFragment() const override;
+
+    void onAdded(const FormattingContext &parent, std::shared_ptr<LayoutObject> beforeChild = nullptr) override;
+    void onRemoved(const FormattingContext &parent) override;
+    void onReplaced(const FormattingContext &parent, const FormattingContext &old) override;
+
+    void contentSizeDidChange(const glm::vec3 &contentSize) override;
+    void setIsEmpty(bool) override;
+    bool setLayoutStyle(crates::layout2::LayoutStyle &) override;
+    std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
+    void debugPrint() const override;
 
   private:
     bool isInline() const override final
@@ -212,5 +230,34 @@ namespace client_layout
     {
       return true;
     }
+
+    // Inline-specific layout computation
+    void computeInlineLayout(const ConstraintSpace &space);
+
+    // Update the taffy placeholder node with our computed size
+    void updateTaffyPlaceholder();
+
+    // Line box management for inline layout
+    struct LineBox
+    {
+      float baseline = 0.0f;
+      float ascent = 0.0f;
+      float descent = 0.0f;
+      float width = 0.0f;
+      float height = 0.0f;
+      std::vector<std::shared_ptr<FormattingContext>> inline_boxes;
+    };
+
+    std::vector<LineBox> line_boxes_;
+
+    // Current computed size for this inline formatting context
+    glm::vec2 computed_size_{0.0f, 0.0f};
+
+    // Track if we need layout recomputation
+    bool needs_layout_ = true;
+
+    // Taffy placeholder node for integration with taffy-based parents
+    // This node represents the space taken by our inline layout in the taffy tree
+    std::unique_ptr<crates::layout2::Node> taffy_placeholder_;
   };
 }

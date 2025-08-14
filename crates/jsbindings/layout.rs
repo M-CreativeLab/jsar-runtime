@@ -644,15 +644,16 @@ impl From<taffy::Rect<f32>> for ffi::NumberRect {
   }
 }
 
-// Custom Display conversion to handle Inline -> Block mapping
+// Custom Display conversion - Inline is handled by custom InlineFormattingContext
 impl From<ffi::Display> for taffy::Display {
   fn from(value: ffi::Display) -> Self {
     match value {
       ffi::Display::Block => taffy::Display::Block,
       ffi::Display::Flex => taffy::Display::Flex,
       ffi::Display::Grid => taffy::Display::Grid,
-      ffi::Display::Inline => taffy::Display::Block, // Map inline to block for taffy
       ffi::Display::None => taffy::Display::None,
+      // Inline display is handled by custom InlineFormattingContext, not taffy
+      ffi::Display::Inline => taffy::Display::Block, // Placeholder for taffy integration
       _ => taffy::Display::Block, // Default fallback
     }
   }
