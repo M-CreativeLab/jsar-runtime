@@ -12,13 +12,21 @@ namespace builtin_scene
   constexpr uint32_t COMPRESSED_SPLAT_TEX_WIDTH = 1u << COMPRESSED_SPLAT_TEX_WIDTH_BITS;
   constexpr uint32_t COMPRESSED_SPLAT_TEX_WIDTH_MASK = COMPRESSED_SPLAT_TEX_WIDTH - 1u;
 
-  // Compressed splat structure: 2 texels (8 floats) per splat
-  // Texel 0: R=pos.x, G=pos.y, B=pos.z, A=scale.x
-  // Texel 1: R=scale.y, G=scale.z, B=compressed_quat, A=compressed_color
+  // Compressed splat structure: 1 texel (4 floats) per splat
+  // R=compressed_pos.xyz (3x8-bit), G=compressed_scale.xyz (3x8-bit log2),
+  // B=compressed_quat, A=compressed_color
   struct CompressedSplat
   {
-    float texel0[4]; // position.xyz, scale.x
-    float texel1[4]; // scale.yz, compressed_quat, compressed_color
+    float texel[4]; // compressed_pos, compressed_scale, compressed_quat, compressed_color
+  };
+
+  // Position and scale normalization parameters
+  struct SplatNormalizationParams
+  {
+    float posMin[3];   // Minimum position values for normalization
+    float posMax[3];   // Maximum position values for normalization
+    float scaleMin[3]; // Minimum log2 scale values for normalization
+    float scaleMax[3]; // Maximum log2 scale values for normalization
   };
 
   // Utility functions for compressed splat storage
@@ -43,7 +51,21 @@ namespace builtin_scene
     // Decompress color from single float to RGBA
     std::array<float, 4> decompressColor(float compressed);
 
-    // Convert from Splat struct to CompressedSplat
+    // Compress position (x,y,z) to single float using 3x8-bit packing
+    // Positions are normalized to [0,1] range using provided min/max bounds
+    float compressPosition(float x, float y, float z, const float minPos[3], const float maxPos[3]);
+
+    // Decompress position from single float to (x,y,z)
+    std::array<float, 3> decompressPosition(float compressed, const float minPos[3], const float maxPos[3]);
+
+    // Compress scale (x,y,z) to single float using log2 compression + 3x8-bit packing
+    // Scales are log2-compressed and normalized to [0,1] range using provided min/max log bounds
+    float compressScale(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3]);
+
+    // Decompress scale from single float to (x,y,z)
+    std::array<float, 3> decompressScale(float compressed, const float minLogScale[3], const float maxLogScale[3]);
+
+    // Convert from Splat struct to CompressedSplat with normalization parameters
     CompressedSplat convertSplat(
       float px, float py, float pz, // position
       float sx,
@@ -56,7 +78,8 @@ namespace builtin_scene
       float r,
       float g,
       float b,
-      float a // color + opacity
+      float a,                                   // color + opacity
+      const SplatNormalizationParams &normParams // normalization parameters
     );
   }
 }

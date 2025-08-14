@@ -33,6 +33,10 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("focalAdjustment");
     LOAD_UNIFORM_LOCATION("maxDistance");
     LOAD_UNIFORM_LOCATION("compressedSplats");
+    LOAD_UNIFORM_LOCATION("posMin");
+    LOAD_UNIFORM_LOCATION("posMax");
+    LOAD_UNIFORM_LOCATION("scaleMin");
+    LOAD_UNIFORM_LOCATION("scaleMax");
     // Note: viewMatrix and projectionMatrix are handled automatically by WebGL context
 #undef LOAD_UNIFORM_LOCATION
 
@@ -119,17 +123,46 @@ namespace builtin_scene::materials
         // Update buffer with sorted indices
         splatsMesh->updateSplatBuffer(glContext);
 
-        // Bind compressed splat texture array to texture unit 0
+        // Bind compressed splat texture to texture unit 0
         auto compressedTexture = splatsMesh->getCompressedSplatsTexture();
 
         if (compressedTexture)
         {
-          // Bind compressed texture array to unit 0
+          // Bind compressed texture to unit 0 (now texture2D instead of texture2DArray)
           glContext->activeTexture(client_graphics::WebGLTextureUnit::kTexture0);
-          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2DArray, compressedTexture);
+          glContext->bindTexture(client_graphics::WebGLTextureTarget::kTexture2D, compressedTexture);
           auto compressedOpt = glContext->getUniformLocation(program, "compressedSplats");
           if (compressedOpt.has_value())
             glContext->uniform1i(compressedOpt.value(), 0);
+
+          // Set normalization parameters as uniforms
+          auto posMinOpt = glContext->getUniformLocation(program, "posMin");
+          if (posMinOpt.has_value())
+          {
+            const auto &normParams = splatsMesh->getNormalizationParams();
+            glContext->uniform3f(posMinOpt.value(), normParams.posMin[0], normParams.posMin[1], normParams.posMin[2]);
+          }
+
+          auto posMaxOpt = glContext->getUniformLocation(program, "posMax");
+          if (posMaxOpt.has_value())
+          {
+            const auto &normParams = splatsMesh->getNormalizationParams();
+            glContext->uniform3f(posMaxOpt.value(), normParams.posMax[0], normParams.posMax[1], normParams.posMax[2]);
+          }
+
+          auto scaleMinOpt = glContext->getUniformLocation(program, "scaleMin");
+          if (scaleMinOpt.has_value())
+          {
+            const auto &normParams = splatsMesh->getNormalizationParams();
+            glContext->uniform3f(scaleMinOpt.value(), normParams.scaleMin[0], normParams.scaleMin[1], normParams.scaleMin[2]);
+          }
+
+          auto scaleMaxOpt = glContext->getUniformLocation(program, "scaleMax");
+          if (scaleMaxOpt.has_value())
+          {
+            const auto &normParams = splatsMesh->getNormalizationParams();
+            glContext->uniform3f(scaleMaxOpt.value(), normParams.scaleMax[0], normParams.scaleMax[1], normParams.scaleMax[2]);
+          }
         }
       }
     }

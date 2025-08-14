@@ -17,8 +17,14 @@ uniform float clipXY;
 uniform float focalAdjustment;
 uniform float maxDistance;
 
-// Compressed splat data texture array (2 layers per splat)
-uniform sampler2DArray compressedSplats;
+// Compressed splat data texture (single layer per splat)
+uniform sampler2D compressedSplats;
+
+// Position and scale normalization uniforms
+uniform vec3 posMin;
+uniform vec3 posMax;
+uniform vec3 scaleMin;
+uniform vec3 scaleMax;
 
 // Texture size constants (power of 2)
 const int TEXTURE_WIDTH_BITS = 10;  // 1024 width
@@ -39,6 +45,59 @@ ivec2 getSplatTexCoord(int index)
   int x = index & TEXTURE_WIDTH_MASK;  // x = index & (1024 - 1)
   int y = index >> TEXTURE_WIDTH_BITS; // y = index >> 10
   return ivec2(x, y);
+}
+
+// Decompress position from single float to (x,y,z)
+vec3 decompressPosition(float compressed)
+{
+  // Extract packed value by reinterpreting float as uint
+  uint packed = floatBitsToUint(compressed);
+  
+  // Unpack x,y,z components (8 bits each)
+  uint ix = packed & 0xFFu;
+  uint iy = (packed >> 8u) & 0xFFu;
+  uint iz = (packed >> 16u) & 0xFFu;
+  
+  // Convert back to normalized float [0,1]
+  float nx = float(ix) / 255.0;
+  float ny = float(iy) / 255.0;
+  float nz = float(iz) / 255.0;
+  
+  // Denormalize using provided bounds
+  float x = posMin.x + nx * (posMax.x - posMin.x);
+  float y = posMin.y + ny * (posMax.y - posMin.y);
+  float z = posMin.z + nz * (posMax.z - posMin.z);
+  
+  return vec3(x, y, z);
+}
+
+// Decompress scale from single float to (x,y,z)
+vec3 decompressScale(float compressed)
+{
+  // Extract packed value by reinterpreting float as uint
+  uint packed = floatBitsToUint(compressed);
+  
+  // Unpack x,y,z components (8 bits each)
+  uint ix = packed & 0xFFu;
+  uint iy = (packed >> 8u) & 0xFFu;
+  uint iz = (packed >> 16u) & 0xFFu;
+  
+  // Convert back to normalized float [0,1]
+  float nx = float(ix) / 255.0;
+  float ny = float(iy) / 255.0;
+  float nz = float(iz) / 255.0;
+  
+  // Denormalize using provided log scale bounds
+  float logX = scaleMin.x + nx * (scaleMax.x - scaleMin.x);
+  float logY = scaleMin.y + ny * (scaleMax.y - scaleMin.y);
+  float logZ = scaleMin.z + nz * (scaleMax.z - scaleMin.z);
+  
+  // Convert back from log2 to linear scale
+  float x = exp2(logX);
+  float y = exp2(logY);
+  float z = exp2(logZ);
+  
+  return vec3(x, y, z);
 }
 
 // Decompress quaternion from single float to (x,y,z,w)
@@ -83,8 +142,8 @@ vec4 decompressColor(float compressed)
   
   return vec4(r, g, b, a);
 }
-
 // SparkJS quaternion functions (unchanged)
+{
 vec3 quatVec(vec4 q, vec3 v)
 {
   vec3 t = 2.0 * cross(q.xyz, v);
@@ -177,19 +236,15 @@ void main()
   // Get texture coordinate using efficient bit operations
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
-  // Fetch compressed splat data from texture2DArray (2 texels per splat)
-  vec4 texel0 = texelFetch(compressedSplats, ivec3(texCoord, 0), 0); // Layer 0: pos.xyz, scale.x
-  vec4 texel1 = texelFetch(compressedSplats, ivec3(texCoord, 1), 0); // Layer 1: scale.yz, compressed_quat, compressed_color
+  // Fetch compressed splat data from texture2D (1 texel per splat)
+  vec4 texel = texelFetch(compressedSplats, texCoord, 0); // compressed_pos, compressed_scale, compressed_quat, compressed_color
 
   // Decompress splat data
-  vec3 center = texel0.xyz;         // position
-  float scaleX = texel0.w;          // scale.x
-  float scaleY = texel1.x;          // scale.y
-  float scaleZ = texel1.y;          // scale.z
-  vec3 scales = vec3(scaleX, scaleY, scaleZ);
+  vec3 center = decompressPosition(texel.x);   // decompress position
+  vec3 scales = decompressScale(texel.y);      // decompress scale
 
-  vec4 quaternion = decompressQuaternion(texel1.z);  // decompress quaternion
-  vec4 rgba = decompressColor(texel1.w);             // decompress color
+  vec4 quaternion = decompressQuaternion(texel.z);  // decompress quaternion
+  vec4 rgba = decompressColor(texel.w);             // decompress color
 
   // Early alpha test
   if (rgba.a < minAlpha)

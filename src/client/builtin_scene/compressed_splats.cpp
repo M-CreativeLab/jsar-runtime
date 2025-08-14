@@ -140,6 +140,116 @@ namespace builtin_scene::compressed_splat_utils
     return {r, g, b, a};
   }
 
+  float compressPosition(float x, float y, float z, const float minPos[3], const float maxPos[3])
+  {
+    // Normalize to [0,1] range using provided bounds
+    float nx = (maxPos[0] > minPos[0]) ? (x - minPos[0]) / (maxPos[0] - minPos[0]) : 0.5f;
+    float ny = (maxPos[1] > minPos[1]) ? (y - minPos[1]) / (maxPos[1] - minPos[1]) : 0.5f;
+    float nz = (maxPos[2] > minPos[2]) ? (z - minPos[2]) / (maxPos[2] - minPos[2]) : 0.5f;
+
+    // Clamp to [0,1] range
+    nx = std::max(0.0f, std::min(1.0f, nx));
+    ny = std::max(0.0f, std::min(1.0f, ny));
+    nz = std::max(0.0f, std::min(1.0f, nz));
+
+    // Convert to 8-bit integers
+    uint32_t ix = (uint32_t)(nx * 255.0f);
+    uint32_t iy = (uint32_t)(ny * 255.0f);
+    uint32_t iz = (uint32_t)(nz * 255.0f);
+
+    // Pack into 32-bit value: 8 bits each for x,y,z, 8 bits unused
+    uint32_t packed = ix | (iy << 8) | (iz << 16);
+
+    // Convert to float using bit reinterpretation
+    float result;
+    std::memcpy(&result, &packed, sizeof(float));
+    return result;
+  }
+
+  std::array<float, 3> decompressPosition(float compressed, const float minPos[3], const float maxPos[3])
+  {
+    // Extract packed value
+    uint32_t packed;
+    std::memcpy(&packed, &compressed, sizeof(uint32_t));
+
+    // Unpack x,y,z components (8 bits each)
+    uint32_t ix = packed & 0xFF;
+    uint32_t iy = (packed >> 8) & 0xFF;
+    uint32_t iz = (packed >> 16) & 0xFF;
+
+    // Convert back to normalized float [0,1]
+    float nx = (float)ix / 255.0f;
+    float ny = (float)iy / 255.0f;
+    float nz = (float)iz / 255.0f;
+
+    // Denormalize using provided bounds
+    float x = minPos[0] + nx * (maxPos[0] - minPos[0]);
+    float y = minPos[1] + ny * (maxPos[1] - minPos[1]);
+    float z = minPos[2] + nz * (maxPos[2] - minPos[2]);
+
+    return {x, y, z};
+  }
+
+  float compressScale(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3])
+  {
+    // Apply log2 compression to scale values
+    float logX = (x > 0.0f) ? std::log2(x) : -10.0f; // Use -10 for very small scales
+    float logY = (y > 0.0f) ? std::log2(y) : -10.0f;
+    float logZ = (z > 0.0f) ? std::log2(z) : -10.0f;
+
+    // Normalize to [0,1] range using provided log scale bounds
+    float nx = (maxLogScale[0] > minLogScale[0]) ? (logX - minLogScale[0]) / (maxLogScale[0] - minLogScale[0]) : 0.5f;
+    float ny = (maxLogScale[1] > minLogScale[1]) ? (logY - minLogScale[1]) / (maxLogScale[1] - minLogScale[1]) : 0.5f;
+    float nz = (maxLogScale[2] > minLogScale[2]) ? (logZ - minLogScale[2]) / (maxLogScale[2] - minLogScale[2]) : 0.5f;
+
+    // Clamp to [0,1] range
+    nx = std::max(0.0f, std::min(1.0f, nx));
+    ny = std::max(0.0f, std::min(1.0f, ny));
+    nz = std::max(0.0f, std::min(1.0f, nz));
+
+    // Convert to 8-bit integers
+    uint32_t ix = (uint32_t)(nx * 255.0f);
+    uint32_t iy = (uint32_t)(ny * 255.0f);
+    uint32_t iz = (uint32_t)(nz * 255.0f);
+
+    // Pack into 32-bit value: 8 bits each for x,y,z, 8 bits unused
+    uint32_t packed = ix | (iy << 8) | (iz << 16);
+
+    // Convert to float using bit reinterpretation
+    float result;
+    std::memcpy(&result, &packed, sizeof(float));
+    return result;
+  }
+
+  std::array<float, 3> decompressScale(float compressed, const float minLogScale[3], const float maxLogScale[3])
+  {
+    // Extract packed value
+    uint32_t packed;
+    std::memcpy(&packed, &compressed, sizeof(uint32_t));
+
+    // Unpack x,y,z components (8 bits each)
+    uint32_t ix = packed & 0xFF;
+    uint32_t iy = (packed >> 8) & 0xFF;
+    uint32_t iz = (packed >> 16) & 0xFF;
+
+    // Convert back to normalized float [0,1]
+    float nx = (float)ix / 255.0f;
+    float ny = (float)iy / 255.0f;
+    float nz = (float)iz / 255.0f;
+
+    // Denormalize using provided log scale bounds
+    float logX = minLogScale[0] + nx * (maxLogScale[0] - minLogScale[0]);
+    float logY = minLogScale[1] + ny * (maxLogScale[1] - minLogScale[1]);
+    float logZ = minLogScale[2] + nz * (maxLogScale[2] - minLogScale[2]);
+
+    // Convert back from log2 to linear scale
+    float x = std::exp2(logX);
+    float y = std::exp2(logY);
+    float z = std::exp2(logZ);
+
+    return {x, y, z};
+  }
+
   CompressedSplat convertSplat(
     float px, float py, float pz, // position
     float sx,
@@ -152,22 +262,17 @@ namespace builtin_scene::compressed_splat_utils
     float r,
     float g,
     float b,
-    float a // color + opacity
+    float a,                                   // color + opacity
+    const SplatNormalizationParams &normParams // normalization parameters
   )
   {
     CompressedSplat compressed;
 
-    // Texel 0: position.xyz, scale.x
-    compressed.texel0[0] = px;
-    compressed.texel0[1] = py;
-    compressed.texel0[2] = pz;
-    compressed.texel0[3] = sx;
-
-    // Texel 1: scale.yz, compressed_quat, compressed_color
-    compressed.texel1[0] = sy;
-    compressed.texel1[1] = sz;
-    compressed.texel1[2] = compressQuaternion(qx, qy, qz, qw);
-    compressed.texel1[3] = compressColor(r, g, b, a);
+    // Single texel: compressed_pos, compressed_scale, compressed_quat, compressed_color
+    compressed.texel[0] = compressPosition(px, py, pz, normParams.posMin, normParams.posMax);
+    compressed.texel[1] = compressScale(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
+    compressed.texel[2] = compressQuaternion(qx, qy, qz, qw);
+    compressed.texel[3] = compressColor(r, g, b, a);
 
     return compressed;
   }

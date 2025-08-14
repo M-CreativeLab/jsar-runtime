@@ -47,8 +47,8 @@ namespace builtin_scene
    * This class manages entity references for all model entities with splats,
    * handles sorting, and performs instanced rendering with the base quad geometry.
    * 
-   * Uses compressed splat storage with texture2DArray for optimal GPU performance.
-   * Each splat is stored in 2 texels (8 floats) instead of 14 floats.
+   * Uses compressed splat storage with texture2D for optimal GPU performance.
+   * Each splat is stored in 1 texel (4 floats) instead of 2 texels (8 floats).
    */
   class GaussianSplatsMesh : public meshes::Splat
   {
@@ -108,8 +108,9 @@ namespace builtin_scene
         {
           const auto &compressed = compressedSplatData_[compressedIndex];
 
-          // Use compressed position data for depth calculation (texel0 contains position)
-          glm::vec3 position(compressed.texel0[0], compressed.texel0[1], compressed.texel0[2]);
+          // Use compressed position data for depth calculation (texel[0] contains compressed position)
+          auto pos = compressed_splat_utils::decompressPosition(compressed.texel[0], normalizationParams_.posMin, normalizationParams_.posMax);
+          glm::vec3 position(pos[0], pos[1], pos[2]);
 
           glm::vec4 viewPos = viewMatrix * glm::vec4(position, 1.0f);
           splat.depth = -viewPos.z; // Depth in view space
@@ -214,6 +215,14 @@ namespace builtin_scene
     }
 
     /**
+     * Get the normalization parameters for position and scale compression.
+     */
+    inline const SplatNormalizationParams &getNormalizationParams() const
+    {
+      return normalizationParams_;
+    }
+
+    /**
      * Get the splat instance buffer for attribute configuration.
      */
     inline std::shared_ptr<client_graphics::WebGLBuffer> getSplatInstanceBuffer() const
@@ -254,7 +263,66 @@ namespace builtin_scene
       compressedSplatData_.clear();
       sortedSplats_.clear();
 
-      // Collect all splats from all entities by iterating entity IDs
+      // Collect all splats from all entities and compute bounds for normalization
+      std::vector<meshes::SplatData> allSplats;
+
+      for (ecs::EntityId entityId : splatEntities_)
+      {
+        auto *model = getComponent(entityId);
+        if (model && model->isLoaded() && model->visible())
+        {
+          const auto &splats = model->getSplats();
+          allSplats.insert(allSplats.end(), splats.begin(), splats.end());
+        }
+      }
+
+      if (allSplats.empty())
+      {
+        needsRebuild_ = false;
+        needsSorting_ = false;
+        needsTextureUpdate_ = true;
+        setDirty(true);
+        return;
+      }
+
+      // Compute position bounds for normalization
+      float posMin[3] = {allSplats[0].position[0], allSplats[0].position[1], allSplats[0].position[2]};
+      float posMax[3] = {allSplats[0].position[0], allSplats[0].position[1], allSplats[0].position[2]};
+
+      // Compute scale bounds for log compression
+      float scaleMin[3] = {std::log2(std::max(0.001f, allSplats[0].scale[0])),
+                           std::log2(std::max(0.001f, allSplats[0].scale[1])),
+                           std::log2(std::max(0.001f, allSplats[0].scale[2]))};
+      float scaleMax[3] = {scaleMin[0], scaleMin[1], scaleMin[2]};
+
+      for (const auto &splat : allSplats)
+      {
+        // Update position bounds
+        for (int i = 0; i < 3; i++)
+        {
+          posMin[i] = std::min(posMin[i], splat.position[i]);
+          posMax[i] = std::max(posMax[i], splat.position[i]);
+        }
+
+        // Update scale bounds (log2 space)
+        for (int i = 0; i < 3; i++)
+        {
+          float logScale = std::log2(std::max(0.001f, splat.scale[i]));
+          scaleMin[i] = std::min(scaleMin[i], logScale);
+          scaleMax[i] = std::max(scaleMax[i], logScale);
+        }
+      }
+
+      // Store normalization parameters
+      for (int i = 0; i < 3; i++)
+      {
+        normalizationParams_.posMin[i] = posMin[i];
+        normalizationParams_.posMax[i] = posMax[i];
+        normalizationParams_.scaleMin[i] = scaleMin[i];
+        normalizationParams_.scaleMax[i] = scaleMax[i];
+      }
+
+      // Now convert all splats to compressed format
       uint32_t compressedIndex = 0;
       for (ecs::EntityId entityId : splatEntities_)
       {
@@ -264,7 +332,7 @@ namespace builtin_scene
           const auto &splats = model->getSplats();
           for (const auto &splat : splats)
           {
-            // Convert splat data to compressed format (2 texels per splat)
+            // Convert splat data to compressed format (1 texel per splat)
             CompressedSplat compressed = compressed_splat_utils::convertSplat(
               splat.position[0], splat.position[1], splat.position[2], // position
               splat.scale[0],
@@ -277,7 +345,8 @@ namespace builtin_scene
               splat.color[0],
               splat.color[1],
               splat.color[2],
-              splat.opacity // color + opacity
+              splat.opacity,       // color + opacity
+              normalizationParams_ // normalization parameters
             );
 
             compressedSplatData_.push_back(compressed);
@@ -317,8 +386,11 @@ namespace builtin_scene
     // WebGL buffer for instanced splat indices
     std::shared_ptr<client_graphics::WebGLBuffer> splatInstanceBuffer_;
 
-    // WebGL texture2DArray for compressed splat data (2 layers per splat)
+    // WebGL texture2D for compressed splat data (1 texel per splat)
     std::shared_ptr<client_graphics::WebGLTexture> compressedSplatsTexture_;
+
+    // Normalization parameters for position and scale compression
+    SplatNormalizationParams normalizationParams_;
 
     // WebGL context reference (needed for iterateInstanceAttributes)
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
