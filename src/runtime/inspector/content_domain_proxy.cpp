@@ -66,6 +66,18 @@ string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage
   }
 
   // TODO: Send request to content process via inspector IPC channel
+  // This implementation will be completed when the full IPC integration is ready.
+  // The infrastructure is in place with:
+  // - Inspector IPC message types in src/common/inspector/message.hpp
+  // - Content-side handlers in src/client/inspector/
+  // - Proxy forwarding logic here
+  //
+  // Future implementation should:
+  // 1. Look up the content runtime for the clientId
+  // 2. Send TrCdpRequest via inspector IPC channel
+  // 3. Wait for TrCdpResponse from content process
+  // 4. Return the response to the CDP client
+  //
   // For now, return a placeholder response indicating the proxy is working
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Request %u prepared for content process, method: %s", requestId, method.c_str());
 
@@ -95,6 +107,15 @@ bool ContentDomainProxy::shouldForwardDomain(const string &domain) const
 TrContentRuntime *ContentDomainProxy::findContentRuntime(const string &clientId)
 {
   // TODO: Implement proper content runtime lookup
+  // This should integrate with TrConstellation to find the content runtime
+  // associated with the given clientId. The clientId typically corresponds
+  // to the content/document ID that the CDP client is debugging.
+  //
+  // Implementation should:
+  // 1. Use constellation_->getContentManager() to access content runtimes
+  // 2. Find the content runtime matching the clientId
+  // 3. Verify the content process is running and has inspector channel
+  //
   // For now, this is a placeholder implementation
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Looking up content runtime for client %s", clientId.c_str());
   return nullptr;
