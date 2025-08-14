@@ -1472,7 +1472,7 @@ private:
       return;
     }
 
-    GLint size = req->conponentSize;
+    GLint size = req->componentSize;
     GLenum type = req->componentType;
     GLboolean normalized = req->normalized;
     GLsizei stride = req->stride;

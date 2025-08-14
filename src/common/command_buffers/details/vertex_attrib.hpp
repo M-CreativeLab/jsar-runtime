@@ -142,7 +142,7 @@ namespace commandbuffers
                                             uint32_t stride,
                                             uint32_t offset)
         : SetVertexAttribCommandBufferRequest(program, location_name)
-        , conponentSize(size)
+        , componentSize(size)
         , componentType(type)
         , normalized(normalized)
         , stride(stride)
@@ -157,7 +157,7 @@ namespace commandbuffers
                                             uint32_t stride,
                                             uint32_t offset)
         : SetVertexAttribCommandBufferRequest(program, index)
-        , conponentSize(size)
+        , componentSize(size)
         , componentType(type)
         , normalized(normalized)
         , stride(stride)
@@ -166,7 +166,7 @@ namespace commandbuffers
     }
     VertexAttribPointerCommandBufferRequest(const VertexAttribPointerCommandBufferRequest &that, bool clone = false)
         : SetVertexAttribCommandBufferRequest(that, clone)
-        , conponentSize(that.conponentSize)
+        , componentSize(that.componentSize)
         , componentType(that.componentType)
         , normalized(that.normalized)
         , stride(that.stride)
@@ -179,7 +179,7 @@ namespace commandbuffers
       std::stringstream ss;
       ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
          << this->locToString() << ", "
-         << conponentSize << ", "
+         << componentSize << ", "
          << componentType << ", "
          << normalized << ", "
          << stride << ", "
@@ -188,7 +188,7 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t conponentSize;
+    uint32_t componentSize;
     uint32_t componentType;
     uint32_t normalized;
     uint32_t stride;
