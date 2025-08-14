@@ -73,12 +73,8 @@ float unpackHalf(uint bits) {
 }
 
 // Decompress position from half-floats (word0, word1) to (x,y,z)
-vec3 decompressPositionHalf(vec4 texel)
+vec3 decompressPositionHalf(uint word0, uint word1)
 {
-  // Extract packed values
-  uint word0 = floatBitsToUint(texel.x);
-  uint word1 = floatBitsToUint(texel.y);
-  
   // Unpack half-floats
   uint hx = word0 & 0xFFFFu;
   uint hy = (word0 >> 16u) & 0xFFFFu;
@@ -93,11 +89,8 @@ vec3 decompressPositionHalf(vec4 texel)
 }
 
 // Decompress scale from 8-bit log values to (x,y,z)
-vec3 decompressScaleLog(vec4 texel)
+vec3 decompressScaleLog(uint word2)
 {
-  // Extract packed value from word2
-  uint word2 = floatBitsToUint(texel.z);
-
   // Unpack x,y,z components from lower 24 bits (8 bits each)
   uint ix = word2 & 0xFFu;
   uint iy = (word2 >> 8u) & 0xFFu;
@@ -127,12 +120,8 @@ vec2 octWrap(vec2 v) {
 }
 
 // Decompress quaternion using octahedral mapping (24-bit) to (x,y,z,w)
-vec4 decompressQuaternionOct(vec4 texel)
+vec4 decompressQuaternionOct(uint word1, uint word2)
 {
-  // Extract quaternion bits from word1 (upper 16) and word2 (upper 8)
-  uint word1 = floatBitsToUint(texel.y);
-  uint word2 = floatBitsToUint(texel.z);
-  
   // Reconstruct 24-bit quaternion value: 16 bits from word1 + 8 bits from word2
   uint quatUpper16 = (word1 >> 16u) & 0xFFFFu;
   uint quatLower8 = (word2 >> 24u) & 0xFFu;
@@ -171,17 +160,14 @@ vec4 decompressQuaternionOct(vec4 texel)
   return vec4(x, y, z, w);
 }
 
-// Decompress RGBA color from single float
-vec4 decompressColor(float compressed)
+// Decompress RGBA color from single uint
+vec4 decompressColor(uint word3)
 {
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
-
   // Unpack RGBA components (8 bits each)
-  uint ir = packed & 0xFFu;
-  uint ig = (packed >> 8u) & 0xFFu;
-  uint ib = (packed >> 16u) & 0xFFu;
-  uint ia = (packed >> 24u) & 0xFFu;
+  uint ir = word3 & 0xFFu;
+  uint ig = (word3 >> 8u) & 0xFFu;
+  uint ib = (word3 >> 16u) & 0xFFu;
+  uint ia = (word3 >> 24u) & 0xFFu;
 
   // Convert back to normalized float
   float r = float(ir) / 255.0;
@@ -288,9 +274,15 @@ void main()
   // word0: pos.xy as half-floats, word1: pos.z + quat upper 16, word2: quat lower 8 + scale, word3: color
   vec4 texel = texelFetch(compressedSplats, texCoord, 0);
 
+  // Extract uint words once to avoid duplicate floatBitsToUint calls
+  uint word0 = floatBitsToUint(texel.x);
+  uint word1 = floatBitsToUint(texel.y);
+  uint word2 = floatBitsToUint(texel.z);
+  uint word3 = floatBitsToUint(texel.w);
+
   // Decompress splat data using new format
-  vec4 rgba = decompressColor(texel.w);
-  vec3 scales = decompressScaleLog(texel);
+  vec4 rgba = decompressColor(word3);
+  vec3 scales = decompressScaleLog(word2);
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -328,7 +320,7 @@ void main()
 #endif
 
   // Decompress position using half-floats
-  vec3 center = decompressPositionHalf(texel);
+  vec3 center = decompressPositionHalf(word0, word1);
   // TODO(yorkie): support set TRS dynamically
   center *= 0.05;
   scales *= 0.05;
@@ -357,7 +349,7 @@ void main()
   }
 
   // Decompress quaternion using octahedral mapping
-  vec4 quaternion = decompressQuaternionOct(texel);
+  vec4 quaternion = decompressQuaternionOct(word1, word2);
 
   // Compute the 3D covariance matrix for the splat
   mat3 cov3D = computeCov3D(viewMatrix, quaternion, scales);
