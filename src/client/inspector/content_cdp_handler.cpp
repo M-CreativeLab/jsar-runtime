@@ -1,6 +1,7 @@
 #include "./content_cdp_handler.hpp"
 #include "./content_runtime_domain.hpp"
 #include "./content_example_domain.hpp"
+#include "./content_log_domain.hpp"
 #include "runtime/inspector/cdp_handler.hpp" // For CdpMessage and CdpResponse
 #include "common/debug.hpp"
 
@@ -13,6 +14,7 @@ ContentCdpHandler::ContentCdpHandler()
   // Register content-side domain implementations
   registerDomain("Runtime", make_unique<ContentCdpRuntimeDomain>());
   registerDomain("Example", make_unique<ContentCdpExampleDomain>());
+  registerDomain("Log", make_unique<ContentCdpLogDomain>());
 }
 
 ContentCdpHandler::~ContentCdpHandler()
