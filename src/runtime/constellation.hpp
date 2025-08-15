@@ -23,6 +23,11 @@ class TrMediaManager;
 class TrInspector;
 #endif
 
+namespace input_manager
+{
+  class TrInputManager;
+}
+
 /**
  * The constellation initialization options.
  *
@@ -296,6 +301,10 @@ public:
    * The performance file system for the host.
    */
   std::shared_ptr<TrHostPerformanceFileSystem> perfFs;
+  /**
+   * The smart pointer to the input manager.
+   */
+  std::shared_ptr<input_manager::TrInputManager> inputManager;
 
 #ifdef TR_ENABLE_INSPECTOR
   /**

@@ -5,6 +5,7 @@
 #include "./content_manager.hpp"
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
+#include "./input-manager/input_manager.hpp"
 
 #ifdef TR_ENABLE_INSPECTOR
 #include "./inspector.hpp"
@@ -31,6 +32,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = TrRenderer::Make(this);
   xrDevice = xr::Device::Make(this);
+  inputManager = std::make_shared<input_manager::TrInputManager>(std::shared_ptr<TrConstellation>(this, [](TrConstellation *) {}));
 
 #ifdef TR_ENABLE_INSPECTOR
   inspector = std::make_shared<TrInspector>(this);

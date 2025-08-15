@@ -1,6 +1,7 @@
 #include "embedder.hpp"
 #include "constellation.hpp"
 #include "content_manager.hpp"
+#include "input-manager/input_manager.hpp"
 #include "common/analytics/perf_counter.hpp"
 
 using namespace std;
@@ -82,4 +83,15 @@ void TrEmbedder::onTransparentsRenderPass()
 void TrEmbedder::onAfterRendering()
 {
   constellation->onAfterRendering();
+}
+
+// Input event injection API implementation
+bool TrEmbedder::dispatchKeyboardEvent(const input_manager::TrKeyboardEventData &eventData)
+{
+  if (!constellation || !constellation->inputManager)
+  {
+    DEBUG(LOG_TAG_ERROR, "InputManager not initialized");
+    return false;
+  }
+  return constellation->inputManager->dispatchKeyboardEvent(eventData);
 }

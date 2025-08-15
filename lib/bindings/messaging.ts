@@ -1,4 +1,5 @@
 const { NativeEventTarget } = process._linkedBinding('transmute:messaging');
+import KeyboardEventImpl from '../events/keyboard-event';
 
 const nativeEventTarget = new NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
@@ -9,6 +10,7 @@ enum EventType {
   RpcResponse = NativeEventTarget.EventTypes.RpcResponse,
   DocumentRequest = NativeEventTarget.EventTypes.DocumentRequest,
   DocumentEvent = NativeEventTarget.EventTypes.DocumentEvent,
+  InputEvent = NativeEventTarget.EventTypes.InputEvent,
 }
 
 function eventNameToType(type: string): EventType {
@@ -67,6 +69,62 @@ export class DocumentRequestEvent extends Event {
   }
 }
 
+interface InputEventData {
+  documentId: number;
+  inputEventType: number;
+  eventData: string;
+  timestamp: number;
+}
+
+enum InputEventType {
+  Unknown = 0,
+  KeyboardDown = 1,
+  KeyboardUp = 2,
+  KeyboardPress = 3,
+  MouseDown = 4,
+  MouseUp = 5,
+  MouseMove = 6,
+  MouseWheel = 7,
+}
+
+function handleInputEvent(inputEventData: InputEventData) {
+  try {
+    // Check if this is a keyboard event
+    if (inputEventData.inputEventType < InputEventType.KeyboardDown || 
+        inputEventData.inputEventType > InputEventType.KeyboardPress) {
+      console.warn('Unsupported input event type:', inputEventData.inputEventType);
+      return;
+    }
+
+    // Parse the keyboard event data from the eventData JSON string
+    const keyboardData = JSON.parse(inputEventData.eventData);
+    
+    // Create the appropriate DOM keyboard event
+    const event = new KeyboardEventImpl(keyboardData.type, {
+      key: keyboardData.key,
+      code: keyboardData.code,
+      location: keyboardData.location,
+      repeat: keyboardData.repeat,
+      altKey: keyboardData.altKey,
+      ctrlKey: keyboardData.ctrlKey,
+      metaKey: keyboardData.metaKey,
+      shiftKey: keyboardData.shiftKey,
+      keyCode: keyboardData.keyCode,
+      charCode: keyboardData.charCode,
+      bubbles: true,
+      cancelable: true
+    });
+
+    // Dispatch to the focused element or document body
+    const target = document.activeElement || document.body;
+    if (target) {
+      target.dispatchEvent(event);
+    }
+  } catch (err) {
+    console.warn('Failed to handle input event:', err, inputEventData);
+  }
+}
+
 function onNativeEventListener(_eventId: number, eventType: number, peerId: number, message: string) {
   switch (eventType) {
     case EventType.RpcRequest:
@@ -93,6 +151,16 @@ function onNativeEventListener(_eventId: number, eventType: number, peerId: numb
           eventTarget.dispatchEvent(new DocumentRequestEvent(init));
         } else {
           console.warn('Invalid document request, the JSON source is:', message);
+        }
+      }
+      break;
+    case EventType.InputEvent:
+      {
+        try {
+          const inputEventData = JSON.parse(message);
+          handleInputEvent(inputEventData);
+        } catch (err) {
+          console.warn('Invalid input event, the JSON source is:', message);
         }
       }
       break;
