@@ -371,14 +371,6 @@ namespace builtin_scene::compressed_splat_utils
     uint32_t ix = (uint32_t)(nx * 255.0f);
     uint32_t iy = (uint32_t)(ny * 255.0f);
     uint32_t iz = (uint32_t)(nz * 255.0f);
-
-    // // Pack into lower 24 bits: 8 bits each for x,y,z
-    // uint32_t packed = ix | (iy << 8) | (iz << 16);
-
-    // // Convert to float using bit reinterpretation
-    // float result;
-    // std::memcpy(&result, &packed, sizeof(float));
-    // return result;
     return {ix, iy, iz};
   }
 
@@ -407,7 +399,6 @@ namespace builtin_scene::compressed_splat_utils
     float x = std::exp2(logX);
     float y = std::exp2(logY);
     float z = std::exp2(logZ);
-
     return {x, y, z};
   }
 
