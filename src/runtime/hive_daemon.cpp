@@ -20,6 +20,7 @@ using namespace std::filesystem;
 
 TrHiveDaemon::TrHiveDaemon(TrConstellation *constellation)
     : constellation(constellation)
+    , inspectorChanPort(0)
 {
 }
 
@@ -31,7 +32,9 @@ void TrHiveDaemon::start()
   assert(eventChanPort != 0);
   assert(mediaChanPort != 0);
   assert(commandBufferChanPort != 0);
+#ifdef TR_ENABLE_INSPECTOR
   assert(inspectorChanPort != 0);
+#endif
 
   if (pipe(childPipes) == -1)
   {
@@ -145,7 +148,9 @@ void TrHiveDaemon::onDeamonProcess()
   hiveConfig.AddMember("eventChanPort", eventChanPort, allocator);
   hiveConfig.AddMember("mediaChanPort", mediaChanPort, allocator);
   hiveConfig.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
+#ifdef TR_ENABLE_INSPECTOR
   hiveConfig.AddMember("inspectorChanPort", inspectorChanPort, allocator);
+#endif
 
   // Global settings
   auto &options = constellation->getOptions();

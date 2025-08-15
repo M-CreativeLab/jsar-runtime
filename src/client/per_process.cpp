@@ -531,13 +531,14 @@ void TrClientContextPerProcess::start()
         auto incomingCommand = inspectorChanReceiver->recvCommandMessage(100);
         if (incomingCommand != nullptr)
         {
+          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received inspector command type: %d", id, static_cast<int>(incomingCommand->getType()));
           onInspectorCommand(*incomingCommand);
           delete incomingCommand;
         }
       };
       inspectorCommandWorker = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
 
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) inspector channel connected successfully", id);
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) inspector channel connected successfully, worker thread started", id);
     }
     else
     {

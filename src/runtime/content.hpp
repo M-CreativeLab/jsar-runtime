@@ -364,8 +364,8 @@ private: // XR fields
 
 private: // Inspector fields
   ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorCommandChanClient = nullptr;
-  inspector_comm::TrInspectorReceiver *inspectorCommandChanReceiver = nullptr;
-  inspector_comm::TrInspectorCommandSender *inspectorCommandChanSender = nullptr;
+  std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorCommandChanReceiver = nullptr;
+  std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorCommandChanSender = nullptr;
   /**
    * **Why we need to store the XRSession instances?**
    *

@@ -203,8 +203,8 @@ void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandM
 
 void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
 {
-  inspectorCommandChanReceiver = new inspector_comm::TrInspectorReceiver(&client);
-  inspectorCommandChanSender = new inspector_comm::TrInspectorCommandSender(&client);
+  inspectorCommandChanReceiver = std::make_unique<inspector_comm::TrInspectorReceiver>(&client);
+  inspectorCommandChanSender = std::make_unique<inspector_comm::TrInspectorCommandSender>(&client);
   inspectorCommandChanClient = &client;
   DEBUG(LOG_TAG_INSPECTOR, "Content %d: Inspector channel connected", id);
 }
@@ -212,8 +212,14 @@ void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector
 bool TrContentRuntime::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
 {
   if (TR_UNLIKELY(!available || shouldDestroy || inspectorCommandChanSender == nullptr))
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Cannot send inspector command - available=%s, shouldDestroy=%s, sender=%s", id, available ? "true" : "false", shouldDestroy ? "true" : "false", inspectorCommandChanSender ? "valid" : "null");
     return false;
-  return inspectorCommandChanSender->sendCommand(command);
+  }
+
+  bool success = inspectorCommandChanSender->sendCommand(command);
+  DEBUG(LOG_TAG_INSPECTOR, "Content %d: Inspector command send result: %s", id, success ? "success" : "failed");
+  return success;
 }
 
 xr::TrXRSession *TrContentRuntime::getActiveXRSession()
