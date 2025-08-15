@@ -364,16 +364,10 @@ private:
         glActiveTexture(GL_TEXTURE0 + i);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &textureId);
         if (textureId != 0)
-        {
           DEBUG(logTag, "      TEXTURE%d: texture(TEXTURE_2D, %d)", i, textureId);
-          continue;
-        }
         glGetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, &textureId);
         if (textureId != 0)
-        {
           DEBUG(logTag, "      TEXTURE%d: texture(TEXTURE_2D_ARRAY, %d)", i, textureId);
-          continue;
-        }
       }
       glActiveTexture(activatedUnit); // Restore the active texture unit
     }
