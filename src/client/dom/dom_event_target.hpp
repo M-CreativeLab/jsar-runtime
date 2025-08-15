@@ -17,8 +17,7 @@ namespace dom
   XX(PointerEvent)                         \
   XX(XRSessionEvent)                       \
   XX(XRInputSourceEvent)                   \
-  XX(XRInputSourcesChangeEvent)            \
-  XX(NetworkEvent)
+  XX(XRInputSourcesChangeEvent)
 
   enum class DOMEventConstructorType
   {
