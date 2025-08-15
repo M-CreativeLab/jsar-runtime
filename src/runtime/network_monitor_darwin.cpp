@@ -37,7 +37,7 @@ namespace runtime
       return false;
     }
 
-    reachabilityRef_ = (void*)reachability;
+    reachabilityRef_ = (void *)reachability;
 
     // Set up the callback
     SCNetworkReachabilityContext context = {0, this, NULL, NULL, NULL};

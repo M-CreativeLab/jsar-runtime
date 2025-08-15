@@ -4,7 +4,7 @@
 namespace runtime
 {
   NetworkService::NetworkService(TrConstellation *constellation)
-    : constellation_(constellation)
+      : constellation_(constellation)
   {
   }
 

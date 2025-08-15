@@ -88,7 +88,7 @@ namespace runtime
     void onNetworkStatusChanged(NetworkStatus status);
 
   private:
-    TrConstellation* constellation_;
+    TrConstellation *constellation_;
     std::shared_ptr<NetworkMonitor> monitor_;
     NetworkEventDispatcher eventDispatcher_;
     bool isRunning_ = false;
