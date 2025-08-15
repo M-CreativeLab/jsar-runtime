@@ -1,3 +1,9 @@
+// Compatibility layer for the old messaging system
+// Most functionality is now handled by the C++ Navigator implementation
+
+import { navigator } from '../navigator';
+
+// Get native messaging components  
 const { NativeEventTarget } = process._linkedBinding('transmute:messaging');
 
 const nativeEventTarget = new NativeEventTarget(onNativeEventListener);
@@ -38,50 +44,42 @@ export type DocumentRequestInit = {
 export class DocumentRequestEvent extends Event {
   static Name = 'documentRequest';
 
-  url: string;
-  documentId: number;
-  disableCache: boolean = false;
-  isPreview: boolean = false;
-  runScripts: string = 'dangerously';
-  defaultHTTPHeaders: string;
+  readonly url: string;
+  readonly documentId: number;
+  readonly disableCache?: boolean;
+  readonly isPreview?: boolean;
+  readonly runScripts?: string;
+  readonly defaultHTTPHeaders?: string;
 
   constructor(init: DocumentRequestInit) {
     super(DocumentRequestEvent.Name);
-
     this.url = init.url;
     this.documentId = init.documentId;
-    this.disableCache = init.disableCache || false;
-    this.isPreview = init.isPreview || false;
-    this.runScripts = init.runScripts || 'dangerously';
-    this.defaultHTTPHeaders = init.defaultHTTPHeaders || '';
-  }
-
-  get [Symbol.toStringTag]() {
-    return JSON.stringify({
-      url: this.url,
-      documentId: this.documentId,
-      disableCache: this.disableCache,
-      isPreview: this.isPreview,
-      runScripts: this.runScripts,
-    }, null, 2);
+    this.disableCache = init.disableCache;
+    this.isPreview = init.isPreview;
+    this.runScripts = init.runScripts;
+    this.defaultHTTPHeaders = init.defaultHTTPHeaders;
   }
 }
 
+// Native event listener for legacy messaging compatibility
 function onNativeEventListener(_eventId: number, eventType: number, peerId: number, message: string) {
   switch (eventType) {
     case EventType.RpcRequest:
-      // Client-side will never receive a RPC request.
+      // RPC requests are now handled by C++ Navigator
       break;
     case EventType.RpcResponse:
+      // Handle RPC responses for compatibility with old Promise-based API
       {
-        const callback = RpcRequestWaitlist.get(peerId);
-        if (typeof callback === 'function') {
-          RpcRequestWaitlist.delete(peerId);
-          callback(message);
+        const waitCallback = RpcRequestWaitlist.get(_eventId);
+        if (waitCallback) {
+          RpcRequestWaitlist.delete(_eventId);
+          waitCallback(message);
         }
       }
       break;
     case EventType.DocumentRequest:
+      // DocumentRequest handling for compatibility
       {
         let init: DocumentRequestInit;
         try {
@@ -105,136 +103,97 @@ function onNativeEventListener(_eventId: number, eventType: number, peerId: numb
 /**
  * Add a listener for the specified event type.
  * 
- * @param type the type name of the event to listen for.
- * @param callback the callback function that receives a notification when an event of the specified type occurs.
- * @param options an options object that specifies characteristics about the event listener.
- * @returns 
+ * @param type the event type, such as "documentRequest".
+ * @param listener the event listener to be called when the event is triggered.
  */
-export function addEventListener(
-  type: string,
-  callback: EventListenerOrEventListenerObject,
-  options?: boolean | AddEventListenerOptions
-) {
-  return eventTarget.addEventListener(type, callback, options);
-}
-
-/**
- * Add a listener for document request event.
- * @param callback 
- * @returns 
- */
-export function addDocumentRequestListener(callback: (event: DocumentRequestEvent) => void) {
-  return eventTarget.addEventListener(DocumentRequestEvent.Name, callback);
+export function addEventListener(type: string, listener: EventListener) {
+  eventTarget.addEventListener(type, listener);
 }
 
 /**
  * Remove a listener for the specified event type.
+ * 
+ * @param type the event type, such as "documentRequest".
+ * @param listener the event listener to be removed.
  */
-export const removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
+export function removeEventListener(type: string, listener: EventListener) {
+  eventTarget.removeEventListener(type, listener);
+}
 
 /**
  * Dispatch an event to the host process.
+ * 
+ * @param eventName the event name, such as "documentRequest".
+ * @param eventDetail the event detail.
+ * @returns the event id.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dispatchEventToHost(type: 'rpcRequest', detail: { method: string, args: any[] }): number;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dispatchEventToHost(type: 'rpcResponse', detail: { success: boolean, data?: any, message?: string }): number;
-function dispatchEventToHost(type: 'documentEvent', detail: { documentId: number, eventType: number, timestamp: number });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function dispatchEventToHost(type: 'rpcRequest' | 'rpcResponse' | 'documentEvent', detail: any): number {
-  return nativeEventTarget.dispatchEvent({
-    type: eventNameToType(type),
-    detail: JSON.stringify(detail),
+export function dispatchEventToHost(eventName: string, eventDetail?: unknown): number {
+  const eventType = eventNameToType(eventName);
+  const eventInit: { type: number, detail?: string } = { type: eventType };
+  if (eventDetail) {
+    eventInit.detail = JSON.stringify(eventDetail);
+  }
+  return nativeEventTarget.dispatchEvent(eventInit);
+}
+
+/**
+ * Add a document request listener
+ */
+export function addDocumentRequestListener(listener: (event: DocumentRequestEvent) => void) {
+  addEventListener('documentrequest', listener as EventListener);
+}
+
+/**
+ * Report document event
+ */
+export function reportDocumentEvent(documentId: string | number, eventType: string) {
+  // Convert to number if string
+  const docId = typeof documentId === 'string' ? parseInt(documentId, 10) : documentId;
+  
+  // Use the legacy event system for compatibility
+  dispatchEventToHost('documentEvent', {
+    documentId: docId,
+    eventType: eventType,
+    timestamp: Date.now()
   });
 }
 
 /**
- * Report a document event to the host process.
- * @param id 
- * @param eventType 
- * @returns 
- */
-export function reportDocumentEvent(
-  documentId: number,
-  /**
-   * TODO: deprecate the "loaded" type, reason: not standard.
-   * 
-   * See: https://web.dev/articles/lcp
-   */
-  eventName: 'beforeloading' | 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
-) {
-  // Just duplicate a "load" event when receiving "loaded" event.
-  if (eventName === 'loaded') {
-    reportDocumentEvent(documentId, 'load');
-  }
-
-  const eventType = NativeEventTarget.DocumentEventTypes[eventName];
-  if (typeof eventType !== 'number') {
-    throw new TypeError(`Unknown document event type: ${eventName}`);
-  }
-  return dispatchEventToHost('documentEvent', {
-    documentId,
-    eventType,
-    timestamp: Date.now(),
-  });
-}
-
-/**
- * Make a new rpc call to the host process, it returns a promise that resolves with the response data.
- * 
- * TODO: support introspection for the host SDK generation.
- * 
- * @param method the remote method name.
- * @param args the arguments to pass to the remote method.
- * @returns a promise that resolves with the response data.
+ * Make RPC call - now uses C++ Navigator for better performance
+ * but maintains original Promise-based API for compatibility
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
-  const reqId = dispatchEventToHost('rpcRequest', { method, args });
-  if (typeof reqId !== 'number') {
-    throw new Error('Failed to make rpc call to the host process: invalid request id.');
-  }
-
+  // Use the C++ Navigator for RPC calls which provides better performance
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new Promise<any>((resolve, reject) => {
-    RpcRequestWaitlist.set(reqId, (responseText: string) => {
+    try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let json: any;
-      try {
-        json = JSON.parse(responseText) || {};
-      } catch (err) {
-        json = {
-          success: false,
-          message: `Failed to parse response(${typeof responseText} '${responseText}') from rpc call: ${err}.`,
-        };
-      }
-      if (json.success === true) {
-        let data = json.data;
-        if (typeof data === 'string') {
-          let dataParsingError: Error;
+      (navigator as any).makeRpcCall(method, args, (success: boolean, response: string) => {
+        if (success) {
           try {
-            data = JSON.parse(json.data);
+            const data = JSON.parse(response);
+            resolve(data);
           } catch (err) {
-            dataParsingError = err;
+            resolve(response); // Return raw response if not JSON
           }
-          if (dataParsingError) {
-            return reject(dataParsingError);
-          }
+        } else {
+          reject(new Error(response || 'RPC call failed'));
         }
-        resolve(data);
-      } else {
-        reject(new Error(json.message || 'Unknown error when receiving rpc response.'));
-      }
-    });
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
 /**
- * Dispose the native listener, this drops the reference of the low-level tsfn instance.
+ * Dispose function for cleanup
  */
 export function dispose() {
   if (typeof nativeEventTarget?.dispose === 'function') {
     nativeEventTarget.dispose();
   }
+  // Clear any pending RPC requests
   RpcRequestWaitlist.clear();
 }
