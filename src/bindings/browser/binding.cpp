@@ -1,6 +1,7 @@
 #include "binding.hpp"
 #include "./location.hpp"
 #include "./window.hpp"
+#include "./navigator.hpp"
 
 namespace bindings
 {
@@ -10,6 +11,7 @@ namespace bindings
     {
       browserbinding::Location::Init(env);
       browserbinding::Window::Init(env);
+      Navigator::Init(env, exports);
       return exports;
     }
   }
