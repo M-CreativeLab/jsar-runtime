@@ -256,8 +256,8 @@ void ContextGLStorage::restore()
   for (auto &it : m_TextureBindings)
   {
     GLenum unit = it.first;
-    GLTextureBinding &texture = it.second;
-    texture.bindTo(unit);
+    auto &textures = it.second;
+    textures.bindTo(unit);
   }
   glActiveTexture(m_LastActiveTextureUnit);
   bindTextureError = glGetError();

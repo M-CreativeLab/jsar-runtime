@@ -143,7 +143,10 @@ void ContextGLApp::onActiveTextureUnitChanged(int active_unit)
 
 void ContextGLApp::onTextureBindingChanged(GLenum target, GLuint texture)
 {
-  m_TextureBindings[m_LastActiveTextureUnit] = GLTextureBinding(target, texture);
+  auto it = m_TextureBindings.find(m_LastActiveTextureUnit);
+  if (it == m_TextureBindings.end())
+    m_TextureBindings.emplace(m_LastActiveTextureUnit, GLTextureUnitBinding());
+  m_TextureBindings[m_LastActiveTextureUnit].setBinding(target, texture);
 }
 
 void ContextGLApp::RecordProgramOnCreated(GLuint program)

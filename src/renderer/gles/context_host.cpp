@@ -57,47 +57,38 @@ void ContextGLHost::recordFromHost()
   glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
 
   clearTextureBindings();
-  // FIXME(yorkie): currently only record from 0-31 texture units to avoid the performance issue, we can record more
+  // FIXME(yorkie): currently only record from 0-16 texture units to avoid the performance issue, we can record more
   // texture units if needed.
-  for (int unit = GL_TEXTURE0; unit <= GL_TEXTURE31; unit++)
+  for (int i = 0; i <= 16; i++)
   {
+    int unit = GL_TEXTURE0 + i;
     GLint texture = 0;
     glActiveTexture(unit);
+
+    // Ensure the texture unit object
+    m_TextureBindings.emplace(unit, GLTextureUnitBinding());
 
     // Reading the TEXTURE_2D
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
     if (texture > 0)
-    {
-      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, texture);
-      continue;
-    }
+      m_TextureBindings[unit].setBinding(GL_TEXTURE_2D, texture, true);
 
     // Reading the TEXTURE_2D_ARRAY
     glGetIntegerv(GL_TEXTURE_BINDING_2D_ARRAY, &texture);
     if (texture > 0)
-    {
-      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D_ARRAY, texture);
-      continue;
-    }
+      m_TextureBindings[unit].setBinding(GL_TEXTURE_2D_ARRAY, texture, true);
 
     // Reading the TEXTURE_3D
     glGetIntegerv(GL_TEXTURE_BINDING_3D, &texture);
     if (texture > 0)
-    {
-      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_3D, texture);
-      continue;
-    }
+      m_TextureBindings[unit].setBinding(GL_TEXTURE_3D, texture, true);
 
     // Reading the TEXTURE_CUBE_MAP
     glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &texture);
     if (texture > 0)
-    {
-      m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_CUBE_MAP, texture);
-      continue;
-    }
+      m_TextureBindings[unit].setBinding(GL_TEXTURE_CUBE_MAP, texture, true);
 
-    // TODO(yorkie): support other texture targets like GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, etc.
-    m_TextureBindings[unit] = GLTextureBinding(GL_TEXTURE_2D, 0);
+    // TODO(yorkie): support more texture targets if needed.
   }
   glActiveTexture(m_LastActiveTextureUnit);
 
