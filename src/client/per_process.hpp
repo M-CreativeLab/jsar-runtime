@@ -364,9 +364,6 @@ public: // Inspector methods
    */
   bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
 
-private:
-  void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
-
   /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
    *
@@ -478,6 +475,7 @@ public:
 
 private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
+  void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
 
 public:
   uint32_t id;
