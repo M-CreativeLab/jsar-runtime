@@ -4,7 +4,8 @@
 #include <functional>
 #include <thread>
 #include <atomic>
-#include "platform_base.hpp"
+
+#include "./constellation.hpp"
 
 namespace runtime
 {
@@ -53,7 +54,7 @@ namespace runtime
      * Create a platform-specific network monitor instance.
      * @return Shared pointer to the appropriate NetworkMonitor implementation
      */
-    static std::shared_ptr<NetworkMonitor> create();
+    static std::shared_ptr<NetworkMonitor> Create(TrConstellation *constellation);
 
   protected:
     NetworkStatusCallback statusCallback_;
@@ -88,25 +89,7 @@ namespace runtime
     std::atomic<bool> stopRequested_{false};
   };
 
-#if UNITY_ANDROID
-  /**
-   * @class AndroidNetworkMonitor
-   * Android-specific implementation using JNI to interface with ConnectivityManager.
-   * Provides real-time network status monitoring through Android's native APIs.
-   */
-  class AndroidNetworkMonitor : public NetworkMonitor
-  {
-  public:
-    AndroidNetworkMonitor() = default;
-    ~AndroidNetworkMonitor() override;
-
-    bool startMonitoring(NetworkStatusCallback callback) override;
-    void stopMonitoring() override;
-    NetworkStatus getCurrentStatus() const override;
-  };
-#endif
-
-#if UNITY_OSX
+#if defined(__APPLE__)
   /**
    * @class MacOSNetworkMonitor
    * Darwin/macOS-specific implementation using SCNetworkReachabilitySetCallback.

@@ -3,6 +3,10 @@
 #include <string>
 #include "./constellation.hpp"
 
+#if defined(__ANDROID__)
+#include <jni.h>
+#endif
+
 /**
  * The host engines that the JSAR runtime would be embedded with.
  */
@@ -75,6 +79,9 @@ public: // API for configuration and operations
   inline void shutdown()
   {
     constellation->shutdown();
+#if defined(__ANDROID__)
+    cleanupJNI();
+#endif
   }
   /**
    * @returns the server-side fps of the runtime.
@@ -164,4 +171,62 @@ public:
 
 protected:
   TrHostEngine hostEngine = TrHostEngine::None;
+
+
+#if defined(__ANDROID__)
+public:
+  inline bool isJNIInitialized() const
+  {
+    return is_JNI_initialized;
+  }
+  inline JavaVM *getJavaVM() const
+  {
+    return javaVM_;
+  }
+  inline jobject getJavaContextObject() const
+  {
+    return javaContextObject_;
+  }
+  inline jclass getJavaContextClass() const
+  {
+    return javaContextClass_;
+  }
+  JNIEnv *getJavaEnv()
+  {
+    JNIEnv *env = nullptr;
+    jint result = javaVM_->GetEnv((void **)&env, JNI_VERSION_1_6);
+    if (result == JNI_EDETACHED)
+    {
+      // TODO: Add a lock?
+      result = javaVM_->AttachCurrentThread(&env, nullptr);
+    }
+
+    assert(result == JNI_OK && env != nullptr &&
+           "Failed to get JNI environment");
+    return env;
+  }
+
+protected:
+  // This method should be implemented by the embedder to initialize the JNI environment on Android-platforms.
+  virtual bool initializeJNI(JavaVM *vm) = 0;
+  virtual void cleanupJNI()
+  {
+    if (!is_JNI_initialized || !javaVM_)
+      return;
+
+    JNIEnv *env = getJavaEnv();
+    if (javaContextObject_ != nullptr)
+    {
+      env->DeleteGlobalRef(javaContextObject_);
+      javaContextObject_ = nullptr;
+    }
+    DEBUG(LOG_TAG_JSAR, "Android JNI cleaned up");
+    is_JNI_initialized = false;
+  }
+
+  bool is_JNI_initialized = false;
+  JavaVM *javaVM_ = nullptr; // Java VM for Android JNI
+  jobject javaContextObject_ = nullptr;
+  jclass javaContextClass_ = nullptr;
+#endif
 };

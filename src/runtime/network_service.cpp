@@ -3,9 +3,9 @@
 
 namespace runtime
 {
-  NetworkService::NetworkService()
+  NetworkService::NetworkService(TrConstellation *constellation)
+    : constellation_(constellation)
   {
-    monitor_ = NetworkMonitor::create();
   }
 
   NetworkService::~NetworkService()
@@ -15,10 +15,10 @@ namespace runtime
 
   bool NetworkService::start()
   {
+    if (!monitor_)
+      monitor_ = NetworkMonitor::Create(constellation_);
     if (isRunning_ || !monitor_)
-    {
       return false;
-    }
 
     // Only start automatic monitoring if not in manual mode
     if (!manualMode_)
@@ -70,12 +70,6 @@ namespace runtime
     return NetworkStatus::Offline;
   }
 
-  NetworkService &NetworkService::getInstance()
-  {
-    static NetworkService instance;
-    return instance;
-  }
-
   void NetworkService::registerEventCallback(NetworkEventCallback callback)
   {
     eventDispatcher_.registerCallback(callback);
@@ -98,7 +92,7 @@ namespace runtime
 
       // Log the network status change for debugging
       const char *statusStr = (status == NetworkStatus::Online) ? "online" : "offline";
-      std::cout << "[NetworkService] Network status changed to: " << statusStr << std::endl;
+      DEBUG(LOG_TAG_JSAR, "[NetworkService] Network status changed to: %s", statusStr);
     }
   }
 

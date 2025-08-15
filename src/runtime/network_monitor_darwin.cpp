@@ -1,6 +1,6 @@
 #include "network_monitor.hpp"
 
-#if UNITY_OSX
+#if defined(__APPLE__)
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <sys/socket.h>
@@ -37,7 +37,7 @@ namespace runtime
       return false;
     }
 
-    reachabilityRef_ = reachability;
+    reachabilityRef_ = (void*)reachability;
 
     // Set up the callback
     SCNetworkReachabilityContext context = {0, this, NULL, NULL, NULL};

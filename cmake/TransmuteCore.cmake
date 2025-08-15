@@ -56,6 +56,7 @@ if(APPLE)
         "-framework Carbon"
         "-framework CoreFoundation"
         "-framework CoreAudio"
+        "-framework SystemConfiguration"
         "-framework AudioToolbox"
         "-framework OpenGL"
         "-framework Metal"
@@ -66,14 +67,7 @@ if(APPLE)
     )
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${APPLE_RENDERER_DEPS})
 elseif (ANDROID)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv3 EGL log jnigraphics)
-    find_package(Java COMPONENTS Runtime)
-    if (Java_FOUND)
-        find_package(JNI)
-        if (JNI_FOUND)
-            target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${JNI_INCLUDE_DIRS})
-        endif()
-    endif()
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv3 EGL android log)
 endif()
 
 if (WIN32)

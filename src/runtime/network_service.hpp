@@ -2,13 +2,16 @@
 
 #include <memory>
 #include <functional>
-#include "network_monitor.hpp"
-#include "network_events.hpp"
+
+#include "./network_monitor.hpp"
+#include "./network_events.hpp"
+#include "./constellation.hpp"
 
 namespace runtime
 {
   /**
    * @class NetworkService
+   *
    * Service class that manages network monitoring and dispatches network events.
    * This class acts as a bridge between the platform-specific network monitor
    * and the event system used throughout the runtime.
@@ -16,7 +19,7 @@ namespace runtime
   class NetworkService
   {
   public:
-    NetworkService();
+    NetworkService(TrConstellation *);
     ~NetworkService();
 
     /**
@@ -81,21 +84,16 @@ namespace runtime
      */
     bool setNetworkStatus(NetworkStatus status);
 
-    /**
-     * Get the singleton instance of the network service.
-     * @return Reference to the global network service instance
-     */
-    static NetworkService &getInstance();
-
   private:
     void onNetworkStatusChanged(NetworkStatus status);
 
   private:
+    TrConstellation* constellation_;
     std::shared_ptr<NetworkMonitor> monitor_;
     NetworkEventDispatcher eventDispatcher_;
     bool isRunning_ = false;
     bool manualMode_ = false;
-    NetworkStatus lastKnownStatus_ = NetworkStatus::Online;
+    NetworkStatus lastKnownStatus_ = NetworkStatus::Offline;
     NetworkStatus manualStatus_ = NetworkStatus::Online;
   };
 

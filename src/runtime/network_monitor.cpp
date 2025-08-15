@@ -1,24 +1,32 @@
-#include "network_monitor.hpp"
-#include "common/debug.hpp"
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
 #include <chrono>
+#include <common/debug.hpp>
+
+#include "./constellation.hpp"
+#include "./embedder.hpp"
+#include "./network_monitor.hpp"
+
+#if defined(__ANDROID__)
+#include "./network_monitor_android.hpp"
+#endif
 
 namespace runtime
 {
-  std::shared_ptr<NetworkMonitor> NetworkMonitor::create()
+  using namespace std;
+
+  shared_ptr<NetworkMonitor> NetworkMonitor::Create(TrConstellation *constellation)
   {
-#if UNITY_ANDROID
-    return std::make_shared<AndroidNetworkMonitor>();
-#elif UNITY_OSX
-    return std::make_shared<MacOSNetworkMonitor>();
+#if defined(__ANDROID__)
+    return make_shared<AndroidNetworkMonitor>(constellation->getEmbedder());
+#elif __APPLE__
+    return make_shared<MacOSNetworkMonitor>();
 #else
     // For other platforms, use the default implementation
-    return std::make_shared<DefaultNetworkMonitor>();
+    return make_shared<DefaultNetworkMonitor>();
 #endif
   }
 
@@ -92,7 +100,6 @@ namespace runtime
 
     isMonitoring_ = false;
     statusCallback_ = nullptr;
-
     DEBUG(LOG_TAG_JSAR, "Network monitoring stopped");
   }
 

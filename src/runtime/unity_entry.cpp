@@ -24,6 +24,17 @@
 
 using namespace std;
 
+#if defined(__ANDROID__)
+#include <jni.h>
+
+static JavaVM *s_JVM = nullptr;
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+  s_JVM = vm;
+  return JNI_VERSION_1_6;
+}
+#endif
+
 /**
  * The embedder class for Unity, it depends on the Unity native interfaces to embed the Transmute runtime into Unity.
  */
@@ -77,6 +88,11 @@ public:
     }
 #endif
     constellation->renderer->setRHI(rhi);
+
+#if defined(__ANDROID__)
+    // Set the Java VM for the embedder
+    initializeJNI(s_JVM);
+#endif
   }
 
   void unload()
@@ -121,6 +137,70 @@ public:
     // remove the event from the pending list
     pendingEvents.erase(first);
   }
+
+private:
+#if defined(__ANDROID__)
+  bool initializeJNI(JavaVM *vm) override final
+  {
+    if (is_JNI_initialized) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR, "JNI is already initialized");
+      return false;
+    }
+
+    if (vm == nullptr) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR, "JavaVM is not initialized");
+      return false;
+    }
+    javaVM_ = vm;
+    JNIEnv *env = getJavaEnv();
+
+    // Get Unity's current activity as context
+    // Unity typically exposes the current activity through UnityPlayer.currentActivity
+    // TODO(yorkie): custom the class name?
+    jclass unityPlayerClass = env->FindClass("com/unity3d/player/UnityPlayer");
+    if (unityPlayerClass == nullptr)
+    {
+      DEBUG(LOG_TAG_ERROR, "Failed to find UnityPlayerActivity class");
+      return false;
+    }
+
+    jfieldID currentActivityField = env->GetStaticFieldID(unityPlayerClass,
+                                                          "currentActivity",
+                                                          "Landroid/app/Activity;");
+    if (currentActivityField == nullptr)
+    {
+      env->DeleteLocalRef(unityPlayerClass);
+      DEBUG(LOG_TAG_ERROR, "Failed to get currentActivity field");
+      return false;
+    }
+
+    jobject currentActivity = env->GetStaticObjectField(unityPlayerClass, currentActivityField);
+    if (currentActivity == nullptr)
+    {
+      env->DeleteLocalRef(unityPlayerClass);
+      DEBUG(LOG_TAG_ERROR, "Failed to get current activity");
+      return false;
+    }
+
+    // Keep a global reference to the context
+    javaContextObject_ = env->NewGlobalRef(currentActivity);
+
+    // Get Context class and getSystemService method
+    javaContextClass_ = (jclass)env->NewGlobalRef(env->FindClass("android/content/Context"));
+    if (javaContextClass_ == nullptr)
+    {
+      DEBUG(LOG_TAG_ERROR, "Failed to find `android/content/Context` class");
+      env->DeleteLocalRef(unityPlayerClass);
+      env->DeleteLocalRef(currentActivity);
+      return false;
+    }
+
+    is_JNI_initialized = true;
+    return true;
+  }
+#endif
 
 private:
   UnityGfxRenderer deviceType = kUnityGfxRendererNull;
