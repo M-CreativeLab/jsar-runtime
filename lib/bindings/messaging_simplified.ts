@@ -111,7 +111,7 @@ export function removeEventListener(type: string, listener: EventListener) {
  * @param eventDetail the event detail.
  * @returns the event id.
  */
-export function dispatchEventToHost(eventName: string, eventDetail?: any): number {
+export function dispatchEventToHost(eventName: string, eventDetail?: unknown): number {
   const eventType = eventNameToType(eventName);
   const eventInit: { type: number, detail?: string } = { type: eventType };
   if (eventDetail) {
@@ -126,8 +126,7 @@ export function dispatchEventToHost(eventName: string, eventDetail?: any): numbe
  * 
  * @deprecated Use navigator.makeRpcCall() instead
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
+export const makeRpcCall = function makeRpcCallToNative(_method: string, _args: unknown[]) {
   console.warn('makeRpcCall from messaging is deprecated. Use navigator.makeRpcCall() instead.');
   throw new Error('RPC calls are now handled by the C++ Navigator. Use navigator.makeRpcCall() instead.');
 };

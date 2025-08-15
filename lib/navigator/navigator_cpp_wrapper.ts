@@ -4,7 +4,19 @@ const { Navigator: NativeNavigator } = process._linkedBinding('transmute:browser
  * Navigator implementation that wraps the native C++ Navigator
  */
 class NavigatorImpl implements Navigator {
-  private nativeNavigator: any;
+  private nativeNavigator: {
+    userAgent: string;
+    platform: string;
+    appName: string;
+    appVersion: string;
+    language: string;
+    cookieEnabled: boolean;
+    onLine: boolean;
+    hardwareConcurrency: number;
+    javaEnabled: boolean;
+    makeRpcCall: (method: string, args: string[], callback?: (success: boolean, response: string) => void) => number;
+    handleDocumentRequest: (url: string, documentId: number, disableCache: boolean) => void;
+  };
 
   constructor() {
     this.nativeNavigator = new NativeNavigator();
@@ -52,7 +64,7 @@ class NavigatorImpl implements Navigator {
   }
 
   // RPC functionality now handled in C++
-  makeRpcCall(method: string, args: any[], callback?: (success: boolean, response: string) => void): number {
+  makeRpcCall(method: string, args: unknown[], callback?: (success: boolean, response: string) => void): number {
     return this.nativeNavigator.makeRpcCall(method, args.map(arg => String(arg)), callback);
   }
 
@@ -62,18 +74,18 @@ class NavigatorImpl implements Navigator {
   }
 
   // Placeholder implementations for other Navigator interface methods
-  clipboard: Clipboard;
-  credentials: CredentialsContainer;
-  doNotTrack: string;
-  geolocation: Geolocation;
-  maxTouchPoints: number;
-  mediaCapabilities: MediaCapabilities;
-  mediaDevices: MediaDevices;
-  mediaSession: MediaSession;
-  permissions: Permissions;
-  serviceWorker: ServiceWorkerContainer;
-  userActivation: UserActivation;
-  wakeLock: WakeLock;
+  clipboard!: Clipboard;
+  credentials!: CredentialsContainer;
+  doNotTrack!: string;
+  geolocation!: Geolocation;
+  maxTouchPoints!: number;
+  mediaCapabilities!: MediaCapabilities;
+  mediaDevices!: MediaDevices;
+  mediaSession!: MediaSession;
+  permissions!: Permissions;
+  serviceWorker!: ServiceWorkerContainer;
+  userActivation!: UserActivation;
+  wakeLock!: WakeLock;
 
   canShare(_data?: ShareData): boolean {
     throw new Error('Method not implemented.');
@@ -100,14 +112,14 @@ class NavigatorImpl implements Navigator {
   vibrate(_pattern: unknown): boolean {
     throw new Error('Method not implemented.');
   }
-  mozGetVRDevices: (any: any) => any;
-  webkitGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
+  mozGetVRDevices!: (input: unknown) => unknown;
+  webkitGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: unknown, _errorCallback: unknown): void {
     throw new Error('Method not implemented.');
   }
-  mozGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
+  mozGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: unknown, _errorCallback: unknown): void {
     throw new Error('Method not implemented.');
   }
-  msGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
+  msGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: unknown, _errorCallback: unknown): void {
     throw new Error('Method not implemented.');
   }
   webkitGetGamepads(): Gamepad[] {
@@ -152,16 +164,16 @@ class NavigatorImpl implements Navigator {
   registerProtocolHandler(_scheme: string, _url: string | URL): void {
     throw new Error('Method not implemented.');
   }
-  appCodeName: string;
-  product: string;
-  productSub: string;
-  vendor: string;
-  vendorSub: string;
-  locks: LockManager;
-  mimeTypes: MimeTypeArray;
+  appCodeName!: string;
+  product!: string;
+  productSub!: string;
+  vendor!: string;
+  vendorSub!: string;
+  locks!: LockManager;
+  mimeTypes!: MimeTypeArray;
   pdfViewerEnabled: boolean = false;
-  plugins: PluginArray;
-  storage: StorageManager;
+  plugins!: PluginArray;
+  storage!: StorageManager;
 }
 
 export const navigator = new NavigatorImpl();
