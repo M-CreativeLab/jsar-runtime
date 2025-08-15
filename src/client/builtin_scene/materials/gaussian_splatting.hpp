@@ -35,7 +35,11 @@ namespace builtin_scene::materials
 
     const std::vector<std::string> defines() const override
     {
+#ifdef __ANDROID__
+      return mixDefines(Material::defines(), {"__ANDROID__"});
+#else
       return mixDefines(Material::defines(), {});
+#endif
     }
 
     ShaderRef vertexShader() override
