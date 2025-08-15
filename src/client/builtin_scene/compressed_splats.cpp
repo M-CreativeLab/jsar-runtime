@@ -483,24 +483,19 @@ namespace builtin_scene::compressed_splat_utils
 
     // Compress quaternion using octahedral mapping (24-bit)
     uint32_t uQuat = encodeQuatOctXy88R8(qx, qy, qz, qw);
-    auto uQuatX = uQuat & 0xFF;
-    auto uQuatY = (uQuat >> 8) & 0xFF;
-    auto uQuatZ = (uQuat >> 16) & 0xFF;
 
-    // word1: pos.z (lower 16 bits) + upper 16 bits of quaternion
+    // word1: pos.z (lower 16 bits) + quaternion upper 16 bits
     uint32_t word1;
     std::memcpy(&word1, &posWords[1], sizeof(uint32_t));
-    word1 = (word1 & 0xFFFF) | (uQuatX << 16) | (uQuatY << 24);
+    word1 = (word1 & 0xFFFF) | ((uQuat & 0xFFFF) << 16);
     std::memcpy(&compressed.word[1], &word1, sizeof(float));
 
     // Compress scale using log compression
     auto scaleBits = compressScaleLog(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
-    // uint32_t scaleBits;
-    // std::memcpy(&scaleBits, &compressedScale, sizeof(uint32_t));
-    // scaleBits &= 0xFFFFFF; // Keep only 24 bits
 
-    // word2: lower 8 bits of quaternion + scale.xyz (24 bits)
-    compressed.word[2] = scaleBits.x | (scaleBits.y << 8) | (scaleBits.z << 16) | (uQuatZ << 24);
+    // word2: quaternion lower 8 bits + scale.xyz (8 bits each)
+    uint32_t word2 = ((uQuat >> 16) & 0xFF) | (scaleBits.x << 8) | (scaleBits.y << 16) | (scaleBits.z << 24);
+    std::memcpy(&compressed.word[2], &word2, sizeof(float));
 
     // word3: RGBA color (unchanged)
     compressed.word[3] = compressColor(r, g, b, a);

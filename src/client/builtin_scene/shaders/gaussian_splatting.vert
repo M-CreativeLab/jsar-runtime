@@ -102,10 +102,10 @@ vec3 decompressPositionHalf(uint word0, uint word1)
 // Decompress scale from 8-bit log values to (x,y,z)
 vec3 decompressScaleLog(uint word2)
 {
-  // Unpack x,y,z components from lower 24 bits (8 bits each)
-  uint ix = word2 & 0xFFu;
-  uint iy = (word2 >> 8u) & 0xFFu;
-  uint iz = (word2 >> 16u) & 0xFFu;
+  // Unpack x,y,z components from bits 8-31 (8 bits each, skipping lower 8 bits used for quaternion)
+  uint ix = (word2 >> 8u) & 0xFFu;
+  uint iy = (word2 >> 16u) & 0xFFu;
+  uint iz = (word2 >> 24u) & 0xFFu;
 
   // Convert back to normalized float [0,1]
   float nx = float(ix) / 255.0;
@@ -148,7 +148,8 @@ vec4 decodeQuatOctXy88R8(uint encoded) {
 // Decompress quaternion using octahedral mapping (24-bit) to (x,y,z,w)
 vec4 decompressQuaternionOct(uint word1, uint word2)
 {
-  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 >> 8u) & 0xFF0000u);
+  // Extract 24-bit quaternion: upper 16 bits from word1 + lower 8 bits from word2
+  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 & 0xFFu) << 16u);
   return decodeQuatOctXy88R8(uQuat);
 }
 
