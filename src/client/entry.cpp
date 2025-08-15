@@ -63,8 +63,10 @@ bool TrClientEntry::parseConfig(string &configJson)
   clientContext->eventChanPort = document["eventChanPort"].GetUint();
   clientContext->mediaChanPort = document["mediaChanPort"].GetUint();
   clientContext->commandBufferChanPort = document["commandBufferChanPort"].GetUint();
+#ifdef TR_ENABLE_INSPECTOR
   if (document.HasMember("inspectorChanPort") && document["inspectorChanPort"].IsUint())
     clientContext->inspectorChanPort = document["inspectorChanPort"].GetUint();
+#endif
 
   // Global settings
   if (document.HasMember("applicationCacheDirectory"))

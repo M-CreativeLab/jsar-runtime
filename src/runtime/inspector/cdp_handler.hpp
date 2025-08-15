@@ -6,32 +6,14 @@
 #include <unordered_map>
 #include <vector>
 #include <rapidjson/document.h>
+#include <common/inspector/cdp_message.hpp>
 
 // Forward declarations
 class TrConstellation;
 class TrInspectorClient;
 class ContentDomainProxy;
 
-// CDP (Chrome DevTools Protocol) Message Structure
-struct CdpMessage
-{
-  int64_t id = -1;
-  std::string method;
-  rapidjson::Value params;
-
-  static std::unique_ptr<CdpMessage> parse(const std::string &json);
-};
-
-// CDP Response Builder
-class CdpResponse
-{
-public:
-  static std::string success(int64_t id, const rapidjson::Value &result);
-  static std::string error(int64_t id, int code, const std::string &message);
-  static std::string event(const std::string &method, const rapidjson::Value &params);
-};
-
-// CDP Command Definition
+// CDP Command Definition (moved from common as it contains function pointers)
 struct CdpCommand
 {
   std::string name;

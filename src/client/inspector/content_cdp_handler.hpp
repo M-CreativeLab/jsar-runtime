@@ -4,9 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <rapidjson/document.h>
-
-// Forward declarations
-struct CdpMessage;
+#include <common/inspector/cdp_message.hpp>
 
 // Content-side base CDP Domain Handler - runs in content processes
 class ContentCdpDomainHandler
