@@ -70,4 +70,17 @@ private:
 
   // Timeout handling for pending requests
   void cleanupTimedOutRequests();
+
+public:
+  // Static method for content runtimes to call back with responses
+  static void handleResponseFromContent(uint32_t requestId, const std::string &response);
+
+private:
+  // Static registry to map request IDs to proxy instances for callbacks
+  static std::mutex registryMutex_;
+  static std::unordered_map<uint32_t, ContentDomainProxy *> requestIdToProxy_;
+
+  // Register/unregister request with this proxy instance
+  void registerRequest(uint32_t requestId);
+  void unregisterRequest(uint32_t requestId);
 };

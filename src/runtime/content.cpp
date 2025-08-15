@@ -16,6 +16,7 @@
 #include "./embedder.hpp"
 #include "./content.hpp"
 #include "./media_manager.hpp"
+#include "./inspector/content_domain_proxy.hpp"
 
 using namespace std;
 
@@ -200,6 +201,21 @@ void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandM
   xrCommandChanClient = &client;
 }
 
+void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
+{
+  inspectorCommandChanReceiver = new inspector_comm::TrInspectorReceiver(&client);
+  inspectorCommandChanSender = new inspector_comm::TrInspectorCommandSender(&client);
+  inspectorCommandChanClient = &client;
+  DEBUG(LOG_TAG_INSPECTOR, "Content %d: Inspector channel connected", id);
+}
+
+bool TrContentRuntime::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
+{
+  if (TR_UNLIKELY(!available || shouldDestroy || inspectorCommandChanSender == nullptr))
+    return false;
+  return inspectorCommandChanSender->sendCommand(command);
+}
+
 xr::TrXRSession *TrContentRuntime::getActiveXRSession()
 {
   if (xrSessionsStack.empty())
@@ -350,6 +366,52 @@ bool TrContentRuntime::recvXRCommand(int timeout)
   }
 }
 
+bool TrContentRuntime::recvInspectorCommand(int timeout)
+{
+  if (TR_UNLIKELY(inspectorCommandChanReceiver == nullptr))
+    return false;
+
+  auto message = inspectorCommandChanReceiver->recvCommandMessage(timeout);
+  if (message != nullptr)
+  {
+    // Handle incoming inspector command message
+    handleInspectorCommandMessage(*message);
+    delete message;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message)
+{
+  switch (message.getType())
+  {
+  case inspector_comm::TrInspectorCommandType::CdpResponse:
+  {
+    auto cdpResponse = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpResponse>(message);
+    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP response for request %u", id, cdpResponse.requestId);
+
+    // Forward response back to the ContentDomainProxy via static callback
+    ContentDomainProxy::handleResponseFromContent(cdpResponse.requestId, cdpResponse.cdpResponseJson);
+    break;
+  }
+  case inspector_comm::TrInspectorCommandType::CdpEvent:
+  {
+    auto cdpEvent = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpEvent>(message);
+    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP event", id);
+
+    // TODO: Forward CDP events to inspector clients if needed
+    break;
+  }
+  default:
+    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Unknown inspector command type: %d", id, static_cast<int>(message.getType()));
+    break;
+  }
+}
+
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -409,6 +471,7 @@ bool TrContentRuntime::tickOnFrame()
   recvEvent();
   recvXRCommand();
   recvMediaRequest();
+  recvInspectorCommand();
   return true;
 }
 

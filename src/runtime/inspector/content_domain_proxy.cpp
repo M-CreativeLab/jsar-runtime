@@ -12,6 +12,10 @@
 using namespace std;
 using namespace inspector_comm;
 
+// Static member definitions
+mutex ContentDomainProxy::registryMutex_;
+unordered_map<uint32_t, ContentDomainProxy *> ContentDomainProxy::requestIdToProxy_;
+
 ContentDomainProxy::ContentDomainProxy(TrConstellation *constellation)
     : constellation_(constellation)
     , nextRequestId_(1)
@@ -110,6 +114,9 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
     pendingRequests_[requestId] = move(pendingRequest);
   }
 
+  // Register request in static registry for callback
+  registerRequest(requestId);
+
   // Send request to content process via inspector IPC channel
   bool success = sendCdpRequestToContent(contentRuntime, requestId, message.id, cdpMessageJson);
 
@@ -122,6 +129,9 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
       lock_guard<mutex> lock(pendingRequestsMutex_);
       pendingRequests_.erase(requestId);
     }
+
+    // Remove from static registry
+    unregisterRequest(requestId);
 
     string errorResponse = CdpResponse::error(message.id, -32603, "Failed to send request to content process");
     if (callback)
@@ -141,27 +151,20 @@ bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntim
     return false;
   }
 
-  // TODO: This needs to be implemented when inspector IPC channels are added to TrContentRuntime
-  // For now, return a simulated success response after a short delay
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Simulating CDP request send to content runtime %d", contentRuntime->id);
+  // Create CDP request command to send to content process
+  inspector_comm::TrCdpRequest cdpRequest(requestId, contentRuntime->id, cdpMessageJson);
 
-  // Create a simulated response
-  rapidjson::Document result;
-  result.SetObject();
-  auto &allocator = result.GetAllocator();
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Sending CDP request %u to content runtime %d", requestId, contentRuntime->id);
 
-  result.AddMember("proxied", rapidjson::Value().SetBool(true), allocator);
-  result.AddMember("requestId", rapidjson::Value().SetUint(requestId), allocator);
-  result.AddMember("contentId", rapidjson::Value().SetInt(contentRuntime->id), allocator);
-  result.AddMember("status", rapidjson::Value("simulated_success", allocator), allocator);
+  // Send the request via inspector IPC channel
+  bool success = contentRuntime->sendInspectorCommand(cdpRequest);
 
-  string simulatedResponse = CdpResponse::success(cdpMessageId, result);
+  if (!success)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Failed to send CDP request %u to content runtime %d", requestId, contentRuntime->id);
+  }
 
-  // Simulate async response by calling handleResponse directly
-  // In a real implementation, this would be called when the IPC response is received
-  handleResponse(requestId, simulatedResponse);
-
-  return true;
+  return success;
 }
 bool ContentDomainProxy::shouldForwardDomain(const string &domain) const
 {
@@ -265,6 +268,9 @@ void ContentDomainProxy::cleanupTimedOutRequests()
       // Notify any waiting synchronous requests
       pendingRequest->cv.notify_one();
 
+      // Remove from static registry
+      unregisterRequest(pendingRequest->requestId);
+
       it = pendingRequests_.erase(it);
     }
     else
@@ -282,4 +288,35 @@ void ContentDomainProxy::setupForwardedDomains()
   forwardedDomains_.insert("Example");
 
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Configured %zu domains for forwarding", forwardedDomains_.size());
+}
+
+// Static method for content runtimes to call back with responses
+void ContentDomainProxy::handleResponseFromContent(uint32_t requestId, const string &response)
+{
+  lock_guard<mutex> lock(registryMutex_);
+  auto it = requestIdToProxy_.find(requestId);
+  if (it != requestIdToProxy_.end())
+  {
+    ContentDomainProxy *proxy = it->second;
+    // Call the instance method on the correct proxy
+    proxy->handleResponse(requestId, response);
+    // Remove from registry since response is handled
+    requestIdToProxy_.erase(it);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Static callback received response for unknown request %u", requestId);
+  }
+}
+
+void ContentDomainProxy::registerRequest(uint32_t requestId)
+{
+  lock_guard<mutex> lock(registryMutex_);
+  requestIdToProxy_[requestId] = this;
+}
+
+void ContentDomainProxy::unregisterRequest(uint32_t requestId)
+{
+  lock_guard<mutex> lock(registryMutex_);
+  requestIdToProxy_.erase(requestId);
 }

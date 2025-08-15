@@ -28,6 +28,9 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
+#include "common/inspector/message.hpp"
+#include "common/inspector/sender.hpp"
+#include "common/inspector/receiver.hpp"
 
 #include "./constellation.hpp"
 #include "./hive_daemon.hpp"
@@ -234,6 +237,21 @@ public: // WebXR methods
    */
   bool removeXRSession(xr::TrXRSession *session);
 
+public: // Inspector methods
+  /**
+   * When the content's client is connected to the server-side inspector command channel.
+   *
+   * @param client The channel client for the inspector command.
+   */
+  void onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client);
+  /**
+   * Send an inspector command (CDP request) to the content process.
+   *
+   * @param command The inspector command to send.
+   * @returns true if the command is sent successfully.
+   */
+  bool sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command);
+
 private:
   inline bool isUsed() const
   {
@@ -247,6 +265,8 @@ private:
   void recvEvent();
   void recvMediaRequest();
   bool recvXRCommand(int timeout = 0);
+  bool recvInspectorCommand(int timeout = 0);
+  void handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message);
 
   bool tryDispatchRequest();
   void prepareRequest(events_comm::TrDocumentRequest &);
@@ -341,6 +361,11 @@ private: // XR fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+
+private: // Inspector fields
+  ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorCommandChanClient = nullptr;
+  inspector_comm::TrInspectorReceiver *inspectorCommandChanReceiver = nullptr;
+  inspector_comm::TrInspectorCommandSender *inspectorCommandChanSender = nullptr;
   /**
    * **Why we need to store the XRSession instances?**
    *
