@@ -44,12 +44,18 @@ string ContentCdpLogDomain::enable(const CdpMessage &message)
   DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Enabling domain");
   enabled_ = true;
 
-  // Send any buffered log entries if there are any
+  // Send any buffered log entries as events
   for (const auto &entry : logBuffer_)
   {
-    // Note: In a real implementation, we would need a way to send events to the host
-    // For now, we just log that we would send them
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Would send buffered entry: %s", entry.text.c_str());
+    string eventJson = createLogEntryEvent(entry);
+    if (sendEvent(eventJson))
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Sent buffered entry event: %s", entry.text.c_str());
+    }
+    else
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Failed to send buffered entry event: %s", entry.text.c_str());
+    }
   }
 
   rapidjson::Document result;
@@ -153,9 +159,16 @@ void ContentCdpLogDomain::addLogEntry(const LogEntry &entry)
     logBuffer_.erase(logBuffer_.begin());
   }
 
-  // In a real implementation, we would send a Log.entryAdded event to the host
-  // For now, we just log that we would send an event
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Would send Log.entryAdded event");
+  // Send Log.entryAdded event to the host process
+  string eventJson = createLogEntryEvent(entry);
+  if (sendEvent(eventJson))
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Sent Log.entryAdded event successfully");
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Failed to send Log.entryAdded event");
+  }
 }
 
 string ContentCdpLogDomain::createLogEntryEvent(const LogEntry &entry)

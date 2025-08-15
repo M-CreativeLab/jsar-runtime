@@ -19,6 +19,7 @@ public:
   void tryAccept();
   void tick();
   int countWebSocketClients() const;
+  const std::vector<std::shared_ptr<TrInspectorClient>> &getClients() const;
 
 private:
   bool setNonBlocking();

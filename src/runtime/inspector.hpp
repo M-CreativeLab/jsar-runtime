@@ -31,6 +31,9 @@ public:
   // Get the inspector command channel port
   int getInspectorCommandChanPort() const;
 
+  // Broadcast CDP event to all connected WebSocket clients
+  void broadcastEventToClients(const std::string &eventJson);
+
 private:
   void onRequest(TrInspectorClient &);
   void handleRequest(std::function<std::string()> handler, TrInspectorClient &);
@@ -56,4 +59,8 @@ public:
 private:
   std::unique_ptr<TrInspectorServer> server_;
   std::unique_ptr<ipc::TrOneShotServer<inspector_comm::TrInspectorCommandMessage>> inspectorCommandChanServer_;
+
+public:
+  // Static method for content runtimes to broadcast events to inspector clients
+  static void handleEventFromContent(uint32_t contentId, const std::string &eventJson);
 };

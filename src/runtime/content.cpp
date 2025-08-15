@@ -17,6 +17,7 @@
 #include "./content.hpp"
 #include "./media_manager.hpp"
 #include "./inspector/content_domain_proxy.hpp"
+#include "./inspector.hpp"
 
 using namespace std;
 
@@ -406,9 +407,10 @@ void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspector
   case inspector_comm::TrInspectorCommandType::CdpEvent:
   {
     auto cdpEvent = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpEvent>(message);
-    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP event", id);
+    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP event: %s", id, cdpEvent.cdpEventJson.c_str());
 
-    // TODO: Forward CDP events to inspector clients if needed
+    // Forward CDP events to inspector clients via the static handler
+    TrInspector::handleEventFromContent(cdpEvent.contentId, cdpEvent.cdpEventJson);
     break;
   }
   default:

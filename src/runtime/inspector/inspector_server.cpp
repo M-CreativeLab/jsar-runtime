@@ -158,3 +158,8 @@ int TrInspectorServer::countWebSocketClients() const
   }
   return count;
 }
+
+const std::vector<std::shared_ptr<TrInspectorClient>> &TrInspectorServer::getClients() const
+{
+  return clients_;
+}

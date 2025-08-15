@@ -3,8 +3,12 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <functional>
 #include <rapidjson/document.h>
 #include <common/inspector/cdp_message.hpp>
+
+// Function type for sending CDP events from content process to host
+using CdpEventSender = std::function<bool(const std::string &eventJson)>;
 
 // Content-side base CDP Domain Handler - runs in content processes
 class ContentCdpDomainHandler
@@ -18,6 +22,26 @@ public:
   // Get domain metadata
   virtual std::string getDomainName() const = 0;
   virtual std::string getDomainDescription() const = 0;
+
+  // Set the event sender callback (called by ContentCdpHandler)
+  virtual void setEventSender(const CdpEventSender &eventSender)
+  {
+    eventSender_ = eventSender;
+  }
+
+protected:
+  // Send a CDP event to the host process
+  bool sendEvent(const std::string &eventJson)
+  {
+    if (eventSender_)
+    {
+      return eventSender_(eventJson);
+    }
+    return false;
+  }
+
+private:
+  CdpEventSender eventSender_;
 };
 
 // Content-side CDP Handler - manages domain implementations in content processes
@@ -25,6 +49,7 @@ class ContentCdpHandler
 {
 public:
   ContentCdpHandler();
+  ContentCdpHandler(const CdpEventSender &eventSender);
   ~ContentCdpHandler();
 
   // Process incoming CDP message from the proxy and return response
@@ -33,8 +58,12 @@ public:
   // Register a domain handler
   void registerDomain(const std::string &domainName, std::unique_ptr<ContentCdpDomainHandler> handler);
 
+  // Set event sender for all registered domains
+  void setEventSender(const CdpEventSender &eventSender);
+
 private:
   std::unordered_map<std::string, std::unique_ptr<ContentCdpDomainHandler>> domains_;
+  CdpEventSender eventSender_;
 
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);

@@ -402,3 +402,39 @@ int TrInspector::getInspectorCommandChanPort() const
     return 0;
   return inspectorCommandChanServer_->getPort();
 }
+
+void TrInspector::broadcastEventToClients(const std::string &eventJson)
+{
+  if (!server_)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Inspector server not initialized, cannot broadcast event");
+    return;
+  }
+
+  const auto &clients = server_->getClients();
+  int sentCount = 0;
+
+  for (const auto &client : clients)
+  {
+    if (client && client->isWebSocket())
+    {
+      client->sendWebSocketMessage(eventJson);
+      sentCount++;
+    }
+  }
+
+  DEBUG(LOG_TAG_INSPECTOR, "Broadcasted CDP event to %d WebSocket clients", sentCount);
+}
+
+// Static method for content runtimes to broadcast events
+void TrInspector::handleEventFromContent(uint32_t contentId, const std::string &eventJson)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Received CDP event from content %u: %s", contentId, eventJson.c_str());
+
+  // For now, we don't have a simple way to get to the TrInspector instance from static context
+  // In a more complete implementation, we would need a registry or singleton pattern
+  // For this proof of concept, we'll just log that we received the event
+
+  // TODO: Implement proper static registry to get TrInspector instance and broadcast
+  DEBUG(LOG_TAG_INSPECTOR, "Static event handling not fully implemented yet - event logged");
+}

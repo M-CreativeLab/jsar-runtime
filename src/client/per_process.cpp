@@ -522,8 +522,24 @@ void TrClientContextPerProcess::start()
       inspectorChanSender = make_unique<inspector_comm::TrInspectorCommandSender>(inspectorChanClient);
       inspectorChanReceiver = make_unique<inspector_comm::TrInspectorReceiver>(inspectorChanClient);
 
-      // Initialize content-side CDP handler
-      contentCdpHandler = make_unique<ContentCdpHandler>();
+      // Create event sender function for CDP domains
+      auto eventSender = [this](const string &eventJson) -> bool
+      {
+        inspector_comm::TrCdpEvent cdpEvent(this->id, eventJson);
+        bool result = sendInspectorResponse(cdpEvent);
+        if (result)
+        {
+          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) sent CDP event successfully", this->id);
+        }
+        else
+        {
+          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send CDP event", this->id);
+        }
+        return result;
+      };
+
+      // Initialize content-side CDP handler with event sender
+      contentCdpHandler = make_unique<ContentCdpHandler>(eventSender);
 
       // Create worker thread for processing inspector commands
       auto onInspectorCommandWork = [this](WorkerThread &worker)

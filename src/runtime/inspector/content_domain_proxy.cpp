@@ -281,6 +281,7 @@ void ContentDomainProxy::setupForwardedDomains()
   // Initially, we'll forward Runtime and Example domains as examples
   forwardedDomains_.insert("Runtime");
   forwardedDomains_.insert("Example");
+  forwardedDomains_.insert("Log");
 
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Configured %zu domains for forwarding", forwardedDomains_.size());
 }

@@ -17,6 +17,20 @@ ContentCdpHandler::ContentCdpHandler()
   registerDomain("Log", make_unique<ContentCdpLogDomain>());
 }
 
+ContentCdpHandler::ContentCdpHandler(const CdpEventSender &eventSender)
+    : eventSender_(eventSender)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Handler initialized with event sender");
+
+  // Register content-side domain implementations
+  registerDomain("Runtime", make_unique<ContentCdpRuntimeDomain>());
+  registerDomain("Example", make_unique<ContentCdpExampleDomain>());
+  registerDomain("Log", make_unique<ContentCdpLogDomain>());
+
+  // Set event sender for all domains
+  setEventSender(eventSender);
+}
+
 ContentCdpHandler::~ContentCdpHandler()
 {
   DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Handler destroyed");
@@ -60,7 +74,25 @@ string ContentCdpHandler::processMessage(const string &message)
 void ContentCdpHandler::registerDomain(const string &domainName, unique_ptr<ContentCdpDomainHandler> handler)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Registering domain: %s", domainName.c_str());
+
+  // Set event sender if we have one
+  if (eventSender_)
+  {
+    handler->setEventSender(eventSender_);
+  }
+
   domains_[domainName] = move(handler);
+}
+
+void ContentCdpHandler::setEventSender(const CdpEventSender &eventSender)
+{
+  eventSender_ = eventSender;
+
+  // Set event sender for all existing domains
+  for (auto &domain : domains_)
+  {
+    domain.second->setEventSender(eventSender);
+  }
 }
 
 string ContentCdpHandler::extractDomain(const string &method)
