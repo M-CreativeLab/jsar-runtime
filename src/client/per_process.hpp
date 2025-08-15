@@ -42,6 +42,7 @@
 #include "common/inspector/message.hpp"
 #include "common/inspector/sender.hpp"
 #include "common/inspector/receiver.hpp"
+#include "inspector/content_cdp_handler.hpp"
 #include "./classes.hpp"
 
 using namespace std;
@@ -560,9 +561,10 @@ private: // xr fields
 
 private: // inspector fields
   TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
-  inspector_comm::TrInspectorCommandSender *inspectorChanSender = nullptr;
-  inspector_comm::TrInspectorReceiver *inspectorChanReceiver = nullptr;
+  unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
+  unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
   unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
+  unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;

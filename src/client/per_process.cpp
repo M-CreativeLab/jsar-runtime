@@ -395,16 +395,8 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
   }
 
   // Clear for inspector
-  if (inspectorChanSender != nullptr)
-  {
-    delete inspectorChanSender;
-    inspectorChanSender = nullptr;
-  }
-  if (inspectorChanReceiver != nullptr)
-  {
-    delete inspectorChanReceiver;
-    inspectorChanReceiver = nullptr;
-  }
+  inspectorChanSender.reset();
+  inspectorChanReceiver.reset();
 
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
@@ -524,8 +516,11 @@ void TrClientContextPerProcess::start()
     inspectorChanClient = ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage>::MakeAndConnect(inspectorChanPort, false, id);
     if (inspectorChanClient && inspectorChanClient->isConnected())
     {
-      inspectorChanSender = new inspector_comm::TrInspectorCommandSender(inspectorChanClient);
-      inspectorChanReceiver = new inspector_comm::TrInspectorReceiver(inspectorChanClient);
+      inspectorChanSender = make_unique<inspector_comm::TrInspectorCommandSender>(inspectorChanClient);
+      inspectorChanReceiver = make_unique<inspector_comm::TrInspectorReceiver>(inspectorChanClient);
+
+      // Initialize content-side CDP handler
+      contentCdpHandler = make_unique<ContentCdpHandler>();
 
       // Create worker thread for processing inspector commands
       auto onInspectorCommandWork = [this](WorkerThread &worker)
@@ -828,11 +823,17 @@ void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCo
 
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received CDP request %u: %s", id, cdpRequest.requestId, cdpRequest.cdpMessageJson.c_str());
 
-    // For now, we'll handle basic CDP requests directly in the content process.
-    // In a full implementation, this would delegate to appropriate domain handlers.
-
-    // Create a simple success response for now
-    std::string responseJson = "{\"id\":" + std::to_string(cdpRequest.requestId) + ",\"result\":{}}";
+    // Use the ContentCdpHandler to process the request and get domain/method
+    std::string responseJson;
+    if (contentCdpHandler)
+    {
+      responseJson = contentCdpHandler->processMessage(cdpRequest.cdpMessageJson);
+    }
+    else
+    {
+      // Fallback error response if handler is not available
+      responseJson = "{\"id\":" + std::to_string(cdpRequest.requestId) + ",\"error\":{\"code\":-32603,\"message\":\"Internal error: CDP handler not initialized\"}}";
+    }
 
     // Send response back to host process
     inspector_comm::TrCdpResponse cdpResponse(cdpRequest.requestId, cdpRequest.contentId, responseJson);
