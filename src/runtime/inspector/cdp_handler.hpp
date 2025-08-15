@@ -69,6 +69,9 @@ public:
   // Process incoming CDP message and return response
   std::string processMessage(const std::string &message);
 
+  // Process incoming CDP message asynchronously (for WebSocket clients)
+  void processMessageAsync(const std::string &message, TrInspectorClient *inspectorClient);
+
   // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
@@ -76,6 +79,7 @@ private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
   std::unique_ptr<ContentDomainProxy> contentProxy_;
   std::string clientId_;
+  TrInspectorClient *inspectorClient_; // For async responses
 
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);

@@ -365,9 +365,18 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
 
   try
   {
-    string response = cdpHandler->processMessage(message);
-    DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
-    client.sendWebSocketMessage(response);
+    // Use async processing for WebSocket clients to avoid blocking
+    if (client.isWebSocket())
+    {
+      cdpHandler->processMessageAsync(message, &client);
+    }
+    else
+    {
+      // Fall back to synchronous processing for non-WebSocket clients
+      string response = cdpHandler->processMessage(message);
+      DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
+      client.sendWebSocketMessage(response);
+    }
   }
   catch (const exception &e)
   {

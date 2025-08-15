@@ -126,6 +126,7 @@ string CdpResponse::event(const string &method, const rapidjson::Value &params)
 // CdpHandler implementation
 CdpHandler::CdpHandler(TrConstellation *constellation, const string &clientId, TrInspectorClient *inspectorClient)
     : clientId_(clientId)
+    , inspectorClient_(inspectorClient)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
 
@@ -189,6 +190,74 @@ string CdpHandler::processMessage(const string &message)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain handler error: %s", e.what());
     return CdpResponse::error(cdpMessage->id, -32603, "Internal error");
+  }
+}
+
+void CdpHandler::processMessageAsync(const string &message, TrInspectorClient *inspectorClient)
+{
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Processing message asynchronously: %s", message.c_str());
+
+  auto cdpMessage = CdpMessage::parse(message);
+  if (!cdpMessage)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Failed to parse message");
+    string errorResponse = CdpResponse::error(-1, -32700, "Parse error");
+    if (inspectorClient && inspectorClient->isWebSocket())
+    {
+      inspectorClient->sendWebSocketMessage(errorResponse);
+    }
+    return;
+  }
+
+  string domain = extractDomain(cdpMessage->method);
+  string methodName = extractMethodName(cdpMessage->method);
+
+  DEBUG(LOG_TAG_INSPECTOR, "CDP: Async Domain=%s, Method=%s, ID=%lld", domain.c_str(), methodName.c_str(), (long long)cdpMessage->id);
+
+  // Check if this domain should be forwarded to content processes
+  if (contentProxy_ && contentProxy_->shouldForwardDomain(domain))
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Async forwarding domain %s to content process", domain.c_str());
+
+    // Use async forwarding without blocking
+    contentProxy_->forwardRequestAsync(cdpMessage->method, *cdpMessage, clientId_, [inspectorClient](const string &response)
+                                       {
+        if (inspectorClient && inspectorClient->isWebSocket())
+        {
+          inspectorClient->sendWebSocketMessage(response);
+        } });
+    return;
+  }
+
+  // Handle local domain synchronously and send response
+  auto domainIt = domains_.find(domain);
+  if (domainIt == domains_.end())
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Unknown domain: %s", domain.c_str());
+    string errorResponse = CdpResponse::error(cdpMessage->id, -32601, "Method not found");
+    if (inspectorClient && inspectorClient->isWebSocket())
+    {
+      inspectorClient->sendWebSocketMessage(errorResponse);
+    }
+    return;
+  }
+
+  try
+  {
+    string response = domainIt->second->handleMethod(methodName, *cdpMessage, clientId_);
+    if (inspectorClient && inspectorClient->isWebSocket())
+    {
+      inspectorClient->sendWebSocketMessage(response);
+    }
+  }
+  catch (const exception &e)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain handler error: %s", e.what());
+    string errorResponse = CdpResponse::error(cdpMessage->id, -32603, "Internal error");
+    if (inspectorClient && inspectorClient->isWebSocket())
+    {
+      inspectorClient->sendWebSocketMessage(errorResponse);
+    }
   }
 }
 
