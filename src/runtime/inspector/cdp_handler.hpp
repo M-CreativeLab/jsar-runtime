@@ -13,14 +13,6 @@ class TrConstellation;
 class TrInspectorClient;
 class ContentDomainProxy;
 
-// CDP Command Definition (moved from common as it contains function pointers)
-struct CdpCommand
-{
-  std::string name;
-  std::string description;
-  std::function<std::string(const CdpMessage &)> handler;
-};
-
 // Base CDP Domain Handler
 class CdpDomainHandler
 {

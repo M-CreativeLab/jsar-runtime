@@ -119,7 +119,6 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
 
   // Send request to content process via inspector IPC channel
   bool success = sendCdpRequestToContent(contentRuntime, requestId, message.id, cdpMessageJson);
-
   if (!success)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Failed to send request %u to content process", requestId);
@@ -158,12 +157,8 @@ bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntim
 
   // Send the request via inspector IPC channel
   bool success = contentRuntime->sendInspectorCommand(cdpRequest);
-
   if (!success)
-  {
     DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Failed to send CDP request %u to content runtime %d", requestId, contentRuntime->id);
-  }
-
   return success;
 }
 bool ContentDomainProxy::shouldForwardDomain(const string &domain) const

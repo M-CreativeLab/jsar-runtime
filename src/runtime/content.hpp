@@ -303,7 +303,7 @@ public:
    */
   TrDocumentRequestInit requestInit;
 
-private:
+public:
   /**
    * The content manager.
    */

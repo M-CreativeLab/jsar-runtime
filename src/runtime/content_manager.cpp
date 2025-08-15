@@ -571,18 +571,25 @@ void TrContentManager::acceptInspectorCommandChanClients(int timeout)
 
 void TrContentManager::onNewClientOnInspectorCommandChan(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "ContentManager: New inspector command channel client connected, client id: %d", client.getClientId());
+  auto clientId = client.getCustomId();
+  DEBUG(LOG_TAG_INSPECTOR,
+        "ContentManager: New inspector command channel client connected, client id: %d",
+        clientId);
 
   // Find the content runtime by client id and set up the inspector command channel
-  auto content = getContent(client.getClientId());
+  auto content = getContent(clientId);
   if (content != nullptr)
   {
     content->onInspectorCommandChanConnected(client);
-    DEBUG(LOG_TAG_INSPECTOR, "ContentManager: Inspector command channel connected to content %d", content->id);
+    DEBUG(LOG_TAG_INSPECTOR,
+          "ContentManager: Inspector command channel connected to content %d",
+          content->id);
   }
   else
   {
-    DEBUG(LOG_TAG_INSPECTOR, "ContentManager: Failed to find content for inspector command channel client %d", client.getClientId());
+    DEBUG(LOG_TAG_INSPECTOR,
+          "ContentManager: Failed to find content for inspector command channel client %d",
+          clientId);
   }
 }
 #endif

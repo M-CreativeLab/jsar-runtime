@@ -4,6 +4,7 @@
 #include <common/debug.hpp>
 #include <runtime/constellation.hpp>
 
+#include "./inspector_client.hpp"
 #include "./cdp_handler.hpp"
 #include "./content_domain_proxy.hpp"
 #include "./cdp_runtime_domain.hpp"
@@ -109,12 +110,12 @@ void CdpHandler::processMessageAsync(const string &message, TrInspectorClient *i
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Async forwarding domain %s to content process", domain.c_str());
 
     // Use async forwarding without blocking
-    contentProxy_->forwardRequestAsync(cdpMessage->method, *cdpMessage, clientId_, [inspectorClient](const string &response)
-                                       {
-        if (inspectorClient && inspectorClient->isWebSocket())
-        {
-          inspectorClient->sendWebSocketMessage(response);
-        } });
+    auto onResponse = [inspectorClient](const string &response)
+    {
+      if (inspectorClient && inspectorClient->isWebSocket())
+        inspectorClient->sendWebSocketMessage(response);
+    };
+    contentProxy_->forwardRequestAsync(cdpMessage->method, *cdpMessage, clientId_, onResponse);
     return;
   }
 

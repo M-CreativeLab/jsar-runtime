@@ -394,9 +394,11 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     xrCommandChanReceiver = nullptr;
   }
 
+#ifdef TR_ENABLE_INSPECTOR
   // Clear for inspector
   inspectorChanSender.reset();
   inspectorChanReceiver.reset();
+#endif
 
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
@@ -510,6 +512,7 @@ void TrClientContextPerProcess::start()
     xrDeviceClient = client_xr::XRDeviceClient::Make(this);
   }
 
+#ifdef TR_ENABLE_INSPECTOR
   // Inspector command initialization
   if (inspectorChanPort > 0)
   {
@@ -541,6 +544,7 @@ void TrClientContextPerProcess::start()
       DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to inspector channel", id);
     }
   }
+#endif
 
   // Initialize the built-in scene
   builtinScene = builtin_scene::Scene::Make(this);
