@@ -103,9 +103,9 @@ vec3 decompressPositionHalf(uint word0, uint word1)
 vec3 decompressScaleLog(uint word2)
 {
   // Unpack x,y,z components from bits 8-31 (8 bits each, skipping lower 8 bits used for quaternion)
-  uint ix = (word2 >> 8u) & 0xFFu;
-  uint iy = (word2 >> 16u) & 0xFFu;
-  uint iz = (word2 >> 24u) & 0xFFu;
+  uint ix = word2 & 0xFFu;
+  uint iy = (word2 >> 8u) & 0xFFu;
+  uint iz = (word2 >> 16u) & 0xFFu;
 
   // Convert back to normalized float [0,1]
   float nx = float(ix) / 255.0;
@@ -149,7 +149,7 @@ vec4 decodeQuatOctXy88R8(uint encoded) {
 vec4 decompressQuaternionOct(uint word1, uint word2)
 {
   // Extract 24-bit quaternion: upper 16 bits from word1 + lower 8 bits from word2
-  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 & 0xFFu) << 16u);
+  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 >> 8u) & 0xFF0000u);
   return decodeQuatOctXy88R8(uQuat);
 }
 
@@ -167,7 +167,6 @@ vec4 decompressColor(uint word3)
   float g = float(ig) / 255.0;
   float b = float(ib) / 255.0;
   float a = float(ia) / 255.0;
-
   return vec4(r, g, b, a);
 }
 
@@ -321,11 +320,9 @@ void main()
   // Decompress position using half-floats
   vec3 center = decompressPositionHalf(word0, word1);
   // TODO(yorkie): support set TRS dynamically
-  // Scale(0.1)
-  center *= 0.1;
-  scales *= 0.1;
-  // Translation(0, 0, -1)
-  center += vec3(0.0, -0.5, 0);
+  center *= 0.06;
+  scales *= 0.06;
+  center += vec3(0.0, -0.1, 0.0);
 
   vec4 viewCenter4 = viewMatrix * vec4(center, 1.0);
   vec3 viewCenter = viewCenter4.xyz;

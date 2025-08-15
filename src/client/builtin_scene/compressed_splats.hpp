@@ -39,13 +39,6 @@ namespace builtin_scene
     // Calculate required texture size for given number of splats
     std::array<uint32_t, 3> getTextureSize(uint32_t numSplats);
 
-    // Compress quaternion using octahedral mapping (24-bit)
-    // Returns packed value as float containing the 24-bit compressed quaternion
-    float compressQuaternionOct(float x, float y, float z, float w);
-
-    // Decompress quaternion from octahedral mapping (24-bit) to (x,y,z,w)
-    std::array<float, 4> decompressQuaternionOct(float compressed);
-
     // Compress RGBA color to single float using normalized encoding
     float compressColor(float r, float g, float b, float a);
 

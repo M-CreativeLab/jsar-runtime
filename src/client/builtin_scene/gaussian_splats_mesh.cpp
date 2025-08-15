@@ -128,7 +128,7 @@ namespace builtin_scene
     }
 
     // Prepare texture data array for single layer
-    vector<float> splatData(maxSplats * 4, 0.0f); // Single texel: compressed_pos, compressed_scale, compressed_quat, compressed_color
+    vector<float> splatData(maxSplats * 4, 0.0f); // Single texel
 
     // Fill texture data from compressed splats
     for (size_t i = 0; i < compressedSplatData_.size(); ++i)

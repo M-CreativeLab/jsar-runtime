@@ -261,54 +261,6 @@ namespace builtin_scene::compressed_splat_utils
     return packed;
   }
 
-  float compressQuaternionOct(float x, float y, float z, float w)
-  {
-    uint32_t uQuat = encodeQuatOctXy88R8(x, y, z, w);
-
-    auto uQuatX = uQuat & 0xff;
-    auto uQuatY = (uQuat >> 8) & 0xff;
-    auto uQuatZ = (uQuat >> 16) & 0xff;
-
-    // auto oct = quatToOct(x, y, z, w);
-
-    // // Convert to 12-bit signed integers for xy, 8-bit for additional data
-    // int32_t octX12 = (int32_t)(oct[0] * 2047.0f); // 12-bit signed (-2047 to 2047)
-    // int32_t octY12 = (int32_t)(oct[1] * 2047.0f); // 12-bit signed (-2047 to 2047)
-
-    // // Clamp to valid range
-    // octX12 = std::max(-2047, std::min(2047, octX12));
-    // octY12 = std::max(-2047, std::min(2047, octY12));
-
-    // // Pack into 24-bit value: 12 bits each for x,y
-    // uint32_t packed = 0;
-    // packed |= (uint32_t)(octX12 + 2047) & 0xFFF;         // x: bits 0-11 (offset by 2047)
-    // packed |= ((uint32_t)(octY12 + 2047) & 0xFFF) << 12; // y: bits 12-23 (offset by 2047)
-
-    // // Convert to float using bit reinterpretation
-    // float result;
-    // std::memcpy(&result, &packed, sizeof(float));
-    // return result;
-  }
-
-  std::array<float, 4> decompressQuaternionOct(float compressed)
-  {
-    // Extract packed value
-    uint32_t packed;
-    std::memcpy(&packed, &compressed, sizeof(uint32_t));
-
-    // Unpack x,y components (12 bits each, offset by 2047)
-    int32_t octX12 = (int32_t)(packed & 0xFFF) - 2047;
-    int32_t octY12 = (int32_t)((packed >> 12) & 0xFFF) - 2047;
-
-    // Convert back to normalized float
-    float octX = (float)octX12 / 2047.0f;
-    float octY = (float)octY12 / 2047.0f;
-
-    // Convert from octahedral to quaternion
-    auto quat = octToQuat(octX, octY);
-    return quat;
-  }
-
   float compressColor(float r, float g, float b, float a)
   {
     // Clamp values to [0,1] range
@@ -479,27 +431,29 @@ namespace builtin_scene::compressed_splat_utils
 
     // Compress position using half-floats
     auto posWords = compressPositionHalf(px, py, pz);
-    compressed.word[0] = posWords[0]; // pos.xy as half-floats
+    auto uQuat = encodeQuatOctXy88R8(qx, qy, qz, qw);
+    auto scaleBits = compressScaleLog(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
+    float colorBits = compressColor(r, g, b, a);
 
-    // Compress quaternion using octahedral mapping (24-bit)
-    uint32_t uQuat = encodeQuatOctXy88R8(qx, qy, qz, qw);
+    auto uQuatX = uQuat & 0xFFFF;
+    auto uQuatY = (uQuat >> 8) & 0xFF;
+    auto uQuatZ = (uQuat >> 16) & 0xFF;
+
+    uint32_t word0;
+    compressed.word[0] = posWords[0]; // word0: pos.x (half) + pos.y (half)
 
     // word1: pos.z (lower 16 bits) + quaternion upper 16 bits
     uint32_t word1;
-    std::memcpy(&word1, &posWords[1], sizeof(uint32_t));
-    word1 = (word1 & 0xFFFF) | ((uQuat & 0xFFFF) << 16);
+    std::memcpy(&word1, &posWords[1], sizeof(float));
+    word1 = (word1 & 0xFFFF) | (uQuatX << 16) | (uQuatY << 24);
     std::memcpy(&compressed.word[1], &word1, sizeof(float));
 
-    // Compress scale using log compression
-    auto scaleBits = compressScaleLog(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
-
     // word2: quaternion lower 8 bits + scale.xyz (8 bits each)
-    uint32_t word2 = ((uQuat >> 16) & 0xFF) | (scaleBits.x << 8) | (scaleBits.y << 16) | (scaleBits.z << 24);
+    uint32_t word2 = scaleBits.x | (scaleBits.y << 8) | (scaleBits.z << 16) | (uQuatZ << 24);
     std::memcpy(&compressed.word[2], &word2, sizeof(float));
 
     // word3: RGBA color (unchanged)
-    compressed.word[3] = compressColor(r, g, b, a);
-
+    compressed.word[3] = colorBits;
     return compressed;
   }
 }

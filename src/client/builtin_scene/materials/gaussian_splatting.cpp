@@ -123,7 +123,6 @@ namespace builtin_scene::materials
 
         // Bind compressed splat texture to texture unit 0
         auto compressedTexture = splatsMesh->getCompressedSplatsTexture();
-
         if (compressedTexture)
         {
           // Bind compressed texture to unit 0 (now texture2D instead of texture2DArray)
