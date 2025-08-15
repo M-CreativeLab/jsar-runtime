@@ -12,7 +12,7 @@ namespace runtime
 
   NetworkService::~NetworkService()
   {
-    stop();
+    shutdown();
   }
 
   bool NetworkService::start()
@@ -42,7 +42,7 @@ namespace runtime
     return true;
   }
 
-  void NetworkService::stop()
+  void NetworkService::shutdown()
   {
     if (!isRunning_)
     {

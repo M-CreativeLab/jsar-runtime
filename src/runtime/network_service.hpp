@@ -46,9 +46,9 @@ namespace runtime
     bool start();
 
     /**
-     * Stop the network monitoring service.
+     * Shutdown the network monitoring service.
      */
-    void stop();
+    void shutdown();
 
     /**
      * Check if the service is currently running.

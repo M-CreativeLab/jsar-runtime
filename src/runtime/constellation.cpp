@@ -86,11 +86,11 @@ bool TrConstellation::initialize()
 void TrConstellation::shutdown()
 {
   disableTicking = true;
-  mediaManager->shutdown(); // Shutdown the media manager first to release the audio resources.
-  networkService->stop();
+  mediaManager->shutdown();
   contentManager->shutdown();
   renderer->shutdown();
   xrDevice->shutdown();
+  networkService->shutdown();
   initialized = false;
 }
 
