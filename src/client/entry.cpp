@@ -63,6 +63,7 @@ bool TrClientEntry::parseConfig(string &configJson)
   clientContext->eventChanPort = document["eventChanPort"].GetUint();
   clientContext->mediaChanPort = document["mediaChanPort"].GetUint();
   clientContext->commandBufferChanPort = document["commandBufferChanPort"].GetUint();
+  clientContext->inspectorChanPort = document["inspectorChanPort"].GetUint();
 
   // Global settings
   if (document.HasMember("applicationCacheDirectory"))

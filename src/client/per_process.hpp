@@ -39,6 +39,9 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
+#include "common/inspector/message.hpp"
+#include "common/inspector/sender.hpp"
+#include "common/inspector/receiver.hpp"
 #include "./classes.hpp"
 
 using namespace std;
@@ -351,6 +354,18 @@ public: // WebXR methods
     return xrInputSourcesZoneClient.get();
   }
 
+public: // Inspector methods
+  /**
+   * Send an inspector command response to the host process.
+   *
+   * @param response The inspector command response to send.
+   * @returns true if the response is sent successfully.
+   */
+  bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
+
+private:
+  void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
+
   /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
    *
@@ -483,6 +498,7 @@ public:
   uint32_t eventChanPort;
   uint32_t mediaChanPort;
   uint32_t commandBufferChanPort;
+  uint32_t inspectorChanPort;
   xr::TrDeviceInit xrDeviceInit;
   uint64_t startedAt;
   /**
@@ -541,6 +557,12 @@ private: // xr fields
   unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;
+
+private: // inspector fields
+  TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
+  inspector_comm::TrInspectorCommandSender *inspectorChanSender = nullptr;
+  inspector_comm::TrInspectorReceiver *inspectorChanReceiver = nullptr;
+  unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;

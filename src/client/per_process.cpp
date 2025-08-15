@@ -394,6 +394,18 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     xrCommandChanReceiver = nullptr;
   }
 
+  // Clear for inspector
+  if (inspectorChanSender != nullptr)
+  {
+    delete inspectorChanSender;
+    inspectorChanSender = nullptr;
+  }
+  if (inspectorChanReceiver != nullptr)
+  {
+    delete inspectorChanReceiver;
+    inspectorChanReceiver = nullptr;
+  }
+
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
 }
@@ -506,6 +518,32 @@ void TrClientContextPerProcess::start()
     xrDeviceClient = client_xr::XRDeviceClient::Make(this);
   }
 
+  // Inspector command initialization
+  if (inspectorChanPort > 0)
+  {
+    inspectorChanClient = ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage>::MakeAndConnect(inspectorChanPort, false, id);
+    if (inspectorChanClient && inspectorChanClient->isConnected())
+    {
+      inspectorChanSender = new inspector_comm::TrInspectorCommandSender(inspectorChanClient);
+      inspectorChanReceiver = new inspector_comm::TrInspectorReceiver(inspectorChanClient);
+
+      // Create worker thread for processing inspector commands
+      auto onInspectorCommandWork = [this](WorkerThread &worker)
+      {
+        inspector_comm::TrInspectorCommandMessage incomingCommand;
+        if (inspectorChanReceiver->recvCommand(incomingCommand, 100))
+          onInspectorCommand(incomingCommand);
+      };
+      inspectorCommandWorker = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
+
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) inspector channel connected successfully", id);
+    }
+    else
+    {
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to inspector channel", id);
+    }
+  }
+
   // Initialize the built-in scene
   builtinScene = builtin_scene::Scene::Make(this);
   if (builtinScene != nullptr)
@@ -539,6 +577,7 @@ void TrClientContextPerProcess::print()
   fprintf(stdout, "ClientContext(%d) eventChanPort=%d\n", id, eventChanPort);
   fprintf(stdout, "ClientContext(%d) mediaChanPort=%d\n", id, mediaChanPort);
   fprintf(stdout, "ClientContext(%d) commandBufferChanPort=%d\n", id, commandBufferChanPort);
+  fprintf(stdout, "ClientContext(%d) inspectorChanPort=%d\n", id, inspectorChanPort);
 
   if (xrDeviceInit.enabled == true)
   {
@@ -770,5 +809,45 @@ void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMes
   else
   {
     fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
+  }
+}
+
+bool TrClientContextPerProcess::sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response)
+{
+  assert(inspectorChanSender != nullptr);
+  return inspectorChanSender->sendCommand(response);
+}
+
+void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage)
+{
+  auto messageType = commandMessage.getType();
+
+  if (messageType == inspector_comm::TrInspectorCommandType::CdpRequest)
+  {
+    auto cdpRequest = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpRequest>(commandMessage);
+
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received CDP request %u: %s", id, cdpRequest.requestId, cdpRequest.cdpMessageJson.c_str());
+
+    // For now, we'll handle basic CDP requests directly in the content process.
+    // In a full implementation, this would delegate to appropriate domain handlers.
+
+    // Create a simple success response for now
+    std::string responseJson = "{\"id\":" + std::to_string(cdpRequest.requestId) + ",\"result\":{}}";
+
+    // Send response back to host process
+    inspector_comm::TrCdpResponse cdpResponse(cdpRequest.requestId, cdpRequest.contentId, responseJson);
+
+    if (sendInspectorResponse(cdpResponse))
+    {
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) sent CDP response %u successfully", id, cdpRequest.requestId);
+    }
+    else
+    {
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send CDP response %u", id, cdpRequest.requestId);
+    }
+  }
+  else
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received unknown inspector command type: %d", id, static_cast<int>(messageType));
   }
 }

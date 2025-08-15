@@ -8,6 +8,8 @@
 #include "./constellation.hpp"
 #include "./inspector/inspector_server.hpp"
 #include "./inspector/inspector_client.hpp"
+#include "common/ipc.hpp"
+#include "common/inspector/message.hpp"
 
 class TrInspector final : public std::enable_shared_from_this<TrInspector>
 {
@@ -25,6 +27,9 @@ public:
   void tick();
   bool canAcceptWebSocketConnection();
   void onMessage(TrInspectorClient &client, const string &message);
+
+  // Get the inspector command channel port
+  int getInspectorCommandChanPort() const;
 
 private:
   void onRequest(TrInspectorClient &);
@@ -50,4 +55,5 @@ public:
 
 private:
   std::unique_ptr<TrInspectorServer> server_;
+  std::unique_ptr<ipc::TrOneShotServer<inspector_comm::TrInspectorCommandMessage>> inspectorCommandChanServer_;
 };

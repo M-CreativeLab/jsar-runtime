@@ -31,6 +31,7 @@ void TrHiveDaemon::start()
   assert(eventChanPort != 0);
   assert(mediaChanPort != 0);
   assert(commandBufferChanPort != 0);
+  assert(inspectorChanPort != 0);
 
   if (pipe(childPipes) == -1)
   {
@@ -144,6 +145,7 @@ void TrHiveDaemon::onDeamonProcess()
   hiveConfig.AddMember("eventChanPort", eventChanPort, allocator);
   hiveConfig.AddMember("mediaChanPort", mediaChanPort, allocator);
   hiveConfig.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
+  hiveConfig.AddMember("inspectorChanPort", inspectorChanPort, allocator);
 
   // Global settings
   auto &options = constellation->getOptions();

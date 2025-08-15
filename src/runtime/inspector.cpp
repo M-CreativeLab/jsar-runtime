@@ -21,7 +21,8 @@ using namespace std::placeholders;
 void TrInspector::initialize()
 {
   server_ = make_unique<TrInspectorServer>(shared_from_this());
-  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized");
+  inspectorCommandChanServer_ = make_unique<ipc::TrOneShotServer<inspector_comm::TrInspectorCommandMessage>>("InspectorCommandChan");
+  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with command channel port: %d", getInspectorCommandChanPort());
 }
 
 void TrInspector::tick()
@@ -393,4 +394,11 @@ void TrInspector::onClientConnected(TrInspectorClient &client)
 void TrInspector::onClientDisconnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
+}
+
+int TrInspector::getInspectorCommandChanPort() const
+{
+  if (inspectorCommandChanServer_ == nullptr)
+    return 0;
+  return inspectorCommandChanServer_->getPort();
 }

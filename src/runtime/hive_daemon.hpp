@@ -129,6 +129,10 @@ public: // fields to share for hived
    * The channel port for the `CommandBuffer` channel.
    */
   int commandBufferChanPort;
+  /**
+   * The channel port for the `Inspector` channel.
+   */
+  int inspectorChanPort;
 
 private:
   TrConstellation *constellation = nullptr;
