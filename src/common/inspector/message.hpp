@@ -96,7 +96,6 @@ namespace inspector_comm
         : TrInspectorCommandBase(that.type, that.size)
         , requestId(that.requestId)
         , contentId(that.contentId)
-        , cdpMessageJson(that.cdpMessageJson)
     {
     }
     TrCdpRequest(uint32_t requestId, uint32_t contentId, const std::string &cdpMessageJson)
@@ -135,7 +134,6 @@ namespace inspector_comm
         : TrInspectorCommandBase(that.type, that.size)
         , requestId(that.requestId)
         , contentId(that.contentId)
-        , cdpResponseJson(that.cdpResponseJson)
     {
     }
     TrCdpResponse(uint32_t requestId, uint32_t contentId, const std::string &cdpResponseJson)
@@ -173,7 +171,6 @@ namespace inspector_comm
     TrCdpEvent(TrCdpEvent &that)
         : TrInspectorCommandBase(that.type, that.size)
         , contentId(that.contentId)
-        , cdpEventJson(that.cdpEventJson)
     {
     }
     TrCdpEvent(uint32_t contentId, const std::string &cdpEventJson)

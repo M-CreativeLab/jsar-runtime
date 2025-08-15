@@ -825,11 +825,9 @@ bool TrClientContextPerProcess::sendInspectorResponse(inspector_comm::TrInspecto
 void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage)
 {
   auto messageType = commandMessage.getType();
-
   if (messageType == inspector_comm::TrInspectorCommandType::CdpRequest)
   {
     auto cdpRequest = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpRequest>(commandMessage);
-
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received CDP request %u: %s", id, cdpRequest.requestId, cdpRequest.cdpMessageJson.c_str());
 
     // Use the ContentCdpHandler to process the request and get domain/method
