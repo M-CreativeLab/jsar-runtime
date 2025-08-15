@@ -35,6 +35,7 @@ private:
   std::string name_;
 };
 
+using GLTextureUnit = GLenum;
 class GLTextureBinding
 {
 public:
@@ -63,17 +64,106 @@ public:
     return texture_;
   }
 
+  inline void bind()
+  {
+    glBindTexture(target_, texture_);
+  }
+
   // Bind this texture to the specified texture unit.
   // The `unit` should be one of the GL_TEXTURE0, GL_TEXTURE1, ..., GL_TEXTURE31.
   inline void bindTo(GLenum unit)
   {
     glActiveTexture(unit);
-    glBindTexture(target_, texture_);
+    bind();
   }
 
 private:
   GLenum target_;
   GLuint texture_;
+};
+
+class GLTextureUnitBinding
+{
+public:
+  GLTextureUnitBinding()
+      : texture2d_binding_(std::nullopt)
+      , texture2d_array_binding_(std::nullopt)
+      , texture3d_binding_(std::nullopt)
+  {
+  }
+
+  void setBinding(GLenum target, GLuint texture, bool unbind = false)
+  {
+    bool recorded = false;
+    if (target == GL_TEXTURE_2D)
+    {
+      texture2d_binding_.emplace(target, texture);
+      recorded = true;
+    }
+    else if (target == GL_TEXTURE_2D_ARRAY)
+    {
+      texture2d_array_binding_.emplace(target, texture);
+      recorded = true;
+    }
+    else if (target == GL_TEXTURE_3D)
+    {
+      texture3d_binding_.emplace(target, texture);
+      recorded = true;
+    }
+    else if (target == GL_TEXTURE_CUBE_MAP)
+    {
+      texture_cube_map_binding_.emplace(target, texture);
+      recorded = true;
+    }
+    else
+    {
+      DEBUG(LOG_TAG_ERROR, "Unsupported texture target: %d", target);
+    }
+
+    // Unbind the texture after having recorded it to avoid the side effects for the next binding.
+    if (recorded && unbind)
+    {
+      glBindTexture(target, 0);
+    }
+  }
+
+  std::optional<GLTextureBinding> getBinding(GLenum target) const
+  {
+    if (target == GL_TEXTURE_2D)
+      return texture2d_binding_;
+    else if (target == GL_TEXTURE_2D_ARRAY)
+      return texture2d_array_binding_;
+    else if (target == GL_TEXTURE_3D)
+      return texture3d_binding_;
+    else if (target == GL_TEXTURE_CUBE_MAP)
+      return texture_cube_map_binding_;
+    else
+      DEBUG(LOG_TAG_ERROR, "Unsupported texture target: %d", target);
+    return std::nullopt;
+  }
+
+  void bindTo(GLenum unit)
+  {
+    glActiveTexture(unit);
+    texture2d_binding_.has_value()
+      ? texture2d_binding_->bind()
+      : glBindTexture(GL_TEXTURE_2D, 0);
+    texture2d_array_binding_.has_value()
+      ? texture2d_array_binding_->bind()
+      : glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    texture3d_binding_.has_value()
+      ? texture3d_binding_->bind()
+      : glBindTexture(GL_TEXTURE_3D, 0);
+    texture_cube_map_binding_.has_value()
+      ? texture_cube_map_binding_->bind()
+      : glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+  }
+
+private:
+  std::optional<GLTextureBinding> texture2d_binding_;
+  std::optional<GLTextureBinding> texture2d_array_binding_;
+  std::optional<GLTextureBinding> texture3d_binding_;
+  std::optional<GLTextureBinding> texture_cube_map_binding_;
 };
 
 class OpenGLBlendingFunc
@@ -405,8 +495,8 @@ protected: /** OpenGLES objects */
   std::optional<GLuint> m_FramebufferId;
   std::optional<GLuint> m_RenderbufferId;
   GLint m_VertexArrayObjectId = 0;
-  GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
-  std::unordered_map<GLenum, GLTextureBinding> m_TextureBindings;
+  GLTextureUnit m_LastActiveTextureUnit = GL_TEXTURE0;
+  std::unordered_map<GLTextureUnit, GLTextureUnitBinding> m_TextureBindings;
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>
