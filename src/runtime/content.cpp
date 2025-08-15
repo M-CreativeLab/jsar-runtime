@@ -377,12 +377,11 @@ bool TrContentRuntime::recvInspectorCommand(int timeout)
   if (TR_UNLIKELY(inspectorCommandChanReceiver == nullptr))
     return false;
 
-  auto message = inspectorCommandChanReceiver->recvCommandMessage(timeout);
-  if (message != nullptr)
+  inspector_comm::TrInspectorCommandMessage message;
+  if (inspectorCommandChanReceiver->recvCommand(message, timeout))
   {
     // Handle incoming inspector command message
-    handleInspectorCommandMessage(*message);
-    delete message;
+    handleInspectorCommandMessage(message);
     return true;
   }
   else

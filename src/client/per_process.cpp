@@ -528,12 +528,11 @@ void TrClientContextPerProcess::start()
       // Create worker thread for processing inspector commands
       auto onInspectorCommandWork = [this](WorkerThread &worker)
       {
-        auto incomingCommand = inspectorChanReceiver->recvCommandMessage(100);
-        if (incomingCommand != nullptr)
+        inspector_comm::TrInspectorCommandMessage incomingCommand;
+        if (inspectorChanReceiver->recvCommand(incomingCommand, 100))
         {
-          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received inspector command type: %d", id, static_cast<int>(incomingCommand->getType()));
-          onInspectorCommand(*incomingCommand);
-          delete incomingCommand;
+          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received inspector command type: %d", id, static_cast<int>(incomingCommand.getType()));
+          onInspectorCommand(incomingCommand);
         }
       };
       inspectorCommandWorker = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
