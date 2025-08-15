@@ -4,11 +4,28 @@
 #include <functional>
 
 #include "./network_monitor.hpp"
-#include "./network_events.hpp"
 #include "./constellation.hpp"
 
 namespace runtime
 {
+  /**
+   * @enum NetworkEventType
+   * Types of network-related events that can be dispatched.
+   */
+  enum class NetworkEventType
+  {
+    Online, // Network connectivity is available
+    Offline // Network connectivity is lost
+  };
+
+  /**
+   * @class NetworkEventCallback
+   * Simple callback interface for network status changes.
+   */
+  using NetworkEventCallback = std::function<void(NetworkEventType eventType,
+                                                  NetworkStatus status,
+                                                  const std::string &timestamp)>;
+
   /**
    * @class NetworkService
    *
@@ -49,17 +66,6 @@ namespace runtime
     NetworkStatus getCurrentStatus() const;
 
     /**
-     * Register a callback for network events.
-     * @param callback Function to call when network status changes
-     */
-    void registerEventCallback(NetworkEventCallback callback);
-
-    /**
-     * Unregister the network event callback.
-     */
-    void unregisterEventCallback();
-
-    /**
      * Enable manual network status control.
      * When enabled, the automatic monitoring is disabled and network status
      * must be set manually using setNetworkStatus().
@@ -90,7 +96,7 @@ namespace runtime
   private:
     TrConstellation *constellation_;
     std::shared_ptr<NetworkMonitor> monitor_;
-    NetworkEventDispatcher eventDispatcher_;
+
     bool isRunning_ = false;
     bool manualMode_ = false;
     NetworkStatus lastKnownStatus_ = NetworkStatus::Offline;

@@ -3,6 +3,8 @@
 
 namespace runtime
 {
+  using namespace std;
+
   NetworkService::NetworkService(TrConstellation *constellation)
       : constellation_(constellation)
   {
@@ -70,16 +72,6 @@ namespace runtime
     return NetworkStatus::Offline;
   }
 
-  void NetworkService::registerEventCallback(NetworkEventCallback callback)
-  {
-    eventDispatcher_.registerCallback(callback);
-  }
-
-  void NetworkService::unregisterEventCallback()
-  {
-    eventDispatcher_.unregisterCallback();
-  }
-
   void NetworkService::onNetworkStatusChanged(NetworkStatus status)
   {
     // Only dispatch events if the status actually changed
@@ -88,7 +80,7 @@ namespace runtime
       lastKnownStatus_ = status;
 
       // Dispatch the network event
-      eventDispatcher_.dispatchFromNetworkStatus(status);
+      // TODO(yorkie): dispatch to contents
 
       // Log the network status change for debugging
       const char *statusStr = (status == NetworkStatus::Online) ? "online" : "offline";
@@ -114,7 +106,7 @@ namespace runtime
         {
           monitor_->stopMonitoring();
         }
-        std::cout << "[NetworkService] Switched to manual network monitoring mode" << std::endl;
+        cout << "[NetworkService] Switched to manual network monitoring mode" << endl;
       }
       else
       {
@@ -127,7 +119,7 @@ namespace runtime
           };
           monitor_->startMonitoring(statusCallback);
         }
-        std::cout << "[NetworkService] Switched to automatic network monitoring mode" << std::endl;
+        cout << "[NetworkService] Switched to automatic network monitoring mode" << endl;
       }
     }
   }
