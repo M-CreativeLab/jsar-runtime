@@ -92,7 +92,7 @@ public:
   {
   }
 
-  void setBinding(GLenum target, GLuint texture, bool unbind = false)
+  void setBinding(GLenum target, GLuint texture, bool unbind_after_record = false)
   {
     bool recorded = false;
     if (target == GL_TEXTURE_2D)
@@ -121,7 +121,7 @@ public:
     }
 
     // Unbind the texture after having recorded it to avoid the side effects for the next binding.
-    if (recorded && unbind)
+    if (recorded && unbind_after_record)
     {
       glBindTexture(target, 0);
     }
