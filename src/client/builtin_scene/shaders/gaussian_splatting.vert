@@ -18,7 +18,11 @@ uniform float focalAdjustment;
 uniform float maxDistance;
 
 // Compressed splat data texture (single layer per splat)
+#ifdef __ANDROID__
+uniform usampler2D compressedSplats;
+#else
 uniform sampler2D compressedSplats;
+#endif
 
 // Scale normalization uniforms (position uses half-floats, no normalization needed)
 uniform vec3 scaleMin;
@@ -270,15 +274,21 @@ void main()
   // Get texture coordinate using efficient bit operations
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
-  // Fetch compressed splat data from texture2D (1 texel per splat)
+  // Fetch compressed splat data from texture (1 texel per splat)
   // word0: pos.xy as half-floats, word1: pos.z + quat upper 16, word2: quat lower 8 + scale, word3: color
+#ifdef __ANDROID__
+  uvec4 texel = texelFetch(compressedSplats, texCoord, 0);
+  uint word0 = texel.x;
+  uint word1 = texel.y;
+  uint word2 = texel.z;
+  uint word3 = texel.w;
+#else
   vec4 texel = texelFetch(compressedSplats, texCoord, 0);
-
-  // Extract uint words once to avoid duplicate floatBitsToUint calls
   uint word0 = floatBitsToUint(texel.x);
   uint word1 = floatBitsToUint(texel.y);
   uint word2 = floatBitsToUint(texel.z);
   uint word3 = floatBitsToUint(texel.w);
+#endif
 
   // Decompress splat data using new format
   vec4 rgba = decompressColor(word3);
