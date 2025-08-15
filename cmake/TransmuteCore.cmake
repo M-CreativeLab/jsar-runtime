@@ -53,7 +53,10 @@ endif()
 if(APPLE)
     set(APPLE_RENDERER_DEPS
         "-framework Foundation"
+        "-framework Carbon"
         "-framework CoreFoundation"
+        "-framework CoreAudio"
+        "-framework AudioToolbox"
         "-framework OpenGL"
         "-framework Metal"
         # The followings are required by surfman(rust).
@@ -73,40 +76,6 @@ elseif (ANDROID)
     endif()
 endif()
 
-# LabSound libraries requirements
-# See https://github.com/LabSound/LabSound/blob/main/cmake/examples.cmake
-if (WIN32)
-    if(MSVC)
-        # Arch AVX is problematic for many users, so disable it until
-        # some reasonable strategy (a separate AVX target?) is determined
-        #target_compile_options(${proj} PRIVATE /arch:AVX /Zi)
-        target_compile_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE /Zi)
-    endif(MSVC)
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE __WINDOWS_WASAPI__=1)
-    # TODO: These vars are for libniquist and should be set in the find libynquist script.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SINF=1)
-elseif (APPLE)
-    set(DARWIN_LABSOUND_DEPS
-        "-framework AudioToolbox"
-        "-framework AudioUnit"
-        "-framework Accelerate"
-        "-framework CoreAudio"
-        "-framework Cocoa"
-    )
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${DARWIN_LABSOUND_DEPS})
-elseif (WIN32)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE dsound.lib dxguid.lib winmm.lib)
-elseif (ANDROID)
-    # TODO: These vars are for libnyquist and should be set in the find libynquist script.
-    # TODO: libnyquist's loadabc calls getenv and setenv. That's undesirable.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SETENV=1 HAVE_SINF=1)
-endif()
-
-# Link to the LabSound library
-tr_target_link_labsound_library(TransmuteCore LabSound)
-tr_target_link_labsound_library(TransmuteCore samplerate)
-tr_target_link_labsound_library(TransmuteCore libnyquist)
-
 if (WIN32)
     foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
         file(RELATIVE_PATH source_rel ${CMAKE_CURRENT_LIST_DIR} ${source})
@@ -122,9 +91,16 @@ tr_target_install(TransmuteCore)
 
 # Add examples
 # TODO: move to a separate TransmuteExample.cmake?
-function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
+function(tr_add_example EXECUTABLE_NAME)
     find_package(ZLIB REQUIRED) # Search for ZLIB
-    add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
+
+    file(GLOB TR_EXAMPLES_SOURCE "src/examples/*.cpp")
+    if(APPLE)
+        file(GLOB TR_EXAMPLES_SOURCE_MM "src/examples/*.mm")
+        list(APPEND TR_EXAMPLES_SOURCE ${TR_EXAMPLES_SOURCE_MM})
+    endif()
+    add_executable(${EXECUTABLE_NAME} ${TR_EXAMPLES_SOURCE})
+
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE ZLIB::ZLIB)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore)
@@ -155,5 +131,5 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
 endfunction()
 
 if (APPLE)
-    tr_add_example(jsar_desktop_opengl "src/examples/desktop_opengl.cpp")
+    tr_add_example(transmute_browser)
 endif()

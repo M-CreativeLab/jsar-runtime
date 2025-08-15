@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <chrono>
 #include <client/animation/animatable.hpp>
 #include <client/animation/animation.hpp>
 #include <client/animation/animation_timeline.hpp>
@@ -29,9 +30,12 @@
   XX("div", HTMLDivElement)           \
   XX("head", HTMLHeadElement)         \
   XX("html", HTMLHtmlElement)         \
+  XX("iframe", HTMLIframeElement)     \
   XX("img", HTMLImageElement)         \
+  XX("input", HTMLInputElement)       \
   XX("link", HTMLLinkElement)         \
   XX("meta", HTMLMetaElement)         \
+  XX("model", HTMLModelElement)       \
   XX("h1", HTMLHeadingElement)        \
   XX("h2", HTMLHeadingElement)        \
   XX("h3", HTMLHeadingElement)        \
@@ -68,6 +72,7 @@ namespace dom
   {
     friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
+    friend class client_layout::LayoutObject;
 
   public:
     /**
@@ -125,7 +130,7 @@ namespace dom
     {
       after(std::vector<std::shared_ptr<Node>>{node});
     }
-    std::string getAttribute(const std::string &name) const;
+    std::string getAttribute(const std::string &name, const std::string &defaultValue = "") const;
     std::vector<std::string> getAttributeNames() const;
     std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
     Attr &getAttributeNodeChecked(const std::string &name) const;
@@ -286,6 +291,10 @@ namespace dom
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
+    /**
+     * When the element's layout size is changed, this is called when the layout box size(width, height) is changed.
+     */
+    virtual void layoutSizeChangedCallback(const client_layout::Fragment &);
 
   protected:
     // Initialize the CSS boxes of the element.
@@ -321,6 +330,7 @@ namespace dom
   private:
     bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
     bool setActionState(bool &state, bool value);
+    bool shouldThrottleScrollEvent() const;
 
   public:
     std::string id;
@@ -364,5 +374,9 @@ namespace dom
     bool is_hovered_ = false;
     bool is_focused_ = false;
     bool is_active_ = false;
+
+    // Scroll performance optimization
+    std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // ~60fps throttling
   };
 }

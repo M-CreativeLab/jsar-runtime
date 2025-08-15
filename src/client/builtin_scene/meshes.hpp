@@ -8,14 +8,19 @@
 #include "./ecs.hpp"
 #include "./mesh_base.hpp"
 #include "./mesh_material.hpp"
-#include "./instanced_mesh.hpp"
 #include "./meshes/builder.hpp"
 #include "./meshes/box.hpp"
 #include "./meshes/plane.hpp"
 #include "./meshes/sphere.hpp"
+#include "./meshes/splat.hpp"
+#include "./instanced_mesh.hpp"
+#include "./gaussian_splats_mesh.hpp"
 
 namespace builtin_scene
 {
+  // Forward declaration
+  class GaussianSplatsMesh;
+
   class Meshes : public asset::Assets<Mesh>
   {
   public:
@@ -24,7 +29,6 @@ namespace builtin_scene
 
   class Mesh3d : public ecs::Component
   {
-  public:
     using ecs::Component::Component;
 
   public:
@@ -49,8 +53,10 @@ namespace builtin_scene
      * @returns If the mesh's handle is the given type.
      */
     template <typename MeshType>
-      requires std::is_base_of<Mesh, MeshType>::value
-    inline bool is() const
+      requires std::is_same<InstancedMeshBase, MeshType>::value ||
+               std::is_same<Mesh, MeshType>::value ||
+               std::is_base_of<Mesh, MeshType>::value
+    bool is() const
     {
       return std::dynamic_pointer_cast<MeshType>(handle_) != nullptr;
     }
@@ -59,7 +65,7 @@ namespace builtin_scene
      */
     inline bool isInstancedMesh() const
     {
-      return std::dynamic_pointer_cast<InstancedMeshBase>(handle_) != nullptr;
+      return is<InstancedMeshBase>() || is<GaussianSplatsMesh>();
     }
     /**
      * Get the handle of the mesh as the given type.
@@ -92,8 +98,7 @@ namespace builtin_scene
     MeshType &getHandleCheckedAsRef() const
     {
       auto mesh = getHandleAs<MeshType>();
-      if (mesh == nullptr)
-        throw std::runtime_error("The mesh is not valid.");
+      assert(mesh != nullptr && "The mesh handle is not valid.");
       return *mesh;
     }
     /**
@@ -111,6 +116,13 @@ namespace builtin_scene
       return vbo_;
     }
     /**
+     * @returns The element buffer object.
+     */
+    inline std::shared_ptr<client_graphics::WebGLBuffer> elementBufferObject() const
+    {
+      return ebo_;
+    }
+    /**
      * Set if the mesh3d is initialized.
      *
      * @param glContext The WebGL context.
@@ -119,20 +131,24 @@ namespace builtin_scene
      */
     inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                            std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                           std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+                           std::shared_ptr<client_graphics::WebGLBuffer> vbo,
+                           std::shared_ptr<client_graphics::WebGLBuffer> ebo)
     {
       if (vao == nullptr)
         throw std::runtime_error("The vertex array object is not initialized.");
 
       vao_ = vao;
       vbo_ = vbo;
+      ebo_ = ebo;
       glContext_ = glContext;
       initialized_ = true;
+
+      handle_->onMesh3dInitialized(*this, glContext);
     }
     /**
      * @returns If the mesh3d is initialized.
      */
-    inline bool initialized()
+    inline bool initialized() const
     {
       return initialized_;
     }
@@ -216,6 +232,7 @@ namespace builtin_scene
     std::shared_ptr<Mesh> handle_ = nullptr;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
     std::shared_ptr<client_graphics::WebGLBuffer> vbo_;
+    std::shared_ptr<client_graphics::WebGLBuffer> ebo_;
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
     bool disableRendering_ = true;
@@ -294,6 +311,12 @@ namespace builtin_scene
     {
       return CreateAndBuild<meshes::UvSphere>(radius, sectors, stacks);
     }
+
+    /**
+     * Create a GaussianSplatsMesh for rendering Gaussian splats.
+     * This is a global mesh that manages all splats across the scene.
+     */
+    static std::shared_ptr<GaussianSplatsMesh> CreateGaussianSplatsMesh();
 
   private:
     /**

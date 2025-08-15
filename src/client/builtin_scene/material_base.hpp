@@ -9,6 +9,8 @@
 
 #include "./asset.hpp"
 #include "./shader_base.hpp"
+#include "./renderer/render_pass.hpp"
+#include "./renderer/render_target.hpp"
 
 namespace builtin_scene
 {
@@ -64,6 +66,10 @@ namespace builtin_scene
     Material()
     {
     }
+    Material(bool isOpaque)
+        : isOpaque_(isOpaque)
+    {
+    }
     virtual ~Material() = default;
 
   public:
@@ -103,24 +109,21 @@ namespace builtin_scene
      * @returns Whether the material is initialized successfully.
      */
     virtual bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                            std::shared_ptr<client_graphics::WebGLProgram> program)
-    {
-      if (TR_UNLIKELY(glContext == nullptr || program == nullptr))
-        return false;
-      glContext_ = glContext;
-      return true;
-    }
+                            std::shared_ptr<client_graphics::WebGLProgram> program);
+
     /**
-     * Called before drawing the mesh with the material.
+     * Custom drawing implementation for materials that need special rendering logic.
+     * Return true if the material handled the drawing, false to use default drawing.
      */
+    virtual void drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
+                              const Mesh3d &mesh,
+                              RenderPass renderPass,
+                              std::optional<XRRenderTarget> renderTarget);
+
     virtual void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                  std::shared_ptr<Mesh3d> mesh)
-    {
-    }
+                                  std::shared_ptr<Mesh3d> mesh);
     virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                 std::shared_ptr<Mesh3d> mesh)
-    {
-    }
+                                 std::shared_ptr<Mesh3d> mesh);
 
   public:
     /**

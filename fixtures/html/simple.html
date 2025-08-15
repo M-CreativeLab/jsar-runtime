@@ -14,12 +14,12 @@
     img.float-image {
       border-bottom-right-radius: 50px;
       height: 300px;
-      transform: translate3d(0, 0, 35px);
+      transform: translate3d(0, 0, 0);
       transition: transform 0.3s ease-in-out;
     }
 
     img.float-image:hover {
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 35px);
     }
 
     #header {
@@ -29,13 +29,13 @@
       font-weight: 1000;
       padding: 0 20px;
       margin: 20px;
-      border: 15px solid #e8b51cd8;
+      border: 15px solid #e84c1cd8;
       background-color: #ca8319d8;
       background-clip: text;
       background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
       background-blend-mode: luminosity;
       background-origin: content-box;
-      border-radius: 5px;
+      border-radius: 12px;
       box-sizing: border-box;
       transform: translate3d(0, 0, 15px);
     }
@@ -45,7 +45,7 @@
       flex-direction: column;
       padding: 20px;
       margin: 40px 20px;
-      background-color: rgba(224, 172, 150, 0.224);
+      background-color: rgba(224, 172, 150, 0.594);
     }
 
     main:hover {
@@ -55,7 +55,7 @@
     p {
       width: 100%;
       font-size: 30px;
-      font-weight: bold;
+      font-weight: normal;
       padding: 20px;
       box-sizing: border-box;
     }
@@ -83,7 +83,8 @@
 
     #stereo-image {
       margin: 20px auto;
-      width: 65vw;
+      height: 500px;
+      border-radius: 0 20px 20px 0;
     }
   </style>
   <script>

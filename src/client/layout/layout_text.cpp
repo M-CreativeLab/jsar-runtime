@@ -15,6 +15,7 @@ namespace client_layout
   using namespace builtin_scene;
   using namespace skia::textlayout;
 
+
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
       : LayoutObject(textNode)
       , plain_text_(nullopt)
@@ -102,6 +103,7 @@ namespace client_layout
     auto updateText = [this](Scene &scene)
     {
       bool shouldUpdateContent = false;
+
       auto textComponent = scene.getComponent<Text2d>(entity());
       if (textComponent != nullptr)
       {
@@ -112,7 +114,7 @@ namespace client_layout
       if (shouldUpdateContent)
       {
         auto &webContentComponent = scene.getComponentChecked<WebContent>(entity());
-        webContentComponent.setDirty(true);
+        webContentComponent.setContentDirty(true);
       }
     };
     useSceneWithCallback(updateText);
@@ -169,6 +171,13 @@ namespace client_layout
 
     // Update the text content if the text is empty.
     formattingContext().setIsEmpty(isEmptyText());
+  }
+
+  void LayoutText::styleDidChange()
+  {
+    LayoutObject::styleDidChange();
+
+    updateLayer(false);
   }
 
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)

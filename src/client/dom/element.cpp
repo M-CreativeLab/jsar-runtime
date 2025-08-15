@@ -275,6 +275,10 @@ namespace dom
     }
   }
 
+  void Element::layoutSizeChangedCallback(const client_layout::Fragment &)
+  {
+  }
+
   void Element::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
@@ -290,7 +294,14 @@ namespace dom
           parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
       }
       principalBox_ = layoutView.createBox(currentDisplayStr_, getPtr<Element>(), parentBlock);
-      boxes_ = {principalBox_};
+      if (principalBox_ != nullptr)
+      {
+        boxes_ = {principalBox_};
+      }
+      else
+      {
+        boxes_.clear();
+      }
     }
   }
 
@@ -318,10 +329,22 @@ namespace dom
 
       layoutView.removeObject(principalBox_); // Remove the old box.
       principalBox_ = newPrincipalBox;
-      boxes_ = {principalBox_};
+      if (principalBox_ != nullptr)
+      {
+        boxes_ = {principalBox_};
+      }
+      else
+      {
+        // Parent is a replaced element, don't create layout box for this element
+        boxes_.clear();
+      }
     }
-    assert(principalBox_ != nullptr &&
-           "The principal box is not set when reinitializing CSS boxes.");
+    // Only assert if we expect a principal box (when parent is not a replaced element)
+    if (principalBox_ == nullptr)
+    {
+      // Element is a child of a replaced element, skip further initialization
+      return;
+    }
 
     // Skip the following steps to create child boxes if the principal box is a none box.
     if (principalBox_->isNone())
@@ -427,13 +450,13 @@ namespace dom
     after(getOwnerDocumentChecked().createTextNode(text));
   }
 
-  string Element::getAttribute(const string &name) const
+  string Element::getAttribute(const string &name, const std::string &defaultValue) const
   {
     auto it = attributeNodes_.find(name);
     if (it != attributeNodes_.end())
       return it->second->value;
     else
-      return "";
+      return defaultValue;
   }
 
   vector<string> Element::getAttributeNames() const
@@ -588,7 +611,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -602,7 +631,13 @@ namespace dom
 
     glm::vec3 offset = glm::vec3(options.left, options.top, 0);
     dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
@@ -756,7 +791,13 @@ namespace dom
       return;
 
     layoutBox->scrollBy(offset);
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // Throttle scroll events for better performance
+    if (!shouldThrottleScrollEvent())
+    {
+      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    }
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -771,6 +812,12 @@ namespace dom
     {
       return false;
     }
+  }
+
+  bool Element::shouldThrottleScrollEvent() const
+  {
+    auto now = std::chrono::steady_clock::now();
+    return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 
   bool Element::recalcStyleDirectly(const client_cssom::ComputedStyle &new_computed_style)

@@ -40,7 +40,7 @@ namespace client_layout
     auto markAsDirty = [this](Scene &scene)
     {
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-      webContent.setDirty(true);
+      webContent.setContentDirty(true);
     };
     useSceneWithCallback(markAsDirty);
   }

@@ -1,7 +1,5 @@
 #include <optional>
 #include <client/builtin_scene/scene.hpp>
-#include <client/dom/node.hpp>
-#include <client/html/html_image_element.hpp>
 
 #include "./layout_image.hpp"
 #include "./layout_view.hpp"
@@ -15,9 +13,8 @@ namespace client_layout
 
   bool LayoutImage::adjustImageSize()
   {
-    const auto &imageElement = dom::Node::AsChecked<const dom::HTMLImageElement>(node());
-    const auto &adoptedStyle = imageElement.adoptedStyleRef();
-    const auto srcImageRect = imageElement.getImageClientRect();
+    const auto &adoptedStyle = imageElement().adoptedStyleRef();
+    const auto srcImageRect = imageElement().getImageClientRect();
     const auto lastFragment = fragment();
 
     // Not adjusting the size if the image source is not loaded yet.
@@ -74,7 +71,7 @@ namespace client_layout
     return false;
   }
 
-  void LayoutImage::setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap)
+  void LayoutImage::setImageBitmap(shared_ptr<SkBitmap> srcBitmap)
   {
     adjustImageSize();
 
@@ -89,7 +86,7 @@ namespace client_layout
 
       WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
       webContent.setSpatialized(imageElement.isSpatial());
-      webContent.setDirty(true); // Mark the content as dirty to update the texture.
+      webContent.setContentDirty(true); // Mark the content as dirty to update the texture.
     };
     useSceneWithCallback(setBitmap);
   }
@@ -145,10 +142,9 @@ namespace client_layout
     setVisible(shouldVisible);
   }
 
-  void LayoutImage::sizeDidChange()
+  void LayoutImage::sizeDidChange(const Fragment &newSize)
   {
-    LayoutReplaced::sizeDidChange();
-
+    LayoutReplaced::sizeDidChange(newSize);
     adjustImageSize();
   }
 
@@ -173,7 +169,7 @@ namespace client_layout
       auto markContentDirty = [this](Scene &scene)
       {
         WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
-        webContent.setDirty(true);
+        webContent.setContentDirty(true);
       };
       useSceneWithCallback(markContentDirty);
     }

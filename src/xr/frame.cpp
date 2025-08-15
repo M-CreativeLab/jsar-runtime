@@ -5,6 +5,8 @@
 
 namespace xr
 {
+  using namespace std;
+
   FrameContextBySessionId::FrameContextBySessionId(int sessionId)
       : m_SessionId(sessionId)
   {
@@ -66,7 +68,7 @@ namespace xr
     return nullptr;
   }
 
-  void DeviceFrame::iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback)
+  void DeviceFrame::iterateSessions(function<void(int, FrameContextBySessionId *)> callback)
   {
     for (auto &item : m_Sessions)
       callback(item.first, item.second);
@@ -190,17 +192,20 @@ namespace xr
     /**
      * TODO: support real computation graph.
      */
-    if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrix)
+    if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrix ||
+        placeholder == WebGLMatrixPlaceholderId::ProjectionMatrixForRightEye)
     {
       matrix = getProjectionMatrix(isRightHandedSystem);
     }
-    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix ||
+             placeholder == WebGLMatrixPlaceholderId::ViewMatrixForRightEye)
     {
       auto contentLocal = getLocalTransform(sessionId);
       auto originTransform = contentLocal * math::GetOriginMatrix();
       matrix = getViewMatrixWithOffset(originTransform, isRightHandedSystem);
     }
-    else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix ||
+             placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye)
     {
       auto contentLocal = getLocalTransform(sessionId);
       auto offsetTransform = contentLocal * math::GetOriginMatrix();
@@ -255,11 +260,21 @@ namespace xr
     {
       matrix = GetProjectionMat(projectionMatrixFloats, isRightHandedSystem);
     }
+    else if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrixForRightEye)
+    {
+      matrix = GetProjectionMat(m_ProjectionMatrixForRightEye, isRightHandedSystem);
+    }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto originTransform = contentLocal * math::GetOriginMatrix();
-      matrix = GetViewMatWithOffset(viewMatrixFloats, originTransform, isRightHandedSystem);
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
+      matrix = GetViewMatWithOffset(viewMatrixFloats, offsetTransform, isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrixForRightEye)
+    {
+      auto contentLocal = getLocalTransform(sessionId);
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
+      matrix = GetViewMatWithOffset(m_ViewMatrixForRightEye, offsetTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {
@@ -286,7 +301,7 @@ namespace xr
   {
     m_IsMultiPass = isMultiPass;
     m_StereoId = id;
-    m_CreatedTime = std::chrono::high_resolution_clock::now();
+    m_CreatedTime = chrono::high_resolution_clock::now();
   }
 
   StereoRenderingFrame::~StereoRenderingFrame()
@@ -409,7 +424,7 @@ namespace xr
     m_IsAddedOnce = true;
   }
 
-  std::vector<commandbuffers::TrCommandBufferBase *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
+  vector<commandbuffers::TrCommandBufferBase *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
   {
     if (passIndex == 0)
       return m_CommandBuffersInPass;

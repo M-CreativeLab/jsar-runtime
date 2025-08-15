@@ -10,8 +10,9 @@ namespace jsar::example
   class XRStereoscopicRenderer
   {
   public:
-    XRStereoscopicRenderer(WindowContext *windowCtx)
+    XRStereoscopicRenderer(WindowContext *windowCtx, bool monoMode = false)
         : windowCtx(windowCtx)
+        , monoMode(monoMode)
         , viewer_position_(0.0f, 0.0f, 0.35f)
     {
       float eyeOffset = XR_EYE_SPAN / 2;
@@ -19,15 +20,19 @@ namespace jsar::example
         glm::vec3 forward(0.0f, 0.0f, -1.0f);
         viewer_orientation_ = glm::quatLookAt(glm::normalize(forward), glm::vec3(0, 1, 0));
       }
-      eye_position_[0] = glm::vec3(viewer_position_.x - eyeOffset, viewer_position_.y, viewer_position_.z);
-      eye_position_[1] = glm::vec3(viewer_position_.x + eyeOffset, viewer_position_.y, viewer_position_.z);
+
+      if (!monoMode)
       {
-        glm::vec3 eyeForward(0.01f, 0.0f, -1.0f);
-        eye_orientation_[0] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
-      }
-      {
-        glm::vec3 eyeForward(-0.01f, 0.0f, -1.0f);
-        eye_orientation_[1] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
+        eye_position_[0] = glm::vec3(viewer_position_.x - eyeOffset, viewer_position_.y, viewer_position_.z);
+        eye_position_[1] = glm::vec3(viewer_position_.x + eyeOffset, viewer_position_.y, viewer_position_.z);
+        {
+          glm::vec3 eyeForward(0.01f, 0.0f, -1.0f);
+          eye_orientation_[0] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
+        }
+        {
+          glm::vec3 eyeForward(-0.01f, 0.0f, -1.0f);
+          eye_orientation_[1] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
+        }
       }
     }
     ~XRStereoscopicRenderer()
@@ -42,7 +47,13 @@ namespace jsar::example
     glm::vec3 eyePosition(int eyeIndex)
     {
       assert(eyeIndex < 2);
-      return eye_position_[eyeIndex];
+      return isMonoMode()
+               ? viewer_position_ // In mono mode, both eyes share the same position
+               : eye_position_[eyeIndex];
+    }
+    bool isMonoMode() const
+    {
+      return monoMode;
     }
 
     void initialize(std::shared_ptr<xr::Device> xrDevice)
@@ -65,14 +76,17 @@ namespace jsar::example
     glm::mat4 getViewMatrixForEye(int eyeIndex)
     {
       assert(eyeIndex < 2);
-      auto viewBaseMatrix =
-        glm::translate(glm::mat4(1.0f), eye_position_[eyeIndex]) * glm::mat4_cast(eye_orientation_[eyeIndex]);
+
+      auto eye_position = isMonoMode() ? viewer_position_ : eye_position_[eyeIndex];
+      auto eye_orientation = isMonoMode() ? viewer_orientation_ : eye_orientation_[eyeIndex];
+      auto viewBaseMatrix = glm::translate(glm::mat4(1.0f), eye_position) * glm::mat4_cast(eye_orientation);
       return glm::inverse(viewBaseMatrix);
     }
     glm::mat4 getProjectionMatrix()
     {
+      float aspectRatio = monoMode ? windowCtx->aspect : (windowCtx->aspect / 2);
       return glm::perspective(glm::radians(fov),
-                              windowCtx->aspect / 2, // aspect ratio for each eye
+                              aspectRatio,
                               near,
                               far);
     }
@@ -120,6 +134,7 @@ namespace jsar::example
 
   private:
     std::shared_ptr<xr::Device> xrDevice = nullptr;
+    bool monoMode = false;
     glm::vec3 viewer_position_;
     glm::quat viewer_orientation_;
     glm::vec3 eye_position_[2];

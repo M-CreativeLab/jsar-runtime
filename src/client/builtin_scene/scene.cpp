@@ -2,6 +2,7 @@
 
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
+#include "./gaussian_splatting.hpp"
 
 namespace builtin_scene
 {
@@ -24,6 +25,7 @@ namespace builtin_scene
       app.addResource(Resource::Make<Timer>(16));
       app.addResource(Resource::Make<Meshes>());
       app.addResource(Resource::Make<Materials>());
+      app.addResource(Resource::Make<GaussianSplattingContext>());
 
       // Components
       app.registerComponent<hierarchy::Element>();
@@ -35,17 +37,23 @@ namespace builtin_scene
       app.registerComponent<Camera>();
       app.registerComponent<Mesh3d>();
       app.registerComponent<MeshMaterial3d>();
+      app.registerComponent<RenderLayer>();
       app.registerComponent<Text2d>();
       app.registerComponent<Image2d>();
+      app.registerComponent<GaussianSplattingModel3d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
       app.addSystem(SchedulerLabel::kStartup, System::Make<RenderStartupSystem>());
+      app.addSystem(SchedulerLabel::kStartup, System::Make<gaussian_splatting::GaussianSplattingInitSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
+      auto updateSplats = System::Make<gaussian_splatting::GaussianSplatsUpdateSystem>();
       auto renderScene = System::Make<RenderSystem>();
-      updateCamera->chain(renderScene);
+      updateCamera
+        ->chain(updateSplats)
+        ->chain(renderScene);
       app.addSystem(SchedulerLabel::kUpdate, updateCamera);
     }
   };
@@ -56,6 +64,11 @@ namespace builtin_scene
       , glContext_(clientContext->createHostWebGLContext())
   {
     assert(glContext_ != nullptr);
+
+    // Set platform-specific global defines for all materials
+#ifdef __ANDROID__
+    Material::SetGlobalDefines("__ANDROID__");
+#endif
 
     frameCallback_ = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *env_)
     {
@@ -69,7 +82,7 @@ namespace builtin_scene
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
     addPlugin<WebXRPlugin>();
-    addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
+    addResource(ecs::Resource::Make<SceneRenderer>(glContext_, volumeSize_));
   }
 
   void Scene::bootstrap()
@@ -130,6 +143,7 @@ namespace builtin_scene
         hierarchy::Children(),
         hierarchy::Root(isRootRenderable),
         BoundingBox(),
+        RenderLayer(),
         defaultTransform);
     }
     else
@@ -153,6 +167,7 @@ namespace builtin_scene
         hierarchy::Children(),
         hierarchy::Parent(parentEntity, rootEntity),
         BoundingBox(),
+        RenderLayer(),
         defaultTransform);
 
       // Update the parent's children

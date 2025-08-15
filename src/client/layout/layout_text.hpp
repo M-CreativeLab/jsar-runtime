@@ -63,6 +63,7 @@ namespace client_layout
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
     void formattingContextDidSet(FormattingContext &) override;
     void styleWillChange(client_cssom::ComputedStyle &new_style) override;
+    void styleDidChange() override;
     void didComputeLayoutOnce(const ConstraintSpace &) override final;
 
     // Adjust the text's internal content size, call this when the text content is changed.

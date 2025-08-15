@@ -8,6 +8,7 @@
 #include "../material_base.hpp"
 #include "../texture_altas.hpp"
 #include "../web_content.hpp"
+#include "../css_border_data_texture.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials
@@ -37,7 +38,8 @@ namespace builtin_scene::materials
                           "USE_UVS",
                           "USE_INSTANCE_TRANSFORMS",
                           "USE_INSTANCE_COLORS",
-                          "USE_INSTANCE_TEXTURE"
+                          "USE_INSTANCE_TEXTURE",
+                          "USE_INSTANCE_SDF"
                           // End
                         });
     }
@@ -47,6 +49,10 @@ namespace builtin_scene::materials
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override;
+    void drawMeshImpl(std::shared_ptr<client_graphics::WebGLProgram> program,
+                      const Mesh3d &mesh,
+                      RenderPass renderPass,
+                      std::optional<XRRenderTarget> renderTarget) override;
     void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
                           std::shared_ptr<Mesh3d> mesh) override;
     void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program,
@@ -65,6 +71,20 @@ namespace builtin_scene::materials
      * @returns The status of the texture update.
      */
     TextureUpdateStatus updateTexture(WebContent &content);
+
+    /**
+     * Enable or disable SDF-based anti-aliasing globally.
+     *
+     * @param enabled Whether to enable SDF rendering.
+     */
+    void setSdfEnabled(bool enabled);
+
+    /**
+     * Get the border data texture for direct updates.
+     *
+     * @return Pointer to the CSSBorderDataTexture instance.
+     */
+    CSSBorderDataTexture *getBorderDataTexture() const;
 
   public:
     float width() const
@@ -85,6 +105,11 @@ namespace builtin_scene::materials
       return it->second;
     }
 
+    inline bool hasUniform(const std::string &name) const
+    {
+      return uniforms_.find(name) != uniforms_.end();
+    }
+
   private:
     float width_;
     float height_;
@@ -92,5 +117,11 @@ namespace builtin_scene::materials
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
     std::unique_ptr<TextureAtlas> textureAtlas_;
+
+    // SDF rendering parameters
+    bool sdfEnabled_ = true;
+
+    // Border data texture manager
+    std::unique_ptr<CSSBorderDataTexture> borderDataTexture_;
   };
 }

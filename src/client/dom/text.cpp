@@ -152,6 +152,10 @@ namespace dom
     }
   }
 
+  void Text::layoutSizeChangedCallback(const client_layout::Fragment &)
+  {
+  }
+
   void Text::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
@@ -167,7 +171,16 @@ namespace dom
         assert(parentBox != nullptr &&
                "The parent box must not be null in a TextNode().");
       }
-      textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
+
+      auto textObject = layoutView.createText(getPtr<Text>(), parentBox);
+      if (textObject != nullptr)
+      {
+        textBoxes_ = {textObject};
+      }
+      else
+      {
+        textBoxes_.clear();
+      }
     }
   }
 
