@@ -810,6 +810,8 @@ void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMes
   }
 }
 
+#ifdef TR_ENABLE_INSPECTOR
+
 bool TrClientContextPerProcess::sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response)
 {
   assert(inspectorChanSender != nullptr);
@@ -855,3 +857,5 @@ void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCo
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received unknown inspector command type: %d", id, static_cast<int>(messageType));
   }
 }
+
+#endif

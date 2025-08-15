@@ -355,15 +355,6 @@ public: // WebXR methods
     return xrInputSourcesZoneClient.get();
   }
 
-public: // Inspector methods
-  /**
-   * Send an inspector command response to the host process.
-   *
-   * @param response The inspector command response to send.
-   * @returns true if the response is sent successfully.
-   */
-  bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
-
   /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
    *
@@ -475,7 +466,11 @@ public:
 
 private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
+
+#ifdef TR_ENABLE_INSPECTOR
+  bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
   void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
+#endif
 
 public:
   uint32_t id;
@@ -557,12 +552,14 @@ private: // xr fields
   int framebufferWidth = 0;
   int framebufferHeight = 0;
 
+#ifdef TR_ENABLE_INSPECTOR
 private: // inspector fields
   TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
   unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
   unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
   unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
   unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
+#endif
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
