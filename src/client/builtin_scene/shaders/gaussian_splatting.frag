@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 
 uniform float maxStdDev;
 uniform float minAlpha;

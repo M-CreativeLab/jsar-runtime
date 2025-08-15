@@ -1,5 +1,5 @@
-precision mediump float;
-precision mediump int;
+precision highp float;
+precision highp int;
 
 // Uniforms
 uniform mat4 view;
@@ -328,7 +328,10 @@ void main()
   vec3 viewCenter = viewCenter4.xyz;
 
   // Discard splats that are behind the camera or too far away
-  if (viewCenter.z >= 0.0 || length(viewCenter) > maxDistance)
+  if (
+    viewCenter.z >= 0.0 ||
+    dot(viewCenter, viewCenter) > maxDistance * maxDistance
+  )
   {
     return;
   }
