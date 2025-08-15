@@ -33,11 +33,6 @@ namespace builtin_scene::materials
       return "GaussianSplattingMaterial";
     }
 
-    const std::vector<std::string> defines() const override
-    {
-      return mixDefines(Material::defines(), {});
-    }
-
     ShaderRef vertexShader() override
     {
       return ShaderRef(ShaderType::kVertex, "shaders/gaussian_splatting.vert");

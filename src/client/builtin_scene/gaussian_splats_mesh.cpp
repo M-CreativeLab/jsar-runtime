@@ -127,56 +127,73 @@ namespace builtin_scene
       textureInitialized_ = true;
     }
 
-    // Prepare texture data arrays for 2 layers
-    vector<float> layer0Data(maxSplats * 4, 0.0f); // Texel 0: position.xyz, scale.x
-    vector<float> layer1Data(maxSplats * 4, 0.0f); // Texel 1: scale.yz, compressed_quat, compressed_color
+    // Prepare texture data array for single layer
+    vector<float> splatData(maxSplats * 4, 0.0f); // Single texel
 
     // Fill texture data from compressed splats
     for (size_t i = 0; i < compressedSplatData_.size(); ++i)
     {
       const auto &compressed = compressedSplatData_[i];
 
-      // Layer 0 data (texel0)
-      layer0Data[i * 4 + 0] = compressed.texel0[0]; // pos.x
-      layer0Data[i * 4 + 1] = compressed.texel0[1]; // pos.y
-      layer0Data[i * 4 + 2] = compressed.texel0[2]; // pos.z
-      layer0Data[i * 4 + 3] = compressed.texel0[3]; // scale.x
-
-      // Layer 1 data (texel1)
-      layer1Data[i * 4 + 0] = compressed.texel1[0]; // scale.y
-      layer1Data[i * 4 + 1] = compressed.texel1[1]; // scale.z
-      layer1Data[i * 4 + 2] = compressed.texel1[2]; // compressed_quat
-      layer1Data[i * 4 + 3] = compressed.texel1[3]; // compressed_color
+      // Single texel data
+      splatData[i * 4 + 0] = compressed.word[0]; // compressed_pos
+      splatData[i * 4 + 1] = compressed.word[1]; // compressed_scale
+      splatData[i * 4 + 2] = compressed.word[2]; // compressed_quat
+      splatData[i * 4 + 3] = compressed.word[3]; // compressed_color
     }
 
-    // Upload compressed texture array (RGBA32F, 2 layers)
-    glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, compressedSplatsTexture_);
-    glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray, 1, WEBGL2_RGBA32F, width, height, 2);
-
-    // Upload layer 0 (texel0 data)
-    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0, 0, 0, 0, width, height, 1, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)layer0Data.data());
-
-    // Upload layer 1 (texel1 data)
-    glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0, 0, 0, 1, width, height, 1, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)layer1Data.data());
+    // Upload compressed texture (RGBA32F for non-Android, RGBA32UI for Android with usampler2D)
+    glContext->bindTexture(WebGLTextureTarget::kTexture2D, compressedSplatsTexture_);
+#ifdef __ANDROID__
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                            1,
+                            WEBGL2_RGBA32UI,
+                            width,
+                            height);
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D,
+                             0,
+                             0,
+                             0,
+                             width,
+                             height,
+                             WebGLTextureFormat::kRGBAInteger,
+                             WebGLPixelType::kUnsignedInt,
+                             (unsigned char *)splatData.data());
+#else
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                            1,
+                            WEBGL2_RGBA32F,
+                            width,
+                            height);
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D,
+                             0,
+                             0,
+                             0,
+                             width,
+                             height,
+                             WebGLTextureFormat::kRGBA,
+                             WebGLPixelType::kFloat,
+                             (unsigned char *)splatData.data());
+#endif
 
     // Set texture parameters (nearest sampling for discrete data)
-    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
                              WebGLTextureParameterName::kTextureMinFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
                              WebGLTextureParameterName::kTextureMagFilter,
                              WEBGL_NEAREST);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
                              WebGLTextureParameterName::kTextureWrapS,
                              WEBGL_CLAMP_TO_EDGE);
-    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+    glContext->texParameteri(WebGLTextureTarget::kTexture2D,
                              WebGLTextureParameterName::kTextureWrapT,
                              WEBGL_CLAMP_TO_EDGE);
 
     // Reset the flag since textures have been updated
     needsTextureUpdate_ = false;
 
-    DEBUG("GaussianSplatsMesh", "Updated compressed splat texture array: %zu splats, %ux%ux2 texture2DArray", compressedSplatData_.size(), width, height);
+    DEBUG("GaussianSplatsMesh", "Updated compressed splat texture: %zu splats, %ux%u texture2D", compressedSplatData_.size(), width, height);
   }
 
   void GaussianSplatsMesh::updateSplatTexturesIfNeeded()
@@ -189,12 +206,6 @@ namespace builtin_scene
         updateSplatTextures(glContext);
       }
     }
-  }
-
-  glm::vec3 GaussianSplatsMesh::extractPositionFromCompressed(const CompressedSplat &compressed) const
-  {
-    // Compressed position extraction - texel0 contains position xyz
-    return glm::vec3(compressed.texel0[0], compressed.texel0[1], compressed.texel0[2]);
   }
 
   void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,

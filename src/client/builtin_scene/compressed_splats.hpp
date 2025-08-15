@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <algorithm>
+#include <glm/glm.hpp>
 
 namespace builtin_scene
 {
@@ -12,13 +13,21 @@ namespace builtin_scene
   constexpr uint32_t COMPRESSED_SPLAT_TEX_WIDTH = 1u << COMPRESSED_SPLAT_TEX_WIDTH_BITS;
   constexpr uint32_t COMPRESSED_SPLAT_TEX_WIDTH_MASK = COMPRESSED_SPLAT_TEX_WIDTH - 1u;
 
-  // Compressed splat structure: 2 texels (8 floats) per splat
-  // Texel 0: R=pos.x, G=pos.y, B=pos.z, A=scale.x
-  // Texel 1: R=scale.y, G=scale.z, B=compressed_quat, A=compressed_color
+  // Compressed splat structure: 1 texel (4 floats) per splat
+  // word0: pos.xy as half-floats (16 bits each)
+  // word1: pos.z as half-float (16 bits) + upper 16 bits of quaternion
+  // word2: lower 8 bits of quaternion + scale.xyz (8 bits each)
+  // word3: RGBA color (8 bits each)
   struct CompressedSplat
   {
-    float texel0[4]; // position.xyz, scale.x
-    float texel1[4]; // scale.yz, compressed_quat, compressed_color
+    float word[4]; // word0, word1, word2, word3
+  };
+
+  // Scale normalization parameters (for log-scale range)
+  struct SplatNormalizationParams
+  {
+    float scaleMin[3]; // Minimum log2 scale values for normalization
+    float scaleMax[3]; // Maximum log2 scale values for normalization
   };
 
   // Utility functions for compressed splat storage
@@ -30,20 +39,25 @@ namespace builtin_scene
     // Calculate required texture size for given number of splats
     std::array<uint32_t, 3> getTextureSize(uint32_t numSplats);
 
-    // Compress quaternion (x,y,z,w) to single float using 3D packing
-    // Stores x,y,z and sign of w, reconstructs w using unit length constraint
-    float compressQuaternion(float x, float y, float z, float w);
-
-    // Decompress quaternion from single float to (x,y,z,w)
-    std::array<float, 4> decompressQuaternion(float compressed);
-
     // Compress RGBA color to single float using normalized encoding
     float compressColor(float r, float g, float b, float a);
 
     // Decompress color from single float to RGBA
     std::array<float, 4> decompressColor(float compressed);
 
-    // Convert from Splat struct to CompressedSplat
+    // Compress position (x,y,z) using half-floats (no normalization needed)
+    std::array<float, 2> compressPositionHalf(float x, float y, float z);
+
+    // Decompress position from half-floats to (x,y,z)
+    std::array<float, 3> decompressPositionHalf(float word0, float word1);
+
+    // Compress scale (x,y,z) using log2 compression + 8-bit packing
+    glm::uvec3 compressScaleLog(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3]);
+
+    // Decompress scale from 8-bit log values to (x,y,z)
+    std::array<float, 3> decompressScaleLog(float word2, const float minLogScale[3], const float maxLogScale[3]);
+
+    // Convert from Splat struct to CompressedSplat with new format
     CompressedSplat convertSplat(
       float px, float py, float pz, // position
       float sx,
@@ -56,7 +70,8 @@ namespace builtin_scene
       float r,
       float g,
       float b,
-      float a // color + opacity
+      float a,                                   // color + opacity
+      const SplatNormalizationParams &normParams // normalization parameters
     );
   }
 }

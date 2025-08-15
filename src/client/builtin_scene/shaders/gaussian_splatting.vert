@@ -17,8 +17,16 @@ uniform float clipXY;
 uniform float focalAdjustment;
 uniform float maxDistance;
 
-// Compressed splat data texture array (2 layers per splat)
-uniform sampler2DArray compressedSplats;
+// Compressed splat data texture (single layer per splat)
+#ifdef __ANDROID__
+uniform usampler2D compressedSplats;
+#else
+uniform sampler2D compressedSplats;
+#endif
+
+// Scale normalization uniforms (position uses half-floats, no normalization needed)
+uniform vec3 scaleMin;
+uniform vec3 scaleMax;
 
 // Texture size constants (power of 2)
 const int TEXTURE_WIDTH_BITS = 10;  // 1024 width
@@ -41,50 +49,127 @@ ivec2 getSplatTexCoord(int index)
   return ivec2(x, y);
 }
 
-// Decompress quaternion from single float to (x,y,z,w)
-vec4 decompressQuaternion(float compressed)
-{
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
+// Helper function to unpack half-float from 16 bits
+float unpackHalf(uint bits) {
+  uint sign = (bits >> 15u) & 1u;
+  uint exponent = (bits >> 10u) & 31u;
+  uint mantissa = bits & 1023u;
   
-  // Unpack x,y,z components (10 bits each, offset by 512)
-  int ix = int(packed & 0x3FFu) - 512;
-  int iy = int((packed >> 10u) & 0x3FFu) - 512;
-  int iz = int((packed >> 20u) & 0x3FFu) - 512;
-  
-  // Convert back to normalized float
-  float x = float(ix) / 511.0;
-  float y = float(iy) / 511.0;
-  float z = float(iz) / 511.0;
-  
-  // Reconstruct w using unit length constraint
-  float w_squared = 1.0 - (x*x + y*y + z*z);
-  float w = (w_squared > 0.0) ? sqrt(w_squared) : 0.0;
-  return vec4(x, y, z, w);
+  if (exponent == 0u) {
+    if (mantissa == 0u) {
+      // Zero
+      return (sign == 1u) ? -0.0 : 0.0;
+    } else {
+      // Denormalized
+      float value = float(mantissa) / 1024.0;
+      value *= exp2(-14.0);
+      return (sign == 1u) ? -value : value;
+    }
+  } else if (exponent == 31u) {
+    // Infinity or NaN
+    return (sign == 1u) ? -1e10 : 1e10; // Clamp to large value
+  } else {
+    // Normal
+    float value = (1024.0 + float(mantissa)) / 1024.0;
+    value *= exp2(float(int(exponent) - 15));
+    return (sign == 1u) ? -value : value;
+  }
 }
 
-// Decompress RGBA color from single float
-vec4 decompressColor(float compressed)
+// Decompress position from half-floats (word0, word1) to (x,y,z)
+vec3 decompressPositionHalf(uint word0, uint word1)
 {
-  // Extract packed value by reinterpreting float as uint
-  uint packed = floatBitsToUint(compressed);
+#ifdef __ANDROID__
+  return vec4(
+    unpackHalf2x16(word0),
+    unpackHalf2x16(word1 & 0xFFFFu)
+  ).xyz;
+#else
+  // Unpack half-floats
+  uint hx = word0 & 0xFFFFu;
+  uint hy = (word0 >> 16u) & 0xFFFFu;
+  uint hz = word1 & 0xFFFFu;
+
+  // Convert back to floats
+  float x = unpackHalf(hx);
+  float y = unpackHalf(hy);
+  float z = unpackHalf(hz);
   
+  return vec3(x, y, z);
+#endif
+}
+
+// Decompress scale from 8-bit log values to (x,y,z)
+vec3 decompressScaleLog(uint word2)
+{
+  // Unpack x,y,z components from bits 8-31 (8 bits each, skipping lower 8 bits used for quaternion)
+  uint ix = word2 & 0xFFu;
+  uint iy = (word2 >> 8u) & 0xFFu;
+  uint iz = (word2 >> 16u) & 0xFFu;
+
+  // Convert back to normalized float [0,1]
+  float nx = float(ix) / 255.0;
+  float ny = float(iy) / 255.0;
+  float nz = float(iz) / 255.0;
+
+  // Convert back from log2 to linear scale
+  return vec3(
+    (nx == 0.0) ? 0.0 : exp2(scaleMin.x + nx * (scaleMax.x - scaleMin.x)),
+    (ny == 0.0) ? 0.0 : exp2(scaleMin.y + ny * (scaleMax.y - scaleMin.y)),
+    (nz == 0.0) ? 0.0 : exp2(scaleMin.z + nz * (scaleMax.z - scaleMin.z))
+  );
+}
+
+vec4 decodeQuatOctXy88R8(uint encoded) {
+  // Extract the fields.
+  uint quantU = encoded & uint(0xFFu);                 // bits 0–7
+  uint quantV = (encoded >> 8u) & uint(0xFFu);         // bits 8–15
+  uint angleInt = encoded >> 16u;                      // bits 16–23
+
+  // Recover u and v in [0,1], then map to [-1,1].
+  float u_f = float(quantU) / 255.0;
+  float v_f = float(quantV) / 255.0;
+  vec2 f = vec2(u_f * 2.0 - 1.0, v_f * 2.0 - 1.0);
+
+  vec3 axis = vec3(f.xy, 1.0 - abs(f.x) - abs(f.y));
+  float t = max(-axis.z, 0.0);
+  axis.x += (axis.x >= 0.0) ? -t : t;
+  axis.y += (axis.y >= 0.0) ? -t : t;
+  axis = normalize(axis);
+
+  // Decode the angle θ ∈ [0,π].
+  float theta = (float(angleInt) / 255.0) * 3.14159265359;
+  float halfTheta = theta * 0.5;
+  float s = sin(halfTheta);
+  float w = cos(halfTheta);
+  return vec4(axis * s, w);
+}
+
+// Decompress quaternion using octahedral mapping (24-bit) to (x,y,z,w)
+vec4 decompressQuaternionOct(uint word1, uint word2)
+{
+  // Extract 24-bit quaternion: upper 16 bits from word1 + lower 8 bits from word2
+  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 >> 8u) & 0xFF0000u);
+  return decodeQuatOctXy88R8(uQuat);
+}
+
+// Decompress RGBA color from single uint
+vec4 decompressColor(uint word3)
+{
   // Unpack RGBA components (8 bits each)
-  uint ir = packed & 0xFFu;
-  uint ig = (packed >> 8u) & 0xFFu;
-  uint ib = (packed >> 16u) & 0xFFu;
-  uint ia = (packed >> 24u) & 0xFFu;
-  
+  uint ir = word3 & 0xFFu;
+  uint ig = (word3 >> 8u) & 0xFFu;
+  uint ib = (word3 >> 16u) & 0xFFu;
+  uint ia = (word3 >> 24u) & 0xFFu;
+
   // Convert back to normalized float
   float r = float(ir) / 255.0;
   float g = float(ig) / 255.0;
   float b = float(ib) / 255.0;
   float a = float(ia) / 255.0;
-  
   return vec4(r, g, b, a);
 }
 
-// SparkJS quaternion functions (unchanged)
 vec3 quatVec(vec4 q, vec3 v)
 {
   vec3 t = 2.0 * cross(q.xyz, v);
@@ -177,19 +262,25 @@ void main()
   // Get texture coordinate using efficient bit operations
   ivec2 texCoord = getSplatTexCoord(int(splatIndex));
 
-  // Fetch compressed splat data from texture2DArray (2 texels per splat)
-  vec4 texel0 = texelFetch(compressedSplats, ivec3(texCoord, 0), 0); // Layer 0: pos.xyz, scale.x
-  vec4 texel1 = texelFetch(compressedSplats, ivec3(texCoord, 1), 0); // Layer 1: scale.yz, compressed_quat, compressed_color
+  // Fetch compressed splat data from texture (1 texel per splat)
+  // word0: pos.xy as half-floats, word1: pos.z + quat upper 16, word2: quat lower 8 + scale, word3: color
+#ifdef __ANDROID__
+  uvec4 texel = texelFetch(compressedSplats, texCoord, 0);
+  uint word0 = texel.x;
+  uint word1 = texel.y;
+  uint word2 = texel.z;
+  uint word3 = texel.w;
+#else
+  vec4 texel = texelFetch(compressedSplats, texCoord, 0);
+  uint word0 = floatBitsToUint(texel.x);
+  uint word1 = floatBitsToUint(texel.y);
+  uint word2 = floatBitsToUint(texel.z);
+  uint word3 = floatBitsToUint(texel.w);
+#endif
 
-  // Decompress splat data
-  vec3 center = texel0.xyz;         // position
-  float scaleX = texel0.w;          // scale.x
-  float scaleY = texel1.x;          // scale.y
-  float scaleZ = texel1.y;          // scale.z
-  vec3 scales = vec3(scaleX, scaleY, scaleZ);
-
-  vec4 quaternion = decompressQuaternion(texel1.z);  // decompress quaternion
-  vec4 rgba = decompressColor(texel1.w);             // decompress color
+  // Decompress splat data using new format
+  vec4 rgba = decompressColor(word3);
+  vec3 scales = decompressScaleLog(word2);
 
   // Early alpha test
   if (rgba.a < minAlpha)
@@ -226,9 +317,12 @@ void main()
   projectionMatrix = projection;
 #endif
 
+  // Decompress position using half-floats
+  vec3 center = decompressPositionHalf(word0, word1);
   // TODO(yorkie): support set TRS dynamically
-  center *= 0.05;
-  scales *= 0.05;
+  center *= 0.06;
+  scales *= 0.06;
+  center += vec3(0.0, -0.1, 0.0);
 
   vec4 viewCenter4 = viewMatrix * vec4(center, 1.0);
   vec3 viewCenter = viewCenter4.xyz;
@@ -252,6 +346,9 @@ void main()
   {
     return;
   }
+
+  // Decompress quaternion using octahedral mapping
+  vec4 quaternion = decompressQuaternionOct(word1, word2);
 
   // Compute the 3D covariance matrix for the splat
   mat3 cov3D = computeCov3D(viewMatrix, quaternion, scales);

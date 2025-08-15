@@ -65,6 +65,11 @@ namespace builtin_scene
   {
     assert(glContext_ != nullptr);
 
+    // Set platform-specific global defines for all materials
+#ifdef __ANDROID__
+    Material::SetGlobalDefines("__ANDROID__");
+#endif
+
     frameCallback_ = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *env_)
     {
       if (paused_)
