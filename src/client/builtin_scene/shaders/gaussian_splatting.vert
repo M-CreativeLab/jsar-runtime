@@ -79,17 +79,24 @@ float unpackHalf(uint bits) {
 // Decompress position from half-floats (word0, word1) to (x,y,z)
 vec3 decompressPositionHalf(uint word0, uint word1)
 {
+#ifdef __ANDROID__
+  return vec4(
+    unpackHalf2x16(word0),
+    unpackHalf2x16(word1 & 0xFFFFu)
+  ).xyz;
+#else
   // Unpack half-floats
   uint hx = word0 & 0xFFFFu;
   uint hy = (word0 >> 16u) & 0xFFFFu;
   uint hz = word1 & 0xFFFFu;
-  
+
   // Convert back to floats
   float x = unpackHalf(hx);
   float y = unpackHalf(hy);
   float z = unpackHalf(hz);
   
   return vec3(x, y, z);
+#endif
 }
 
 // Decompress scale from 8-bit log values to (x,y,z)
@@ -105,63 +112,44 @@ vec3 decompressScaleLog(uint word2)
   float ny = float(iy) / 255.0;
   float nz = float(iz) / 255.0;
 
-  // Denormalize using provided log scale bounds
-  float logX = scaleMin.x + nx * (scaleMax.x - scaleMin.x);
-  float logY = scaleMin.y + ny * (scaleMax.y - scaleMin.y);
-  float logZ = scaleMin.z + nz * (scaleMax.z - scaleMin.z);
-
   // Convert back from log2 to linear scale
   return vec3(
-    (nx == 0.0) ? 0.0 : exp2(logX),
-    (ny == 0.0) ? 0.0 : exp2(logY),
-    (nz == 0.0) ? 0.0 : exp2(logZ)
+    (nx == 0.0) ? 0.0 : exp2(scaleMin.x + nx * (scaleMax.x - scaleMin.x)),
+    (ny == 0.0) ? 0.0 : exp2(scaleMin.y + ny * (scaleMax.y - scaleMin.y)),
+    (nz == 0.0) ? 0.0 : exp2(scaleMin.z + nz * (scaleMax.z - scaleMin.z))
   );
 }
 
-// Helper functions for octahedral mapping
-vec2 octWrap(vec2 v) {
-  return (1.0 - abs(v.yx)) * (step(0.0, v.xy) * 2.0 - 1.0);
+vec4 decodeQuatOctXy88R8(uint encoded) {
+  // Extract the fields.
+  uint quantU = encoded & uint(0xFFu);                 // bits 0–7
+  uint quantV = (encoded >> 8u) & uint(0xFFu);         // bits 8–15
+  uint angleInt = encoded >> 16u;                      // bits 16–23
+
+  // Recover u and v in [0,1], then map to [-1,1].
+  float u_f = float(quantU) / 255.0;
+  float v_f = float(quantV) / 255.0;
+  vec2 f = vec2(u_f * 2.0 - 1.0, v_f * 2.0 - 1.0);
+
+  vec3 axis = vec3(f.xy, 1.0 - abs(f.x) - abs(f.y));
+  float t = max(-axis.z, 0.0);
+  axis.x += (axis.x >= 0.0) ? -t : t;
+  axis.y += (axis.y >= 0.0) ? -t : t;
+  axis = normalize(axis);
+
+  // Decode the angle θ ∈ [0,π].
+  float theta = (float(angleInt) / 255.0) * 3.14159265359;
+  float halfTheta = theta * 0.5;
+  float s = sin(halfTheta);
+  float w = cos(halfTheta);
+  return vec4(axis * s, w);
 }
 
 // Decompress quaternion using octahedral mapping (24-bit) to (x,y,z,w)
 vec4 decompressQuaternionOct(uint word1, uint word2)
 {
-  // Reconstruct 24-bit quaternion value: 16 bits from word1 + 8 bits from word2
-  uint quatUpper16 = (word1 >> 16u) & 0xFFFFu;
-  uint quatLower8 = (word2 >> 24u) & 0xFFu;
-  uint quatBits = quatUpper16 | (quatLower8 << 16u);
-  
-  // Unpack x,y components (12 bits each, offset by 2047)
-  int octX12 = int(quatBits & 0xFFFu) - 2047;
-  int octY12 = int((quatBits >> 12u) & 0xFFFu) - 2047;
-  
-  // Convert back to normalized float
-  float octX = float(octX12) / 2047.0;
-  float octY = float(octY12) / 2047.0;
-  
-  // Convert from octahedral to quaternion
-  float z = 1.0 - abs(octX) - abs(octY);
-  float x = octX;
-  float y = octY;
-  
-  if (z < 0.0) {
-    vec2 wrapped = octWrap(vec2(octX, octY));
-    x = wrapped.x;
-    y = wrapped.y;
-  }
-  
-  // Normalize
-  float length = sqrt(x * x + y * y + z * z);
-  if (length > 0.0) {
-    x /= length;
-    y /= length;
-    z /= length;
-  }
-  
-  // Reconstruct w
-  float w = sqrt(max(0.0, 1.0 - (x * x + y * y + z * z)));
-  
-  return vec4(x, y, z, w);
+  uint uQuat = ((word1 >> 16u) & 0xFFFFu) | ((word2 >> 8u) & 0xFF0000u);
+  return decodeQuatOctXy88R8(uQuat);
 }
 
 // Decompress RGBA color from single uint
@@ -332,8 +320,11 @@ void main()
   // Decompress position using half-floats
   vec3 center = decompressPositionHalf(word0, word1);
   // TODO(yorkie): support set TRS dynamically
-  center *= 0.05;
-  scales *= 0.05;
+  // Scale(0.1)
+  center *= 0.1;
+  scales *= 0.1;
+  // Translation(0, 0, -1)
+  center += vec3(0.0, -0.5, 0);
 
   vec4 viewCenter4 = viewMatrix * vec4(center, 1.0);
   vec3 viewCenter = viewCenter4.xyz;

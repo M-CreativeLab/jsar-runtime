@@ -1,6 +1,6 @@
-#include "./compressed_splats.hpp"
 #include <cstring>
 #include <cmath>
+#include "./compressed_splats.hpp"
 
 namespace builtin_scene::compressed_splat_utils
 {
@@ -181,27 +181,113 @@ namespace builtin_scene::compressed_splat_utils
     return {x, y, z, w};
   }
 
-  float compressQuaternionOct(float x, float y, float z, float w)
+  inline float clampf(float v, float lo, float hi)
   {
-    auto oct = quatToOct(x, y, z, w);
+    return std::max(lo, std::min(hi, v));
+  }
 
-    // Convert to 12-bit signed integers for xy, 8-bit for additional data
-    int32_t octX12 = (int32_t)(oct[0] * 2047.0f); // 12-bit signed (-2047 to 2047)
-    int32_t octY12 = (int32_t)(oct[1] * 2047.0f); // 12-bit signed (-2047 to 2047)
+  uint32_t encodeQuatOctXy88R8(float x, float y, float z, float w)
+  {
+    // Normalize quaternion
+    const float len = std::sqrt(x * x + y * y + z * z + w * w);
+    if (len > 0.0f)
+    {
+      x /= len;
+      y /= len;
+      z /= len;
+      w /= len;
+    }
+
+    // Force minimal representation (w >= 0)
+    if (w < 0.0f)
+    {
+      x = -x;
+      y = -y;
+      z = -z;
+      w = -w;
+    }
+
+    // Compute rotation angle theta in [0, pi]
+    constexpr float PI = 3.14159265358979323846f;
+    const float w_clamped = clampf(w, -1.0f, 1.0f);
+    const float theta = 2.0f * std::acos(w_clamped);
+
+    // Recover rotation axis (default to (1,0,0) for near-zero rotation)
+    const float xyz_norm = std::sqrt(x * x + y * y + z * z);
+    float ax, ay, az;
+    if (xyz_norm < 1e-6f)
+    {
+      ax = 1.0f;
+      ay = 0.0f;
+      az = 0.0f;
+    }
+    else
+    {
+      ax = x / xyz_norm;
+      ay = y / xyz_norm;
+      az = z / xyz_norm;
+    }
+
+    // Folded Octahedral Mapping
+    const float sum = std::fabs(ax) + std::fabs(ay) + std::fabs(az);
+    float p_x = ax / sum;
+    float p_y = ay / sum;
+
+    if (az < 0.0f)
+    {
+      const float tmp = p_x;
+      p_x = (1.0f - std::fabs(p_y)) * (tmp >= 0.0f ? 1.0f : -1.0f);
+      p_y = (1.0f - std::fabs(tmp)) * (p_y >= 0.0f ? 1.0f : -1.0f);
+    }
+
+    // Remap from [-1,1] to [0,1]
+    const float u_f = p_x * 0.5f + 0.5f;
+    const float v_f = p_y * 0.5f + 0.5f;
+
+    // Quantize to 8 bits (0..255)
+    int quantU = static_cast<int>(std::round(u_f * 255.0f));
+    int quantV = static_cast<int>(std::round(v_f * 255.0f));
+    int angleInt = static_cast<int>(std::round(theta * (255.0f / PI)));
 
     // Clamp to valid range
-    octX12 = std::max(-2047, std::min(2047, octX12));
-    octY12 = std::max(-2047, std::min(2047, octY12));
+    quantU = std::min(255, std::max(0, quantU));
+    quantV = std::min(255, std::max(0, quantV));
+    angleInt = std::min(255, std::max(0, angleInt));
 
-    // Pack into 24-bit value: 12 bits each for x,y
-    uint32_t packed = 0;
-    packed |= (uint32_t)(octX12 + 2047) & 0xFFF;         // x: bits 0-11 (offset by 2047)
-    packed |= ((uint32_t)(octY12 + 2047) & 0xFFF) << 12; // y: bits 12-23 (offset by 2047)
+    // Pack into 24 bits: [16–23]: angle, [8–15]: V, [0–7]: U
+    const uint32_t packed = (static_cast<uint32_t>(angleInt) << 16) |
+                            (static_cast<uint32_t>(quantV) << 8) |
+                            static_cast<uint32_t>(quantU);
+    return packed;
+  }
 
-    // Convert to float using bit reinterpretation
-    float result;
-    std::memcpy(&result, &packed, sizeof(float));
-    return result;
+  float compressQuaternionOct(float x, float y, float z, float w)
+  {
+    uint32_t uQuat = encodeQuatOctXy88R8(x, y, z, w);
+
+    auto uQuatX = uQuat & 0xff;
+    auto uQuatY = (uQuat >> 8) & 0xff;
+    auto uQuatZ = (uQuat >> 16) & 0xff;
+
+    // auto oct = quatToOct(x, y, z, w);
+
+    // // Convert to 12-bit signed integers for xy, 8-bit for additional data
+    // int32_t octX12 = (int32_t)(oct[0] * 2047.0f); // 12-bit signed (-2047 to 2047)
+    // int32_t octY12 = (int32_t)(oct[1] * 2047.0f); // 12-bit signed (-2047 to 2047)
+
+    // // Clamp to valid range
+    // octX12 = std::max(-2047, std::min(2047, octX12));
+    // octY12 = std::max(-2047, std::min(2047, octY12));
+
+    // // Pack into 24-bit value: 12 bits each for x,y
+    // uint32_t packed = 0;
+    // packed |= (uint32_t)(octX12 + 2047) & 0xFFF;         // x: bits 0-11 (offset by 2047)
+    // packed |= ((uint32_t)(octY12 + 2047) & 0xFFF) << 12; // y: bits 12-23 (offset by 2047)
+
+    // // Convert to float using bit reinterpretation
+    // float result;
+    // std::memcpy(&result, &packed, sizeof(float));
+    // return result;
   }
 
   std::array<float, 4> decompressQuaternionOct(float compressed)
@@ -311,7 +397,8 @@ namespace builtin_scene::compressed_splat_utils
     return {x, y, z};
   }
 
-  float compressScaleLog(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3])
+
+  glm::uvec3 compressScaleLog(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3])
   {
     // Apply log2 compression to scale values
     float logX = (x > 0.0f) ? std::log2(x) : -10.0f; // Use -10 for very small scales
@@ -333,13 +420,14 @@ namespace builtin_scene::compressed_splat_utils
     uint32_t iy = (uint32_t)(ny * 255.0f);
     uint32_t iz = (uint32_t)(nz * 255.0f);
 
-    // Pack into lower 24 bits: 8 bits each for x,y,z
-    uint32_t packed = ix | (iy << 8) | (iz << 16);
+    // // Pack into lower 24 bits: 8 bits each for x,y,z
+    // uint32_t packed = ix | (iy << 8) | (iz << 16);
 
-    // Convert to float using bit reinterpretation
-    float result;
-    std::memcpy(&result, &packed, sizeof(float));
-    return result;
+    // // Convert to float using bit reinterpretation
+    // float result;
+    // std::memcpy(&result, &packed, sizeof(float));
+    // return result;
+    return {ix, iy, iz};
   }
 
   std::array<float, 3> decompressScaleLog(float word2, const float minLogScale[3], const float maxLogScale[3])
@@ -394,26 +482,25 @@ namespace builtin_scene::compressed_splat_utils
     compressed.word[0] = posWords[0]; // pos.xy as half-floats
 
     // Compress quaternion using octahedral mapping (24-bit)
-    float compressedQuat = compressQuaternionOct(qx, qy, qz, qw);
-    uint32_t quatBits;
-    std::memcpy(&quatBits, &compressedQuat, sizeof(uint32_t));
-    quatBits &= 0xFFFFFF; // Keep only 24 bits
+    uint32_t uQuat = encodeQuatOctXy88R8(qx, qy, qz, qw);
+    auto uQuatX = uQuat & 0xFF;
+    auto uQuatY = (uQuat >> 8) & 0xFF;
+    auto uQuatZ = (uQuat >> 16) & 0xFF;
 
     // word1: pos.z (lower 16 bits) + upper 16 bits of quaternion
     uint32_t word1;
     std::memcpy(&word1, &posWords[1], sizeof(uint32_t));
-    word1 = (word1 & 0xFFFF) | ((quatBits & 0xFFFF) << 16);
+    word1 = (word1 & 0xFFFF) | (uQuatX << 16) | (uQuatY << 24);
     std::memcpy(&compressed.word[1], &word1, sizeof(float));
 
     // Compress scale using log compression
-    float compressedScale = compressScaleLog(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
-    uint32_t scaleBits;
-    std::memcpy(&scaleBits, &compressedScale, sizeof(uint32_t));
-    scaleBits &= 0xFFFFFF; // Keep only 24 bits
+    auto scaleBits = compressScaleLog(sx, sy, sz, normParams.scaleMin, normParams.scaleMax);
+    // uint32_t scaleBits;
+    // std::memcpy(&scaleBits, &compressedScale, sizeof(uint32_t));
+    // scaleBits &= 0xFFFFFF; // Keep only 24 bits
 
-    // word2: upper 8 bits of quaternion + scale.xyz (24 bits)
-    uint32_t word2 = (((quatBits >> 16) & 0xFF) << 24) | scaleBits;
-    std::memcpy(&compressed.word[2], &word2, sizeof(float));
+    // word2: lower 8 bits of quaternion + scale.xyz (24 bits)
+    compressed.word[2] = scaleBits.x | (scaleBits.y << 8) | (scaleBits.z << 16) | (uQuatZ << 24);
 
     // word3: RGBA color (unchanged)
     compressed.word[3] = compressColor(r, g, b, a);

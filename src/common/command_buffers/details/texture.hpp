@@ -169,34 +169,64 @@ namespace commandbuffers
     virtual size_t computePixelsByteLength() = 0;
 
   public:
+    size_t getDataSize() const
+    {
+      switch (pixelType)
+      {
+      case WEBGL_UNSIGNED_SHORT:
+      case WEBGL_SHORT:
+      case WEBGL2_HALF_FLOAT:
+      case WEBGL_UNSIGNED_SHORT_5_6_5:
+      case WEBGL_UNSIGNED_SHORT_4_4_4_4:
+      case WEBGL_UNSIGNED_SHORT_5_5_5_1:
+        return 2;
+      case WEBGL_UNSIGNED_INT:
+      case WEBGL_INT:
+      case WEBGL_FLOAT:
+      case WEBGL2_UNSIGNED_INT_2_10_10_10_REV:
+      case WEBGL2_UNSIGNED_INT_10F_11F_11F_REV:
+      case WEBGL2_UNSIGNED_INT_5_9_9_9_REV:
+      case WEBGL2_UNSIGNED_INT_24_8:
+        return 4;
+      case WEBGL2_FLOAT_32_UNSIGNED_INT_24_8_REV:
+        return 8;
+      case WEBGL_UNSIGNED_BYTE:
+      case WEBGL_BYTE:
+      default:
+        return 1;
+      }
+    }
+
     size_t getPixelSize()
     {
-      int sizePerPixel = 1;
-      if (pixelType == WEBGL_UNSIGNED_BYTE || pixelType == WEBGL_FLOAT)
+      int sizePerPixel = 2; // Default to 2 bytes
+      int dataSize = getDataSize();
+
+      // Compute the size per pixel based on the format
+      switch (format)
       {
-        if (pixelType == WEBGL_FLOAT)
-          sizePerPixel = 4;
-        switch (format)
-        {
-        case WEBGL_ALPHA:
-        case WEBGL_LUMINANCE:
-          break;
-        case WEBGL_LUMINANCE_ALPHA:
-          sizePerPixel *= 2;
-          break;
-        case WEBGL_RGB:
-          sizePerPixel *= 3;
-          break;
-        case WEBGL_RGBA:
-          sizePerPixel *= 4;
-          break;
-        default:
-          break;
-        }
-      }
-      else
-      {
-        sizePerPixel = 2;
+      case WEBGL2_RG:
+      case WEBGL2_DEPTH_STENCIL:
+        sizePerPixel = dataSize * 2;
+        break;
+      case WEBGL_RGB:
+      case WEBGL2_RGB_INTEGER:
+        sizePerPixel = dataSize * 3;
+        break;
+      case WEBGL_RGBA:
+      case WEBGL2_RGBA_INTEGER:
+        sizePerPixel = dataSize * 4;
+        break;
+      case WEBGL2_RED:
+      case WEBGL2_RED_INTEGER:
+      case WEBGL_DEPTH_COMPONENT:
+      case WEBGL_LUMINANCE_ALPHA:
+      case WEBGL_ALPHA:
+      case WEBGL_LUMINANCE:
+        sizePerPixel = dataSize * 1;
+        break;
+      default:
+        break;
       }
       return sizePerPixel;
     }
@@ -362,6 +392,16 @@ namespace commandbuffers
     size_t computePixelsByteLength() override
     {
       return width * height * getPixelSize();
+    }
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureImageNDCommandBufferRequest::toString(line_prefix) << std::endl
+         << "  xoffset=" << xoffset << ", " << std::endl
+         << "  yoffset=" << yoffset << ", " << std::endl
+         << "    width=" << width << ", " << std::endl
+         << "   height=" << height;
+      return ss.str();
     }
 
   public:
@@ -693,6 +733,17 @@ namespace commandbuffers
     }
 
   public:
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest<Derived, Type>::toString(line_prefix) << "("
+         << WebGLHelper::WebGLEnumToString(target) << ", "
+         << levels << ", "
+         << internalformat << ")";
+      return ss.str();
+    }
+
+  public:
     int target;
     int levels;
     int internalformat;
@@ -715,6 +766,15 @@ namespace commandbuffers
         , width(that.width)
         , height(that.height)
     {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TextureStorageNDCommandBufferRequest::toString(line_prefix)
+         << "           width=" << width << std::endl
+         << "          height=" << height << std::endl;
+      return ss.str();
     }
 
   public:

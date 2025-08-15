@@ -145,15 +145,35 @@ namespace builtin_scene
     // Upload compressed texture (RGBA32F for non-Android, RGBA32UI for Android with usampler2D)
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, compressedSplatsTexture_);
 #ifdef __ANDROID__
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32UI, width, height);
-
-    // Upload texture data as unsigned integers for Android
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBAInteger, WebGLPixelType::kUnsignedInt, (unsigned char *)splatData.data());
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                            1,
+                            WEBGL2_RGBA32UI,
+                            width,
+                            height);
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D,
+                             0,
+                             0,
+                             0,
+                             width,
+                             height,
+                             WebGLTextureFormat::kRGBAInteger,
+                             WebGLPixelType::kUnsignedInt,
+                             (unsigned char *)splatData.data());
 #else
-    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D, 1, WEBGL2_RGBA32F, width, height);
-
-    // Upload texture data as floats for other platforms
-    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D, 0, 0, 0, width, height, WebGLTextureFormat::kRGBA, WebGLPixelType::kFloat, (unsigned char *)splatData.data());
+    glContext->texStorage2D(WebGLTexture2DTarget::kTexture2D,
+                            1,
+                            WEBGL2_RGBA32F,
+                            width,
+                            height);
+    glContext->texSubImage2D(WebGLTexture2DTarget::kTexture2D,
+                             0,
+                             0,
+                             0,
+                             width,
+                             height,
+                             WebGLTextureFormat::kRGBA,
+                             WebGLPixelType::kFloat,
+                             (unsigned char *)splatData.data());
 #endif
 
     // Set texture parameters (nearest sampling for discrete data)

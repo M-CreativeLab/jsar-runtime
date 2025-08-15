@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <algorithm>
+#include <glm/glm.hpp>
 
 namespace builtin_scene
 {
@@ -58,7 +59,7 @@ namespace builtin_scene
     std::array<float, 3> decompressPositionHalf(float word0, float word1);
 
     // Compress scale (x,y,z) using log2 compression + 8-bit packing
-    float compressScaleLog(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3]);
+    glm::uvec3 compressScaleLog(float x, float y, float z, const float minLogScale[3], const float maxLogScale[3]);
 
     // Decompress scale from 8-bit log values to (x,y,z)
     std::array<float, 3> decompressScaleLog(float word2, const float minLogScale[3], const float maxLogScale[3]);
