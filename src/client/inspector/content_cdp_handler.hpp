@@ -7,6 +7,9 @@
 #include <rapidjson/document.h>
 #include <common/inspector/cdp_message.hpp>
 
+// Forward declarations
+class ContentCdpLogDomain;
+
 // Function type for sending CDP events from content process to host
 using CdpEventSender = std::function<bool(const std::string &eventJson)>;
 
@@ -60,6 +63,24 @@ public:
 
   // Set event sender for all registered domains
   void setEventSender(const CdpEventSender &eventSender);
+
+  // Get specific domain handler
+  template <typename T>
+  T *getDomain(const std::string &domainName)
+  {
+    auto it = domains_.find(domainName);
+    if (it != domains_.end())
+    {
+      return dynamic_cast<T *>(it->second.get());
+    }
+    return nullptr;
+  }
+
+  // Convenience method to get Log domain
+  ContentCdpLogDomain *getLogDomain()
+  {
+    return getDomain<ContentCdpLogDomain>("Log");
+  }
 
 private:
   std::unordered_map<std::string, std::unique_ptr<ContentCdpDomainHandler>> domains_;

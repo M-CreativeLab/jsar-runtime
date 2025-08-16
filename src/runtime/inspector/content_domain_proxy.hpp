@@ -36,6 +36,9 @@ public:
   // Check if this domain should be handled by content processes
   bool shouldForwardDomain(const std::string &domain) const;
 
+  // Handle response from content process (called by TrContentRuntime)
+  void handleResponseFromContent(uint32_t requestId, const std::string &response);
+
 private:
   // Structure to track pending requests
   struct PendingRequest
@@ -72,7 +75,4 @@ private:
 
   // Timeout handling for pending requests
   void cleanupTimedOutRequests();
-
-  // Handle response from content process (called by TrContentRuntime)
-  void handleResponseFromContent(uint32_t requestId, const std::string &response);
 };

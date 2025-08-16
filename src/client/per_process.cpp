@@ -18,6 +18,10 @@
 #include "./xr/device.hpp"
 #include "./bindings.hpp"
 
+#ifdef TR_ENABLE_INSPECTOR
+#include "./tr_logger.hpp"
+#endif
+
 using namespace std;
 using namespace node;
 using namespace v8;
@@ -541,6 +545,9 @@ void TrClientContextPerProcess::start()
       // Initialize content-side CDP handler with event sender
       contentCdpHandler = make_unique<ContentCdpHandler>(eventSender);
 
+      // Initialize logger
+      logger = make_unique<TrLogger>(this);
+
       // Create worker thread for processing inspector commands
       auto onInspectorCommandWork = [this](WorkerThread &worker)
       {
@@ -874,6 +881,11 @@ void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCo
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received unknown inspector command type: %d", id, static_cast<int>(messageType));
   }
+}
+
+TrLogger *TrClientContextPerProcess::getLogger()
+{
+  return logger.get();
 }
 
 #endif

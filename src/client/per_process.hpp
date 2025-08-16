@@ -45,6 +45,9 @@
 #include "inspector/content_cdp_handler.hpp"
 #include "./classes.hpp"
 
+// Forward declarations
+class TrLogger;
+
 using namespace std;
 using namespace ipc;
 using namespace commandbuffers;
@@ -470,6 +473,15 @@ private:
 #ifdef TR_ENABLE_INSPECTOR
   bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
   void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
+
+  // Get the content CDP handler
+  ContentCdpHandler *getContentCdpHandler()
+  {
+    return contentCdpHandler.get();
+  }
+
+  // Get the logger instance
+  TrLogger *getLogger();
 #endif
 
 public:
@@ -559,6 +571,7 @@ private: // inspector fields
   unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
   unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
   unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
+  unique_ptr<TrLogger> logger = nullptr;
 #endif
 
 private: // frame request fields
