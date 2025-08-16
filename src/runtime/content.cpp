@@ -205,24 +205,30 @@ void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandM
 
 void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
 {
-  inspectorCommandChanReceiver = std::make_unique<inspector_comm::TrInspectorReceiver>(&client);
-  inspectorCommandChanSender = std::make_unique<inspector_comm::TrInspectorCommandSender>(&client);
-  inspectorCommandChanClient = &client;
-  DEBUG(LOG_TAG_INSPECTOR, "Content %d: Inspector channel connected", id);
+#ifdef TR_ENABLE_INSPECTOR
+  contentInspector = std::make_unique<RuntimeContentInspector>();
+  if (contentInspector->initialize(&client))
+  {
+    // Success - inspector is initialized
+  }
+  else
+  {
+    contentInspector.reset();
+  }
+#endif
 }
 
+#ifdef TR_ENABLE_INSPECTOR
 bool TrContentRuntime::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
 {
-  if (TR_UNLIKELY(!available || shouldDestroy || inspectorCommandChanSender == nullptr))
+  if (TR_UNLIKELY(!available || shouldDestroy || !contentInspector))
   {
-    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Cannot send inspector command - available=%s, shouldDestroy=%s, sender=%s", id, available ? "true" : "false", shouldDestroy ? "true" : "false", inspectorCommandChanSender ? "valid" : "null");
     return false;
   }
 
-  bool success = inspectorCommandChanSender->sendCommand(command);
-  DEBUG(LOG_TAG_INSPECTOR, "Content %d: Inspector command send result: %s", id, success ? "success" : "failed");
-  return success;
+  return contentInspector->sendInspectorCommand(command);
 }
+#endif
 
 xr::TrXRSession *TrContentRuntime::getActiveXRSession()
 {
@@ -378,67 +384,19 @@ bool TrContentRuntime::recvXRCommand(int timeout)
 
 bool TrContentRuntime::recvInspectorCommand(int timeout)
 {
-  if (TR_UNLIKELY(inspectorCommandChanReceiver == nullptr))
+  if (TR_UNLIKELY(!contentInspector))
     return false;
 
-  inspector_comm::TrInspectorCommandMessage message;
-  if (inspectorCommandChanReceiver->recvCommand(message, timeout))
-  {
-    // Handle incoming inspector command message
-    handleInspectorCommandMessage(message);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  // This method is no longer needed as ContentInspector handles command processing internally
+  return false;
+}
 }
 
 void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message)
 {
-  switch (message.getType())
+  if (contentInspector)
   {
-  case inspector_comm::TrInspectorCommandType::CdpResponse:
-  {
-    auto cdpResponse = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpResponse>(message);
-    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP response for request %u", id, cdpResponse.requestId);
-
-    // Forward response back to the ContentDomainProxy via the inspector CDP handler
-    auto cdpHandler = getInspectorCdpHandler();
-    if (cdpHandler)
-    {
-      auto contentProxy = cdpHandler->getContentProxy();
-      if (contentProxy)
-      {
-        contentProxy->handleResponseFromContent(cdpResponse.requestId, cdpResponse.cdpResponseJson);
-      }
-      else
-      {
-        DEBUG(LOG_TAG_INSPECTOR, "Content %d: No ContentDomainProxy available for response", id);
-      }
-    }
-    else
-    {
-      DEBUG(LOG_TAG_INSPECTOR, "Content %d: No inspector CDP handler set for content runtime", id);
-    }
-    break;
-  }
-  case inspector_comm::TrInspectorCommandType::CdpEvent:
-  {
-    auto cdpEvent = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpEvent>(message);
-    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP event: %s", id, cdpEvent.cdpEventJson.c_str());
-
-    // Forward CDP events to inspector clients via the constellation's inspector instance
-    auto constellation = getConstellation();
-    if (constellation && constellation->inspector)
-    {
-      constellation->inspector->broadcastEventToClients(cdpEvent.cdpEventJson);
-    }
-    break;
-  }
-  default:
-    DEBUG(LOG_TAG_INSPECTOR, "Content %d: Unknown inspector command type: %d", id, static_cast<int>(message.getType()));
-    break;
+    contentInspector->handleInspectorCommandMessage(message);
   }
 }
 
@@ -541,10 +499,13 @@ void TrContentRuntime::release()
 
 void TrContentRuntime::setInspectorCdpHandler(CdpHandler *cdpHandler)
 {
-  inspectorCdpHandler_ = cdpHandler;
+  if (contentInspector)
+  {
+    contentInspector->setCdpHandler(cdpHandler);
+  }
 }
 
 CdpHandler *TrContentRuntime::getInspectorCdpHandler() const
 {
-  return inspectorCdpHandler_;
+  return contentInspector ? contentInspector->getCdpHandler() : nullptr;
 }

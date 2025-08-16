@@ -28,9 +28,9 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
-#include "common/inspector/message.hpp"
-#include "common/inspector/sender.hpp"
-#include "common/inspector/receiver.hpp"
+#ifdef TR_ENABLE_INSPECTOR
+#include "inspector/runtime_content_inspector.hpp"
+#endif
 
 #include "./constellation.hpp"
 #include "./hive_daemon.hpp"
@@ -244,6 +244,8 @@ public: // Inspector methods
    * @param client The channel client for the inspector command.
    */
   void onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client);
+
+#ifdef TR_ENABLE_INSPECTOR
   /**
    * Send an inspector command (CDP request) to the content process.
    *
@@ -265,6 +267,7 @@ public: // Inspector methods
    * @returns The CDP handler instance or nullptr if not set.
    */
   class CdpHandler *getInspectorCdpHandler() const;
+#endif
 
 private:
   inline bool isUsed() const
@@ -379,13 +382,10 @@ private: // XR fields
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
 
+#ifdef TR_ENABLE_INSPECTOR
 private: // Inspector fields
-  ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorCommandChanClient = nullptr;
-  std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorCommandChanReceiver = nullptr;
-  std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorCommandChanSender = nullptr;
-
-  // Reference to the inspector client (CdpHandler) that manages this content runtime
-  class CdpHandler *inspectorCdpHandler_ = nullptr;
+  std::unique_ptr<RuntimeContentInspector> contentInspector = nullptr;
+#endif
   /**
    * **Why we need to store the XRSession instances?**
    *

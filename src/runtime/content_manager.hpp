@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "./constellation.hpp"
 #include "./content.hpp"
 #include "common/inspector/message.hpp"

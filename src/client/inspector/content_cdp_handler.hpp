@@ -51,8 +51,7 @@ private:
 class ContentCdpHandler
 {
 public:
-  ContentCdpHandler();
-  ContentCdpHandler(const CdpEventSender &eventSender);
+  ContentCdpHandler(const CdpEventSender &eventSender = CdpEventSender{});
   ~ContentCdpHandler();
 
   // Process incoming CDP message from the proxy and return response

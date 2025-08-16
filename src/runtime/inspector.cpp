@@ -375,7 +375,6 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
     {
       // Fall back to synchronous processing for non-WebSocket clients
       string response = cdpHandler->processMessage(message);
-      DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
       client.sendWebSocketMessage(response);
     }
   }
@@ -422,6 +421,4 @@ void TrInspector::broadcastEventToClients(const std::string &eventJson)
       sentCount++;
     }
   }
-
-  DEBUG(LOG_TAG_INSPECTOR, "Broadcasted CDP event to %d WebSocket clients", sentCount);
 }

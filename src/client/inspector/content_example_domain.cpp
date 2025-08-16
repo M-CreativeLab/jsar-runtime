@@ -1,20 +1,18 @@
+#include <chrono>
+#include <rapidjson/document.h>
+
 #include "./content_example_domain.hpp"
 #include "runtime/inspector/cdp_handler.hpp" // For CdpMessage and CdpResponse
 #include "common/debug.hpp"
-#include <rapidjson/document.h>
-#include <chrono>
 
 using namespace std;
 
 ContentCdpExampleDomain::ContentCdpExampleDomain()
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Example: Domain initialized");
 }
 
 string ContentCdpExampleDomain::handleMethod(const string &method, const CdpMessage &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Example: Handling method: %s", method.c_str());
-
   if (method == "ping")
   {
     return ping(message);

@@ -60,7 +60,6 @@ string CdpHandler::processMessage(const string &message)
   // Check if this domain should be forwarded to content processes
   if (contentProxy_ && contentProxy_->shouldForwardDomain(domain))
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: Forwarding domain %s to content process", domain.c_str());
     return contentProxy_->forwardRequest(cdpMessage->method, *cdpMessage, clientId_);
   }
 
@@ -107,8 +106,6 @@ void CdpHandler::processMessageAsync(const string &message, TrInspectorClient *i
   // Check if this domain should be forwarded to content processes
   if (contentProxy_ && contentProxy_->shouldForwardDomain(domain))
   {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP: Async forwarding domain %s to content process", domain.c_str());
-
     // Use async forwarding without blocking
     auto onResponse = [inspectorClient](const string &response)
     {

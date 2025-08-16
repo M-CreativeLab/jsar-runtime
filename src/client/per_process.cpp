@@ -517,65 +517,38 @@ void TrClientContextPerProcess::start()
 
 #ifdef TR_ENABLE_INSPECTOR
   // Inspector command initialization
+#ifdef TR_ENABLE_INSPECTOR
   if (inspectorChanPort > 0)
   {
-    inspectorChanClient = ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage>::MakeAndConnect(inspectorChanPort, false, id);
-    if (inspectorChanClient && inspectorChanClient->isConnected())
+    contentInspector = make_unique<ContentInspector>();
+    if (contentInspector->initialize(inspectorChanPort))
     {
-      inspectorChanSender = make_unique<inspector_comm::TrInspectorCommandSender>(inspectorChanClient);
-      inspectorChanReceiver = make_unique<inspector_comm::TrInspectorReceiver>(inspectorChanClient);
-
-      // Create event sender function for CDP domains
-      auto eventSender = [this](const string &eventJson) -> bool
-      {
-        inspector_comm::TrCdpEvent cdpEvent(this->id, eventJson);
-        bool result = sendInspectorResponse(cdpEvent);
-        if (result)
-        {
-          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) sent CDP event successfully", this->id);
-        }
-        else
-        {
-          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send CDP event", this->id);
-        }
-        return result;
-      };
-
-      // Initialize content-side CDP handler with event sender
-      contentCdpHandler = make_unique<ContentCdpHandler>(eventSender);
-
-      // Create worker thread for processing inspector commands
-      auto onInspectorCommandWork = [this](WorkerThread &worker)
-      {
-        inspector_comm::TrInspectorCommandMessage incomingCommand;
-        if (inspectorChanReceiver->recvCommand(incomingCommand, 100))
-        {
-          DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received inspector command type: %d", id, static_cast<int>(incomingCommand.getType()));
-          onInspectorCommand(incomingCommand);
-        }
-      };
-      inspectorCommandWorker = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
-
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) inspector channel connected successfully, worker thread started", id);
+      contentInspector->start();
     }
     else
     {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to inspector channel", id);
+      contentInspector.reset();
     }
   }
 #endif
+  else
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to inspector channel", id);
+  }
+}
+#endif
 
-  // Initialize the built-in scene
-  builtinScene = builtin_scene::Scene::Make(this);
-  if (builtinScene != nullptr)
-    builtinScene->bootstrap();
+// Initialize the built-in scene
+builtinScene = builtin_scene::Scene::Make(this);
+if (builtinScene != nullptr)
+  builtinScene->bootstrap();
 
-  // Create the window instance
-  window = make_shared<::browser::Window>(this);
+// Create the window instance
+window = make_shared<::browser::Window>(this);
 
-  // Start the service alive listener
-  serviceAliveListener = new thread([]()
-                                    {
+// Start the service alive listener
+serviceAliveListener = new thread([]()
+                                  {
                                       SET_THREAD_NAME("TrServiceAliveListener");
                                       while (true)
                                       {
@@ -584,10 +557,10 @@ void TrClientContextPerProcess::start()
                                           exit(0);  // FIXME: more graceful exit?
                                       } });
 
-  startedAt = uv_hrtime();
+startedAt = uv_hrtime();
 
-  // Finish the client start.
-  fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
+// Finish the client start.
+fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
 }
 
 void TrClientContextPerProcess::print()
@@ -837,45 +810,14 @@ void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMes
 
 bool TrClientContextPerProcess::sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response)
 {
-  assert(inspectorChanSender != nullptr);
-  return inspectorChanSender->sendCommand(response);
+  return contentInspector ? contentInspector->sendInspectorResponse(response) : false;
 }
 
 void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage)
 {
-  auto messageType = commandMessage.getType();
-  if (messageType == inspector_comm::TrInspectorCommandType::CdpRequest)
+  if (contentInspector)
   {
-    auto cdpRequest = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpRequest>(commandMessage);
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received CDP request %u: %s", id, cdpRequest.requestId, cdpRequest.cdpMessageJson.c_str());
-
-    // Use the ContentCdpHandler to process the request and get domain/method
-    std::string responseJson;
-    if (contentCdpHandler)
-    {
-      responseJson = contentCdpHandler->processMessage(cdpRequest.cdpMessageJson);
-    }
-    else
-    {
-      // Fallback error response if handler is not available
-      responseJson = "{\"id\":" + std::to_string(cdpRequest.requestId) + ",\"error\":{\"code\":-32603,\"message\":\"Internal error: CDP handler not initialized\"}}";
-    }
-
-    // Send response back to host process
-    inspector_comm::TrCdpResponse cdpResponse(cdpRequest.requestId, cdpRequest.contentId, responseJson);
-
-    if (sendInspectorResponse(cdpResponse))
-    {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) sent CDP response %u successfully", id, cdpRequest.requestId);
-    }
-    else
-    {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send CDP response %u", id, cdpRequest.requestId);
-    }
-  }
-  else
-  {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received unknown inspector command type: %d", id, static_cast<int>(messageType));
+    contentInspector->handleInspectorCommand(commandMessage);
   }
 }
 

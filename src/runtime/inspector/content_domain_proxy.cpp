@@ -1,3 +1,6 @@
+#include <chrono>
+#include <unordered_set>
+
 #include "./content_domain_proxy.hpp"
 #include "./cdp_handler.hpp" // For CdpMessage and CdpResponse
 #include "../constellation.hpp"
@@ -6,8 +9,7 @@
 #include "common/debug.hpp"
 #include "common/inspector/message.hpp"
 #include "common/inspector/sender.hpp"
-#include <chrono>
-#include <unordered_set>
+#include "common/inspector/cdp_domains.hpp"
 
 using namespace std;
 using namespace inspector_comm;
@@ -268,18 +270,11 @@ void ContentDomainProxy::cleanupTimedOutRequests()
 
 void ContentDomainProxy::setupForwardedDomains()
 {
-  // Define which domains should be forwarded to content processes
-  // Initially, we'll forward Runtime and Example domains as examples
-  forwardedDomains_.insert("Runtime");
-  forwardedDomains_.insert("Example");
-  forwardedDomains_.insert("Log");
-
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Configured %zu domains for forwarding", forwardedDomains_.size());
+  forwardedDomains_ = cdp_domains::getForwardedDomains();
 }
 
 // Handle response from content process (called by TrContentRuntime)
 void ContentDomainProxy::handleResponseFromContent(uint32_t requestId, const string &response)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Received response for request %u", requestId);
   handleResponse(requestId, response);
 }

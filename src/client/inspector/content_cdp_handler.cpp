@@ -1,62 +1,48 @@
-#include <common/debug.hpp>
+#include <chrono>
+#include <rapidjson/document.h>
 
 #include "./content_cdp_handler.hpp"
 #include "./content_runtime_domain.hpp"
 #include "./content_example_domain.hpp"
 #include "./content_log_domain.hpp"
+#include "common/inspector/cdp_domains.hpp"
 
 using namespace std;
-
-ContentCdpHandler::ContentCdpHandler()
-{
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Handler initialized");
-
-  // Register content-side domain implementations
-  registerDomain("Runtime", make_unique<ContentCdpRuntimeDomain>());
-  registerDomain("Example", make_unique<ContentCdpExampleDomain>());
-  registerDomain("Log", make_unique<ContentCdpLogDomain>());
-}
 
 ContentCdpHandler::ContentCdpHandler(const CdpEventSender &eventSender)
     : eventSender_(eventSender)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Handler initialized with event sender");
-
   // Register content-side domain implementations
   registerDomain("Runtime", make_unique<ContentCdpRuntimeDomain>());
   registerDomain("Example", make_unique<ContentCdpExampleDomain>());
   registerDomain("Log", make_unique<ContentCdpLogDomain>());
 
-  // Set event sender for all domains
-  setEventSender(eventSender);
+  // Set event sender for all domains if provided
+  if (eventSender_)
+  {
+    setEventSender(eventSender_);
+  }
 }
 
 ContentCdpHandler::~ContentCdpHandler()
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Handler destroyed");
 }
 
 string ContentCdpHandler::processMessage(const string &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Processing message: %s", message.c_str());
-
   auto cdpMessage = CdpMessage::parse(message);
   if (!cdpMessage)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Failed to parse message");
     return CdpResponse::error(-1, -32700, "Parse error");
   }
 
   string domain = extractDomain(cdpMessage->method);
   string methodName = extractMethodName(cdpMessage->method);
 
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Domain=%s, Method=%s, ID=%lld", domain.c_str(), methodName.c_str(), (long long)cdpMessage->id);
-
   // Find domain handler
   auto domainIt = domains_.find(domain);
   if (domainIt == domains_.end())
   {
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Unknown domain: %s", domain.c_str());
     return CdpResponse::error(cdpMessage->id, -32601, "Method not found");
   }
 
@@ -66,15 +52,12 @@ string ContentCdpHandler::processMessage(const string &message)
   }
   catch (const exception &e)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Domain handler error: %s", e.what());
     return CdpResponse::error(cdpMessage->id, -32603, "Internal error");
   }
 }
 
 void ContentCdpHandler::registerDomain(const string &domainName, unique_ptr<ContentCdpDomainHandler> handler)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP: Registering domain: %s", domainName.c_str());
-
   // Set event sender if we have one
   if (eventSender_)
   {

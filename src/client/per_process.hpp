@@ -39,10 +39,10 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
+#ifdef TR_ENABLE_INSPECTOR
 #include "common/inspector/message.hpp"
-#include "common/inspector/sender.hpp"
-#include "common/inspector/receiver.hpp"
-#include "inspector/content_cdp_handler.hpp"
+#include "inspector/content_inspector.hpp"
+#endif
 #include "./classes.hpp"
 
 // Forward declarations
@@ -483,7 +483,7 @@ public:
   // Get the content CDP handler
   ContentCdpHandler *getContentCdpHandler()
   {
-    return contentCdpHandler.get();
+    return contentInspector ? contentInspector->getContentCdpHandler() : nullptr;
   }
 #endif
 
@@ -572,11 +572,7 @@ private: // xr fields
 
 #ifdef TR_ENABLE_INSPECTOR
 private: // inspector fields
-  TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
-  unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
-  unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
-  unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
-  unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
+  std::unique_ptr<ContentInspector> contentInspector = nullptr;
 #endif
 
 private: // frame request fields
