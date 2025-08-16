@@ -105,6 +105,7 @@ private:
   void startHived();
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
+
 #ifdef TR_ENABLE_INSPECTOR
   void acceptInspectorCommandChanClients(int timeout = 100);
 #endif

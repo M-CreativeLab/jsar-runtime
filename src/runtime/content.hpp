@@ -279,8 +279,11 @@ private:
   void recvEvent();
   void recvMediaRequest();
   bool recvXRCommand(int timeout = 0);
+
+#ifdef TR_ENABLE_INSPECTOR
   bool recvInspectorCommand(int timeout = 0);
   void handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message);
+#endif
 
   bool tryDispatchRequest();
   void prepareRequest(events_comm::TrDocumentRequest &);

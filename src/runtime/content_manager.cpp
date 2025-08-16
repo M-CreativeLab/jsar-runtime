@@ -82,6 +82,10 @@ bool TrContentManager::shutdown()
   }
 
   eventChanWatcher->stop();
+#ifdef TR_ENABLE_INSPECTOR
+  inspectorCommandChanWatcher->stop();
+#endif
+
   hived->shutdown();
   DEBUG(LOG_TAG_CONTENT, "TrContentManager::shutdown() done.");
   return true;

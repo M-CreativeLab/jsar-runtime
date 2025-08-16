@@ -374,6 +374,8 @@ bool TrContentRuntime::recvXRCommand(int timeout)
   }
 }
 
+#ifdef TR_ENABLE_INSPECTOR
+
 bool TrContentRuntime::recvInspectorCommand(int timeout)
 {
   if (TR_UNLIKELY(inspectorCommandChanReceiver == nullptr))
@@ -440,6 +442,8 @@ void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspector
   }
 }
 
+#endif
+
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -499,7 +503,10 @@ bool TrContentRuntime::tickOnFrame()
   recvEvent();
   recvXRCommand();
   recvMediaRequest();
+
+#ifdef TR_ENABLE_INSPECTOR
   recvInspectorCommand();
+#endif
   return true;
 }
 
