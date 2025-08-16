@@ -884,5 +884,4 @@ logging::Logger *TrClientContextPerProcess::getLogger()
   return logging::Logger::GetInstance();
 }
 
-#ifdef TR_ENABLE_INSPECTOR
 #endif

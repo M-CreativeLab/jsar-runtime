@@ -2,7 +2,6 @@
 
 #include <string>
 #include <memory>
-#include "inspector/content_log_domain.hpp"
 
 // Forward declarations
 class TrClientContextPerProcess;

@@ -77,10 +77,7 @@ public:
   }
 
   // Convenience method to get Log domain
-  ContentCdpLogDomain *getLogDomain()
-  {
-    return getDomain<ContentCdpLogDomain>("Log");
-  }
+  ContentCdpLogDomain *getLogDomain();
 
 private:
   std::unordered_map<std::string, std::unique_ptr<ContentCdpDomainHandler>> domains_;

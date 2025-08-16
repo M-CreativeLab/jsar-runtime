@@ -2,6 +2,7 @@
 #include <idgen.hpp>
 #include <common/image/image_processor.hpp>
 #include <crates/bindings.hpp>
+#include <client/logger.hpp>
 #include <client/xr/webxr_session.hpp>
 
 #include "./webgl_context.hpp"
@@ -74,9 +75,8 @@ namespace client_graphics
     }
 
     auto initializedAt = chrono::system_clock::now();
-    cout << "Initialized a `WebGL1Context` in "
-         << chrono::duration_cast<chrono::milliseconds>(initializedAt - sentAt).count() << "ms" << endl;
-    cout << initResp->toString("  ") << endl;
+    logging::LogInfo("Initialized `WebGL1Context` in " +
+                     to_string(chrono::duration_cast<chrono::milliseconds>(initializedAt - sentAt).count()) + "ms");
 
     viewport_ = initResp->drawingViewport;
     maxCombinedTextureImageUnits = initResp->maxCombinedTextureImageUnits;

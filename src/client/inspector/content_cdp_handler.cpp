@@ -1,9 +1,9 @@
+#include <common/debug.hpp>
+
 #include "./content_cdp_handler.hpp"
 #include "./content_runtime_domain.hpp"
 #include "./content_example_domain.hpp"
 #include "./content_log_domain.hpp"
-#include "runtime/inspector/cdp_handler.hpp" // For CdpMessage and CdpResponse
-#include "common/debug.hpp"
 
 using namespace std;
 
@@ -109,4 +109,9 @@ string ContentCdpHandler::extractMethodName(const string &method)
   if (dotPos == string::npos)
     return method;
   return method.substr(dotPos + 1);
+}
+
+ContentCdpLogDomain *ContentCdpHandler::getLogDomain()
+{
+  return getDomain<ContentCdpLogDomain>("Log");
 }

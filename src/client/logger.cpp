@@ -1,12 +1,14 @@
-#include "logger.hpp"
-#include "per_process.hpp"
-#include "inspector/content_cdp_handler.hpp"
-#include "inspector/content_log_domain.hpp"
-#include "debug.hpp"
 #include <iostream>
+
+#include "./inspector/content_cdp_handler.hpp"
+#include "./inspector/content_log_domain.hpp"
+#include "./per_process.hpp"
+#include "./logger.hpp"
+#include "./debug.hpp"
 
 namespace logging
 {
+  using namespace std;
 
   Logger *Logger::GetInstance()
   {
@@ -19,20 +21,25 @@ namespace logging
     clientContext_ = clientContext;
   }
 
-  void Logger::log(Level level, Source source, const std::string &text)
+  void Logger::log(Level level, Source source, const string &text)
   {
     log(level, source, text, "", 0);
   }
 
-  void Logger::log(Level level, Source source, const std::string &text, const std::string &url, int lineNumber)
+  void Logger::log(Level level, Source source, const string &text, const string &url, int lineNumber)
   {
+    if (level == Level::ERROR || level == Level::WARNING)
+      cerr << "[" << sourceToString(source) << "] " << text << endl;
+    else
+      cout << "[" << sourceToString(source) << "] " << text << endl;
+
 #ifdef TR_ENABLE_INSPECTOR
     auto cdpHandler = getContentCdpHandler();
     if (!cdpHandler)
     {
       DEBUG(LOG_TAG_INSPECTOR, "Logger: No CDP handler available, skipping log entry");
       // Fallback to standard error when CDP is not available
-      std::cerr << "Logger: " << text << std::endl;
+      cerr << "Logger: " << text << endl;
       return;
     }
 
@@ -41,7 +48,7 @@ namespace logging
     {
       DEBUG(LOG_TAG_INSPECTOR, "Logger: No Log domain available, skipping log entry");
       // Fallback to standard error when Log domain is not available
-      std::cerr << "Logger: " << text << std::endl;
+      cerr << "Logger: " << text << endl;
       return;
     }
 
@@ -50,8 +57,8 @@ namespace logging
     entry.source = sourceToString(source);
     entry.level = levelToString(level);
     entry.text = text;
-    entry.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::system_clock::now().time_since_epoch())
+    entry.timestamp = chrono::duration_cast<chrono::milliseconds>(
+                        chrono::system_clock::now().time_since_epoch())
                         .count();
 
     if (!url.empty())
@@ -66,55 +73,50 @@ namespace logging
 
     // Send to CDP Log domain
     logDomain->addLogEntry(entry);
-
-    DEBUG(LOG_TAG_INSPECTOR, "Logger: Sent log entry to DevTools: [%s/%s] %s", entry.level.c_str(), entry.source.c_str(), text.c_str());
-#else
-    // Fallback to standard output when inspector is disabled
-    std::cout << "Logger: " << text << std::endl;
 #endif
   }
 
-  void Logger::verbose(const std::string &text)
+  void Logger::verbose(const string &text)
   {
     log(Level::VERBOSE, Source::OTHER, text);
   }
 
-  void Logger::info(const std::string &text)
+  void Logger::info(const string &text)
   {
     log(Level::INFO, Source::OTHER, text);
   }
 
-  void Logger::warning(const std::string &text)
+  void Logger::warning(const string &text)
   {
     log(Level::WARNING, Source::OTHER, text);
   }
 
-  void Logger::error(const std::string &text)
+  void Logger::error(const string &text)
   {
     log(Level::ERROR, Source::OTHER, text);
   }
 
-  void Logger::jsLog(const std::string &text)
+  void Logger::jsLog(const string &text)
   {
     log(Level::INFO, Source::JAVASCRIPT, text);
   }
 
-  void Logger::jsInfo(const std::string &text)
+  void Logger::jsInfo(const string &text)
   {
     log(Level::INFO, Source::JAVASCRIPT, text);
   }
 
-  void Logger::jsWarn(const std::string &text)
+  void Logger::jsWarn(const string &text)
   {
     log(Level::WARNING, Source::JAVASCRIPT, text);
   }
 
-  void Logger::jsError(const std::string &text)
+  void Logger::jsError(const string &text)
   {
     log(Level::ERROR, Source::JAVASCRIPT, text);
   }
 
-  std::string Logger::levelToString(Level level)
+  string Logger::levelToString(Level level)
   {
     switch (level)
     {
@@ -131,7 +133,7 @@ namespace logging
     }
   }
 
-  std::string Logger::sourceToString(Source source)
+  string Logger::sourceToString(Source source)
   {
     switch (source)
     {
@@ -180,47 +182,47 @@ namespace logging
   }
 
   // Convenience functions for global access
-  void LogVerbose(const std::string &text)
+  void LogVerbose(const string &text)
   {
     Logger::GetInstance()->verbose(text);
   }
 
-  void LogInfo(const std::string &text)
+  void LogInfo(const string &text)
   {
     Logger::GetInstance()->info(text);
   }
 
-  void LogWarning(const std::string &text)
+  void LogWarning(const string &text)
   {
     Logger::GetInstance()->warning(text);
   }
 
-  void LogError(const std::string &text)
+  void LogError(const string &text)
   {
     Logger::GetInstance()->error(text);
   }
 
-  void LogJsInfo(const std::string &text)
+  void LogJsInfo(const string &text)
   {
     Logger::GetInstance()->jsInfo(text);
   }
 
-  void LogJsWarn(const std::string &text)
+  void LogJsWarn(const string &text)
   {
     Logger::GetInstance()->jsWarn(text);
   }
 
-  void LogJsError(const std::string &text)
+  void LogJsError(const string &text)
   {
     Logger::GetInstance()->jsError(text);
   }
 
-  void Log(Logger::Level level, Logger::Source source, const std::string &text)
+  void Log(Logger::Level level, Logger::Source source, const string &text)
   {
     Logger::GetInstance()->log(level, source, text);
   }
 
-  void Log(Logger::Level level, Logger::Source source, const std::string &text, const std::string &url, int lineNumber)
+  void Log(Logger::Level level, Logger::Source source, const string &text, const string &url, int lineNumber)
   {
     Logger::GetInstance()->log(level, source, text, url, lineNumber);
   }

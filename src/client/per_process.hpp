@@ -474,10 +474,12 @@ private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
 #ifdef TR_ENABLE_INSPECTOR
-#ifdef TR_ENABLE_INSPECTOR
   bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
   void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
+#endif
 
+public:
+#ifdef TR_ENABLE_INSPECTOR
   // Get the content CDP handler
   ContentCdpHandler *getContentCdpHandler()
   {

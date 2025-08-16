@@ -41,21 +41,14 @@ string ContentCdpLogDomain::handleMethod(const string &method, const CdpMessage 
 
 string ContentCdpLogDomain::enable(const CdpMessage &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Enabling domain");
   enabled_ = true;
 
   // Send any buffered log entries as events
   for (const auto &entry : logBuffer_)
   {
     string eventJson = createLogEntryEvent(entry);
-    if (sendEvent(eventJson))
-    {
-      DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Sent buffered entry event: %s", entry.text.c_str());
-    }
-    else
-    {
-      DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Failed to send buffered entry event: %s", entry.text.c_str());
-    }
+    if (!sendEvent(eventJson))
+      cerr << "Content CDP Log: Failed to send buffered entry event: " << entry.text << endl;
   }
 
   rapidjson::Document result;
@@ -65,7 +58,6 @@ string ContentCdpLogDomain::enable(const CdpMessage &message)
 
 string ContentCdpLogDomain::disable(const CdpMessage &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Disabling domain");
   enabled_ = false;
   violationsReportEnabled_ = false;
   violationTypes_.clear();
@@ -77,7 +69,6 @@ string ContentCdpLogDomain::disable(const CdpMessage &message)
 
 string ContentCdpLogDomain::clear(const CdpMessage &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Clearing log entries");
   logBuffer_.clear();
 
   rapidjson::Document result;
@@ -87,8 +78,6 @@ string ContentCdpLogDomain::clear(const CdpMessage &message)
 
 string ContentCdpLogDomain::startViolationsReport(const CdpMessage &message)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Starting violations report");
-
   violationsReportEnabled_ = true;
   violationTypes_.clear();
 
@@ -143,31 +132,19 @@ string ContentCdpLogDomain::stopViolationsReport(const CdpMessage &message)
 
 void ContentCdpLogDomain::addLogEntry(const LogEntry &entry)
 {
-  if (!enabled_)
-  {
-    return; // Log domain is not enabled, ignore
-  }
-
-  DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Adding log entry: %s [%s/%s]", entry.text.c_str(), entry.level.c_str(), entry.source.c_str());
-
   // Store in buffer
   logBuffer_.push_back(entry);
 
   // Keep buffer size reasonable (last 1000 entries)
   if (logBuffer_.size() > 1000)
-  {
     logBuffer_.erase(logBuffer_.begin());
-  }
 
-  // Send Log.entryAdded event to the host process
-  string eventJson = createLogEntryEvent(entry);
-  if (sendEvent(eventJson))
+  if (enabled_)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Sent Log.entryAdded event successfully");
-  }
-  else
-  {
-    DEBUG(LOG_TAG_INSPECTOR, "Content CDP Log: Failed to send Log.entryAdded event");
+    // Send Log.entryAdded event to the host process
+    string eventJson = createLogEntryEvent(entry);
+    if (!sendEvent(eventJson))
+      cerr << "Content CDP Log: Failed to send Log.entryAdded event: " << entry.text << endl;
   }
 }
 
