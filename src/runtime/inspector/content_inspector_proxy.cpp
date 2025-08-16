@@ -1,24 +1,25 @@
-#ifdef TR_ENABLE_INSPECTOR
-
 #include <iostream>
+#include <common/ipc.hpp>
+#include <runtime/constellation.hpp>
+#include <runtime/inspector.hpp>
 
-#include "./runtime_content_inspector.hpp"
 #include "./cdp_handler.hpp"
-#include "../constellation.hpp"
-#include "common/ipc.hpp"
+#include "./content_domain_proxy.hpp"
+#include "./content_inspector_proxy.hpp"
 
 using namespace std;
 
-RuntimeContentInspector::RuntimeContentInspector()
+ContentInspectorProxy::ContentInspectorProxy(shared_ptr<TrInspector> inspector)
+    : inspector_(inspector)
 {
 }
 
-RuntimeContentInspector::~RuntimeContentInspector()
+ContentInspectorProxy::~ContentInspectorProxy()
 {
   // Don't delete the client - it's managed externally
 }
 
-bool RuntimeContentInspector::initialize(ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *client)
+bool ContentInspectorProxy::initialize(ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *client)
 {
   if (!client)
     return false;
@@ -30,16 +31,30 @@ bool RuntimeContentInspector::initialize(ipc::TrOneShotClient<inspector_comm::Tr
   return true;
 }
 
-bool RuntimeContentInspector::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
+bool ContentInspectorProxy::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
 {
   if (!inspectorCommandChanSender)
     return false;
   return inspectorCommandChanSender->sendCommand(command);
 }
 
-void RuntimeContentInspector::handleInspectorCommandMessage(const inspector_comm::TrInspectorCommandMessage &message)
+bool ContentInspectorProxy::recvInspectorCommand()
 {
-  switch (message.commandType)
+  inspector_comm::TrInspectorCommandMessage message;
+  if (inspectorCommandChanReceiver->recvCommand(message, 0))
+  {
+    handleInspectorCommandMessage(message);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void ContentInspectorProxy::handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message)
+{
+  switch (message.getType())
   {
   case inspector_comm::TrInspectorCommandType::CdpResponse:
   {
@@ -50,31 +65,21 @@ void RuntimeContentInspector::handleInspectorCommandMessage(const inspector_comm
     {
       auto contentProxy = inspectorCdpHandler_->getContentProxy();
       if (contentProxy)
-      {
         contentProxy->handleResponseFromContent(cdpResponse.requestId, cdpResponse.cdpResponseJson);
-      }
     }
     break;
   }
   case inspector_comm::TrInspectorCommandType::CdpEvent:
   {
     auto cdpEvent = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpEvent>(message);
-
-    // Forward CDP events to inspector clients
-    if (inspectorCdpHandler_)
-    {
-      auto constellation = inspectorCdpHandler_->getConstellation();
-      if (constellation && constellation->inspector)
-      {
-        constellation->inspector->broadcastEventToClients(cdpEvent.cdpEventJson);
-      }
-    }
+    if (inspector_)
+      inspector_->broadcastEventToClients(cdpEvent.cdpEventJson);
     break;
   }
   default:
-    cerr << "RuntimeContentInspector: Unknown inspector command type: " << static_cast<int>(message.commandType) << endl;
+    cerr << "ContentInspectorProxy: Unknown inspector command type: "
+         << static_cast<int>(message.getType())
+         << endl;
     break;
   }
 }
-
-#endif // TR_ENABLE_INSPECTOR

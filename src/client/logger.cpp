@@ -1,14 +1,15 @@
 #include <iostream>
 
 #include "./inspector/content_cdp_handler.hpp"
-#include "./inspector/content_log_domain.hpp"
+#include "./inspector/domains/log_domain.hpp"
 #include "./per_process.hpp"
-#include "./logger.hpp"
 #include "./debug.hpp"
+#include "./logger.hpp"
 
 namespace logging
 {
   using namespace std;
+  using namespace client_inspector::domains;
 
   Logger *Logger::GetInstance()
   {
@@ -170,7 +171,7 @@ namespace logging
     }
   }
 
-  ContentCdpHandler *Logger::getContentCdpHandler()
+  client_inspector::ContentCdpHandler *Logger::getContentCdpHandler()
   {
 #ifdef TR_ENABLE_INSPECTOR
     if (clientContext_)

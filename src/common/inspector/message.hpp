@@ -41,7 +41,7 @@ namespace inspector_comm
     }
 
   public:
-    TrInspectorCommandType getType()
+    TrInspectorCommandType getType() const
     {
       return type;
     }

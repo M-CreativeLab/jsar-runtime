@@ -1,7 +1,5 @@
 #pragma once
 
-#ifdef TR_ENABLE_INSPECTOR
-
 #include <memory>
 #include "common/inspector/receiver.hpp"
 #include "common/inspector/sender.hpp"
@@ -9,45 +7,47 @@
 #include "common/scoped_thread.hpp"
 #include "client/inspector/content_cdp_handler.hpp"
 
-// Encapsulates all inspector-related functionality for content processes
-class ContentInspector
+namespace client_inspector
 {
-public:
-  ContentInspector();
-  ~ContentInspector();
-
-  // Initialize inspector channels and handlers
-  bool initialize(int inspectorChanPort);
-
-  // Start the inspector worker thread
-  void start();
-
-  // Stop the inspector worker thread
-  void stop();
-
-  // Get the ContentCdpHandler instance
-  ContentCdpHandler *getContentCdpHandler() const
+  class ContentInspector
   {
-    return contentCdpHandler.get();
-  }
+  public:
+    ContentInspector(uint32_t contentId);
+    ~ContentInspector();
 
-  // Send inspector response
-  bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
+    // Initialize inspector channels and handlers
+    bool initialize(int inspectorChanPort);
 
-  // Handle incoming inspector command
-  void handleInspectorCommand(const inspector_comm::TrInspectorCommandMessage &message);
+    // Start the inspector worker thread
+    void start();
 
-private:
-  // IPC channels for inspector communication
-  ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
-  std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
-  std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
+    // Stop the inspector worker thread
+    void stop();
 
-  // Worker thread for handling inspector commands
-  std::unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
+    // Get the ContentCdpHandler instance
+    ContentCdpHandler *getContentCdpHandler() const
+    {
+      return contentCdpHandler.get();
+    }
 
-  // CDP handler for processing inspector commands
-  std::unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
-};
+    // Send inspector response
+    bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
 
-#endif // TR_ENABLE_INSPECTOR
+    // Handle incoming inspector command
+    void handleInspectorCommand(inspector_comm::TrInspectorCommandMessage &message);
+
+  private:
+    uint32_t contentId_ = 0;
+
+    // IPC channels for inspector communication
+    ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
+    std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
+    std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
+
+    // Worker thread for handling inspector commands
+    std::unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
+
+    // CDP handler for processing inspector commands
+    std::unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
+  };
+}

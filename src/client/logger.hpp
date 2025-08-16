@@ -5,7 +5,10 @@
 
 // Forward declarations
 class TrClientContextPerProcess;
-class ContentCdpHandler;
+namespace client_inspector
+{
+  class ContentCdpHandler;
+}
 
 namespace logging
 {
@@ -78,7 +81,7 @@ namespace logging
     // Helper methods
     std::string levelToString(Level level);
     std::string sourceToString(Source source);
-    ContentCdpHandler *getContentCdpHandler();
+    client_inspector::ContentCdpHandler *getContentCdpHandler();
   };
 
   // Convenience functions for global access

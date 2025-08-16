@@ -7,29 +7,30 @@
 #include <condition_variable>
 #include <filesystem>
 
-#include "common/classes.hpp"
-#include "common/debug.hpp"
-#include "common/options.hpp"
-#include "common/scoped_thread.hpp"
-#include "common/ipc.hpp"
-#include "common/command_buffers/shared.hpp"
-#include "common/command_buffers/sender.hpp"
-#include "common/command_buffers/receiver.hpp"
-#include "common/command_buffers/command_buffers.hpp"
+#include <common/classes.hpp>
+#include <common/debug.hpp>
+#include <common/options.hpp>
+#include <common/scoped_thread.hpp>
+#include <common/ipc.hpp>
+#include <common/command_buffers/shared.hpp>
+#include <common/command_buffers/sender.hpp>
+#include <common/command_buffers/receiver.hpp>
+#include <common/command_buffers/command_buffers.hpp>
 
-#include "common/events_v2/event_target.hpp"
-#include "common/events_v2/native_event.hpp"
-#include "common/events_v2/native_message.hpp"
-#include "common/events_v2/native_sender.hpp"
-#include "common/events_v2/native_receiver.hpp"
-#include "common/media/message.hpp"
-#include "common/media/sender.hpp"
-#include "common/media/receiver.hpp"
-#include "common/xr/message.hpp"
-#include "common/xr/sender.hpp"
-#include "common/xr/receiver.hpp"
+#include <common/events_v2/event_target.hpp>
+#include <common/events_v2/native_event.hpp>
+#include <common/events_v2/native_message.hpp>
+#include <common/events_v2/native_sender.hpp>
+#include <common/events_v2/native_receiver.hpp>
+#include <common/media/message.hpp>
+#include <common/media/sender.hpp>
+#include <common/media/receiver.hpp>
+#include <common/xr/message.hpp>
+#include <common/xr/sender.hpp>
+#include <common/xr/receiver.hpp>
+
 #ifdef TR_ENABLE_INSPECTOR
-#include "inspector/runtime_content_inspector.hpp"
+#include "./inspector/content_inspector_proxy.hpp"
 #endif
 
 #include "./constellation.hpp"
@@ -237,6 +238,7 @@ public: // WebXR methods
    */
   bool removeXRSession(xr::TrXRSession *session);
 
+#ifdef TR_ENABLE_INSPECTOR
 public: // Inspector methods
   /**
    * When the content's client is connected to the server-side inspector command channel.
@@ -245,7 +247,6 @@ public: // Inspector methods
    */
   void onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client);
 
-#ifdef TR_ENABLE_INSPECTOR
   /**
    * Send an inspector command (CDP request) to the content process.
    *
@@ -282,11 +283,6 @@ private:
   void recvEvent();
   void recvMediaRequest();
   bool recvXRCommand(int timeout = 0);
-
-#ifdef TR_ENABLE_INSPECTOR
-  bool recvInspectorCommand(int timeout = 0);
-  void handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message);
-#endif
 
   bool tryDispatchRequest();
   void prepareRequest(events_comm::TrDocumentRequest &);
@@ -384,7 +380,7 @@ private: // XR fields
 
 #ifdef TR_ENABLE_INSPECTOR
 private: // Inspector fields
-  std::unique_ptr<RuntimeContentInspector> contentInspector = nullptr;
+  std::unique_ptr<ContentInspectorProxy> contentInspectorProxy = nullptr;
 #endif
   /**
    * **Why we need to store the XRSession instances?**

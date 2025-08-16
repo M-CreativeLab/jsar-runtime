@@ -11,8 +11,8 @@ namespace cdp_domains
   {
     return {
       "Runtime",
-      "Example",
-      "Log"};
+      "Log",
+    };
   }
 
 } // namespace cdp_domains

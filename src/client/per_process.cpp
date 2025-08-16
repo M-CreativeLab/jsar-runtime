@@ -17,7 +17,6 @@
 #include "./media/audio_player.hpp"
 #include "./xr/device.hpp"
 #include "./bindings.hpp"
-#include "./logger.hpp"
 
 using namespace std;
 using namespace node;
@@ -397,12 +396,6 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     xrCommandChanReceiver = nullptr;
   }
 
-#ifdef TR_ENABLE_INSPECTOR
-  // Clear for inspector
-  inspectorChanSender.reset();
-  inspectorChanReceiver.reset();
-#endif
-
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
 }
@@ -516,39 +509,31 @@ void TrClientContextPerProcess::start()
   }
 
 #ifdef TR_ENABLE_INSPECTOR
-  // Inspector command initialization
-#ifdef TR_ENABLE_INSPECTOR
   if (inspectorChanPort > 0)
   {
-    contentInspector = make_unique<ContentInspector>();
+    contentInspector = make_unique<client_inspector::ContentInspector>(id);
     if (contentInspector->initialize(inspectorChanPort))
-    {
       contentInspector->start();
-    }
     else
-    {
       contentInspector.reset();
-    }
   }
-#endif
   else
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to inspector channel", id);
+    cout << "ClientContext(" << id << ") failed to connect to inspector channel" << endl;
   }
-}
 #endif
 
-// Initialize the built-in scene
-builtinScene = builtin_scene::Scene::Make(this);
-if (builtinScene != nullptr)
-  builtinScene->bootstrap();
+  // Initialize the built-in scene
+  builtinScene = builtin_scene::Scene::Make(this);
+  if (builtinScene != nullptr)
+    builtinScene->bootstrap();
 
-// Create the window instance
-window = make_shared<::browser::Window>(this);
+  // Create the window instance
+  window = make_shared<::browser::Window>(this);
 
-// Start the service alive listener
-serviceAliveListener = new thread([]()
-                                  {
+  // Start the service alive listener
+  serviceAliveListener = new thread([]()
+                                    {
                                       SET_THREAD_NAME("TrServiceAliveListener");
                                       while (true)
                                       {
@@ -557,10 +542,10 @@ serviceAliveListener = new thread([]()
                                           exit(0);  // FIXME: more graceful exit?
                                       } });
 
-startedAt = uv_hrtime();
+  startedAt = uv_hrtime();
 
-// Finish the client start.
-fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
+  // Finish the client start.
+  fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
 }
 
 void TrClientContextPerProcess::print()
@@ -805,25 +790,3 @@ void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMes
     fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
   }
 }
-
-#ifdef TR_ENABLE_INSPECTOR
-
-bool TrClientContextPerProcess::sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response)
-{
-  return contentInspector ? contentInspector->sendInspectorResponse(response) : false;
-}
-
-void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage)
-{
-  if (contentInspector)
-  {
-    contentInspector->handleInspectorCommand(commandMessage);
-  }
-}
-
-logging::Logger *TrClientContextPerProcess::getLogger()
-{
-  return logging::Logger::GetInstance();
-}
-
-#endif

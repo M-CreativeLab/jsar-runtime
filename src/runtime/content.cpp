@@ -203,31 +203,22 @@ void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandM
   xrCommandChanClient = &client;
 }
 
+#ifdef TR_ENABLE_INSPECTOR
+
 void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
 {
-#ifdef TR_ENABLE_INSPECTOR
-  contentInspector = std::make_unique<RuntimeContentInspector>();
-  if (contentInspector->initialize(&client))
-  {
-    // Success - inspector is initialized
-  }
-  else
-  {
-    contentInspector.reset();
-  }
-#endif
+  contentInspectorProxy = std::make_unique<ContentInspectorProxy>(getConstellation()->inspector);
+  if (!contentInspectorProxy->initialize(&client))
+    contentInspectorProxy.reset();
 }
 
-#ifdef TR_ENABLE_INSPECTOR
 bool TrContentRuntime::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
 {
-  if (TR_UNLIKELY(!available || shouldDestroy || !contentInspector))
-  {
+  if (TR_UNLIKELY(!available || shouldDestroy || !contentInspectorProxy))
     return false;
-  }
-
-  return contentInspector->sendInspectorCommand(command);
+  return contentInspectorProxy->sendInspectorCommand(command);
 }
+
 #endif
 
 xr::TrXRSession *TrContentRuntime::getActiveXRSession()
@@ -380,28 +371,6 @@ bool TrContentRuntime::recvXRCommand(int timeout)
   }
 }
 
-#ifdef TR_ENABLE_INSPECTOR
-
-bool TrContentRuntime::recvInspectorCommand(int timeout)
-{
-  if (TR_UNLIKELY(!contentInspector))
-    return false;
-
-  // This method is no longer needed as ContentInspector handles command processing internally
-  return false;
-}
-}
-
-void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspectorCommandMessage &message)
-{
-  if (contentInspector)
-  {
-    contentInspector->handleInspectorCommandMessage(message);
-  }
-}
-
-#endif
-
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -463,7 +432,8 @@ bool TrContentRuntime::tickOnFrame()
   recvMediaRequest();
 
 #ifdef TR_ENABLE_INSPECTOR
-  recvInspectorCommand();
+  if (contentInspectorProxy)
+    contentInspectorProxy->recvInspectorCommand();
 #endif
   return true;
 }
@@ -497,15 +467,19 @@ void TrContentRuntime::release()
   DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
 }
 
+#ifdef TR_ENABLE_INSPECTOR
+
 void TrContentRuntime::setInspectorCdpHandler(CdpHandler *cdpHandler)
 {
-  if (contentInspector)
+  if (contentInspectorProxy)
   {
-    contentInspector->setCdpHandler(cdpHandler);
+    contentInspectorProxy->setCdpHandler(cdpHandler);
   }
 }
 
 CdpHandler *TrContentRuntime::getInspectorCdpHandler() const
 {
-  return contentInspector ? contentInspector->getCdpHandler() : nullptr;
+  return contentInspectorProxy ? contentInspectorProxy->getCdpHandler() : nullptr;
 }
+
+#endif

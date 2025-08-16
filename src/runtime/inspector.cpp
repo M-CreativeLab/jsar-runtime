@@ -410,15 +410,9 @@ void TrInspector::broadcastEventToClients(const std::string &eventJson)
     return;
   }
 
-  const auto &clients = server_->getClients();
-  int sentCount = 0;
-
-  for (const auto &client : clients)
+  for (const auto &client : server_->getClients())
   {
     if (client && client->isWebSocket())
-    {
       client->sendWebSocketMessage(eventJson);
-      sentCount++;
-    }
   }
 }
