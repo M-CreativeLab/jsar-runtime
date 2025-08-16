@@ -1,7 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "./constellation.hpp"
 #include "./content.hpp"
+#include "common/inspector/message.hpp"
 
 /**
  * A `TrContentManager` is to manage the lifecycle of content instances, that is, to create, run, and dispose of JavaScript runtime
@@ -76,6 +79,9 @@ public:
 
 private:
   void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
+#ifdef TR_ENABLE_INSPECTOR
+  void onNewClientOnInspectorCommandChan(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client);
+#endif
   void onTryDestroyingContents();
   void onRpcRequest(std::shared_ptr<events_comm::TrNativeEvent> event);
   void onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event);
@@ -102,6 +108,10 @@ private:
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
 
+#ifdef TR_ENABLE_INSPECTOR
+  void acceptInspectorCommandChanClients(int timeout = 100);
+#endif
+
 private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
@@ -120,6 +130,10 @@ private: // pre-content
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
   unique_ptr<WorkerThread> eventChanWatcher;
+#ifdef TR_ENABLE_INSPECTOR
+  TrOneShotServer<inspector_comm::TrInspectorCommandMessage> *inspectorCommandChanServer = nullptr;
+  unique_ptr<WorkerThread> inspectorCommandChanWatcher;
+#endif
 
 private: // Global configs
   struct RequestAuthorizationHeaders

@@ -7,27 +7,31 @@
 #include <condition_variable>
 #include <filesystem>
 
-#include "common/classes.hpp"
-#include "common/debug.hpp"
-#include "common/options.hpp"
-#include "common/scoped_thread.hpp"
-#include "common/ipc.hpp"
-#include "common/command_buffers/shared.hpp"
-#include "common/command_buffers/sender.hpp"
-#include "common/command_buffers/receiver.hpp"
-#include "common/command_buffers/command_buffers.hpp"
+#include <common/classes.hpp>
+#include <common/debug.hpp>
+#include <common/options.hpp>
+#include <common/scoped_thread.hpp>
+#include <common/ipc.hpp>
+#include <common/command_buffers/shared.hpp>
+#include <common/command_buffers/sender.hpp>
+#include <common/command_buffers/receiver.hpp>
+#include <common/command_buffers/command_buffers.hpp>
 
-#include "common/events_v2/event_target.hpp"
-#include "common/events_v2/native_event.hpp"
-#include "common/events_v2/native_message.hpp"
-#include "common/events_v2/native_sender.hpp"
-#include "common/events_v2/native_receiver.hpp"
-#include "common/media/message.hpp"
-#include "common/media/sender.hpp"
-#include "common/media/receiver.hpp"
-#include "common/xr/message.hpp"
-#include "common/xr/sender.hpp"
-#include "common/xr/receiver.hpp"
+#include <common/events_v2/event_target.hpp>
+#include <common/events_v2/native_event.hpp>
+#include <common/events_v2/native_message.hpp>
+#include <common/events_v2/native_sender.hpp>
+#include <common/events_v2/native_receiver.hpp>
+#include <common/media/message.hpp>
+#include <common/media/sender.hpp>
+#include <common/media/receiver.hpp>
+#include <common/xr/message.hpp>
+#include <common/xr/sender.hpp>
+#include <common/xr/receiver.hpp>
+
+#ifdef TR_ENABLE_INSPECTOR
+#include "./inspector/content_inspector_proxy.hpp"
+#endif
 
 #include "./constellation.hpp"
 #include "./hive_daemon.hpp"
@@ -234,6 +238,38 @@ public: // WebXR methods
    */
   bool removeXRSession(xr::TrXRSession *session);
 
+#ifdef TR_ENABLE_INSPECTOR
+public: // Inspector methods
+  /**
+   * When the content's client is connected to the server-side inspector command channel.
+   *
+   * @param client The channel client for the inspector command.
+   */
+  void onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client);
+
+  /**
+   * Send an inspector command (CDP request) to the content process.
+   *
+   * @param command The inspector command to send.
+   * @returns true if the command is sent successfully.
+   */
+  bool sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command);
+
+  /**
+   * Set the inspector CDP handler that manages this content runtime.
+   *
+   * @param cdpHandler The CDP handler instance.
+   */
+  void setInspectorCdpHandler(class CdpHandler *cdpHandler);
+
+  /**
+   * Get the inspector CDP handler that manages this content runtime.
+   *
+   * @returns The CDP handler instance or nullptr if not set.
+   */
+  class CdpHandler *getInspectorCdpHandler() const;
+#endif
+
 private:
   inline bool isUsed() const
   {
@@ -283,7 +319,7 @@ public:
    */
   TrDocumentRequestInit requestInit;
 
-private:
+public:
   /**
    * The content manager.
    */
@@ -341,6 +377,11 @@ private: // XR fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+
+#ifdef TR_ENABLE_INSPECTOR
+private: // Inspector fields
+  std::unique_ptr<ContentInspectorProxy> contentInspectorProxy = nullptr;
+#endif
   /**
    * **Why we need to store the XRSession instances?**
    *

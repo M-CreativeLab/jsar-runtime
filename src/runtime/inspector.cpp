@@ -21,7 +21,8 @@ using namespace std::placeholders;
 void TrInspector::initialize()
 {
   server_ = make_unique<TrInspectorServer>(shared_from_this());
-  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized");
+  inspectorCommandChanServer_ = make_unique<ipc::TrOneShotServer<inspector_comm::TrInspectorCommandMessage>>("InspectorCommandChan");
+  DEBUG(LOG_TAG_INSPECTOR, "Inspector initialized with command channel port: %d", getInspectorCommandChanPort());
 }
 
 void TrInspector::tick()
@@ -365,14 +366,24 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
 
   try
   {
-    string response = cdpHandler->processMessage(message);
-    DEBUG(LOG_TAG_INSPECTOR, "Sending CDP response: %s", response.c_str());
-    client.sendWebSocketMessage(response);
+    // Use async processing for WebSocket clients to avoid blocking
+    if (client.isWebSocket())
+    {
+      cdpHandler->processMessageAsync(message, &client);
+    }
+    else
+    {
+      // Fall back to synchronous processing for non-WebSocket clients
+      string response = cdpHandler->processMessage(message);
+      client.sendWebSocketMessage(response);
+    }
   }
   catch (const exception &e)
   {
     DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
-    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");
+    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":" +
+                                to_string(inspector_comm::TR_CDP_INTERNAL_ERROR_CODE) +
+                                ",\"message\":\"Internal error\"}}");
   }
 }
 
@@ -384,4 +395,26 @@ void TrInspector::onClientConnected(TrInspectorClient &client)
 void TrInspector::onClientDisconnected(TrInspectorClient &client)
 {
   DEBUG(LOG_TAG_INSPECTOR, "Client disconnected: %s", client.clientId().c_str());
+}
+
+int TrInspector::getInspectorCommandChanPort() const
+{
+  if (inspectorCommandChanServer_ == nullptr)
+    return 0;
+  return inspectorCommandChanServer_->getPort();
+}
+
+void TrInspector::broadcastEventToClients(const std::string &eventJson)
+{
+  if (!server_)
+  {
+    DEBUG(LOG_TAG_INSPECTOR, "Inspector server not initialized, cannot broadcast event");
+    return;
+  }
+
+  for (const auto &client : server_->getClients())
+  {
+    if (client && client->isWebSocket())
+      client->sendWebSocketMessage(eventJson);
+  }
 }

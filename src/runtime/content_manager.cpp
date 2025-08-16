@@ -13,6 +13,9 @@ TrContentManager::TrContentManager(TrConstellation *constellation)
     , hived(make_unique<TrHiveDaemon>(constellation))
 {
   eventChanServer = new TrOneShotServer<events_comm::TrNativeEventMessage>("eventChan");
+#ifdef TR_ENABLE_INSPECTOR
+  inspectorCommandChanServer = new TrOneShotServer<inspector_comm::TrInspectorCommandMessage>("inspectorCommandChan");
+#endif
 
   auto eventTarget = constellation->nativeEventTarget;
   rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto event)
@@ -28,6 +31,13 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
+#ifdef TR_ENABLE_INSPECTOR
+  if (inspectorCommandChanServer != nullptr)
+  {
+    delete inspectorCommandChanServer;
+    inspectorCommandChanServer = nullptr;
+  }
+#endif
   DEBUG(LOG_TAG_CONTENT, "ContentManager(%p) is destroyed", this);
 }
 
@@ -38,6 +48,10 @@ bool TrContentManager::initialize()
 
   eventChanWatcher = make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                { acceptEventChanClients(); });
+#ifdef TR_ENABLE_INSPECTOR
+  inspectorCommandChanWatcher = make_unique<WorkerThread>("TrInspectorCommandChanWatcher", [this](WorkerThread &)
+                                                          { acceptInspectorCommandChanClients(); });
+#endif
   return true;
 }
 
@@ -68,6 +82,10 @@ bool TrContentManager::shutdown()
   }
 
   eventChanWatcher->stop();
+#ifdef TR_ENABLE_INSPECTOR
+  inspectorCommandChanWatcher->stop();
+#endif
+
   hived->shutdown();
   DEBUG(LOG_TAG_CONTENT, "TrContentManager::shutdown() done.");
   return true;
@@ -489,6 +507,9 @@ void TrContentManager::startHived()
     hived->eventChanPort = eventChanServer->getPort();
     hived->mediaChanPort = constellation->mediaManager->chanPort();
     hived->commandBufferChanPort = constellation->renderer->getCommandBufferChanPort();
+#ifdef TR_ENABLE_INSPECTOR
+    hived->inspectorChanPort = inspectorCommandChanServer->getPort();
+#endif
   }
   hived->start();
 }
@@ -543,3 +564,36 @@ void TrContentManager::acceptEventChanClients(int timeout)
                              { onNewClientOnEventChan(newClient); },
                              timeout);
 }
+
+#ifdef TR_ENABLE_INSPECTOR
+void TrContentManager::acceptInspectorCommandChanClients(int timeout)
+{
+  inspectorCommandChanServer->tryAccept([this](TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &newClient)
+                                        { onNewClientOnInspectorCommandChan(newClient); },
+                                        timeout);
+}
+
+void TrContentManager::onNewClientOnInspectorCommandChan(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
+{
+  auto clientId = client.getCustomId();
+  DEBUG(LOG_TAG_INSPECTOR,
+        "ContentManager: New inspector command channel client connected, client id: %d",
+        clientId);
+
+  // Find the content runtime by client id and set up the inspector command channel
+  auto content = getContent(clientId);
+  if (content != nullptr)
+  {
+    content->onInspectorCommandChanConnected(client);
+    DEBUG(LOG_TAG_INSPECTOR,
+          "ContentManager: Inspector command channel connected to content %d",
+          content->id);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_INSPECTOR,
+          "ContentManager: Failed to find content for inspector command channel client %d",
+          clientId);
+  }
+}
+#endif

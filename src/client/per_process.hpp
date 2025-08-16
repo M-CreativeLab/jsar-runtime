@@ -14,32 +14,45 @@
 #include <node/uv.h>
 #include <napi.h>
 
-#include "base.hpp"
-#include "idgen.hpp"
-#include "debug.hpp"
-#include "common/ipc.hpp"
-#include "common/zone.hpp"
-#include "common/scoped_thread.hpp"
-#include "common/analytics/perf_fs.hpp"
-#include "common/command_buffers/shared.hpp"
-#include "common/command_buffers/command_buffers.hpp"
-#include "common/command_buffers/receiver.hpp"
-#include "common/command_buffers/sender.hpp"
-#include "common/frame_request/types.hpp"
-#include "common/events_v2/native_message.hpp"
-#include "common/events_v2/native_receiver.hpp"
-#include "common/events_v2/native_sender.hpp"
-#include "common/font/cache.hpp"
-#include "common/media/types.hpp"
-#include "common/media/message.hpp"
-#include "common/media/sender.hpp"
-#include "common/media/receiver.hpp"
-#include "common/xr/types.hpp"
-#include "common/xr/input_sources.hpp"
-#include "common/xr/message.hpp"
-#include "common/xr/sender.hpp"
-#include "common/xr/receiver.hpp"
+#include <base.hpp>
+#include <idgen.hpp>
+#include <common/debug.hpp>
+#include <common/ipc.hpp>
+#include <common/zone.hpp>
+#include <common/scoped_thread.hpp>
+#include <common/analytics/perf_fs.hpp>
+#include <common/command_buffers/shared.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <common/command_buffers/receiver.hpp>
+#include <common/command_buffers/sender.hpp>
+#include <common/frame_request/types.hpp>
+#include <common/events_v2/native_message.hpp>
+#include <common/events_v2/native_receiver.hpp>
+#include <common/events_v2/native_sender.hpp>
+#include <common/font/cache.hpp>
+#include <common/media/types.hpp>
+#include <common/media/message.hpp>
+#include <common/media/sender.hpp>
+#include <common/media/receiver.hpp>
+#include <common/xr/types.hpp>
+#include <common/xr/input_sources.hpp>
+#include <common/xr/message.hpp>
+#include <common/xr/sender.hpp>
+#include <common/xr/receiver.hpp>
+
 #include "./classes.hpp"
+#include "./logger.hpp"
+
+#ifdef TR_ENABLE_INSPECTOR
+#include <common/inspector/message.hpp>
+#include "./inspector/content_inspector.hpp"
+#endif
+
+// Forward declarations
+namespace logging
+{
+  class Logger;
+}
 
 using namespace std;
 using namespace ipc;
@@ -464,6 +477,19 @@ private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
 public:
+#ifdef TR_ENABLE_INSPECTOR
+  client_inspector::ContentCdpHandler *getContentCdpHandler()
+  {
+    return contentInspector ? contentInspector->getContentCdpHandler() : nullptr;
+  }
+#endif
+
+  logging::Logger *getLogger()
+  {
+    return logging::Logger::GetInstance();
+  }
+
+public:
   uint32_t id;
   string url;
   const TrClientEnvironmentPerProcess env;
@@ -483,6 +509,7 @@ public:
   uint32_t eventChanPort;
   uint32_t mediaChanPort;
   uint32_t commandBufferChanPort;
+  uint32_t inspectorChanPort;
   xr::TrDeviceInit xrDeviceInit;
   uint64_t startedAt;
   /**
@@ -496,7 +523,7 @@ public:
   /**
    * The `Window` instance for the client process.
    */
-  std::shared_ptr<browser::Window> window;
+  std::shared_ptr<::browser::Window> window;
 
 private: // event fields
   TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
@@ -541,6 +568,11 @@ private: // xr fields
   unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;
+
+#ifdef TR_ENABLE_INSPECTOR
+private: // inspector fields
+  std::unique_ptr<client_inspector::ContentInspector> contentInspector = nullptr;
+#endif
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;

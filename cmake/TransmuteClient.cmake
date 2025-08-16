@@ -20,6 +20,13 @@ file(GLOB TR_CLIENT_SOURCE
     "src/client/*.cpp"
 )
 
+if(TR_ENABLE_INSPECTOR)
+    file(GLOB_RECURSE TR_CLIENT_INSPECTOR_SOURCE
+        "src/client/inspector/*.cpp"
+    )
+    list(APPEND TR_CLIENT_LIBRARY_SOURCE ${TR_CLIENT_INSPECTOR_SOURCE})
+endif()
+
 # Add the client shaders header target
 set(TR_SHADERS_SOURCE "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/")
 set(TR_SHADERS_HEADER "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/shaders_store.gen.hpp")

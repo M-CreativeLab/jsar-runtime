@@ -16,6 +16,9 @@
 #include "./embedder.hpp"
 #include "./content.hpp"
 #include "./media_manager.hpp"
+#include "./inspector/content_domain_proxy.hpp"
+#include "./inspector/cdp_handler.hpp"
+#include "./inspector.hpp"
 
 using namespace std;
 
@@ -199,6 +202,24 @@ void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandM
   xrCommandChanSender = new xr::TrXRCommandSender(&client);
   xrCommandChanClient = &client;
 }
+
+#ifdef TR_ENABLE_INSPECTOR
+
+void TrContentRuntime::onInspectorCommandChanConnected(TrOneShotClient<inspector_comm::TrInspectorCommandMessage> &client)
+{
+  contentInspectorProxy = std::make_unique<ContentInspectorProxy>(getConstellation()->inspector);
+  if (!contentInspectorProxy->initialize(&client))
+    contentInspectorProxy.reset();
+}
+
+bool TrContentRuntime::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
+{
+  if (TR_UNLIKELY(!available || shouldDestroy || !contentInspectorProxy))
+    return false;
+  return contentInspectorProxy->sendInspectorCommand(command);
+}
+
+#endif
 
 xr::TrXRSession *TrContentRuntime::getActiveXRSession()
 {
@@ -409,6 +430,11 @@ bool TrContentRuntime::tickOnFrame()
   recvEvent();
   recvXRCommand();
   recvMediaRequest();
+
+#ifdef TR_ENABLE_INSPECTOR
+  if (contentInspectorProxy)
+    contentInspectorProxy->recvInspectorCommand();
+#endif
   return true;
 }
 
@@ -440,3 +466,20 @@ void TrContentRuntime::release()
   xrSessionsStack.clear();
   DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
 }
+
+#ifdef TR_ENABLE_INSPECTOR
+
+void TrContentRuntime::setInspectorCdpHandler(CdpHandler *cdpHandler)
+{
+  if (contentInspectorProxy)
+  {
+    contentInspectorProxy->setCdpHandler(cdpHandler);
+  }
+}
+
+CdpHandler *TrContentRuntime::getInspectorCdpHandler() const
+{
+  return contentInspectorProxy ? contentInspectorProxy->getCdpHandler() : nullptr;
+}
+
+#endif

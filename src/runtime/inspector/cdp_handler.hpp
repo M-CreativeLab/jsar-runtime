@@ -6,37 +6,12 @@
 #include <unordered_map>
 #include <vector>
 #include <rapidjson/document.h>
+#include <common/inspector/cdp_message.hpp>
 
 // Forward declarations
 class TrConstellation;
 class TrInspectorClient;
-
-// CDP (Chrome DevTools Protocol) Message Structure
-struct CdpMessage
-{
-  int64_t id = -1;
-  std::string method;
-  rapidjson::Value params;
-
-  static std::unique_ptr<CdpMessage> parse(const std::string &json);
-};
-
-// CDP Response Builder
-class CdpResponse
-{
-public:
-  static std::string success(int64_t id, const rapidjson::Value &result);
-  static std::string error(int64_t id, int code, const std::string &message);
-  static std::string event(const std::string &method, const rapidjson::Value &params);
-};
-
-// CDP Command Definition
-struct CdpCommand
-{
-  std::string name;
-  std::string description;
-  std::function<std::string(const CdpMessage &)> handler;
-};
+class ContentDomainProxy;
 
 // Base CDP Domain Handler
 class CdpDomainHandler
@@ -68,11 +43,20 @@ public:
   // Process incoming CDP message and return response
   std::string processMessage(const std::string &message);
 
+  // Process incoming CDP message asynchronously (for WebSocket clients)
+  void processMessageAsync(const std::string &message, TrInspectorClient *inspectorClient);
+
   // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
+  // Get the content domain proxy for handling content process responses
+  ContentDomainProxy *getContentProxy() const;
+
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
+  std::unique_ptr<ContentDomainProxy> contentProxy_;
+  std::string clientId_;
+  TrInspectorClient *inspectorClient_; // For async responses
 
   std::string extractDomain(const std::string &method);
   std::string extractMethodName(const std::string &method);

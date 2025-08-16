@@ -367,6 +367,8 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
 
 TrClientContextPerProcess::TrClientContextPerProcess()
 {
+  // Set up the logger singleton with this client context
+  logging::Logger::GetInstance()->setClientContext(this);
 }
 
 TrClientContextPerProcess::~TrClientContextPerProcess()
@@ -506,6 +508,21 @@ void TrClientContextPerProcess::start()
     xrDeviceClient = client_xr::XRDeviceClient::Make(this);
   }
 
+#ifdef TR_ENABLE_INSPECTOR
+  if (inspectorChanPort > 0)
+  {
+    contentInspector = make_unique<client_inspector::ContentInspector>(id);
+    if (contentInspector->initialize(inspectorChanPort))
+      contentInspector->start();
+    else
+      contentInspector.reset();
+  }
+  else
+  {
+    cout << "ClientContext(" << id << ") failed to connect to inspector channel" << endl;
+  }
+#endif
+
   // Initialize the built-in scene
   builtinScene = builtin_scene::Scene::Make(this);
   if (builtinScene != nullptr)
@@ -539,6 +556,7 @@ void TrClientContextPerProcess::print()
   fprintf(stdout, "ClientContext(%d) eventChanPort=%d\n", id, eventChanPort);
   fprintf(stdout, "ClientContext(%d) mediaChanPort=%d\n", id, mediaChanPort);
   fprintf(stdout, "ClientContext(%d) commandBufferChanPort=%d\n", id, commandBufferChanPort);
+  fprintf(stdout, "ClientContext(%d) inspectorChanPort=%d\n", id, inspectorChanPort);
 
   if (xrDeviceInit.enabled == true)
   {
