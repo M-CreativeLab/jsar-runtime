@@ -1,15 +1,15 @@
 #include <chrono>
 #include <unordered_set>
+#include <common/debug.hpp>
+#include <common/inspector/message.hpp>
+#include <common/inspector/sender.hpp>
+#include <common/inspector/cdp_domains.hpp>
+#include <runtime/constellation.hpp>
+#include <runtime/content.hpp>
+#include <runtime/content_manager.hpp>
 
 #include "./content_domain_proxy.hpp"
-#include "./cdp_handler.hpp" // For CdpMessage and CdpResponse
-#include "../constellation.hpp"
-#include "../content.hpp"
-#include "../content_manager.hpp"
-#include "common/debug.hpp"
-#include "common/inspector/message.hpp"
-#include "common/inspector/sender.hpp"
-#include "common/inspector/cdp_domains.hpp"
+#include "./cdp_handler.hpp"
 
 using namespace std;
 using namespace inspector_comm;
