@@ -46,7 +46,7 @@
 #include "./classes.hpp"
 
 // Forward declarations
-class TrLogger;
+class Logger;
 
 using namespace std;
 using namespace ipc;
@@ -471,6 +471,7 @@ private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
 #ifdef TR_ENABLE_INSPECTOR
+#ifdef TR_ENABLE_INSPECTOR
   bool sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response);
   void onInspectorCommand(inspector_comm::TrInspectorCommandMessage &commandMessage);
 
@@ -479,10 +480,10 @@ private:
   {
     return contentCdpHandler.get();
   }
-
-  // Get the logger instance
-  TrLogger *getLogger();
 #endif
+
+  // Get the logger instance - available regardless of inspector
+  Logger *getLogger();
 
 public:
   uint32_t id;
@@ -571,7 +572,6 @@ private: // inspector fields
   unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
   unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
   unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
-  unique_ptr<TrLogger> logger = nullptr;
 #endif
 
 private: // frame request fields

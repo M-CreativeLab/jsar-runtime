@@ -1,37 +1,43 @@
-#include "tr_logger.hpp"
+#include "logger.hpp"
 #include "per_process.hpp"
 #include "inspector/content_cdp_handler.hpp"
 #include "inspector/content_log_domain.hpp"
 #include "debug.hpp"
 
-TrLogger::TrLogger(TrClientContextPerProcess *clientContext)
-    : clientContext_(clientContext)
+Logger *Logger::getInstance()
 {
+  static Logger instance;
+  return &instance;
 }
 
-TrLogger::~TrLogger()
+void Logger::setClientContext(TrClientContextPerProcess *clientContext)
 {
+  clientContext_ = clientContext;
 }
 
-void TrLogger::log(Level level, Source source, const std::string &text)
+void Logger::log(Level level, Source source, const std::string &text)
 {
   log(level, source, text, "", 0);
 }
 
-void TrLogger::log(Level level, Source source, const std::string &text, const std::string &url, int lineNumber)
+void Logger::log(Level level, Source source, const std::string &text, const std::string &url, int lineNumber)
 {
 #ifdef TR_ENABLE_INSPECTOR
   auto cdpHandler = getContentCdpHandler();
   if (!cdpHandler)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "TrLogger: No CDP handler available, skipping log entry");
+    DEBUG(LOG_TAG_INSPECTOR, "Logger: No CDP handler available, skipping log entry");
+    // Fallback to regular debug logging when CDP is not available
+    DEBUG(LOG_TAG_JSAR, "Logger: %s", text.c_str());
     return;
   }
 
   auto logDomain = cdpHandler->getLogDomain();
   if (!logDomain)
   {
-    DEBUG(LOG_TAG_INSPECTOR, "TrLogger: No Log domain available, skipping log entry");
+    DEBUG(LOG_TAG_INSPECTOR, "Logger: No Log domain available, skipping log entry");
+    // Fallback to regular debug logging when Log domain is not available
+    DEBUG(LOG_TAG_JSAR, "Logger: %s", text.c_str());
     return;
   }
 
@@ -57,54 +63,54 @@ void TrLogger::log(Level level, Source source, const std::string &text, const st
   // Send to CDP Log domain
   logDomain->addLogEntry(entry);
 
-  DEBUG(LOG_TAG_INSPECTOR, "TrLogger: Sent log entry to DevTools: [%s/%s] %s", entry.level.c_str(), entry.source.c_str(), text.c_str());
+  DEBUG(LOG_TAG_INSPECTOR, "Logger: Sent log entry to DevTools: [%s/%s] %s", entry.level.c_str(), entry.source.c_str(), text.c_str());
 #else
   // Fallback to regular debug logging when inspector is disabled
-  DEBUG(LOG_TAG_JSAR, "TrLogger: %s", text.c_str());
+  DEBUG(LOG_TAG_JSAR, "Logger: %s", text.c_str());
 #endif
 }
 
-void TrLogger::verbose(const std::string &text)
+void Logger::verbose(const std::string &text)
 {
   log(Level::VERBOSE, Source::OTHER, text);
 }
 
-void TrLogger::info(const std::string &text)
+void Logger::info(const std::string &text)
 {
   log(Level::INFO, Source::OTHER, text);
 }
 
-void TrLogger::warning(const std::string &text)
+void Logger::warning(const std::string &text)
 {
   log(Level::WARNING, Source::OTHER, text);
 }
 
-void TrLogger::error(const std::string &text)
+void Logger::error(const std::string &text)
 {
   log(Level::ERROR, Source::OTHER, text);
 }
 
-void TrLogger::jsLog(const std::string &text)
+void Logger::jsLog(const std::string &text)
 {
   log(Level::INFO, Source::JAVASCRIPT, text);
 }
 
-void TrLogger::jsInfo(const std::string &text)
+void Logger::jsInfo(const std::string &text)
 {
   log(Level::INFO, Source::JAVASCRIPT, text);
 }
 
-void TrLogger::jsWarn(const std::string &text)
+void Logger::jsWarn(const std::string &text)
 {
   log(Level::WARNING, Source::JAVASCRIPT, text);
 }
 
-void TrLogger::jsError(const std::string &text)
+void Logger::jsError(const std::string &text)
 {
   log(Level::ERROR, Source::JAVASCRIPT, text);
 }
 
-std::string TrLogger::levelToString(Level level)
+std::string Logger::levelToString(Level level)
 {
   switch (level)
   {
@@ -121,7 +127,7 @@ std::string TrLogger::levelToString(Level level)
   }
 }
 
-std::string TrLogger::sourceToString(Source source)
+std::string Logger::sourceToString(Source source)
 {
   switch (source)
   {
@@ -158,7 +164,7 @@ std::string TrLogger::sourceToString(Source source)
   }
 }
 
-ContentCdpHandler *TrLogger::getContentCdpHandler()
+ContentCdpHandler *Logger::getContentCdpHandler()
 {
 #ifdef TR_ENABLE_INSPECTOR
   if (clientContext_)

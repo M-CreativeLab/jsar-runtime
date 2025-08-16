@@ -10,8 +10,9 @@ class ContentCdpHandler;
 
 /**
  * Client-side logger that sends log messages to DevTools via CDP Log domain
+ * Singleton pattern for global access
  */
-class TrLogger
+class Logger
 {
 public:
   // Log levels matching CDP Log.LogEntry
@@ -42,8 +43,11 @@ public:
     OTHER
   };
 
-  TrLogger(TrClientContextPerProcess *clientContext);
-  ~TrLogger();
+  // Singleton access
+  static Logger *getInstance();
+
+  // Set the current client context for CDP integration
+  void setClientContext(TrClientContextPerProcess *clientContext);
 
   // Main logging methods
   void log(Level level, Source source, const std::string &text);
@@ -62,7 +66,12 @@ public:
   void jsError(const std::string &text);
 
 private:
-  TrClientContextPerProcess *clientContext_;
+  Logger() = default;
+  ~Logger() = default;
+  Logger(const Logger &) = delete;
+  Logger &operator=(const Logger &) = delete;
+
+  TrClientContextPerProcess *clientContext_ = nullptr;
 
   // Helper methods
   std::string levelToString(Level level);

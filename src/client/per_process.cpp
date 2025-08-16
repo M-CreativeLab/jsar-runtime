@@ -17,10 +17,7 @@
 #include "./media/audio_player.hpp"
 #include "./xr/device.hpp"
 #include "./bindings.hpp"
-
-#ifdef TR_ENABLE_INSPECTOR
-#include "./tr_logger.hpp"
-#endif
+#include "./logger.hpp"
 
 using namespace std;
 using namespace node;
@@ -371,6 +368,8 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
 
 TrClientContextPerProcess::TrClientContextPerProcess()
 {
+  // Set up the logger singleton with this client context
+  Logger::getInstance()->setClientContext(this);
 }
 
 TrClientContextPerProcess::~TrClientContextPerProcess()
@@ -544,9 +543,6 @@ void TrClientContextPerProcess::start()
 
       // Initialize content-side CDP handler with event sender
       contentCdpHandler = make_unique<ContentCdpHandler>(eventSender);
-
-      // Initialize logger
-      logger = make_unique<TrLogger>(this);
 
       // Create worker thread for processing inspector commands
       auto onInspectorCommandWork = [this](WorkerThread &worker)
@@ -883,9 +879,10 @@ void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCo
   }
 }
 
-TrLogger *TrClientContextPerProcess::getLogger()
+Logger *TrClientContextPerProcess::getLogger()
 {
-  return logger.get();
+  return Logger::getInstance();
 }
 
+#ifdef TR_ENABLE_INSPECTOR
 #endif
