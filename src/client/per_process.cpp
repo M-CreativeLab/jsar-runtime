@@ -369,7 +369,7 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
 TrClientContextPerProcess::TrClientContextPerProcess()
 {
   // Set up the logger singleton with this client context
-  Logger::getInstance()->setClientContext(this);
+  logging::Logger::GetInstance()->setClientContext(this);
 }
 
 TrClientContextPerProcess::~TrClientContextPerProcess()
@@ -879,9 +879,9 @@ void TrClientContextPerProcess::onInspectorCommand(inspector_comm::TrInspectorCo
   }
 }
 
-Logger *TrClientContextPerProcess::getLogger()
+logging::Logger *TrClientContextPerProcess::getLogger()
 {
-  return Logger::getInstance();
+  return logging::Logger::GetInstance();
 }
 
 #ifdef TR_ENABLE_INSPECTOR

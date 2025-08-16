@@ -46,7 +46,10 @@
 #include "./classes.hpp"
 
 // Forward declarations
-class Logger;
+namespace logging
+{
+  class Logger;
+}
 
 using namespace std;
 using namespace ipc;
@@ -483,7 +486,7 @@ private:
 #endif
 
   // Get the logger instance - available regardless of inspector
-  Logger *getLogger();
+  logging::Logger *getLogger();
 
 public:
   uint32_t id;
