@@ -26,6 +26,7 @@ The JSAR Runtime inspector now supports basic Chrome DevTools Protocol (CDP) fun
 #### Content-Side Domains (via Proxy)
 - **`ContentCdpRuntimeDomain`** - Runtime domain with JavaScript runtime methods (runs in content processes)
 - **`ContentCdpExampleDomain`** - Example domain for testing connectivity (runs in content processes)
+- **`ContentCdpLogDomain`** - Log domain for collecting and broadcasting log entries from content processes
 
 ### IPC Communication
 
@@ -33,8 +34,17 @@ The system uses a dedicated `inspector` IPC channel for communication between ho
 
 - **`TrInspectorCommandMessage`** - IPC message format for CDP data
 - **`TrCdpRequest`** - IPC message for forwarding CDP requests to content processes
-- **`TrCdpResponse`** - IPC message for returning CDP responses from content processes
-- **`TrCdpEvent`** - IPC message for sending CDP events from content processes
+- **`TrCdpResponse`** - IPC message for returning CDP responses from content processes  
+- **`TrCdpEvent`** - IPC message for sending CDP events from content processes to host and then to CDP clients
+
+### Event Broadcasting System
+
+The implementation includes a real-time event broadcasting system:
+
+- **`CdpEventSender`** - Callback mechanism in content processes for sending events
+- **Content to Host Events** - Content processes send `TrCdpEvent` IPC messages to the host
+- **Host Event Broadcasting** - `TrInspector::broadcastEventToClients()` forwards events to all connected WebSocket clients
+- **Real-time DevTools Integration** - Events appear immediately in Chrome DevTools (e.g., log entries in Console)
 
 ### Request Flow
 
@@ -48,6 +58,21 @@ The system uses a dedicated `inspector` IPC channel for communication between ho
 4. If domain is host-side:
    - Request processed directly by host-side domain handler
    - Response returned immediately to CDP client
+
+### Event Flow
+
+1. Content process generates event (e.g., log entry added)
+2. Content domain handler calls event sender callback
+3. `TrCdpEvent` IPC message sent to host process
+4. Host `TrInspector::broadcastEventToClients()` forwards to all WebSocket clients
+5. Event appears in real-time in connected DevTools instances
+
+### Memory Management & Architecture
+
+- **RAII Compliance**: All inspector IPC channels use `unique_ptr` for automatic memory management
+- **Instance-based Communication**: Each `TrContentRuntime` has associated `CdpHandler` reference for response routing
+- **Singleton Logger**: Global `logging::Logger::GetInstance()` for client-side logging with automatic CDP integration
+- **Conditional Compilation**: All inspector features guarded by `TR_ENABLE_INSPECTOR` preprocessor directives
 
 ## Supported Domains
 
@@ -94,6 +119,90 @@ The Runtime domain exposes JavaScript runtime functionality.
     "revision": "0.9.0",
     "userAgent": "JSAR/0.9.0",
     "jsVersion": "ES2021"
+  }
+}
+```
+
+### Log Domain
+
+The Log domain provides Chrome DevTools Protocol Log functionality for collecting and viewing log entries from content processes.
+
+#### Methods
+
+- **`Log.enable`** - Enables log domain and sends buffered log entries to DevTools
+- **`Log.disable`** - Disables log domain and stops log event broadcasting
+- **`Log.clear`** - Clears the log entry buffer in the content process
+- **`Log.startViolationsReport`** - Starts performance violations reporting with configurable violation types
+- **`Log.stopViolationsReport`** - Stops performance violations reporting
+
+#### Events
+
+- **`Log.entryAdded`** - Sent when a new log entry is added (real-time broadcasting to DevTools)
+
+#### Log Entry Structure
+
+Log entries follow the CDP Log.LogEntry specification:
+
+```javascript
+{
+  "source": "javascript",           // xml, javascript, network, storage, etc.
+  "level": "error",                // verbose, info, warning, error
+  "text": "Error message",         // Log message text
+  "timestamp": 1234567890.123,     // Timestamp when log was created
+  "url": "file://example.js",      // Optional URL associated with log
+  "lineNumber": 42,                // Optional line number
+  "category": "console"            // Optional log category
+}
+```
+
+#### Client-side Logging System
+
+A singleton logger is available for applications to send logs directly to DevTools:
+
+```cpp
+#include "client/logger.hpp"
+
+// Singleton access
+auto logger = logging::Logger::GetInstance();
+
+// Convenience methods
+logger->info("Application started");
+logger->error("Connection failed");
+logger->jsError("JavaScript error occurred");
+
+// Or use global convenience functions
+logging::LogInfo("Information message");
+logging::LogJsWarn("JavaScript warning");
+```
+
+#### Example Usage
+
+```javascript
+// Enable log domain
+{
+  "id": 1,
+  "method": "Log.enable",
+  "params": {}
+}
+
+// Response
+{
+  "id": 1,
+  "result": {}
+}
+
+// Real-time log event (sent automatically)
+{
+  "method": "Log.entryAdded",
+  "params": {
+    "entry": {
+      "source": "javascript",
+      "level": "error", 
+      "text": "Uncaught TypeError: Cannot read property 'x' of undefined",
+      "timestamp": 1234567890.123,
+      "url": "file://app.js",
+      "lineNumber": 25
+    }
   }
 }
 ```
@@ -150,6 +259,26 @@ Sample domain for testing CDP connectivity and method invocation.
   }
 }
 ```
+
+## Conditional Compilation Support
+
+All inspector functionality can be disabled at compile time using the `TR_ENABLE_INSPECTOR` preprocessor directive:
+
+```cpp
+#ifdef TR_ENABLE_INSPECTOR
+// Inspector-specific code
+inspectorChanPort = config.inspectorChanPort;
+// Initialize inspector IPC channels
+#endif
+```
+
+When `TR_ENABLE_INSPECTOR` is not defined:
+- All inspector IPC channels are excluded from compilation
+- Content processes start normally without inspector support
+- No inspector-related assertions or runtime overhead
+- Client-side logger falls back to `std::cout`/`std::cerr` output
+
+This allows for inspector-free builds while maintaining full core functionality.
 
 ## Protocol Discovery
 
@@ -402,6 +531,13 @@ The content process inspector provides CDP domain handlers that run in content p
   - Demonstrates content-side CDP domain implementation
   - Provides ping/pong functionality for connectivity testing
   - Shows how to implement custom domains in content processes
+
+- **`content_log_domain.hpp/cpp`**: Log domain implementation
+  - Handles Chrome DevTools Protocol Log domain methods
+  - Manages log entry collection and buffering (last 1000 entries)
+  - Supports performance violations reporting
+  - Sends real-time `Log.entryAdded` events to DevTools
+  - Integrates with singleton logging system for application logging
 
 #### Communication Flow
 
