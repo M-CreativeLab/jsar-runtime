@@ -1,6 +1,7 @@
 #include <chrono>
 #include <rapidjson/document.h>
 #include <common/inspector/cdp_domains.hpp>
+#include <common/inspector/message.hpp>
 
 #include "./content_cdp_handler.hpp"
 #include "./domains/log_domain.hpp"
@@ -43,7 +44,7 @@ namespace client_inspector
     auto domainIt = domains_.find(domain);
     if (domainIt == domains_.end())
     {
-      return CdpResponse::error(cdpMessage->id, -32601, "Method not found");
+      return CdpResponse::error(cdpMessage->id, inspector_comm::TR_CDP_METHOD_NOT_FOUND_CODE, "Method not found");
     }
 
     try
@@ -52,7 +53,7 @@ namespace client_inspector
     }
     catch (const exception &e)
     {
-      return CdpResponse::error(cdpMessage->id, -32603, "Internal error");
+      return CdpResponse::error(cdpMessage->id, inspector_comm::TR_CDP_INTERNAL_ERROR_CODE, "Internal error");
     }
   }
 

@@ -381,7 +381,9 @@ void TrInspector::onMessage(TrInspectorClient &client, const string &message)
   catch (const exception &e)
   {
     DEBUG(LOG_TAG_INSPECTOR, "Error processing CDP message: %s", e.what());
-    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}");
+    client.sendWebSocketMessage("{\"id\":-1,\"error\":{\"code\":" +
+                                to_string(inspector_comm::TR_CDP_INTERNAL_ERROR_CODE) +
+                                ",\"message\":\"Internal error\"}}");
   }
 }
 

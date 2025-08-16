@@ -5,7 +5,6 @@
 
 namespace cdp_domains
 {
-
   // Get the set of domains that should be forwarded to content processes
   inline std::unordered_set<std::string> getForwardedDomains()
   {

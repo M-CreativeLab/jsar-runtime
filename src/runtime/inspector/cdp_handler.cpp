@@ -2,6 +2,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/error/en.h>
 #include <common/debug.hpp>
+#include <common/inspector/message.hpp>
 #include <runtime/constellation.hpp>
 
 #include "./inspector_client.hpp"
@@ -68,7 +69,7 @@ string CdpHandler::processMessage(const string &message)
   if (domainIt == domains_.end())
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Unknown domain: %s", domain.c_str());
-    return CdpResponse::error(cdpMessage->id, -32601, "Method not found");
+    return CdpResponse::error(cdpMessage->id, inspector_comm::TR_CDP_INTERNAL_ERROR_CODE, "Method not found");
   }
 
   try
@@ -78,7 +79,7 @@ string CdpHandler::processMessage(const string &message)
   catch (const exception &e)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain handler error: %s", e.what());
-    return CdpResponse::error(cdpMessage->id, -32603, "Internal error");
+    return CdpResponse::error(cdpMessage->id, inspector_comm::TR_CDP_INTERNAL_ERROR_CODE, "Internal error");
   }
 }
 
@@ -140,7 +141,9 @@ void CdpHandler::processMessageAsync(const string &message, TrInspectorClient *i
   catch (const exception &e)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP: Domain handler error: %s", e.what());
-    string errorResponse = CdpResponse::error(cdpMessage->id, -32603, "Internal error");
+    string errorResponse = CdpResponse::error(cdpMessage->id,
+                                              inspector_comm::TR_CDP_INTERNAL_ERROR_CODE,
+                                              "Internal error");
     if (inspectorClient && inspectorClient->isWebSocket())
     {
       inspectorClient->sendWebSocketMessage(errorResponse);

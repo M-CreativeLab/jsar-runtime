@@ -109,7 +109,8 @@ namespace client_inspector
         // Fallback error response if handler is not available
         responseJson = "{\"id\":" +
                        to_string(cdpRequest.requestId) +
-                       ",\"error\":{\"code\":-32603,\"message\":\"Internal error: CDP handler not initialized\"}}";
+                       ",\"error\":{\"code\":" + to_string(inspector_comm::TR_CDP_INTERNAL_ERROR_CODE) +
+                       ",\"message\":\"Internal error: CDP handler not initialized\"}}";
       }
 
       // Send response back to host process

@@ -14,6 +14,8 @@
 using namespace std;
 using namespace inspector_comm;
 
+constexpr int kPendingRequestTimeoutSeconds = 30;
+
 ContentDomainProxy::ContentDomainProxy(TrConstellation *constellation, CdpHandler *cdpHandler)
     : constellation_(constellation)
     , cdpHandler_(cdpHandler)
@@ -30,7 +32,10 @@ ContentDomainProxy::~ContentDomainProxy()
 
 string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage &message, const string &clientId)
 {
-  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Synchronous forward request %s for client %s", method.c_str(), clientId.c_str());
+  DEBUG(LOG_TAG_INSPECTOR,
+        "CDP Proxy: Synchronous forward request %s for client %s",
+        method.c_str(),
+        clientId.c_str());
 
   // Use a condition variable to wait for async response
   string result;
@@ -48,7 +53,7 @@ string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage
 
   // Wait for response with timeout
   unique_lock<mutex> lock(responseMutex);
-  auto timeout = chrono::steady_clock::now() + chrono::seconds(30); // 30 second timeout
+  auto timeout = chrono::steady_clock::now() + chrono::seconds(kPendingRequestTimeoutSeconds);
 
   if (responseCv.wait_until(lock, timeout, [&]
                             { return responseReceived; }))
@@ -58,24 +63,32 @@ string ContentDomainProxy::forwardRequest(const string &method, const CdpMessage
   else
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Request timeout for method %s, client %s", method.c_str(), clientId.c_str());
-    return CdpResponse::error(message.id, -32603, "Request timeout");
+    return CdpResponse::error(message.id, inspector_comm::TR_CDP_INTERNAL_ERROR_CODE, "Request timeout");
   }
 }
 
-void ContentDomainProxy::forwardRequestAsync(const string &method, const CdpMessage &message, const string &clientId, ResponseCallback callback)
+void ContentDomainProxy::forwardRequestAsync(const string &method,
+                                             const CdpMessage &message,
+                                             const string &clientId,
+                                             ResponseCallback callback)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Async forward request %s for client %s", method.c_str(), clientId.c_str());
   forwardRequestInternal(method, message, clientId, callback);
 }
 
-void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpMessage &message, const string &clientId, ResponseCallback callback)
+void ContentDomainProxy::forwardRequestInternal(const string &method,
+                                                const CdpMessage &message,
+                                                const string &clientId,
+                                                ResponseCallback callback)
 {
   // Find the content runtime for this client
   TrContentRuntime *contentRuntime = findContentRuntime(clientId);
   if (!contentRuntime)
   {
     DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Content runtime not found for client %s", clientId.c_str());
-    string errorResponse = CdpResponse::error(message.id, -32603, "Content process not available");
+    string errorResponse = CdpResponse::error(message.id,
+                                              inspector_comm::TR_CDP_INTERNAL_ERROR_CODE,
+                                              "Content process not available");
     if (callback)
       callback(errorResponse);
     return;
@@ -128,7 +141,9 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
       pendingRequests_.erase(requestId);
     }
 
-    string errorResponse = CdpResponse::error(message.id, -32603, "Failed to send request to content process");
+    string errorResponse = CdpResponse::error(message.id,
+                                              inspector_comm::TR_CDP_INTERNAL_ERROR_CODE,
+                                              "Failed to send request to content process");
     if (callback)
       callback(errorResponse);
   }
@@ -138,7 +153,10 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
   }
 }
 
-bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntime, uint32_t requestId, uint32_t cdpMessageId, const string &cdpMessageJson)
+bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntime,
+                                                 uint32_t requestId,
+                                                 uint32_t cdpMessageId,
+                                                 const string &cdpMessageJson)
 {
   if (!contentRuntime)
   {
@@ -154,7 +172,12 @@ bool ContentDomainProxy::sendCdpRequestToContent(TrContentRuntime *contentRuntim
   // Send the request via inspector IPC channel
   bool success = contentRuntime->sendInspectorCommand(cdpRequest);
   if (!success)
-    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Failed to send CDP request %u to content runtime %d", requestId, contentRuntime->id);
+  {
+    DEBUG(LOG_TAG_INSPECTOR,
+          "CDP Proxy: Failed to send CDP request %u to content runtime %d",
+          requestId,
+          contentRuntime->id);
+  }
   return success;
 }
 bool ContentDomainProxy::shouldForwardDomain(const string &domain) const
@@ -238,7 +261,7 @@ void ContentDomainProxy::handleResponse(uint32_t requestId, const string &respon
 void ContentDomainProxy::cleanupTimedOutRequests()
 {
   auto now = chrono::steady_clock::now();
-  auto timeout = chrono::seconds(30); // 30 second timeout
+  auto timeout = chrono::seconds(kPendingRequestTimeoutSeconds);
 
   lock_guard<mutex> lock(pendingRequestsMutex_);
   auto it = pendingRequests_.begin();
@@ -252,7 +275,9 @@ void ContentDomainProxy::cleanupTimedOutRequests()
       // Call callback with timeout error if provided
       if (pendingRequest->callback)
       {
-        string errorResponse = CdpResponse::error(pendingRequest->cdpMessageId, -32603, "Request timeout");
+        string errorResponse = CdpResponse::error(pendingRequest->cdpMessageId,
+                                                  inspector_comm::TR_CDP_INTERNAL_ERROR_CODE,
+                                                  "Request timeout");
         pendingRequest->callback(errorResponse);
       }
 

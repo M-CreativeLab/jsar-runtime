@@ -14,6 +14,8 @@ using namespace ipc;
 namespace inspector_comm
 {
   constexpr int16_t TR_INSPECTOR_MAGIC = 0x73ff;
+  constexpr int32_t TR_CDP_INTERNAL_ERROR_CODE = -32603;
+  constexpr int32_t TR_CDP_METHOD_NOT_FOUND_CODE = -32601;
 
 #define TR_INSPECTOR_COMMANDS_MAP(XX) \
   XX(CdpRequest)                      \
