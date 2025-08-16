@@ -17,6 +17,7 @@
 #include "./content.hpp"
 #include "./media_manager.hpp"
 #include "./inspector/content_domain_proxy.hpp"
+#include "./inspector/cdp_handler.hpp"
 #include "./inspector.hpp"
 
 using namespace std;
@@ -400,8 +401,24 @@ void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspector
     auto cdpResponse = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpResponse>(message);
     DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP response for request %u", id, cdpResponse.requestId);
 
-    // Forward response back to the ContentDomainProxy via static callback
-    ContentDomainProxy::handleResponseFromContent(cdpResponse.requestId, cdpResponse.cdpResponseJson);
+    // Forward response back to the ContentDomainProxy via the inspector CDP handler
+    auto cdpHandler = getInspectorCdpHandler();
+    if (cdpHandler)
+    {
+      auto contentProxy = cdpHandler->getContentProxy();
+      if (contentProxy)
+      {
+        contentProxy->handleResponseFromContent(cdpResponse.requestId, cdpResponse.cdpResponseJson);
+      }
+      else
+      {
+        DEBUG(LOG_TAG_INSPECTOR, "Content %d: No ContentDomainProxy available for response", id);
+      }
+    }
+    else
+    {
+      DEBUG(LOG_TAG_INSPECTOR, "Content %d: No inspector CDP handler set for content runtime", id);
+    }
     break;
   }
   case inspector_comm::TrInspectorCommandType::CdpEvent:
@@ -409,8 +426,12 @@ void TrContentRuntime::handleInspectorCommandMessage(inspector_comm::TrInspector
     auto cdpEvent = inspector_comm::TrInspectorCommandBase::CreateFromMessage<inspector_comm::TrCdpEvent>(message);
     DEBUG(LOG_TAG_INSPECTOR, "Content %d: Received CDP event: %s", id, cdpEvent.cdpEventJson.c_str());
 
-    // Forward CDP events to inspector clients via the static handler
-    TrInspector::handleEventFromContent(cdpEvent.contentId, cdpEvent.cdpEventJson);
+    // Forward CDP events to inspector clients via the constellation's inspector instance
+    auto constellation = getConstellation();
+    if (constellation && constellation->inspector)
+    {
+      constellation->inspector->broadcastEventToClients(cdpEvent.cdpEventJson);
+    }
     break;
   }
   default:
@@ -509,4 +530,14 @@ void TrContentRuntime::release()
   }
   xrSessionsStack.clear();
   DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
+}
+
+void TrContentRuntime::setInspectorCdpHandler(CdpHandler *cdpHandler)
+{
+  inspectorCdpHandler_ = cdpHandler;
+}
+
+CdpHandler *TrContentRuntime::getInspectorCdpHandler() const
+{
+  return inspectorCdpHandler_;
 }

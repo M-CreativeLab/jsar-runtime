@@ -49,6 +49,9 @@ public:
   // Get protocol definitions from all registered domains
   void addProtocolDefinitions(rapidjson::Value &domains, rapidjson::Document::AllocatorType &allocator);
 
+  // Get the content domain proxy for handling content process responses
+  ContentDomainProxy *getContentProxy() const;
+
 private:
   std::unordered_map<std::string, std::unique_ptr<CdpDomainHandler>> domains_;
   std::unique_ptr<ContentDomainProxy> contentProxy_;

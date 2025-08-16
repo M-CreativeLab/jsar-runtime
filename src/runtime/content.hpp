@@ -252,6 +252,20 @@ public: // Inspector methods
    */
   bool sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command);
 
+  /**
+   * Set the inspector CDP handler that manages this content runtime.
+   *
+   * @param cdpHandler The CDP handler instance.
+   */
+  void setInspectorCdpHandler(class CdpHandler *cdpHandler);
+
+  /**
+   * Get the inspector CDP handler that manages this content runtime.
+   *
+   * @returns The CDP handler instance or nullptr if not set.
+   */
+  class CdpHandler *getInspectorCdpHandler() const;
+
 private:
   inline bool isUsed() const
   {
@@ -366,6 +380,9 @@ private: // Inspector fields
   ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorCommandChanClient = nullptr;
   std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorCommandChanReceiver = nullptr;
   std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorCommandChanSender = nullptr;
+
+  // Reference to the inspector client (CdpHandler) that manages this content runtime
+  class CdpHandler *inspectorCdpHandler_ = nullptr;
   /**
    * **Why we need to store the XRSession instances?**
    *

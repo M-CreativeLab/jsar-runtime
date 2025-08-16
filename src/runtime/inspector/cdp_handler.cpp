@@ -21,7 +21,7 @@ CdpHandler::CdpHandler(TrConstellation *constellation, const string &clientId, T
   DEBUG(LOG_TAG_INSPECTOR, "CDP: Handler initialized for client: %s", clientId.c_str());
 
   // Initialize content domain proxy
-  contentProxy_ = make_unique<ContentDomainProxy>(constellation);
+  contentProxy_ = make_unique<ContentDomainProxy>(constellation, this);
 
   // Create domain instances directly (host-side domains only)
   // Runtime and Example domains are now handled by content processes via proxy
@@ -209,4 +209,9 @@ string CdpHandler::extractMethodName(const string &method)
     return ""; // No method name
   }
   return method.substr(dotPos + 1);
+}
+
+ContentDomainProxy *CdpHandler::getContentProxy() const
+{
+  return contentProxy_.get();
 }

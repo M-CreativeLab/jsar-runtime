@@ -12,12 +12,9 @@
 using namespace std;
 using namespace inspector_comm;
 
-// Static member definitions
-mutex ContentDomainProxy::registryMutex_;
-unordered_map<uint32_t, ContentDomainProxy *> ContentDomainProxy::requestIdToProxy_;
-
-ContentDomainProxy::ContentDomainProxy(TrConstellation *constellation)
+ContentDomainProxy::ContentDomainProxy(TrConstellation *constellation, CdpHandler *cdpHandler)
     : constellation_(constellation)
+    , cdpHandler_(cdpHandler)
     , nextRequestId_(1)
 {
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Initialized");
@@ -82,6 +79,9 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
     return;
   }
 
+  // Set the inspector CDP handler on the content runtime for response routing
+  contentRuntime->setInspectorCdpHandler(cdpHandler_);
+
   // Generate a unique request ID for tracking
   uint32_t requestId = generateRequestId();
 
@@ -114,9 +114,6 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
     pendingRequests_[requestId] = move(pendingRequest);
   }
 
-  // Register request in static registry for callback
-  registerRequest(requestId);
-
   // Send request to content process via inspector IPC channel
   bool success = sendCdpRequestToContent(contentRuntime, requestId, message.id, cdpMessageJson);
   if (!success)
@@ -128,9 +125,6 @@ void ContentDomainProxy::forwardRequestInternal(const string &method, const CdpM
       lock_guard<mutex> lock(pendingRequestsMutex_);
       pendingRequests_.erase(requestId);
     }
-
-    // Remove from static registry
-    unregisterRequest(requestId);
 
     string errorResponse = CdpResponse::error(message.id, -32603, "Failed to send request to content process");
     if (callback)
@@ -263,9 +257,6 @@ void ContentDomainProxy::cleanupTimedOutRequests()
       // Notify any waiting synchronous requests
       pendingRequest->cv.notify_one();
 
-      // Remove from static registry
-      unregisterRequest(pendingRequest->requestId);
-
       it = pendingRequests_.erase(it);
     }
     else
@@ -286,33 +277,9 @@ void ContentDomainProxy::setupForwardedDomains()
   DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Configured %zu domains for forwarding", forwardedDomains_.size());
 }
 
-// Static method for content runtimes to call back with responses
+// Handle response from content process (called by TrContentRuntime)
 void ContentDomainProxy::handleResponseFromContent(uint32_t requestId, const string &response)
 {
-  lock_guard<mutex> lock(registryMutex_);
-  auto it = requestIdToProxy_.find(requestId);
-  if (it != requestIdToProxy_.end())
-  {
-    ContentDomainProxy *proxy = it->second;
-    // Call the instance method on the correct proxy
-    proxy->handleResponse(requestId, response);
-    // Remove from registry since response is handled
-    requestIdToProxy_.erase(it);
-  }
-  else
-  {
-    DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Static callback received response for unknown request %u", requestId);
-  }
-}
-
-void ContentDomainProxy::registerRequest(uint32_t requestId)
-{
-  lock_guard<mutex> lock(registryMutex_);
-  requestIdToProxy_[requestId] = this;
-}
-
-void ContentDomainProxy::unregisterRequest(uint32_t requestId)
-{
-  lock_guard<mutex> lock(registryMutex_);
-  requestIdToProxy_.erase(requestId);
+  DEBUG(LOG_TAG_INSPECTOR, "CDP Proxy: Received response for request %u", requestId);
+  handleResponse(requestId, response);
 }

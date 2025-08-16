@@ -14,6 +14,7 @@
 // Forward declarations
 class TrConstellation;
 class TrContentRuntime;
+class CdpHandler;
 struct CdpMessage;
 
 // Proxy class that forwards CDP requests to content processes via IPC
@@ -23,7 +24,7 @@ public:
   // Callback type for async CDP responses
   using ResponseCallback = std::function<void(const std::string &response)>;
 
-  ContentDomainProxy(TrConstellation *constellation);
+  ContentDomainProxy(TrConstellation *constellation, CdpHandler *cdpHandler);
   ~ContentDomainProxy();
 
   // Forward a CDP request to the appropriate content process (synchronous version)
@@ -49,6 +50,7 @@ private:
   };
 
   TrConstellation *constellation_;
+  CdpHandler *cdpHandler_; // Parent CDP handler that owns this proxy
   std::atomic<uint32_t> nextRequestId_;
   std::mutex pendingRequestsMutex_;
   std::unordered_map<uint32_t, std::unique_ptr<PendingRequest>> pendingRequests_;
@@ -71,16 +73,6 @@ private:
   // Timeout handling for pending requests
   void cleanupTimedOutRequests();
 
-public:
-  // Static method for content runtimes to call back with responses
-  static void handleResponseFromContent(uint32_t requestId, const std::string &response);
-
-private:
-  // Static registry to map request IDs to proxy instances for callbacks
-  static std::mutex registryMutex_;
-  static std::unordered_map<uint32_t, ContentDomainProxy *> requestIdToProxy_;
-
-  // Register/unregister request with this proxy instance
-  void registerRequest(uint32_t requestId);
-  void unregisterRequest(uint32_t requestId);
+  // Handle response from content process (called by TrContentRuntime)
+  void handleResponseFromContent(uint32_t requestId, const std::string &response);
 };

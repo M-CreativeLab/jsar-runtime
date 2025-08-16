@@ -55,12 +55,4 @@ public:
   // Client lifecycle management
   void onClientConnected(TrInspectorClient &client);
   void onClientDisconnected(TrInspectorClient &client);
-
-private:
-  std::unique_ptr<TrInspectorServer> server_;
-  std::unique_ptr<ipc::TrOneShotServer<inspector_comm::TrInspectorCommandMessage>> inspectorCommandChanServer_;
-
-public:
-  // Static method for content runtimes to broadcast events to inspector clients
-  static void handleEventFromContent(uint32_t contentId, const std::string &eventJson);
 };
