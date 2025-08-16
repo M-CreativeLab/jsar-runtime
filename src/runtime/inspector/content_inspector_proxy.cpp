@@ -24,24 +24,24 @@ bool ContentInspectorProxy::initialize(ipc::TrOneShotClient<inspector_comm::TrIn
   if (!client)
     return false;
 
-  inspectorCommandChanClient = client;
-  inspectorCommandChanSender = make_unique<inspector_comm::TrInspectorCommandSender>(client);
-  inspectorCommandChanReceiver = make_unique<inspector_comm::TrInspectorReceiver>(client);
+  inspectorCommandChanClient_ = client;
+  inspectorCommandChanSender_ = make_unique<inspector_comm::TrInspectorCommandSender>(client);
+  inspectorCommandChanReceiver_ = make_unique<inspector_comm::TrInspectorReceiver>(client);
 
   return true;
 }
 
 bool ContentInspectorProxy::sendInspectorCommand(inspector_comm::TrInspectorCommandBase &command)
 {
-  if (!inspectorCommandChanSender)
+  if (!inspectorCommandChanSender_)
     return false;
-  return inspectorCommandChanSender->sendCommand(command);
+  return inspectorCommandChanSender_->sendCommand(command);
 }
 
 bool ContentInspectorProxy::recvInspectorCommand()
 {
   inspector_comm::TrInspectorCommandMessage message;
-  if (inspectorCommandChanReceiver->recvCommand(message, 0))
+  if (inspectorCommandChanReceiver_->recvCommand(message, 0))
   {
     handleInspectorCommandMessage(message);
     return true;

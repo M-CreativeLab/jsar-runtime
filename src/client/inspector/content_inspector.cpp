@@ -24,15 +24,15 @@ namespace client_inspector
       return false;
 
     // Initialize inspector IPC channels
-    inspectorChanClient = ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage>::MakeAndConnect(inspectorChanPort, false, contentId_);
-    if (!inspectorChanClient || !inspectorChanClient->isConnected())
+    inspectorChanClient_ = ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage>::MakeAndConnect(inspectorChanPort, false, contentId_);
+    if (!inspectorChanClient_ || !inspectorChanClient_->isConnected())
     {
       cerr << "ContentInspector: Failed to connect to inspector channel on port " << inspectorChanPort << endl;
       return false;
     }
 
-    inspectorChanSender = make_unique<inspector_comm::TrInspectorCommandSender>(inspectorChanClient);
-    inspectorChanReceiver = make_unique<inspector_comm::TrInspectorReceiver>(inspectorChanClient);
+    inspectorChanSender_ = make_unique<inspector_comm::TrInspectorCommandSender>(inspectorChanClient_);
+    inspectorChanReceiver_ = make_unique<inspector_comm::TrInspectorReceiver>(inspectorChanClient_);
 
     // Create event sender function for CDP domains
     auto eventSender = [this](const string &eventJson) -> bool
@@ -45,50 +45,50 @@ namespace client_inspector
     };
 
     // Initialize content-side CDP handler with event sender
-    contentCdpHandler = make_unique<ContentCdpHandler>(eventSender);
+    contentCdpHandler_ = make_unique<ContentCdpHandler>(eventSender);
     return true;
   }
 
   void ContentInspector::start()
   {
-    assert(inspectorChanReceiver != nullptr && inspectorChanSender != nullptr &&
+    assert(inspectorChanReceiver_ != nullptr && inspectorChanSender_ != nullptr &&
            "ContentInspector: Inspector channels are not initialized");
 
     // Create worker thread for processing inspector commands
     auto onInspectorCommandWork = [this](WorkerThread &worker)
     {
       inspector_comm::TrInspectorCommandMessage incomingCommand;
-      if (inspectorChanReceiver->recvCommand(incomingCommand, 100))
+      if (inspectorChanReceiver_->recvCommand(incomingCommand, 100))
         handleInspectorCommand(incomingCommand);
     };
-    inspectorCommandWorker = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
+    inspectorCommandWorker_ = make_unique<WorkerThread>("TrInspectorCommandWorker", onInspectorCommandWork);
   }
 
   void ContentInspector::stop()
   {
-    if (inspectorCommandWorker)
+    if (inspectorCommandWorker_)
     {
-      inspectorCommandWorker.reset();
+      inspectorCommandWorker_.reset();
     }
 
-    if (inspectorChanClient)
+    if (inspectorChanClient_)
     {
-      inspectorChanClient->disconnect();
-      inspectorChanClient = nullptr;
+      inspectorChanClient_->disconnect();
+      inspectorChanClient_ = nullptr;
       // TODO(yorkie): delete the client?
     }
   }
 
   bool ContentInspector::sendInspectorResponse(inspector_comm::TrInspectorCommandBase &response)
   {
-    if (!inspectorChanSender)
+    if (!inspectorChanSender_)
       return false;
-    return inspectorChanSender->sendCommand(response);
+    return inspectorChanSender_->sendCommand(response);
   }
 
   void ContentInspector::handleInspectorCommand(inspector_comm::TrInspectorCommandMessage &message)
   {
-    if (!contentCdpHandler)
+    if (!contentCdpHandler_)
       return;
 
     auto messageType = message.getType();
@@ -100,9 +100,9 @@ namespace client_inspector
 
       // Use the ContentCdpHandler to process the request and get domain/method
       string responseJson;
-      if (contentCdpHandler)
+      if (contentCdpHandler_)
       {
-        responseJson = contentCdpHandler->processMessage(cdpRequest.cdpMessageJson);
+        responseJson = contentCdpHandler_->processMessage(cdpRequest.cdpMessageJson);
       }
       else
       {

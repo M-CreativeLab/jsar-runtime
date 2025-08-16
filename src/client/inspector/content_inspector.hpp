@@ -40,14 +40,14 @@ namespace client_inspector
     uint32_t contentId_ = 0;
 
     // IPC channels for inspector communication
-    ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient = nullptr;
-    std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender = nullptr;
-    std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver = nullptr;
+    ipc::TrOneShotClient<inspector_comm::TrInspectorCommandMessage> *inspectorChanClient_ = nullptr;
+    std::unique_ptr<inspector_comm::TrInspectorCommandSender> inspectorChanSender_ = nullptr;
+    std::unique_ptr<inspector_comm::TrInspectorReceiver> inspectorChanReceiver_ = nullptr;
 
     // Worker thread for handling inspector commands
-    std::unique_ptr<WorkerThread> inspectorCommandWorker = nullptr;
+    std::unique_ptr<WorkerThread> inspectorCommandWorker_ = nullptr;
 
     // CDP handler for processing inspector commands
-    std::unique_ptr<ContentCdpHandler> contentCdpHandler = nullptr;
+    std::unique_ptr<ContentCdpHandler> contentCdpHandler_ = nullptr;
   };
 }
