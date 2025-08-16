@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
-#include "common/inspector/receiver.hpp"
-#include "common/inspector/sender.hpp"
-#include "common/inspector/message.hpp"
-#include "common/scoped_thread.hpp"
-#include "client/inspector/content_cdp_handler.hpp"
+#include <common/inspector/receiver.hpp>
+#include <common/inspector/sender.hpp>
+#include <common/inspector/message.hpp>
+#include <common/scoped_thread.hpp>
+#include <client/inspector/content_cdp_handler.hpp>
 
 namespace client_inspector
 {
@@ -15,19 +15,14 @@ namespace client_inspector
     ContentInspector(uint32_t contentId);
     ~ContentInspector();
 
-    // Initialize inspector channels and handlers
     bool initialize(int inspectorChanPort);
-
-    // Start the inspector worker thread
     void start();
-
-    // Stop the inspector worker thread
     void stop();
 
     // Get the ContentCdpHandler instance
     ContentCdpHandler *getContentCdpHandler() const
     {
-      return contentCdpHandler.get();
+      return contentCdpHandler_.get();
     }
 
     // Send inspector response
