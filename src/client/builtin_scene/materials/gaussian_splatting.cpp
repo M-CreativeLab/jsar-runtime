@@ -119,7 +119,7 @@ namespace builtin_scene::materials
         splatInstanceCount_ = splatsMesh->getTotalSplatCount();
 
         // Update buffer with sorted indices
-        splatsMesh->updateSplatBuffer(glContext);
+        splatsMesh->updateSplatBuffer(glContext, mesh->vertexArrayObject());
 
         // Bind compressed splat texture to texture unit 0
         auto compressedTexture = splatsMesh->getCompressedSplatsTexture();
