@@ -217,10 +217,10 @@ namespace commandbuffers
     }
 
   protected:
-    template<typename... Args>
+    template <typename... Args>
     void setValues(Args... args)
     {
-      static_cast<Derived*>(this)->setFloatValues(args...);
+      static_cast<Derived *>(this)->setFloatValues(args...);
     }
   };
 
@@ -265,7 +265,8 @@ namespace commandbuffers
   class VertexAttrib2fCommandBufferRequest final
       : public VertexAttribNfCommandBufferRequest<VertexAttrib2fCommandBufferRequest,
                                                   COMMAND_BUFFER_VERTEX_ATTRIB_2F_REQ,
-                                                  float, float>
+                                                  float,
+                                                  float>
   {
   public:
     VertexAttrib2fCommandBufferRequest() = delete;
@@ -305,7 +306,9 @@ namespace commandbuffers
   class VertexAttrib3fCommandBufferRequest final
       : public VertexAttribNfCommandBufferRequest<VertexAttrib3fCommandBufferRequest,
                                                   COMMAND_BUFFER_VERTEX_ATTRIB_3F_REQ,
-                                                  float, float, float>
+                                                  float,
+                                                  float,
+                                                  float>
   {
   public:
     VertexAttrib3fCommandBufferRequest() = delete;
@@ -347,7 +350,10 @@ namespace commandbuffers
   class VertexAttrib4fCommandBufferRequest final
       : public VertexAttribNfCommandBufferRequest<VertexAttrib4fCommandBufferRequest,
                                                   COMMAND_BUFFER_VERTEX_ATTRIB_4F_REQ,
-                                                  float, float, float, float>
+                                                  float,
+                                                  float,
+                                                  float,
+                                                  float>
   {
   public:
     VertexAttrib4fCommandBufferRequest() = delete;
