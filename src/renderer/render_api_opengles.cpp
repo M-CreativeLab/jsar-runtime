@@ -19,7 +19,6 @@
 
 #include "./render_api.hpp"
 #include "./content_renderer.hpp"
-#include <LabSound/extended/Logging.h>
 
 using namespace std;
 using namespace renderer;
@@ -2775,7 +2774,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   content_renderer->onCommandBuffersExecuting();
   ContextGLApp *contentGlContext = content_renderer->getContextGL();
   ContextGLApp contextBaseState = ContextGLApp("tmp", contentGlContext);
-  LOG_DEBUG("[CLEARBUFFER_DEBUG] ExecuteCommandBuffer: Processing %zu commands", list.size());
   bool should_move_to_offscreen_pass = false;
   for (auto it = list.begin(); it != list.end();)
   {
