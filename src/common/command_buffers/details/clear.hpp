@@ -170,166 +170,109 @@ namespace commandbuffers
     int stencil;
   };
 
+  // Base class for ClearBuffer commands that use vector values
+  template <typename Derived, CommandBufferType Type, typename ValueType>
+  class ClearBufferBaseRequest : public TrCommandBufferSimpleRequest<Derived, Type>
+  {
+  public:
+    ClearBufferBaseRequest() = delete;
+    ClearBufferBaseRequest(int buffer, int drawbuffer, const std::vector<ValueType> &values)
+        : TrCommandBufferSimpleRequest<Derived, Type>()
+        , buffer(buffer)
+        , drawbuffer(drawbuffer)
+        , values(values)
+    {
+    }
+    ClearBufferBaseRequest(const ClearBufferBaseRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
+        , buffer(that.buffer)
+        , drawbuffer(that.drawbuffer)
+        , values(that.values)
+    {
+    }
+
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = TrCommandBufferSimpleRequest<Derived, Type>::serialize();
+      if (values.size() > 0)
+        message->addVecSegment(values);
+      return message;
+    }
+
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      TrCommandBufferSimpleRequest<Derived, Type>::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
+      if (valuesSegment != nullptr)
+        values = valuesSegment->toVec<ValueType>();
+      else
+        values.clear();
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest<Derived, Type>::toString(line_prefix) << "("
+         << buffer << ", " << drawbuffer << ", [" << values.size() << " values])";
+      return ss.str();
+    }
+
+  public:
+    int buffer;
+    int drawbuffer;
+    std::vector<ValueType> values;
+  };
+
   class ClearBufferfvCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<ClearBufferfvCommandBufferRequest,
-                                            COMMAND_BUFFER_CLEAR_BUFFERFV_REQ>
+      : public ClearBufferBaseRequest<ClearBufferfvCommandBufferRequest,
+                                      COMMAND_BUFFER_CLEAR_BUFFERFV_REQ,
+                                      float>
   {
   public:
     ClearBufferfvCommandBufferRequest() = delete;
     ClearBufferfvCommandBufferRequest(int buffer, int drawbuffer, const std::vector<float> &values)
-        : TrCommandBufferSimpleRequest()
-        , buffer(buffer)
-        , drawbuffer(drawbuffer)
-        , values(values)
+        : ClearBufferBaseRequest(buffer, drawbuffer, values)
     {
     }
     ClearBufferfvCommandBufferRequest(const ClearBufferfvCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , buffer(that.buffer)
-        , drawbuffer(that.drawbuffer)
-        , values(that.values)
+        : ClearBufferBaseRequest(that, clone)
     {
     }
-
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = TrCommandBufferSimpleRequest::serialize();
-      if (values.size() > 0)
-        message->addVecSegment(values);
-      return message;
-    }
-
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-      TrCommandBufferSimpleRequest::deserialize(message);
-
-      auto valuesSegment = message.nextSegment();
-      if (valuesSegment != nullptr)
-        values = valuesSegment->toVec<float>();
-      else
-        values.clear();
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << buffer << ", " << drawbuffer << ", [" << values.size() << " values])";
-      return ss.str();
-    }
-
-  public:
-    int buffer;
-    int drawbuffer;
-    std::vector<float> values;
   };
 
   class ClearBufferivCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<ClearBufferivCommandBufferRequest,
-                                            COMMAND_BUFFER_CLEAR_BUFFERIV_REQ>
+      : public ClearBufferBaseRequest<ClearBufferivCommandBufferRequest,
+                                      COMMAND_BUFFER_CLEAR_BUFFERIV_REQ,
+                                      int>
   {
   public:
     ClearBufferivCommandBufferRequest() = delete;
     ClearBufferivCommandBufferRequest(int buffer, int drawbuffer, const std::vector<int> &values)
-        : TrCommandBufferSimpleRequest()
-        , buffer(buffer)
-        , drawbuffer(drawbuffer)
-        , values(values)
+        : ClearBufferBaseRequest(buffer, drawbuffer, values)
     {
     }
     ClearBufferivCommandBufferRequest(const ClearBufferivCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , buffer(that.buffer)
-        , drawbuffer(that.drawbuffer)
-        , values(that.values)
+        : ClearBufferBaseRequest(that, clone)
     {
     }
-
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = TrCommandBufferSimpleRequest::serialize();
-      if (values.size() > 0)
-        message->addVecSegment(values);
-      return message;
-    }
-
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-      TrCommandBufferSimpleRequest::deserialize(message);
-
-      auto valuesSegment = message.nextSegment();
-      if (valuesSegment != nullptr)
-        values = valuesSegment->toVec<int>();
-      else
-        values.clear();
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << buffer << ", " << drawbuffer << ", [" << values.size() << " values])";
-      return ss.str();
-    }
-
-  public:
-    int buffer;
-    int drawbuffer;
-    std::vector<int> values;
   };
 
   class ClearBufferuivCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<ClearBufferuivCommandBufferRequest,
-                                            COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ>
+      : public ClearBufferBaseRequest<ClearBufferuivCommandBufferRequest,
+                                      COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
+                                      unsigned int>
   {
   public:
     ClearBufferuivCommandBufferRequest() = delete;
     ClearBufferuivCommandBufferRequest(int buffer, int drawbuffer, const std::vector<unsigned int> &values)
-        : TrCommandBufferSimpleRequest()
-        , buffer(buffer)
-        , drawbuffer(drawbuffer)
-        , values(values)
+        : ClearBufferBaseRequest(buffer, drawbuffer, values)
     {
     }
     ClearBufferuivCommandBufferRequest(const ClearBufferuivCommandBufferRequest &that, bool clone = false)
-        : TrCommandBufferSimpleRequest(that, clone)
-        , buffer(that.buffer)
-        , drawbuffer(that.drawbuffer)
-        , values(that.values)
+        : ClearBufferBaseRequest(that, clone)
     {
     }
-
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = TrCommandBufferSimpleRequest::serialize();
-      if (values.size() > 0)
-        message->addVecSegment(values);
-      return message;
-    }
-
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-      TrCommandBufferSimpleRequest::deserialize(message);
-
-      auto valuesSegment = message.nextSegment();
-      if (valuesSegment != nullptr)
-        values = valuesSegment->toVec<unsigned int>();
-      else
-        values.clear();
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "("
-         << buffer << ", " << drawbuffer << ", [" << values.size() << " values])";
-      return ss.str();
-    }
-
-  public:
-    int buffer;
-    int drawbuffer;
-    std::vector<unsigned int> values;
   };
 
   class ClearBufferfiCommandBufferRequest final

@@ -195,24 +195,52 @@ namespace commandbuffers
     uint32_t offset;
   };
 
+  // Base class template for VertexAttribNf commands (1f, 2f, 3f, 4f)
+  template <typename Derived, CommandBufferType Type, typename... FloatArgs>
+  class VertexAttribNfCommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
+  {
+  public:
+    VertexAttribNfCommandBufferRequest() = delete;
+    VertexAttribNfCommandBufferRequest(uint32_t program, const std::string &location_name, FloatArgs... args)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, location_name)
+    {
+      setValues(args...);
+    }
+    VertexAttribNfCommandBufferRequest(uint32_t program, uint32_t index, FloatArgs... args)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, index)
+    {
+      setValues(args...);
+    }
+    VertexAttribNfCommandBufferRequest(const Derived &that, bool clone = false)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(that, clone)
+    {
+    }
+
+  protected:
+    template<typename... Args>
+    void setValues(Args... args)
+    {
+      static_cast<Derived*>(this)->setFloatValues(args...);
+    }
+  };
+
   class VertexAttrib1fCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttrib1fCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_1F_REQ>
+      : public VertexAttribNfCommandBufferRequest<VertexAttrib1fCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_1F_REQ,
+                                                  float>
   {
   public:
     VertexAttrib1fCommandBufferRequest() = delete;
     VertexAttrib1fCommandBufferRequest(uint32_t program, const std::string &location_name, float x)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , x(x)
+        : VertexAttribNfCommandBufferRequest(program, location_name, x)
     {
     }
     VertexAttrib1fCommandBufferRequest(uint32_t program, uint32_t index, float x)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , x(x)
+        : VertexAttribNfCommandBufferRequest(program, index, x)
     {
     }
     VertexAttrib1fCommandBufferRequest(const VertexAttrib1fCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
+        : VertexAttribNfCommandBufferRequest(that, clone)
         , x(that.x)
     {
     }
@@ -225,30 +253,32 @@ namespace commandbuffers
       return ss.str();
     }
 
+    void setFloatValues(float x_val)
+    {
+      x = x_val;
+    }
+
   public:
     float x;
   };
 
   class VertexAttrib2fCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttrib2fCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_2F_REQ>
+      : public VertexAttribNfCommandBufferRequest<VertexAttrib2fCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_2F_REQ,
+                                                  float, float>
   {
   public:
     VertexAttrib2fCommandBufferRequest() = delete;
     VertexAttrib2fCommandBufferRequest(uint32_t program, const std::string &location_name, float x, float y)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , x(x)
-        , y(y)
+        : VertexAttribNfCommandBufferRequest(program, location_name, x, y)
     {
     }
     VertexAttrib2fCommandBufferRequest(uint32_t program, uint32_t index, float x, float y)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , x(x)
-        , y(y)
+        : VertexAttribNfCommandBufferRequest(program, index, x, y)
     {
     }
     VertexAttrib2fCommandBufferRequest(const VertexAttrib2fCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
+        : VertexAttribNfCommandBufferRequest(that, clone)
         , x(that.x)
         , y(that.y)
     {
@@ -262,32 +292,33 @@ namespace commandbuffers
       return ss.str();
     }
 
+    void setFloatValues(float x_val, float y_val)
+    {
+      x = x_val;
+      y = y_val;
+    }
+
   public:
     float x, y;
   };
 
   class VertexAttrib3fCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttrib3fCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_3F_REQ>
+      : public VertexAttribNfCommandBufferRequest<VertexAttrib3fCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_3F_REQ,
+                                                  float, float, float>
   {
   public:
     VertexAttrib3fCommandBufferRequest() = delete;
     VertexAttrib3fCommandBufferRequest(uint32_t program, const std::string &location_name, float x, float y, float z)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , x(x)
-        , y(y)
-        , z(z)
+        : VertexAttribNfCommandBufferRequest(program, location_name, x, y, z)
     {
     }
     VertexAttrib3fCommandBufferRequest(uint32_t program, uint32_t index, float x, float y, float z)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , x(x)
-        , y(y)
-        , z(z)
+        : VertexAttribNfCommandBufferRequest(program, index, x, y, z)
     {
     }
     VertexAttrib3fCommandBufferRequest(const VertexAttrib3fCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
+        : VertexAttribNfCommandBufferRequest(that, clone)
         , x(that.x)
         , y(that.y)
         , z(that.z)
@@ -302,34 +333,34 @@ namespace commandbuffers
       return ss.str();
     }
 
+    void setFloatValues(float x_val, float y_val, float z_val)
+    {
+      x = x_val;
+      y = y_val;
+      z = z_val;
+    }
+
   public:
     float x, y, z;
   };
 
   class VertexAttrib4fCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttrib4fCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_4F_REQ>
+      : public VertexAttribNfCommandBufferRequest<VertexAttrib4fCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_4F_REQ,
+                                                  float, float, float, float>
   {
   public:
     VertexAttrib4fCommandBufferRequest() = delete;
     VertexAttrib4fCommandBufferRequest(uint32_t program, const std::string &location_name, float x, float y, float z, float w)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , x(x)
-        , y(y)
-        , z(z)
-        , w(w)
+        : VertexAttribNfCommandBufferRequest(program, location_name, x, y, z, w)
     {
     }
     VertexAttrib4fCommandBufferRequest(uint32_t program, uint32_t index, float x, float y, float z, float w)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , x(x)
-        , y(y)
-        , z(z)
-        , w(w)
+        : VertexAttribNfCommandBufferRequest(program, index, x, y, z, w)
     {
     }
     VertexAttrib4fCommandBufferRequest(const VertexAttrib4fCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
+        : VertexAttribNfCommandBufferRequest(that, clone)
         , x(that.x)
         , y(that.y)
         , z(that.z)
@@ -343,6 +374,14 @@ namespace commandbuffers
       ss << SetVertexAttribCommandBufferRequest::toString(line_prefix) << "("
          << x << ", " << y << ", " << z << ", " << w << ")";
       return ss.str();
+    }
+
+    void setFloatValues(float x_val, float y_val, float z_val, float w_val)
+    {
+      x = x_val;
+      y = y_val;
+      z = z_val;
+      w = w_val;
     }
 
   public:
@@ -442,31 +481,30 @@ namespace commandbuffers
     uint32_t divisor;
   };
 
-  // VertexAttribI4i command buffer request
-  class VertexAttribI4iCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttribI4iCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4I_REQ>
+  // Base class template for VertexAttribI4 commands (I4i, I4ui)
+  template <typename Derived, CommandBufferType Type, typename ValueType>
+  class VertexAttribI4CommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
   {
   public:
-    VertexAttribI4iCommandBufferRequest() = delete;
-    VertexAttribI4iCommandBufferRequest(uint32_t program, const std::string &location_name, int x, int y, int z, int w)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
+    VertexAttribI4CommandBufferRequest() = delete;
+    VertexAttribI4CommandBufferRequest(uint32_t program, const std::string &location_name, ValueType x, ValueType y, ValueType z, ValueType w)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, location_name)
         , x(x)
         , y(y)
         , z(z)
         , w(w)
     {
     }
-    VertexAttribI4iCommandBufferRequest(uint32_t program, uint32_t index, int x, int y, int z, int w)
-        : SetVertexAttribCommandBufferRequest(program, index)
+    VertexAttribI4CommandBufferRequest(uint32_t program, uint32_t index, ValueType x, ValueType y, ValueType z, ValueType w)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, index)
         , x(x)
         , y(y)
         , z(z)
         , w(w)
     {
     }
-    VertexAttribI4iCommandBufferRequest(const VertexAttribI4iCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
+    VertexAttribI4CommandBufferRequest(const Derived &that, bool clone = false)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(that, clone)
         , x(that.x)
         , y(that.y)
         , z(that.z)
@@ -477,138 +515,92 @@ namespace commandbuffers
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
-      ss << SetVertexAttribCommandBufferRequest::toString(line_prefix) << "("
+      ss << SetVertexAttribCommandBufferRequest<Derived, Type>::toString(line_prefix) << "("
          << x << ", " << y << ", " << z << ", " << w << ")";
       return ss.str();
     }
 
   public:
-    int x, y, z, w;
+    ValueType x, y, z, w;
+  };
+
+  // Base class template for VertexAttribI4v commands (I4iv, I4uiv)
+  template <typename Derived, CommandBufferType Type, typename ValueType>
+  class VertexAttribI4vCommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
+  {
+  public:
+    VertexAttribI4vCommandBufferRequest() = delete;
+    VertexAttribI4vCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<ValueType> &values)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, location_name)
+        , values(values)
+    {
+    }
+    VertexAttribI4vCommandBufferRequest(uint32_t program, uint32_t index, const std::vector<ValueType> &values)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(program, index)
+        , values(values)
+    {
+    }
+    VertexAttribI4vCommandBufferRequest(const Derived &that, bool clone = false)
+        : SetVertexAttribCommandBufferRequest<Derived, Type>(that, clone)
+        , values(that.values)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << SetVertexAttribCommandBufferRequest<Derived, Type>::toString(line_prefix) << "([";
+      for (size_t i = 0; i < values.size(); ++i)
+      {
+        if (i > 0)
+          ss << ", ";
+        ss << values[i];
+      }
+      ss << "])";
+      return ss.str();
+    }
+
+  public:
+    std::vector<ValueType> values;
+  };
+
+  // VertexAttribI4i command buffer request
+  class VertexAttribI4iCommandBufferRequest final
+      : public VertexAttribI4CommandBufferRequest<VertexAttribI4iCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_I4I_REQ,
+                                                  int>
+  {
+  public:
+    using VertexAttribI4CommandBufferRequest::VertexAttribI4CommandBufferRequest;
   };
 
   // VertexAttribI4ui command buffer request
   class VertexAttribI4uiCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttribI4uiCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4UI_REQ>
+      : public VertexAttribI4CommandBufferRequest<VertexAttribI4uiCommandBufferRequest,
+                                                  COMMAND_BUFFER_VERTEX_ATTRIB_I4UI_REQ,
+                                                  uint32_t>
   {
   public:
-    VertexAttribI4uiCommandBufferRequest() = delete;
-    VertexAttribI4uiCommandBufferRequest(uint32_t program, const std::string &location_name, uint32_t x, uint32_t y, uint32_t z, uint32_t w)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , x(x)
-        , y(y)
-        , z(z)
-        , w(w)
-    {
-    }
-    VertexAttribI4uiCommandBufferRequest(uint32_t program, uint32_t index, uint32_t x, uint32_t y, uint32_t z, uint32_t w)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , x(x)
-        , y(y)
-        , z(z)
-        , w(w)
-    {
-    }
-    VertexAttribI4uiCommandBufferRequest(const VertexAttribI4uiCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
-        , x(that.x)
-        , y(that.y)
-        , z(that.z)
-        , w(that.w)
-    {
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << SetVertexAttribCommandBufferRequest::toString(line_prefix) << "("
-         << x << ", " << y << ", " << z << ", " << w << ")";
-      return ss.str();
-    }
-
-  public:
-    uint32_t x, y, z, w;
+    using VertexAttribI4CommandBufferRequest::VertexAttribI4CommandBufferRequest;
   };
 
   // VertexAttribI4iv command buffer request
   class VertexAttribI4ivCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttribI4ivCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4IV_REQ>
+      : public VertexAttribI4vCommandBufferRequest<VertexAttribI4ivCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4IV_REQ,
+                                                   int>
   {
   public:
-    VertexAttribI4ivCommandBufferRequest() = delete;
-    VertexAttribI4ivCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<int> &values)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , values(values)
-    {
-    }
-    VertexAttribI4ivCommandBufferRequest(uint32_t program, uint32_t index, const std::vector<int> &values)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , values(values)
-    {
-    }
-    VertexAttribI4ivCommandBufferRequest(const VertexAttribI4ivCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
-        , values(that.values)
-    {
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << SetVertexAttribCommandBufferRequest::toString(line_prefix) << "([";
-      for (size_t i = 0; i < values.size(); ++i)
-      {
-        if (i > 0)
-          ss << ", ";
-        ss << values[i];
-      }
-      ss << "])";
-      return ss.str();
-    }
-
-  public:
-    std::vector<int> values;
+    using VertexAttribI4vCommandBufferRequest::VertexAttribI4vCommandBufferRequest;
   };
 
   // VertexAttribI4uiv command buffer request
   class VertexAttribI4uivCommandBufferRequest final
-      : public SetVertexAttribCommandBufferRequest<VertexAttribI4uivCommandBufferRequest,
-                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4UIV_REQ>
+      : public VertexAttribI4vCommandBufferRequest<VertexAttribI4uivCommandBufferRequest,
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4UIV_REQ,
+                                                   uint32_t>
   {
   public:
-    VertexAttribI4uivCommandBufferRequest() = delete;
-    VertexAttribI4uivCommandBufferRequest(uint32_t program, const std::string &location_name, const std::vector<uint32_t> &values)
-        : SetVertexAttribCommandBufferRequest(program, location_name)
-        , values(values)
-    {
-    }
-    VertexAttribI4uivCommandBufferRequest(uint32_t program, uint32_t index, const std::vector<uint32_t> &values)
-        : SetVertexAttribCommandBufferRequest(program, index)
-        , values(values)
-    {
-    }
-    VertexAttribI4uivCommandBufferRequest(const VertexAttribI4uivCommandBufferRequest &that, bool clone = false)
-        : SetVertexAttribCommandBufferRequest(that, clone)
-        , values(that.values)
-    {
-    }
-
-    std::string toString(const char *line_prefix) const override
-    {
-      std::stringstream ss;
-      ss << SetVertexAttribCommandBufferRequest::toString(line_prefix) << "([";
-      for (size_t i = 0; i < values.size(); ++i)
-      {
-        if (i > 0)
-          ss << ", ";
-        ss << values[i];
-      }
-      ss << "])";
-      return ss.str();
-    }
-
-  public:
-    std::vector<uint32_t> values;
+    using VertexAttribI4vCommandBufferRequest::VertexAttribI4vCommandBufferRequest;
   };
 }
