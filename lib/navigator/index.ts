@@ -78,7 +78,7 @@ class NavigatorImpl implements Navigator {
   /**
    * The `gpu` provides the WebGPU context.
    */
-  get gpu(): GPU {
+  get gpu() {
     throw new TypeError('WebGPU is not supported in this environment');
   }
   get webdriver(): boolean {

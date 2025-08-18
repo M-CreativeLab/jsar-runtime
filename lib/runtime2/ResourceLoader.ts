@@ -4,9 +4,10 @@ import fsPromises from 'node:fs/promises';
 import { resolveObjectURL } from 'node:buffer';
 
 import {
-  type ResourceLoader as JSARResourceLoader,
-} from '@yodaos-jsar/dom';
-import { getClientContext, isResourcesCachingDisabled, getResourceCacheExpirationTime } from '@transmute/env';
+  getClientContext,
+  isResourcesCachingDisabled,
+  getResourceCacheExpirationTime
+} from '@transmute/env';
 import * as undici from 'undici';
 import { CacheControl, parse as parseCacheControl } from 'cache-control-parser';
 import { IncomingHttpHeaders } from 'undici/types/header';
@@ -18,6 +19,7 @@ type FetchReturnsMap = {
 };
 type FetchOptions = {
   accept?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cookieJar?: any;
   referrer?: string;
   headers?: undici.HeadersInit;
@@ -32,7 +34,7 @@ const getHashOfUri = (uri: string) => hash('md5', uri);
 const getOrigin = (url: string) => {
   let origin: string = '';
   try {
-    let urlObject = new URL(url);
+    const urlObject = new URL(url);
     origin = urlObject.hostname;
     // TODO(yorkie): support the port?
   } catch (_) {
@@ -182,8 +184,8 @@ type ResponseCacheInfo<D> = {
 type ResponseContentCallback<D> = (content: NodeJS.ArrayBufferView | string, info: ResponseCacheInfo<D>) => void;
 
 function buildCacheInfoFrom<D>(response: ResponseCacheInfo<D>['responseData']): ResponseCacheInfo<D> {
-  let statusCode = response.status || response.statusCode;
-  let useCache = statusCode === 304;
+  const statusCode = response.status || response.statusCode;
+  const useCache = statusCode === 304;
   let storeCache = true;
   if (!useCache && response.headers['cache-control']) {
     const cacheControl = parseCacheControl(response.headers['cache-control'].toString());
@@ -256,6 +258,7 @@ class CacheStorage {
     return null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async put(url: string, headers: any, content?: NodeJS.ArrayBufferView | string): Promise<void> {
     if (this.#disabled) {
       return;
@@ -327,7 +330,7 @@ class CacheStorage {
     await Promise.all(writes);
   }
 
-  async delete(url: string): Promise<void> {
+  async delete(_url: string): Promise<void> {
     if (this.#disabled) {
       return;
     }
@@ -415,7 +418,7 @@ class CacheStorage {
   }
 }
 
-export class ResourceLoaderOnTransmute implements JSARResourceLoader {
+export class ResourceLoaderOnTransmute {
   #cacheDirectory: string;
   #cacheStorage: CacheStorage;
   #defaultHeaders: Record<string, string> = {};
@@ -500,7 +503,8 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     } else {
       return this.#cacheStorage.requestWithCache(url, this.#getRequestInit(options), {
         readFile: (filename: string) => this.#readFile(filename, returnsAs),
-        sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init as any),
         readResponse: (...args) => this.#readBody(...args, returnsAs),
       });
     }
@@ -513,6 +517,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    * @returns the fetch(input, init?) function.
    */
   createWHATWGFetchImpl(baseURI: string): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self: ResourceLoaderOnTransmute = this;
     const forceFetch = fetch;  // Save the Node.js fetch implementation.
 
@@ -586,6 +591,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const reqInit: undici.RequestInit = {
       ...(options == null ? {} : options),
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const responseData = await undici.request(url, <any>{
       maxRedirections: 5,
       dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher(),
@@ -616,10 +622,13 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       if (returnsAs === 'string') {
         return text as FetchReturnsMap[AsType];
       } else if (returnsAs === 'json') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let obj: any;
         try {
           obj = JSON.parse(text);
-        } catch (_) { }
+        } catch (_) {
+          // Nothing to do here
+        }
         return obj as FetchReturnsMap[AsType];
       } else {
         throw new TypeError(`Unknown return type: "${returnsAs}"`);

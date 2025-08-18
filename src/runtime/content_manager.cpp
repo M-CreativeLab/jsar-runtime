@@ -464,23 +464,6 @@ void TrContentManager::installScripts()
   if (!filesystem::exists(scriptsTargetDir))
     filesystem::create_directory(scriptsTargetDir);
 
-#define INSTALL_BOOTSTRAP_SCRIPT(framework, scriptName)                                         \
-  {                                                                                             \
-    auto sourcePtr = JSBundle::GetBootstrapSourcePtr(JSFrameworkName::framework);               \
-    path sourcePath = path(scriptsTargetDir) / scriptName;                                      \
-    {                                                                                           \
-      FILE *fp = fopen(sourcePath.c_str(), "wb");                                               \
-      if (fp != nullptr)                                                                        \
-      {                                                                                         \
-        fwrite(sourcePtr, 1, JSBundle::GetBootstrapSourceSize(JSFrameworkName::framework), fp); \
-        fclose(fp);                                                                             \
-      }                                                                                         \
-    }                                                                                           \
-  }
-
-  INSTALL_BOOTSTRAP_SCRIPT(BABYLON, "jsar-bootstrap-babylon.js");
-#undef INSTALL_BOOTSTRAP_SCRIPT
-
 #define INSTALL_JSBUNDLE_SCRIPT(id, scriptName)                                      \
   {                                                                                  \
     auto sourcePtr = JSBundle::GetClientEntrySourcePtr(JSBundles::id);               \

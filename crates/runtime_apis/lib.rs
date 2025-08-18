@@ -43,7 +43,6 @@ mod platform {
   pub const LIBNODE_SRC_MD5: &str = "";
 }
 
-const JSBOOTSTRAP_BABYLON_COMPRESSED: &[u8] = include_bytes!("jsar-bootstrap-babylon.js.gz");
 const JSBUNDLE_CLIENT_ENTRY_COMPRESSED: &[u8] = include_bytes!("jsar-client-entry.js.gz");
 const JSBUNDLE_WEBWORKERS_ENTRY_COMPRESSED: &[u8] = include_bytes!("jsar-webworkers-entry.js.gz");
 
@@ -55,7 +54,6 @@ fn decompress_js_source(js: &[u8]) -> String {
 }
 
 lazy_static! {
-  static ref JSBOOTSTRAP_BABYLON_SRC: String = decompress_js_source(JSBOOTSTRAP_BABYLON_COMPRESSED);
   static ref JSBUNDLE_CLIENT_ENTRY_SRC: String =
     decompress_js_source(JSBUNDLE_CLIENT_ENTRY_COMPRESSED);
   static ref JSBUNDLE_WEBWORKERS_ENTRY_SRC: String =
@@ -80,16 +78,6 @@ extern "C" fn get_libnode_md5_ptr() -> *const u8 {
 #[no_mangle]
 extern "C" fn get_libnode_md5_size() -> usize {
   platform::LIBNODE_SRC_MD5.len()
-}
-
-#[no_mangle]
-extern "C" fn get_jsbootstrap_ptr(_framework_id: i32) -> *const u8 {
-  JSBOOTSTRAP_BABYLON_SRC.as_ptr()
-}
-
-#[no_mangle]
-extern "C" fn get_jsbootstrap_size(_framework_id: i32) -> usize {
-  JSBOOTSTRAP_BABYLON_SRC.len()
 }
 
 #[no_mangle]
@@ -157,31 +145,5 @@ extern "C" fn carbonite_release_memory(ptr: *mut u8, len: usize) {
 
   unsafe {
     let _ = Box::from_raw(ptr::slice_from_raw_parts_mut(ptr, len));
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_decompress_js_source() {
-    let js = include_bytes!("jsar-bootstrap-babylon.js.gz");
-    let decompressed_js = decompress_js_source(js);
-    assert_eq!(decompressed_js.len() > 0, true);
-  }
-
-  #[test]
-  fn test_decompress_binary() {
-    let js = include_bytes!("jsar-bootstrap-babylon.js.gz");
-    let mut output_ptr: *mut u8 = ptr::null_mut();
-    let mut output_len: usize = 0;
-    let result =
-      carbonite_decompress_binary(js.as_ptr(), js.len(), &mut output_ptr, &mut output_len);
-    assert_eq!(result, 0);
-    assert_eq!(output_len, 5024048);
-    println!("output: {:?}", output_ptr);
-
-    carbonite_release_memory(output_ptr, output_len);
   }
 }

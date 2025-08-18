@@ -282,8 +282,10 @@ declare namespace Transmute {
      * @param intput user input, it can be a URL or a source.
      * @param sourceMimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
      * @param inputType the input type: 'url' or 'source'.
+     * @param baseURI the base URI for the new document, only used when the `inputType` is 'url'.
+     * @returns the new document.
      */
-    start(intput: string, sourceMimeType: 'text/html', inputType?: 'url' | 'source'): Document;
+    start(intput: string, sourceMimeType: 'text/html', inputType?: 'url' | 'source', baseURI?: string): Document;
   }
 
   /**
