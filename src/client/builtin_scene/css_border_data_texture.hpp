@@ -46,6 +46,12 @@ namespace builtin_scene
     void bind(client_graphics::WebGLTextureUnit textureUnit);
 
     /**
+     * Unbind the border data texture from the specified texture unit.
+     * @param textureUnit The texture unit to unbind from (typically 1)
+     */
+    void unbind(client_graphics::WebGLTextureUnit textureUnit);
+
+    /**
      * Get the underlying WebGL texture.
      * @return The border data texture
      */

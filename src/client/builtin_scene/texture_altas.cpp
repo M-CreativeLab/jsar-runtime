@@ -139,6 +139,7 @@ namespace builtin_scene
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
+    glContext->activeTexture(unit_);
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, nullptr);
   }
 }

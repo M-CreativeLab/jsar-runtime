@@ -128,6 +128,15 @@ namespace builtin_scene
     glContext_->bindTexture(WebGLTextureTarget::kTexture2D, borderDataTexture_);
   }
 
+  void CSSBorderDataTexture::unbind(WebGLTextureUnit textureUnit)
+  {
+    if (TR_UNLIKELY(!isInitialized()))
+      return;
+
+    glContext_->activeTexture(textureUnit);
+    glContext_->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
+  }
+
   void CSSBorderDataTexture::ensureTextureSize(size_t instanceCount)
   {
     if (instanceCount <= currentTextureHeight_)
