@@ -206,6 +206,8 @@ namespace commandbuffers
       auto valuesSegment = message.nextSegment();
       if (valuesSegment != nullptr)
         values = valuesSegment->toVec<float>();
+      else
+        values.clear();
     }
 
     std::string toString(const char *line_prefix) const override
@@ -243,6 +245,25 @@ namespace commandbuffers
     {
     }
 
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = TrCommandBufferSimpleRequest::serialize();
+      if (values.size() > 0)
+        message->addVecSegment(values);
+      return message;
+    }
+
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      TrCommandBufferSimpleRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
+      if (valuesSegment != nullptr)
+        values = valuesSegment->toVec<int>();
+      else
+        values.clear();
+    }
+
     std::string toString(const char *line_prefix) const override
     {
       std::stringstream ss;
@@ -276,6 +297,25 @@ namespace commandbuffers
         , drawbuffer(that.drawbuffer)
         , values(that.values)
     {
+    }
+
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = TrCommandBufferSimpleRequest::serialize();
+      if (values.size() > 0)
+        message->addVecSegment(values);
+      return message;
+    }
+
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      TrCommandBufferSimpleRequest::deserialize(message);
+
+      auto valuesSegment = message.nextSegment();
+      if (valuesSegment != nullptr)
+        values = valuesSegment->toVec<unsigned int>();
+      else
+        values.clear();
     }
 
     std::string toString(const char *line_prefix) const override

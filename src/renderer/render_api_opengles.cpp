@@ -19,6 +19,7 @@
 
 #include "./render_api.hpp"
 #include "./content_renderer.hpp"
+#include <LabSound/extended/Logging.h>
 
 using namespace std;
 using namespace renderer;
@@ -116,7 +117,7 @@ private:
       DEBUG(LOG_TAG_ERROR,
             "Occurs an %s error at %s",
             gles::glErrorToString(error).c_str(),
-            commandTypeToStr(static_cast<CommandBufferType>(commandType)).c_str());
+            commandTypeToStr(commandType).c_str());
       DEBUG(LOG_TAG_ERROR, "    command: %d", commandType);
       DEBUG(LOG_TAG_ERROR, "    content: %d", contentId);
       DEBUG(LOG_TAG_ERROR, "    context: %d", req->contextId);
@@ -1550,7 +1551,7 @@ private:
     }
 
     glVertexAttribI4i(loc.value(), req->x, req->y, req->z, req->w);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+    if (CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall) [[unlikely]]
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnVertexAttribI4ui(VertexAttribI4uiCommandBufferRequest *req,
@@ -2508,10 +2509,20 @@ private:
   }
   TR_OPENGL_FUNC void OnClear(ClearCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
+    if (options.executingPassType != ExecutingPassType::kOffscreenPass) [[unlikely]]
+      return;
+
     GLbitfield mask = req->mask;
     glClear(mask);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, nullptr, nullptr, options);
+    {
+      if (options.executingPassType != ExecutingPassType::kOffscreenPass)
+      {
+        glClear(mask);
+        if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+          PrintDebugInfo(req, nullptr, nullptr, options);
+      }
+    }
   }
   TR_OPENGL_FUNC void OnClearBufferfv(ClearBufferfvCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -2520,36 +2531,12 @@ private:
     GLenum buffer = req->buffer;
     GLint drawbuffer = req->drawbuffer;
     const GLfloat *value = req->values.data();
-
-    // Multiple debug outputs to ensure visibility
-    printf("[CLEARBUFFER_DEBUG] OnClearBufferfv called: buffer=%u, drawbuffer=%d, values=[%f,%f,%f,%f]\n",
-           buffer,
-           drawbuffer,
-           req->values.size() > 0 ? req->values[0] : 0.0f,
-           req->values.size() > 1 ? req->values[1] : 0.0f,
-           req->values.size() > 2 ? req->values[2] : 0.0f,
-           req->values.size() > 3 ? req->values[3] : 0.0f);
-    fflush(stdout);
-
-    std::cout << "[CLEARBUFFER_DEBUG] OnClearBufferfv called: buffer=" << buffer
-              << ", drawbuffer=" << drawbuffer << ", values=[";
-    for (size_t i = 0; i < req->values.size() && i < 4; i++)
-    {
-      if (i > 0)
-        std::cout << ",";
-      std::cout << req->values[i];
-    }
-    std::cout << "]" << std::endl;
-
     DEBUG(LOG_TAG_RENDERER, "[CLEARBUFFER_DEBUG] OnClearBufferfv called: buffer=%u, drawbuffer=%d, values=[%f,%f,%f,%f]", buffer, drawbuffer, req->values.size() > 0 ? req->values[0] : 0.0f, req->values.size() > 1 ? req->values[1] : 0.0f, req->values.size() > 2 ? req->values[2] : 0.0f, req->values.size() > 3 ? req->values[3] : 0.0f);
-
     glClearBufferfv(buffer, drawbuffer, value);
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
     {
-      printf("[CLEARBUFFER_DEBUG] glClearBufferfv error: 0x%x\n", error);
-      fflush(stdout);
-      DEBUG(LOG_TAG_ERROR, "[CLEARBUFFER_DEBUG] glClearBufferfv error: 0x%x", error);
+      DEBUG(LOG_TAG_ERROR, "glClearBufferfv error: 0x%x", error);
     }
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -2796,11 +2783,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   content_renderer->onCommandBuffersExecuting();
   ContextGLApp *contentGlContext = content_renderer->getContextGL();
   ContextGLApp contextBaseState = ContextGLApp("tmp", contentGlContext);
-
-#ifdef CLEARBUFFER_DEBUG
-  printf("[CLEARBUFFER_DEBUG] ExecuteCommandBuffer: Processing %zu commands\n", list.size());
-#endif
-
+  LOG_DEBUG("[CLEARBUFFER_DEBUG] ExecuteCommandBuffer: Processing %zu commands", list.size());
   bool should_move_to_offscreen_pass = false;
   for (auto it = list.begin(); it != list.end();)
   {
@@ -2862,9 +2845,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     break;                                                                                  \
   }
 
-#ifdef CLEARBUFFER_DEBUG
-    printf("[CLEARBUFFER_DEBUG] Processing command type: %s(%d)\n", commandTypeToStr(commandType).c_str(), commandType);
-#endif
 
     switch (commandType)
     {

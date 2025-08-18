@@ -1894,22 +1894,8 @@ namespace client_graphics
   void WebGL2Context::clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<float> values)
   {
     // Debug output to check values before creating command buffer request
-    printf("[WEBGL_CONTEXT_DEBUG] clearBufferfv: buffer=%u, drawbuffer=%d, values.size()=%zu, values=[", static_cast<uint32_t>(buffer), drawbuffer, values.size());
-    for (size_t i = 0; i < values.size() && i < 4; i++)
-    {
-      if (i > 0)
-        printf(",");
-      printf("%f", values[i]);
-    }
-    printf("]\n");
-    fflush(stdout);
-
     auto req = ClearBufferfvCommandBufferRequest(static_cast<uint32_t>(buffer), drawbuffer, values);
-    printf("[WEBGL_CONTEXT_DEBUG] Sending clearBufferfv command buffer request\n");
-    fflush(stdout);
     bool success = sendCommandBufferRequest(req);
-    printf("[WEBGL_CONTEXT_DEBUG] clearBufferfv command buffer request sent, success=%s\n", success ? "true" : "false");
-    fflush(stdout);
   }
 
   void WebGL2Context::clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<int> values)

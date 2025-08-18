@@ -1826,18 +1826,6 @@ namespace webgl
     auto data = reinterpret_cast<const float *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
     size_t length = typedArray.ByteLength() / sizeof(float);
     std::vector<float> values(data, data + length);
-
-    // Debug output to check values received from JavaScript
-    printf("[JS_BINDING_DEBUG] ClearBufferfv: buffer=%u, drawbuffer=%d, length=%zu, values=[", buffer, drawbuffer, length);
-    for (size_t i = 0; i < length && i < 4; i++)
-    {
-      if (i > 0)
-        printf(",");
-      printf("%f", values[i]);
-    }
-    printf("]\n");
-    fflush(stdout);
-
     glContext_->clearBufferfv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
     return env.Undefined();
   }

@@ -170,4 +170,4 @@
   XX(GET_FLOATV, GetFloatvCommandBufferResponse, "GL::GetFloatv")                                                \
   XX(GET_STRING, GetStringCommandBufferResponse, "GL::GetString")                                                \
   XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse, "GL::GetShaderPrecisionFormat") \
-  XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")\
+  XX(GET_ERROR, GetErrorCommandBufferResponse, "GL::GetError")
