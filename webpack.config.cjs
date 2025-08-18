@@ -64,9 +64,6 @@ function getBaseConfig(entry, filename) {
 
 module.exports = [
   {
-    ...getBaseConfig('./lib/bootstrap-babylon.ts', 'jsar-bootstrap-babylon'),
-  },
-  {
     ...getBaseConfig('./lib/main.ts', 'jsar-client-entry'),
   },
   {

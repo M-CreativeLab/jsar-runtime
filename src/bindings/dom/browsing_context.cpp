@@ -51,19 +51,24 @@ namespace dombinding
     }
 
     auto inputType = dom::InputType::URL;
-    if (info.Length() >= 3 && info[3].IsString())
+    string baseURI = "";
+
+    if (info.Length() >= 3 && info[2].IsString())
     {
-      std::string value = info[3].ToString().Utf8Value();
+      string value = info[2].ToString().Utf8Value();
       if (value == "source")
       {
         inputType = dom::InputType::Source;
+        if (info.Length() >= 4 && info[3].IsString())
+          baseURI = info[3].ToString().Utf8Value();
       }
     }
+
     if (parsingType == dom::DOMParsingType::HTML)
     {
       try
       {
-        auto doc = contextImpl->create<dom::HTMLDocument>(source.Utf8Value(), parsingType, inputType);
+        auto doc = contextImpl->create<dom::HTMLDocument>(source.Utf8Value(), parsingType, inputType, baseURI);
         contextImpl->setBaseURI(doc->baseURI);
 
         auto jsInstance = Document::NewInstance(env, doc);

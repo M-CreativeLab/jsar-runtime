@@ -53,6 +53,8 @@ namespace dom
     {
       baseURI = "about:blank";
       loadSource = false;
+      cerr << "Warning: The URL is not a valid HTTP or file URL, using about:blank instead." << endl;
+      cerr << "The URL: " << url << endl;
     }
 
     if (loadSource)

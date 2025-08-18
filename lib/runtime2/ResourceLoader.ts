@@ -4,9 +4,10 @@ import fsPromises from 'node:fs/promises';
 import { resolveObjectURL } from 'node:buffer';
 
 import {
-  type ResourceLoader as JSARResourceLoader,
-} from '@yodaos-jsar/dom';
-import { getClientContext, isResourcesCachingDisabled, getResourceCacheExpirationTime } from '@transmute/env';
+  getClientContext,
+  isResourcesCachingDisabled,
+  getResourceCacheExpirationTime
+} from '@transmute/env';
 import * as undici from 'undici';
 import { CacheControl, parse as parseCacheControl } from 'cache-control-parser';
 import { IncomingHttpHeaders } from 'undici/types/header';
@@ -415,7 +416,7 @@ class CacheStorage {
   }
 }
 
-export class ResourceLoaderOnTransmute implements JSARResourceLoader {
+export class ResourceLoaderOnTransmute {
   #cacheDirectory: string;
   #cacheStorage: CacheStorage;
   #defaultHeaders: Record<string, string> = {};
@@ -500,7 +501,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     } else {
       return this.#cacheStorage.requestWithCache(url, this.#getRequestInit(options), {
         readFile: (filename: string) => this.#readFile(filename, returnsAs),
-        sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init),
+        sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init as any),
         readResponse: (...args) => this.#readBody(...args, returnsAs),
       });
     }

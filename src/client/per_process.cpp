@@ -54,8 +54,6 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir)
     args.push_back("--preserve-symlinks");
     args.push_back("--preserve-symlinks-main");
   }
-  args.push_back("-r");
-  args.push_back(scriptsDir + "/jsar-bootstrap-babylon.js");
   args.push_back(scriptsDir + "/jsar-client-entry.js");
 
   // TODO: Check if we are in debug mode

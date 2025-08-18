@@ -1,5 +1,5 @@
 import { workerData, parentPort } from 'node:worker_threads';
-import { ResourceLoaderOnTransmute } from '../runtime2/jsardom/ResourceLoader';
+import { ResourceLoaderOnTransmute } from '../runtime2/ResourceLoader';
 import type { WorkerRequest } from './worker';
 const { WorkerContext } = process._linkedBinding('transmute:dom');
 
