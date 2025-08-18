@@ -36,13 +36,17 @@ rustup target add x86_64-apple-darwin      # For macOS x86_64
 
 1. **Install dependencies** - 2-3 minutes, set timeout to 5+ minutes:
    ```bash
-   npm install
+   npm ci
    ```
+   - **Note**: Use `npm ci` for clean installs, not `npm install`, but if your changes require a fresh install such as:
+      -  add new npm dependencies
+      -  update existing npm dependencies
+      -  remove npm dependencies
    - **Known Issue**: If npm install fails with "npmmirror" network errors, run:
      ```bash
      rm package-lock.json
      npm config set registry https://registry.npmjs.org/
-     npm install
+     npm ci
      ```
 
 2. **Build JavaScript bundle** - CURRENTLY BROKEN due to TypeScript compilation errors:
