@@ -2515,14 +2515,7 @@ private:
     GLbitfield mask = req->mask;
     glClear(mask);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-    {
-      if (options.executingPassType != ExecutingPassType::kOffscreenPass)
-      {
-        glClear(mask);
-        if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-          PrintDebugInfo(req, nullptr, nullptr, options);
-      }
-    }
+      PrintDebugInfo(req, nullptr, nullptr, options);
   }
   TR_OPENGL_FUNC void OnClearBufferfv(ClearBufferfvCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,
@@ -2531,7 +2524,6 @@ private:
     GLenum buffer = req->buffer;
     GLint drawbuffer = req->drawbuffer;
     const GLfloat *value = req->values.data();
-    DEBUG(LOG_TAG_RENDERER, "[CLEARBUFFER_DEBUG] OnClearBufferfv called: buffer=%u, drawbuffer=%d, values=[%f,%f,%f,%f]", buffer, drawbuffer, req->values.size() > 0 ? req->values[0] : 0.0f, req->values.size() > 1 ? req->values[1] : 0.0f, req->values.size() > 2 ? req->values[2] : 0.0f, req->values.size() > 3 ? req->values[3] : 0.0f);
     glClearBufferfv(buffer, drawbuffer, value);
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
@@ -2844,7 +2836,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
     }                                                                                       \
     break;                                                                                  \
   }
-
 
     switch (commandType)
     {
