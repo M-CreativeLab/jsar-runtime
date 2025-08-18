@@ -1442,9 +1442,9 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[3].IsBoolean())
+    if (!info[3].IsNumber())
     {
-      Napi::TypeError::New(env, "vertexAttribIPointer() 4th argument(stride) must be a boolean.")
+      Napi::TypeError::New(env, "vertexAttribIPointer() 4th argument(stride) must be a number.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
