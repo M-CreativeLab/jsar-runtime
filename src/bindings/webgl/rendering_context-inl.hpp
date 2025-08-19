@@ -1502,9 +1502,9 @@ namespace webgl
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
 
-    glContext_->vertexAttrib1f(index, x);
+    glContext_->vertexAttrib1f(index, v0);
     return env.Undefined();
   }
 
