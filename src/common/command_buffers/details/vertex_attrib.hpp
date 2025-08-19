@@ -573,8 +573,8 @@ namespace commandbuffers
   // VertexAttribI4i command buffer request
   class VertexAttribI4iCommandBufferRequest final
       : public VertexAttribINiCommandBufferRequest<VertexAttribI4iCommandBufferRequest,
-                                                  COMMAND_BUFFER_VERTEX_ATTRIB_I4I_REQ,
-                                                  int>
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4I_REQ,
+                                                   int>
   {
   public:
     using VertexAttribINiCommandBufferRequest::VertexAttribINiCommandBufferRequest;
@@ -583,8 +583,8 @@ namespace commandbuffers
   // VertexAttribI4ui command buffer request
   class VertexAttribI4uiCommandBufferRequest final
       : public VertexAttribINiCommandBufferRequest<VertexAttribI4uiCommandBufferRequest,
-                                                  COMMAND_BUFFER_VERTEX_ATTRIB_I4UI_REQ,
-                                                  uint32_t>
+                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4UI_REQ,
+                                                   uint32_t>
   {
   public:
     using VertexAttribINiCommandBufferRequest::VertexAttribINiCommandBufferRequest;
