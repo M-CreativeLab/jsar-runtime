@@ -95,7 +95,7 @@ namespace builtin_scene::materials
       return;
 
     // a) Check isStructureDirty_ and update layeredInstances_ if needed
-    instancedMesh.updateInstancesList();
+    instancedMesh.updateInstancesList(program);
 
     size_t meshIndicesCount = mesh.indices().size();
     CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();

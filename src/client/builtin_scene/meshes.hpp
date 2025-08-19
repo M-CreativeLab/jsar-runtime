@@ -27,7 +27,8 @@ namespace builtin_scene
     using asset::Assets<Mesh>::Assets;
   };
 
-  class Mesh3d : public ecs::Component
+  class Mesh3d : public ecs::Component,
+                 public std::enable_shared_from_this<Mesh3d>
   {
     using ecs::Component::Component;
 
@@ -122,6 +123,7 @@ namespace builtin_scene
     {
       return ebo_;
     }
+
     /**
      * Set if the mesh3d is initialized.
      *
@@ -143,15 +145,21 @@ namespace builtin_scene
       glContext_ = glContext;
       initialized_ = true;
 
-      handle_->onMesh3dInitialized(*this, glContext);
+      handle_->onMesh3dInitialized(shared_from_this(), glContext);
     }
-    /**
-     * @returns If the mesh3d is initialized.
-     */
     inline bool initialized() const
     {
       return initialized_;
     }
+
+    /**
+     * Configure the vertex attributes of the mesh3d.
+     */
+    void configureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram> program)
+    {
+      handle_->onConfigureVertexAttribs(program);
+    }
+
     /**
      * @returns If the mesh3d needs to update the underlying vertex buffer data.
      */

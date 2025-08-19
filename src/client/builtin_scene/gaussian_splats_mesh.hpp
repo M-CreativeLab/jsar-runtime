@@ -233,7 +233,7 @@ namespace builtin_scene
     /**
      * Initialize the splat buffer when the mesh is set up with WebGL context.
      */
-    void onMesh3dInitialized(const Mesh3d &mesh3d,
+    void onMesh3dInitialized(std::shared_ptr<Mesh3d> mesh3d,
                              std::shared_ptr<client_graphics::WebGL2Context> glContext) override;
 
     /**

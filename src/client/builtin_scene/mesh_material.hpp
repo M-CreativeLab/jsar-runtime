@@ -72,41 +72,17 @@ namespace builtin_scene
      * @param pass The render pass to check against.
      * @returns Whether the material matches the render pass.
      */
-    inline bool matchesPass(const RenderPass &pass) const
-    {
-      assert(pass == RenderPass::kOpaques || pass == RenderPass::kTransparents);
-      if (pass == RenderPass::kOpaques)
-        return isOpaque();
-      else if (pass == RenderPass::kTransparents)
-        return isTransparent();
-      else
-        return false;
-    }
+    bool matchesPass(const RenderPass &pass) const;
+
     /**
      * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.
      *
      * @param glContext The WebGL context to use.
      * @param program The WebGL program to use.
      */
-    inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                           std::shared_ptr<client_graphics::WebGLProgram> program,
-                           std::shared_ptr<Mesh3d> mesh)
-    {
-      if (program == nullptr)
-        throw std::runtime_error("The program is not initialized.");
-
-      if (material_->initialize(glContext, program))
-      {
-        program_ = program;
-        glContext_ = glContext;
-        mesh_ = mesh;
-        initialized_ = true;
-      }
-      else
-      {
-        throw std::runtime_error("Failed to initialize the material: " + material_->name());
-      }
-    }
+    void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                    std::shared_ptr<client_graphics::WebGLProgram> program,
+                    std::shared_ptr<Mesh3d> mesh);
     /**
      * @returns Whether the material is initialized.
      */

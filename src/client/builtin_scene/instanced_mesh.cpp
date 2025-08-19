@@ -245,21 +245,98 @@ namespace builtin_scene
   }
 
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
-                                                   shared_ptr<WebGLVertexArray> vao,
                                                    shared_ptr<WebGLBuffer> instanceVbo,
-                                                   const InstancedMeshBase *instancedMesh,
                                                    shared_ptr<Mesh3d> mesh3d)
       : filter(filter)
-      , vao(vao)
       , instanceVbo(instanceVbo)
       , bufferDataDirty_(true)
       , textureDataDirty_(true)
   {
     assert(filter != InstanceFilter::kAll);
+  }
 
-    // Note: Vertex attribute configuration will be done when the program is available
-    // during rendering, not in the constructor. This constructor signature is prepared
-    // for future configuration when the WebGL program context is available.
+  size_t RenderableInstancesList::configureInstanceAttribs(WebGL2Context &glContext, shared_ptr<WebGLProgram> program)
+  {
+    auto configureInstanceAttrib = [&glContext](const IVertexAttribute &attrib,
+                                                int index,
+                                                size_t stride,
+                                                size_t offset)
+    {
+      glContext.enableVertexAttribArray(index);
+      glContext.vertexAttribPointer(index,
+                                    attrib.size(),
+                                    attrib.type(),
+                                    attrib.normalized(),
+                                    stride,
+                                    offset);
+      glContext.vertexAttribDivisor(index, 1);
+    };
+
+    size_t attribsCount = 0;
+    size_t offset = 0;
+    for (size_t i = 0; i < InstancedMeshBase::INSTANCE_ATTRIBUTES.size(); i++)
+    {
+      auto &name = InstancedMeshBase::INSTANCE_ATTRIBUTES[i];
+      auto attribLocation = glContext.getAttribLocation(program, name);
+      if (attribLocation.has_value())
+      {
+        auto instanceIndex = attribLocation.value().index.value_or(-1);
+        if (name == "instanceTransform")
+        {
+          for (int i = 0; i < 4; i++)
+          {
+            auto matrixRowIndex = instanceIndex + i;
+            VertexAttribute<float, 4> attrib(name, matrixRowIndex, VertexFormat::kFloat32x4);
+            configureInstanceAttrib(attrib, matrixRowIndex, InstancedMeshBase::STRIDE, offset);
+            offset += attrib.byteLength();
+            attribsCount += 1;
+          }
+        }
+        else
+        {
+          unique_ptr<IVertexAttribute> attrib = nullptr;
+          // 1u
+          if (name == "instanceLayerIndex" ||
+              name == "instanceBorderStyle")
+          {
+            attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
+          }
+          // 1f
+          else if (name == "instanceUseSDFTexture")
+          {
+            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
+          }
+          // 2f
+          else if (name == "instanceTexUvOffset" ||
+                   name == "instanceTexUvScale" ||
+                   name == "instanceTexUvOffsetR" ||
+                   name == "instanceDimensions")
+          {
+            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
+          }
+          // 4f
+          else if (name == "instanceColor" ||
+                   name == "instanceBorderRadius")
+          {
+            attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          }
+          else
+          {
+            assert(false && "Unknown instance attribute name.");
+          }
+
+          assert(attrib != nullptr);
+          configureInstanceAttrib(*attrib, instanceIndex, InstancedMeshBase::STRIDE, offset);
+          offset += attrib->byteLength();
+          attribsCount += 1;
+        }
+      }
+      else
+      {
+        cerr << "The instance attribute " << name << " is not found." << endl;
+      }
+    }
+    return attribsCount;
   }
 
   void RenderableInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
@@ -534,29 +611,30 @@ namespace builtin_scene
     return removed;
   }
 
-  void InstancedMeshBase::setup(shared_ptr<WebGL2Context> glContext,
-                                shared_ptr<WebGLVertexArray> opaqueVao,
-                                shared_ptr<WebGLBuffer> opaqueInstanceVbo,
-                                shared_ptr<WebGLVertexArray> transparentVao,
-                                shared_ptr<WebGLBuffer> transparentInstanceVbo,
-                                shared_ptr<Mesh3d> mesh3d)
+  void InstancedMeshBase::setup(shared_ptr<WebGL2Context> glContext, shared_ptr<Mesh3d> mesh3d)
   {
-    assert(glContext != nullptr);
+    assert(glContext != nullptr && "WebGL2 context must not be null.");
+    assert(mesh3d != nullptr && "Mesh3d must not be null.");
+
     glContext_ = glContext;
     mesh3d_ = mesh3d;
-    opaqueInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo, this, mesh3d);
-    transparentInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo, this, mesh3d);
 
-    // Create depth-only instances list with mesh3d's VAO and its own VBO
     auto depthOnlyInstanceVbo = glContext->createBuffer();
-    auto depthOnlyVao = mesh3d ? mesh3d->vertexArrayObject() : glContext->createVertexArray();
-    depthOnlyInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kTransparent, depthOnlyVao, depthOnlyInstanceVbo, this, mesh3d);
+    auto depthOnlyVao = mesh3d->vertexArrayObject();
+    depthOnlyInstances_ = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
+                                                               depthOnlyInstanceVbo,
+                                                               mesh3d);
   }
 
-  void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
+  void InstancedMeshBase::configureVertexAttribs(shared_ptr<WebGLProgram> program)
+  {
+    auto glContext = glContext_.lock();
+    assert(glContext != nullptr && "WebGL2 context must not be null.");
+    if (program != nullptr)
+      depthOnlyInstances_->configureInstanceAttribs(*glContext, program);
+  }
+
+  void InstancedMeshBase::updateInstancesList(std::shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty)
   {
     if (!isStructureDirty_ && !ignoreDirty)
       return;
@@ -585,16 +663,15 @@ namespace builtin_scene
         if (glContext != nullptr)
         {
           auto layerInstanceVbo = glContext->createBuffer();
-          auto layerVao = mesh3d ? mesh3d->vertexArrayObject() : glContext->createVertexArray();
-          layeredInstances_[layer] = std::make_shared<RenderableInstancesList>(
-            InstanceFilter::kTransparent, layerVao, layerInstanceVbo, this, mesh3d);
+          layeredInstances_[layer] = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
+                                                                          layerInstanceVbo,
+                                                                          mesh3d);
+          layeredInstances_[layer]->configureInstanceAttribs(*glContext, program);
         }
       }
 
       if (layeredInstances_[layer] != nullptr)
-      {
         layeredInstances_[layer]->update(instanceMap);
-      }
     }
 
     // Remove layers that no longer have instances
