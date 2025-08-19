@@ -1895,7 +1895,7 @@ namespace client_graphics
   {
     // Debug output to check values before creating command buffer request
     auto req = ClearBufferfvCommandBufferRequest(static_cast<uint32_t>(buffer), drawbuffer, values);
-    bool success = sendCommandBufferRequest(req);
+    sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, vector<int> values)
