@@ -187,8 +187,10 @@ namespace commandbuffers
         : TrCommandBufferSimpleRequest<Derived, Type>(that, clone)
         , buffer(that.buffer)
         , drawbuffer(that.drawbuffer)
-        , values(that.values)
+        , values()
     {
+      if (clone)
+        values = that.values;
     }
 
     TrCommandBufferMessage *serialize() override
@@ -231,14 +233,7 @@ namespace commandbuffers
   {
   public:
     ClearBufferfvCommandBufferRequest() = delete;
-    ClearBufferfvCommandBufferRequest(int buffer, int drawbuffer, const std::vector<float> &values)
-        : ClearBufferBaseRequest(buffer, drawbuffer, values)
-    {
-    }
-    ClearBufferfvCommandBufferRequest(const ClearBufferfvCommandBufferRequest &that, bool clone = false)
-        : ClearBufferBaseRequest(that, clone)
-    {
-    }
+    using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 
   class ClearBufferivCommandBufferRequest final
@@ -248,31 +243,17 @@ namespace commandbuffers
   {
   public:
     ClearBufferivCommandBufferRequest() = delete;
-    ClearBufferivCommandBufferRequest(int buffer, int drawbuffer, const std::vector<int> &values)
-        : ClearBufferBaseRequest(buffer, drawbuffer, values)
-    {
-    }
-    ClearBufferivCommandBufferRequest(const ClearBufferivCommandBufferRequest &that, bool clone = false)
-        : ClearBufferBaseRequest(that, clone)
-    {
-    }
+    using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 
   class ClearBufferuivCommandBufferRequest final
       : public ClearBufferBaseRequest<ClearBufferuivCommandBufferRequest,
-                                      COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
-                                      unsigned int>
+                                       COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
+                                       unsigned int>
   {
   public:
     ClearBufferuivCommandBufferRequest() = delete;
-    ClearBufferuivCommandBufferRequest(int buffer, int drawbuffer, const std::vector<unsigned int> &values)
-        : ClearBufferBaseRequest(buffer, drawbuffer, values)
-    {
-    }
-    ClearBufferuivCommandBufferRequest(const ClearBufferuivCommandBufferRequest &that, bool clone = false)
-        : ClearBufferBaseRequest(that, clone)
-    {
-    }
+    using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 
   class ClearBufferfiCommandBufferRequest final

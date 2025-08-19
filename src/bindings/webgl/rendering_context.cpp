@@ -1503,18 +1503,18 @@ namespace webgl
 
     if (info.Length() < 5)
     {
-      Napi::TypeError::New(env, "vertexAttribI4i() takes 5 arguments: index, x, y, z, w.")
+      Napi::TypeError::New(env, "vertexAttribI4i() takes 5 arguments: index, v0, v1, v2, v3.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().Int32Value();
-    auto y = info[2].As<Napi::Number>().Int32Value();
-    auto z = info[3].As<Napi::Number>().Int32Value();
-    auto w = info[4].As<Napi::Number>().Int32Value();
+    auto v0 = info[1].As<Napi::Number>().Int32Value();
+    auto v1 = info[2].As<Napi::Number>().Int32Value();
+    auto v2 = info[3].As<Napi::Number>().Int32Value();
+    auto v3 = info[4].As<Napi::Number>().Int32Value();
 
-    glContext_->vertexAttribI4i(static_cast<int>(index), x, y, z, w);
+    glContext_->vertexAttribI4i(static_cast<int>(index), v0, v1, v2, v3);
     return env.Undefined();
   }
 
@@ -1525,18 +1525,18 @@ namespace webgl
 
     if (info.Length() < 5)
     {
-      Napi::TypeError::New(env, "vertexAttribI4ui() takes 5 arguments: index, x, y, z, w.")
+      Napi::TypeError::New(env, "vertexAttribI4ui() takes 5 arguments: index, v0, v1, v2, v3.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().Uint32Value();
-    auto y = info[2].As<Napi::Number>().Uint32Value();
-    auto z = info[3].As<Napi::Number>().Uint32Value();
-    auto w = info[4].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().Uint32Value();
+    auto v1 = info[2].As<Napi::Number>().Uint32Value();
+    auto v2 = info[3].As<Napi::Number>().Uint32Value();
+    auto v3 = info[4].As<Napi::Number>().Uint32Value();
 
-    glContext_->vertexAttribI4ui(static_cast<int>(index), x, y, z, w);
+    glContext_->vertexAttribI4ui(static_cast<int>(index), v0, v1, v2, v3);
     return env.Undefined();
   }
 
