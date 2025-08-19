@@ -1,4 +1,4 @@
-# Debugging your application
+# Debugging with ADB
 
 Each application in JSAR is a standalone [Node.js][nodejs] process, and each process will start a debugging server to provide the debugging interface for the developers. The debugging server is based on the [Chrome DevTools Protocol][cdp], which allows developers to debug the application in the browser.
 
