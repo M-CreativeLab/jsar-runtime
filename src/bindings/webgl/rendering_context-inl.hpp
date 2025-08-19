@@ -1516,15 +1516,15 @@ namespace webgl
 
     if (info.Length() < 3)
     {
-      Napi::TypeError::New(env, "vertexAttrib2f() takes 3 arguments: index, x, y.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "vertexAttrib2f() takes 3 arguments: index, v0, v1.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().FloatValue();
-    auto y = info[2].As<Napi::Number>().FloatValue();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
 
-    glContext_->vertexAttrib2f(index, x, y);
+    glContext_->vertexAttrib2f(index, v0, v1);
     return env.Undefined();
   }
 
@@ -1536,16 +1536,16 @@ namespace webgl
 
     if (info.Length() < 4)
     {
-      Napi::TypeError::New(env, "vertexAttrib3f() takes 4 arguments: index, x, y, z.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "vertexAttrib3f() takes 4 arguments: index, v0, v1, v2.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().FloatValue();
-    auto y = info[2].As<Napi::Number>().FloatValue();
-    auto z = info[3].As<Napi::Number>().FloatValue();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
+    auto v2 = info[3].As<Napi::Number>().FloatValue();
 
-    glContext_->vertexAttrib3f(index, x, y, z);
+    glContext_->vertexAttrib3f(index, v0, v1, v2);
     return env.Undefined();
   }
 
@@ -1557,17 +1557,17 @@ namespace webgl
 
     if (info.Length() < 5)
     {
-      Napi::TypeError::New(env, "vertexAttrib4f() takes 5 arguments: index, x, y, z, w.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "vertexAttrib4f() takes 5 arguments: index, v0, v1, v2, v3.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     auto index = info[0].As<Napi::Number>().Uint32Value();
-    auto x = info[1].As<Napi::Number>().FloatValue();
-    auto y = info[2].As<Napi::Number>().FloatValue();
-    auto z = info[3].As<Napi::Number>().FloatValue();
-    auto w = info[4].As<Napi::Number>().FloatValue();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
+    auto v2 = info[3].As<Napi::Number>().FloatValue();
+    auto v3 = info[4].As<Napi::Number>().FloatValue();
 
-    glContext_->vertexAttrib4f(index, x, y, z, w);
+    glContext_->vertexAttrib4f(index, v0, v1, v2, v3);
     return env.Undefined();
   }
 
