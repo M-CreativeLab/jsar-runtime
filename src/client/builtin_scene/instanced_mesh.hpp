@@ -294,7 +294,9 @@ namespace builtin_scene
   public:
     RenderableInstancesList(InstanceFilter filter,
                             std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                            std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo);
+                            std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo,
+                            const InstancedMeshBase *instancedMesh = nullptr,
+                            std::shared_ptr<Mesh3d> mesh3d = nullptr);
 
   public:
     inline size_t count() const
@@ -451,7 +453,7 @@ namespace builtin_scene
     {
       for (const auto &[layer, instances] : layeredInstances_)
       {
-        if (instances)
+        if (instances && instances->count() > 0)
           callback(layer, *instances);
       }
     }
@@ -485,7 +487,8 @@ namespace builtin_scene
                std::shared_ptr<client_graphics::WebGLVertexArray> opaqueVao,
                std::shared_ptr<client_graphics::WebGLBuffer> opaqueInstanceVbo,
                std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
-               std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
+               std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao,
+               std::shared_ptr<Mesh3d> mesh3d = nullptr);
     /**
      * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
@@ -509,6 +512,7 @@ namespace builtin_scene
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
+    std::weak_ptr<Mesh3d> mesh3d_;
     bool isDepthOnlyPassEnabled_ = false;
     bool isStructureDirty_ = true;
   };

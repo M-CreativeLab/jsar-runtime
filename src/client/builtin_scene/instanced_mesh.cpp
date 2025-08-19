@@ -246,7 +246,9 @@ namespace builtin_scene
 
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
                                                    shared_ptr<WebGLVertexArray> vao,
-                                                   shared_ptr<WebGLBuffer> instanceVbo)
+                                                   shared_ptr<WebGLBuffer> instanceVbo,
+                                                   const InstancedMeshBase *instancedMesh,
+                                                   shared_ptr<Mesh3d> mesh3d)
       : filter(filter)
       , vao(vao)
       , instanceVbo(instanceVbo)
@@ -254,6 +256,10 @@ namespace builtin_scene
       , textureDataDirty_(true)
   {
     assert(filter != InstanceFilter::kAll);
+
+    // Note: Vertex attribute configuration will be done when the program is available
+    // during rendering, not in the constructor. This constructor signature is prepared
+    // for future configuration when the WebGL program context is available.
   }
 
   void RenderableInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
@@ -532,20 +538,22 @@ namespace builtin_scene
                                 shared_ptr<WebGLVertexArray> opaqueVao,
                                 shared_ptr<WebGLBuffer> opaqueInstanceVbo,
                                 shared_ptr<WebGLVertexArray> transparentVao,
-                                shared_ptr<WebGLBuffer> transparentInstanceVbo)
+                                shared_ptr<WebGLBuffer> transparentInstanceVbo,
+                                shared_ptr<Mesh3d> mesh3d)
   {
     assert(glContext != nullptr);
     glContext_ = glContext;
+    mesh3d_ = mesh3d;
     opaqueInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo);
+      InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo, this, mesh3d);
     transparentInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
+      InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo, this, mesh3d);
 
-    // Create depth-only instances list with its own VAO and VBO
-    auto depthOnlyVao = glContext->createVertexArray();
+    // Create depth-only instances list with mesh3d's VAO and its own VBO
     auto depthOnlyInstanceVbo = glContext->createBuffer();
+    auto depthOnlyVao = mesh3d ? mesh3d->vertexArrayObject() : glContext->createVertexArray();
     depthOnlyInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kAll, depthOnlyVao, depthOnlyInstanceVbo);
+      InstanceFilter::kTransparent, depthOnlyVao, depthOnlyInstanceVbo, this, mesh3d);
   }
 
   void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
@@ -571,14 +579,15 @@ namespace builtin_scene
     {
       if (layeredInstances_.find(layer) == layeredInstances_.end())
       {
-        // Create new RenderableInstancesList for this layer with dedicated VAO and VBO
+        // Create new RenderableInstancesList for this layer using mesh3d's VAO
         auto glContext = glContext_.lock();
+        auto mesh3d = mesh3d_.lock();
         if (glContext != nullptr)
         {
-          auto layerVao = glContext->createVertexArray();
           auto layerInstanceVbo = glContext->createBuffer();
+          auto layerVao = mesh3d ? mesh3d->vertexArrayObject() : glContext->createVertexArray();
           layeredInstances_[layer] = std::make_shared<RenderableInstancesList>(
-            InstanceFilter::kAll, layerVao, layerInstanceVbo);
+            InstanceFilter::kTransparent, layerVao, layerInstanceVbo, this, mesh3d);
         }
       }
 
@@ -601,11 +610,6 @@ namespace builtin_scene
         ++it;
       }
     }
-
-    // Still update legacy opaque/transparent instances for backward compatibility
-    opaqueInstances_->update(idToInstanceMap_);
-    transparentInstances_->update(idToInstanceMap_,
-                                  RenderableInstancesList::SortingOrder::kFrontToBack);
 
     // Update depth-only instances with all instances for unified DepthOnlyPass
     depthOnlyInstances_->update(idToInstanceMap_);
