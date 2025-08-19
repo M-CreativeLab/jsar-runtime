@@ -489,11 +489,11 @@ namespace commandbuffers
 
   // Base class template for VertexAttribI4 commands (I4i, I4ui)
   template <typename Derived, CommandBufferType Type, typename ValueType>
-  class VertexAttribI4CommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
+  class VertexAttribINiCommandBufferRequest : public SetVertexAttribCommandBufferRequest<Derived, Type>
   {
   public:
-    VertexAttribI4CommandBufferRequest() = delete;
-    VertexAttribI4CommandBufferRequest(uint32_t program, const std::string &location_name, ValueType x, ValueType y, ValueType z, ValueType w)
+    VertexAttribINiCommandBufferRequest() = delete;
+    VertexAttribINiCommandBufferRequest(uint32_t program, const std::string &location_name, ValueType x, ValueType y, ValueType z, ValueType w)
         : SetVertexAttribCommandBufferRequest<Derived, Type>(program, location_name)
         , x(x)
         , y(y)
@@ -501,7 +501,7 @@ namespace commandbuffers
         , w(w)
     {
     }
-    VertexAttribI4CommandBufferRequest(uint32_t program, uint32_t index, ValueType x, ValueType y, ValueType z, ValueType w)
+    VertexAttribINiCommandBufferRequest(uint32_t program, uint32_t index, ValueType x, ValueType y, ValueType z, ValueType w)
         : SetVertexAttribCommandBufferRequest<Derived, Type>(program, index)
         , x(x)
         , y(y)
@@ -509,7 +509,7 @@ namespace commandbuffers
         , w(w)
     {
     }
-    VertexAttribI4CommandBufferRequest(const Derived &that, bool clone = false)
+    VertexAttribINiCommandBufferRequest(const Derived &that, bool clone = false)
         : SetVertexAttribCommandBufferRequest<Derived, Type>(that, clone)
         , x(that.x)
         , y(that.y)
@@ -572,22 +572,22 @@ namespace commandbuffers
 
   // VertexAttribI4i command buffer request
   class VertexAttribI4iCommandBufferRequest final
-      : public VertexAttribI4CommandBufferRequest<VertexAttribI4iCommandBufferRequest,
+      : public VertexAttribINiCommandBufferRequest<VertexAttribI4iCommandBufferRequest,
                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4I_REQ,
                                                   int>
   {
   public:
-    using VertexAttribI4CommandBufferRequest::VertexAttribI4CommandBufferRequest;
+    using VertexAttribINiCommandBufferRequest::VertexAttribINiCommandBufferRequest;
   };
 
   // VertexAttribI4ui command buffer request
   class VertexAttribI4uiCommandBufferRequest final
-      : public VertexAttribI4CommandBufferRequest<VertexAttribI4uiCommandBufferRequest,
+      : public VertexAttribINiCommandBufferRequest<VertexAttribI4uiCommandBufferRequest,
                                                   COMMAND_BUFFER_VERTEX_ATTRIB_I4UI_REQ,
                                                   uint32_t>
   {
   public:
-    using VertexAttribI4CommandBufferRequest::VertexAttribI4CommandBufferRequest;
+    using VertexAttribINiCommandBufferRequest::VertexAttribINiCommandBufferRequest;
   };
 
   // VertexAttribI4iv command buffer request
