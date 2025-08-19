@@ -439,6 +439,10 @@ namespace builtin_scene
     {
       return *transparentInstances_;
     }
+    inline RenderableInstancesList &getDepthOnlyInstancesList() const
+    {
+      return *depthOnlyInstances_;
+    }
     inline size_t countLayers() const
     {
       return layeredInstances_.size();
@@ -501,6 +505,7 @@ namespace builtin_scene
     std::shared_ptr<RenderableInstancesList> opaqueInstances_;
     std::shared_ptr<RenderableInstancesList> transparentInstances_;
     std::map<RenderLayer, std::shared_ptr<RenderableInstancesList>> layeredInstances_;
+    std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

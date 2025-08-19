@@ -160,6 +160,31 @@ namespace builtin_scene
           glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
           instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
         }
+
+        // Configure for the layered instances (layer-based rendering).
+        instancedMesh.iterateLayers([&](RenderLayer layer, RenderableInstancesList &layerInstancesList)
+                                    {
+          WebGLVertexArrayScope vaoScope(glContext_, layerInstancesList.vao);
+
+          // Configure vertex attributes first
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+          mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+          // Configure instance attributes
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, layerInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute); });
+
+        // Configure for the depth-only instances.
+        {
+          auto &depthOnlyInstancesList = instancedMesh.getDepthOnlyInstancesList();
+          WebGLVertexArrayScope vaoScope(glContext_, depthOnlyInstancesList.vao);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+          mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, depthOnlyInstancesList.instanceVbo);
+          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+        }
       }
     }
   }

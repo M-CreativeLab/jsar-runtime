@@ -540,6 +540,12 @@ namespace builtin_scene
       InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo);
     transparentInstances_ = make_shared<RenderableInstancesList>(
       InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
+
+    // Create depth-only instances list with its own VAO and VBO
+    auto depthOnlyVao = glContext->createVertexArray();
+    auto depthOnlyInstanceVbo = glContext->createBuffer();
+    depthOnlyInstances_ = make_shared<RenderableInstancesList>(
+      InstanceFilter::kAll, depthOnlyVao, depthOnlyInstanceVbo);
   }
 
   void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
@@ -548,9 +554,62 @@ namespace builtin_scene
       return;
 
     shared_lock<shared_mutex> lock(mutex_);
+
+    // Update layered instances based on RenderLayer from instances
+    std::map<RenderLayer, InstanceMap> layeredInstanceMaps;
+    for (auto &[id, instance] : idToInstanceMap_)
+    {
+      if (instance != nullptr && !instance->skipToDraw())
+      {
+        RenderLayer layer = instance->renderLayer_;
+        layeredInstanceMaps[layer][id] = instance;
+      }
+    }
+
+    // Update or create RenderableInstancesList for each layer
+    for (auto &[layer, instanceMap] : layeredInstanceMaps)
+    {
+      if (layeredInstances_.find(layer) == layeredInstances_.end())
+      {
+        // Create new RenderableInstancesList for this layer with dedicated VAO and VBO
+        auto glContext = glContext_.lock();
+        if (glContext != nullptr)
+        {
+          auto layerVao = glContext->createVertexArray();
+          auto layerInstanceVbo = glContext->createBuffer();
+          layeredInstances_[layer] = std::make_shared<RenderableInstancesList>(
+            InstanceFilter::kAll, layerVao, layerInstanceVbo);
+        }
+      }
+
+      if (layeredInstances_[layer] != nullptr)
+      {
+        layeredInstances_[layer]->update(instanceMap);
+      }
+    }
+
+    // Remove layers that no longer have instances
+    auto it = layeredInstances_.begin();
+    while (it != layeredInstances_.end())
+    {
+      if (layeredInstanceMaps.find(it->first) == layeredInstanceMaps.end())
+      {
+        it = layeredInstances_.erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+
+    // Still update legacy opaque/transparent instances for backward compatibility
     opaqueInstances_->update(idToInstanceMap_);
     transparentInstances_->update(idToInstanceMap_,
                                   RenderableInstancesList::SortingOrder::kFrontToBack);
+
+    // Update depth-only instances with all instances for unified DepthOnlyPass
+    depthOnlyInstances_->update(idToInstanceMap_);
+
     isStructureDirty_ = false;
   }
 }
