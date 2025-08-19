@@ -248,8 +248,8 @@ namespace commandbuffers
 
   class ClearBufferuivCommandBufferRequest final
       : public ClearBufferBaseRequest<ClearBufferuivCommandBufferRequest,
-                                       COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
-                                       unsigned int>
+                                      COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
+                                      unsigned int>
   {
   public:
     ClearBufferuivCommandBufferRequest() = delete;
