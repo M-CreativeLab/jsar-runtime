@@ -311,6 +311,8 @@ namespace builtin_scene
           needsUpdate = true;
         if (instance.setOpaque(webContentComponent->isOpaque()))
           needsUpdate = true;
+        if (instance.setRenderLayer(webContentComponent->layer()))
+          needsUpdate = true;
 
         // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);

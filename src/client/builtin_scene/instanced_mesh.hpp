@@ -195,6 +195,7 @@ namespace builtin_scene
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
     IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
+    IMPL_SETTER(RenderLayer, renderLayer_, RenderLayer)
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
 
@@ -277,6 +278,7 @@ namespace builtin_scene
   class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
   {
     friend class Instance;
+    friend class InstancedMeshBase;
 
   public:
     /**
@@ -437,6 +439,18 @@ namespace builtin_scene
     {
       return *transparentInstances_;
     }
+    inline size_t countLayers() const
+    {
+      return layeredInstances_.size();
+    }
+    inline void iterateLayers(std::function<void(RenderLayer, RenderableInstancesList &)> callback) const
+    {
+      for (const auto &[layer, instances] : layeredInstances_)
+      {
+        if (instances)
+          callback(layer, *instances);
+      }
+    }
 
     /**
      * Whether to dispatch a depth-only pass for transparent objects which writes the transparent objects' depth
@@ -486,6 +500,7 @@ namespace builtin_scene
     InstanceMap idToInstanceMap_;
     std::shared_ptr<RenderableInstancesList> opaqueInstances_;
     std::shared_ptr<RenderableInstancesList> transparentInstances_;
+    std::map<RenderLayer, std::shared_ptr<RenderableInstancesList>> layeredInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
