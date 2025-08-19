@@ -56,6 +56,10 @@ namespace client_layout
       : FormattingContext(type, view)
       , node_(make_unique<crates::layout2::Node>(view->taffyNodeAllocatorRef()))
   {
+    // Update node style with the initial display type.
+    auto nodeStyle = node_->style();
+    nodeStyle.setDisplay(type);
+    updateNodeStyle(nodeStyle);
   }
 
   Fragment TaffyBasedFormattingContext::liveFragment() const

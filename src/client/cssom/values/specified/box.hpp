@@ -157,6 +157,18 @@ namespace client_cssom::values::specified
     {
       return isFlex() || isGrid();
     }
+    inline bool isFlow() const
+    {
+      return tag_ == kFlow || tag_ == kFlowRoot;
+    }
+    inline bool isFlowRoot() const
+    {
+      return tag_ == kFlowRoot;
+    }
+    inline bool isTable() const
+    {
+      return tag_ == kTable;
+    }
 
   private:
     Tag tag_;
@@ -262,7 +274,18 @@ namespace client_cssom::values::specified
   public:
     std::string toCss() const override
     {
-      return "display";
+      if (isNone())
+        return "none";
+      else if (isFlex())
+        return "flex";
+      else if (isGrid())
+        return "grid";
+      else if (isInline())
+        return "inline";
+      else if (isInlineBlock())
+        return "inline-block";
+      else
+        return "block";
     }
     Display toComputedValue(computed::Context &) const override
     {
@@ -276,6 +299,8 @@ namespace client_cssom::values::specified
         return crates::layout2::styles::Display::Flex();
       else if (isGrid())
         return crates::layout2::styles::Display::Grid();
+      else if (isInline())
+        return crates::layout2::styles::Display::Inline();
       else
         return crates::layout2::styles::Display::Block();
     }
@@ -304,6 +329,14 @@ namespace client_cssom::values::specified
     inline bool isGrid() const
     {
       return outside().isBlock() && inside().isGrid();
+    }
+    inline bool isInline() const
+    {
+      return outside().isInline() && inside().isFlow();
+    }
+    inline bool isInlineBlock() const
+    {
+      return outside().isInline() && inside().isFlowRoot();
     }
 
   private:

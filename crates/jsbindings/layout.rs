@@ -239,6 +239,7 @@ mod ffi {
   #[repr(u8)]
   #[derive(Clone, Copy, Debug)]
   enum Display {
+    Inline,
     Block,
     Flex,
     Grid,
@@ -643,7 +644,7 @@ impl From<taffy::Rect<f32>> for ffi::NumberRect {
   }
 }
 
-impl_type_casting_simple!(Display, { Block, Flex, Grid, None }, Block);
+impl_type_casting_simple!(Display, { Inline, Block, Flex, Grid, None }, Block);
 impl_type_casting_simple!(BoxSizing, { ContentBox, BorderBox }, ContentBox);
 impl_type_casting_simple!(Overflow, { Visible, Clip, Hidden, Scroll }, Visible);
 impl_type_casting_simple!(Position, { Relative, Absolute }, Relative);
@@ -1096,7 +1097,7 @@ fn max_track(input: &StyloSpecifiedValues::TrackBreadth) -> taffy::MaxTrackSizin
 }
 
 #[inline]
-fn track_size(input: &StyloSpecifiedValues::TrackSize) -> taffy::NonRepeatedTrackSizingFunction {
+fn track_size(input: &StyloSpecifiedValues::TrackSize) -> taffy::TrackSizingFunction {
   match input {
     StyloSpecifiedValues::TrackSize::Breadth(breadth) => taffy::MinMax {
       min: min_track(breadth),
@@ -1123,18 +1124,18 @@ fn track_size(input: &StyloSpecifiedValues::TrackSize) -> taffy::NonRepeatedTrac
 #[inline]
 fn track_repeat(
   count: &StyloGenericsValues::grid::RepeatCount<StyloSpecifiedValues::Integer>,
-) -> taffy::GridTrackRepetition {
+) -> taffy::RepetitionCount {
   match count {
     StyloGenericsValues::grid::RepeatCount::Number(v) => {
-      taffy::GridTrackRepetition::Count(v.value().try_into().unwrap())
+      taffy::RepetitionCount::Count(v.value().try_into().unwrap())
     }
-    StyloGenericsValues::grid::RepeatCount::AutoFill => taffy::GridTrackRepetition::AutoFill,
-    StyloGenericsValues::grid::RepeatCount::AutoFit => taffy::GridTrackRepetition::AutoFit,
+    StyloGenericsValues::grid::RepeatCount::AutoFill => taffy::RepetitionCount::AutoFill,
+    StyloGenericsValues::grid::RepeatCount::AutoFit => taffy::RepetitionCount::AutoFit,
   }
 }
 
 #[inline]
-fn grid_template_tracks(input_str: &str) -> Vec<taffy::TrackSizingFunction> {
+fn grid_template_tracks(input_str: &str) -> Vec<taffy::GridTemplateComponent<String>> {
   use style::values::generics::grid::GenericTrackListValue;
   use style::values::specified::GridTemplateComponent;
 
@@ -1148,12 +1149,19 @@ fn grid_template_tracks(input_str: &str) -> Vec<taffy::TrackSizingFunction> {
         .iter()
         .map(|track| match track {
           GenericTrackListValue::TrackSize(size) => {
-            taffy::TrackSizingFunction::Single(track_size(size))
+            taffy::GridTemplateComponent::Single(track_size(size))
           }
-          GenericTrackListValue::TrackRepeat(repeat) => taffy::TrackSizingFunction::Repeat(
-            track_repeat(&repeat.count),
-            repeat.track_sizes.iter().map(track_size).collect(),
-          ),
+          GenericTrackListValue::TrackRepeat(repeat) => {
+            taffy::GridTemplateComponent::Repeat(taffy::GridTemplateRepetition {
+              count: track_repeat(&repeat.count),
+              tracks: repeat
+                .track_sizes
+                .iter()
+                .map(track_size)
+                .collect::<Vec<_>>(),
+              line_names: vec![],
+            })
+          }
         })
         .collect(),
       GridTemplateComponent::Subgrid(_) => vec![],
@@ -1163,7 +1171,7 @@ fn grid_template_tracks(input_str: &str) -> Vec<taffy::TrackSizingFunction> {
 }
 
 #[inline]
-fn grid_auto_tracks(input_str: &str) -> Vec<taffy::NonRepeatedTrackSizingFunction> {
+fn grid_auto_tracks(input_str: &str) -> Vec<taffy::TrackSizingFunction> {
   crate::css_parser::CSSParser::default()
     .parse_grid_implicit_tracks(input_str)
     .map(|list| list.0.iter().map(track_size).collect())

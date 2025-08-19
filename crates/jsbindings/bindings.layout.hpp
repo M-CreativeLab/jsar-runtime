@@ -154,6 +154,7 @@ namespace crates::layout2
     using OverflowXY = holocron::layout::OverflowXY;
 
 #define DISPLAY_MAP(XX) \
+  XX(Inline, "inline")  \
   XX(Block, "block")    \
   XX(Flex, "flex")      \
   XX(Grid, "grid")      \
@@ -210,6 +211,10 @@ namespace crates::layout2
       using CSSKeyword::CSSKeyword;
 
     public:
+      static Display Inline()
+      {
+        return Display(holocron::layout::Display::Inline);
+      }
       static Display Block()
       {
         return Display(holocron::layout::Display::Block);
