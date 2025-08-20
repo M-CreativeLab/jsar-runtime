@@ -83,7 +83,7 @@ namespace builtin_scene::model_loaders
      * @param splatCallback Callback called for each splat
      * @return true if loading was successful, false otherwise
      */
-    static bool decodePly(
+    static bool DecodePly(
       const std::vector<char> &fileBytes,
       std::function<void(int numSplats)> initNumSplats,
       SplatCallback splatCallback);
@@ -94,7 +94,7 @@ namespace builtin_scene::model_loaders
      * @param splats Output vector to store loaded splats
      * @return true if loading was successful, false otherwise
      */
-    static bool load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
+    static bool Load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
 
   private:
     /**
@@ -105,7 +105,7 @@ namespace builtin_scene::model_loaders
      * @param littleEndian Output: whether binary data is little-endian
      * @return true if header was parsed successfully
      */
-    static bool parseHeader(
+    static bool ParseHeader(
       const std::vector<char> &fileBytes,
       size_t &headerEnd,
       std::unordered_map<std::string, PlyElement> &elements,
@@ -119,7 +119,7 @@ namespace builtin_scene::model_loaders
      * @param callback Function to call for each item parsed
      * @return number of bytes consumed
      */
-    static size_t parseElementData(
+    static size_t ParseElementData(
       const char *data,
       const PlyElement &element,
       bool littleEndian,
@@ -130,7 +130,7 @@ namespace builtin_scene::model_loaders
      * @param type Property type
      * @return Size in bytes
      */
-    static size_t getPropertyTypeSize(PropertyType type);
+    static size_t GetPropertyTypeSize(PropertyType type);
 
     /**
      * Parse a single property value from binary data.
@@ -140,14 +140,14 @@ namespace builtin_scene::model_loaders
      * @param littleEndian Whether data is little-endian
      * @return Parsed value as float
      */
-    static float parsePropertyValue(const char *data, size_t offset, PropertyType type, bool littleEndian);
+    static float ParsePropertyValue(const char *data, size_t offset, PropertyType type, bool littleEndian);
 
     /**
      * Convert property type string to PropertyType enum.
      * @param typeStr Property type string from PLY header
      * @return PropertyType enum value
      */
-    static PropertyType stringToPropertyType(const std::string &typeStr);
+    static PropertyType StringToPropertyType(const std::string &typeStr);
 
     /**
      * Extract splat data from parsed vertex properties.
@@ -155,7 +155,7 @@ namespace builtin_scene::model_loaders
      * @param properties Map of property name to value
      * @param splatCallback Callback to invoke with splat data
      */
-    static void extractSplatData(
+    static void ExtractSplatData(
       int index,
       const std::unordered_map<std::string, float> &properties,
       SplatCallback splatCallback);
@@ -169,6 +169,6 @@ namespace builtin_scene::model_loaders
      * @return true if read was successful, false if out of bounds
      */
     template <typename T>
-    static bool readBinary(const char *data, size_t offset, T &value, bool littleEndian);
+    static bool ReadBinary(const char *data, size_t offset, T &value, bool littleEndian);
   };
 }

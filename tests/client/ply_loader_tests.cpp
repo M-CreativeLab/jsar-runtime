@@ -11,7 +11,7 @@ TEST_CASE("PLY Loader", "[ply_loader]")
     std::vector<char> emptyData;
     std::vector<builtin_scene::GaussianSplat> splats;
 
-    bool result = PlyLoader::load(emptyData, splats);
+    bool result = PlyLoader::Load(emptyData, splats);
     REQUIRE_FALSE(result);
     REQUIRE(splats.empty());
   }
@@ -22,7 +22,7 @@ TEST_CASE("PLY Loader", "[ply_loader]")
     std::vector<char> invalidData(invalidHeader.begin(), invalidHeader.end());
     std::vector<builtin_scene::GaussianSplat> splats;
 
-    bool result = PlyLoader::load(invalidData, splats);
+    bool result = PlyLoader::Load(invalidData, splats);
     REQUIRE_FALSE(result);
     REQUIRE(splats.empty());
   }
@@ -41,7 +41,7 @@ TEST_CASE("PLY Loader", "[ply_loader]")
     std::vector<char> validData(validHeader.begin(), validHeader.end());
     std::vector<builtin_scene::GaussianSplat> splats;
 
-    bool result = PlyLoader::load(validData, splats);
+    bool result = PlyLoader::Load(validData, splats);
     REQUIRE(result);
     REQUIRE(splats.empty()); // No vertex data, so no splats
   }
@@ -52,7 +52,7 @@ TEST_CASE("PLY Loader", "[ply_loader]")
     int numSplatsCallback = -1;
     int splatCallbackCount = 0;
 
-    bool result = PlyLoader::decodePly(emptyData,
+    bool result = PlyLoader::DecodePly(emptyData,
       [&numSplatsCallback](int numSplats) {
         numSplatsCallback = numSplats;
       },

@@ -1,4 +1,4 @@
-#include <common/debug.hpp>
+#include <client/logger.hpp>
 #include <cstring>
 #include <algorithm>
 #include <cmath>
@@ -9,10 +9,9 @@
 
 namespace builtin_scene::model_loaders
 {
-  static const char *LOG_TAG = "PlyLoader";
   static constexpr float SH_C0 = 0.28209479177387814f;
 
-  bool PlyLoader::decodePly(
+  bool PlyLoader::DecodePly(
     const std::vector<char> &fileBytes,
     std::function<void(int numSplats)> initNumSplats,
     SplatCallback splatCallback)
@@ -24,9 +23,9 @@ namespace builtin_scene::model_loaders
       bool littleEndian;
 
       // Parse header
-      if (!parseHeader(fileBytes, headerEnd, elements, littleEndian))
+      if (!ParseHeader(fileBytes, headerEnd, elements, littleEndian))
       {
-        DEBUG(LOG_TAG, "Failed to parse PLY header");
+        logging::LogError("PlyLoader: Failed to parse PLY header");
         return false;
       }
 
@@ -34,7 +33,7 @@ namespace builtin_scene::model_loaders
       auto vertexIt = elements.find("vertex");
       if (vertexIt == elements.end())
       {
-        DEBUG(LOG_TAG, "No vertex element found in PLY file");
+        logging::LogError("PlyLoader: No vertex element found in PLY file");
         return false;
       }
 
@@ -45,19 +44,19 @@ namespace builtin_scene::model_loaders
 
       // Parse vertex data
       const char *binaryData = fileBytes.data() + headerEnd;
-      parseElementData(binaryData, vertexElement, littleEndian, [&splatCallback](int index, const std::unordered_map<std::string, float> &properties)
-                       { extractSplatData(index, properties, splatCallback); });
+      ParseElementData(binaryData, vertexElement, littleEndian, [&splatCallback](int index, const std::unordered_map<std::string, float> &properties)
+                       { ExtractSplatData(index, properties, splatCallback); });
 
       return true;
     }
     catch (const std::exception &e)
     {
-      DEBUG(LOG_TAG, "Error decoding PLY file: %s", e.what());
+      logging::LogError("PlyLoader: Error decoding PLY file - " + std::string(e.what()));
       return false;
     }
   }
 
-  bool PlyLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
+  bool PlyLoader::Load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
     auto initSplats = [&splats](int numSplats)
     {
@@ -98,10 +97,10 @@ namespace builtin_scene::model_loaders
 
       splats.push_back(splat);
     };
-    return decodePly(data, initSplats, addSplat);
+    return DecodePly(data, initSplats, addSplat);
   }
 
-  bool PlyLoader::parseHeader(
+  bool PlyLoader::ParseHeader(
     const std::vector<char> &fileBytes,
     size_t &headerEnd,
     std::unordered_map<std::string, PlyElement> &elements,
@@ -113,7 +112,7 @@ namespace builtin_scene::model_loaders
     size_t endPos = header.find(headerTerminator);
     if (endPos == std::string::npos)
     {
-      DEBUG(LOG_TAG, "Header terminator not found");
+      logging::LogError("PlyLoader: Header terminator not found");
       return false;
     }
 
@@ -147,7 +146,7 @@ namespace builtin_scene::model_loaders
       {
         if (keyword != "ply")
         {
-          DEBUG(LOG_TAG, "Invalid PLY header - does not start with 'ply'");
+          logging::LogError("PlyLoader: Invalid PLY header - does not start with 'ply'");
           return false;
         }
         firstLine = false;
@@ -169,13 +168,13 @@ namespace builtin_scene::model_loaders
         }
         else
         {
-          DEBUG(LOG_TAG, "Unsupported PLY format: %s", format.c_str());
+          logging::LogError("PlyLoader: Unsupported PLY format - " + format);
           return false;
         }
 
         if (version != "1.0")
         {
-          DEBUG(LOG_TAG, "Unsupported PLY version: %s", version.c_str());
+          logging::LogError("PlyLoader: Unsupported PLY version - " + version);
           return false;
         }
       }
@@ -196,7 +195,7 @@ namespace builtin_scene::model_loaders
       {
         if (!currentElement)
         {
-          DEBUG(LOG_TAG, "Property found without element");
+          logging::LogError("PlyLoader: Property found without element");
           return false;
         }
 
@@ -210,14 +209,14 @@ namespace builtin_scene::model_loaders
           property.isList = true;
           std::string countTypeStr, typeStr, name;
           lineStream >> countTypeStr >> typeStr >> name;
-          property.countType = stringToPropertyType(countTypeStr);
-          property.type = stringToPropertyType(typeStr);
+          property.countType = StringToPropertyType(countTypeStr);
+          property.type = StringToPropertyType(typeStr);
           currentElement->properties.push_back(std::make_pair(name, property));
         }
         else
         {
           property.isList = false;
-          property.type = stringToPropertyType(typeOrList);
+          property.type = StringToPropertyType(typeOrList);
           std::string name;
           lineStream >> name;
           currentElement->properties.push_back(std::make_pair(name, property));
@@ -237,7 +236,7 @@ namespace builtin_scene::model_loaders
     return true;
   }
 
-  size_t PlyLoader::parseElementData(
+  size_t PlyLoader::ParseElementData(
     const char *data,
     const PlyElement &element,
     bool littleEndian,
@@ -257,23 +256,23 @@ namespace builtin_scene::model_loaders
         if (property.isList)
         {
           // Read list count
-          float count = parsePropertyValue(data, offset, property.countType, littleEndian);
-          offset += getPropertyTypeSize(property.countType);
+          float count = ParsePropertyValue(data, offset, property.countType, littleEndian);
+          offset += GetPropertyTypeSize(property.countType);
 
           // For now, we'll just read the first value of lists or skip them
           // In a full implementation, you might want to handle lists properly
           if (count > 0)
           {
-            item[propName] = parsePropertyValue(data, offset, property.type, littleEndian);
+            item[propName] = ParsePropertyValue(data, offset, property.type, littleEndian);
           }
 
           // Skip remaining list items
-          offset += static_cast<size_t>(count) * getPropertyTypeSize(property.type);
+          offset += static_cast<size_t>(count) * GetPropertyTypeSize(property.type);
         }
         else
         {
-          item[propName] = parsePropertyValue(data, offset, property.type, littleEndian);
-          offset += getPropertyTypeSize(property.type);
+          item[propName] = ParsePropertyValue(data, offset, property.type, littleEndian);
+          offset += GetPropertyTypeSize(property.type);
         }
       }
 
@@ -283,7 +282,7 @@ namespace builtin_scene::model_loaders
     return offset;
   }
 
-  size_t PlyLoader::getPropertyTypeSize(PropertyType type)
+  size_t PlyLoader::GetPropertyTypeSize(PropertyType type)
   {
     switch (type)
     {
@@ -304,56 +303,56 @@ namespace builtin_scene::model_loaders
     }
   }
 
-  float PlyLoader::parsePropertyValue(const char *data, size_t offset, PropertyType type, bool littleEndian)
+  float PlyLoader::ParsePropertyValue(const char *data, size_t offset, PropertyType type, bool littleEndian)
   {
     switch (type)
     {
     case PropertyType::CHAR:
     {
       int8_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::UCHAR:
     {
       uint8_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::SHORT:
     {
       int16_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::USHORT:
     {
       uint16_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::INT:
     {
       int32_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::UINT:
     {
       uint32_t value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     case PropertyType::FLOAT:
     {
       float value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return value;
     }
     case PropertyType::DOUBLE:
     {
       double value;
-      readBinary(data, offset, value, littleEndian);
+      ReadBinary(data, offset, value, littleEndian);
       return static_cast<float>(value);
     }
     default:
@@ -361,7 +360,7 @@ namespace builtin_scene::model_loaders
     }
   }
 
-  PlyLoader::PropertyType PlyLoader::stringToPropertyType(const std::string &typeStr)
+  PlyLoader::PropertyType PlyLoader::StringToPropertyType(const std::string &typeStr)
   {
     if (typeStr == "char")
       return PropertyType::CHAR;
@@ -380,11 +379,11 @@ namespace builtin_scene::model_loaders
     if (typeStr == "double")
       return PropertyType::DOUBLE;
 
-    DEBUG(LOG_TAG, "Unknown property type: %s", typeStr.c_str());
+    logging::LogWarning("PlyLoader: Unknown property type - " + typeStr);
     return PropertyType::FLOAT; // Default fallback
   }
 
-  void PlyLoader::extractSplatData(
+  void PlyLoader::ExtractSplatData(
     int index,
     const std::unordered_map<std::string, float> &properties,
     SplatCallback splatCallback)
@@ -443,7 +442,7 @@ namespace builtin_scene::model_loaders
   }
 
   template <typename T>
-  bool PlyLoader::readBinary(const char *data, size_t offset, T &value, bool littleEndian)
+  bool PlyLoader::ReadBinary(const char *data, size_t offset, T &value, bool littleEndian)
   {
     static_assert(sizeof(T) <= 8, "Unsupported type size");
 
@@ -495,12 +494,12 @@ namespace builtin_scene::model_loaders
   }
 
   // Explicit template instantiations for the types we use
-  template bool PlyLoader::readBinary<int8_t>(const char *, size_t, int8_t &, bool);
-  template bool PlyLoader::readBinary<uint8_t>(const char *, size_t, uint8_t &, bool);
-  template bool PlyLoader::readBinary<int16_t>(const char *, size_t, int16_t &, bool);
-  template bool PlyLoader::readBinary<uint16_t>(const char *, size_t, uint16_t &, bool);
-  template bool PlyLoader::readBinary<int32_t>(const char *, size_t, int32_t &, bool);
-  template bool PlyLoader::readBinary<uint32_t>(const char *, size_t, uint32_t &, bool);
-  template bool PlyLoader::readBinary<float>(const char *, size_t, float &, bool);
-  template bool PlyLoader::readBinary<double>(const char *, size_t, double &, bool);
+  template bool PlyLoader::ReadBinary<int8_t>(const char *, size_t, int8_t &, bool);
+  template bool PlyLoader::ReadBinary<uint8_t>(const char *, size_t, uint8_t &, bool);
+  template bool PlyLoader::ReadBinary<int16_t>(const char *, size_t, int16_t &, bool);
+  template bool PlyLoader::ReadBinary<uint16_t>(const char *, size_t, uint16_t &, bool);
+  template bool PlyLoader::ReadBinary<int32_t>(const char *, size_t, int32_t &, bool);
+  template bool PlyLoader::ReadBinary<uint32_t>(const char *, size_t, uint32_t &, bool);
+  template bool PlyLoader::ReadBinary<float>(const char *, size_t, float &, bool);
+  template bool PlyLoader::ReadBinary<double>(const char *, size_t, double &, bool);
 }

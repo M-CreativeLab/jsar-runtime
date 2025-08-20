@@ -354,7 +354,7 @@ namespace dom
     {
       // Use PLY parser to parse the model data
       vector<builtin_scene::GaussianSplat> parsedSplats;
-      if (model_loaders::PlyLoader::load(modelData, parsedSplats))
+      if (model_loaders::PlyLoader::Load(modelData, parsedSplats))
       {
         // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
         vector<GaussianSplat> elementSplats;
