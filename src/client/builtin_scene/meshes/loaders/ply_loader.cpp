@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
-#include <iostream>
 
 #include "./ply_loader.hpp"
 
@@ -67,24 +66,19 @@ namespace builtin_scene::model_loaders
                      {
         builtin_scene::GaussianSplat splat;
         splat.position[0] = x;
-        splat.position[1] = -y;
-        splat.position[2] = -z;
+        splat.position[1] = y;
+        splat.position[2] = z;
         splat.scale[0] = scaleX;
         splat.scale[1] = scaleY;
         splat.scale[2] = scaleZ;
         splat.rotation[0] = quatX;
-        splat.rotation[1] = -quatY;
-        splat.rotation[2] = -quatZ;
+        splat.rotation[1] = quatY;
+        splat.rotation[2] = quatZ;
         splat.rotation[3] = quatW;
         splat.color[0] = r;
         splat.color[1] = g;
         splat.color[2] = b;
         splat.opacity = opacity;
-        std::cout << "Splat " << index << ": Pos(" << splat.position[0] << ", " << splat.position[1] << ", " << splat.position[2] << ") "
-                  << "Scale(" << splat.scale[0] << ", " << splat.scale[1] << ", " << splat.scale[2] << ") "
-                  << "Rot(" << splat.rotation[0] << ", " << splat.rotation[1] << ", " << splat.rotation[2] << ", " << splat.rotation[3] << ") "
-                  << "Color(" << splat.color[0] << ", " << splat.color[1] << ", " << splat.color[2] << ") "
-                  << "Opacity(" << splat.opacity << ")" << std::endl;
 
         splats.push_back(splat); });
   }
