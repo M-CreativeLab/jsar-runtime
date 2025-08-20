@@ -2524,12 +2524,6 @@ private:
     GLint drawbuffer = req->drawbuffer;
     const GLfloat *value = req->values.data();
     glClearBufferfv(buffer, drawbuffer, value);
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
-      DEBUG(LOG_TAG_ERROR, "glClearBufferfv error: 0x%x", error);
-    }
-
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
