@@ -29,10 +29,7 @@ if (TR_BUILD_TESTS)
         ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include
     )
     add_dependencies(TransmuteUnitTests TransmuteClientLibrary)
-    target_link_libraries(TransmuteUnitTests
-        PRIVATE
-        TransmuteClientLibrary
-    )
+    target_link_libraries(TransmuteUnitTests PRIVATE TransmuteClientLibrary)
 
     # Add tests
     add_test(NAME CommonTests COMMAND TransmuteCommandBuffersBaseTest)

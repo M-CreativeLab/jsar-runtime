@@ -106,8 +106,8 @@ namespace builtin_scene::materials
     glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
 
     // b) Render layeredInstances_ in order (0-1-2-...)
-    instancedMesh.iterateLayers([&](RenderLayer layer, RenderableInstancesList &layerInstancesList)
-                                {
+    auto renderLayer = [&](RenderLayer layer, RenderableInstancesList &layerInstancesList)
+    {
       // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
       WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
 
@@ -124,7 +124,9 @@ namespace builtin_scene::materials
                                          0,
                                          layerInstancesList.count());
       }
-      layerInstancesList.afterInstancedDraw(*glContext); });
+      layerInstancesList.afterInstancedDraw(*glContext);
+    };
+    instancedMesh.iterateLayers(renderLayer);
 
     // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
     if (instancedMesh.isDepthOnlyPassEnabled())
@@ -135,7 +137,7 @@ namespace builtin_scene::materials
         WebGLVertexArrayScope vaoScope(glContext, depthOnlyInstancesList.vao);
 
         // Draw all instances to depth attachment only
-        depthOnlyInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
+        depthOnlyInstancesList.beforeInstancedDraw(*glContext, nullptr);
         {
           glContext->colorMask(false, false, false, false);
           glContext->depthMask(true);

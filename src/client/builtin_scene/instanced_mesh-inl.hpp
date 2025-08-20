@@ -17,8 +17,9 @@ namespace builtin_scene
 
   template <typename MeshType>
     requires std::is_base_of<Mesh, MeshType>::value
-  void InstancedMesh<MeshType>::onConfigureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram> program)
+  void InstancedMesh<MeshType>::onConfigureInstanceAttribs(std::shared_ptr<Mesh3d> mesh3d,
+                                                           std::shared_ptr<client_graphics::WebGLProgram> program)
   {
-    configureVertexAttribs(program);
+    configureInstanceAttribs(program, mesh3d);
   }
 }

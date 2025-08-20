@@ -155,9 +155,23 @@ namespace builtin_scene
     /**
      * Configure the vertex attributes of the mesh3d.
      */
-    void configureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram> program)
+    void configureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                std::shared_ptr<client_graphics::WebGLVertexArray> vao = nullptr)
     {
-      handle_->onConfigureVertexAttribs(program);
+      auto glContext = glContext_.lock();
+      client_graphics::WebGLVertexArrayScope vaoScope(glContext, vao == nullptr ? vao_ : vao);
+      handle_->onConfigureVertexAttribs(shared_from_this(), program);
+    }
+
+    /**
+     * Configure the instance attributes of the mesh3d.
+     */
+    void configureInstanceAttribs(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                  std::shared_ptr<client_graphics::WebGLVertexArray> vao = nullptr)
+    {
+      auto glContext = glContext_.lock();
+      client_graphics::WebGLVertexArrayScope vaoScope(glContext, vao == nullptr ? vao_ : vao);
+      handle_->onConfigureInstanceAttribs(shared_from_this(), program);
     }
 
     /**

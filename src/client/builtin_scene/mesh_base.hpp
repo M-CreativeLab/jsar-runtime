@@ -537,7 +537,11 @@ namespace builtin_scene
     /**
      * Configuring the vertext attribs before initializing material.
      */
-    virtual void onConfigureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram>)
+    virtual void onConfigureVertexAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>)
+    {
+      // Default implementation does nothing.
+    }
+    virtual void onConfigureInstanceAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>)
     {
       // Default implementation does nothing.
     }

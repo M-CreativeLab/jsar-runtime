@@ -293,8 +293,8 @@ namespace builtin_scene
 
   public:
     RenderableInstancesList(InstanceFilter filter,
-                            std::shared_ptr<client_graphics::WebGLBuffer> vbo,
-                            std::shared_ptr<Mesh3d> mesh3d);
+                            std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                            std::shared_ptr<client_graphics::WebGLBuffer> vbo);
 
   public:
     inline size_t count() const
@@ -313,8 +313,9 @@ namespace builtin_scene
     /**
      * Configure the instance attributes for the given WebGL program.
      */
-    size_t configureInstanceAttribs(client_graphics::WebGL2Context &,
-                                    std::shared_ptr<client_graphics::WebGLProgram>);
+    size_t configureAttribs(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                            std::shared_ptr<client_graphics::WebGLProgram> program,
+                            std::shared_ptr<Mesh3d> mesh3d);
 
     /**
      * Update the renderable instances list with the given instances.
@@ -491,7 +492,8 @@ namespace builtin_scene
      */
     void setup(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                std::shared_ptr<Mesh3d> mesh3d = nullptr);
-    void configureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram> program);
+    void configureInstanceAttribs(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                  std::shared_ptr<Mesh3d> mesh3d);
     /**
      * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
@@ -549,6 +551,6 @@ namespace builtin_scene
 
   public:
     void onMesh3dInitialized(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGL2Context>) override;
-    void onConfigureVertexAttribs(std::shared_ptr<client_graphics::WebGLProgram>) override;
+    void onConfigureInstanceAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>) override;
   };
 }

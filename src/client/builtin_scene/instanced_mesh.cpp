@@ -188,7 +188,7 @@ namespace builtin_scene
     return false;
   }
 
-  void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
+  void Instance::addHolder(shared_ptr<RenderableInstancesList> holder)
   {
     // Check if the holder is already added.
     for (auto &h : holders_)
@@ -201,7 +201,7 @@ namespace builtin_scene
     holders_.push_back(holder);
   }
 
-  void Instance::removeHolder(std::shared_ptr<RenderableInstancesList> holder)
+  void Instance::removeHolder(shared_ptr<RenderableInstancesList> holder)
   {
     holders_.erase(remove_if(holders_.begin(), holders_.end(), [holder](const weak_ptr<RenderableInstancesList> &h)
                              { return h.lock() == holder; }),
@@ -245,9 +245,10 @@ namespace builtin_scene
   }
 
   RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
-                                                   shared_ptr<WebGLBuffer> instanceVbo,
-                                                   shared_ptr<Mesh3d> mesh3d)
+                                                   shared_ptr<WebGLVertexArray> vao,
+                                                   shared_ptr<WebGLBuffer> instanceVbo)
       : filter(filter)
+      , vao(vao)
       , instanceVbo(instanceVbo)
       , bufferDataDirty_(true)
       , textureDataDirty_(true)
@@ -255,29 +256,50 @@ namespace builtin_scene
     assert(filter != InstanceFilter::kAll);
   }
 
-  size_t RenderableInstancesList::configureInstanceAttribs(WebGL2Context &glContext, shared_ptr<WebGLProgram> program)
+  size_t RenderableInstancesList::configureAttribs(shared_ptr<WebGL2Context> glContext,
+                                                   shared_ptr<WebGLProgram> program,
+                                                   shared_ptr<Mesh3d> mesh3d)
   {
+    WebGLVertexArrayScope vaoScope(glContext, vao);
+
+    glContext->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, mesh3d->elementBufferObject());
+    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+    auto configureVertexAttrib = [&](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+    {
+      glContext->vertexAttribPointer(index,
+                                     attrib.size(),
+                                     attrib.type(),
+                                     attrib.normalized(),
+                                     stride,
+                                     offset);
+      glContext->enableVertexAttribArray(index);
+    };
+    mesh3d->iterateEnabledAttributes(program, configureVertexAttrib);
+
+    // Make sure the `vbo` is currently bound.
+    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
     auto configureInstanceAttrib = [&glContext](const IVertexAttribute &attrib,
                                                 int index,
                                                 size_t stride,
                                                 size_t offset)
     {
-      glContext.enableVertexAttribArray(index);
-      glContext.vertexAttribPointer(index,
-                                    attrib.size(),
-                                    attrib.type(),
-                                    attrib.normalized(),
-                                    stride,
-                                    offset);
-      glContext.vertexAttribDivisor(index, 1);
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index,
+                                     attrib.size(),
+                                     attrib.type(),
+                                     attrib.normalized(),
+                                     stride,
+                                     offset);
+      glContext->vertexAttribDivisor(index, 1);
     };
 
+    // Iterate through the instance attributes and call `configureInstanceAttrib` to configure them.
     size_t attribsCount = 0;
     size_t offset = 0;
     for (size_t i = 0; i < InstancedMeshBase::INSTANCE_ATTRIBUTES.size(); i++)
     {
       auto &name = InstancedMeshBase::INSTANCE_ATTRIBUTES[i];
-      auto attribLocation = glContext.getAttribLocation(program, name);
+      auto attribLocation = glContext->getAttribLocation(program, name);
       if (attribLocation.has_value())
       {
         auto instanceIndex = attribLocation.value().index.value_or(-1);
@@ -351,7 +373,9 @@ namespace builtin_scene
         continue;
 
       if (filter == InstanceFilter::kAll)
+      {
         addInstance(instance);
+      }
       else if (filter == InstanceFilter::kOpaque)
       {
         if (instance->isOpaque_)
@@ -414,7 +438,10 @@ namespace builtin_scene
       if ((len = copyToArrayData(array)) > 0)
       {
         glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
-        glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
+        glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer,
+                             len,
+                             array.data(),
+                             WebGLBufferUsage::kDynamicDraw);
       }
       bufferDataDirty_ = false;
     }
@@ -433,9 +460,9 @@ namespace builtin_scene
   {
   }
 
-  std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
+  vector<shared_ptr<Instance>> RenderableInstancesList::getInstances() const
   {
-    std::vector<std::shared_ptr<Instance>> instances;
+    vector<shared_ptr<Instance>> instances;
     for (const auto &weakInstance : list_)
     {
       if (!weakInstance.expired())
@@ -466,7 +493,7 @@ namespace builtin_scene
     textureDataDirty_ = true;
   }
 
-  void RenderableInstancesList::addInstance(std::shared_ptr<Instance> instance)
+  void RenderableInstancesList::addInstance(shared_ptr<Instance> instance)
   {
     if (TR_UNLIKELY(instance == nullptr))
       return;
@@ -618,23 +645,20 @@ namespace builtin_scene
 
     glContext_ = glContext;
     mesh3d_ = mesh3d;
-
-    auto depthOnlyInstanceVbo = glContext->createBuffer();
-    auto depthOnlyVao = mesh3d->vertexArrayObject();
     depthOnlyInstances_ = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
-                                                               depthOnlyInstanceVbo,
-                                                               mesh3d);
+                                                               glContext->createVertexArray(),
+                                                               glContext->createBuffer());
   }
 
-  void InstancedMeshBase::configureVertexAttribs(shared_ptr<WebGLProgram> program)
+  void InstancedMeshBase::configureInstanceAttribs(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh3d)
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr && "WebGL2 context must not be null.");
     if (program != nullptr)
-      depthOnlyInstances_->configureInstanceAttribs(*glContext, program);
+      depthOnlyInstances_->configureAttribs(glContext, program, mesh3d);
   }
 
-  void InstancedMeshBase::updateInstancesList(std::shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty)
+  void InstancedMeshBase::updateInstancesList(shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty)
   {
     if (!isStructureDirty_ && !ignoreDirty)
       return;
@@ -642,7 +666,7 @@ namespace builtin_scene
     shared_lock<shared_mutex> lock(mutex_);
 
     // Update layered instances based on RenderLayer from instances
-    std::map<RenderLayer, InstanceMap> layeredInstanceMaps;
+    map<RenderLayer, InstanceMap> layeredInstanceMaps;
     for (auto &[id, instance] : idToInstanceMap_)
     {
       if (instance != nullptr && !instance->skipToDraw())
@@ -662,16 +686,17 @@ namespace builtin_scene
         auto mesh3d = mesh3d_.lock();
         if (glContext != nullptr)
         {
-          auto layerInstanceVbo = glContext->createBuffer();
+          auto layerVao = glContext->createVertexArray();
+          auto layerVbo = glContext->createBuffer();
           layeredInstances_[layer] = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
-                                                                          layerInstanceVbo,
-                                                                          mesh3d);
-          layeredInstances_[layer]->configureInstanceAttribs(*glContext, program);
+                                                                          layerVao,
+                                                                          layerVbo);
+          layeredInstances_[layer]->configureAttribs(glContext, program, mesh3d);
         }
       }
 
-      if (layeredInstances_[layer] != nullptr)
-        layeredInstances_[layer]->update(instanceMap);
+      if (layeredInstances_[layer] != nullptr) [[likely]]
+        layeredInstances_[layer]->update(instanceMap, RenderableInstancesList::SortingOrder::kFrontToBack);
     }
 
     // Remove layers that no longer have instances
@@ -689,7 +714,7 @@ namespace builtin_scene
     }
 
     // Update depth-only instances with all instances for unified DepthOnlyPass
-    depthOnlyInstances_->update(idToInstanceMap_);
+    depthOnlyInstances_->update(idToInstanceMap_, RenderableInstancesList::SortingOrder::kNone /* Disable sorting */);
 
     isStructureDirty_ = false;
   }

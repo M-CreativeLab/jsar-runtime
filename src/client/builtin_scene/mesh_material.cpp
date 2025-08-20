@@ -5,7 +5,7 @@ namespace builtin_scene
 {
   using namespace std;
 
-  inline bool MeshMaterial3d::matchesPass(const RenderPass &pass) const
+  bool MeshMaterial3d::matchesPass(const RenderPass &pass) const
   {
     assert(pass == RenderPass::kOpaques || pass == RenderPass::kTransparents);
     if (pass == RenderPass::kOpaques)
@@ -16,7 +16,7 @@ namespace builtin_scene
       return false;
   }
 
-  inline void MeshMaterial3d::initialize(shared_ptr<client_graphics::WebGL2Context> glContext,
+  void MeshMaterial3d::initialize(shared_ptr<client_graphics::WebGL2Context> glContext,
                                          shared_ptr<client_graphics::WebGLProgram> program,
                                          shared_ptr<Mesh3d> mesh)
   {
@@ -25,6 +25,7 @@ namespace builtin_scene
 
     // Configure the mesh attributes
     mesh->configureVertexAttribs(program);
+    mesh->configureInstanceAttribs(program);
 
     // Initialize the material with the WebGL context and program.
     if (material_->initialize(glContext, program))
