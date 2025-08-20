@@ -1,4 +1,4 @@
-#include "../catch2/catch.hpp"
+#include "../catch2/catch_amalgamated.hpp"
 #include <client/builtin_scene/meshes/loaders/ply_loader.hpp>
 #include <cstring>
 

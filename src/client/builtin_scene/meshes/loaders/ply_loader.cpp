@@ -10,6 +10,7 @@
 namespace builtin_scene::model_loaders
 {
   static const char *LOG_TAG = "PlyLoader";
+  static constexpr float SH_C0 = 0.28209479177387814f;
 
   bool PlyLoader::decodePly(
     const std::vector<char> &fileBytes,
@@ -66,19 +67,25 @@ namespace builtin_scene::model_loaders
                      {
         builtin_scene::GaussianSplat splat;
         splat.position[0] = x;
-        splat.position[1] = y;
-        splat.position[2] = z;
+        splat.position[1] = -y;
+        splat.position[2] = -z;
         splat.scale[0] = scaleX;
         splat.scale[1] = scaleY;
         splat.scale[2] = scaleZ;
         splat.rotation[0] = quatX;
-        splat.rotation[1] = quatY;
-        splat.rotation[2] = quatZ;
+        splat.rotation[1] = -quatY;
+        splat.rotation[2] = -quatZ;
         splat.rotation[3] = quatW;
         splat.color[0] = r;
         splat.color[1] = g;
         splat.color[2] = b;
         splat.opacity = opacity;
+        std::cout << "Splat " << index << ": Pos(" << splat.position[0] << ", " << splat.position[1] << ", " << splat.position[2] << ") "
+                  << "Scale(" << splat.scale[0] << ", " << splat.scale[1] << ", " << splat.scale[2] << ") "
+                  << "Rot(" << splat.rotation[0] << ", " << splat.rotation[1] << ", " << splat.rotation[2] << ", " << splat.rotation[3] << ") "
+                  << "Color(" << splat.color[0] << ", " << splat.color[1] << ", " << splat.color[2] << ") "
+                  << "Opacity(" << splat.opacity << ")" << std::endl;
+
         splats.push_back(splat); });
   }
 
@@ -379,25 +386,26 @@ namespace builtin_scene::model_loaders
     if (properties.find("z") != properties.end())
       z = properties.at("z");
 
+    static constexpr float DEFAULT_SCALE = 0.001f;
+
+    bool hasScales = properties.find("scale_0") != properties.end() &&
+                     properties.find("scale_1") != properties.end() &&
+                     properties.find("scale_2") != properties.end();
+    bool hasRotations = properties.find("rot_0") != properties.end() &&
+                        properties.find("rot_1") != properties.end() &&
+                        properties.find("rot_2") != properties.end() &&
+                        properties.find("rot_3") != properties.end();
+
     // Extract scale (with defaults)
-    float scaleX = 0.001f, scaleY = 0.001f, scaleZ = 0.001f; // Default point scale from Spark
-    if (properties.find("scale_0") != properties.end())
-      scaleX = std::exp(properties.at("scale_0"));
-    if (properties.find("scale_1") != properties.end())
-      scaleY = std::exp(properties.at("scale_1"));
-    if (properties.find("scale_2") != properties.end())
-      scaleZ = std::exp(properties.at("scale_2"));
+    float scaleX = hasScales ? std::exp(properties.at("scale_0")) : DEFAULT_SCALE;
+    float scaleY = hasScales ? std::exp(properties.at("scale_1")) : DEFAULT_SCALE;
+    float scaleZ = hasScales ? std::exp(properties.at("scale_2")) : DEFAULT_SCALE;
 
     // Extract rotation quaternion (with defaults)
-    float quatX = 0.0f, quatY = 0.0f, quatZ = 0.0f, quatW = 1.0f;
-    if (properties.find("rot_0") != properties.end())
-      quatX = properties.at("rot_0");
-    if (properties.find("rot_1") != properties.end())
-      quatY = properties.at("rot_1");
-    if (properties.find("rot_2") != properties.end())
-      quatZ = properties.at("rot_2");
-    if (properties.find("rot_3") != properties.end())
-      quatW = properties.at("rot_3");
+    float quatX = hasRotations ? properties.at("rot_0") : 0.0f;
+    float quatY = hasRotations ? properties.at("rot_1") : 0.0f;
+    float quatZ = hasRotations ? properties.at("rot_2") : 0.0f;
+    float quatW = hasRotations ? properties.at("rot_3") : 1.0f;
 
     // Extract opacity (with default)
     float opacity = 1.0f;
@@ -409,11 +417,11 @@ namespace builtin_scene::model_loaders
     // Extract color (with defaults)
     float r = 0.5f, g = 0.5f, b = 0.5f;
     if (properties.find("f_dc_0") != properties.end())
-      r = 0.5f + 0.28209479177387814f * properties.at("f_dc_0");
+      r = 0.5f + SH_C0 * properties.at("f_dc_0");
     if (properties.find("f_dc_1") != properties.end())
-      g = 0.5f + 0.28209479177387814f * properties.at("f_dc_1");
+      g = 0.5f + SH_C0 * properties.at("f_dc_1");
     if (properties.find("f_dc_2") != properties.end())
-      b = 0.5f + 0.28209479177387814f * properties.at("f_dc_2");
+      b = 0.5f + SH_C0 * properties.at("f_dc_2");
 
     // Clamp colors to valid range
     r = std::max(0.0f, std::min(1.0f, r));
