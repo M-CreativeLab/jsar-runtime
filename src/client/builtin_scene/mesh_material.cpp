@@ -17,8 +17,8 @@ namespace builtin_scene
   }
 
   void MeshMaterial3d::initialize(shared_ptr<client_graphics::WebGL2Context> glContext,
-                                         shared_ptr<client_graphics::WebGLProgram> program,
-                                         shared_ptr<Mesh3d> mesh)
+                                  shared_ptr<client_graphics::WebGLProgram> program,
+                                  shared_ptr<Mesh3d> mesh)
   {
     if (program == nullptr)
       throw runtime_error("The program is not initialized.");
