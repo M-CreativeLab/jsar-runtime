@@ -685,7 +685,9 @@ namespace builtin_scene
       }
     }
 
-    // Collect scrollable container instances for all layers
+    // Collect scrollable container instances for all layers.
+    // These instances will be used to create stencil masks that constrain rendering
+    // to scrollable regions, enabling proper overflow behavior for Web Content.
     map<RenderLayer, InstanceMap> scrollableContainerInstanceMaps;
     for (auto &[id, instance] : idToInstanceMap_)
     {
@@ -696,7 +698,9 @@ namespace builtin_scene
       }
     }
 
-    // Collect all layers that have either regular instances or scrollable containers
+    // Collect all layers that have either regular instances or scrollable containers.
+    // This ensures we create LayeredInstancesData for any layer that needs either
+    // regular rendering or mask/stencil rendering.
     set<RenderLayer> allLayers;
     for (const auto &[layer, _] : layeredInstanceMaps)
       allLayers.insert(layer);
