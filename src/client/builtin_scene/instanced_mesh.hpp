@@ -294,7 +294,7 @@ namespace builtin_scene
   public:
     RenderableInstancesList(InstanceFilter filter,
                             std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                            std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo);
+                            std::shared_ptr<client_graphics::WebGLBuffer> vbo);
 
   public:
     inline size_t count() const
@@ -309,6 +309,14 @@ namespace builtin_scene
     {
       return textureDataDirty_;
     }
+
+    /**
+     * Configure the instance attributes for the given WebGL program.
+     */
+    size_t configureAttribs(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                            std::shared_ptr<client_graphics::WebGLProgram> program,
+                            std::shared_ptr<Mesh3d> mesh3d);
+
     /**
      * Update the renderable instances list with the given instances.
      *
@@ -337,6 +345,7 @@ namespace builtin_scene
     void clearInstances();
     // Add an instance to the list.
     void addInstance(std::shared_ptr<Instance> instance);
+
     inline void markBufferAsDirty()
     {
       bufferDataDirty_ = true;
@@ -439,6 +448,10 @@ namespace builtin_scene
     {
       return *transparentInstances_;
     }
+    inline RenderableInstancesList &getDepthOnlyInstancesList() const
+    {
+      return *depthOnlyInstances_;
+    }
     inline size_t countLayers() const
     {
       return layeredInstances_.size();
@@ -447,7 +460,7 @@ namespace builtin_scene
     {
       for (const auto &[layer, instances] : layeredInstances_)
       {
-        if (instances)
+        if (instances && instances->count() > 0)
           callback(layer, *instances);
       }
     }
@@ -478,16 +491,15 @@ namespace builtin_scene
      * @param opaqueVao The instance VBO to setup.
      */
     void setup(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-               std::shared_ptr<client_graphics::WebGLVertexArray> opaqueVao,
-               std::shared_ptr<client_graphics::WebGLBuffer> opaqueInstanceVbo,
-               std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
-               std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
+               std::shared_ptr<Mesh3d> mesh3d = nullptr);
+    void configureInstanceAttribs(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                  std::shared_ptr<Mesh3d> mesh3d);
     /**
      * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
      *
      * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
-    void updateInstancesList(bool ignoreDirty = false);
+    void updateInstancesList(std::shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty = false);
 
   private:
     inline void markStructureAsDirty()
@@ -501,9 +513,11 @@ namespace builtin_scene
     std::shared_ptr<RenderableInstancesList> opaqueInstances_;
     std::shared_ptr<RenderableInstancesList> transparentInstances_;
     std::map<RenderLayer, std::shared_ptr<RenderableInstancesList>> layeredInstances_;
+    std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
+    std::weak_ptr<Mesh3d> mesh3d_;
     bool isDepthOnlyPassEnabled_ = false;
     bool isStructureDirty_ = true;
   };
@@ -536,7 +550,7 @@ namespace builtin_scene
     }
 
   public:
-    void onMesh3dInitialized(const Mesh3d &mesh3d,
-                             std::shared_ptr<client_graphics::WebGL2Context> glContext) override;
+    void onMesh3dInitialized(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGL2Context>) override;
+    void onConfigureInstanceAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>) override;
   };
 }

@@ -94,27 +94,27 @@ namespace builtin_scene::materials
     if (instancedMesh.instanceCount() <= 0)
       return;
 
-    // Update the render queues for opaque and transparent instances.
-    instancedMesh.updateInstancesList();
+    // a) Check isStructureDirty_ and update layeredInstances_ if needed
+    instancedMesh.updateInstancesList(program);
 
     size_t meshIndicesCount = mesh.indices().size();
     CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
 
-    // Draw the transparent instances
-    RenderableInstancesList &instances = instancedMesh.getTransparentInstancesList();
-    if (instances.count() > 0)
+    // Set the base matrix once (shared uniform), move the transparent objects +z 0.001
+    auto loc = glContext->getUniformLocation(program, "modelMatrix");
+    glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+    glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+    // b) Render layeredInstances_ in order (0-1-2-...)
+    auto renderLayer = [&](RenderLayer layer, RenderableInstancesList &layerInstancesList)
     {
-      WebGLVertexArrayScope vaoScope(glContext, instances.vao);
+      // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
+      WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
 
-      // Set the base matrix, move the transparent objects +z 0.001
-      auto loc = glContext->getUniformLocation(program, "modelMatrix");
-      glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-      glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
-
-      // Draw
-      instances.beforeInstancedDraw(*glContext, borderDataTexture);
+      // Draw the layer
+      layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
       {
-        // Draw transparent instances to color attachment
+        // Draw layer instances to color attachment
         glContext->depthMask(false);
         glContext->enable(WEBGL_BLEND);
         glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
@@ -122,10 +122,22 @@ namespace builtin_scene::materials
                                          meshIndicesCount,
                                          WEBGL_UNSIGNED_INT,
                                          0,
-                                         instances.count());
+                                         layerInstancesList.count());
+      }
+      layerInstancesList.afterInstancedDraw(*glContext);
+    };
+    instancedMesh.iterateLayers(renderLayer);
 
-        // Draw transparent instances to depth attachment if depth-only pass is enabled.
-        if (instancedMesh.isDepthOnlyPassEnabled())
+    // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
+    if (instancedMesh.isDepthOnlyPassEnabled())
+    {
+      auto &depthOnlyInstancesList = instancedMesh.getDepthOnlyInstancesList();
+      if (depthOnlyInstancesList.count() > 0) [[likely]]
+      {
+        WebGLVertexArrayScope vaoScope(glContext, depthOnlyInstancesList.vao);
+
+        // Draw all instances to depth attachment only
+        depthOnlyInstancesList.beforeInstancedDraw(*glContext, nullptr);
         {
           glContext->colorMask(false, false, false, false);
           glContext->depthMask(true);
@@ -134,13 +146,13 @@ namespace builtin_scene::materials
                                            meshIndicesCount,
                                            WEBGL_UNSIGNED_INT,
                                            0,
-                                           instances.count());
+                                           depthOnlyInstancesList.count());
 
           // Restore the color mask state
           glContext->colorMask(true, true, true, true);
         }
+        depthOnlyInstancesList.afterInstancedDraw(*glContext);
       }
-      instances.afterInstancedDraw(*glContext);
     }
   }
 

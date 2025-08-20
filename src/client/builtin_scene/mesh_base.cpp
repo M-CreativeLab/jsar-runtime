@@ -127,8 +127,9 @@ namespace builtin_scene
     return attribsCount;
   }
 
-  void Mesh::onMesh3dInitialized(const Mesh3d &mesh3d, std::shared_ptr<client_graphics::WebGL2Context>)
+  void Mesh::onMesh3dInitialized(shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGL2Context>)
   {
-    assert(mesh3d.initialized() && "Mesh3d is not initialized.");
+    assert(mesh3d != nullptr && mesh3d->initialized() &&
+           "Mesh3d is not initialized.");
   }
 }

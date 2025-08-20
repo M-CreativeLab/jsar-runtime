@@ -208,7 +208,7 @@ namespace builtin_scene
     }
   }
 
-  void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
+  void GaussianSplatsMesh::onMesh3dInitialized(shared_ptr<Mesh3d> mesh3d,
                                                shared_ptr<WebGL2Context> glContext)
   {
     // Call parent implementation first
@@ -218,7 +218,7 @@ namespace builtin_scene
     glContext_ = glContext;
 
     // Initialize the splat buffer
-    setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
+    setupSplatBuffer(glContext, mesh3d->vertexArrayObject());
   }
 
   size_t GaussianSplatsMesh::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,

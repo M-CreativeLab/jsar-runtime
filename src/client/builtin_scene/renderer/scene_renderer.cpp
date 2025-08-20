@@ -135,32 +135,6 @@ namespace builtin_scene
           gaussianMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
         }
       }
-      else
-      {
-        // Handle regular InstancedMeshBase
-        auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
-
-        // Configure for the opaque instances.
-        {
-          auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
-          WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
-          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
-        }
-
-        // Configure for the transparent instances.
-        {
-          auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
-          WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
-          mesh3d->iterateEnabledAttributes(program, configureAttribute);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
-          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
-        }
-      }
     }
   }
 
