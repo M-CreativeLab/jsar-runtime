@@ -1549,7 +1549,7 @@ private:
       return;
     }
 
-    glVertexAttribI4i(loc.value(), req->x, req->y, req->z, req->w);
+    glVertexAttribI4i(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall) [[unlikely]]
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1567,7 +1567,7 @@ private:
       return;
     }
 
-    glVertexAttribI4ui(loc.value(), req->x, req->y, req->z, req->w);
+    glVertexAttribI4ui(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1621,7 +1621,7 @@ private:
       return;
     }
 
-    glVertexAttrib1f(loc.value(), req->x);
+    glVertexAttrib1f(loc.value(), req->v0);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1639,7 +1639,7 @@ private:
       return;
     }
 
-    glVertexAttrib2f(loc.value(), req->x, req->y);
+    glVertexAttrib2f(loc.value(), req->v0, req->v1);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1657,7 +1657,7 @@ private:
       return;
     }
 
-    glVertexAttrib3f(loc.value(), req->x, req->y, req->z);
+    glVertexAttrib3f(loc.value(), req->v0, req->v1, req->v2);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -1675,7 +1675,7 @@ private:
       return;
     }
 
-    glVertexAttrib4f(loc.value(), req->x, req->y, req->z, req->w);
+    glVertexAttrib4f(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
