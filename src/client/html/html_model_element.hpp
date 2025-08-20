@@ -45,7 +45,8 @@ namespace dom
       GLB,
       GaussianSplatting,
       KSplat,
-      SPZ
+      SPZ,
+      PLY
     };
 
   public:
