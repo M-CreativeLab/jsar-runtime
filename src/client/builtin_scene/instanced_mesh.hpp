@@ -478,25 +478,20 @@ namespace builtin_scene
     {
       return layeredInstances_.size();
     }
-    inline void iterateLayers(std::function<void(RenderLayer, RenderableInstancesList &)> callback) const
+    inline void iterateLayers(std::function<void(RenderLayer, RenderableInstancesList *, RenderableInstancesList *)> callback) const
     {
       for (const auto &[layer, layerData] : layeredInstances_)
       {
-        if (layerData.renderableInstances && layerData.renderableInstances->count() > 0)
-          callback(layer, *layerData.renderableInstances);
-      }
-    }
+        RenderableInstancesList *renderableInstances = layerData.renderableInstances && layerData.renderableInstances->count() > 0
+                                                         ? layerData.renderableInstances.get()
+                                                         : nullptr;
+        RenderableInstancesList *scrollableContainerInstances = layerData.scrollableContainerInstances && layerData.scrollableContainerInstances->count() > 0
+                                                                  ? layerData.scrollableContainerInstances.get()
+                                                                  : nullptr;
 
-    /**
-     * Iterate through scrollable container instances for mask/stencil rendering.
-     * These instances are used to create masks that constrain rendering to scrollable regions.
-     */
-    inline void iterateScrollableContainerLayers(std::function<void(RenderLayer, RenderableInstancesList &)> callback) const
-    {
-      for (const auto &[layer, layerData] : layeredInstances_)
-      {
-        if (layerData.scrollableContainerInstances && layerData.scrollableContainerInstances->count() > 0)
-          callback(layer, *layerData.scrollableContainerInstances);
+        // Only call callback if there are instances to process (either renderable or scrollable containers)
+        if (renderableInstances || scrollableContainerInstances)
+          callback(layer, renderableInstances, scrollableContainerInstances);
       }
     }
 
