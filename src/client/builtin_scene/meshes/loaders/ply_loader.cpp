@@ -59,29 +59,46 @@ namespace builtin_scene::model_loaders
 
   bool PlyLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
-    return decodePly(data, [&splats](int numSplats)
-                     {
-        splats.clear();
-        splats.reserve(numSplats); },
-                     [&splats](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
-                     {
-        builtin_scene::GaussianSplat splat;
-        splat.position[0] = x;
-        splat.position[1] = y;
-        splat.position[2] = z;
-        splat.scale[0] = scaleX;
-        splat.scale[1] = scaleY;
-        splat.scale[2] = scaleZ;
-        splat.rotation[0] = quatX;
-        splat.rotation[1] = quatY;
-        splat.rotation[2] = quatZ;
-        splat.rotation[3] = quatW;
-        splat.color[0] = r;
-        splat.color[1] = g;
-        splat.color[2] = b;
-        splat.opacity = opacity;
+    auto initSplats = [&splats](int numSplats)
+    {
+      splats.clear();
+      splats.reserve(numSplats);
+    };
+    auto addSplat = [&splats](int index,
+                              float x,
+                              float y,
+                              float z,
+                              float scaleX,
+                              float scaleY,
+                              float scaleZ,
+                              float quatX,
+                              float quatY,
+                              float quatZ,
+                              float quatW,
+                              float opacity,
+                              float r,
+                              float g,
+                              float b)
+    {
+      builtin_scene::GaussianSplat splat;
+      splat.position[0] = x;
+      splat.position[1] = -y;
+      splat.position[2] = -z;
+      splat.scale[0] = scaleX;
+      splat.scale[1] = scaleY;
+      splat.scale[2] = scaleZ;
+      splat.rotation[0] = quatX;
+      splat.rotation[1] = -quatY;
+      splat.rotation[2] = -quatZ;
+      splat.rotation[3] = quatW;
+      splat.color[0] = r;
+      splat.color[1] = g;
+      splat.color[2] = b;
+      splat.opacity = opacity;
 
-        splats.push_back(splat); });
+      splats.push_back(splat);
+    };
+    return decodePly(data, initSplats, addSplat);
   }
 
   bool PlyLoader::parseHeader(
@@ -381,8 +398,6 @@ namespace builtin_scene::model_loaders
     if (properties.find("z") != properties.end())
       z = properties.at("z");
 
-    static constexpr float DEFAULT_SCALE = 0.001f;
-
     bool hasScales = properties.find("scale_0") != properties.end() &&
                      properties.find("scale_1") != properties.end() &&
                      properties.find("scale_2") != properties.end();
@@ -392,6 +407,7 @@ namespace builtin_scene::model_loaders
                         properties.find("rot_3") != properties.end();
 
     // Extract scale (with defaults)
+    static constexpr float DEFAULT_SCALE = 0.001f;
     float scaleX = hasScales ? std::exp(properties.at("scale_0")) : DEFAULT_SCALE;
     float scaleY = hasScales ? std::exp(properties.at("scale_1")) : DEFAULT_SCALE;
     float scaleZ = hasScales ? std::exp(properties.at("scale_2")) : DEFAULT_SCALE;

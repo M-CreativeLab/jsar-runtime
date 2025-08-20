@@ -104,6 +104,7 @@ export class TransmuteRuntime2 extends EventTarget {
       // case '.gltf':
       case '.spz':
       case '.ksplat':
+      case '.ply':
         codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
         inputType = 'source';
         urlBase = urlObj.href;
