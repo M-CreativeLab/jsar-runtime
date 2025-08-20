@@ -722,8 +722,8 @@ namespace builtin_scene
 
     // Update depth-only instances with all instances for use in `DepthOnlyPass`.
     //
-    // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or 
-    // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is 
+    // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or
+    // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is
     // written and no blending occurs.
     depthOnlyInstances_->update(idToInstanceMap_, RenderableInstancesList::SortingOrder::kNone /* Disable sorting */);
 
