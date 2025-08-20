@@ -413,7 +413,6 @@ namespace builtin_scene::model_loaders
     float scaleZ = hasScales ? std::exp(properties.at("scale_2")) : DEFAULT_SCALE;
 
     // Extract rotation quaternion (with defaults)
-    // Note: Spark uses rot_0 as W component, rot_1 as X, rot_2 as Y, rot_3 as Z
     float quatW = hasRotations ? properties.at("rot_0") : 1.0f; // W component
     float quatX = hasRotations ? properties.at("rot_1") : 0.0f; // X component
     float quatY = hasRotations ? properties.at("rot_2") : 0.0f; // Y component
