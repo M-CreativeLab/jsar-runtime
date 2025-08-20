@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <cstdint>
 
 #include "./ply_loader.hpp"
 
@@ -396,10 +397,11 @@ namespace builtin_scene::model_loaders
     float scaleZ = hasScales ? std::exp(properties.at("scale_2")) : DEFAULT_SCALE;
 
     // Extract rotation quaternion (with defaults)
-    float quatX = hasRotations ? properties.at("rot_0") : 0.0f;
-    float quatY = hasRotations ? properties.at("rot_1") : 0.0f;
-    float quatZ = hasRotations ? properties.at("rot_2") : 0.0f;
-    float quatW = hasRotations ? properties.at("rot_3") : 1.0f;
+    // Note: Spark uses rot_0 as W component, rot_1 as X, rot_2 as Y, rot_3 as Z
+    float quatW = hasRotations ? properties.at("rot_0") : 1.0f; // W component
+    float quatX = hasRotations ? properties.at("rot_1") : 0.0f; // X component
+    float quatY = hasRotations ? properties.at("rot_2") : 0.0f; // Y component
+    float quatZ = hasRotations ? properties.at("rot_3") : 0.0f; // Z component
 
     // Extract opacity (with default)
     float opacity = 1.0f;
@@ -428,21 +430,49 @@ namespace builtin_scene::model_loaders
   template <typename T>
   bool PlyLoader::readBinary(const char *data, size_t offset, T &value, bool littleEndian)
   {
+    static_assert(sizeof(T) <= 8, "Unsupported type size");
+
+    // Copy bytes from data
     std::memcpy(&value, data + offset, sizeof(T));
 
-    // Handle endianness if needed
-    if constexpr (sizeof(T) > 1)
+    // Handle endianness if needed for multi-byte types
+    if (sizeof(T) > 1)
     {
-      // Check if we need to swap bytes
-      bool systemLittleEndian = true;
-      uint16_t test = 1;
-      systemLittleEndian = *reinterpret_cast<uint8_t *>(&test) == 1;
+      // Detect system endianness more reliably
+      static const bool systemLittleEndian = []()
+      {
+        const uint32_t test = 0x01234567;
+        return *reinterpret_cast<const uint8_t *>(&test) == 0x67;
+      }();
 
       if (systemLittleEndian != littleEndian)
       {
-        // Swap bytes
-        char *bytes = reinterpret_cast<char *>(&value);
-        std::reverse(bytes, bytes + sizeof(T));
+        // Swap bytes using more efficient approach
+        if (sizeof(T) == 2)
+        {
+          uint16_t *ptr = reinterpret_cast<uint16_t *>(&value);
+          *ptr = (*ptr << 8) | (*ptr >> 8);
+        }
+        else if (sizeof(T) == 4)
+        {
+          uint32_t *ptr = reinterpret_cast<uint32_t *>(&value);
+          *ptr = ((*ptr << 24) & 0xFF000000) |
+                 ((*ptr << 8) & 0x00FF0000) |
+                 ((*ptr >> 8) & 0x0000FF00) |
+                 ((*ptr >> 24) & 0x000000FF);
+        }
+        else if (sizeof(T) == 8)
+        {
+          uint64_t *ptr = reinterpret_cast<uint64_t *>(&value);
+          *ptr = ((*ptr << 56) & 0xFF00000000000000ULL) |
+                 ((*ptr << 40) & 0x00FF000000000000ULL) |
+                 ((*ptr << 24) & 0x0000FF0000000000ULL) |
+                 ((*ptr << 8) & 0x000000FF00000000ULL) |
+                 ((*ptr >> 8) & 0x00000000FF000000ULL) |
+                 ((*ptr >> 24) & 0x0000000000FF0000ULL) |
+                 ((*ptr >> 40) & 0x000000000000FF00ULL) |
+                 ((*ptr >> 56) & 0x00000000000000FFULL);
+        }
       }
     }
 
