@@ -73,7 +73,7 @@ namespace builtin_scene::model_loaders
     {
       std::string name;
       int count;
-      std::unordered_map<std::string, PlyProperty> properties;
+      std::vector<std::pair<std::string, PlyProperty>> properties;
     };
 
     /**

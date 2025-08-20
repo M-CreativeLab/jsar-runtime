@@ -195,7 +195,7 @@ namespace builtin_scene::model_loaders
           lineStream >> countTypeStr >> typeStr >> name;
           property.countType = stringToPropertyType(countTypeStr);
           property.type = stringToPropertyType(typeStr);
-          currentElement->properties[name] = property;
+          currentElement->properties.push_back(std::make_pair(name, property));
         }
         else
         {
@@ -203,7 +203,7 @@ namespace builtin_scene::model_loaders
           property.type = stringToPropertyType(typeOrList);
           std::string name;
           lineStream >> name;
-          currentElement->properties[name] = property;
+          currentElement->properties.push_back(std::make_pair(name, property));
         }
       }
       else if (keyword == "comment")
