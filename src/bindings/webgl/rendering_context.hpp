@@ -118,6 +118,10 @@ namespace webgl
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value DisableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttrib1f(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttrib2f(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttrib3f(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttrib4f(const Napi::CallbackInfo &info);
     Napi::Value GetActiveAttrib(const Napi::CallbackInfo &info);
     Napi::Value GetActiveUniform(const Napi::CallbackInfo &info);
     Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);
@@ -304,7 +308,15 @@ namespace webgl
     Napi::Value UniformBlockBinding(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribIPointer(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribDivisor(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribI4i(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribI4ui(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribI4iv(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribI4uiv(const Napi::CallbackInfo &info);
     Napi::Value DrawBuffers(const Napi::CallbackInfo &info);
+    Napi::Value ClearBufferfv(const Napi::CallbackInfo &info);
+    Napi::Value ClearBufferiv(const Napi::CallbackInfo &info);
+    Napi::Value ClearBufferuiv(const Napi::CallbackInfo &info);
+    Napi::Value ClearBufferfi(const Napi::CallbackInfo &info);
     Napi::Value DrawArraysInstanced(const Napi::CallbackInfo &info);
     Napi::Value DrawElementsInstanced(const Napi::CallbackInfo &info);
     Napi::Value DrawRangeElements(const Napi::CallbackInfo &info);

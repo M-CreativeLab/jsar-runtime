@@ -63,8 +63,16 @@
   XX(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, "GL::EnableVertexAttribArray")                     \
   XX(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, "GL::DisableVertexAttribArray")                  \
   XX(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, "GL::VertexAttribPointer")                                  \
+  XX(VERTEX_ATTRIB_1F, VertexAttrib1fCommandBufferRequest, "GL::VertexAttrib1f")                                                 \
+  XX(VERTEX_ATTRIB_2F, VertexAttrib2fCommandBufferRequest, "GL::VertexAttrib2f")                                                 \
+  XX(VERTEX_ATTRIB_3F, VertexAttrib3fCommandBufferRequest, "GL::VertexAttrib3f")                                                 \
+  XX(VERTEX_ATTRIB_4F, VertexAttrib4fCommandBufferRequest, "GL::VertexAttrib4f")                                                 \
   XX(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, "GL::VertexAttribIPointer")                               \
   XX(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, "GL::VertexAttribDivisor")                                  \
+  XX(VERTEX_ATTRIB_I4I, VertexAttribI4iCommandBufferRequest, "GL::VertexAttribI4i")                                              \
+  XX(VERTEX_ATTRIB_I4UI, VertexAttribI4uiCommandBufferRequest, "GL::VertexAttribI4ui")                                           \
+  XX(VERTEX_ATTRIB_I4IV, VertexAttribI4ivCommandBufferRequest, "GL::VertexAttribI4iv")                                           \
+  XX(VERTEX_ATTRIB_I4UIV, VertexAttribI4uivCommandBufferRequest, "GL::VertexAttribI4uiv")                                        \
   XX(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, "GL::UniformBlockBinding")                                  \
   XX(UNIFORM1F, Uniform1fCommandBufferRequest, "GL::Uniform1f")                                                                  \
   XX(UNIFORM1FV, Uniform1fvCommandBufferRequest, "GL::Uniform1fv")                                                               \
@@ -102,6 +110,10 @@
   XX(CLEAR_COLOR, ClearColorCommandBufferRequest, "GL::ClearColor")                                                              \
   XX(CLEAR_DEPTH, ClearDepthCommandBufferRequest, "GL::ClearDepth")                                                              \
   XX(CLEAR_STENCIL, ClearStencilCommandBufferRequest, "GL::ClearStencil")                                                        \
+  XX(CLEAR_BUFFERFV, ClearBufferfvCommandBufferRequest, "GL::ClearBufferfv")                                                     \
+  XX(CLEAR_BUFFERIV, ClearBufferivCommandBufferRequest, "GL::ClearBufferiv")                                                     \
+  XX(CLEAR_BUFFERUIV, ClearBufferuivCommandBufferRequest, "GL::ClearBufferuiv")                                                  \
+  XX(CLEAR_BUFFERFI, ClearBufferfiCommandBufferRequest, "GL::ClearBufferfi")                                                     \
   XX(DEPTH_MASK, DepthMaskCommandBufferRequest, "GL::DepthMask")                                                                 \
   XX(DEPTH_FUNC, DepthFuncCommandBufferRequest, "GL::DepthFunc")                                                                 \
   XX(DEPTH_RANGE, DepthRangeCommandBufferRequest, "GL::DepthRange")                                                              \

@@ -418,6 +418,14 @@ namespace client_graphics
     void disableVertexAttribArray(int index);
     void vertexAttribPointer(const WebGLAttribLocation &, size_t size, int type, bool normalized, size_t stride, int offset);
     void vertexAttribPointer(int index, size_t size, int type, bool normalized, size_t stride, int offset);
+    void vertexAttrib1f(const WebGLAttribLocation &, float v0);
+    void vertexAttrib1f(int index, float v0);
+    void vertexAttrib2f(const WebGLAttribLocation &, float v0, float v1);
+    void vertexAttrib2f(int index, float v0, float v1);
+    void vertexAttrib3f(const WebGLAttribLocation &, float v0, float v1, float v2);
+    void vertexAttrib3f(int index, float v0, float v1, float v2);
+    void vertexAttrib4f(const WebGLAttribLocation &, float v0, float v1, float v2, float v3);
+    void vertexAttrib4f(int index, float v0, float v1, float v2, float v3);
     std::optional<WebGLActiveInfo> getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index);
     std::optional<WebGLActiveInfo> getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index);
     std::optional<WebGLAttribLocation> getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
@@ -1198,22 +1206,24 @@ namespace client_graphics
      * It specify integer values for generic vertex attributes.
      *
      * @param index The index of the vertex attribute.
-     * @param x The x value to set.
-     * @param y The y value to set.
-     * @param z The z value to set.
-     * @param w The w value to set.
+     * @param v0 The first value to set.
+     * @param v1 The second value to set.
+     * @param v2 The third value to set.
+     * @param v3 The fourth value to set.
      */
-    void vertexAttribI4i(const WebGLAttribLocation &, int x, int y, int z, int w);
+    void vertexAttribI4i(const WebGLAttribLocation &, int v0, int v1, int v2, int v3);
+    void vertexAttribI4i(int index, int v0, int v1, int v2, int v3);
     /**
      * It specify unsigned integer values for generic vertex attributes.
      *
      * @param index The index of the vertex attribute.
-     * @param x The x value to set.
-     * @param y The y value to set.
-     * @param z The z value to set.
-     * @param w The w value to set.
+     * @param v0 The first value to set.
+     * @param v1 The second value to set.
+     * @param v2 The third value to set.
+     * @param v3 The fourth value to set.
      */
-    void vertexAttribI4ui(const WebGLAttribLocation &, uint x, uint y, uint z, uint w);
+    void vertexAttribI4ui(const WebGLAttribLocation &, uint v0, uint v1, uint v2, uint v3);
+    void vertexAttribI4ui(int index, uint v0, uint v1, uint v2, uint v3);
     /**
      * It specify integer values for generic vertex attributes from a vector.
      *
@@ -1221,6 +1231,7 @@ namespace client_graphics
      * @param values The values to set.
      */
     void vertexAttribI4iv(const WebGLAttribLocation &, const std::vector<int> values);
+    void vertexAttribI4iv(int index, const std::vector<int> values);
     /**
      * It specify unsigned integer values for generic vertex attributes from a vector.
      *
@@ -1228,6 +1239,7 @@ namespace client_graphics
      * @param values The values to set.
      */
     void vertexAttribI4uiv(const WebGLAttribLocation &, const std::vector<uint> values);
+    void vertexAttribI4uiv(int index, const std::vector<uint> values);
     /**
      * It specifies integer data formats and locations of vertex attributes in a vertex attributes array.
      *
