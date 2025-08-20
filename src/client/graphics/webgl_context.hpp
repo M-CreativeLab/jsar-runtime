@@ -418,8 +418,8 @@ namespace client_graphics
     void disableVertexAttribArray(int index);
     void vertexAttribPointer(const WebGLAttribLocation &, size_t size, int type, bool normalized, size_t stride, int offset);
     void vertexAttribPointer(int index, size_t size, int type, bool normalized, size_t stride, int offset);
-    void vertexAttrib1f(const WebGLAttribLocation &, float x);
-    void vertexAttrib1f(int index, float x);
+    void vertexAttrib1f(const WebGLAttribLocation &, float v0);
+    void vertexAttrib1f(int index, float v0);
     void vertexAttrib2f(const WebGLAttribLocation &, float v0, float v1);
     void vertexAttrib2f(int index, float v0, float v1);
     void vertexAttrib3f(const WebGLAttribLocation &, float v0, float v1, float v2);

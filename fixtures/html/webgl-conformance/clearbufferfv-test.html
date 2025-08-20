@@ -34,6 +34,7 @@
         // Test different clearBufferfv calls
         const colorValues = new Float32Array([1.0, 0.0, 0.0, 1.0]);
         const colorValues2 = new Float32Array([0.0, 1.0, 0.0, 1.0]);
+        const colorArrayValues = [0.0, 0.0, 0.0, 0.0];
         const depthValue = new Float32Array([1.0]);
 
         console.log('Calling gl.clearBufferfv(gl.COLOR, 0, colorValues)');
@@ -42,6 +43,8 @@
         gl.clearBufferfv(gl.COLOR, 1, colorValues2);
         console.log('Calling gl.clearBufferfv(gl.DEPTH, 0, depthValue)');
         gl.clearBufferfv(gl.DEPTH, 0, depthValue);
+        console.log('Calling gl.clearBufferfv(gl.COLOR, 0, colorArrayValues)');
+        gl.clearBufferfv(gl.COLOR, 0, colorArrayValues);
 
         console.log('clearBufferfv calls completed');
       } else {

@@ -231,8 +231,6 @@ namespace commandbuffers
                                       COMMAND_BUFFER_CLEAR_BUFFERFV_REQ,
                                       float>
   {
-  public:
-    ClearBufferfvCommandBufferRequest() = delete;
     using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 
@@ -241,8 +239,6 @@ namespace commandbuffers
                                       COMMAND_BUFFER_CLEAR_BUFFERIV_REQ,
                                       int>
   {
-  public:
-    ClearBufferivCommandBufferRequest() = delete;
     using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 
@@ -251,8 +247,6 @@ namespace commandbuffers
                                       COMMAND_BUFFER_CLEAR_BUFFERUIV_REQ,
                                       unsigned int>
   {
-  public:
-    ClearBufferuivCommandBufferRequest() = delete;
     using ClearBufferBaseRequest::ClearBufferBaseRequest;
   };
 

@@ -1812,20 +1812,42 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[2].IsTypedArray())
+    if (!info[2].IsArray() && !info[2].IsTypedArray())
     {
-      Napi::TypeError::New(env, "clearBufferfv() 3rd argument(values) must be a typed array.")
+      Napi::TypeError::New(env, "clearBufferfv() 3rd argument(values) must be an array or typed array.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
-    auto typedArray = info[2].As<Napi::TypedArray>();
-    auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const float *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
-    size_t length = typedArray.ByteLength() / sizeof(float);
-    std::vector<float> values(data, data + length);
+    std::vector<float> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const float *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(float);
+      values.assign(data, data + length);
+    }
+    else if (info[2].IsArray())
+    {
+      auto array = info[2].As<Napi::Array>();
+      uint32_t length = array.Length();
+      values.reserve(length);
+      for (uint32_t i = 0; i < length; i++)
+      {
+        Napi::Value element = array[i];
+        if (!element.IsNumber())
+        {
+          Napi::TypeError::New(env, "clearBufferfv() array elements must be numbers.")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        values.push_back(element.As<Napi::Number>().FloatValue());
+      }
+    }
     glContext_->clearBufferfv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
     return env.Undefined();
   }
@@ -1853,20 +1875,42 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[2].IsTypedArray())
+    if (!info[2].IsArray() && !info[2].IsTypedArray())
     {
-      Napi::TypeError::New(env, "clearBufferiv() 3rd argument(values) must be a typed array.")
+      Napi::TypeError::New(env, "clearBufferiv() 3rd argument(values) must be an array or typed array.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
-    auto typedArray = info[2].As<Napi::TypedArray>();
-    auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
-    size_t length = typedArray.ByteLength() / sizeof(int32_t);
-    std::vector<int> values(data, data + length);
+    std::vector<int> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(int32_t);
+      values.assign(data, data + length);
+    }
+    else if (info[2].IsArray())
+    {
+      auto array = info[2].As<Napi::Array>();
+      uint32_t length = array.Length();
+      values.reserve(length);
+      for (uint32_t i = 0; i < length; i++)
+      {
+        Napi::Value element = array[i];
+        if (!element.IsNumber())
+        {
+          Napi::TypeError::New(env, "clearBufferiv() array elements must be numbers.")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        values.push_back(element.As<Napi::Number>().Int32Value());
+      }
+    }
     glContext_->clearBufferiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
     return env.Undefined();
   }
@@ -1894,20 +1938,34 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[2].IsTypedArray())
+    if (!info[2].IsTypedArray() && !info[2].IsArray())
     {
-      Napi::TypeError::New(env, "clearBufferuiv() 3rd argument(values) must be a typed array.")
+      Napi::TypeError::New(env, "clearBufferuiv() 3rd argument(values) must be a typed array or array.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
     int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
-    auto typedArray = info[2].As<Napi::TypedArray>();
-    auto arrayBuffer = typedArray.ArrayBuffer();
-    auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
-    size_t length = typedArray.ByteLength() / sizeof(uint32_t);
-    std::vector<unsigned int> values(data, data + length);
+    std::vector<unsigned int> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(uint32_t);
+      values.assign(data, data + length);
+    }
+    else
+    {
+      auto array = info[2].As<Napi::Array>();
+      values.reserve(array.Length());
+      for (uint32_t i = 0; i < array.Length(); i++)
+      {
+        values.push_back(array.Get(i).As<Napi::Number>().Uint32Value());
+      }
+    }
     glContext_->clearBufferuiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
     return env.Undefined();
   }
