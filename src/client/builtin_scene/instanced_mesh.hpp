@@ -5,6 +5,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <shared_mutex>
+#include <set>
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 
@@ -277,6 +278,25 @@ namespace builtin_scene
   };
 
   using InstanceMap = std::unordered_map<ecs::EntityId, std::shared_ptr<Instance>>;
+
+  /**
+   * Data structure that holds both renderable instances and scrollable container instances for a render layer.
+   * This enables support for overflow behavior through mask/stencil rendering where:
+   * - renderableInstances: Current instances used for normal rendering
+   * - scrollableContainerInstances: All scrollable container instances used for mask/stencil rendering
+   */
+  struct LayeredInstancesData
+  {
+    LayeredInstancesData() = default;
+
+    // Current instances used for rendering
+    std::shared_ptr<RenderableInstancesList> renderableInstances;
+
+    // All scrollable container instances for mask/stencil rendering
+    // (updated regardless of whether they are rendered in current frame)
+    std::shared_ptr<RenderableInstancesList> scrollableContainerInstances;
+  };
+
   class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
   {
     friend class Instance;
@@ -460,10 +480,23 @@ namespace builtin_scene
     }
     inline void iterateLayers(std::function<void(RenderLayer, RenderableInstancesList &)> callback) const
     {
-      for (const auto &[layer, instances] : layeredInstances_)
+      for (const auto &[layer, layerData] : layeredInstances_)
       {
-        if (instances && instances->count() > 0)
-          callback(layer, *instances);
+        if (layerData.renderableInstances && layerData.renderableInstances->count() > 0)
+          callback(layer, *layerData.renderableInstances);
+      }
+    }
+
+    /**
+     * Iterate through scrollable container instances for mask/stencil rendering.
+     * These instances are used to create masks that constrain rendering to scrollable regions.
+     */
+    inline void iterateScrollableContainerLayers(std::function<void(RenderLayer, RenderableInstancesList &)> callback) const
+    {
+      for (const auto &[layer, layerData] : layeredInstances_)
+      {
+        if (layerData.scrollableContainerInstances && layerData.scrollableContainerInstances->count() > 0)
+          callback(layer, *layerData.scrollableContainerInstances);
       }
     }
 
@@ -514,7 +547,7 @@ namespace builtin_scene
     InstanceMap idToInstanceMap_;
     std::shared_ptr<RenderableInstancesList> opaqueInstances_;
     std::shared_ptr<RenderableInstancesList> transparentInstances_;
-    std::map<RenderLayer, std::shared_ptr<RenderableInstancesList>> layeredInstances_;
+    std::map<RenderLayer, LayeredInstancesData> layeredInstances_;
     std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
 
   private:

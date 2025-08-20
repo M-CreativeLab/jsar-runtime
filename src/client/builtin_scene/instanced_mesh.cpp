@@ -685,32 +685,83 @@ namespace builtin_scene
       }
     }
 
-    // Update or create RenderableInstancesList for each layer
-    for (auto &[layer, instanceMap] : layeredInstanceMaps)
+    // Collect scrollable container instances for all layers
+    map<RenderLayer, InstanceMap> scrollableContainerInstanceMaps;
+    for (auto &[id, instance] : idToInstanceMap_)
+    {
+      if (instance != nullptr && instance->isScrollableContainer_)
+      {
+        RenderLayer layer = instance->renderLayer_;
+        scrollableContainerInstanceMaps[layer][id] = instance;
+      }
+    }
+
+    // Collect all layers that have either regular instances or scrollable containers
+    set<RenderLayer> allLayers;
+    for (const auto &[layer, _] : layeredInstanceMaps)
+      allLayers.insert(layer);
+    for (const auto &[layer, _] : scrollableContainerInstanceMaps)
+      allLayers.insert(layer);
+
+    // Update or create LayeredInstancesData for each layer
+    for (const auto &layer : allLayers)
     {
       if (layeredInstances_.find(layer) == layeredInstances_.end())
       {
-        // Create new RenderableInstancesList for this layer using mesh3d's VAO
-        if (glContext != nullptr)
-        {
-          auto layerVao = glContext->createVertexArray();
-          auto layerVbo = glContext->createBuffer();
-          layeredInstances_[layer] = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
-                                                                          layerVao,
-                                                                          layerVbo);
-          layeredInstances_[layer]->configureAttribs(glContext, program, mesh3d);
-        }
+        // Create new LayeredInstancesData for this layer
+        layeredInstances_[layer] = LayeredInstancesData{};
       }
 
-      if (layeredInstances_[layer] != nullptr) [[likely]]
-        layeredInstances_[layer]->update(instanceMap, RenderableInstancesList::SortingOrder::kFrontToBack);
+      auto &layerData = layeredInstances_[layer];
+
+      // Create or update renderable instances list (if layer has regular instances)
+      if (layeredInstanceMaps.find(layer) != layeredInstanceMaps.end())
+      {
+        if (layerData.renderableInstances == nullptr)
+        {
+          if (glContext != nullptr)
+          {
+            auto layerVao = glContext->createVertexArray();
+            auto layerVbo = glContext->createBuffer();
+            layerData.renderableInstances = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
+                                                                                 layerVao,
+                                                                                 layerVbo);
+            layerData.renderableInstances->configureAttribs(glContext, program, mesh3d);
+          }
+        }
+
+        if (layerData.renderableInstances != nullptr) [[likely]]
+          layerData.renderableInstances->update(layeredInstanceMaps[layer], RenderableInstancesList::SortingOrder::kFrontToBack);
+      }
+
+      // Create or update scrollable container instances list (if layer has scrollable containers)
+      if (scrollableContainerInstanceMaps.find(layer) != scrollableContainerInstanceMaps.end())
+      {
+        if (layerData.scrollableContainerInstances == nullptr)
+        {
+          if (glContext != nullptr)
+          {
+            auto scrollableVao = glContext->createVertexArray();
+            auto scrollableVbo = glContext->createBuffer();
+            layerData.scrollableContainerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
+                                                                                          scrollableVao,
+                                                                                          scrollableVbo);
+            layerData.scrollableContainerInstances->configureAttribs(glContext, program, mesh3d);
+          }
+        }
+
+        if (layerData.scrollableContainerInstances != nullptr) [[likely]]
+          layerData.scrollableContainerInstances->update(scrollableContainerInstanceMaps[layer],
+                                                         RenderableInstancesList::SortingOrder::kNone);
+      }
     }
 
     // Remove layers that no longer have instances
     auto it = layeredInstances_.begin();
     while (it != layeredInstances_.end())
     {
-      if (layeredInstanceMaps.find(it->first) == layeredInstanceMaps.end())
+      if (layeredInstanceMaps.find(it->first) == layeredInstanceMaps.end() &&
+          scrollableContainerInstanceMaps.find(it->first) == scrollableContainerInstanceMaps.end())
       {
         it = layeredInstances_.erase(it);
       }
