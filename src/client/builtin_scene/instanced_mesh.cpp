@@ -663,6 +663,15 @@ namespace builtin_scene
     if (!isStructureDirty_ && !ignoreDirty)
       return;
 
+    auto glContext = glContext_.lock();
+    auto mesh3d = mesh3d_.lock();
+    if (glContext == nullptr || mesh3d == nullptr)
+    {
+      cerr << "InstancedMeshBase::updateInstancesList(): WebGL2 context or Mesh3d is not set."
+           << endl;
+      return;
+    }
+
     shared_lock<shared_mutex> lock(mutex_);
 
     // Update layered instances based on RenderLayer from instances
@@ -682,8 +691,6 @@ namespace builtin_scene
       if (layeredInstances_.find(layer) == layeredInstances_.end())
       {
         // Create new RenderableInstancesList for this layer using mesh3d's VAO
-        auto glContext = glContext_.lock();
-        auto mesh3d = mesh3d_.lock();
         if (glContext != nullptr)
         {
           auto layerVao = glContext->createVertexArray();
@@ -713,7 +720,11 @@ namespace builtin_scene
       }
     }
 
-    // Update depth-only instances with all instances for unified DepthOnlyPass
+    // Update depth-only instances with all instances for use in `DepthOnlyPass`.
+    //
+    // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or 
+    // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is 
+    // written and no blending occurs.
     depthOnlyInstances_->update(idToInstanceMap_, RenderableInstancesList::SortingOrder::kNone /* Disable sorting */);
 
     isStructureDirty_ = false;
