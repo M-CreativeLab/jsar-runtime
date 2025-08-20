@@ -140,6 +140,22 @@ namespace builtin_scene
       layer_ = layer;
     }
 
+    /**
+     * Check if the content is a scrollable container.
+     */
+    inline bool isScrollableContainer() const
+    {
+      return is_scrollable_container_;
+    }
+
+    /**
+     * Set the content as a scrollable container.
+     */
+    inline void setIsScrollableContainer(bool value)
+    {
+      is_scrollable_container_ = value;
+    }
+
     // Returns if the surface is valid.
     bool resetSkSurface(float width, float height);
     SkCanvas *canvas() const;
@@ -328,7 +344,10 @@ namespace builtin_scene
   private:
     sk_sp<SkSurface> surface_;
     std::string name_;
+
     int layer_;
+    bool is_scrollable_container_;
+
     client_cssom::ComputedStyle style_;
     std::optional<client_layout::Fragment> last_fragment_;
     WebContentStyle content_style_;

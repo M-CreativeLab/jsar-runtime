@@ -194,6 +194,7 @@ namespace builtin_scene
 
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
+    IMPL_BOOL_SETTER(IsScrollableContainer, isScrollableContainer_)
     IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
     IMPL_SETTER(RenderLayer, renderLayer_, RenderLayer)
 #undef IMPL_BOOL_SETTER
@@ -262,6 +263,7 @@ namespace builtin_scene
     bool enabled_ = false;
     bool maybeInvisible_ = true;
     bool isOpaque_ = false;
+    bool isScrollableContainer_ = false;
 
   private:
     std::vector<std::weak_ptr<RenderableInstancesList>> holders_;

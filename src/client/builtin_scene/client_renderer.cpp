@@ -313,6 +313,8 @@ namespace builtin_scene
           needsUpdate = true;
         if (instance.setRenderLayer(webContentComponent->layer()))
           needsUpdate = true;
+        if (instance.setIsScrollableContainer(webContentComponent->isScrollableContainer()))
+          needsUpdate = true;
 
         // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);

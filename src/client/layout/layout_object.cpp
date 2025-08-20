@@ -194,7 +194,10 @@ namespace client_layout
     {
       auto webContent = getSceneComponent<WebContent>();
       if (webContent != nullptr)
+      {
         webContent->setLayer(layer_);
+        webContent->setIsScrollableContainer(isScrollContainer());
+      }
     }
 
     // Recursively update all children

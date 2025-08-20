@@ -403,6 +403,7 @@ namespace builtin_scene
       glContext_->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
     }
   }
+
   void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
     if (isVolumeMaskEnabled())
