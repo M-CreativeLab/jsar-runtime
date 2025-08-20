@@ -80,7 +80,7 @@ namespace builtin_scene
       bufferInitialized_ = true;
   }
 
-  void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext)
+  void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext, shared_ptr<WebGLVertexArray> vao)
   {
     if (!glContext ||
         !bufferInitialized_ ||
@@ -96,11 +96,14 @@ namespace builtin_scene
       indexData.push_back(splat.index);
 
     // Upload to GPU
-    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
-    glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
-                          indexData.size() * sizeof(uint32_t),
-                          indexData.data(),
-                          WebGLBufferUsage::kDynamicDraw);
+    {
+      WebGLVertexArrayScope vaoScope(glContext, vao);
+      glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
+      glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
+                            indexData.size() * sizeof(uint32_t),
+                            indexData.data(),
+                            WebGLBufferUsage::kDynamicDraw);
+    }
     setDirty(false);
 
     DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());

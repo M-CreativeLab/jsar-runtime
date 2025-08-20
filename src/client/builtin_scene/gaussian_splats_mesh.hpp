@@ -185,7 +185,8 @@ namespace builtin_scene
      * Update the splat instance buffer with current splat indices.
      * This uploads only the sorted indices to GPU for rendering.
      */
-    void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext);
+    void updateSplatBuffer(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                           std::shared_ptr<client_graphics::WebGLVertexArray> vao);
 
     /**
      * Update the splat data textures with all splat properties.
