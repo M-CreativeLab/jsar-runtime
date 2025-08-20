@@ -1,25 +1,27 @@
-#include <client/logger.hpp>
 #include <cstring>
 #include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <cstdint>
+#include <client/logger.hpp>
 
 #include "./ply_loader.hpp"
 
 namespace builtin_scene::model_loaders
 {
+  using namespace std;
+
   static constexpr float SH_C0 = 0.28209479177387814f;
 
   bool PlyLoader::DecodePly(
-    const std::vector<char> &fileBytes,
-    std::function<void(int numSplats)> initNumSplats,
+    const vector<char> &fileBytes,
+    function<void(int numSplats)> initNumSplats,
     SplatCallback splatCallback)
   {
     try
     {
       size_t headerEnd;
-      std::unordered_map<std::string, PlyElement> elements;
+      unordered_map<string, PlyElement> elements;
       bool littleEndian;
 
       // Parse header
@@ -44,19 +46,22 @@ namespace builtin_scene::model_loaders
 
       // Parse vertex data
       const char *binaryData = fileBytes.data() + headerEnd;
-      ParseElementData(binaryData, vertexElement, littleEndian, [&splatCallback](int index, const std::unordered_map<std::string, float> &properties)
+      ParseElementData(binaryData,
+                       vertexElement,
+                       littleEndian,
+                       [&splatCallback](int index, const unordered_map<string, float> &properties)
                        { ExtractSplatData(index, properties, splatCallback); });
 
       return true;
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
-      logging::LogError("PlyLoader: Error decoding PLY file - " + std::string(e.what()));
+      logging::LogError("PlyLoader: Error decoding PLY file - " + string(e.what()));
       return false;
     }
   }
 
-  bool PlyLoader::Load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
+  bool PlyLoader::Load(const vector<char> &data, vector<builtin_scene::GaussianSplat> &splats)
   {
     auto initSplats = [&splats](int numSplats)
     {
@@ -101,16 +106,16 @@ namespace builtin_scene::model_loaders
   }
 
   bool PlyLoader::ParseHeader(
-    const std::vector<char> &fileBytes,
+    const vector<char> &fileBytes,
     size_t &headerEnd,
-    std::unordered_map<std::string, PlyElement> &elements,
+    unordered_map<string, PlyElement> &elements,
     bool &littleEndian)
   {
     // Find header terminator
-    const std::string headerTerminator = "end_header\n";
-    std::string header(fileBytes.begin(), fileBytes.end());
+    const string headerTerminator = "end_header\n";
+    string header(fileBytes.begin(), fileBytes.end());
     size_t endPos = header.find(headerTerminator);
-    if (endPos == std::string::npos)
+    if (endPos == string::npos)
     {
       logging::LogError("PlyLoader: Header terminator not found");
       return false;
@@ -120,13 +125,13 @@ namespace builtin_scene::model_loaders
     header = header.substr(0, headerEnd);
 
     // Parse header lines
-    std::istringstream headerStream(header);
-    std::string line;
+    istringstream headerStream(header);
+    string line;
     bool firstLine = true;
     PlyElement *currentElement = nullptr;
     littleEndian = true; // Default
 
-    while (std::getline(headerStream, line))
+    while (getline(headerStream, line))
     {
       // Remove carriage return if present
       if (!line.empty() && line.back() == '\r')
@@ -138,8 +143,8 @@ namespace builtin_scene::model_loaders
       if (line.empty())
         continue;
 
-      std::istringstream lineStream(line);
-      std::string keyword;
+      istringstream lineStream(line);
+      string keyword;
       lineStream >> keyword;
 
       if (firstLine)
@@ -155,7 +160,7 @@ namespace builtin_scene::model_loaders
 
       if (keyword == "format")
       {
-        std::string format, version;
+        string format, version;
         lineStream >> format >> version;
 
         if (format == "binary_little_endian")
@@ -180,7 +185,7 @@ namespace builtin_scene::model_loaders
       }
       else if (keyword == "element")
       {
-        std::string name;
+        string name;
         int count;
         lineStream >> name >> count;
 
@@ -199,7 +204,7 @@ namespace builtin_scene::model_loaders
           return false;
         }
 
-        std::string typeOrList;
+        string typeOrList;
         lineStream >> typeOrList;
 
         PlyProperty property;
@@ -207,19 +212,19 @@ namespace builtin_scene::model_loaders
         if (typeOrList == "list")
         {
           property.isList = true;
-          std::string countTypeStr, typeStr, name;
+          string countTypeStr, typeStr, name;
           lineStream >> countTypeStr >> typeStr >> name;
           property.countType = StringToPropertyType(countTypeStr);
           property.type = StringToPropertyType(typeStr);
-          currentElement->properties.push_back(std::make_pair(name, property));
+          currentElement->properties.push_back(make_pair(name, property));
         }
         else
         {
           property.isList = false;
           property.type = StringToPropertyType(typeOrList);
-          std::string name;
+          string name;
           lineStream >> name;
-          currentElement->properties.push_back(std::make_pair(name, property));
+          currentElement->properties.push_back(make_pair(name, property));
         }
       }
       else if (keyword == "comment")
@@ -240,17 +245,17 @@ namespace builtin_scene::model_loaders
     const char *data,
     const PlyElement &element,
     bool littleEndian,
-    std::function<void(int index, const std::unordered_map<std::string, float> &item)> callback)
+    function<void(int index, const unordered_map<string, float> &item)> callback)
   {
     size_t offset = 0;
 
     for (int i = 0; i < element.count; ++i)
     {
-      std::unordered_map<std::string, float> item;
+      unordered_map<string, float> item;
 
       for (const auto &prop : element.properties)
       {
-        const std::string &propName = prop.first;
+        const string &propName = prop.first;
         const PlyProperty &property = prop.second;
 
         if (property.isList)
@@ -360,7 +365,7 @@ namespace builtin_scene::model_loaders
     }
   }
 
-  PlyLoader::PropertyType PlyLoader::StringToPropertyType(const std::string &typeStr)
+  PlyLoader::PropertyType PlyLoader::StringToPropertyType(const string &typeStr)
   {
     if (typeStr == "char")
       return PropertyType::CHAR;
@@ -385,7 +390,7 @@ namespace builtin_scene::model_loaders
 
   void PlyLoader::ExtractSplatData(
     int index,
-    const std::unordered_map<std::string, float> &properties,
+    const unordered_map<string, float> &properties,
     SplatCallback splatCallback)
   {
     // Extract position (required)
@@ -407,9 +412,9 @@ namespace builtin_scene::model_loaders
 
     // Extract scale (with defaults)
     static constexpr float DEFAULT_SCALE = 0.001f;
-    float scaleX = hasScales ? std::exp(properties.at("scale_0")) : DEFAULT_SCALE;
-    float scaleY = hasScales ? std::exp(properties.at("scale_1")) : DEFAULT_SCALE;
-    float scaleZ = hasScales ? std::exp(properties.at("scale_2")) : DEFAULT_SCALE;
+    float scaleX = hasScales ? exp(properties.at("scale_0")) : DEFAULT_SCALE;
+    float scaleY = hasScales ? exp(properties.at("scale_1")) : DEFAULT_SCALE;
+    float scaleZ = hasScales ? exp(properties.at("scale_2")) : DEFAULT_SCALE;
 
     // Extract rotation quaternion (with defaults)
     float quatW = hasRotations ? properties.at("rot_0") : 1.0f; // W component
@@ -421,7 +426,7 @@ namespace builtin_scene::model_loaders
     float opacity = 1.0f;
     if (properties.find("opacity") != properties.end())
     {
-      opacity = 1.0f / (1.0f + std::exp(-properties.at("opacity"))); // Sigmoid activation
+      opacity = 1.0f / (1.0f + exp(-properties.at("opacity"))); // Sigmoid activation
     }
 
     // Extract color (with defaults)
@@ -434,9 +439,9 @@ namespace builtin_scene::model_loaders
       b = 0.5f + SH_C0 * properties.at("f_dc_2");
 
     // Clamp colors to valid range
-    r = std::max(0.0f, std::min(1.0f, r));
-    g = std::max(0.0f, std::min(1.0f, g));
-    b = std::max(0.0f, std::min(1.0f, b));
+    r = max(0.0f, min(1.0f, r));
+    g = max(0.0f, min(1.0f, g));
+    b = max(0.0f, min(1.0f, b));
 
     splatCallback(index, x, y, z, scaleX, scaleY, scaleZ, quatX, quatY, quatZ, quatW, opacity, r, g, b);
   }
@@ -447,7 +452,7 @@ namespace builtin_scene::model_loaders
     static_assert(sizeof(T) <= 8, "Unsupported type size");
 
     // Copy bytes from data
-    std::memcpy(&value, data + offset, sizeof(T));
+    memcpy(&value, data + offset, sizeof(T));
 
     // Handle endianness if needed for multi-byte types
     if (sizeof(T) > 1)

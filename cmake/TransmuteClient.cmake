@@ -14,10 +14,14 @@ file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
     "src/client/scripting_base/*.cpp"
     "src/client/scroll/*.cpp"
     "src/client/xr/*.cpp"
+    "src/client/logger.cpp"
     "src/pugixml/*.cpp"
 )
 file(GLOB TR_CLIENT_SOURCE
-    "src/client/*.cpp"
+    "src/client/per_process.cpp"
+    "src/client/hive_server.cpp"
+    "src/client/entry.cpp"
+    "src/client/main.cpp"
 )
 
 if(TR_ENABLE_INSPECTOR)
