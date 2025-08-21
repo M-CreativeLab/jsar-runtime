@@ -462,14 +462,6 @@ namespace builtin_scene
      */
     bool removeInstance(ecs::EntityId id);
 
-    inline RenderableInstancesList &getOpaqueInstancesList() const
-    {
-      return *opaqueInstances_;
-    }
-    inline RenderableInstancesList &getTransparentInstancesList() const
-    {
-      return *transparentInstances_;
-    }
     inline RenderableInstancesList &getDepthOnlyInstancesList() const
     {
       return *depthOnlyInstances_;
@@ -545,8 +537,6 @@ namespace builtin_scene
   protected:
     mutable std::shared_mutex mutex_;
     InstanceMap idToInstanceMap_;
-    std::shared_ptr<RenderableInstancesList> opaqueInstances_;
-    std::shared_ptr<RenderableInstancesList> transparentInstances_;
     std::map<RenderLayer, LayeredInstancesData> layeredInstances_;
     std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
 
