@@ -135,8 +135,8 @@ namespace builtin_scene::materials
     // 3. Rendering content belonging to this container with stencil testing
     auto renderLayerWithMask = [&](RenderLayer layer,
                                    uint32_t containerId,
-                                   RenderableInstancesList *containerInstance,
-                                   RenderableInstancesList *contentInstances)
+                                   ContainerInstance *containerInstance,
+                                   ContentInstancesList *contentInstances)
     {
       bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
       bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;

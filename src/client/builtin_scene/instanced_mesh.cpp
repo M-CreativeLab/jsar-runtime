@@ -168,15 +168,6 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
-  void Instance::setContainerId(uint32_t containerId)
-  {
-    if (data_.containerId == containerId)
-      return; // Skip if there is no change.
-
-    data_.containerId = containerId;
-    notifyBufferDataChanged();
-  }
-
   bool Instance::hasNoBorders() const
   {
     // Fast check for none border style.
@@ -253,9 +244,9 @@ namespace builtin_scene
                       hasNoBorders();
   }
 
-  RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
-                                                   shared_ptr<WebGLVertexArray> vao,
-                                                   shared_ptr<WebGLBuffer> instanceVbo)
+  InstanceListBase::InstanceListBase(InstanceFilter filter,
+                                     shared_ptr<WebGLVertexArray> vao,
+                                     shared_ptr<WebGLBuffer> instanceVbo)
       : filter(filter)
       , vao(vao)
       , instanceVbo(instanceVbo)
@@ -264,9 +255,9 @@ namespace builtin_scene
   {
   }
 
-  size_t RenderableInstancesList::configureAttribs(shared_ptr<WebGL2Context> glContext,
-                                                   shared_ptr<WebGLProgram> program,
-                                                   shared_ptr<Mesh3d> mesh3d)
+  size_t InstanceListBase::configureAttribs(shared_ptr<WebGL2Context> glContext,
+                                            shared_ptr<WebGLProgram> program,
+                                            shared_ptr<Mesh3d> mesh3d)
   {
     WebGLVertexArrayScope vaoScope(glContext, vao);
 
@@ -369,7 +360,7 @@ namespace builtin_scene
     return attribsCount;
   }
 
-  void RenderableInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
+  void InstanceListBase::update(const InstanceMap &instances, SortingOrder sortingOrder)
   {
     clearInstances(); // Clear the instances first.
 
@@ -420,7 +411,7 @@ namespace builtin_scene
     markTextureDataAsDirty();
   }
 
-  size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
+  size_t InstanceListBase::copyToArrayData(vector<InstanceData> &dst)
   {
     size_t len = 0;
     for (auto &instance : list_)
@@ -436,7 +427,7 @@ namespace builtin_scene
     return len * sizeof(InstanceData);
   }
 
-  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
+  void InstanceListBase::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
   {
     // Update instance VBO if structure is dirty
     if (bufferDataDirty_)
@@ -464,11 +455,11 @@ namespace builtin_scene
     }
   }
 
-  void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
+  void InstanceListBase::afterInstancedDraw(WebGL2Context &glContext)
   {
   }
 
-  vector<shared_ptr<Instance>> RenderableInstancesList::getInstances() const
+  vector<shared_ptr<Instance>> InstanceListBase::getInstances() const
   {
     vector<shared_ptr<Instance>> instances;
     for (const auto &weakInstance : list_)
@@ -485,7 +476,7 @@ namespace builtin_scene
     return instances;
   }
 
-  void RenderableInstancesList::clearInstances()
+  void InstanceListBase::clearInstances()
   {
     for (auto &instance : list_)
     {
@@ -501,7 +492,7 @@ namespace builtin_scene
     textureDataDirty_ = true;
   }
 
-  void RenderableInstancesList::addInstance(shared_ptr<Instance> instance)
+  void InstanceListBase::addInstance(shared_ptr<Instance> instance)
   {
     if (TR_UNLIKELY(instance == nullptr))
       return;
@@ -726,7 +717,7 @@ namespace builtin_scene
                                                                           layerVbo);
         layerData.contentInstances->configureAttribs(glContext, program, mesh3d);
         layerData.contentInstances->update(renderableInstanceMaps[layer],
-                                           RenderableInstancesList::SortingOrder::kFrontToBack);
+                                           InstanceListBase::SortingOrder::kFrontToBack);
       }
 
       // Create or update container instances list (if layer has containers)
@@ -739,7 +730,7 @@ namespace builtin_scene
                                                                            containerVbo);
         layerData.containerInstance->configureAttribs(glContext, program, mesh3d);
         layerData.containerInstance->update(containerInstanceMaps[layer],
-                                            RenderableInstancesList::SortingOrder::kNone);
+                                            InstanceListBase::SortingOrder::kNone);
       }
 
       layeredInstances_.push_back(std::move(layerData));
@@ -750,7 +741,7 @@ namespace builtin_scene
     // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or
     // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is
     // written and no blending occurs.
-    depthOnlyInstances_->update(idToInstanceMap_, RenderableInstancesList::SortingOrder::kNone /* Disable sorting */);
+    depthOnlyInstances_->update(idToInstanceMap_, InstanceListBase::SortingOrder::kNone /* Disable sorting */);
 
     // Mark the structure as clean after updating.
     isStructureDirty_ = false;

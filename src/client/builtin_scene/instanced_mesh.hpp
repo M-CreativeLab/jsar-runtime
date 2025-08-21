@@ -42,7 +42,6 @@ namespace builtin_scene
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
         , enableSDFTexture(0.0f)
-        , containerId(0)
     {
     }
     glm::mat4 transform;    /** element transformation */
@@ -55,7 +54,6 @@ namespace builtin_scene
     glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
     uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
     float enableSDFTexture; /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
-    uint32_t containerId;   /** Container ID (0 = no container, >0 = specific container ID) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -70,7 +68,6 @@ namespace builtin_scene
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
          << "  enableSDFTexture=" << data.enableSDFTexture << std::endl
-         << "  containerId=" << data.containerId << std::endl
          << ")";
       return os;
     }
@@ -181,7 +178,6 @@ namespace builtin_scene
     void setBorderColor(float r, float g, float b, float a);
     void setBorderStyle(float borderStyle);
     void setSDFTextureEnabled(bool);
-    void setContainerId(uint32_t containerId);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -305,12 +301,12 @@ namespace builtin_scene
     }
 
     RenderLayer layer;
-    uint32_t containerId;                                       // Unique container ID (0 = no container)
-    std::shared_ptr<RenderableInstancesList> containerInstance; // Single container mask
-    std::shared_ptr<RenderableInstancesList> contentInstances;  // Content for this container
+    uint32_t containerId;                                   // Unique container ID (0 = no container)
+    std::shared_ptr<ContainerInstance> containerInstance;   // Single container mask
+    std::shared_ptr<ContentInstancesList> contentInstances; // Content for this container
   };
 
-  class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
+  class InstanceListBase : public std::enable_shared_from_this<InstanceListBase>
   {
     friend class Instance;
     friend class InstancedMeshBase;
@@ -327,9 +323,9 @@ namespace builtin_scene
     };
 
   public:
-    RenderableInstancesList(InstanceFilter filter,
-                            std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                            std::shared_ptr<client_graphics::WebGLBuffer> vbo);
+    InstanceListBase(InstanceFilter filter,
+                     std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                     std::shared_ptr<client_graphics::WebGLBuffer> vbo);
 
   public:
     inline size_t count() const
@@ -400,6 +396,43 @@ namespace builtin_scene
     bool bufferDataDirty_ = true;
     bool textureDataDirty_ = true;
   };
+
+  // Derived class for container instances (with container ID)
+  class ContainerInstance : public InstanceListBase
+  {
+  public:
+    ContainerInstance(uint32_t containerId,
+                      InstanceFilter filter,
+                      std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                      std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+        : InstanceListBase(filter, vao, vbo)
+        , containerId_(containerId)
+    {
+    }
+
+    uint32_t getContainerId() const
+    {
+      return containerId_;
+    }
+
+  private:
+    uint32_t containerId_;
+  };
+
+  // Derived class for content instances list
+  class ContentInstancesList : public InstanceListBase
+  {
+  public:
+    ContentInstancesList(InstanceFilter filter,
+                         std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                         std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+        : InstanceListBase(filter, vao, vbo)
+    {
+    }
+  };
+
+  // Type alias for backward compatibility during transition
+  using RenderableInstancesList = InstanceListBase;
 
   class InstancedMeshBase
   {
@@ -486,18 +519,18 @@ namespace builtin_scene
 
     using LayerCallback = std::function<void(RenderLayer layer,
                                              uint32_t containerId,
-                                             RenderableInstancesList *containerInstance,
-                                             RenderableInstancesList *contentInstances)>;
+                                             ContainerInstance *containerInstance,
+                                             ContentInstancesList *contentInstances)>;
     inline void iterateLayers(LayerCallback callback) const
     {
       for (const auto &layerData : layeredInstances_)
       {
-        RenderableInstancesList *contentInstances =
+        ContentInstancesList *contentInstances =
           (layerData.contentInstances && layerData.contentInstances->count() > 0)
             ? layerData.contentInstances.get()
             : nullptr;
 
-        RenderableInstancesList *containerInstance =
+        ContainerInstance *containerInstance =
           (layerData.containerInstance && layerData.containerInstance->count() > 0)
             ? layerData.containerInstance.get()
             : nullptr;
