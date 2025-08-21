@@ -11,6 +11,7 @@
 
 #include <common/math3d/utils.hpp>
 #include <client/graphics/webgl_context.hpp>
+#include <client/logger.hpp>
 
 #include "./ecs.hpp"
 #include "./meshes/builder.hpp"
@@ -195,7 +196,8 @@ namespace builtin_scene
 
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
-    IMPL_BOOL_SETTER(IsScrollableContainer, isScrollableContainer_)
+    IMPL_BOOL_SETTER(IsContainer, isContainer_)
+    IMPL_SETTER(BelongsToContainerId, belongsToContainerId_, uint32_t)
     IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
     IMPL_SETTER(RenderLayer, renderLayer_, RenderLayer)
 #undef IMPL_BOOL_SETTER
@@ -264,7 +266,9 @@ namespace builtin_scene
     bool enabled_ = false;
     bool maybeInvisible_ = true;
     bool isOpaque_ = false;
-    bool isScrollableContainer_ = false;
+
+    bool isContainer_ = false;
+    uint32_t belongsToContainerId_ = 0;
 
   private:
     std::vector<std::weak_ptr<RenderableInstancesList>> holders_;
@@ -292,9 +296,9 @@ namespace builtin_scene
     // Current instances used for rendering
     std::shared_ptr<RenderableInstancesList> renderableInstances;
 
-    // All scrollable container instances for mask/stencil rendering
+    // All container instances for mask/stencil rendering
     // (updated regardless of whether they are rendered in current frame)
-    std::shared_ptr<RenderableInstancesList> scrollableContainerInstances;
+    std::shared_ptr<RenderableInstancesList> containerInstances;
   };
 
   class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
@@ -487,7 +491,7 @@ namespace builtin_scene
         {
           callback(layer,
                    *renderableInstances,
-                   layerData.scrollableContainerInstances.get());
+                   layerData.containerInstances.get());
         }
       }
     }

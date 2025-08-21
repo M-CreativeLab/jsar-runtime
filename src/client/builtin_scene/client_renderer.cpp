@@ -307,14 +307,11 @@ namespace builtin_scene
       // Update for web content component
       if (TR_LIKELY(webContentComponent != nullptr))
       {
-        if (instance.setEnabled(true))
-          needsUpdate = true;
-        if (instance.setOpaque(webContentComponent->isOpaque()))
-          needsUpdate = true;
-        if (instance.setRenderLayer(webContentComponent->layer()))
-          needsUpdate = true;
-        if (instance.setIsScrollableContainer(webContentComponent->isScrollableContainer()))
-          needsUpdate = true;
+        needsUpdate |= instance.setEnabled(true);
+        needsUpdate |= instance.setOpaque(webContentComponent->isOpaque());
+        needsUpdate |= instance.setRenderLayer(webContentComponent->layer());
+        needsUpdate |= instance.setIsContainer(webContentComponent->isScrollableContainer());
+        needsUpdate |= instance.setBelongsToContainerId(webContentComponent->belongsToScrollableContainer());
 
         // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);

@@ -676,7 +676,7 @@ namespace builtin_scene
     // Update layered instances based on RenderLayer from instances
     set<RenderLayer> allLayers;
     map<RenderLayer, InstanceMap> renderableInstanceMaps;
-    map<RenderLayer, InstanceMap> scrollableContainerInstanceMaps;
+    map<RenderLayer, InstanceMap> containerInstanceMaps;
     for (auto &[id, instance] : idToInstanceMap_)
     {
       if (instance != nullptr)
@@ -688,9 +688,9 @@ namespace builtin_scene
           renderableInstanceMaps[layer][id] = instance;
           shouldInsertLayer = true;
         }
-        if (instance->isScrollableContainer_)
+        if (instance->isContainer_)
         {
-          scrollableContainerInstanceMaps[layer][id] = instance;
+          containerInstanceMaps[layer][id] = instance;
           shouldInsertLayer = true;
         }
         if (shouldInsertLayer)
@@ -727,22 +727,22 @@ namespace builtin_scene
                                                 RenderableInstancesList::SortingOrder::kFrontToBack);
       }
 
-      // Create or update scrollable container instances list (if layer has scrollable containers)
-      if (scrollableContainerInstanceMaps.find(layer) != scrollableContainerInstanceMaps.end())
+      // Create or update container instances list (if layer has containers)
+      if (containerInstanceMaps.find(layer) != containerInstanceMaps.end())
       {
-        if (layerData.scrollableContainerInstances == nullptr)
+        if (layerData.containerInstances == nullptr)
         {
-          auto scrollableVao = glContext->createVertexArray();
-          auto scrollableVbo = glContext->createBuffer();
-          layerData.scrollableContainerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
-                                                                                        scrollableVao,
-                                                                                        scrollableVbo);
-          layerData.scrollableContainerInstances->configureAttribs(glContext, program, mesh3d);
+          auto containerVao = glContext->createVertexArray();
+          auto containerVbo = glContext->createBuffer();
+          layerData.containerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
+                                                                             containerVao,
+                                                                             containerVbo);
+          layerData.containerInstances->configureAttribs(glContext, program, mesh3d);
         }
 
-        if (layerData.scrollableContainerInstances != nullptr) [[likely]]
-          layerData.scrollableContainerInstances->update(scrollableContainerInstanceMaps[layer],
-                                                         RenderableInstancesList::SortingOrder::kNone);
+        if (layerData.containerInstances != nullptr) [[likely]]
+          layerData.containerInstances->update(containerInstanceMaps[layer],
+                                                RenderableInstancesList::SortingOrder::kNone);
       }
     }
 
@@ -752,7 +752,7 @@ namespace builtin_scene
     {
       auto layer = it->first;
       if (renderableInstanceMaps.find(layer) == renderableInstanceMaps.end() &&
-          scrollableContainerInstanceMaps.find(layer) == scrollableContainerInstanceMaps.end())
+          containerInstanceMaps.find(layer) == containerInstanceMaps.end())
       {
         it = layeredInstances_.erase(it);
       }

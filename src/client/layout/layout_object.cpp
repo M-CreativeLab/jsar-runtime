@@ -196,7 +196,16 @@ namespace client_layout
       if (webContent != nullptr)
       {
         webContent->setLayer(layer_);
-        webContent->setIsScrollableContainer(isScrollContainer());
+        if (isScrollContainer())
+        {
+          webContent->setIsScrollableContainer(true);
+          webContent->setBelongsToScrollableContainer(entity_.value());
+        }
+        else
+        {
+          webContent->setIsScrollableContainer(false);
+          webContent->setBelongsToScrollableContainer(containingScrollContainer()->entity());
+        }
       }
     }
 
