@@ -605,7 +605,7 @@ namespace builtin_scene::model_loaders
       }
 
       // Extract splat data
-      ExtractSplatData(i, properties, [&batchSplats, this](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
+      ExtractSplatData(i, properties, [&batchSplats](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
                        {
         builtin_scene::GaussianSplat splat = createSplat(
           index, x, -y, -z,  // Apply coordinate system conversion

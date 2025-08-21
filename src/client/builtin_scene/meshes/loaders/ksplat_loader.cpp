@@ -1,6 +1,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <client/logger.hpp>
 
 #include "./ksplat_loader.hpp"
 
@@ -384,7 +385,7 @@ namespace builtin_scene::model_loaders
     }
   }
 
-  bool KsplatLoader::load(const vector<char> &data, vector<builtin_scene::GaussianSplat> &splats)
+  bool KsplatLoader::Load(const vector<char> &data, vector<builtin_scene::GaussianSplat> &splats)
   {
     splats.clear();
 
@@ -486,7 +487,7 @@ namespace builtin_scene::model_loaders
   // Progressive loading implementation
   bool KsplatLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
-    return load(data, splats);
+    return Load(data, splats);
   }
 
   bool KsplatLoader::initProgressiveLoading(const std::vector<char> &data, ProgressCallback progressCallback)

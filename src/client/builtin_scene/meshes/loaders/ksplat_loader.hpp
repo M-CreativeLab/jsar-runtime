@@ -49,7 +49,7 @@ namespace builtin_scene::model_loaders
      * @param splats Output vector to store loaded splats
      * @return true if loading was successful, false otherwise
      */
-    static bool load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
+    static bool Load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats);
 
   private:
     // Compression level definitions

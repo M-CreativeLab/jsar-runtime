@@ -26,20 +26,19 @@ namespace dom
       setType(getAttribute("type"));
     if (hasAttribute("autoplay"))
       setAutoplay(getAttribute("autoplay") == "true" || hasAttribute("autoplay"));
-    if (hasAttribute("loading"))
-    {
-      string loadingValue = getAttribute("loading");
-      if (loadingValue == "lazy")
-        setLoading(LoadingHint::kLoadingLazy);
-      else if (loadingValue == "eager")
-        setLoading(LoadingHint::kLoadingEager);
-      else if (loadingValue == "progressive")
-        setLoading(LoadingHint::kLoadingProgressive);
-      else
-        setLoading(LoadingHint::kLoadingAuto);
-    }
-
-    loading_ = from_scripting ? LoadingHint::kLoadingEager : LoadingHint::kLoadingLazy;
+    // if (hasAttribute("loading"))
+    // {
+    //   string loadingValue = getAttribute("loading");
+    //   if (loadingValue == "lazy")
+    //     setLoading(LoadingHint::kLoadingLazy);
+    //   else if (loadingValue == "eager")
+    //     setLoading(LoadingHint::kLoadingEager);
+    //   else if (loadingValue == "progressive")
+    //     setLoading(LoadingHint::kLoadingProgressive);
+    //   else
+    //     setLoading(LoadingHint::kLoadingAuto);
+    // }
+    // loading_ = from_scripting ? LoadingHint::kLoadingAuto : LoadingHint::kLoadingLazy;
   }
 
   void HTMLModelElement::connectedCallback()
@@ -300,7 +299,7 @@ namespace dom
       }
 
       // Full loading (either not progressive mode or progressive fallback)
-      if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
+      if (model_loaders::KsplatLoader::Load(modelData, parsedSplats))
       {
         // Store parsed splats directly (unified type)
         parsed_splats_ = move(parsedSplats);
@@ -334,7 +333,7 @@ namespace dom
       }
 
       // Full loading (either not progressive mode or progressive fallback)
-      if (model_loaders::SpzLoader::load(modelData, parsedSplats))
+      if (model_loaders::SpzLoader::Load(modelData, parsedSplats))
       {
         // Store parsed splats directly (unified type)
         parsed_splats_ = move(parsedSplats);

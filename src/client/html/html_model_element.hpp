@@ -3,6 +3,7 @@
 #include <string>
 #include <optional>
 #include <client/html/html_element.hpp>
+#include <client/builtin_scene/meshes/loaders/gaussian_splat_loader.hpp>
 #include <client/builtin_scene/gaussian_splatting.hpp>
 
 namespace dom
@@ -169,7 +170,7 @@ namespace dom
     std::string src_;
     std::optional<std::string> type_;
     bool autoplay_ = false;
-    LoadingHint loading_ = LoadingHint::kLoadingAuto;
+    LoadingHint loading_ = LoadingHint::kLoadingProgressive;
 
     // Model loading state management (similar to HTMLImageElement)
     std::optional<std::vector<char>> model_data_ = std::nullopt;
@@ -181,7 +182,7 @@ namespace dom
     std::optional<std::vector<builtin_scene::GaussianSplat>> parsed_splats_ = std::nullopt;
 
     // Progressive loading state
-    std::unique_ptr<builtin_scene::model_loaders::GaussianSplatLoader> progressive_loader_ = nullptr;
+    std::shared_ptr<builtin_scene::model_loaders::GaussianSplatLoader> progressive_loader_ = nullptr;
     std::vector<char> progressive_model_data_;
     bool progressive_loading_active_ = false;
     size_t progressive_batch_size_ = 1000; // Default batch size

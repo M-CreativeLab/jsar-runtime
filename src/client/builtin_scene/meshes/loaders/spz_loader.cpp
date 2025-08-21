@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <node/zlib.h>
+#include <client/logger.hpp>
 
 #include "./spz_loader.hpp"
 
@@ -257,7 +258,7 @@ namespace builtin_scene::model_loaders
     }
   }
 
-  bool SpzLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
+  bool SpzLoader::Load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
     splats.clear();
 
@@ -408,7 +409,7 @@ namespace builtin_scene::model_loaders
   // Progressive loading implementation
   bool SpzLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
   {
-    return load(data, splats);
+    return Load(data, splats);
   }
 
   bool SpzLoader::initProgressiveLoading(const std::vector<char> &data, ProgressCallback progressCallback)
