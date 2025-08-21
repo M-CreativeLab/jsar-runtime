@@ -16,80 +16,19 @@
       font-size: 80px;
     }
 
-    h2 {
-      font-size: 60px;
-    }
-
     p {
       font-size: 40px;
-    }
-
-    .model-container {
-      height: 30px; 
-      width: 30px;
-      margin: 20px 0;
     }
   </style>
 </head>
 
 <body>
   <h1>3D Gaussian Splatting</h1>
-  
-  <h2>Loading Modes Test</h2>
-  
-  <p>Eager loading (default):</p>
-  <div class="model-container">
-    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="eager-model" loading="eager">
+  <p>https://sparkjs.dev/assets/splats/cat.spz</p>
+  <div style="height: 30px; width: 30px;">
+    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="test-model">
     </model>
   </div>
-
-  <p>Lazy loading:</p>
-  <div class="model-container">
-    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="lazy-model" loading="lazy">
-    </model>
-  </div>
-
-  <p>Progressive loading (new feature):</p>
-  <div class="model-container">
-    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="progressive-model" loading="progressive">
-    </model>
-  </div>
-
-  <p>Auto loading (browser decides):</p>
-  <div class="model-container">
-    <model src="https://sparkjs.dev/assets/splats/cat.spz" id="auto-model" loading="auto">
-    </model>
-  </div>
-
-  <script>
-    // Test the loading attribute programmatically
-    console.log('Testing HTMLModelElement loading attribute:');
-    
-    const eagerModel = document.getElementById('eager-model');
-    const lazyModel = document.getElementById('lazy-model');
-    const progressiveModel = document.getElementById('progressive-model');
-    const autoModel = document.getElementById('auto-model');
-    
-    console.log('Eager model loading:', eagerModel.loading);
-    console.log('Lazy model loading:', lazyModel.loading);
-    console.log('Progressive model loading:', progressiveModel.loading);
-    console.log('Auto model loading:', autoModel.loading);
-    
-    // Test setting loading mode programmatically
-    progressiveModel.loading = 'progressive';
-    console.log('Progressive model loading after setting:', progressiveModel.loading);
-    
-    // Test with invalid loading mode (should default to auto)
-    progressiveModel.loading = 'invalid';
-    console.log('Progressive model loading after invalid value:', progressiveModel.loading);
-    
-    // Test with GLTF model (progressive should be ignored)
-    const gltfModel = document.createElement('model');
-    gltfModel.src = 'model.glb';
-    gltfModel.loading = 'progressive';
-    console.log('GLTF model with progressive loading:', gltfModel.loading);
-    document.body.appendChild(gltfModel);
-  </script>
 </body>
 
 </html>
