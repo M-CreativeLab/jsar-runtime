@@ -3,6 +3,7 @@
 #include <string>
 #include <optional>
 #include <client/html/html_element.hpp>
+#include <client/builtin_scene/gaussian_splatting.hpp>
 
 namespace dom
 {
@@ -19,15 +20,9 @@ namespace dom
     using HTMLElement::HTMLElement;
 
   public:
-    // Forward declarations for data structures that can be shared with layout
-    struct GaussianSplat
-    {
-      float position[3];
-      float color[3];
-      float opacity;
-      float scale[3];
-      float rotation[4];
-    };
+    // Use unified GaussianSplat type from builtin_scene
+    using GaussianSplat = builtin_scene::GaussianSplat;
+
     enum LoadingHint
     {
       // Loads the model immediately, regardless of whether or not the model is currently within the visible viewport
@@ -183,7 +178,13 @@ namespace dom
     bool is_src_model_decoded_ = false;
 
     // Parsed model data (ready for layout)
-    std::optional<std::vector<GaussianSplat>> parsed_splats_ = std::nullopt;
+    std::optional<std::vector<builtin_scene::GaussianSplat>> parsed_splats_ = std::nullopt;
+
+    // Progressive loading state
+    std::unique_ptr<builtin_scene::model_loaders::GaussianSplatLoader> progressive_loader_ = nullptr;
+    std::vector<char> progressive_model_data_;
+    bool progressive_loading_active_ = false;
+    size_t progressive_batch_size_ = 1000; // Default batch size
 
     /**
      * Create the Model3d component for this HTML element.
@@ -214,6 +215,22 @@ namespace dom
      * Parse model data asynchronously.
      */
     void parseModelAsync(const std::vector<char> &modelData);
+
+    /**
+     * Parse model data using progressive loading.
+     */
+    template <typename LoaderType>
+    bool parseModelProgressive(const std::vector<char> &modelData, LoaderType loader);
+
+    /**
+     * Load the next batch of splats in progressive mode.
+     */
+    void loadNextProgressiveBatch();
+
+    /**
+     * Schedule the next progressive batch loading.
+     */
+    void scheduleNextProgressiveBatch();
 
     /**
      * Called when model is successfully parsed.

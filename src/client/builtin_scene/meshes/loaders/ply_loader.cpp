@@ -498,6 +498,173 @@ namespace builtin_scene::model_loaders
     return true;
   }
 
+  // Progressive loading implementation
+  bool PlyLoader::load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats)
+  {
+    return Load(data, splats);
+  }
+
+  bool PlyLoader::initProgressiveLoading(const std::vector<char> &data, ProgressCallback progressCallback)
+  {
+    // Reset state
+    resetProgressiveLoading();
+
+    // Store data and callback
+    progressiveData_ = data;
+    progressCallback_ = progressCallback;
+
+    // Parse header
+    if (!ParseHeader(progressiveData_, headerEnd_, elements_, littleEndian_))
+    {
+      logging::LogError("PlyLoader: Failed to parse PLY header for progressive loading");
+      return false;
+    }
+
+    // Check if we have vertex element
+    auto vertexIt = elements_.find("vertex");
+    if (vertexIt == elements_.end())
+    {
+      logging::LogError("PlyLoader: No vertex element found in PLY file for progressive loading");
+      return false;
+    }
+
+    totalSplats_ = vertexIt->second.count;
+    loadedSplats_ = 0;
+    progressiveInitialized_ = true;
+
+    // Notify progress
+    if (progressCallback_)
+    {
+      progressCallback_(loadedSplats_, totalSplats_);
+    }
+
+    return true;
+  }
+
+  bool PlyLoader::loadNextBatch(size_t batchSize, std::vector<builtin_scene::GaussianSplat> &splats)
+  {
+    if (!progressiveInitialized_ || isProgressiveLoadingComplete())
+    {
+      return false;
+    }
+
+    auto vertexIt = elements_.find("vertex");
+    if (vertexIt == elements_.end())
+    {
+      return false;
+    }
+
+    const PlyElement &vertexElement = vertexIt->second;
+    const char *binaryData = progressiveData_.data() + headerEnd_;
+
+    // Calculate start and end indices for this batch
+    int startIndex = loadedSplats_;
+    int endIndex = std::min(loadedSplats_ + static_cast<int>(batchSize), totalSplats_);
+
+    // Skip to the correct position in the data
+    size_t bytesPerVertex = 0;
+    for (const auto &prop : vertexElement.properties)
+    {
+      const PlyProperty &property = prop.second;
+      if (property.isList)
+      {
+        // For list properties, we can't easily calculate size, so we need to parse from beginning
+        // This is a limitation of PLY format for progressive loading
+        logging::LogError("PlyLoader: List properties not supported in progressive loading");
+        return false;
+      }
+      else
+      {
+        bytesPerVertex += GetPropertyTypeSize(property.type);
+      }
+    }
+
+    // Load batch of vertices
+    std::vector<builtin_scene::GaussianSplat> batchSplats;
+    batchSplats.reserve(endIndex - startIndex);
+
+    for (int i = startIndex; i < endIndex; ++i)
+    {
+      size_t vertexOffset = i * bytesPerVertex;
+
+      // Parse single vertex properties
+      std::unordered_map<std::string, float> properties;
+      size_t propOffset = 0;
+
+      for (const auto &prop : vertexElement.properties)
+      {
+        const std::string &propName = prop.first;
+        const PlyProperty &property = prop.second;
+
+        if (!property.isList)
+        {
+          float value = ParsePropertyValue(binaryData, vertexOffset + propOffset, property.type, littleEndian_);
+          properties[propName] = value;
+          propOffset += GetPropertyTypeSize(property.type);
+        }
+      }
+
+      // Extract splat data
+      ExtractSplatData(i, properties, [&batchSplats, this](int index, float x, float y, float z, float scaleX, float scaleY, float scaleZ, float quatX, float quatY, float quatZ, float quatW, float opacity, float r, float g, float b)
+                       {
+        builtin_scene::GaussianSplat splat = createSplat(
+          index, x, -y, -z,  // Apply coordinate system conversion
+          scaleX, scaleY, scaleZ,
+          quatX, -quatY, -quatZ, quatW,  // Apply quaternion conversion
+          opacity, r, g, b);
+        batchSplats.push_back(splat); });
+    }
+
+    // Append to output vector
+    splats.insert(splats.end(), batchSplats.begin(), batchSplats.end());
+
+    // Update progress
+    loadedSplats_ = endIndex;
+
+    // Notify progress
+    if (progressCallback_)
+    {
+      progressCallback_(loadedSplats_, totalSplats_);
+    }
+
+    return !batchSplats.empty();
+  }
+
+  bool PlyLoader::isProgressiveLoadingComplete() const
+  {
+    return progressiveInitialized_ && loadedSplats_ >= totalSplats_;
+  }
+
+  int PlyLoader::getTotalSplatCount() const
+  {
+    return totalSplats_;
+  }
+
+  int PlyLoader::getLoadedSplatCount() const
+  {
+    return loadedSplats_;
+  }
+
+  void PlyLoader::resetProgressiveLoading()
+  {
+    progressiveData_.clear();
+    progressCallback_ = nullptr;
+    totalSplats_ = -1;
+    loadedSplats_ = 0;
+    progressiveInitialized_ = false;
+    headerEnd_ = 0;
+    elements_.clear();
+    littleEndian_ = true;
+  }
+
+  bool PlyLoader::loadWithCallback(
+    const std::vector<char> &data,
+    std::function<void(int numSplats)> initNumSplats,
+    SplatCallback splatCallback)
+  {
+    return DecodePly(data, initNumSplats, splatCallback);
+  }
+
   // Explicit template instantiations for the types we use
   template bool PlyLoader::ReadBinary<int8_t>(const char *, size_t, int8_t &, bool);
   template bool PlyLoader::ReadBinary<uint8_t>(const char *, size_t, uint8_t &, bool);

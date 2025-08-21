@@ -6,6 +6,7 @@
 #include <functional>
 #include <unordered_map>
 #include <client/builtin_scene/gaussian_splatting.hpp>
+#include "./gaussian_splat_loader.hpp"
 
 namespace builtin_scene::model_loaders
 {
@@ -17,30 +18,9 @@ namespace builtin_scene::model_loaders
    * PLY is a polygon file format that can store 3D model data including
    * vertex positions, colors, and properties for Gaussian splatting.
    */
-  class PlyLoader
+  class PlyLoader : public GaussianSplatLoader
   {
   public:
-    /**
-     * Callback function type for processing each splat during loading.
-     * Parameters: index, x, y, z, scaleX, scaleY, scaleZ, quatX, quatY, quatZ, quatW, opacity, r, g, b
-     */
-    using SplatCallback = std::function<void(
-      int index,
-      float x,
-      float y,
-      float z,
-      float scaleX,
-      float scaleY,
-      float scaleZ,
-      float quatX,
-      float quatY,
-      float quatZ,
-      float quatW,
-      float opacity,
-      float r,
-      float g,
-      float b)>;
-
     /**
      * PLY property types supported by the loader
      */
@@ -87,6 +67,19 @@ namespace builtin_scene::model_loaders
       const std::vector<char> &fileBytes,
       std::function<void(int numSplats)> initNumSplats,
       SplatCallback splatCallback);
+
+    // Override base class methods for progressive loading
+    bool load(const std::vector<char> &data, std::vector<builtin_scene::GaussianSplat> &splats) override;
+    bool initProgressiveLoading(const std::vector<char> &data, ProgressCallback progressCallback = nullptr) override;
+    bool loadNextBatch(size_t batchSize, std::vector<builtin_scene::GaussianSplat> &splats) override;
+    bool isProgressiveLoadingComplete() const override;
+    int getTotalSplatCount() const override;
+    int getLoadedSplatCount() const override;
+    void resetProgressiveLoading() override;
+    bool loadWithCallback(
+      const std::vector<char> &data,
+      std::function<void(int numSplats)> initNumSplats,
+      SplatCallback splatCallback) override;
 
     /**
      * Convenience method to load splats into a vector (for backward compatibility).
@@ -170,5 +163,18 @@ namespace builtin_scene::model_loaders
      */
     template <typename T>
     static bool ReadBinary(const char *data, size_t offset, T &value, bool littleEndian);
+
+  private:
+    // Progressive loading state
+    std::vector<char> progressiveData_;
+    ProgressCallback progressCallback_;
+    int totalSplats_ = -1;
+    int loadedSplats_ = 0;
+    bool progressiveInitialized_ = false;
+
+    // Parsed PLY structure for progressive loading
+    size_t headerEnd_ = 0;
+    std::unordered_map<std::string, PlyElement> elements_;
+    bool littleEndian_ = true;
   };
 }

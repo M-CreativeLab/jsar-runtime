@@ -1,5 +1,6 @@
 #include "./html_model_element.hpp"
 #include <client/dom/document.hpp>
+#include <client/builtin_scene/meshes/loaders/gaussian_splat_loader.hpp>
 #include <client/builtin_scene/meshes/loaders/ksplat_loader.hpp>
 #include <client/builtin_scene/meshes/loaders/spz_loader.hpp>
 #include <client/builtin_scene/meshes/loaders/ply_loader.hpp>
@@ -277,39 +278,32 @@ namespace dom
     // Detect model type
     ModelType modelType = detectModelType(src_, type_.value_or(""));
 
-    // Parse the model data based on type
+    // Parse the model data based on type and loading mode
     if (modelType == ModelType::KSplat || modelType == ModelType::GaussianSplatting)
     {
       // Use Ksplat parser to parse the model data
       vector<builtin_scene::GaussianSplat> parsedSplats;
+
+      if (loading_ == LoadingHint::kLoadingProgressive)
+      {
+        // Use progressive loading
+        if (parseModelProgressive(modelData, model_loaders::KsplatLoader()))
+        {
+          cout << "Successfully initialized progressive loading for .ksplat file" << endl;
+          return true;
+        }
+        else
+        {
+          cerr << "Failed to initialize progressive loading for Ksplat file, falling back to full load" << endl;
+          // Fall back to full loading
+        }
+      }
+
+      // Full loading (either not progressive mode or progressive fallback)
       if (model_loaders::KsplatLoader::load(modelData, parsedSplats))
       {
-        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
-        vector<GaussianSplat> elementSplats;
-        elementSplats.reserve(parsedSplats.size());
-
-        for (const auto &splat : parsedSplats)
-        {
-          GaussianSplat elementSplat;
-          elementSplat.position[0] = splat.position[0];
-          elementSplat.position[1] = splat.position[1];
-          elementSplat.position[2] = splat.position[2];
-          elementSplat.color[0] = splat.color[0];
-          elementSplat.color[1] = splat.color[1];
-          elementSplat.color[2] = splat.color[2];
-          elementSplat.opacity = splat.opacity;
-          elementSplat.scale[0] = splat.scale[0];
-          elementSplat.scale[1] = splat.scale[1];
-          elementSplat.scale[2] = splat.scale[2];
-          elementSplat.rotation[0] = splat.rotation[0];
-          elementSplat.rotation[1] = splat.rotation[1];
-          elementSplat.rotation[2] = splat.rotation[2];
-          elementSplat.rotation[3] = splat.rotation[3];
-          elementSplats.push_back(elementSplat);
-        }
-
-        // Store parsed splats for layout
-        parsed_splats_ = move(elementSplats);
+        // Store parsed splats directly (unified type)
+        parsed_splats_ = move(parsedSplats);
         cout << "Successfully parsed .ksplat file with " << parsed_splats_->size() << " splats" << endl;
       }
       else
@@ -323,34 +317,27 @@ namespace dom
     {
       // Use SPZ parser to parse the model data
       vector<builtin_scene::GaussianSplat> parsedSplats;
+
+      if (loading_ == LoadingHint::kLoadingProgressive)
+      {
+        // Use progressive loading
+        if (parseModelProgressive(modelData, model_loaders::SpzLoader()))
+        {
+          cout << "Successfully initialized progressive loading for .spz file" << endl;
+          return true;
+        }
+        else
+        {
+          cerr << "Failed to initialize progressive loading for SPZ file, falling back to full load" << endl;
+          // Fall back to full loading
+        }
+      }
+
+      // Full loading (either not progressive mode or progressive fallback)
       if (model_loaders::SpzLoader::load(modelData, parsedSplats))
       {
-        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
-        vector<GaussianSplat> elementSplats;
-        elementSplats.reserve(parsedSplats.size());
-
-        for (const auto &splat : parsedSplats)
-        {
-          GaussianSplat elementSplat;
-          elementSplat.position[0] = splat.position[0];
-          elementSplat.position[1] = splat.position[1];
-          elementSplat.position[2] = splat.position[2];
-          elementSplat.color[0] = splat.color[0];
-          elementSplat.color[1] = splat.color[1];
-          elementSplat.color[2] = splat.color[2];
-          elementSplat.opacity = splat.opacity;
-          elementSplat.scale[0] = splat.scale[0];
-          elementSplat.scale[1] = splat.scale[1];
-          elementSplat.scale[2] = splat.scale[2];
-          elementSplat.rotation[0] = splat.rotation[0];
-          elementSplat.rotation[1] = splat.rotation[1];
-          elementSplat.rotation[2] = splat.rotation[2];
-          elementSplat.rotation[3] = splat.rotation[3];
-          elementSplats.push_back(elementSplat);
-        }
-
-        // Store parsed splats for layout
-        parsed_splats_ = move(elementSplats);
+        // Store parsed splats directly (unified type)
+        parsed_splats_ = move(parsedSplats);
         cout << "Successfully parsed .spz file with " << parsed_splats_->size() << " splats" << endl;
       }
       else
@@ -362,34 +349,27 @@ namespace dom
     {
       // Use PLY parser to parse the model data
       vector<builtin_scene::GaussianSplat> parsedSplats;
+
+      if (loading_ == LoadingHint::kLoadingProgressive)
+      {
+        // Use progressive loading
+        if (parseModelProgressive(modelData, model_loaders::PlyLoader()))
+        {
+          cout << "Successfully initialized progressive loading for .ply file" << endl;
+          return true;
+        }
+        else
+        {
+          cerr << "Failed to initialize progressive loading for PLY file, falling back to full load" << endl;
+          // Fall back to full loading
+        }
+      }
+
+      // Full loading (either not progressive mode or progressive fallback)
       if (model_loaders::PlyLoader::Load(modelData, parsedSplats))
       {
-        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
-        vector<GaussianSplat> elementSplats;
-        elementSplats.reserve(parsedSplats.size());
-
-        for (const auto &splat : parsedSplats)
-        {
-          GaussianSplat elementSplat;
-          elementSplat.position[0] = splat.position[0];
-          elementSplat.position[1] = splat.position[1];
-          elementSplat.position[2] = splat.position[2];
-          elementSplat.color[0] = splat.color[0];
-          elementSplat.color[1] = splat.color[1];
-          elementSplat.color[2] = splat.color[2];
-          elementSplat.opacity = splat.opacity;
-          elementSplat.scale[0] = splat.scale[0];
-          elementSplat.scale[1] = splat.scale[1];
-          elementSplat.scale[2] = splat.scale[2];
-          elementSplat.rotation[0] = splat.rotation[0];
-          elementSplat.rotation[1] = splat.rotation[1];
-          elementSplat.rotation[2] = splat.rotation[2];
-          elementSplat.rotation[3] = splat.rotation[3];
-          elementSplats.push_back(elementSplat);
-        }
-
-        // Store parsed splats for layout
-        parsed_splats_ = move(elementSplats);
+        // Store parsed splats directly (unified type)
+        parsed_splats_ = move(parsedSplats);
         cout << "Successfully parsed .ply file with " << parsed_splats_->size() << " splats" << endl;
       }
       else
@@ -416,6 +396,118 @@ namespace dom
     }
 
     return is_src_model_decoded_;
+  }
+
+  template <typename LoaderType>
+  bool HTMLModelElement::parseModelProgressive(const std::vector<char> &modelData, LoaderType loader)
+  {
+    // Initialize the specific loader with progressive loading
+    progressive_loader_ = std::make_unique<LoaderType>(std::move(loader));
+    progressive_model_data_ = modelData;
+
+    // Set up progress callback
+    auto progressCallback = [this](int loadedCount, int totalCount)
+    {
+      // Update the rendering system with partial results
+      updateModelComponent();
+
+      // Log progress
+      if (totalCount > 0)
+      {
+        float progress = (float)loadedCount / totalCount * 100.0f;
+        cout << "Progressive loading: " << loadedCount << "/" << totalCount
+             << " splats (" << progress << "%)" << endl;
+      }
+    };
+
+    // Initialize progressive loading
+    if (!progressive_loader_->initProgressiveLoading(progressive_model_data_, progressCallback))
+    {
+      progressive_loader_.reset();
+      return false;
+    }
+
+    // Initialize splats vector
+    if (!parsed_splats_.has_value())
+    {
+      parsed_splats_ = std::vector<builtin_scene::GaussianSplat>();
+    }
+
+    progressive_loading_active_ = true;
+
+    // Start loading the first batch
+    loadNextProgressiveBatch();
+
+    return true;
+  }
+
+  void HTMLModelElement::loadNextProgressiveBatch()
+  {
+    if (!progressive_loading_active_ || !progressive_loader_ ||
+        progressive_loader_->isProgressiveLoadingComplete())
+    {
+      // Progressive loading is complete
+      if (progressive_loading_active_)
+      {
+        progressive_loading_active_ = false;
+        cout << "Progressive loading completed with "
+             << (parsed_splats_.has_value() ? parsed_splats_->size() : 0)
+             << " total splats" << endl;
+
+        // Final update to the rendering system
+        updateModelComponent();
+
+        // Clean up
+        progressive_loader_.reset();
+        progressive_model_data_.clear();
+      }
+      return;
+    }
+
+    // Load next batch
+    std::vector<builtin_scene::GaussianSplat> batchSplats;
+    if (progressive_loader_->loadNextBatch(progressive_batch_size_, batchSplats))
+    {
+      // Append new splats to existing collection
+      if (!parsed_splats_.has_value())
+      {
+        parsed_splats_ = std::move(batchSplats);
+      }
+      else
+      {
+        parsed_splats_->insert(parsed_splats_->end(), batchSplats.begin(), batchSplats.end());
+      }
+
+      // Update the rendering system with new splats
+      updateModelComponent();
+
+      // Schedule next batch (using a simple timer for now)
+      // In a real implementation, this might be frame-rate dependent or use a proper scheduler
+      scheduleNextProgressiveBatch();
+    }
+    else
+    {
+      // Loading failed or completed
+      progressive_loading_active_ = false;
+      progressive_loader_.reset();
+    }
+  }
+
+  void HTMLModelElement::scheduleNextProgressiveBatch()
+  {
+    // Simple implementation using a timer
+    // In a real implementation, this might be integrated with the rendering loop
+    static uv_timer_t progressiveTimer;
+    progressiveTimer.data = this;
+
+    uv_timer_init(uv_default_loop(), &progressiveTimer);
+    uv_timer_start(&progressiveTimer, [](uv_timer_t *handle)
+                   {
+      HTMLModelElement* element = static_cast<HTMLModelElement*>(handle->data);
+      element->loadNextProgressiveBatch();
+      uv_timer_stop(handle); },
+                   16,
+                   0); // 16ms delay (~60fps)
   }
 
   void HTMLModelElement::parseModelAsync(const vector<char> &modelData)
