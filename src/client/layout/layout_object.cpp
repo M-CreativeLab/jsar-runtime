@@ -197,6 +197,17 @@ namespace client_layout
       {
         webContent->setLayer(layer_);
         webContent->setIsScrollableContainer(isScrollContainer());
+
+        // Update the container that this content belongs to
+        auto container = containingScrollContainer();
+        if (container != nullptr && container->hasEntity())
+        {
+          webContent->setBelongsToScrollableContainer(container->entity());
+        }
+        else
+        {
+          webContent->setBelongsToScrollableContainer(ecs::kInvalidEntityId);
+        }
       }
     }
 

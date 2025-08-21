@@ -301,7 +301,6 @@ namespace builtin_scene
     }
 
     RenderLayer layer;
-    uint32_t containerId;                                   // Unique container ID (0 = no container)
     std::shared_ptr<ContainerInstance> containerInstance;   // Single container mask
     std::shared_ptr<ContentInstancesList> contentInstances; // Content for this container
   };
@@ -348,23 +347,17 @@ namespace builtin_scene
                             std::shared_ptr<client_graphics::WebGLProgram> program,
                             std::shared_ptr<Mesh3d> mesh3d);
 
-    /**
-     * Update the renderable instances list with the given instances.
-     *
-     * @param instances The instances to update.
-     * @param sortingOrder The sorting order of the instances.
-     */
-    void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
+
     size_t copyToArrayData(vector<InstanceData> &dst);
     /**
      * Called before the instanced draw.
      */
-    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
-                             class CSSBorderDataTexture *borderDataTexture = nullptr);
+    virtual void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                                     class CSSBorderDataTexture *borderDataTexture = nullptr);
     /**
      * Called after the instanced draw.
      */
-    void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
+    virtual void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
 
     /**
      * Get the current instances as a vector (for border data updates).
@@ -410,6 +403,11 @@ namespace builtin_scene
     {
     }
 
+    /**
+     * Set a single instance for this container.
+     */
+    void setInstance(std::shared_ptr<Instance> instance);
+
     uint32_t getContainerId() const
     {
       return containerId_;
@@ -429,6 +427,14 @@ namespace builtin_scene
         : InstanceListBase(filter, vao, vbo)
     {
     }
+
+    /**
+     * Update the renderable instances list with the given instances.
+     *
+     * @param instances The instances to update.
+     * @param sortingOrder The sorting order of the instances.
+     */
+    void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
   };
 
   // Type alias for backward compatibility during transition

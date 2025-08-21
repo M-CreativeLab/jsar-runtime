@@ -360,7 +360,7 @@ namespace builtin_scene
     return attribsCount;
   }
 
-  void InstanceListBase::update(const InstanceMap &instances, SortingOrder sortingOrder)
+  void ContentInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
   {
     clearInstances(); // Clear the instances first.
 
@@ -407,6 +407,17 @@ namespace builtin_scene
       sort(list_.begin(), list_.end(), sortInstances);
     }
 
+    markBufferAsDirty();
+    markTextureDataAsDirty();
+  }
+
+  void ContainerInstance::setInstance(std::shared_ptr<Instance> instance)
+  {
+    clearInstances();
+    if (instance != nullptr)
+    {
+      addInstance(instance);
+    }
     markBufferAsDirty();
     markTextureDataAsDirty();
   }
