@@ -32,6 +32,8 @@ namespace dom
         setLoading(LoadingHint::kLoadingLazy);
       else if (loadingValue == "eager")
         setLoading(LoadingHint::kLoadingEager);
+      else if (loadingValue == "progressive")
+        setLoading(LoadingHint::kLoadingProgressive);
       else
         setLoading(LoadingHint::kLoadingAuto);
     }
@@ -69,6 +71,8 @@ namespace dom
         setLoading(LoadingHint::kLoadingLazy);
       else if (newValue == "eager")
         setLoading(LoadingHint::kLoadingEager);
+      else if (newValue == "progressive")
+        setLoading(LoadingHint::kLoadingProgressive);
       else
         setLoading(LoadingHint::kLoadingAuto);
     }
@@ -138,6 +142,8 @@ namespace dom
       return "eager";
     case LoadingHint::kLoadingAuto:
       return "auto";
+    case LoadingHint::kLoadingProgressive:
+      return "progressive";
     default:
       return "auto";
     }
@@ -149,6 +155,8 @@ namespace dom
       setLoading(LoadingHint::kLoadingLazy);
     else if (loading == "eager")
       setLoading(LoadingHint::kLoadingEager);
+    else if (loading == "progressive")
+      setLoading(LoadingHint::kLoadingProgressive);
     else
       setLoading(LoadingHint::kLoadingAuto);
   }

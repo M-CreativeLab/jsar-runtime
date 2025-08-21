@@ -36,6 +36,8 @@ namespace dom
       kLoadingLazy,
       // No preference for the loading mode; the browser decides what is best for the user. This is the default value.
       kLoadingAuto,
+      // Enables progressive/streaming loading for supported formats (PLY, KSplat, SPZ). Ignored for unsupported formats.
+      kLoadingProgressive,
     };
 
     enum class ModelType
@@ -110,13 +112,13 @@ namespace dom
 
     /**
      * Get the loading behavior as a string (for JavaScript bindings).
-     * @return "lazy", "eager", or "auto".
+     * @return "lazy", "eager", "auto", or "progressive".
      */
     std::string loadingString() const;
 
     /**
      * Set the loading behavior from a string (for JavaScript bindings).
-     * @param loading "lazy", "eager", or "auto".
+     * @param loading "lazy", "eager", "auto", or "progressive".
      */
     void setLoadingString(const std::string &loading);
 

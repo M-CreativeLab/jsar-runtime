@@ -24,6 +24,12 @@ namespace dom {
 - Interface with layout system
 - Event dispatching (load, error)
 
+**Loading Modes:**
+- `eager`: Load immediately regardless of viewport visibility
+- `lazy`: Defer loading until model approaches viewport
+- `auto`: Browser decides optimal loading strategy (default)
+- `progressive`: Enable streaming/chunked loading for supported formats (PLY, KSplat, SPZ)
+
 **Key Methods:**
 - `setSrc()`, `setType()`, `setAutoplay()`, `setLoading()` - Attribute management
 - `loadModel()` - Initiate model loading from URL
@@ -138,6 +144,12 @@ This allows materials to implement custom drawing while maintaining standard Mat
 
 <!-- With loading control -->
 <model src="large_scene.ksplat" loading="lazy"></model>
+
+<!-- Progressive loading for large models -->
+<model src="huge_scene.ksplat" loading="progressive"></model>
+
+<!-- GLTF model (progressive ignored, loads normally) -->
+<model src="model.glb" loading="progressive"></model>
 ```
 
 ### Multiple Models
@@ -157,6 +169,7 @@ All models are automatically collected and rendered in a single efficient pass w
 const model = document.createElement('model');
 model.src = 'scene.ksplat';
 model.type = '3dgs';
+model.loading = 'progressive'; // Enable progressive loading
 model.addEventListener('load', () => console.log('Loaded'));
 document.body.appendChild(model);
 ```
@@ -183,7 +196,7 @@ document.body.appendChild(model);
 
 ## Future Enhancements
 
-- **Streaming Support**: Large dataset progressive loading
+- **Progressive Loading Implementation**: Backend streaming support for the new `loading="progressive"` attribute
 - **Level of Detail**: Distance-based quality adaptation  
 - **Animation**: Temporal splat data support
 - **Culling**: Frustum and occlusion optimizations
