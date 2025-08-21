@@ -463,6 +463,8 @@ namespace client_layout
     void setParent(std::shared_ptr<LayoutObject> parent)
     {
       parent_ = parent;
+      // Invalidate cached containing scroll container when parent changes
+      cached_containing_scroll_container_.reset();
     }
     void setPrevSibling(std::shared_ptr<LayoutObject> prev)
     {
@@ -490,6 +492,7 @@ namespace client_layout
     // TODO(yorkie): will be replaced by the computed style type.
     std::optional<builtin_scene::ecs::EntityId> entity_;
     mutable std::optional<Fragment> accumulated_fragment_;
+    mutable std::weak_ptr<const LayoutBlock> cached_containing_scroll_container_;
     // TODO(yorkie): support fragments
 
   private: // Hierarchy fields

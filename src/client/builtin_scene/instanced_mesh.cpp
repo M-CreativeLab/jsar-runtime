@@ -168,6 +168,15 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
+  void Instance::setContainerId(uint32_t containerId)
+  {
+    if (data_.containerId == containerId)
+      return; // Skip if there is no change.
+
+    data_.containerId = containerId;
+    notifyBufferDataChanged();
+  }
+
   bool Instance::hasNoBorders() const
   {
     // Fast check for none border style.
@@ -698,68 +707,42 @@ namespace builtin_scene
       }
     }
 
-    // Update or create LayeredInstancesData for each layer
+    // Clear existing layered instances and rebuild from scratch for vector structure
+    layeredInstances_.clear();
+
+    // Create LayeredInstancesData entries per layer
+    // TODO: Per-container logic will be implemented later
     for (const auto &layer : allLayers)
     {
-      if (layeredInstances_.find(layer) == layeredInstances_.end())
-      {
-        // Create new LayeredInstancesData for this layer
-        layeredInstances_[layer] = LayeredInstancesData{};
-      }
-
-      auto &layerData = layeredInstances_[layer];
+      LayeredInstancesData layerData(layer, 0); // containerId=0 for now
 
       // Create or update renderable instances list (if layer has regular instances)
       if (renderableInstanceMaps.find(layer) != renderableInstanceMaps.end())
       {
-        if (layerData.renderableInstances == nullptr)
-        {
-          auto layerVao = glContext->createVertexArray();
-          auto layerVbo = glContext->createBuffer();
-          layerData.renderableInstances = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
-                                                                               layerVao,
-                                                                               layerVbo);
-          layerData.renderableInstances->configureAttribs(glContext, program, mesh3d);
-        }
-
-        if (layerData.renderableInstances != nullptr) [[likely]]
-          layerData.renderableInstances->update(renderableInstanceMaps[layer],
-                                                RenderableInstancesList::SortingOrder::kFrontToBack);
+        auto layerVao = glContext->createVertexArray();
+        auto layerVbo = glContext->createBuffer();
+        layerData.contentInstances = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
+                                                                          layerVao,
+                                                                          layerVbo);
+        layerData.contentInstances->configureAttribs(glContext, program, mesh3d);
+        layerData.contentInstances->update(renderableInstanceMaps[layer],
+                                           RenderableInstancesList::SortingOrder::kFrontToBack);
       }
 
       // Create or update container instances list (if layer has containers)
       if (containerInstanceMaps.find(layer) != containerInstanceMaps.end())
       {
-        if (layerData.containerInstances == nullptr)
-        {
-          auto containerVao = glContext->createVertexArray();
-          auto containerVbo = glContext->createBuffer();
-          layerData.containerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
-                                                                             containerVao,
-                                                                             containerVbo);
-          layerData.containerInstances->configureAttribs(glContext, program, mesh3d);
-        }
+        auto containerVao = glContext->createVertexArray();
+        auto containerVbo = glContext->createBuffer();
+        layerData.containerInstance = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
+                                                                           containerVao,
+                                                                           containerVbo);
+        layerData.containerInstance->configureAttribs(glContext, program, mesh3d);
+        layerData.containerInstance->update(containerInstanceMaps[layer],
+                                            RenderableInstancesList::SortingOrder::kNone);
+      }
 
-        if (layerData.containerInstances != nullptr) [[likely]]
-          layerData.containerInstances->update(containerInstanceMaps[layer],
-                                                RenderableInstancesList::SortingOrder::kNone);
-      }
-    }
-
-    // Remove layers that no longer have instances
-    auto it = layeredInstances_.begin();
-    while (it != layeredInstances_.end())
-    {
-      auto layer = it->first;
-      if (renderableInstanceMaps.find(layer) == renderableInstanceMaps.end() &&
-          containerInstanceMaps.find(layer) == containerInstanceMaps.end())
-      {
-        it = layeredInstances_.erase(it);
-      }
-      else
-      {
-        ++it;
-      }
+      layeredInstances_.push_back(std::move(layerData));
     }
 
     // Update depth-only instances with all instances for use in `DepthOnlyPass`.

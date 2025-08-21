@@ -42,6 +42,7 @@ namespace builtin_scene
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
         , enableSDFTexture(0.0f)
+        , containerId(0)
     {
     }
     glm::mat4 transform;    /** element transformation */
@@ -54,6 +55,7 @@ namespace builtin_scene
     glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
     uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
     float enableSDFTexture; /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
+    uint32_t containerId;   /** Container ID (0 = no container, >0 = specific container ID) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -68,6 +70,7 @@ namespace builtin_scene
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
          << "  enableSDFTexture=" << data.enableSDFTexture << std::endl
+         << "  containerId=" << data.containerId << std::endl
          << ")";
       return os;
     }
@@ -178,6 +181,7 @@ namespace builtin_scene
     void setBorderColor(float r, float g, float b, float a);
     void setBorderStyle(float borderStyle);
     void setSDFTextureEnabled(bool);
+    void setContainerId(uint32_t containerId);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -284,21 +288,26 @@ namespace builtin_scene
   using InstanceMap = std::unordered_map<ecs::EntityId, std::shared_ptr<Instance>>;
 
   /**
-   * Data structure that holds both renderable instances and scrollable container instances for a render layer.
-   * This enables support for overflow behavior through mask/stencil rendering where:
-   * - renderableInstances: Current instances used for normal rendering
-   * - scrollableContainerInstances: All scrollable container instances used for mask/stencil rendering
+   * LayeredInstancesData represents a single container and its content for isolated rendering
+   * 
+   * This structure supports per-container stencil rendering to prevent content leakage:
+   * - Each container gets its own LayeredInstancesData entry
+   * - Contains the layer, container ID, container instance and content instances
+   * - Enables isolated mask/content rendering per container
    */
   struct LayeredInstancesData
   {
     LayeredInstancesData() = default;
+    LayeredInstancesData(RenderLayer layer, uint32_t containerId)
+        : layer(layer)
+        , containerId(containerId)
+    {
+    }
 
-    // Current instances used for rendering
-    std::shared_ptr<RenderableInstancesList> renderableInstances;
-
-    // All container instances for mask/stencil rendering
-    // (updated regardless of whether they are rendered in current frame)
-    std::shared_ptr<RenderableInstancesList> containerInstances;
+    RenderLayer layer;
+    uint32_t containerId;                                       // Unique container ID (0 = no container)
+    std::shared_ptr<RenderableInstancesList> containerInstance; // Single container mask
+    std::shared_ptr<RenderableInstancesList> contentInstances;  // Content for this container
   };
 
   class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
@@ -475,23 +484,30 @@ namespace builtin_scene
       return layeredInstances_.size();
     }
 
-    using LayerCallback = std::function<void(RenderLayer,
-                                             RenderableInstancesList &renderables,
-                                             RenderableInstancesList *containers)>;
+    using LayerCallback = std::function<void(RenderLayer layer,
+                                             uint32_t containerId,
+                                             RenderableInstancesList *containerInstance,
+                                             RenderableInstancesList *contentInstances)>;
     inline void iterateLayers(LayerCallback callback) const
     {
-      for (const auto &[layer, layerData] : layeredInstances_)
+      for (const auto &layerData : layeredInstances_)
       {
-        RenderableInstancesList *renderableInstances =
-          (layerData.renderableInstances && layerData.renderableInstances->count() > 0)
-            ? layerData.renderableInstances.get()
+        RenderableInstancesList *contentInstances =
+          (layerData.contentInstances && layerData.contentInstances->count() > 0)
+            ? layerData.contentInstances.get()
             : nullptr;
 
-        if (renderableInstances)
+        RenderableInstancesList *containerInstance =
+          (layerData.containerInstance && layerData.containerInstance->count() > 0)
+            ? layerData.containerInstance.get()
+            : nullptr;
+
+        if (contentInstances || containerInstance)
         {
-          callback(layer,
-                   *renderableInstances,
-                   layerData.containerInstances.get());
+          callback(layerData.layer,
+                   layerData.containerId,
+                   containerInstance,
+                   contentInstances);
         }
       }
     }
@@ -541,7 +557,7 @@ namespace builtin_scene
   protected:
     mutable std::shared_mutex mutex_;
     InstanceMap idToInstanceMap_;
-    std::map<RenderLayer, LayeredInstancesData> layeredInstances_;
+    std::vector<LayeredInstancesData> layeredInstances_;
     std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
 
   private:

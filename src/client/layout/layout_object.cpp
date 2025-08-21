@@ -716,13 +716,27 @@ namespace client_layout
 
   shared_ptr<const LayoutBlock> LayoutObject::containingScrollContainer() const
   {
+    // Check if we have a valid cached result
+    if (!cached_containing_scroll_container_.expired())
+    {
+      return cached_containing_scroll_container_.lock();
+    }
+
+    // Cache miss - walk up the tree to find the container
     auto object = parent();
     while (object != nullptr)
     {
       if (object->isScrollContainer())
-        return dynamic_pointer_cast<const LayoutBlock>(object);
+      {
+        auto container = dynamic_pointer_cast<const LayoutBlock>(object);
+        cached_containing_scroll_container_ = container;
+        return container;
+      }
       object = object->parent();
     }
+
+    // No container found - cache the nullptr result
+    cached_containing_scroll_container_ = std::weak_ptr<const LayoutBlock>();
     return nullptr;
   }
 
