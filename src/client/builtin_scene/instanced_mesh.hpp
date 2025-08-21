@@ -478,20 +478,25 @@ namespace builtin_scene
     {
       return layeredInstances_.size();
     }
-    inline void iterateLayers(std::function<void(RenderLayer, RenderableInstancesList *, RenderableInstancesList *)> callback) const
+
+    using LayerCallback = std::function<void(RenderLayer,
+                                             RenderableInstancesList &renderables,
+                                             RenderableInstancesList *containers)>;
+    inline void iterateLayers(LayerCallback callback) const
     {
       for (const auto &[layer, layerData] : layeredInstances_)
       {
-        RenderableInstancesList *renderableInstances = layerData.renderableInstances && layerData.renderableInstances->count() > 0
-                                                         ? layerData.renderableInstances.get()
-                                                         : nullptr;
-        RenderableInstancesList *scrollableContainerInstances = layerData.scrollableContainerInstances && layerData.scrollableContainerInstances->count() > 0
-                                                                  ? layerData.scrollableContainerInstances.get()
-                                                                  : nullptr;
+        RenderableInstancesList *renderableInstances =
+          (layerData.renderableInstances && layerData.renderableInstances->count() > 0)
+            ? layerData.renderableInstances.get()
+            : nullptr;
 
-        // Only call callback if there are instances to process (either renderable or scrollable containers)
-        if (renderableInstances || scrollableContainerInstances)
-          callback(layer, renderableInstances, scrollableContainerInstances);
+        if (renderableInstances)
+        {
+          callback(layer,
+                   *renderableInstances,
+                   layerData.scrollableContainerInstances.get());
+        }
       }
     }
 

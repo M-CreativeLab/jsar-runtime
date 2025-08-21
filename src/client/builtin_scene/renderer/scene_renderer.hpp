@@ -77,8 +77,6 @@ namespace builtin_scene
     {
       volumeMask_ = volumeMask;
       // Set the stencil reference value to a random value from 100 to 255 to avoid conflicts.
-      // TODO: is there a better way to avoid conflicts?
-      volumeMaskStencilRef_ = 100 + rand() % 156;
     }
     /**
      * Initialize the mesh with the given WebGL context, it will create the vertex array object,

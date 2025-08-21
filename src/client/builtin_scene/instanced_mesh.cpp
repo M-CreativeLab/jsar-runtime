@@ -253,7 +253,6 @@ namespace builtin_scene
       , bufferDataDirty_(true)
       , textureDataDirty_(true)
   {
-    assert(filter != InstanceFilter::kAll);
   }
 
   size_t RenderableInstancesList::configureAttribs(shared_ptr<WebGL2Context> glContext,
@@ -675,37 +674,29 @@ namespace builtin_scene
     shared_lock<shared_mutex> lock(mutex_);
 
     // Update layered instances based on RenderLayer from instances
-    map<RenderLayer, InstanceMap> layeredInstanceMaps;
-    for (auto &[id, instance] : idToInstanceMap_)
-    {
-      if (instance != nullptr && !instance->skipToDraw())
-      {
-        RenderLayer layer = instance->renderLayer_;
-        layeredInstanceMaps[layer][id] = instance;
-      }
-    }
-
-    // Collect scrollable container instances for all layers.
-    // These instances will be used to create stencil masks that constrain rendering
-    // to scrollable regions, enabling proper overflow behavior for Web Content.
+    set<RenderLayer> allLayers;
+    map<RenderLayer, InstanceMap> renderableInstanceMaps;
     map<RenderLayer, InstanceMap> scrollableContainerInstanceMaps;
     for (auto &[id, instance] : idToInstanceMap_)
     {
-      if (instance != nullptr && instance->isScrollableContainer_)
+      if (instance != nullptr)
       {
         RenderLayer layer = instance->renderLayer_;
-        scrollableContainerInstanceMaps[layer][id] = instance;
+        bool shouldInsertLayer = false;
+        if (!instance->skipToDraw())
+        {
+          renderableInstanceMaps[layer][id] = instance;
+          shouldInsertLayer = true;
+        }
+        if (instance->isScrollableContainer_)
+        {
+          scrollableContainerInstanceMaps[layer][id] = instance;
+          shouldInsertLayer = true;
+        }
+        if (shouldInsertLayer)
+          allLayers.insert(layer);
       }
     }
-
-    // Collect all layers that have either regular instances or scrollable containers.
-    // This ensures we create LayeredInstancesData for any layer that needs either
-    // regular rendering or mask/stencil rendering.
-    set<RenderLayer> allLayers;
-    for (const auto &[layer, _] : layeredInstanceMaps)
-      allLayers.insert(layer);
-    for (const auto &[layer, _] : scrollableContainerInstanceMaps)
-      allLayers.insert(layer);
 
     // Update or create LayeredInstancesData for each layer
     for (const auto &layer : allLayers)
@@ -719,23 +710,21 @@ namespace builtin_scene
       auto &layerData = layeredInstances_[layer];
 
       // Create or update renderable instances list (if layer has regular instances)
-      if (layeredInstanceMaps.find(layer) != layeredInstanceMaps.end())
+      if (renderableInstanceMaps.find(layer) != renderableInstanceMaps.end())
       {
         if (layerData.renderableInstances == nullptr)
         {
-          if (glContext != nullptr)
-          {
-            auto layerVao = glContext->createVertexArray();
-            auto layerVbo = glContext->createBuffer();
-            layerData.renderableInstances = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
-                                                                                 layerVao,
-                                                                                 layerVbo);
-            layerData.renderableInstances->configureAttribs(glContext, program, mesh3d);
-          }
+          auto layerVao = glContext->createVertexArray();
+          auto layerVbo = glContext->createBuffer();
+          layerData.renderableInstances = make_shared<RenderableInstancesList>(InstanceFilter::kTransparent,
+                                                                               layerVao,
+                                                                               layerVbo);
+          layerData.renderableInstances->configureAttribs(glContext, program, mesh3d);
         }
 
         if (layerData.renderableInstances != nullptr) [[likely]]
-          layerData.renderableInstances->update(layeredInstanceMaps[layer], RenderableInstancesList::SortingOrder::kFrontToBack);
+          layerData.renderableInstances->update(renderableInstanceMaps[layer],
+                                                RenderableInstancesList::SortingOrder::kFrontToBack);
       }
 
       // Create or update scrollable container instances list (if layer has scrollable containers)
@@ -743,15 +732,12 @@ namespace builtin_scene
       {
         if (layerData.scrollableContainerInstances == nullptr)
         {
-          if (glContext != nullptr)
-          {
-            auto scrollableVao = glContext->createVertexArray();
-            auto scrollableVbo = glContext->createBuffer();
-            layerData.scrollableContainerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
-                                                                                          scrollableVao,
-                                                                                          scrollableVbo);
-            layerData.scrollableContainerInstances->configureAttribs(glContext, program, mesh3d);
-          }
+          auto scrollableVao = glContext->createVertexArray();
+          auto scrollableVbo = glContext->createBuffer();
+          layerData.scrollableContainerInstances = make_shared<RenderableInstancesList>(InstanceFilter::kAll,
+                                                                                        scrollableVao,
+                                                                                        scrollableVbo);
+          layerData.scrollableContainerInstances->configureAttribs(glContext, program, mesh3d);
         }
 
         if (layerData.scrollableContainerInstances != nullptr) [[likely]]
@@ -764,8 +750,9 @@ namespace builtin_scene
     auto it = layeredInstances_.begin();
     while (it != layeredInstances_.end())
     {
-      if (layeredInstanceMaps.find(it->first) == layeredInstanceMaps.end() &&
-          scrollableContainerInstanceMaps.find(it->first) == scrollableContainerInstanceMaps.end())
+      auto layer = it->first;
+      if (renderableInstanceMaps.find(layer) == renderableInstanceMaps.end() &&
+          scrollableContainerInstanceMaps.find(layer) == scrollableContainerInstanceMaps.end())
       {
         it = layeredInstances_.erase(it);
       }
@@ -782,6 +769,7 @@ namespace builtin_scene
     // written and no blending occurs.
     depthOnlyInstances_->update(idToInstanceMap_, RenderableInstancesList::SortingOrder::kNone /* Disable sorting */);
 
+    // Mark the structure as clean after updating.
     isStructureDirty_ = false;
   }
 }

@@ -324,7 +324,7 @@ private:
 
         GLint depthFunc;
         glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
-        DEBUG(logTag, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
+        DEBUG(logTag, "      Func=%s", gles::glDepthOrStencilFuncToString(depthFunc).c_str());
 
         GLboolean depthWriteMask;
         glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask);
@@ -347,6 +347,30 @@ private:
         GLint stencilMask;
         glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
         DEBUG(logTag, "      Mask=%d", stencilMask);
+
+        GLint stencilFunc;
+        glGetIntegerv(GL_STENCIL_FUNC, &stencilFunc);
+        GLint stencilRef;
+        glGetIntegerv(GL_STENCIL_REF, &stencilRef);
+        GLint stencilValueMask;
+        glGetIntegerv(GL_STENCIL_VALUE_MASK, &stencilValueMask);
+        DEBUG(logTag,
+              "      Func=%s Ref=%d ValueMask=%d",
+              gles::glDepthOrStencilFuncToString(stencilFunc).c_str(),
+              stencilRef,
+              stencilValueMask);
+
+        GLint stencilFail;
+        glGetIntegerv(GL_STENCIL_FAIL, &stencilFail);
+        GLint stencilZFail;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, &stencilZFail);
+        GLint stencilZPass;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, &stencilZPass);
+        DEBUG(logTag,
+              "      Fail=%s ZFail=%s ZPass=%s",
+              gles::glStencilOpToString(stencilFail).c_str(),
+              gles::glStencilOpToString(stencilZFail).c_str(),
+              gles::glStencilOpToString(stencilZPass).c_str());
       }
     }
 

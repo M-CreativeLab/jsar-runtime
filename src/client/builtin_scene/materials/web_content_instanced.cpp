@@ -133,41 +133,41 @@ namespace builtin_scene::materials
     // 1. Rendering scrollable containers as masks to the stencil buffer
     // 2. Enabling stencil testing to constrain subsequent rendering to masked regions
     // 3. Rendering regular content with stencil testing active
-    auto renderLayerWithMask = [&](RenderLayer layer, RenderableInstancesList *renderableInstances, RenderableInstancesList *scrollableContainerInstances)
+    auto renderLayerWithMask = [&](RenderLayer layer,
+                                   RenderableInstancesList &renderables,
+                                   RenderableInstancesList *containers)
     {
-      bool hasScrollableContainers = scrollableContainerInstances != nullptr;
-
+      bool hasScrollableContainers = containers != nullptr && containers->count() > 0;
       if (hasScrollableContainers)
       {
         // Step 1: Render scrollable container instances as stencil masks
         // Configure stencil buffer to write mask values where scrollable regions exist
         glContext->enable(WEBGL_STENCIL_TEST);
-        glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
-        glContext->stencilFunc(WEBGL_ALWAYS, 1, 0xFF);               // Always pass, write 1 to stencil
-        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
-        glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
+
+        glContext->colorMask(false, false, false, false);         // Don't write to color buffer for mask
+        glContext->stencilMask(0xFF);                             // Enable writing to stencil buffer
+        glContext->stencilFunc(WEBGL_EQUAL, 1, 0xFF);             // Always pass, write 1 to stencil
+        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_INCR); // Replace stencil value on pass
 
         // Render scrollable containers for this layer as masks
-        WebGLVertexArrayScope scrollableVaoScope(glContext, scrollableContainerInstances->vao);
-        scrollableContainerInstances->beforeInstancedDraw(*glContext, borderDataTexture);
+        WebGLVertexArrayScope vaoScope(glContext, containers->vao);
+        containers->beforeInstancedDraw(*glContext, nullptr);
         glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                          meshIndicesCount,
                                          WEBGL_UNSIGNED_INT,
                                          0,
-                                         scrollableContainerInstances->count());
-        scrollableContainerInstances->afterInstancedDraw(*glContext);
+                                         containers->count());
+        containers->afterInstancedDraw(*glContext);
 
         // Step 2: Configure for rendering content constrained by stencil mask
         glContext->colorMask(true, true, true, true);             // Re-enable color writing
-        glContext->stencilFunc(WEBGL_EQUAL, 1, 0xFF);             // Only render where stencil == 1
+        glContext->stencilMask(0);                                // Disable writing to stencil buffer
+        glContext->stencilFunc(WEBGL_LESS, 1, 0xFF);              // Only render where stencil == 1
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil during content rendering
       }
 
       // Render regular instances (with stencil testing constraining to scrollable regions if masks were set)
-      if (renderableInstances)
-      {
-        renderLayer(layer, *renderableInstances);
-      }
+      renderLayer(layer, renderables);
 
       // Clean up: disable stencil testing after rendering if it was enabled
       if (hasScrollableContainers)
