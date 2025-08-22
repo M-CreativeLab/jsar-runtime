@@ -96,6 +96,7 @@ namespace builtin_scene
   {
     friend class InstancedMeshBase;
     friend class InstanceListBase;
+    friend class ContainerInstance;
     friend class ContentInstancesList;
 
   private:
@@ -361,11 +362,12 @@ namespace builtin_scene
   class ContainerInstance : public InstanceListBase
   {
   public:
-    ContainerInstance(uint32_t containerId,
+    ContainerInstance(uint32_t containerIndex,
                       std::shared_ptr<client_graphics::WebGLVertexArray> vao,
                       std::shared_ptr<client_graphics::WebGLBuffer> vbo)
         : InstanceListBase(vao, vbo)
-        , containerId_(containerId)
+        , containerIndex_(containerIndex)
+        , belongsToContainerId_(std::nullopt)
     {
     }
 
@@ -379,13 +381,22 @@ namespace builtin_scene
      */
     void setInstance(std::shared_ptr<Instance> instance);
 
-    uint32_t getContainerId() const
+    uint32_t getContainerIndex() const
     {
-      return containerId_;
+      return containerIndex_;
+    }
+    std::optional<uint32_t> getBelongsToContainerId() const
+    {
+      return belongsToContainerId_;
+    }
+    void setBelongsToContainerId(uint32_t id)
+    {
+      belongsToContainerId_ = id;
     }
 
   private:
-    uint32_t containerId_;
+    uint32_t containerIndex_;
+    std::optional<uint32_t> belongsToContainerId_;
   };
 
   // Derived class for content instances list

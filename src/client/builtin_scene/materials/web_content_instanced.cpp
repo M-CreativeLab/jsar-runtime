@@ -142,17 +142,17 @@ namespace builtin_scene::materials
 
       if (hasScrollableContainer && hasContent)
       {
-        auto maskRef = 0xA + containerInstance->getContainerId();
-
-        // Step 1: Clear stencil buffer for container isolation
-        glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
-
         // Step 2: Render scrollable container instance as stencil mask
         glContext->enable(WEBGL_STENCIL_TEST);
-        glContext->colorMask(true, true, true, true);                // Don't write to color buffer for mask
-        glContext->stencilMask(0xFF);                                // Enable writing to stencil buffer
-        glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xFF);         // Always pass, write 1 to stencil
+        glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
+        glContext->stencilMask(0xFF);
+
+        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0xf - layer.index()) & 0x0f);
+        if (layer.index() == 0)
+          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xFF);
+        else
+          glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
 
         // Render the container mask
         {
@@ -169,7 +169,7 @@ namespace builtin_scene::materials
         // Step 3: Render content with stencil testing enabled
         glContext->colorMask(true, true, true, true);             // Re-enable color buffer writes
         glContext->stencilMask(0);                                // Disable writing to stencil buffer
-        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xFF);       // Only render where stencil == 1
+        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render where stencil == 1
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
 
         // Render the content instances

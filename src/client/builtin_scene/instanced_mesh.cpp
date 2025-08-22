@@ -439,7 +439,10 @@ namespace builtin_scene
   {
     clearInstances();
     if (instance != nullptr)
+    {
       addInstance(instance);
+      belongsToContainerId_ = instance->belongsToContainerId_;
+    }
     markBufferAsDirty();
   }
 
@@ -733,10 +736,11 @@ namespace builtin_scene
       bool ownsContainer = containerInstanceMaps.find(layer) != containerInstanceMaps.end();
       if (ownsContainer)
       {
+        uint32_t index = 1;
         for (const auto &[id, instance] : containerInstanceMaps[layer])
         {
           LayeredInstancesData layerData(layer);
-          layerData.containerInstance = make_shared<ContainerInstance>(id,
+          layerData.containerInstance = make_shared<ContainerInstance>(index++,
                                                                        glContext->createVertexArray(),
                                                                        glContext->createBuffer());
           layerData.containerInstance->configureAttribs(glContext, program, mesh3d);
@@ -753,14 +757,16 @@ namespace builtin_scene
           auto belongsToContainer = layeredDataMap.find(instance->belongsToContainerId_) != layeredDataMap.end();
           if (!belongsToContainer)
           {
-            LayeredInstancesData layerData(layer);
-            layerData.containerInstance = nullptr; // No container for this instance
-            layerData.contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
-                                                                           glContext->createVertexArray(),
-                                                                           glContext->createBuffer());
-            layerData.contentInstances->configureAttribs(glContext, program, mesh3d);
-            layerData.contentInstances->addInstance(instance);
-            defaultLayeredData = move(layerData);
+            if (!defaultLayeredData.has_value())
+            {
+              defaultLayeredData = LayeredInstancesData(layer);
+              defaultLayeredData->containerInstance = nullptr; // No container for this instance
+              defaultLayeredData->contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
+                                                                                       glContext->createVertexArray(),
+                                                                                       glContext->createBuffer());
+              defaultLayeredData->contentInstances->configureAttribs(glContext, program, mesh3d);
+            }
+            defaultLayeredData->contentInstances->addInstance(instance);
           }
           else
           {

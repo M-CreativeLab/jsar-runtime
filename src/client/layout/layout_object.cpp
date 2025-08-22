@@ -196,13 +196,19 @@ namespace client_layout
       if (webContent != nullptr)
       {
         webContent->setLayer(layer_);
-        webContent->setIsScrollableContainer(isScrollContainer());
 
-        // Update the container that this content belongs to
-        // TODO(yorkie): replace this with a more performant way to find the containing scroll container.
-        auto container = containingScrollContainer();
-        if (container != nullptr && container->hasEntity()) [[likely]]
-          webContent->setBelongsToScrollableContainer(container->entity());
+        if (isScrollContainer())
+        {
+          webContent->setIsScrollableContainer(true);
+          webContent->setBelongsToScrollableContainer(entity_.value());
+        }
+        else
+        {
+          webContent->setIsScrollableContainer(false);
+          auto scrollContainer = containingScrollContainer();
+          if (scrollContainer != nullptr && scrollContainer->hasEntity()) [[likely]]
+            webContent->setBelongsToScrollableContainer(scrollContainer->entity());
+        }
       }
     }
 

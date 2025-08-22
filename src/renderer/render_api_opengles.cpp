@@ -2526,13 +2526,21 @@ private:
   }
   TR_OPENGL_FUNC void OnClear(ClearCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    if (options.executingPassType != ExecutingPassType::kOffscreenPass) [[unlikely]]
-      return;
-
     GLbitfield mask = req->mask;
-    glClear(mask);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, nullptr, nullptr, options);
+    // Only the following cases we allow to clear the buffers:
+    // a) Stencil buffer only is free to clear at any time.
+    // b) The executing pass is Offscreen pass, which means it's not rendering to XR session directly.
+    if (mask == GL_STENCIL_BUFFER_BIT ||
+        options.executingPassType == ExecutingPassType::kOffscreenPass)
+    {
+      glClear(mask);
+      if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+        PrintDebugInfo(req, nullptr, nullptr, options);
+    }
+    else
+    {
+      return;
+    }
   }
   TR_OPENGL_FUNC void OnClearBufferfv(ClearBufferfvCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,

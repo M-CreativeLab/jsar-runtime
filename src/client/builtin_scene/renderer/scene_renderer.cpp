@@ -385,9 +385,6 @@ namespace builtin_scene
 
   void SceneRenderer::onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    if (isVolumeMaskEnabled())
-      enableVolumeMask();
-
     if (renderPass == RenderPass::kOpaques)
     {
       glContext_->enable(WEBGL_DEPTH_TEST);
@@ -406,7 +403,5 @@ namespace builtin_scene
 
   void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    if (isVolumeMaskEnabled())
-      disableVolumeMask();
   }
 }
