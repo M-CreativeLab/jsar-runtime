@@ -294,9 +294,8 @@ namespace builtin_scene
   struct LayeredInstancesData
   {
     LayeredInstancesData() = default;
-    LayeredInstancesData(RenderLayer layer, uint32_t containerId)
+    LayeredInstancesData(RenderLayer layer)
         : layer(layer)
-        , containerId(containerId)
     {
     }
 
@@ -524,7 +523,6 @@ namespace builtin_scene
     }
 
     using LayerCallback = std::function<void(RenderLayer layer,
-                                             uint32_t containerId,
                                              ContainerInstance *containerInstance,
                                              ContentInstancesList *contentInstances)>;
     inline void iterateLayers(LayerCallback callback) const
@@ -544,7 +542,6 @@ namespace builtin_scene
         if (contentInstances || containerInstance)
         {
           callback(layerData.layer,
-                   layerData.containerId,
                    containerInstance,
                    contentInstances);
         }
