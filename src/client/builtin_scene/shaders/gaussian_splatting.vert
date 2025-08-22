@@ -295,9 +295,6 @@ void main()
     return;
   }
 
-  vRgba = rgba;
-  vSplatUv = position.xy * maxStdDev;
-
   mat4 viewMatrix;
   mat4 projectionMatrix;
 
@@ -416,5 +413,8 @@ void main()
   vec2 ndcOffset = (2.0 / scaledRenderSize) * pixelOffset;
   vec3 ndcCenter = clipCenter.xyz / clipCenter.w;
   vec3 ndc = vec3(ndcCenter.xy + ndcOffset, ndcCenter.z);
+
+  vRgba = rgba;
+  vSplatUv = position.xy * maxStdDev;
   gl_Position = vec4(ndc.xy * clipCenter.w, clipCenter.zw);
 }
