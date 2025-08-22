@@ -18,12 +18,13 @@
 #include "./mesh_base.hpp"
 #include "./render_queue.hpp"
 #include "./render_layer.hpp"
+#include "./css_border_data_texture.hpp"
 
 namespace builtin_scene
 {
   // Forward declarations
   class Mesh3d;
-  class RenderableInstancesList;
+  class InstanceListBase;
   namespace materials
   {
     class WebContentInstancedMaterial;
@@ -94,7 +95,8 @@ namespace builtin_scene
   class Instance
   {
     friend class InstancedMeshBase;
-    friend class RenderableInstancesList;
+    friend class InstanceListBase;
+    friend class ContentInstancesList;
 
   private:
     class TextureCoordBase : public std::array<float, 2>
@@ -193,13 +195,16 @@ namespace builtin_scene
   }
 #define IMPL_BOOL_SETTER(NAME, PRIV_FIELD) \
   IMPL_SETTER(NAME, PRIV_FIELD, bool)
+#define IMPL_U32_SETTER(NAME, PRIV_FIELD) \
+  IMPL_SETTER(NAME, PRIV_FIELD, uint32_t)
 
     IMPL_BOOL_SETTER(Enabled, enabled_)
     IMPL_BOOL_SETTER(Opaque, isOpaque_)
     IMPL_BOOL_SETTER(IsContainer, isContainer_)
-    IMPL_SETTER(BelongsToContainerId, belongsToContainerId_, uint32_t)
+    IMPL_U32_SETTER(BelongsToContainerId, belongsToContainerId_)
     IMPL_SETTER(RenderQueue, renderQueue_, RenderQueue)
     IMPL_SETTER(RenderLayer, renderLayer_, RenderLayer)
+#undef IMPL_U32_SETTER
 #undef IMPL_BOOL_SETTER
 #undef IMPL_SETTER
 
@@ -242,9 +247,9 @@ namespace builtin_scene
 
   private:
     // Add a holder to the instance.
-    void addHolder(std::shared_ptr<RenderableInstancesList> holder);
+    void addHolder(std::shared_ptr<InstanceListBase> holder);
     // Remove a holder from the instance.
-    void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
+    void removeHolder(std::shared_ptr<InstanceListBase> holder);
     // Notify the holders that buffer data has changed.
     void notifyBufferDataChanged();
     // Notify the holders that texture data has changed.
@@ -271,7 +276,7 @@ namespace builtin_scene
     uint32_t belongsToContainerId_ = 0;
 
   private:
-    std::vector<std::weak_ptr<RenderableInstancesList>> holders_;
+    std::vector<std::weak_ptr<InstanceListBase>> holders_;
   };
 
   enum class InstanceFilter
@@ -282,6 +287,164 @@ namespace builtin_scene
   };
 
   using InstanceMap = std::unordered_map<ecs::EntityId, std::shared_ptr<Instance>>;
+
+  class InstanceListBase : public std::enable_shared_from_this<InstanceListBase>
+  {
+    friend class Instance;
+    friend class InstancedMeshBase;
+
+  public:
+    InstanceListBase(std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                     std::shared_ptr<client_graphics::WebGLBuffer> vbo);
+    virtual ~InstanceListBase() = default;
+
+  public:
+    virtual bool isContainerInstance() const
+    {
+      return false;
+    }
+    virtual bool isContentInstancesList() const
+    {
+      return false;
+    }
+
+    inline size_t count() const
+    {
+      return list_.size();
+    }
+    inline bool isBufferDataDirty() const
+    {
+      return bufferDataDirty_;
+    }
+
+    /**
+     * Configure the instance attributes for the given WebGL program.
+     */
+    size_t configureAttribs(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                            std::shared_ptr<client_graphics::WebGLProgram> program,
+                            std::shared_ptr<Mesh3d> mesh3d);
+
+
+    size_t copyToArrayData(vector<InstanceData> &dst);
+
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext);
+    void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
+
+    /**
+     * Get the current instances as a vector (for border data updates).
+     */
+    std::vector<std::shared_ptr<Instance>> getInstances() const;
+
+  protected:
+    // Clear the instances.
+    virtual void clearInstances();
+    // Add an instance to the list.
+    void addInstance(std::shared_ptr<Instance> instance);
+
+    inline void markBufferAsDirty()
+    {
+      bufferDataDirty_ = true;
+    }
+
+  public:
+    std::shared_ptr<client_graphics::WebGLVertexArray> vao;
+    std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
+
+  protected:
+    std::vector<std::weak_ptr<Instance>> list_;
+
+  private:
+    bool bufferDataDirty_ = true;
+  };
+
+  // Derived class for container instances (with container ID)
+  class ContainerInstance : public InstanceListBase
+  {
+  public:
+    ContainerInstance(uint32_t containerId,
+                      std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                      std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+        : InstanceListBase(vao, vbo)
+        , containerId_(containerId)
+    {
+    }
+
+    bool isContainerInstance() const override
+    {
+      return true;
+    }
+
+    /**
+     * Set a single instance for this container.
+     */
+    void setInstance(std::shared_ptr<Instance> instance);
+
+    uint32_t getContainerId() const
+    {
+      return containerId_;
+    }
+
+  private:
+    uint32_t containerId_;
+  };
+
+  // Derived class for content instances list
+  class ContentInstancesList : public InstanceListBase
+  {
+    friend struct LayeredInstancesData;
+
+  public:
+    /**
+     * The sorting order of the instances.
+     */
+    enum SortingOrder
+    {
+      kNone,
+      kFrontToBack,
+      kBackToFront
+    };
+
+  public:
+    ContentInstancesList(InstanceFilter filter,
+                         std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                         std::shared_ptr<client_graphics::WebGLBuffer> vbo)
+        : InstanceListBase(vao, vbo)
+        , textureDataDirty_(true)
+    {
+    }
+
+    bool isContentInstancesList() const override
+    {
+      return true;
+    }
+    inline bool isTextureDataDirty() const
+    {
+      return textureDataDirty_;
+    }
+    inline void markTextureDataAsDirty()
+    {
+      textureDataDirty_ = true;
+    }
+
+    /**
+     * Update the renderable instances list with the given instances.
+     *
+     * @param instances The instances to update.
+     * @param sortingOrder The sorting order of the instances.
+     */
+    void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture);
+
+  private:
+    void clearInstances() override;
+    void sortInstances(SortingOrder sortingOrder);
+
+  public:
+    InstanceFilter filter;
+
+  private:
+    bool textureDataDirty_;
+  };
 
   /**
    * LayeredInstancesData represents a single container and its content for isolated rendering
@@ -302,142 +465,13 @@ namespace builtin_scene
     RenderLayer layer;
     std::shared_ptr<ContainerInstance> containerInstance;   // Single container mask
     std::shared_ptr<ContentInstancesList> contentInstances; // Content for this container
+
+    void sortContentInstances()
+    {
+      if (contentInstances)
+        contentInstances->sortInstances(ContentInstancesList::SortingOrder::kFrontToBack);
+    }
   };
-
-  class InstanceListBase : public std::enable_shared_from_this<InstanceListBase>
-  {
-    friend class Instance;
-    friend class InstancedMeshBase;
-
-  public:
-    /**
-     * The sorting order of the instances.
-     */
-    enum SortingOrder
-    {
-      kNone,
-      kFrontToBack,
-      kBackToFront
-    };
-
-  public:
-    InstanceListBase(InstanceFilter filter,
-                     std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                     std::shared_ptr<client_graphics::WebGLBuffer> vbo);
-
-  public:
-    inline size_t count() const
-    {
-      return list_.size();
-    }
-    inline bool isBufferDataDirty() const
-    {
-      return bufferDataDirty_;
-    }
-    inline bool isTextureDataDirty() const
-    {
-      return textureDataDirty_;
-    }
-
-    /**
-     * Configure the instance attributes for the given WebGL program.
-     */
-    size_t configureAttribs(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                            std::shared_ptr<client_graphics::WebGLProgram> program,
-                            std::shared_ptr<Mesh3d> mesh3d);
-
-
-    size_t copyToArrayData(vector<InstanceData> &dst);
-    /**
-     * Called before the instanced draw.
-     */
-    virtual void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
-                                     class CSSBorderDataTexture *borderDataTexture = nullptr);
-    /**
-     * Called after the instanced draw.
-     */
-    virtual void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
-
-    /**
-     * Get the current instances as a vector (for border data updates).
-     */
-    std::vector<std::shared_ptr<Instance>> getInstances() const;
-
-  private:
-    // Clear the instances.
-    void clearInstances();
-    // Add an instance to the list.
-    void addInstance(std::shared_ptr<Instance> instance);
-
-    inline void markBufferAsDirty()
-    {
-      bufferDataDirty_ = true;
-    }
-    inline void markTextureDataAsDirty()
-    {
-      textureDataDirty_ = true;
-    }
-
-  public:
-    InstanceFilter filter;
-    std::shared_ptr<client_graphics::WebGLVertexArray> vao;
-    std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
-
-  private:
-    std::vector<std::weak_ptr<Instance>> list_;
-    bool bufferDataDirty_ = true;
-    bool textureDataDirty_ = true;
-  };
-
-  // Derived class for container instances (with container ID)
-  class ContainerInstance : public InstanceListBase
-  {
-  public:
-    ContainerInstance(uint32_t containerId,
-                      InstanceFilter filter,
-                      std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                      std::shared_ptr<client_graphics::WebGLBuffer> vbo)
-        : InstanceListBase(filter, vao, vbo)
-        , containerId_(containerId)
-    {
-    }
-
-    /**
-     * Set a single instance for this container.
-     */
-    void setInstance(std::shared_ptr<Instance> instance);
-
-    uint32_t getContainerId() const
-    {
-      return containerId_;
-    }
-
-  private:
-    uint32_t containerId_;
-  };
-
-  // Derived class for content instances list
-  class ContentInstancesList : public InstanceListBase
-  {
-  public:
-    ContentInstancesList(InstanceFilter filter,
-                         std::shared_ptr<client_graphics::WebGLVertexArray> vao,
-                         std::shared_ptr<client_graphics::WebGLBuffer> vbo)
-        : InstanceListBase(filter, vao, vbo)
-    {
-    }
-
-    /**
-     * Update the renderable instances list with the given instances.
-     *
-     * @param instances The instances to update.
-     * @param sortingOrder The sorting order of the instances.
-     */
-    void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
-  };
-
-  // Type alias for backward compatibility during transition
-  using RenderableInstancesList = InstanceListBase;
 
   class InstancedMeshBase
   {
@@ -513,7 +547,7 @@ namespace builtin_scene
      */
     bool removeInstance(ecs::EntityId id);
 
-    inline RenderableInstancesList &getDepthOnlyInstancesList() const
+    inline ContentInstancesList &getDepthOnlyInstancesList() const
     {
       return *depthOnlyInstances_;
     }
@@ -529,21 +563,14 @@ namespace builtin_scene
     {
       for (const auto &layerData : layeredInstances_)
       {
-        ContentInstancesList *contentInstances =
-          (layerData.contentInstances && layerData.contentInstances->count() > 0)
-            ? layerData.contentInstances.get()
-            : nullptr;
-
         ContainerInstance *containerInstance =
           (layerData.containerInstance && layerData.containerInstance->count() > 0)
             ? layerData.containerInstance.get()
             : nullptr;
 
-        if (contentInstances || containerInstance)
+        if (containerInstance)
         {
-          callback(layerData.layer,
-                   containerInstance,
-                   contentInstances);
+          callback(layerData.layer, containerInstance, layerData.contentInstances.get());
         }
       }
     }
@@ -578,7 +605,7 @@ namespace builtin_scene
     void configureInstanceAttribs(std::shared_ptr<client_graphics::WebGLProgram> program,
                                   std::shared_ptr<Mesh3d> mesh3d);
     /**
-     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList`.
+     * Update the internal `idToInstanceMap_` into the `layeredInstances_` and `depthOnlyInstances_`.
      *
      * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
@@ -594,7 +621,7 @@ namespace builtin_scene
     mutable std::shared_mutex mutex_;
     InstanceMap idToInstanceMap_;
     std::vector<LayeredInstancesData> layeredInstances_;
-    std::shared_ptr<RenderableInstancesList> depthOnlyInstances_;
+    std::shared_ptr<ContentInstancesList> depthOnlyInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

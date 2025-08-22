@@ -199,15 +199,10 @@ namespace client_layout
         webContent->setIsScrollableContainer(isScrollContainer());
 
         // Update the container that this content belongs to
+        // TODO(yorkie): replace this with a more performant way to find the containing scroll container.
         auto container = containingScrollContainer();
-        if (container != nullptr && container->hasEntity())
-        {
+        if (container != nullptr && container->hasEntity()) [[likely]]
           webContent->setBelongsToScrollableContainer(container->entity());
-        }
-        else
-        {
-          webContent->setBelongsToScrollableContainer(ecs::kInvalidEntityId);
-        }
       }
     }
 

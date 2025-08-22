@@ -242,7 +242,7 @@ namespace builtin_scene::ecs
     EntityId id_;
 
   private:
-    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0, MAX_ENTITY_ID);
+    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0x1, MAX_ENTITY_ID);
   };
 
   /**

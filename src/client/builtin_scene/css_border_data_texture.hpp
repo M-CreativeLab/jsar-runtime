@@ -9,7 +9,6 @@ namespace builtin_scene
 {
   // Forward declaration
   class Instance;
-  class RenderableInstancesList;
 
   /**
    * Manages the border data texture for SDF border rendering.
