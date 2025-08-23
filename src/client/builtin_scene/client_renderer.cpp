@@ -127,7 +127,6 @@ namespace builtin_scene
     // Render items
     if (entities.size() > 0)
     {
-      renderVolumeMask(renderPass, renderTarget);
       onBeforeRender(renderPass, renderTarget);
       for (const auto &entity : entities)
       {
@@ -138,20 +137,6 @@ namespace builtin_scene
                    renderTarget);
       }
       onAfterRender(renderPass, renderTarget);
-    }
-  }
-
-  void RenderSystem::renderVolumeMask(RenderPass renderPass, optional<XRRenderTarget> renderTarget)
-  {
-    if (renderer_->isVolumeMaskEnabled())
-    {
-      auto renderVolume = [this, &renderPass, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
-      {
-        auto meshComponent = getComponent<Mesh3d>(entity);
-        auto materialComponent = getComponent<MeshMaterial3d>(entity);
-        renderMesh(entity, meshComponent, materialComponent, renderPass, renderTarget);
-      };
-      renderer_->addVolumeMask(renderVolume);
     }
   }
 

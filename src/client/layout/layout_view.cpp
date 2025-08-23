@@ -33,6 +33,7 @@ namespace client_layout
     client_cssom::CSSStyleDeclaration initialStyle;
     initialStyle.setProperty("width", "100vw");
     initialStyle.setProperty("height", "100vh");
+    initialStyle.setProperty("background-color", "white");
 
     view->setStyle(client_cssom::ComputedStyle(initialStyle, context));
     return view;

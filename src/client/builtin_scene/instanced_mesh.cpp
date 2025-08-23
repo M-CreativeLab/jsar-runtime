@@ -35,20 +35,6 @@ namespace builtin_scene
     return true;
   }
 
-  void Instance::translate(float tx, float ty, float tz)
-  {
-    auto &transform = data_.transform;
-    transform = glm::translate(transform, glm::vec3(tx, ty, tz));
-    notifyBufferDataChanged();
-  }
-
-  void Instance::scale(float sx, float sy, float sz)
-  {
-    auto &transform = data_.transform;
-    transform = glm::scale(transform, glm::vec3(sx, sy, sz));
-    notifyBufferDataChanged();
-  }
-
   void Instance::setTransform(const glm::mat4 &transformationMatrix)
   {
     auto &transform = data_.transform;
@@ -443,7 +429,6 @@ namespace builtin_scene
       addInstance(instance);
       belongsToContainerId_ = instance->belongsToContainerId_;
     }
-    markBufferAsDirty();
   }
 
   size_t InstanceListBase::copyToArrayData(vector<InstanceData> &dst)
@@ -696,7 +681,7 @@ namespace builtin_scene
       return;
     }
 
-    shared_lock<shared_mutex> lock(mutex_);
+    unique_lock<shared_mutex> lock(mutex_);
 
     // Update layered instances based on RenderLayer from instances
     set<RenderLayer> allLayers;

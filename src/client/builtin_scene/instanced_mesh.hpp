@@ -164,8 +164,6 @@ namespace builtin_scene
   public:
     void randomColor();
     bool setColor(const glm::vec4 &color);
-    void translate(float tx, float ty, float tz);
-    void scale(float sx, float sy, float sz);
     void setTransform(const glm::mat4 &transformationMatrix);
     void setTexture(TextureOffset uvOffset,
                     TextureOffset uvOffsetR,
@@ -572,6 +570,7 @@ namespace builtin_scene
                                              ContentInstancesList *contentInstances)>;
     inline void iterateLayers(LayerCallback callback) const
     {
+      shared_lock<shared_mutex> lock(mutex_);
       for (const auto &layerData : layeredInstances_)
       {
         ContainerInstance *containerInstance =
