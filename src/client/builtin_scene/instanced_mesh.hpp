@@ -571,16 +571,16 @@ namespace builtin_scene
     inline void iterateLayers(LayerCallback callback) const
     {
       shared_lock<shared_mutex> lock(mutex_);
-      for (const auto &layerData : layeredInstances_)
+      for (const auto *layerData : layeredInstances_)
       {
         ContainerInstance *containerInstance =
-          (layerData.containerInstance && layerData.containerInstance->count() > 0)
-            ? layerData.containerInstance.get()
+          (layerData->containerInstance && layerData->containerInstance->count() > 0)
+            ? layerData->containerInstance.get()
             : nullptr;
 
         if (containerInstance)
         {
-          callback(layerData.layer, containerInstance, layerData.contentInstances.get());
+          callback(layerData->layer, containerInstance, layerData->contentInstances.get());
         }
       }
     }
@@ -630,7 +630,7 @@ namespace builtin_scene
   protected:
     mutable std::shared_mutex mutex_;
     InstanceMap idToInstanceMap_;
-    std::vector<LayeredInstancesData> layeredInstances_;
+    std::vector<LayeredInstancesData *> layeredInstances_; // Store pointers to active LayeredInstancesData objects
     std::shared_ptr<ContentInstancesList> depthOnlyInstances_;
 
   private:
@@ -638,6 +638,10 @@ namespace builtin_scene
     std::weak_ptr<Mesh3d> mesh3d_;
     bool isDepthOnlyPassEnabled_ = false;
     bool isStructureDirty_ = true;
+
+    // Caching/pooling system for LayeredInstancesData objects
+    std::optional<LayeredInstancesData> defaultLayerData_;                // Default layer for non-container instances
+    std::unordered_map<std::string, LayeredInstancesData> layerDataPool_; // Pool for layer+container combinations
   };
 
   /**

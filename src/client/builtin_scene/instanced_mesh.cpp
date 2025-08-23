@@ -708,33 +708,60 @@ namespace builtin_scene
       }
     }
 
-    // Clear existing layered instances and rebuild from scratch for vector structure
+    // Clear existing layered instances (only pointers, not the actual data)
     layeredInstances_.clear();
 
-    // Create LayeredInstancesData entries per layer
-    // TODO: Per-container logic will be implemented later
+    // Helper lambda to get or create cached LayeredInstancesData
+    auto getOrCreateLayerData = [&](RenderLayer layer, uint32_t containerId) -> LayeredInstancesData &
+    {
+      std::string key = std::to_string(static_cast<int>(layer)) + "_" + std::to_string(containerId);
+
+      auto it = layerDataPool_.find(key);
+      if (it == layerDataPool_.end())
+      {
+        // Create new LayeredInstancesData with VAO/VBO only once
+        LayeredInstancesData newLayerData(layer);
+        uint32_t containerIndex = containerId; // Use containerId as index for now
+        newLayerData.containerInstance = make_shared<ContainerInstance>(containerIndex,
+                                                                        glContext->createVertexArray(),
+                                                                        glContext->createBuffer());
+        newLayerData.containerInstance->configureAttribs(glContext, program, mesh3d);
+
+        it = layerDataPool_.emplace(key, std::move(newLayerData)).first;
+      }
+
+      return it->second;
+    };
+
+    // Initialize default layer data if not already done
+    if (!defaultLayerData_.has_value())
+    {
+      defaultLayerData_ = LayeredInstancesData(RenderLayer::kBackground); // Default layer
+      defaultLayerData_->containerInstance = nullptr;                     // No container for default layer
+      defaultLayerData_->contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
+                                                                              glContext->createVertexArray(),
+                                                                              glContext->createBuffer());
+      defaultLayerData_->contentInstances->configureAttribs(glContext, program, mesh3d);
+    }
+
+    // Process each layer
     for (const auto &layer : allLayers)
     {
-      unordered_map<uint32_t, LayeredInstancesData> layeredDataMap;
-      optional<LayeredInstancesData> defaultLayeredData; // The default layer (no container)
+      std::unordered_map<uint32_t, LayeredInstancesData *> layeredDataMap;
+      bool usedDefaultLayer = false;
 
       bool ownsContainer = containerInstanceMaps.find(layer) != containerInstanceMaps.end();
       if (ownsContainer)
       {
-        uint32_t index = 1;
         for (const auto &[id, instance] : containerInstanceMaps[layer])
         {
-          LayeredInstancesData layerData(layer);
-          layerData.containerInstance = make_shared<ContainerInstance>(index++,
-                                                                       glContext->createVertexArray(),
-                                                                       glContext->createBuffer());
-          layerData.containerInstance->configureAttribs(glContext, program, mesh3d);
+          LayeredInstancesData &layerData = getOrCreateLayerData(layer, id);
           layerData.containerInstance->setInstance(instance);
-          layeredDataMap[id] = move(layerData);
+          layeredDataMap[id] = &layerData;
         }
       }
 
-      // Create or update renderable instances list (if layer has regular instances)
+      // Process content instances for this layer
       if (contentInstanceMaps.find(layer) != contentInstanceMaps.end())
       {
         for (const auto &[id, instance] : contentInstanceMaps[layer])
@@ -742,47 +769,52 @@ namespace builtin_scene
           auto belongsToContainer = layeredDataMap.find(instance->belongsToContainerId_) != layeredDataMap.end();
           if (!belongsToContainer)
           {
-            if (!defaultLayeredData.has_value())
+            // Add to default layer
+            if (!usedDefaultLayer)
             {
-              defaultLayeredData = LayeredInstancesData(layer);
-              defaultLayeredData->containerInstance = nullptr; // No container for this instance
-              defaultLayeredData->contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
-                                                                                       glContext->createVertexArray(),
-                                                                                       glContext->createBuffer());
-              defaultLayeredData->contentInstances->configureAttribs(glContext, program, mesh3d);
+              // Clear previous content from default layer
+              defaultLayerData_->contentInstances->clearInstances();
+              usedDefaultLayer = true;
             }
-            defaultLayeredData->contentInstances->addInstance(instance);
+            defaultLayerData_->contentInstances->addInstance(instance);
           }
           else
           {
-            auto &layerData = layeredDataMap[instance->belongsToContainerId_];
-            if (!layerData.contentInstances)
+            LayeredInstancesData *layerData = layeredDataMap[instance->belongsToContainerId_];
+            if (!layerData->contentInstances)
             {
-              // If the layer does not have a content instance list, create one
-              layerData.contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
-                                                                             glContext->createVertexArray(),
-                                                                             glContext->createBuffer());
-              layerData.contentInstances->configureAttribs(glContext, program, mesh3d);
+              // Create content instances list only once per layer+container
+              layerData->contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
+                                                                              glContext->createVertexArray(),
+                                                                              glContext->createBuffer());
+              layerData->contentInstances->configureAttribs(glContext, program, mesh3d);
             }
-            layerData.contentInstances->addInstance(instance);
+            else
+            {
+              // Clear previous content to rebuild
+              layerData->contentInstances->clearInstances();
+            }
+            layerData->contentInstances->addInstance(instance);
           }
         }
       }
 
-      // Append the layer data to the layered instances vector
-      if (defaultLayeredData.has_value())
+      // Add default layer to the active instances if it was used
+      if (usedDefaultLayer)
       {
-        defaultLayeredData->sortContentInstances();
-        if (defaultLayeredData->contentInstances != nullptr)
-          defaultLayeredData->contentInstances->markTextureDataAsDirty();
-        layeredInstances_.push_back(defaultLayeredData.value());
+        defaultLayerData_->sortContentInstances();
+        if (defaultLayerData_->contentInstances != nullptr)
+          defaultLayerData_->contentInstances->markTextureDataAsDirty();
+        layeredInstances_.push_back(&defaultLayerData_.value());
       }
+
+      // Add container-specific layer data to the active instances
       for (auto &[_, layerData] : layeredDataMap)
       {
-        layerData.sortContentInstances();
-        if (layerData.contentInstances != nullptr)
-          layerData.contentInstances->markTextureDataAsDirty();
-        layeredInstances_.push_back(move(layerData));
+        layerData->sortContentInstances();
+        if (layerData->contentInstances != nullptr)
+          layerData->contentInstances->markTextureDataAsDirty();
+        layeredInstances_.push_back(layerData);
       }
     }
 
