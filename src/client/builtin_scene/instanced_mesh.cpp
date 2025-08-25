@@ -709,36 +709,38 @@ namespace builtin_scene
     }
 
     // Helper lambda to get or create cached LayeredInstancesData
-    auto getOrCreateLayerData = [&](RenderLayer layer, uint32_t containerId) -> LayeredInstancesData &
+    auto getOrCreateLayerData = [&](RenderLayer layer, uint32_t containerIndex) -> LayeredInstancesData &
     {
-      string key = to_string(static_cast<int>(layer)) + "_" + to_string(containerId);
-
+      // Key format: "<layer>_<containerIndex>"
+      string key = to_string(static_cast<int>(layer)) + "_" + to_string(containerIndex);
       auto it = layerDataPool_.find(key);
       if (it == layerDataPool_.end())
       {
         // Create new LayeredInstancesData with VAO/VBO only once
         LayeredInstancesData newLayerData(layer);
-        uint32_t containerIndex = containerId; // Use containerId as index for now
+
+        // Initialize container instance for the new layer data
         newLayerData.containerInstance = make_shared<ContainerInstance>(containerIndex,
                                                                         glContext->createVertexArray(),
                                                                         glContext->createBuffer());
         newLayerData.containerInstance->configureAttribs(glContext, program, mesh3d);
 
+        // Initialize content instances for the new layer data
         newLayerData.contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
                                                                           glContext->createVertexArray(),
                                                                           glContext->createBuffer());
         newLayerData.contentInstances->configureAttribs(glContext, program, mesh3d);
 
-        it = layerDataPool_.emplace(key, std::move(newLayerData)).first;
+        // Move to the pool and get the iterator
+        it = layerDataPool_.emplace(key, move(newLayerData)).first;
       }
-
       return it->second;
     };
 
-    // Clear existing layered instances (only pointers, not the actual data)
+    // 1. Clear existing layered instances (only pointers, not the actual data)
     layeredInstances_.clear();
 
-    // Initialize default layer data if not already done
+    // 2. Initialize default layer data if not already done
     if (!defaultLayerData_.has_value())
     {
       defaultLayerData_ = LayeredInstancesData(RenderLayer()); // Default layer
@@ -748,14 +750,19 @@ namespace builtin_scene
                                                                               glContext->createBuffer());
       defaultLayerData_->contentInstances->configureAttribs(glContext, program, mesh3d);
     }
+    else
+    {
+      // Clear previous content from default layer
+      defaultLayerData_->contentInstances->clearInstances();
+    }
 
-
-    // Process each layer
+    // 3. Process each layer
     for (const auto &layer : allLayers)
     {
+      // Map to track which container instance each content instance belongs to
       std::unordered_map<uint32_t, LayeredInstancesData *> layeredDataMap;
-      bool usedDefaultLayer = false;
 
+      // 3.1 Process container instances for this layer
       bool ownsContainer = containerInstanceMaps.find(layer) != containerInstanceMaps.end();
       if (ownsContainer)
       {
@@ -769,7 +776,7 @@ namespace builtin_scene
         }
       }
 
-      // Process content instances for this layer
+      // 3.2 Process content instances for this layer
       if (contentInstanceMaps.find(layer) != contentInstanceMaps.end())
       {
         for (const auto &[id, instance] : contentInstanceMaps[layer])
@@ -777,13 +784,6 @@ namespace builtin_scene
           auto belongsToContainer = layeredDataMap.find(instance->belongsToContainerId_) != layeredDataMap.end();
           if (!belongsToContainer)
           {
-            // Add to default layer
-            if (!usedDefaultLayer)
-            {
-              // Clear previous content from default layer
-              defaultLayerData_->contentInstances->clearInstances();
-              usedDefaultLayer = true;
-            }
             defaultLayerData_->contentInstances->addInstance(instance);
           }
           else
@@ -795,13 +795,13 @@ namespace builtin_scene
         }
       }
 
+      // 3.3 Add active layers to the layeredInstances_ list
       {
         // Add default layer to the active instances if it was used
-        if (usedDefaultLayer)
+        if (defaultLayerData_->contentInstances->count() > 0)
         {
           defaultLayerData_->sortContentInstances();
-          if (defaultLayerData_->contentInstances != nullptr)
-            defaultLayerData_->contentInstances->markTextureDataAsDirty();
+          defaultLayerData_->contentInstances->markTextureDataAsDirty();
           layeredInstances_.push_back(&defaultLayerData_.value());
         }
 
@@ -809,21 +809,20 @@ namespace builtin_scene
         for (auto &[_, layerData] : layeredDataMap)
         {
           layerData->sortContentInstances();
-          if (layerData->contentInstances != nullptr)
-            layerData->contentInstances->markTextureDataAsDirty();
+          layerData->contentInstances->markTextureDataAsDirty();
           layeredInstances_.push_back(layerData);
         }
       }
     }
 
-    // Update depth-only instances with all instances for use in `DepthOnlyPass`.
+    // 4. Update depth-only instances with all instances for use in `DepthOnlyPass`.
     //
     // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or
     // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is
     // written and no blending occurs.
     depthOnlyInstances_->update(idToInstanceMap_, ContentInstancesList::SortingOrder::kNone /* Disable sorting */);
 
-    // Mark the structure as clean after updating.
+    // 5. Mark the structure as clean after updating.
     isStructureDirty_ = false;
   }
 }
