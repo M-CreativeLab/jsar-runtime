@@ -444,7 +444,6 @@ namespace builtin_scene
     void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
     void beforeInstancedDraw(client_graphics::WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture);
 
-  private:
     void clearInstances() override;
     void sortInstances(SortingOrder sortingOrder);
 
