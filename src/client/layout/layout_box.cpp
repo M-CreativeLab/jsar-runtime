@@ -219,6 +219,8 @@ namespace client_layout
     auto scrollable_area = getScrollableArea();
     if (scrollable_area && scrollable_area->needsScrolling())
     {
+      cout << "LayoutBox::scrollBy on " << debugName() << ": "
+           << "Scrolling by " << offset.x << "," << offset.y << endl;
       scrollable_area->scrollBy(offset);
     }
   }

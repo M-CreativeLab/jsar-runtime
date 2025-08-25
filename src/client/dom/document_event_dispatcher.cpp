@@ -228,12 +228,12 @@ namespace dom
       }
 
       // Check if this container can scroll in the requested direction
-      if (!scrollableArea->canScrollInDirection(movementInX, movementInY))
-      {
-        cerr << "Info: Scroll container cannot scroll further in the requested direction." << endl
-             << "  scrollable area = " << *scrollableArea << endl;
-        return false; // This container has reached its boundary
-      }
+      // if (!scrollableArea->canScrollInDirection(movementInX, movementInY))
+      // {
+      //   cerr << "Info: Scroll container cannot scroll further in the requested direction." << endl
+      //        << "  scrollable area = " << *scrollableArea << endl;
+      //   return false; // This container has reached its boundary
+      // }
 
       // Perform the scroll
       element->simulateScrollWithOffset(movementInX, movementInY);
