@@ -17,17 +17,6 @@ namespace builtin_scene
 
   void RenderStartupSystem::onExecute()
   {
-    auto meshes = getResource<Meshes>();
-    auto materials = getResource<Materials>();
-    auto renderer = getResource<SceneRenderer>();
-
-    // Create a mesh for the volume mask
-    auto entity = spawn(
-      Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.05f))),
-      MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
-      Transform::FromXYZ(0.0f, 0.0f, 0.0f)
-        .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
-    renderer->setVolumeMask(entity);
   }
 
   void RenderSystem::onExecute()

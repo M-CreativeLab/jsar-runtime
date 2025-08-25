@@ -46,39 +46,6 @@ namespace builtin_scene
      */
     void setPolygonOffset(bool enabled = true);
     /**
-     * @returns Whether the volume mask is enabled.
-     */
-    inline bool isVolumeMaskEnabled() const
-    {
-      return volumeMask_.has_value();
-    }
-    /**
-     * @returns The volume size of the renderer.
-     */
-    inline math::Size3 volumeSize() const
-    {
-      return volumeSize_;
-    }
-    /**
-     * Set the volume size of the renderer.
-     *
-     * @param newSize The volume size to set.
-     */
-    inline void setVolumeSize(const math::Size3 &newSize)
-    {
-      volumeSize_ = newSize;
-    }
-    /**
-     * Set the volume mask which is used to mask the volume of the renderer.
-     *
-     * @param volumeMask The volume mask to set.
-     */
-    inline void setVolumeMask(const ecs::EntityId &volumeMask)
-    {
-      volumeMask_ = volumeMask;
-      // Set the stencil reference value to a random value from 100 to 255 to avoid conflicts.
-    }
-    /**
      * Initialize the mesh with the given WebGL context, it will create the vertex array object,
      * vertex buffer object, and element buffer object, and upload the data to the GPU.
      *
@@ -152,24 +119,6 @@ namespace builtin_scene
                                                         std::shared_ptr<Transform> transform,
                                                         std::shared_ptr<Transform> parentTransform = nullptr,
                                                         bool forceUpdate = false);
-    /**
-     * Add the volume mask with the given draw mask geometry function.
-     *
-     * @param drawMaskGeometry The draw mask geometry function to enable the volume mask.
-     */
-    void addVolumeMask(std::function<void(ecs::EntityId, SceneRenderer &)> drawMaskGeometry);
-    /**
-     * Remove the volume mask.
-     */
-    void removeVolumeMask();
-    /**
-     * Enable the volume mask, this will enable the stencil test and set the stencil function and op.
-     */
-    void enableVolumeMask();
-    /**
-     * Disable the volume mask, this will disable the stencil test.
-     */
-    void disableVolumeMask();
 
   public:
     void onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget);
@@ -178,7 +127,5 @@ namespace builtin_scene
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     math::Size3 volumeSize_;
-    std::optional<ecs::EntityId> volumeMask_;
-    int volumeMaskStencilRef_ = 1;
   };
 }
