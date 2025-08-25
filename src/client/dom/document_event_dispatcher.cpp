@@ -1,5 +1,7 @@
 #include <cstdlib>
 #include <cstring>
+#include <vector>
+#include <algorithm>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/dom/element.hpp>
 #include <client/html/html_element.hpp>
@@ -130,20 +132,99 @@ namespace dom
     if (layoutBox == nullptr)
       return false;
 
-    auto scrollContainer = !layoutBox->isScrollContainer()
-                             ? layoutBox->containingScrollContainer()
-                             : const_pointer_cast<const client_layout::LayoutBoxModelObject>(layoutBox);
-    if (scrollContainer != nullptr)
-    {
-      current_scroll_target_ = scrollContainer->node();
-      current_scroll_start_point_ = p;
-      current_scroll_end_point_ = p;
-      return current_scroll_target_.lock() != nullptr;
-    }
-    else
-    {
+    // Build the chain of scroll containers from deepest to shallowest
+    buildScrollContainerChain(innerTarget);
+
+    if (scroll_container_chain_.empty())
       return false;
+
+    // Start with the deepest (first) scroll container
+    current_scroll_target_ = scroll_container_chain_[0];
+    current_scroll_start_point_ = p;
+    current_scroll_end_point_ = p;
+    return current_scroll_target_.lock() != nullptr;
+  }
+
+  void DocumentEventDispatcher::buildScrollContainerChain(Element &innerTarget)
+  {
+    scroll_container_chain_.clear();
+
+    auto layoutBox = innerTarget.principalBox();
+    if (layoutBox == nullptr)
+      return;
+
+    // Check if the target element itself is a scrollable container
+    if (layoutBox->isScrollContainer())
+    {
+      const auto &elementStyle = innerTarget.adoptedStyleRef();
+      if (elementStyle.overflowX().isAutoOrScroll() ||
+          elementStyle.overflowY().isAutoOrScroll())
+      {
+        scroll_container_chain_.push_back(innerTarget.shared_from_this());
+      }
     }
+
+    // Then check parent containers
+    auto object = layoutBox->parent();
+    while (object != nullptr)
+    {
+      if (object->isScrollContainer())
+      {
+        auto element = dom::Node::As<dom::Element>(object->node());
+        if (element != nullptr)
+        {
+          const auto &elementStyle = element->adoptedStyleRef();
+          // Only include containers with scroll or auto overflow (not hidden)
+          if (elementStyle.overflowX().isAutoOrScroll() ||
+              elementStyle.overflowY().isAutoOrScroll())
+          {
+            scroll_container_chain_.push_back(object->node());
+          }
+        }
+      }
+      object = object->parent();
+    }
+
+    // If no scrollable containers found, try including the document itself
+    if (scroll_container_chain_.empty())
+    {
+      scroll_container_chain_.push_back(document_);
+    }
+  }
+
+  bool DocumentEventDispatcher::tryScrollCurrentTarget(float movementInX, float movementInY)
+  {
+    auto target = current_scroll_target_.lock();
+    if (target == nullptr)
+      return false;
+
+    if (target->isElement())
+    {
+      auto element = Node::As<Element>(target);
+      auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(element->principalBox());
+      if (layoutBox == nullptr || !layoutBox->isScrollContainer())
+        return false;
+
+      auto scrollableArea = layoutBox->getScrollableArea();
+      if (scrollableArea == nullptr)
+        return false;
+
+      // Check if this container can scroll in the requested direction
+      if (!scrollableArea->canScrollInDirection(movementInX, movementInY))
+        return false; // This container has reached its boundary
+
+      // Perform the scroll
+      element->simulateScrollWithOffset(movementInX, movementInY);
+      return true;
+    }
+    else if (target->isHTMLDocument())
+    {
+      // Handle document-level scrolling
+      Node::As<HTMLDocument>(target)->simulateScrollWithOffset(movementInX, movementInY);
+      return true;
+    }
+
+    return false;
   }
 
   void DocumentEventDispatcher::onScroll(const glm::vec3 &p)
@@ -157,13 +238,27 @@ namespace dom
     if (abs(movementInX) > 0 || abs(movementInY) > 0)
     {
       current_scroll_end_point_ = p;
-      auto target = current_scroll_target_.lock();
-      assert(target != nullptr && "The scroll target is expired.");
 
-      if (target->isElement())
-        Node::As<Element>(target)->simulateScrollWithOffset(movementInX, movementInY);
-      else if (target->isHTMLDocument())
-        Node::As<HTMLDocument>(target)->simulateScrollWithOffset(movementInX, movementInY);
+      // Try to scroll the current target
+      bool scrolled = tryScrollCurrentTarget(movementInX, movementInY);
+
+      if (!scrolled)
+      {
+        // Current target can't scroll further, try to bubble up to parent containers
+        auto currentTargetIter = std::find_if(scroll_container_chain_.begin(), scroll_container_chain_.end(), [this](const std::weak_ptr<Node> &container)
+                                              { return !container.expired() && container.lock() == current_scroll_target_.lock(); });
+
+        if (currentTargetIter != scroll_container_chain_.end())
+        {
+          // Move to the next parent container in the chain
+          auto nextIter = currentTargetIter + 1;
+          if (nextIter != scroll_container_chain_.end())
+          {
+            current_scroll_target_ = *nextIter;
+            tryScrollCurrentTarget(movementInX, movementInY);
+          }
+        }
+      }
     }
   }
 
@@ -179,6 +274,7 @@ namespace dom
     current_scroll_start_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
     current_scroll_end_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
     current_scroll_target_.reset();
+    scroll_container_chain_.clear();
   }
 
   bool DocumentEventDispatcher::hitTestAndDispatchEvents()

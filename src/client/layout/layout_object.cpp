@@ -726,6 +726,33 @@ namespace client_layout
     return nullptr;
   }
 
+  shared_ptr<const LayoutBlock> LayoutObject::deepestScrollableContainer() const
+  {
+    shared_ptr<const LayoutBlock> deepest = nullptr;
+
+    // Start from this object and work up the tree
+    auto object = shared_from_this();
+    while (object != nullptr)
+    {
+      if (object->isScrollContainer())
+      {
+        auto element = dom::Node::As<dom::Element>(object->node());
+        if (element != nullptr)
+        {
+          const auto &elementStyle = element->adoptedStyleRef();
+          // Only consider containers with scroll or auto overflow, not hidden
+          if (elementStyle.overflowX().isAutoOrScroll() ||
+              elementStyle.overflowY().isAutoOrScroll())
+          {
+            deepest = dynamic_pointer_cast<const LayoutBlock>(object);
+          }
+        }
+      }
+      object = object->parent();
+    }
+    return deepest;
+  }
+
   bool LayoutObject::visibleToHitTestRequest(const HitTestRequest &request) const
   {
     auto &style = styleRef();

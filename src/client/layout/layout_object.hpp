@@ -397,6 +397,7 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
     std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
+    std::shared_ptr<const LayoutBlock> deepestScrollableContainer() const;
 
     bool isHorizontalWritingMode() const
     {
