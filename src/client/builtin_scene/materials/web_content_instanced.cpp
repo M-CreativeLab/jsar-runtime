@@ -146,13 +146,26 @@ namespace builtin_scene::materials
         glContext->enable(WEBGL_STENCIL_TEST);
         glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
-        glContext->stencilMask(0xFF);
+        glContext->stencilMask(0xff);
 
-        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0xf - layer.index()) & 0x0f);
+        /**
+         * Stencil masking format: [4 bits for container index | 4 bits for layer index]
+         * 
+         * NOTE(yorkie): the container index is reversed as well though it is not used at the moment.
+         * NOTE(yorkie): this stores layer index reversely (0x0f - layer.index()) to work with `LESS` function, so that
+         *               the stencil value zero can be filtered out.
+         */
+        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0x0f - layer.index()) & 0x0f);
         if (layer.index() == 0)
-          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xFF);
+        {
+          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xff);
+        }
         else
+        {
+          // When drawing masks based on the parent layer, we need to ensure that the new mask is drawn inside the
+          // parent layer's mask, so we use `LESS` function to compare the layer index bits.
           glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
+        }
 
         // Render the container mask
         {
@@ -169,7 +182,7 @@ namespace builtin_scene::materials
         // Step 3: Render content with stencil testing enabled
         glContext->colorMask(true, true, true, true);             // Re-enable color buffer writes
         glContext->stencilMask(0);                                // Disable writing to stencil buffer
-        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render where stencil == 1
+        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
 
         // Render the content instances
