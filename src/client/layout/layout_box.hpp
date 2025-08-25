@@ -112,8 +112,6 @@ namespace client_layout
     virtual bool hasTopOverflow() const;
     virtual bool hasLeftOverflow() const;
 
-    virtual void updateAfterLayout();
-
     // Sets the scrollable-overflow from the current set of layout-results.
     void setScrollableOverflowFromLayoutResults();
 
@@ -202,8 +200,8 @@ namespace client_layout
 
   protected:
     virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
+    virtual void didComputeLayoutOnce(const ConstraintSpace &) override;
 
-    bool computeLayout(const ConstraintSpace &) override;
     void updateFromStyle() override;
 
   private:

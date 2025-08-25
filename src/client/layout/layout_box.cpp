@@ -132,17 +132,6 @@ namespace client_layout
       return false;
   }
 
-  void LayoutBox::updateAfterLayout()
-  {
-    setScrollableOverflowFromLayoutResults();
-
-    if (isScrollContainer())
-    {
-      getScrollableArea()
-        ->updateAfterLayout(formattingContext().liveFragment());
-    }
-  }
-
   void LayoutBox::setScrollableOverflowFromLayoutResults()
   {
     if (overflow_)
@@ -362,12 +351,16 @@ namespace client_layout
     return false;
   }
 
-  bool LayoutBox::computeLayout(const ConstraintSpace &availableSpace)
+  void LayoutBox::didComputeLayoutOnce(const ConstraintSpace &availableSpace)
   {
-    auto success = LayoutBoxModelObject::computeLayout(availableSpace);
-    if (success)
-      updateAfterLayout();
-    return success;
+    LayoutBoxModelObject::didComputeLayoutOnce(availableSpace);
+
+    setScrollableOverflowFromLayoutResults();
+    if (isScrollContainer())
+    {
+      getScrollableArea()
+        ->updateAfterLayout(formattingContext().liveFragment());
+    }
   }
 
   void LayoutBox::updateFromStyle()
