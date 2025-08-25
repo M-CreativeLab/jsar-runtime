@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <common/math_utils.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 #include "./scrollable_area.hpp"
 
 namespace client_scroll
@@ -82,5 +85,15 @@ namespace client_scroll
     overflow_rect_ = fragment.contentSize();
   }
 
-
+  ostream &operator<<(ostream &os, const ScrollableArea &scrollable_area)
+  {
+    os << "ScrollableArea(origin=" << glm::to_string(scrollable_area.scroll_origin_)
+       << ", offset=" << glm::to_string(scrollable_area.scroll_offset_);
+    if (scrollable_area.overflow_rect_.has_value())
+      os << ", overflow=" << glm::to_string(scrollable_area.overflow_rect_.value());
+    else
+      os << ", overflow=null";
+    os << ")";
+    return os;
+  }
 }

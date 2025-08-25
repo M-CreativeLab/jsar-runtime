@@ -136,7 +136,10 @@ namespace dom
     buildScrollContainerChain(innerTarget);
 
     if (scroll_container_chain_.empty())
+    {
+      cerr << "Warning: No scrollable container found in the document." << endl;
       return false;
+    }
 
     // Start with the deepest (first) scroll container
     current_scroll_target_ = scroll_container_chain_[0];
@@ -150,8 +153,7 @@ namespace dom
     scroll_container_chain_.clear();
 
     auto layoutBox = innerTarget.principalBox();
-    if (layoutBox == nullptr)
-      return;
+    assert(layoutBox != nullptr && "The target element has no layout box.");
 
     // Check if the target element itself is a scrollable container
     if (layoutBox->isScrollContainer())
@@ -170,9 +172,18 @@ namespace dom
     {
       if (object->isScrollContainer())
       {
-        auto element = dom::Node::As<dom::Element>(object->node());
-        if (element != nullptr)
+        const auto node = object->node();
+        assert(node != nullptr && "The scroll container has no associated node.");
+
+        if (node->isDocument())
         {
+          scroll_container_chain_.push_back(document_->shared_from_this());
+        }
+        else if (node->isElement())
+        {
+          auto element = Node::As<Element>(node);
+          assert(element != nullptr && "The scroll container's node is not an element.");
+
           const auto &elementStyle = element->adoptedStyleRef();
           // Only include containers with scroll or auto overflow (not hidden)
           if (elementStyle.overflowX().isAutoOrScroll() ||
@@ -187,31 +198,42 @@ namespace dom
 
     // If no scrollable containers found, try including the document itself
     if (scroll_container_chain_.empty())
-    {
-      scroll_container_chain_.push_back(document_);
-    }
+      scroll_container_chain_.push_back(document_->shared_from_this());
   }
 
   bool DocumentEventDispatcher::tryScrollCurrentTarget(float movementInX, float movementInY)
   {
     auto target = current_scroll_target_.lock();
     if (target == nullptr)
+    {
+      cerr << "Error: Current scroll target is expired." << endl;
       return false;
+    }
 
     if (target->isElement())
     {
       auto element = Node::As<Element>(target);
       auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(element->principalBox());
       if (layoutBox == nullptr || !layoutBox->isScrollContainer())
+      {
+        cerr << "Error: Current scroll target is not a scrollable element." << endl;
         return false;
+      }
 
       auto scrollableArea = layoutBox->getScrollableArea();
       if (scrollableArea == nullptr)
+      {
+        cerr << "Error: Scrollable area is null for the current scroll target." << endl;
         return false;
+      }
 
       // Check if this container can scroll in the requested direction
       if (!scrollableArea->canScrollInDirection(movementInX, movementInY))
+      {
+        cerr << "Info: Scroll container cannot scroll further in the requested direction." << endl
+             << "  scrollable area = " << *scrollableArea << endl;
         return false; // This container has reached its boundary
+      }
 
       // Perform the scroll
       element->simulateScrollWithOffset(movementInX, movementInY);
@@ -241,7 +263,6 @@ namespace dom
 
       // Try to scroll the current target
       bool scrolled = tryScrollCurrentTarget(movementInX, movementInY);
-
       if (!scrolled)
       {
         // Current target can't scroll further, try to bubble up to parent containers

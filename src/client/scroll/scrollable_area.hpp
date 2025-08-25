@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <iostream>
 #include <glm/glm.hpp>
 #include <client/layout/fragment.hpp>
 
@@ -80,6 +81,9 @@ namespace client_scroll
     }
 
     void updateAfterLayout(const client_layout::Fragment &);
+
+  public:
+    friend std::ostream &operator<<(std::ostream &, const ScrollableArea &);
 
   private:
     glm::vec3 scroll_origin_;
