@@ -170,7 +170,7 @@ namespace client_layout
     }
 
     int recalcLayer() const;
-    void updateLayer(bool includeDescendants = true);
+    void updateLayer(std::shared_ptr<const LayoutBlock> scrollContainer, bool includeDescendants = true);
 
     inline std::shared_ptr<dom::Node> node() const
     {

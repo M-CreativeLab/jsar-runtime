@@ -58,6 +58,6 @@ namespace client_layout
     LayoutObject::styleDidChange();
 
     updateFromStyle();
-    updateLayer(true);
+    updateLayer(containingScrollContainer(), true);
   }
 }
