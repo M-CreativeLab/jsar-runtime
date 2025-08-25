@@ -324,7 +324,7 @@ private:
 
         GLint depthFunc;
         glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
-        DEBUG(logTag, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
+        DEBUG(logTag, "      Func=%s", gles::glDepthOrStencilFuncToString(depthFunc).c_str());
 
         GLboolean depthWriteMask;
         glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask);
@@ -347,6 +347,30 @@ private:
         GLint stencilMask;
         glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
         DEBUG(logTag, "      Mask=%d", stencilMask);
+
+        GLint stencilFunc;
+        glGetIntegerv(GL_STENCIL_FUNC, &stencilFunc);
+        GLint stencilRef;
+        glGetIntegerv(GL_STENCIL_REF, &stencilRef);
+        GLint stencilValueMask;
+        glGetIntegerv(GL_STENCIL_VALUE_MASK, &stencilValueMask);
+        DEBUG(logTag,
+              "      Func=%s Ref=%d ValueMask=%d",
+              gles::glDepthOrStencilFuncToString(stencilFunc).c_str(),
+              stencilRef,
+              stencilValueMask);
+
+        GLint stencilFail;
+        glGetIntegerv(GL_STENCIL_FAIL, &stencilFail);
+        GLint stencilZFail;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, &stencilZFail);
+        GLint stencilZPass;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, &stencilZPass);
+        DEBUG(logTag,
+              "      Fail=%s ZFail=%s ZPass=%s",
+              gles::glStencilOpToString(stencilFail).c_str(),
+              gles::glStencilOpToString(stencilZFail).c_str(),
+              gles::glStencilOpToString(stencilZPass).c_str());
       }
     }
 
@@ -2502,13 +2526,21 @@ private:
   }
   TR_OPENGL_FUNC void OnClear(ClearCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    if (options.executingPassType != ExecutingPassType::kOffscreenPass) [[unlikely]]
-      return;
-
     GLbitfield mask = req->mask;
-    glClear(mask);
-    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      PrintDebugInfo(req, nullptr, nullptr, options);
+    // Only the following cases we allow to clear the buffers:
+    // a) Stencil buffer only is free to clear at any time.
+    // b) The executing pass is Offscreen pass, which means it's not rendering to XR session directly.
+    if (mask == GL_STENCIL_BUFFER_BIT ||
+        options.executingPassType == ExecutingPassType::kOffscreenPass)
+    {
+      glClear(mask);
+      if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+        PrintDebugInfo(req, nullptr, nullptr, options);
+    }
+    else
+    {
+      return;
+    }
   }
   TR_OPENGL_FUNC void OnClearBufferfv(ClearBufferfvCommandBufferRequest *req,
                                       renderer::TrContentRenderer *reqContentRenderer,

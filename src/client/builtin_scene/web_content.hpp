@@ -140,20 +140,21 @@ namespace builtin_scene
       layer_ = layer;
     }
 
-    /**
-     * Check if the content is a scrollable container.
-     */
     inline bool isScrollableContainer() const
     {
       return is_scrollable_container_;
     }
-
-    /**
-     * Set the content as a scrollable container.
-     */
     inline void setIsScrollableContainer(bool value)
     {
       is_scrollable_container_ = value;
+    }
+    inline ecs::EntityId belongsToScrollableContainer() const
+    {
+      return belongs_to_scrollable_container_;
+    }
+    inline void setBelongsToScrollableContainer(ecs::EntityId container)
+    {
+      belongs_to_scrollable_container_ = container;
     }
 
     // Returns if the surface is valid.
@@ -347,6 +348,7 @@ namespace builtin_scene
 
     int layer_;
     bool is_scrollable_container_;
+    ecs::EntityId belongs_to_scrollable_container_;
 
     client_cssom::ComputedStyle style_;
     std::optional<client_layout::Fragment> last_fragment_;

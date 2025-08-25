@@ -115,7 +115,7 @@ namespace dom
 
     auto boundingBox = scene->getComponent<BoundingBox>(entity);
     if (boundingBox != nullptr)
-      boundingBox->updateSize(fragment.contentSize());
+      boundingBox->updateSize(fragment.size());
 
     // Update transform
     auto transform = scene->getComponent<Transform>(entity);

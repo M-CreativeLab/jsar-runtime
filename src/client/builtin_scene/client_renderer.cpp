@@ -17,17 +17,6 @@ namespace builtin_scene
 
   void RenderStartupSystem::onExecute()
   {
-    auto meshes = getResource<Meshes>();
-    auto materials = getResource<Materials>();
-    auto renderer = getResource<SceneRenderer>();
-
-    // Create a mesh for the volume mask
-    auto entity = spawn(
-      Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.05f))),
-      MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
-      Transform::FromXYZ(0.0f, 0.0f, 0.0f)
-        .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
-    renderer->setVolumeMask(entity);
   }
 
   void RenderSystem::onExecute()
@@ -127,7 +116,6 @@ namespace builtin_scene
     // Render items
     if (entities.size() > 0)
     {
-      renderVolumeMask(renderPass, renderTarget);
       onBeforeRender(renderPass, renderTarget);
       for (const auto &entity : entities)
       {
@@ -138,20 +126,6 @@ namespace builtin_scene
                    renderTarget);
       }
       onAfterRender(renderPass, renderTarget);
-    }
-  }
-
-  void RenderSystem::renderVolumeMask(RenderPass renderPass, optional<XRRenderTarget> renderTarget)
-  {
-    if (renderer_->isVolumeMaskEnabled())
-    {
-      auto renderVolume = [this, &renderPass, &renderTarget](ecs::EntityId entity, SceneRenderer &renderer)
-      {
-        auto meshComponent = getComponent<Mesh3d>(entity);
-        auto materialComponent = getComponent<MeshMaterial3d>(entity);
-        renderMesh(entity, meshComponent, materialComponent, renderPass, renderTarget);
-      };
-      renderer_->addVolumeMask(renderVolume);
     }
   }
 
@@ -307,14 +281,11 @@ namespace builtin_scene
       // Update for web content component
       if (TR_LIKELY(webContentComponent != nullptr))
       {
-        if (instance.setEnabled(true))
-          needsUpdate = true;
-        if (instance.setOpaque(webContentComponent->isOpaque()))
-          needsUpdate = true;
-        if (instance.setRenderLayer(webContentComponent->layer()))
-          needsUpdate = true;
-        if (instance.setIsScrollableContainer(webContentComponent->isScrollableContainer()))
-          needsUpdate = true;
+        needsUpdate |= instance.setEnabled(true);
+        needsUpdate |= instance.setOpaque(webContentComponent->isOpaque());
+        needsUpdate |= instance.setRenderLayer(webContentComponent->layer());
+        needsUpdate |= instance.setIsContainer(webContentComponent->isScrollableContainer());
+        needsUpdate |= instance.setBelongsToContainerId(webContentComponent->belongsToScrollableContainer());
 
         // Update instance render queue
         auto elementComponent = getComponent<hierarchy::Element>(id);

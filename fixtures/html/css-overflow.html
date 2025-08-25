@@ -6,24 +6,29 @@
   <title>CSS Overflow</title>
   <style>
     body {
-      background-color: transparent;
       font-size: 40px;
       color: #6d172e;
+      width: 100%;
     }
 
     header {
       overflow: scroll;
-      background-color: rgba(255, 0, 0, 0.274);
+      background-color: rgba(0, 174, 255, 0.274);
       padding: 2rem;
+      height: 20px;
+      width: 80vw;
     }
 
     #title {
-      overflow: auto;
+      /* overflow: auto; */
       background-color: #6d172e;
+      color: #fff;
     }
 
     p {
-      padding: 2rem;
+      box-sizing: border-box;
+      padding: 1rem;
+      width: 100%;
     }
 
     main {
@@ -31,15 +36,23 @@
     }
 
     .first {
+      margin-top: 5px;
       background-color: #ebb3c2;
-      /* overflow: hidden; */
+      overflow: hidden;
+      height: 100px;
+    }
+
+    .divider {
+      height: 1050px;
+      background-color: #1ebb89;
+      width: 100%;
     }
   </style>
 </head>
 
 <body>
   <header>
-    <h1 id="title" style="overflow: auto;">CSS Overflow</h1>
+    <h1 id="title">CSS Overflow</h1>
   </header>
   <main>
     <p class="primary first">
@@ -61,6 +74,7 @@
       inappropriate to cite this document as other than work in progress.
     </p>
   </main>
+  <div class="divider"></div>
   <div>Footer</div>
 </body>
 

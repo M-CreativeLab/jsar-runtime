@@ -31,8 +31,8 @@ namespace client_layout
 
     auto context = client_cssom::values::computed::Context::From(document);
     client_cssom::CSSStyleDeclaration initialStyle;
-    initialStyle.setProperty("width", "100%");
-    initialStyle.setProperty("height", "100%");
+    initialStyle.setProperty("width", "100vw");
+    initialStyle.setProperty("height", "100vh");
 
     view->setStyle(client_cssom::ComputedStyle(initialStyle, context));
     return view;

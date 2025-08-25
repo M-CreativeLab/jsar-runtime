@@ -263,7 +263,7 @@ namespace gles
     }
   }
 
-  std::string glDepthFuncToString(GLenum func)
+  std::string glDepthOrStencilFuncToString(GLenum func)
   {
 #define CASE(x) \
   case x:       \
@@ -284,6 +284,32 @@ namespace gles
     default:
       std::stringstream ss;
       ss << "0x" << std::hex << func;
+      return ss.str();
+    }
+#undef CASE
+  }
+
+  std::string glStencilOpToString(GLenum op)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (op)
+    {
+      // Stencil Operations
+      CASE(GL_ZERO);
+      CASE(GL_KEEP);
+      CASE(GL_REPLACE);
+      CASE(GL_INCR);
+      CASE(GL_DECR);
+      CASE(GL_INVERT);
+      CASE(GL_INCR_WRAP);
+      CASE(GL_DECR_WRAP);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << op;
       return ss.str();
     }
 #undef CASE

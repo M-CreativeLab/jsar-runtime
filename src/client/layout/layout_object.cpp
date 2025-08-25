@@ -184,10 +184,17 @@ namespace client_layout
       return parentLayer;
   }
 
-  void LayoutObject::updateLayer(bool includeDescendants)
+  void LayoutObject::updateLayer(shared_ptr<const LayoutBlock> scrollContainer, bool includeDescendants)
   {
+    shared_ptr<const LayoutBlock> curr_scroll_container = scrollContainer;
+    bool is_scroll_container = isScrollContainer();
+
     // Calculate and set this object's layer based on parent
     layer_ = recalcLayer();
+
+    // Update the current scroll container if this object is a scroll container
+    if (is_scroll_container)
+      curr_scroll_container = dynamic_pointer_cast<const LayoutBlock>(shared_from_this());
 
     // Update WebContent component if it exists
     if (hasEntity())
@@ -196,7 +203,9 @@ namespace client_layout
       if (webContent != nullptr)
       {
         webContent->setLayer(layer_);
-        webContent->setIsScrollableContainer(isScrollContainer());
+        webContent->setIsScrollableContainer(is_scroll_container);
+        if (curr_scroll_container != nullptr && curr_scroll_container->hasEntity())
+          webContent->setBelongsToScrollableContainer(curr_scroll_container->entity());
       }
     }
 
@@ -204,7 +213,7 @@ namespace client_layout
     if (includeDescendants)
     {
       for (auto child = slowFirstChild(); child != nullptr; child = child->nextSibling())
-        child->updateLayer(includeDescendants);
+        child->updateLayer(curr_scroll_container, includeDescendants);
     }
   }
 
@@ -490,7 +499,7 @@ namespace client_layout
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
 
     // Update layers for the new child and its descendants since hierarchy changed
-    newChild->updateLayer(true);
+    newChild->updateLayer(containingScrollContainer(), true);
   }
 
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)

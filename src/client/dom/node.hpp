@@ -338,7 +338,6 @@ namespace dom
      */
     virtual bool enableCustomGeometry() const
     {
-      // TODO: Implement custom geometry node, such as `HTMLCubeElement`, `HTMLPlaneElement`, etc.
       return isHTMLMeshElement();
     }
 

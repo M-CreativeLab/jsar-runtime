@@ -106,7 +106,8 @@ namespace builtin_scene::materials
     glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
 
     // b) Render layeredInstances_ in order (0-1-2-...)
-    auto renderLayer = [&](RenderLayer layer, RenderableInstancesList &layerInstancesList)
+    // First render scrollable container masks for each layer, then render regular content with stencil testing
+    auto renderLayer = [&](RenderLayer layer, ContentInstancesList &layerInstancesList)
     {
       // c) Switch RenderableInstancesList's vbo to current vao's vbo for this layer
       WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
@@ -126,7 +127,78 @@ namespace builtin_scene::materials
       }
       layerInstancesList.afterInstancedDraw(*glContext);
     };
-    instancedMesh.iterateLayers(renderLayer);
+
+    // Render per-container with individual stencil isolation.
+    // This implements overflow behavior for Web Content by:
+    // 1. Clearing stencil buffer for each container
+    // 2. Rendering this container's mask to the stencil buffer
+    // 3. Rendering content belonging to this container with stencil testing
+    auto renderLayerWithMask = [&](RenderLayer layer,
+                                   ContainerInstance *containerInstance,
+                                   ContentInstancesList *contentInstances)
+    {
+      bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
+      bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
+
+      if (hasScrollableContainer && hasContent)
+      {
+        // Step 2: Render scrollable container instance as stencil mask
+        glContext->enable(WEBGL_STENCIL_TEST);
+        glContext->colorMask(false, false, false, false);            // Don't write to color buffer for mask
+        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
+        glContext->stencilMask(0xff);
+
+        /**
+         * Stencil masking format: [4 bits for container index | 4 bits for layer index]
+         * 
+         * NOTE(yorkie): the container index is reversed as well though it is not used at the moment.
+         * NOTE(yorkie): this stores layer index reversely (0x0f - layer.index()) to work with `LESS` function, so that
+         *               the stencil value zero can be filtered out.
+         */
+        int maskRef = ((containerInstance->getContainerIndex() & 0x0f) << 4) | ((0x0f - layer.index()) & 0x0f);
+        if (layer.index() == 0)
+        {
+          glContext->stencilFunc(WEBGL_ALWAYS, maskRef, 0xff);
+        }
+        else
+        {
+          // When drawing masks based on the parent layer, we need to ensure that the new mask is drawn inside the
+          // parent layer's mask, so we use `LESS` function to compare the layer index bits.
+          glContext->stencilFunc(WEBGL_LESS, maskRef, 0x0f);
+        }
+
+        // Render the container mask
+        {
+          WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
+          containerInstance->beforeInstancedDraw(*glContext);
+          glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                           meshIndicesCount,
+                                           WEBGL_UNSIGNED_INT,
+                                           0,
+                                           containerInstance->count());
+          containerInstance->afterInstancedDraw(*glContext);
+        }
+
+        // Step 3: Render content with stencil testing enabled
+        glContext->colorMask(true, true, true, true);             // Re-enable color buffer writes
+        glContext->stencilMask(0);                                // Disable writing to stencil buffer
+        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
+        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
+
+        // Render the content instances
+        renderLayer(layer, *contentInstances);
+
+        // Step 4: Disable stencil testing after rendering this container
+        glContext->disable(WEBGL_STENCIL_TEST);
+      }
+      else if (hasContent)
+      {
+        // No container, render content directly
+        renderLayer(layer, *contentInstances);
+      }
+    };
+
+    instancedMesh.iterateLayers(renderLayerWithMask);
 
     // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
     if (instancedMesh.isDepthOnlyPassEnabled())
