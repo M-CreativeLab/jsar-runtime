@@ -15,6 +15,7 @@
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
 #include "./values/specified/background.hpp"
+#include "./values/specified/filter.hpp"
 
 namespace client_cssom
 {
@@ -448,6 +449,18 @@ namespace client_cssom
     {
       transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
       bitfields_.SetHasTransform(transform_.empty() == false);
+    }
+
+    /**
+     * Visual Effects properties
+     */
+    else if (name == "filter")
+    {
+      filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
+    }
+    else if (name == "backdrop-filter")
+    {
+      backdrop_filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
     }
 
     /**

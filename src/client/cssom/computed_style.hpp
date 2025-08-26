@@ -7,6 +7,7 @@
 #include <crates/bindings.hpp>
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
+#include <client/cssom/values/computed/filter.hpp>
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
@@ -430,6 +431,16 @@ namespace client_cssom
       return transform_.applyTo(matrix);
     }
 
+    // Visual Effects
+    inline const values::computed::Filter &filter() const
+    {
+      return filter_;
+    }
+    inline const values::computed::Filter &backdropFilter() const
+    {
+      return backdrop_filter_;
+    }
+
     // Transitions and animations
     inline const std::vector<values::computed::TransitionProperty> &transitionProperties() const
     {
@@ -547,6 +558,10 @@ namespace client_cssom
 
     // 3D Transforms
     values::computed::Transform transform_;
+
+    // Visual Effects
+    values::computed::Filter filter_ = values::computed::Filter::None();
+    values::computed::Filter backdrop_filter_ = values::computed::Filter::None();
 
     // Transitions and animations
     std::vector<values::computed::TransitionProperty> transition_properties_;
