@@ -33,6 +33,11 @@
   listContainer.appendChild(textNode);
 
   console.info('empty text node:', document.createTextNode(''));
+
+  const comment = document.createComment('comment');
+  console.info(comment);
+  document.body.appendChild(comment);
+  console.info(document.body.innerHTML);
 </script>
 
 </html>
