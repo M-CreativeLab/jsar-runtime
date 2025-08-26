@@ -34,7 +34,7 @@ namespace dom
     }
 
   public:
-    string getContent()
+    string getContent() const
     {
       return getAttribute("content");
     }
@@ -43,7 +43,7 @@ namespace dom
       setAttribute("content", value);
       onContentChanged();
     }
-    string getHttpEquiv()
+    string getHttpEquiv() const
     {
       return getAttribute("http-equiv");
     }
@@ -51,7 +51,7 @@ namespace dom
     {
       setAttribute("http-equiv", value);
     }
-    string getMedia()
+    string getMedia() const
     {
       return getAttribute("media");
     }
@@ -59,7 +59,7 @@ namespace dom
     {
       setAttribute("media", value);
     }
-    string getName()
+    string getName() const
     {
       return getAttribute("name");
     }

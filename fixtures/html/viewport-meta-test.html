@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800,height=600,initial-scale=1.5,user-scalable=no">
+  <title>Viewport Meta Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      color: white;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .viewport-info {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    .test-button {
+      background: #2ecc71;
+      border: none;
+      color: white;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .test-button:hover {
+      background: #27ae60;
+    }
+
+    #viewport-display {
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Viewport Meta Tag Test</h1>
+
+    <div class="viewport-info">
+      <h2>Current Viewport Settings</h2>
+      <div id="viewport-display">
+        Initial viewport: width=800, height=600, initial-scale=1.0, user-scalable=no
+      </div>
+    </div>
+
+    <div class="viewport-info">
+      <h2>Window Dimensions</h2>
+      <div id="window-dimensions">
+        Loading...
+      </div>
+    </div>
+
+    <div class="viewport-info">
+      <h2>Test Different Viewport Settings</h2>
+      <button class="test-button" onclick="setViewport('width=640,height=480')">
+        640×480
+      </button>
+      <button class="test-button" onclick="setViewport('width=1024,height=768')">
+        1024×768
+      </button>
+      <button class="test-button" onclick="setViewport('width=device-width,height=device-height')">
+        Device Size
+      </button>
+      <button class="test-button" onclick="setViewport('width=320,height=568,initial-scale=2.0')">
+        320×568 (2x scale)
+      </button>
+    </div>
+
+    <div class="viewport-info">
+      <h2>Test Instructions</h2>
+      <p>This page tests the viewport meta tag implementation:</p>
+      <ul style="text-align: left;">
+        <li>Initial viewport is set to 800×600 pixels</li>
+        <li>Window dimensions should reflect the viewport meta settings</li>
+        <li>Click buttons to dynamically change viewport settings</li>
+        <li>Window should resize according to new viewport meta</li>
+        <li>Check browser dev tools to see actual window dimensions</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function updateWindowDimensions() {
+      const dimensions = document.getElementById('window-dimensions');
+      dimensions.innerHTML = `
+                Inner Width: ${window.innerWidth}px<br>
+                Inner Height: ${window.innerHeight}px<br>
+                Outer Width: ${window.outerWidth}px<br>
+                Outer Height: ${window.outerHeight}px<br>
+                Device Pixel Ratio: ${window.devicePixelRatio}
+            `;
+    }
+
+    function setViewport(content) {
+      // Find existing viewport meta tag
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+
+      if (!viewportMeta) {
+        // Create new viewport meta tag if it doesn't exist
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        document.head.appendChild(viewportMeta);
+      }
+
+      // Update the content
+      viewportMeta.content = content;
+
+      // Update display
+      document.getElementById('viewport-display').textContent =
+        `Current viewport: ${content}`;
+
+      // Update window dimensions after a brief delay to allow processing
+      setTimeout(updateWindowDimensions, 100);
+
+      console.log('Viewport meta updated:', content);
+    }
+
+    // Update dimensions on page load and resize
+    window.addEventListener('load', updateWindowDimensions);
+    window.addEventListener('resize', updateWindowDimensions);
+
+    // Initial update
+    updateWindowDimensions();
+  </script>
+</body>
+
+</html>

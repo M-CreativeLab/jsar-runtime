@@ -138,21 +138,17 @@ namespace dom
     if (isViewportMeta())
     {
       // Notify the document that viewport meta has changed
-      auto doc = getOwnerDocument();
-      if (doc)
-      {
-        doc->onViewportMetaChanged(std::dynamic_pointer_cast<HTMLMetaElement>(shared_from_this()));
-      }
+      auto document = getOwnerDocumentReference();
+      if (document)
+        document->onViewportMetaChanged(std::dynamic_pointer_cast<HTMLMetaElement>(shared_from_this()));
     }
   }
 
   void HTMLMetaElement::onNameChanged()
   {
     // Check if we became or stopped being a viewport meta
-    auto doc = getOwnerDocument();
-    if (doc)
-    {
-      doc->onViewportMetaChanged(std::dynamic_pointer_cast<HTMLMetaElement>(shared_from_this()));
-    }
+    auto document = getOwnerDocumentReference();
+    if (document)
+      document->onViewportMetaChanged(std::dynamic_pointer_cast<HTMLMetaElement>(shared_from_this()));
   }
 }
