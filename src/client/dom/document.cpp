@@ -7,6 +7,7 @@
 #include "./node_list-inl.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
+#include "./comment.hpp"
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
@@ -238,6 +239,11 @@ namespace dom
   std::shared_ptr<Text> Document::createTextNode(const string &data)
   {
     return make_shared<Text>(data, getPtr<Document>());
+  }
+
+  std::shared_ptr<Comment> Document::createComment(const string &data)
+  {
+    return make_shared<Comment>(data, getPtr<Document>());
   }
 
   std::shared_ptr<Node> Document::importNode(const std::shared_ptr<Node> node, bool deep)
@@ -582,7 +588,17 @@ namespace dom
           return;
         }
 
-        // TODO: Support Comment, ProcessingInstruction and DocumentType.
+        if (Node::Is<Comment>(node))
+        {
+          auto &comment = Node::AsChecked<Comment>(node);
+          s.append("<!--");
+          s.append(comment.data());
+          s.append("-->");
+          isElementNode = false;
+          return;
+        }
+
+        // TODO: Support ProcessingInstruction and DocumentType.
         isElementNode = false;
       };
 
