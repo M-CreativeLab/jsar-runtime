@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Script Loading Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007acc;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .pending { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Complex Script Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Description</h2>
+        <p>This test verifies the following script execution order:</p>
+        <ol>
+            <li>External script script1.js (synchronous loading)</li>
+            <li>Inline script #1 (depends on script1)</li>
+            <li>External script script2.js (synchronous loading)</li>
+            <li>Inline script #2 (depends on script1 and script2)</li>
+            <li>External script script3.js (asynchronous loading, non-blocking)</li>
+            <li>Inline script #3 (does not depend on async script)</li>
+            <li>External script script4.js (deferred loading)</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Execution Log</h2>
+        <div id="log" class="log">Waiting for script execution...
+</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="result" class="status pending">Test in progress...</div>
+    </div>
+
+    <script>
+        // Initialize test environment
+        window.scriptExecutionLog = [];
+        window.scriptLoadedFlags = {
+            script1: false,
+            script2: false,
+            script3: false,
+            script4: false
+        };
+        
+        // Log recording function
+        window.logExecution = function(message) {
+            const timestamp = new Date().toISOString().substr(11, 12);
+            const logMessage = `[${timestamp}] ${message}`;
+            window.scriptExecutionLog.push(logMessage);
+            
+            const logElement = document.getElementById('log');
+            if (logElement) {
+                logElement.textContent = window.scriptExecutionLog.join('\n') + '\n';
+            }
+            
+            console.log(logMessage);
+        };
+        
+        // Global method for dynamically loading scripts
+        window.loadScript = function(src, callback, options = {}) {
+            const script = document.createElement('script');
+            script.src = src;
+            
+            if (options.async) {
+                script.async = true;
+            }
+            if (options.defer) {
+                script.defer = true;
+            }
+            
+            script.onload = function() {
+                window.logExecution(`Dynamic script loading completed: ${src}`);
+                if (callback) callback(null, script);
+            };
+            
+            script.onerror = function(error) {
+                window.logExecution(`Dynamic script loading failed: ${src}`);
+                if (callback) callback(error, script);
+            };
+            
+            document.head.appendChild(script);
+            window.logExecution(`Starting dynamic script loading: ${src}`);
+            return script;
+        };
+        
+        // Global method for batch loading scripts
+        window.loadScripts = function(scripts, callback) {
+            let loadedCount = 0;
+            const errors = [];
+            const results = [];
+            
+            if (scripts.length === 0) {
+                if (callback) callback(null, results);
+                return;
+            }
+            
+            scripts.forEach((scriptConfig, index) => {
+                const src = typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
+                const options = typeof scriptConfig === 'object' ? scriptConfig : {};
+                
+                window.loadScript(src, function(error, script) {
+                    loadedCount++;
+                    if (error) {
+                        errors.push({ index, src, error });
+                    }
+                    results[index] = { src, script, error };
+                    
+                    if (loadedCount === scripts.length) {
+                        if (callback) {
+                            callback(errors.length > 0 ? errors : null, results);
+                        }
+                    }
+                }, options);
+            });
+        };
+        
+        // Global method to check if script is loaded
+        window.isScriptLoaded = function(src) {
+            const scripts = document.querySelectorAll('script[src]');
+            for (let script of scripts) {
+                if (script.src.includes(src)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        
+        // Global method to remove scripts
+        window.removeScript = function(src) {
+            const scripts = document.querySelectorAll('script[src]');
+            let removed = false;
+            for (let script of scripts) {
+                if (script.src.includes(src)) {
+                    script.parentNode.removeChild(script);
+                    window.logExecution(`Script removed: ${src}`);
+                    removed = true;
+                }
+            }
+            return removed;
+        };
+        
+        // Global method to reload scripts
+        window.reloadScript = function(src, callback, options = {}) {
+            window.removeScript(src);
+            return window.loadScript(src, callback, options);
+        };
+        
+        // Global method to get all loaded script information
+        window.getLoadedScripts = function() {
+            const scripts = document.querySelectorAll('script[src]');
+            return Array.from(scripts).map(script => ({
+                src: script.src,
+                async: script.async,
+                defer: script.defer,
+                loaded: script.readyState === 'complete' || script.readyState === 'loaded'
+            }));
+        };
+        
+        // Test validation function
+        window.validateTest = function() {
+            const log = window.scriptExecutionLog;
+            const expectedOrder = [
+                'Script1 loaded',
+                'Inline script 1 executed',
+                'Script2 loaded', 
+                'Inline script 2 executed',
+                'Inline script 3 executed'
+            ];
+            
+            let isValid = true;
+            let errorMessage = '';
+            
+            let currentIndex = 0;
+            for (let i = 0; i < log.length; i++) {
+                if (currentIndex < expectedOrder.length && log[i].includes(expectedOrder[currentIndex])) {
+                    currentIndex++;
+                }
+            }
+            
+            if (currentIndex !== expectedOrder.length) {
+                isValid = false;
+                errorMessage = `Script execution order error. Expected order: ${expectedOrder.join(' -> ')}`;
+            }
+            
+            const script1Index = log.findIndex(entry => entry.includes('Script1 loaded'));
+            const inline1Index = log.findIndex(entry => entry.includes('Inline script 1 executed'));
+            const script2Index = log.findIndex(entry => entry.includes('Script2 loaded'));
+            const inline2Index = log.findIndex(entry => entry.includes('Inline script 2 executed'));
+            
+            if (script1Index >= inline1Index) {
+                isValid = false;
+                errorMessage += ' Script1 must execute before Inline script 1.';
+            }
+            
+            if (script2Index >= inline2Index) {
+                isValid = false;
+                errorMessage += ' Script2 must execute before Inline script 2.';
+            }
+            
+            const resultElement = document.getElementById('result');
+            if (isValid) {
+                resultElement.textContent = '✅ Test Passed - Script execution order is correct';
+                resultElement.className = 'status success';
+            } else {
+                resultElement.textContent = '❌ Test Failed - ' + errorMessage;
+                resultElement.className = 'status error';
+            }
+        };
+        
+        window.logExecution('Test environment initialization completed');
+        window.logExecution('Global script loading methods registered: loadScript, loadScripts, isScriptLoaded, removeScript, reloadScript, getLoadedScripts');
+    </script>
+
+    <script src="script1.js"></script>
+    
+    <script>
+        window.logExecution('Inline script 1 started executing');
+        
+        if (typeof window.script1Function === 'function') {
+            window.script1Function();
+            window.logExecution('Inline script 1 executed - successfully called script1Function');
+        } else {
+            window.logExecution('Error: script1Function is not defined');
+        }
+    </script>
+
+    <script src="script2.js"></script>
+    
+    <script>
+        window.logExecution('Inline script 2 started executing');
+        
+        if (typeof window.script1Function === 'function' && typeof window.script2Function === 'function') {
+            window.script1Function();
+            window.script2Function();
+            window.logExecution('Inline script 2 executed - successfully called script1Function and script2Function');
+        } else {
+            window.logExecution('Error: script1Function or script2Function is not defined');
+        }
+    </script>
+
+    <script async src="script3.js"></script>
+    
+    <script>
+        window.logExecution('Inline script 3 started executing');
+        window.logExecution('Inline script 3 executed - independent execution, does not depend on async scripts');
+    </script>
+
+    <script defer src="script4.js"></script>
+    
+    <script>
+         window.logExecution('Page loading completed');
+         
+         window.validateTest();
+        
+        // DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function() {
+            window.logExecution('DOMContentLoaded event triggered');
+        });
+    </script>
+</body>
+</html>

@@ -3,9 +3,10 @@
 #include <crates/bindings.hpp>
 #include <client/dom/document.hpp>
 #include <client/dom/browsing_context.hpp>
+#include <client/dom/script_execution_manager.hpp>
+#include <client/dom/html_script_adapter.hpp>
 
 #include "./html_script_element.hpp"
-#include "./script_loader.hpp"
 
 namespace dom
 {
@@ -16,6 +17,9 @@ namespace dom
   {
     HTMLElement::createdCallback(from_scripting);
     renderable = false;
+
+    // parserInserted is true only for parser-created nodes; false for scripting-created
+    parserInserted = !from_scripting;
 
     if (hasAttribute("src"))
       src = getAttribute("src");
@@ -49,15 +53,20 @@ namespace dom
       compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
 
-      // Use ScriptLoader to manage script execution order
+      // Use script execution management to handle script execution order
       auto document = ownerDocument->lock();
       if (document && document->isHTMLDocument())
       {
         auto htmlDoc = std::static_pointer_cast<HTMLDocument>(document);
-        auto scriptLoader = htmlDoc->getScriptLoader();
-        if (scriptLoader)
+
+        // Use ScriptExecutionManager
+        auto scriptManager = htmlDoc->getScriptExecutionManager();
+        if (scriptManager && htmlDoc->isScriptExecutionManagerReady())
         {
-          scriptLoader->handleScriptElement(std::static_pointer_cast<HTMLScriptElement>(shared_from_this()));
+          // Use architecture with adapter pattern
+          auto scriptAdapter = std::make_shared<HTMLScriptAdapter>(
+            std::static_pointer_cast<HTMLScriptElement>(shared_from_this()));
+          scriptManager->handleScript(scriptAdapter);
         }
         else
         {
@@ -78,6 +87,20 @@ namespace dom
 
   void HTMLScriptElement::beforeLoadedCallback()
   {
+    // Avoid duplicate execution when ScriptExecutionManager is present.
+    auto document = ownerDocument->lock();
+    if (document && document->isHTMLDocument())
+    {
+      auto htmlDoc = std::static_pointer_cast<HTMLDocument>(document);
+      if (htmlDoc->isScriptExecutionManagerReady())
+      {
+        // ScriptExecutionManager will orchestrate loading and execution.
+        // Do not schedule here to prevent double execution.
+        return;
+      }
+    }
+
+    // Fallback behavior when manager is not available.
     scheduleScriptExecution();
   }
 
@@ -85,6 +108,7 @@ namespace dom
   {
     if (src == "" || src.empty())
     {
+      // For inline scripts, compilation will trigger the loading callback once.
       compileScript(textContent(), false);
       return;
     }
@@ -95,7 +119,13 @@ namespace dom
         auto resourceUrl = UrlHelper::CreateUrlStringWithPath(baseURI, src);
         if (resourceUrl == "")
         {
-          cerr << "Failed to parse the URL: " << src << endl;
+          // signal failure
+          auto cb = loadingCallback_;
+          loadingCallback_ = nullptr;
+          if (cb)
+            cb(false);
+          // dispatch error event
+          dispatchEvent(dom::DOMEventType::Error);
         }
         else
         {
@@ -112,8 +142,20 @@ namespace dom
 
           // TODO: support blocking script loading
           //       requires custom http client implementation
-          browsingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const string &source)
-                                                   { compileScript(source, isTypeScript); });
+          browsingContext->fetchTextSourceResource(
+            resourceUrl,
+            [this, isTypeScript](const string &source)
+            {
+              compileScript(source, isTypeScript);
+            },
+            [this](const string &errorStr)
+            {
+              auto cb = loadingCallback_;
+              loadingCallback_ = nullptr;
+              if (cb)
+                cb(false);
+              dispatchEvent(dom::DOMEventType::Error);
+            });
         }
       }
     }
@@ -122,19 +164,25 @@ namespace dom
   void HTMLScriptElement::compileScript(const string &source, bool isTypeScript)
   {
     auto browsingContext = ownerDocument->lock()->browsingContext;
-    browsingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
-    scriptCompiled = true;
+    bool ok = browsingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
+    scriptCompiled = ok;
 
-    // Notify loading completion callback if set (for ScriptLoader managed scripts)
-    if (loadingCallback_)
+    // Notify loading completion callback if set (for ScriptExecutionManager managed scripts)
+    // Ensure the callback is invoked at most once to avoid duplicate execution.
+    auto cb = loadingCallback_;
+    loadingCallback_ = nullptr;
+    if (cb)
     {
-      loadingCallback_();
+      cb(ok);
     }
-    else
+
+    if (!ok)
     {
-      cout << "[DEBUG] No loadingCallback set, script will be managed by ScriptLoader" << endl;
-      // Script execution will be handled by ScriptLoader, no fallback needed
+      // Dispatch error for compilation failure
+      dispatchEvent(dom::DOMEventType::Error);
+      return;
     }
+    // Script execution will be handled by ScriptExecutionManager
   }
 
   void HTMLScriptElement::scheduleScriptExecution()

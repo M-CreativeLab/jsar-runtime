@@ -112,22 +112,23 @@ namespace dom
      */
     string type;
 
+    /**
+     * Whether this <script> element is parser-inserted (true) or created by scripting (false).
+     * This flag affects default async/defer behavior per HTML specification.
+     * It is set in createdCallback based on the from_scripting parameter.
+     */
+    bool parserInserted = true;
+
   public:
     // Make scriptCompiled accessible to ScriptLoader
     bool scriptCompiled = false;
 
     // Set loading completion callback
-    void setLoadingCallback(std::function<void()> callback)
+    void setLoadingCallback(std::function<void(bool)> callback)
     {
       loadingCallback_ = callback;
     }
 
-    // Trigger delayed loading callback (for inline scripts)
-    void triggerLoadingCallback()
-    {
-      if (loadingCallback_)
-        loadingCallback_();
-    }
 
     // Execute script (public for ScriptLoader)
     void executeScript();
@@ -135,10 +136,16 @@ namespace dom
     // Load script source (public for ScriptLoader)
     void loadSource();
 
+    // Public accessor for script execution state (for HTMLScriptAdapter)
+    bool isScriptExecutedOnce() const
+    {
+      return scriptExecutedOnce;
+    }
+
   private:
     shared_ptr<dom::DOMScript> compiledScript;
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
-    std::function<void()> loadingCallback_;
+    std::function<void(bool)> loadingCallback_;
   };
 }

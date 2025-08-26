@@ -22,7 +22,8 @@
 
 namespace dom
 {
-  class ScriptLoader;
+  class ScriptExecutionManager;
+  class DocumentScriptContext;
 
   enum class DocumentCompatMode
   {
@@ -365,17 +366,23 @@ namespace dom
   public:
     void afterLoadedCallback() override;
 
-    // Script loading management
-    std::shared_ptr<ScriptLoader> getScriptLoader()
+    // Script execution management
+    std::shared_ptr<ScriptExecutionManager> getScriptExecutionManager()
     {
-      return scriptLoader_;
+      return scriptExecutionManager_;
     }
+
+    std::shared_ptr<DocumentScriptContext> getScriptContext()
+    {
+      return scriptContext_;
+    }
+
     void onParsingFinished();
 
-    // Check if ScriptLoader is initialized
-    bool isScriptLoaderReady() const
+    // Check if script execution manager is initialized
+    bool isScriptExecutionManagerReady() const
     {
-      return scriptLoader_ != nullptr;
+      return scriptExecutionManager_ != nullptr;
     }
 
   private:
@@ -391,6 +398,9 @@ namespace dom
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;
     mutable std::weak_ptr<Node> dirty_root_text_or_element_;
-    std::shared_ptr<ScriptLoader> scriptLoader_;
+
+    // Script execution management
+    std::shared_ptr<ScriptExecutionManager> scriptExecutionManager_;
+    std::shared_ptr<DocumentScriptContext> scriptContext_;
   };
 }

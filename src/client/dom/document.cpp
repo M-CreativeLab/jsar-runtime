@@ -8,9 +8,11 @@
 #include "./text.hpp"
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
+#include "./document.hpp"
 #include "./browsing_context.hpp"
 #include "../cssom/selectors/matching.hpp"
-#include "../html/script_loader.hpp"
+#include "./script_execution_manager.hpp"
+#include "./html_script_adapter.hpp"
 
 namespace dom
 {
@@ -222,12 +224,12 @@ namespace dom
     if (should_open_)
       openInternal();
 
-    // Call onParsingFinished after openInternal to ensure ScriptLoader is initialized
+    // Call onParsingFinished after openInternal to ensure ScriptExecutionManager is initialized
     // This is the correct timing for defer scripts execution
     if (documentType == DocumentType::kHTML)
     {
       auto htmlDoc = dynamic_pointer_cast<HTMLDocument>(getPtr<Document>());
-      if (htmlDoc && htmlDoc->isScriptLoaderReady())
+      if (htmlDoc && htmlDoc->isScriptExecutionManagerReady())
       {
         htmlDoc->onParsingFinished();
       }
@@ -686,10 +688,15 @@ namespace dom
     auto selfDocument = getPtr<HTMLDocument>();
     auto window = default_view_.lock();
 
-    // Initialize ScriptLoader when document is opened
-    if (!scriptLoader_)
+    // Initialize script execution management
+    if (!scriptContext_)
     {
-      scriptLoader_ = make_shared<ScriptLoader>(std::static_pointer_cast<Document>(shared_from_this()));
+      scriptContext_ = make_shared<DocumentScriptContext>(std::static_pointer_cast<Document>(shared_from_this()));
+    }
+
+    if (!scriptExecutionManager_)
+    {
+      scriptExecutionManager_ = make_shared<ScriptExecutionManager>(scriptContext_);
     }
 
     // Set the document cache to be invalid once the document is opened.
@@ -711,9 +718,10 @@ namespace dom
 
   void HTMLDocument::onParsingFinished()
   {
-    if (scriptLoader_)
+    // Handle parsing finished for script execution manager
+    if (scriptExecutionManager_)
     {
-      scriptLoader_->onParsingFinished();
+      scriptExecutionManager_->onParsingFinished();
     }
   }
 
