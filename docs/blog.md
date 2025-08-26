@@ -9,18 +9,16 @@ Technical insights, community updates, and deep dives into the spatial web revol
 
 ## Latest Posts
 
-### [Bringing 3D Gaussian Splatting to the Web: A Complete Guide](./blogs/3dgs-html-integration.md)
-*August 2025 • Technical Deep Dive • 3DGS Integration*
+### [Render Gaussian Splatting Models with `<model>` Element](./blogs/render-3dgs-models-with-model-element.md)
+*August 2025 • Technical Deep Dive*
 
-A comprehensive guide to using 3D Gaussian Splatting models directly in HTML with JSAR Runtime. Learn how to embed photorealistic 3DGS models as easily as images, understand the technical implementation, and explore advanced shader optimizations.
+A comprehensive introduction to the Web-native 3D Gaussian Splatting rendering at JSAR Runtime. Learn how to embed photorealistic 3DGS models as easily as images, understand the technical implementation, and explore advanced features.
 
 **What's covered:**
-- HTML `<model>` element usage and JavaScript API
-- File format support (.ksplat vs .ply) and performance considerations
-- ECS architecture and rendering pipeline deep dive
+- HTML `<model>` element usage
+- File format support (.spz, .ksplat and .ply) and performance considerations
 - Advanced shader optimizations and compression techniques
-- Performance best practices and WebXR integration
-- Real-world examples and dynamic scene composition
+- Future plans about the 3DGS
 
 ---
 
