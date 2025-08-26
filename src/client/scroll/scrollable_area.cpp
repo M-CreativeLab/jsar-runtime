@@ -54,7 +54,7 @@ namespace client_scroll
     if (overflow_rect_->x > scroll_origin_.x)
     {
       float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
-      new_offset.x = std::clamp(offset.x, 0.0f, max_scroll_x);
+      new_offset.x = clamp(offset.x, -max_scroll_x, 0.0f);
     }
     else
     {
@@ -65,7 +65,7 @@ namespace client_scroll
     if (overflow_rect_->y > scroll_origin_.y)
     {
       float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
-      new_offset.y = std::clamp(offset.y, -max_scroll_y, 0.0f);
+      new_offset.y = clamp(offset.y, -max_scroll_y, 0.0f);
     }
     else
     {
