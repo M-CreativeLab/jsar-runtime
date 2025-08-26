@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <iostream>
 #include <glm/glm.hpp>
 #include <client/layout/fragment.hpp>
 

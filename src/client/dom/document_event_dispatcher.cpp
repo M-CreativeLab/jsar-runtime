@@ -241,19 +241,12 @@ namespace dom
       bool scrolled = tryScrollCurrentTarget(movementInX, movementInY);
       if (!scrolled)
       {
-        // Current target can't scroll further, try to bubble up to parent containers
-        auto currentTargetIter = std::find_if(scroll_container_chain_.begin(), scroll_container_chain_.end(), [this](const std::weak_ptr<Node> &container)
-                                              { return !container.expired() && container.lock() == current_scroll_target_.lock(); });
-
-        if (currentTargetIter != scroll_container_chain_.end())
+        // TODO(yorkie): support bubbling the scroll event to the next scroll container in the chain.
+        int current_scroll_target_index_ = 0;
+        if ((++current_scroll_target_index_) < scroll_container_chain_.size())
         {
-          // Move to the next parent container in the chain
-          auto nextIter = currentTargetIter + 1;
-          if (nextIter != scroll_container_chain_.end())
-          {
-            current_scroll_target_ = *nextIter;
-            tryScrollCurrentTarget(movementInX, movementInY);
-          }
+          current_scroll_target_ = scroll_container_chain_[current_scroll_target_index_];
+          tryScrollCurrentTarget(movementInX, movementInY);
         }
       }
     }
