@@ -18,14 +18,14 @@ namespace client_scroll
     float scrollHeight() const;
 
     glm::vec3 getScrollOffset() const;
-    inline void scrollBy(const glm::vec3 &offset)
+    inline bool scrollBy(const glm::vec3 &offset)
     {
       // Performance optimization: early exit if offset is zero
       if (offset.x == 0.0f && offset.y == 0.0f && offset.z == 0.0f)
-        return;
-      scrollTo(scroll_offset_ + offset);
+        return false;
+      return scrollTo(scroll_offset_ + offset);
     }
-    void scrollTo(const glm::vec3 &offset);
+    bool scrollTo(const glm::vec3 &offset);
 
     // Performance optimization: check if scrolling is needed
     inline bool needsScrolling() const
@@ -51,33 +51,6 @@ namespace client_scroll
                fragment.left() > visible_right ||
                fragment.bottom() < visible_top ||
                fragment.top() > visible_bottom);
-    }
-
-    // Check if the scroll container can scroll further in the given direction
-    inline bool canScrollInDirection(float deltaX, float deltaY) const
-    {
-      if (!overflow_rect_.has_value())
-        return false;
-
-      if (deltaX != 0.0f)
-      {
-        float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
-        if (deltaX > 0 && scroll_offset_.x >= max_scroll_x)
-          return false; // Already at right boundary
-        if (deltaX < 0 && scroll_offset_.x <= 0.0f)
-          return false; // Already at left boundary
-      }
-
-      if (deltaY != 0.0f)
-      {
-        float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
-        if (deltaY > 0 && scroll_offset_.y >= 0.0f)
-          return false; // Already at bottom boundary
-        if (deltaY < 0 && scroll_offset_.y <= -max_scroll_y)
-          return false; // Already at top boundary
-      }
-
-      return true;
     }
 
     void updateAfterLayout(const client_layout::Fragment &);

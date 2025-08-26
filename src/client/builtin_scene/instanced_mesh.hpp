@@ -422,6 +422,13 @@ namespace builtin_scene
     {
     }
 
+    friend std::ostream &operator<<(std::ostream &os, const ContentInstancesList &list)
+    {
+      os << "ContentInstancesList(count=" << list.count() << ")"
+         << std::endl;
+      return os;
+    }
+
     bool isContentInstancesList() const override
     {
       return true;

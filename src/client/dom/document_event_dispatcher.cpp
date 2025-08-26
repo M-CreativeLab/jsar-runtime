@@ -212,40 +212,16 @@ namespace dom
 
     if (target->isElement())
     {
-      auto element = Node::As<Element>(target);
-      auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(element->principalBox());
-      if (layoutBox == nullptr || !layoutBox->isScrollContainer())
-      {
-        cerr << "Error: Current scroll target is not a scrollable element." << endl;
-        return false;
-      }
-
-      auto scrollableArea = layoutBox->getScrollableArea();
-      if (scrollableArea == nullptr)
-      {
-        cerr << "Error: Scrollable area is null for the current scroll target." << endl;
-        return false;
-      }
-
-      // Check if this container can scroll in the requested direction
-      // if (!scrollableArea->canScrollInDirection(movementInX, movementInY))
-      // {
-      //   cerr << "Info: Scroll container cannot scroll further in the requested direction." << endl
-      //        << "  scrollable area = " << *scrollableArea << endl;
-      //   return false; // This container has reached its boundary
-      // }
-
-      // Perform the scroll
-      element->simulateScrollWithOffset(movementInX, movementInY);
-      return true;
+      return Node::As<Element>(target)->simulateScrollWithOffset(movementInX, movementInY);
     }
     else if (target->isHTMLDocument())
     {
-      // Handle document-level scrolling
       Node::As<HTMLDocument>(target)->simulateScrollWithOffset(movementInX, movementInY);
+      /**
+       * Always return true for document scrolling to prevent further bubbling.
+       */
       return true;
     }
-
     return false;
   }
 

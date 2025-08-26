@@ -174,8 +174,8 @@ namespace client_layout
       return hasScrollableOverflowX() || hasScrollableOverflowY();
     }
     virtual void autoScroll(const glm::vec3 &offset);
-    void scrollTo(const glm::vec3 &offset);
-    void scrollBy(const glm::vec3 &offset);
+    bool scrollTo(const glm::vec3 &offset);
+    bool scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
     bool hasScrollableOverflowX() const

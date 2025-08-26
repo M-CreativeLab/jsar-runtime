@@ -39,12 +39,12 @@ namespace client_scroll
     return scroll_offset_;
   }
 
-  void ScrollableArea::scrollTo(const glm::vec3 &offset)
+  bool ScrollableArea::scrollTo(const glm::vec3 &offset)
   {
     if (!overflow_rect_.has_value())
     {
       cerr << "Skipping scrollTo() because overflow_rect_ is not set." << endl;
-      return;
+      return false;
     }
 
     // Optimize scroll bounds checking with early exit and clamping
@@ -76,6 +76,11 @@ namespace client_scroll
     if (new_offset != scroll_offset_)
     {
       scroll_offset_ = new_offset;
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 

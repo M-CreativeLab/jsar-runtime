@@ -371,7 +371,7 @@ namespace dom
     void onDocumentOpened() override;
     void onStyleSheetsDidChange() override;
 
-    void simulateScrollWithOffset(float offsetX, float offsetY);
+    bool simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;

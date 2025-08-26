@@ -168,7 +168,7 @@ namespace dom
       }
       transform->setTranslation({client_cssom::pixelToMeter(left),
                                  client_cssom::pixelToMeter(top),
-                                 fragment.z()});
+                                 client_cssom::pixelToMeter(fragment.z())});
     }
 
     // Update custom material?

@@ -325,7 +325,7 @@ namespace dom
     void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
     void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
     void simulateClick(const glm::vec3 &hitPointInWorld);
-    void simulateScrollWithOffset(float offsetX, float offsetY);
+    bool simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
     bool recalcStyleDirectly(const client_cssom::ComputedStyle &);
