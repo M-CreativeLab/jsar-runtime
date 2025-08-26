@@ -386,6 +386,13 @@ namespace dom
       // Add the element to the element map by id
       if (!element->id.empty())
         element_map_by_id_[element->id] = element;
+
+      // Check if this is a viewport meta element and apply it
+      auto meta_element = std::dynamic_pointer_cast<HTMLMetaElement>(element);
+      if (meta_element && meta_element->isViewportMeta())
+      {
+        onViewportMetaChanged(meta_element);
+      }
     }
 
     if (recursive)
