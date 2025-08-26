@@ -1,6 +1,7 @@
 #include <iostream>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/html/html_meta_element.hpp>
 #include <crates/bindings.hpp>
 
 #include "./node_list-inl.hpp"
@@ -391,6 +392,13 @@ namespace dom
       // Add the element to the element map by id
       if (!element->id.empty())
         element_map_by_id_[element->id] = element;
+
+      // Check if this is a viewport meta element and apply it
+      auto meta_element = std::dynamic_pointer_cast<HTMLMetaElement>(element);
+      if (meta_element && meta_element->isViewportMeta())
+      {
+        onViewportMetaChanged(meta_element);
+      }
     }
 
     if (recursive)
@@ -720,5 +728,22 @@ namespace dom
     bool scrolled = layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
     return scrolled;
+  }
+
+  void Document::onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element)
+  {
+    if (!meta_element || !meta_element->isViewportMeta())
+      return;
+
+    auto viewport_meta = meta_element->parseViewportMeta();
+    if (!viewport_meta)
+      return;
+
+    // Apply viewport settings to the window
+    auto window = defaultView();
+    if (window)
+    {
+      window->applyViewportMeta(*viewport_meta);
+    }
   }
 }

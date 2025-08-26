@@ -23,6 +23,9 @@
 
 namespace dom
 {
+  // Forward declarations
+  class HTMLMetaElement;
+
   enum class DocumentCompatMode
   {
     NO_QUIRKS = 0, // Standards
@@ -96,6 +99,11 @@ namespace dom
     // Write
     void write(const std::string &markup);
     void writeln(const std::string &markup);
+
+    /**
+     * Handle viewport meta tag changes and apply them to the window
+     */
+    void onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element);
 
   protected:
     virtual void onDocumentOpened()
