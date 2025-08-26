@@ -76,6 +76,7 @@ namespace client_layout
 
     // Use taffy to compute the layout.
     bool r = LayoutBlockFlow::computeLayout(avilableSpace);
+    didComputeLayoutOnce(avilableSpace);
 
     // Traverse the children of the view and call `didComputeLayout` for each child.
     // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content

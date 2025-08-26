@@ -774,30 +774,33 @@ namespace dom
     dispatchEventInternal(events::PointerEvent::Click());
   }
 
-  void Element::simulateScrollWithOffset(float offsetX, float offsetY)
+  bool Element::simulateScrollWithOffset(float offsetX, float offsetY)
   {
     auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(principalBox());
-    if (layoutBox == nullptr)
-      return;
+    if (layoutBox == nullptr ||
+        !layoutBox->isScrollContainer())
+      return false;
     assert(layoutBox->isBox() && "The layout box is not a box.");
 
-    glm::vec3 offset;
+    glm::vec3 offset = glm::vec3(0, 0, 0);
     if (layoutBox->scrollsOverflowX())
       offset.x = offsetX;
     if (layoutBox->scrollsOverflowY())
       offset.y = offsetY;
+    // TODO(yorkie): support z-axis scrolling
 
     if (offset.x == 0 && offset.y == 0)
-      return;
+      return false;
 
-    layoutBox->scrollBy(offset);
+    bool scrolled = layoutBox->scrollBy(offset);
 
     // Throttle scroll events for better performance
     if (!shouldThrottleScrollEvent())
     {
-      last_scroll_event_time_ = std::chrono::steady_clock::now();
+      last_scroll_event_time_ = chrono::steady_clock::now();
       dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
     }
+    return scrolled;
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -816,7 +819,7 @@ namespace dom
 
   bool Element::shouldThrottleScrollEvent() const
   {
-    auto now = std::chrono::steady_clock::now();
+    auto now = chrono::steady_clock::now();
     return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 

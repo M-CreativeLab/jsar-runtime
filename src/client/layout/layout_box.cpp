@@ -132,17 +132,6 @@ namespace client_layout
       return false;
   }
 
-  void LayoutBox::updateAfterLayout()
-  {
-    setScrollableOverflowFromLayoutResults();
-
-    if (isScrollContainer())
-    {
-      getScrollableArea()
-        ->updateAfterLayout(formattingContext().liveFragment());
-    }
-  }
-
   void LayoutBox::setScrollableOverflowFromLayoutResults()
   {
     if (overflow_)
@@ -201,36 +190,41 @@ namespace client_layout
     // TODO(yorkie): implement the autoscroll
   }
 
-  void LayoutBox::scrollTo(const glm::vec3 &offset)
+  bool LayoutBox::scrollTo(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
-      return;
+      return false;
 
     auto scrollable_area = getScrollableArea();
     // Performance optimization: check if scrolling is actually needed
     if (scrollable_area && scrollable_area->needsScrolling())
     {
       scrollable_area->scrollTo(offset);
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 
-  void LayoutBox::scrollBy(const glm::vec3 &offset)
+  bool LayoutBox::scrollBy(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
-    {
-      cerr << "LayoutBox::scrollBy on " << debugName() << ": "
-           << "The box is not a scroll container, skipping scrollBy." << endl;
-      return;
-    }
+      return false;
 
     // Performance optimization: early exit for zero offset
     if (offset.x == 0.0f && offset.y == 0.0f && offset.z == 0.0f)
-      return;
+      return false;
 
     auto scrollable_area = getScrollableArea();
     if (scrollable_area && scrollable_area->needsScrolling())
     {
-      scrollable_area->scrollBy(offset);
+      return scrollable_area->scrollBy(offset);
+    }
+    else
+    {
+      return false;
     }
   }
 
@@ -362,12 +356,16 @@ namespace client_layout
     return false;
   }
 
-  bool LayoutBox::computeLayout(const ConstraintSpace &availableSpace)
+  void LayoutBox::didComputeLayoutOnce(const ConstraintSpace &availableSpace)
   {
-    auto success = LayoutBoxModelObject::computeLayout(availableSpace);
-    if (success)
-      updateAfterLayout();
-    return success;
+    LayoutBoxModelObject::didComputeLayoutOnce(availableSpace);
+
+    setScrollableOverflowFromLayoutResults();
+    if (isScrollContainer())
+    {
+      getScrollableArea()
+        ->updateAfterLayout(formattingContext().liveFragment());
+    }
   }
 
   void LayoutBox::updateFromStyle()

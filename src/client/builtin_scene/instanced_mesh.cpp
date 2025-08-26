@@ -760,7 +760,7 @@ namespace builtin_scene
     for (const auto &layer : allLayers)
     {
       // Map to track which container instance each content instance belongs to
-      std::unordered_map<uint32_t, LayeredInstancesData *> layeredDataMap;
+      unordered_map<uint32_t, LayeredInstancesData *> layeredDataMap;
 
       // 3.1 Process container instances for this layer
       bool ownsContainer = containerInstanceMaps.find(layer) != containerInstanceMaps.end();

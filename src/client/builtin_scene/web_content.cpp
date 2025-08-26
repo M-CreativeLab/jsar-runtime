@@ -12,30 +12,23 @@ namespace builtin_scene
 
   WebContentTextStyle::WebContentTextStyle()
       : color(SK_ColorBLACK)
-      ,
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
-      backgroundColor(SK_ColorGRAY)
-      ,
+      , backgroundColor(SK_ColorGRAY)
 #else
-      backgroundColor(SK_ColorTRANSPARENT)
-      ,
+      , backgroundColor(SK_ColorTRANSPARENT)
 #endif
-      decoration(0)
+      , decoration(0)
       , decorationThickness(0.0f)
       , decorationColor(SK_ColorBLACK)
       , fontStyle({SkFontStyle::kUpright_Slant, SkFontStyle::kNormal_Weight, SkFontStyle::kNormal_Width})
-      ,
 #ifdef __APPLE__
-      fontFamilies({SkString("PingFang SC"), SkString("sans-serif")})
-      ,
+      , fontFamilies({SkString("PingFang SC"), SkString("sans-serif")})
 #elif __ANDROID__
-      fontFamilies({SkString("Noto Sans"), SkString("sans-serif")})
-      ,
+      , fontFamilies({SkString("Noto Sans"), SkString("sans-serif")})
 #else
-      fontFamilies({SkString("sans-serif")})
-      ,
+      , fontFamilies({SkString("sans-serif")})
 #endif
-      fontSize(20.0f)
+      , fontSize(20.0f)
       , letterSpacing(std::nullopt)
       , wordSpacing(std::nullopt)
   {

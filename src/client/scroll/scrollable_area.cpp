@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <common/math_utils.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 #include "./scrollable_area.hpp"
 
 namespace client_scroll
@@ -36,12 +39,12 @@ namespace client_scroll
     return scroll_offset_;
   }
 
-  void ScrollableArea::scrollTo(const glm::vec3 &offset)
+  bool ScrollableArea::scrollTo(const glm::vec3 &offset)
   {
     if (!overflow_rect_.has_value())
     {
       cerr << "Skipping scrollTo() because overflow_rect_ is not set." << endl;
-      return;
+      return false;
     }
 
     // Optimize scroll bounds checking with early exit and clamping
@@ -51,7 +54,7 @@ namespace client_scroll
     if (overflow_rect_->x > scroll_origin_.x)
     {
       float max_scroll_x = overflow_rect_->x - scroll_origin_.x;
-      new_offset.x = std::clamp(offset.x, 0.0f, max_scroll_x);
+      new_offset.x = clamp(offset.x, -max_scroll_x, 0.0f);
     }
     else
     {
@@ -62,7 +65,7 @@ namespace client_scroll
     if (overflow_rect_->y > scroll_origin_.y)
     {
       float max_scroll_y = overflow_rect_->y - scroll_origin_.y;
-      new_offset.y = std::clamp(offset.y, -max_scroll_y, 0.0f);
+      new_offset.y = clamp(offset.y, -max_scroll_y, 0.0f);
     }
     else
     {
@@ -73,6 +76,11 @@ namespace client_scroll
     if (new_offset != scroll_offset_)
     {
       scroll_offset_ = new_offset;
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 
@@ -82,5 +90,15 @@ namespace client_scroll
     overflow_rect_ = fragment.contentSize();
   }
 
-
+  ostream &operator<<(ostream &os, const ScrollableArea &scrollable_area)
+  {
+    os << "ScrollableArea(origin=" << glm::to_string(scrollable_area.scroll_origin_)
+       << ", offset=" << glm::to_string(scrollable_area.scroll_offset_);
+    if (scrollable_area.overflow_rect_.has_value())
+      os << ", overflow=" << glm::to_string(scrollable_area.overflow_rect_.value());
+    else
+      os << ", overflow=null";
+    os << ")";
+    return os;
+  }
 }
