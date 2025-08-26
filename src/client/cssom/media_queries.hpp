@@ -127,7 +127,7 @@ namespace client_cssom
 
   private:
     MediaType media_type_ = MediaType::Screen();
-    glm::vec3 viewport_size_ = {ScreenWidth, ScreenHeight, VolumeDepth};
+    glm::vec3 viewport_size_ = {DeviceWidth, DeviceHeight, DeviceDepth};
     float device_pixel_ratio_ = DevicePixelRatio;
 
     // Viewport scaling properties
