@@ -4,6 +4,7 @@
 
 #include "./document.hpp"
 #include "./text.hpp"
+#include "./comment.hpp"
 #include "./node-inl.hpp"
 #include "./node_list-inl.hpp"
 
@@ -74,7 +75,18 @@ namespace dombinding
   template <typename ObjectType, typename DocumentType>
   Napi::Value DocumentBase<ObjectType, DocumentType>::CreateComment(const Napi::CallbackInfo &info)
   {
-    return info.Env().Undefined();
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "Failed to execute 'createComment' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto data = info[0].ToString().Utf8Value();
+    auto commentNode = this->node->createComment(data);
+    return NodeBase<Comment, dom::Comment>::FromImpl(env, commentNode);
   }
 
   template <typename ObjectType, typename DocumentType>
