@@ -68,11 +68,17 @@ namespace browser
   {
     bool dimensions_changed = false;
 
-    // Apply width
+    // Apply width using Device class
     if (viewport_meta.device_width)
     {
-      // Use device width - keep current values for simplicity
-      // In a real implementation, this would get actual device dimensions
+      float device_width = client_cssom::Device::DeviceWidth;
+      if (device_width != inner_width_)
+      {
+        inner_width_ = device_width;
+        outer_width_ = device_width;
+        device_.setViewportWidth(device_width, true);
+        dimensions_changed = true;
+      }
     }
     else if (viewport_meta.width)
     {
@@ -81,16 +87,22 @@ namespace browser
       {
         inner_width_ = new_width;
         outer_width_ = new_width;
-        device_.setViewportWidth(new_width);
+        device_.setViewportWidth(new_width, false);
         dimensions_changed = true;
       }
     }
 
-    // Apply height
+    // Apply height using Device class
     if (viewport_meta.device_height)
     {
-      // Use device height - keep current values for simplicity
-      // In a real implementation, this would get actual device dimensions
+      float device_height = client_cssom::Device::DeviceHeight;
+      if (device_height != inner_height_)
+      {
+        inner_height_ = device_height;
+        outer_height_ = device_height;
+        device_.setViewportHeight(device_height, true);
+        dimensions_changed = true;
+      }
     }
     else if (viewport_meta.height)
     {
@@ -99,13 +111,28 @@ namespace browser
       {
         inner_height_ = new_height;
         outer_height_ = new_height;
-        device_.setViewportHeight(new_height);
+        device_.setViewportHeight(new_height, false);
         dimensions_changed = true;
       }
     }
 
-    // TODO: Apply scaling factors (initial-scale, minimum-scale, maximum-scale, user-scalable)
-    // These would typically affect devicePixelRatio or zoom level
+    // Apply scaling factors using Device class
+    if (viewport_meta.initial_scale)
+    {
+      device_.setInitialScale(*viewport_meta.initial_scale);
+    }
+    if (viewport_meta.minimum_scale)
+    {
+      device_.setMinimumScale(*viewport_meta.minimum_scale);
+    }
+    if (viewport_meta.maximum_scale)
+    {
+      device_.setMaximumScale(*viewport_meta.maximum_scale);
+    }
+    if (viewport_meta.user_scalable)
+    {
+      device_.setUserScalable(*viewport_meta.user_scalable);
+    }
 
     if (dimensions_changed)
     {
@@ -113,8 +140,7 @@ namespace browser
       // This would trigger a re-layout of the document
       if (client_context_)
       {
-        // TODO: Add RPC call to notify about viewport size change
-        // client_context_->makeRpcCall("window.viewportChanged", {inner_width_, inner_height_});
+        // TODO(yorkie): Add RPC call to notify about viewport size change
       }
     }
   }
