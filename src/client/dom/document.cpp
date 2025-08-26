@@ -580,7 +580,17 @@ namespace dom
           return;
         }
 
-        // TODO: Support Comment, ProcessingInstruction and DocumentType.
+        if (Node::Is<Comment>(node))
+        {
+          auto &comment = Node::AsChecked<Comment>(node);
+          s.append("<!--");
+          s.append(comment.data());
+          s.append("-->");
+          isElementNode = false;
+          return;
+        }
+
+        // TODO: Support ProcessingInstruction and DocumentType.
         isElementNode = false;
       };
 

@@ -60,3 +60,64 @@ TEST_CASE("Comment node properties", "[Comment]")
     REQUIRE(comment->textContent == "test comment");
   }
 }
+
+TEST_CASE("Comment DOM tree integration", "[Comment][DOM]")
+{
+  auto browsingContext = std::make_shared<BrowsingContext>();
+  auto document = std::make_shared<HTMLDocument>(browsingContext, false);
+  
+  // Set up a basic document structure
+  document->setSource("<html><body></body></html>");
+  auto body = document->body();
+  REQUIRE(body != nullptr);
+
+  SECTION("comment can be appended to body")
+  {
+    auto comment = document->createComment("test comment");
+    body->appendChild(comment);
+    
+    REQUIRE(comment->parentNode.lock() == body);
+    REQUIRE(body->childNodes.size() == 1);
+    REQUIRE(body->childNodes[0] == comment);
+  }
+
+  SECTION("multiple comments can be added")
+  {
+    auto comment1 = document->createComment("first comment");
+    auto comment2 = document->createComment("second comment");
+    
+    body->appendChild(comment1);
+    body->appendChild(comment2);
+    
+    REQUIRE(body->childNodes.size() == 2);
+    REQUIRE(body->childNodes[0] == comment1);
+    REQUIRE(body->childNodes[1] == comment2);
+  }
+
+  SECTION("comment serialization works correctly")
+  {
+    auto comment = document->createComment("test comment");
+    body->appendChild(comment);
+    
+    std::string serialized = HTMLDocument::SerializeFragment(body);
+    REQUIRE(serialized.find("<!--test comment-->") != std::string::npos);
+  }
+
+  SECTION("empty comment serialization")
+  {
+    auto comment = document->createComment("");
+    body->appendChild(comment);
+    
+    std::string serialized = HTMLDocument::SerializeFragment(body);
+    REQUIRE(serialized.find("<!---->") != std::string::npos);
+  }
+
+  SECTION("comment with special characters serialization")
+  {
+    auto comment = document->createComment("special & chars < > \" '");
+    body->appendChild(comment);
+    
+    std::string serialized = HTMLDocument::SerializeFragment(body);
+    REQUIRE(serialized.find("<!--special & chars < > \" '-->") != std::string::npos);
+  }
+}
