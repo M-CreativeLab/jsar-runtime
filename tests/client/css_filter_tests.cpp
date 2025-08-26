@@ -17,11 +17,17 @@ TEST_CASE("Filter parsing and conversion", "[css-filter]")
     REQUIRE(filter.toCss() == "none");
   }
 
-  SECTION("Parse non-empty filter")
+  SECTION("Parse filter with multiple functions")
   {
     specified::Filter filter;
-    REQUIRE(filter.parse("blur(5px)"));
+    REQUIRE(filter.parse("blur(5px) brightness(1.2)"));
     REQUIRE_FALSE(filter.isNone());
+    REQUIRE(filter.toCss() == "blur(5px) brightness(1.2)");
+    
+    const auto& functions = filter.getFunctions();
+    REQUIRE(functions.size() == 2);
+    REQUIRE(functions[0].isBlur());
+    REQUIRE(functions[1].isBrightness());
   }
 
   SECTION("Parse empty value")
@@ -47,20 +53,30 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     REQUIRE(func.toCss() == "none");
   }
 
-  SECTION("Parse blur function")
+  SECTION("Parse blur function with parameters")
   {
     specified::FilterFunction func;
     REQUIRE(func.parse("blur(5px)"));
     REQUIRE(func.isBlur());
-    REQUIRE(func.toCss() == "blur");
+    REQUIRE(func.toCss() == "blur(5px)");
+    
+    const auto& params = func.getParameters();
+    REQUIRE(params.size() == 1);
+    REQUIRE(params[0].value == 5.0);
+    REQUIRE(params[0].unit == "px");
   }
 
-  SECTION("Parse brightness function")
+  SECTION("Parse brightness with percentage")
   {
     specified::FilterFunction func;
     REQUIRE(func.parse("brightness(150%)"));
     REQUIRE(func.isBrightness());
-    REQUIRE(func.toCss() == "brightness");
+    REQUIRE(func.toCss() == "brightness(150%)");
+    
+    const auto& params = func.getParameters();
+    REQUIRE(params.size() == 1);
+    REQUIRE(params[0].value == 1.5); // 150% converted to 1.5
+    REQUIRE(params[0].unit == "%");
   }
 
   SECTION("Parse contrast function")

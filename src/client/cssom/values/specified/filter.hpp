@@ -5,123 +5,330 @@
 
 namespace client_cssom::values::specified
 {
-  class FilterFunction : public generics::GenericFilterFunction<FilterFunction>,
-                         public Parse,
-                         public ToComputedValue<computed::FilterFunction>
+#pragma once
+
+#include <client/cssom/values/generics/filter.hpp>
+#include <client/cssom/values/computed/filter.hpp>
+#include <client/cssom/parsers/css_filter_parser.hpp>
+
+  namespace client_cssom::values::specified
   {
-    friend class Parse;
-
-  public:
-    using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
-
-    FilterFunction()
-        : generics::GenericFilterFunction<FilterFunction>(kNone)
+    class FilterFunction : public generics::GenericFilterFunction<FilterFunction>,
+                           public Parse,
+                           public ToComputedValue<computed::FilterFunction>
     {
-    }
+      friend class Parse;
 
-    bool parse(const std::string &input) override
-    {
-      if (input == "none")
-        tag_ = kNone;
-      else if (input.find("blur(") == 0)
-        tag_ = kBlur;
-      else if (input.find("brightness(") == 0)
-        tag_ = kBrightness;
-      else if (input.find("contrast(") == 0)
-        tag_ = kContrast;
-      else if (input.find("drop-shadow(") == 0)
-        tag_ = kDropShadow;
-      else if (input.find("grayscale(") == 0)
-        tag_ = kGrayscale;
-      else if (input.find("hue-rotate(") == 0)
-        tag_ = kHueRotate;
-      else if (input.find("invert(") == 0)
-        tag_ = kInvert;
-      else if (input.find("opacity(") == 0)
-        tag_ = kOpacity;
-      else if (input.find("saturate(") == 0)
-        tag_ = kSaturate;
-      else if (input.find("sepia(") == 0)
-        tag_ = kSepia;
-      else
-        return false;
-      return true;
-    }
+    public:
+      using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
 
-    computed::FilterFunction toComputedValue(computed::Context &) const override
-    {
-      if (isNone())
-        return computed::FilterFunction::None();
-      else if (isBlur())
-        return computed::FilterFunction::Blur();
-      else if (isBrightness())
-        return computed::FilterFunction::Brightness();
-      else if (isContrast())
-        return computed::FilterFunction::Contrast();
-      else if (isDropShadow())
-        return computed::FilterFunction::DropShadow();
-      else if (isGrayscale())
-        return computed::FilterFunction::Grayscale();
-      else if (isHueRotate())
-        return computed::FilterFunction::HueRotate();
-      else if (isInvert())
-        return computed::FilterFunction::Invert();
-      else if (isOpacity())
-        return computed::FilterFunction::Opacity();
-      else if (isSaturate())
-        return computed::FilterFunction::Saturate();
-      else if (isSepia())
-        return computed::FilterFunction::Sepia();
-
-      // Default to None if none match
-      return computed::FilterFunction::None();
-    }
-  };
-
-  class Filter : public generics::GenericFilter<Filter>,
-                 public Parse,
-                 public ToComputedValue<computed::Filter>
-  {
-    friend class Parse;
-
-  public:
-    using generics::GenericFilter<Filter>::GenericFilter;
-
-    Filter()
-        : generics::GenericFilter<Filter>()
-    {
-    }
-
-    bool parse(const std::string &input) override
-    {
-      // Basic parsing - for now just handle "none"
-      if (input == "none")
+      FilterFunction()
+          : generics::GenericFilterFunction<FilterFunction>(kNone)
       {
-        is_none_ = true;
+      }
+
+      // Add typedef for the template parameter dependency
+      using FilterFunctionType = FilterFunction;
+
+      bool parse(const std::string &input) override
+      {
+        css_filter_parser::CSSFilterParser parser(input);
+        auto functions = parser.parse();
+
+        if (!parser.isValid() || functions.empty())
+          return false;
+
+        // Parse single filter function
+        const auto &func = functions[0];
+
+        switch (func.type)
+        {
+        case css_filter_parser::FilterFunctionType::kNone:
+          tag_ = kNone;
+          break;
+        case css_filter_parser::FilterFunctionType::kBlur:
+          tag_ = kBlur;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "px" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kBrightness:
+          tag_ = kBrightness;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kContrast:
+          tag_ = kContrast;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kDropShadow:
+          tag_ = kDropShadow;
+          raw_value_ = func.raw_value;
+          break;
+        case css_filter_parser::FilterFunctionType::kGrayscale:
+          tag_ = kGrayscale;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kHueRotate:
+          tag_ = kHueRotate;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "deg" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kInvert:
+          tag_ = kInvert;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kOpacity:
+          tag_ = kOpacity;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kSaturate:
+          tag_ = kSaturate;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        case css_filter_parser::FilterFunctionType::kSepia:
+          tag_ = kSepia;
+          if (!func.values.empty())
+          {
+            parameters_.clear();
+            parameters_.emplace_back(func.values[0], func.units.empty() ? "" : func.units[0]);
+          }
+          break;
+        default:
+          return false;
+        }
+
         return true;
       }
 
-      // TODO: Parse complex filter functions like "blur(5px) brightness(0.5)"
-      // For now, accept any non-empty string as a valid filter
-      if (!input.empty())
+      computed::FilterFunction toComputedValue(computed::Context &) const override
       {
-        is_none_ = false;
+        computed::FilterFunction result;
+        result.tag_ = static_cast<computed::FilterFunction::Tag>(tag_);
+        result.parameters_ = parameters_;
+        result.raw_value_ = raw_value_;
+        return result;
+      }
+    };
+
+    class Filter : public generics::GenericFilter<Filter>,
+                   public Parse,
+                   public ToComputedValue<computed::Filter>
+    {
+      friend class Parse;
+
+    public:
+      using generics::GenericFilter<Filter>::GenericFilter;
+
+      Filter()
+          : generics::GenericFilter<Filter>()
+      {
+      }
+
+      // Add typedef for the template parameter dependency
+      using FilterFunctionType = FilterFunction;
+
+      bool parse(const std::string &input) override
+      {
+        // Handle "none" case
+        if (input == "none")
+        {
+          is_none_ = true;
+          filter_functions_.clear();
+          return true;
+        }
+
+        // Use the CSS filter parser
+        css_filter_parser::CSSFilterParser parser(input);
+        auto parsed_functions = parser.parse();
+
+        if (!parser.isValid())
+        {
+          return false;
+        }
+
+        // Convert parsed functions to FilterFunction objects
+        filter_functions_.clear();
+        for (const auto &parsed_func : parsed_functions)
+        {
+          FilterFunction filter_func;
+
+          // Map parser function type to our internal type
+          switch (parsed_func.type)
+          {
+          case css_filter_parser::FilterFunctionType::kBlur:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "px" : parsed_func.units[0]);
+              filter_func = FilterFunction::Blur(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Blur();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kBrightness:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Brightness(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Brightness();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kContrast:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Contrast(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Contrast();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kDropShadow:
+            filter_func = FilterFunction::DropShadow(parsed_func.raw_value);
+            break;
+          case css_filter_parser::FilterFunctionType::kGrayscale:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Grayscale(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Grayscale();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kHueRotate:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "deg" : parsed_func.units[0]);
+              filter_func = FilterFunction::HueRotate(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::HueRotate();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kInvert:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Invert(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Invert();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kOpacity:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Opacity(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Opacity();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kSaturate:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Saturate(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Saturate();
+            }
+            break;
+          case css_filter_parser::FilterFunctionType::kSepia:
+            if (!parsed_func.values.empty())
+            {
+              generics::FilterFunctionValue param(parsed_func.values[0],
+                                                  parsed_func.units.empty() ? "" : parsed_func.units[0]);
+              filter_func = FilterFunction::Sepia(param);
+            }
+            else
+            {
+              filter_func = FilterFunction::Sepia();
+            }
+            break;
+          default:
+            return false;
+          }
+
+          filter_functions_.push_back(filter_func);
+        }
+
+        is_none_ = filter_functions_.empty();
         return true;
       }
 
-      return false;
-    }
+      computed::Filter toComputedValue(computed::Context &context) const override
+      {
+        computed::Filter result;
 
-    computed::Filter toComputedValue(computed::Context &) const override
-    {
-      if (is_none_)
-        return computed::Filter::None();
+        if (is_none_)
+        {
+          result = computed::Filter::None();
+        }
+        else
+        {
+          std::vector<computed::FilterFunction> computed_functions;
+          for (const auto &func : filter_functions_)
+          {
+            computed::FilterFunction computed_func;
+            computed_func.tag_ = static_cast<computed::FilterFunction::Tag>(func.tag_);
+            computed_func.parameters_ = func.parameters_;
+            computed_func.raw_value_ = func.raw_value_;
+            computed_functions.push_back(computed_func);
+          }
+          result.setFunctions(computed_functions);
+        }
 
-      // TODO: Convert filter functions to computed values
-      // For now, return a non-none filter
-      computed::Filter result;
-      result.is_none_ = false;
-      return result;
-    }
-  };
-}
+        return result;
+      }
+    };
+  }

@@ -7,6 +7,27 @@
 
 namespace client_cssom::values::generics
 {
+  // Base class for filter function parameters
+  struct FilterFunctionValue
+  {
+    double value = 0.0;
+    std::string unit;
+
+    FilterFunctionValue() = default;
+    FilterFunctionValue(double v, const std::string &u = "")
+        : value(v)
+        , unit(u)
+    {
+    }
+
+    std::string toString() const
+    {
+      if (unit.empty())
+        return std::to_string(value);
+      return std::to_string(value) + unit;
+    }
+  };
+
   template <typename T>
   class GenericFilterFunction : public ToCss
   {
@@ -31,45 +52,65 @@ namespace client_cssom::values::generics
     {
       return T(kNone);
     }
-    static T Blur()
+    static T Blur(const FilterFunctionValue &length = FilterFunctionValue(0.0, "px"))
     {
-      return T(kBlur);
+      T result(kBlur);
+      result.parameters_.push_back(length);
+      return result;
     }
-    static T Brightness()
+    static T Brightness(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kBrightness);
+      T result(kBrightness);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T Contrast()
+    static T Contrast(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kContrast);
+      T result(kContrast);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T DropShadow()
+    static T DropShadow(const std::string &shadow_value = "")
     {
-      return T(kDropShadow);
+      T result(kDropShadow);
+      result.raw_value_ = shadow_value;
+      return result;
     }
-    static T Grayscale()
+    static T Grayscale(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kGrayscale);
+      T result(kGrayscale);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T HueRotate()
+    static T HueRotate(const FilterFunctionValue &angle = FilterFunctionValue(0.0, "deg"))
     {
-      return T(kHueRotate);
+      T result(kHueRotate);
+      result.parameters_.push_back(angle);
+      return result;
     }
-    static T Invert()
+    static T Invert(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kInvert);
+      T result(kInvert);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T Opacity()
+    static T Opacity(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kOpacity);
+      T result(kOpacity);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T Saturate()
+    static T Saturate(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kSaturate);
+      T result(kSaturate);
+      result.parameters_.push_back(value);
+      return result;
     }
-    static T Sepia()
+    static T Sepia(const FilterFunctionValue &value = FilterFunctionValue(1.0))
     {
-      return T(kSepia);
+      T result(kSepia);
+      result.parameters_.push_back(value);
+      return result;
     }
 
   protected:
@@ -128,32 +169,83 @@ namespace client_cssom::values::generics
       return tag_ == kSepia;
     }
 
+    // Access parameters
+    const std::vector<FilterFunctionValue> &getParameters() const
+    {
+      return parameters_;
+    }
+
+    const std::string &getRawValue() const
+    {
+      return raw_value_;
+    }
+
     std::string toCss() const override
     {
+      std::string result;
       switch (tag_)
       {
       case kNone:
         return "none";
       case kBlur:
-        return "blur";
+        result = "blur(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kBrightness:
-        return "brightness";
+        result = "brightness(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kContrast:
-        return "contrast";
+        result = "contrast(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kDropShadow:
-        return "drop-shadow";
+        result = "drop-shadow(";
+        result += raw_value_;
+        result += ")";
+        return result;
       case kGrayscale:
-        return "grayscale";
+        result = "grayscale(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kHueRotate:
-        return "hue-rotate";
+        result = "hue-rotate(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kInvert:
-        return "invert";
+        result = "invert(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kOpacity:
-        return "opacity";
+        result = "opacity(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kSaturate:
-        return "saturate";
+        result = "saturate(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       case kSepia:
-        return "sepia";
+        result = "sepia(";
+        if (!parameters_.empty())
+          result += parameters_[0].toString();
+        result += ")";
+        return result;
       default:
         return "none";
       }
@@ -161,6 +253,8 @@ namespace client_cssom::values::generics
 
   protected:
     Tag tag_;
+    std::vector<FilterFunctionValue> parameters_;
+    std::string raw_value_; // For complex values like drop-shadow
   };
 
   template <typename T>
@@ -184,17 +278,47 @@ namespace client_cssom::values::generics
       return is_none_;
     }
 
-    std::string toCss() const override
+    // Add filter functions to the list
+    void addFunction(const typename T::FilterFunctionType &func)
     {
       if (is_none_)
+      {
+        is_none_ = false;
+        filter_functions_.clear();
+      }
+      filter_functions_.push_back(func);
+    }
+
+    // Get filter functions
+    const std::vector<typename T::FilterFunctionType> &getFunctions() const
+    {
+      return filter_functions_;
+    }
+
+    // Set filter functions
+    void setFunctions(const std::vector<typename T::FilterFunctionType> &functions)
+    {
+      filter_functions_ = functions;
+      is_none_ = functions.empty();
+    }
+
+    std::string toCss() const override
+    {
+      if (is_none_ || filter_functions_.empty())
         return "none";
 
-      // TODO: Implement proper CSS serialization for filter functions
-      return "none";
+      std::string result;
+      for (size_t i = 0; i < filter_functions_.size(); ++i)
+      {
+        if (i > 0)
+          result += " ";
+        result += filter_functions_[i].toCss();
+      }
+      return result;
     }
 
   protected:
     bool is_none_;
-    // TODO: Add vector of filter functions when needed
+    std::vector<typename T::FilterFunctionType> filter_functions_;
   };
 }

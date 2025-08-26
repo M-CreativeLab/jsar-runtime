@@ -19,8 +19,8 @@ namespace client_cssom::values::computed
     {
     }
 
-    // TODO: Add value storage and conversion methods when needed
-    // For now, just support the basic function types
+    // Add typedef for the template parameter dependency
+    using FilterFunctionType = FilterFunction;
   };
 
   class Filter : public generics::GenericFilter<Filter>
@@ -33,7 +33,7 @@ namespace client_cssom::values::computed
     {
     }
 
-    // TODO: Add filter function list and operations when needed
-    // For now, just support "none" and basic structure
+    // Add typedef for the template parameter dependency
+    using FilterFunctionType = FilterFunction;
   };
 }
