@@ -10,11 +10,13 @@
       padding: 5px;
       border: 1px solid #ccc;
     }
+
     .pass {
       background-color: #d4edda;
       border-color: #c3e6cb;
       color: #155724;
     }
+
     .fail {
       background-color: #f8d7da;
       border-color: #f5c6cb;
@@ -88,7 +90,7 @@
     try {
       const container = document.getElementById('test-container');
       const testFragment = document.createDocumentFragment();
-      
+
       for (let i = 1; i <= 3; i++) {
         const p = document.createElement('p');
         p.textContent = `Paragraph ${i}`;
@@ -99,10 +101,10 @@
       container.appendChild(testFragment);
       const childCountAfter = testFragment.childNodes.length;
 
-      logResult('DocumentFragment children moved to DOM (fragment empty after insertion)', 
-                childCountBefore === 3 && childCountAfter === 0);
-      logResult('DOM container received children from fragment', 
-                container.children.length === 3);
+      logResult('DocumentFragment children moved to DOM (fragment empty after insertion)',
+        childCountBefore === 3 && childCountAfter === 0);
+      logResult('DOM container received children from fragment',
+        container.children.length === 3);
     } catch (error) {
       logResult(`Error with DOM insertion: ${error.message}`, false);
     }
@@ -113,12 +115,12 @@
       const div = document.createElement('div');
       testFragment.appendChild(div);
 
-      logResult('DocumentFragment childElementCount works', 
-                typeof testFragment.childElementCount === 'number' && testFragment.childElementCount === 1);
-      logResult('DocumentFragment firstElementChild works', 
-                testFragment.firstElementChild === div);
-      logResult('DocumentFragment lastElementChild works', 
-                testFragment.lastElementChild === div);
+      logResult('DocumentFragment childElementCount works',
+        typeof testFragment.childElementCount === 'number' && testFragment.childElementCount === 1);
+      logResult('DocumentFragment firstElementChild works',
+        testFragment.firstElementChild === div);
+      logResult('DocumentFragment lastElementChild works',
+        testFragment.lastElementChild === div);
     } catch (error) {
       logResult(`Error testing DocumentFragment properties: ${error.message}`, false);
     }
