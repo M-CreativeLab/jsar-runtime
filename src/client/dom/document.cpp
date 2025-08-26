@@ -10,6 +10,7 @@
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
 #include "../cssom/selectors/matching.hpp"
+#include "../html/script_loader.hpp"
 
 namespace dom
 {
@@ -220,6 +221,17 @@ namespace dom
 
     if (should_open_)
       openInternal();
+
+    // Call onParsingFinished after openInternal to ensure ScriptLoader is initialized
+    // This is the correct timing for defer scripts execution
+    if (documentType == DocumentType::kHTML)
+    {
+      auto htmlDoc = dynamic_pointer_cast<HTMLDocument>(getPtr<Document>());
+      if (htmlDoc && htmlDoc->isScriptLoaderReady())
+      {
+        htmlDoc->onParsingFinished();
+      }
+    }
   }
 
   void Document::open()
@@ -642,6 +654,7 @@ namespace dom
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect)
       , layout_view_(nullptr)
   {
+    // ScriptLoader will be initialized in onDocumentOpened when shared_from_this is safe
   }
 
   std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const
@@ -661,8 +674,9 @@ namespace dom
   {
     Document::afterLoadedCallback();
 
-    // Dispatch the load event.
-    dispatchEvent(DOMEventType::DOMContentLoaded);
+    // onParsingFinished is now called immediately after DOM parsing in setSource()
+    // No need to call it again here
+
     // TODO(Yorkie): wait for the pending resources to be loaded.
     dispatchEvent(DOMEventType::Load);
   }
@@ -671,6 +685,12 @@ namespace dom
   {
     auto selfDocument = getPtr<HTMLDocument>();
     auto window = default_view_.lock();
+
+    // Initialize ScriptLoader when document is opened
+    if (!scriptLoader_)
+    {
+      scriptLoader_ = make_shared<ScriptLoader>(std::static_pointer_cast<Document>(shared_from_this()));
+    }
 
     // Set the document cache to be invalid once the document is opened.
     invalidateDocumentCache();
@@ -686,6 +706,14 @@ namespace dom
       // Configure the built-in scene for the HTML rendering before starting the scene.
       scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
       scene->start();
+    }
+  }
+
+  void HTMLDocument::onParsingFinished()
+  {
+    if (scriptLoader_)
+    {
+      scriptLoader_->onParsingFinished();
     }
   }
 

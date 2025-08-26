@@ -22,6 +22,8 @@
 
 namespace dom
 {
+  class ScriptLoader;
+
   enum class DocumentCompatMode
   {
     NO_QUIRKS = 0, // Standards
@@ -363,6 +365,19 @@ namespace dom
   public:
     void afterLoadedCallback() override;
 
+    // Script loading management
+    std::shared_ptr<ScriptLoader> getScriptLoader()
+    {
+      return scriptLoader_;
+    }
+    void onParsingFinished();
+
+    // Check if ScriptLoader is initialized
+    bool isScriptLoaderReady() const
+    {
+      return scriptLoader_ != nullptr;
+    }
+
   private:
     bool isHTMLDocument() const override final
     {
@@ -376,5 +391,6 @@ namespace dom
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;
     mutable std::weak_ptr<Node> dirty_root_text_or_element_;
+    std::shared_ptr<ScriptLoader> scriptLoader_;
   };
 }

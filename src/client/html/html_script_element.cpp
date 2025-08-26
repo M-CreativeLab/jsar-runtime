@@ -5,6 +5,7 @@
 #include <client/dom/browsing_context.hpp>
 
 #include "./html_script_element.hpp"
+#include "./script_loader.hpp"
 
 namespace dom
 {
@@ -47,7 +48,28 @@ namespace dom
     {
       compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
-      loadSource();
+
+      // Use ScriptLoader to manage script execution order
+      auto document = ownerDocument->lock();
+      if (document && document->isHTMLDocument())
+      {
+        auto htmlDoc = std::static_pointer_cast<HTMLDocument>(document);
+        auto scriptLoader = htmlDoc->getScriptLoader();
+        if (scriptLoader)
+        {
+          scriptLoader->handleScriptElement(std::static_pointer_cast<HTMLScriptElement>(shared_from_this()));
+        }
+        else
+        {
+          // Fallback to original behavior
+          loadSource();
+        }
+      }
+      else
+      {
+        // Fallback to original behavior for non-HTML documents
+        loadSource();
+      }
     }
     // TODO(yorkie): support "speculationrules"?
 
@@ -103,13 +125,16 @@ namespace dom
     browsingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
     scriptCompiled = true;
 
-    // After compile
-    bool skipScriptExecution = false;
-    if (isClassicScript() && defer)
-      skipScriptExecution = true;
-
-    if (!skipScriptExecution)
-      executeScript();
+    // Notify loading completion callback if set (for ScriptLoader managed scripts)
+    if (loadingCallback_)
+    {
+      loadingCallback_();
+    }
+    else
+    {
+      cout << "[DEBUG] No loadingCallback set, script will be managed by ScriptLoader" << endl;
+      // Script execution will be handled by ScriptLoader, no fallback needed
+    }
   }
 
   void HTMLScriptElement::scheduleScriptExecution()

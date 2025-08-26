@@ -1,12 +1,16 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <functional>
 #include <client/dom/dom_scripting.hpp>
 
 #include "./html_element.hpp"
 
 namespace dom
 {
+  class ScriptLoader;
+
   enum class HTMLScriptCrossOrigin
   {
     Anonymous,
@@ -69,10 +73,8 @@ namespace dom
     {
       return false;
     }
-    void loadSource();
     void compileScript(const string &source, bool isTypeScript);
     void scheduleScriptExecution();
-    void executeScript();
 
   public:
     /**
@@ -110,10 +112,33 @@ namespace dom
      */
     string type;
 
+  public:
+    // Make scriptCompiled accessible to ScriptLoader
+    bool scriptCompiled = false;
+
+    // Set loading completion callback
+    void setLoadingCallback(std::function<void()> callback)
+    {
+      loadingCallback_ = callback;
+    }
+
+    // Trigger delayed loading callback (for inline scripts)
+    void triggerLoadingCallback()
+    {
+      if (loadingCallback_)
+        loadingCallback_();
+    }
+
+    // Execute script (public for ScriptLoader)
+    void executeScript();
+
+    // Load script source (public for ScriptLoader)
+    void loadSource();
+
   private:
     shared_ptr<dom::DOMScript> compiledScript;
-    bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
+    std::function<void()> loadingCallback_;
   };
 }
