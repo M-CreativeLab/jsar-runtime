@@ -14,6 +14,11 @@ namespace client_cssom::values::specified
   public:
     using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
 
+    FilterFunction()
+        : generics::GenericFilterFunction<FilterFunction>(kNone)
+    {
+    }
+
     bool parse(const std::string &input) override
     {
       if (input == "none")
@@ -81,6 +86,11 @@ namespace client_cssom::values::specified
 
   public:
     using generics::GenericFilter<Filter>::GenericFilter;
+
+    Filter()
+        : generics::GenericFilter<Filter>()
+    {
+    }
 
     bool parse(const std::string &input) override
     {

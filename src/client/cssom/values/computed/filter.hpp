@@ -14,6 +14,11 @@ namespace client_cssom::values::computed
     using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
 
   public:
+    FilterFunction()
+        : generics::GenericFilterFunction<FilterFunction>(kNone)
+    {
+    }
+
     // TODO: Add value storage and conversion methods when needed
     // For now, just support the basic function types
   };
@@ -23,6 +28,11 @@ namespace client_cssom::values::computed
     using generics::GenericFilter<Filter>::GenericFilter;
 
   public:
+    Filter()
+        : generics::GenericFilter<Filter>()
+    {
+    }
+
     // TODO: Add filter function list and operations when needed
     // For now, just support "none" and basic structure
   };

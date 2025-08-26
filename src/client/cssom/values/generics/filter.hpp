@@ -79,6 +79,10 @@ namespace client_cssom::values::generics
     }
 
   public:
+    GenericFilterFunction()
+        : tag_(kNone)
+    {
+    }
     inline bool isNone() const
     {
       return tag_ == kNone;
