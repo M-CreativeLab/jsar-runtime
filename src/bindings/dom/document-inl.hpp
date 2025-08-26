@@ -4,6 +4,7 @@
 
 #include "./document.hpp"
 #include "./text.hpp"
+#include "./document_fragment.hpp"
 #include "./node-inl.hpp"
 #include "./node_list-inl.hpp"
 
@@ -80,7 +81,11 @@ namespace dombinding
   template <typename ObjectType, typename DocumentType>
   Napi::Value DocumentBase<ObjectType, DocumentType>::CreateDocumentFragment(const Napi::CallbackInfo &info)
   {
-    return info.Env().Undefined();
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto fragment = this->node->createDocumentFragment();
+    return DocumentFragment::NewInstance(env, fragment);
   }
 
   template <typename ObjectType, typename DocumentType>
