@@ -16,6 +16,12 @@
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
 
+// Forward declaration to avoid circular dependency
+namespace dom
+{
+  struct ViewportMeta;
+}
+
 namespace browser
 {
   /**
@@ -237,6 +243,11 @@ namespace browser
      */
     const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
                                                         std::optional<std::string> pseudoElt = std::nullopt) const;
+
+    /**
+     * Apply viewport meta settings to the window dimensions
+     */
+    void applyViewportMeta(const dom::ViewportMeta &viewport_meta);
 
   private:
     // Configure the document to the window.

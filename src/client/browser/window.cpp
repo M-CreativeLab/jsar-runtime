@@ -1,5 +1,6 @@
 #include <client/dom/element.hpp>
 #include <client/dom/document.hpp>
+#include <client/html/html_meta_element.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
 #include <client/cssom/values/computed/context.hpp>
@@ -61,5 +62,60 @@ namespace browser
     auto elementStyle = htmlElement->style();
     computedStyle->update(elementStyle, context); // Override the style from the element's.
     return *computedStyle;
+  }
+
+  void Window::applyViewportMeta(const dom::ViewportMeta &viewport_meta)
+  {
+    bool dimensions_changed = false;
+
+    // Apply width
+    if (viewport_meta.device_width)
+    {
+      // Use device width - keep current values for simplicity
+      // In a real implementation, this would get actual device dimensions
+    }
+    else if (viewport_meta.width)
+    {
+      float new_width = *viewport_meta.width;
+      if (new_width != inner_width_)
+      {
+        inner_width_ = new_width;
+        outer_width_ = new_width;
+        device_.setViewportWidth(new_width);
+        dimensions_changed = true;
+      }
+    }
+
+    // Apply height
+    if (viewport_meta.device_height)
+    {
+      // Use device height - keep current values for simplicity
+      // In a real implementation, this would get actual device dimensions
+    }
+    else if (viewport_meta.height)
+    {
+      float new_height = *viewport_meta.height;
+      if (new_height != inner_height_)
+      {
+        inner_height_ = new_height;
+        outer_height_ = new_height;
+        device_.setViewportHeight(new_height);
+        dimensions_changed = true;
+      }
+    }
+
+    // TODO: Apply scaling factors (initial-scale, minimum-scale, maximum-scale, user-scalable)
+    // These would typically affect devicePixelRatio or zoom level
+
+    if (dimensions_changed)
+    {
+      // Notify the client context about viewport changes if needed
+      // This would trigger a re-layout of the document
+      if (client_context_)
+      {
+        // TODO: Add RPC call to notify about viewport size change
+        // client_context_->makeRpcCall("window.viewportChanged", {inner_width_, inner_height_});
+      }
+    }
   }
 }

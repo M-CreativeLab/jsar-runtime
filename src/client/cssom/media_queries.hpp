@@ -42,6 +42,32 @@ namespace client_cssom
       return root_line_height_;
     }
 
+    /**
+     * Update viewport size from viewport meta tag
+     */
+    void setViewportSize(float width, float height)
+    {
+      viewport_size_.x = width;
+      viewport_size_.y = height;
+      // Keep depth unchanged
+    }
+
+    /**
+     * Update viewport width only
+     */
+    void setViewportWidth(float width)
+    {
+      viewport_size_.x = width;
+    }
+
+    /**
+     * Update viewport height only
+     */
+    void setViewportHeight(float height)
+    {
+      viewport_size_.y = height;
+    }
+
   private:
     MediaType media_type_ = MediaType::Screen();
     glm::vec3 viewport_size_ = {ScreenWidth, ScreenHeight, VolumeDepth};
