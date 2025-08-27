@@ -19,6 +19,7 @@
 #include "./render_queue.hpp"
 #include "./render_layer.hpp"
 #include "./css_border_data_texture.hpp"
+#include "./css_scroll_shadow_texture.hpp"
 
 namespace builtin_scene
 {
@@ -468,7 +469,9 @@ namespace builtin_scene
      * @param sortingOrder The sorting order of the instances.
      */
     void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
-    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture);
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                             CSSBorderDataTexture *borderDataTexture,
+                             CSSScrollShadowTexture *scrollShadowDataTexture);
 
     void clearInstances() override;
     void sortInstances(SortingOrder sortingOrder);

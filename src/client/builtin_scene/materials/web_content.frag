@@ -14,15 +14,14 @@ in vec2 vInstanceTexCoord;
 in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
 in float vInstanceBorderStyle;
-in vec4 vInstanceScrollShadowColor;
-in float vInstanceScrollShadowMaxHeight;
-in vec2 vInstanceScrollOffset;
-in vec2 vInstanceContentSize;
 flat in int vInstanceId;
 in float vSdfDepthScale;
 
 // Texture-based border data storage
 uniform sampler2D borderDataTexture;
+
+// Texture-based scroll shadow data storage
+uniform sampler2D scrollShadowDataTexture;
 #else
 // SDF rendering uniforms (fallback for non-instanced usage)
 uniform vec2 uDimensions;   // Width and height of the plane in logical units
@@ -86,6 +85,24 @@ vec4 getBorderBottomColor(int instanceId)
 vec4 getBorderLeftColor(int instanceId)
 {
   return texelFetch(borderDataTexture, ivec2(4, instanceId), 0);
+}
+
+// Get scroll shadow color from texture
+vec4 getScrollShadowColor(int instanceId)
+{
+  return texelFetch(scrollShadowDataTexture, ivec2(0, instanceId), 0);
+}
+
+// Get scroll shadow parameters from texture
+vec4 getScrollShadowParams(int instanceId)
+{
+  return texelFetch(scrollShadowDataTexture, ivec2(1, instanceId), 0);
+}
+
+// Get content size from texture 
+vec4 getScrollShadowContentSize(int instanceId)
+{
+  return texelFetch(scrollShadowDataTexture, ivec2(2, instanceId), 0);
 }
 
 // Smooth step anti-aliasing based on SDF distance
@@ -290,9 +307,17 @@ void main()
 
     // Apply scroll shadows if enabled and color has alpha
 #ifdef USE_INSTANCE_SDF
-    if (vInstanceScrollShadowColor.a > 0.0)
+    vec4 shadowColor = getScrollShadowColor(vInstanceId);
+    if (shadowColor.a > 0.0)
     {
-      vec4 shadowAlphas = calculateScrollShadows(planeCoord, dimensions, vInstanceScrollOffset, vInstanceContentSize, vInstanceScrollShadowMaxHeight);
+      vec4 shadowParams = getScrollShadowParams(vInstanceId);
+      vec4 contentSizeData = getScrollShadowContentSize(vInstanceId);
+      
+      float shadowMaxHeight = shadowParams.x;
+      vec2 scrollOffset = shadowParams.yz;
+      vec2 contentSize = vec2(shadowParams.w, contentSizeData.x);
+      
+      vec4 shadowAlphas = calculateScrollShadows(planeCoord, dimensions, scrollOffset, contentSize, shadowMaxHeight);
       
       // Combine all shadow alphas (max of all edges)
       float totalShadowAlpha = max(max(shadowAlphas.x, shadowAlphas.y), max(shadowAlphas.z, shadowAlphas.w));
@@ -300,9 +325,9 @@ void main()
       if (totalShadowAlpha > 0.0)
       {
         // Apply shadow with SDF anti-aliasing
-        vec3 shadowColor = mix(outColor.rgb, vInstanceScrollShadowColor.rgb, totalShadowAlpha * vInstanceScrollShadowColor.a);
-        float shadowFinalAlpha = max(outColor.a, totalShadowAlpha * vInstanceScrollShadowColor.a);
-        outColor = vec4(shadowColor, shadowFinalAlpha);
+        vec3 finalShadowColor = mix(outColor.rgb, shadowColor.rgb, totalShadowAlpha * shadowColor.a);
+        float shadowFinalAlpha = max(outColor.a, totalShadowAlpha * shadowColor.a);
+        outColor = vec4(finalShadowColor, shadowFinalAlpha);
       }
     }
 #endif

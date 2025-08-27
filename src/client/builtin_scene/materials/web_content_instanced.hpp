@@ -9,6 +9,7 @@
 #include "../texture_altas.hpp"
 #include "../web_content.hpp"
 #include "../css_border_data_texture.hpp"
+#include "../css_scroll_shadow_texture.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials
@@ -86,6 +87,13 @@ namespace builtin_scene::materials
      */
     CSSBorderDataTexture *getBorderDataTexture() const;
 
+    /**
+     * Get the scroll shadow data texture for direct updates.
+     *
+     * @return Pointer to the CSSScrollShadowTexture instance.
+     */
+    CSSScrollShadowTexture *getScrollShadowDataTexture() const;
+
   public:
     float width() const
     {
@@ -123,5 +131,8 @@ namespace builtin_scene::materials
 
     // Border data texture manager
     std::unique_ptr<CSSBorderDataTexture> borderDataTexture_;
+
+    // Scroll shadow data texture manager
+    std::unique_ptr<CSSScrollShadowTexture> scrollShadowDataTexture_;
   };
 }

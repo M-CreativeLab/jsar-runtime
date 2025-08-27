@@ -360,8 +360,8 @@ namespace builtin_scene
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
           }
           // 1f
-          else if (name == "instanceUseSDFTexture" ||
-                   name == "instanceScrollShadowMaxHeight")
+          else if (name == "instanceUseSDFTexture")
+
           {
             attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
@@ -369,16 +369,13 @@ namespace builtin_scene
           else if (name == "instanceTexUvOffset" ||
                    name == "instanceTexUvScale" ||
                    name == "instanceTexUvOffsetR" ||
-                   name == "instanceDimensions" ||
-                   name == "instanceScrollOffset" ||
-                   name == "instanceContentSize")
+                   name == "instanceDimensions")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
           }
           // 4f
           else if (name == "instanceColor" ||
-                   name == "instanceBorderRadius" ||
-                   name == "instanceScrollShadowColor")
+                   name == "instanceBorderRadius")
           {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
           }
@@ -433,7 +430,8 @@ namespace builtin_scene
   }
 
   void ContentInstancesList::beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
-                                                 CSSBorderDataTexture *borderDataTexture)
+                                                 CSSBorderDataTexture *borderDataTexture,
+                                                 CSSScrollShadowTexture *scrollShadowDataTexture)
   {
     InstanceListBase::beforeInstancedDraw(glContext);
 
@@ -443,6 +441,18 @@ namespace builtin_scene
         borderDataTexture->isInitialized())
     {
       borderDataTexture->updateBorderData(getInstances());
+    }
+
+    // Update scroll shadow data texture if scroll shadow data is dirty
+    if (textureDataDirty_ &&
+        scrollShadowDataTexture != nullptr &&
+        scrollShadowDataTexture->isInitialized())
+    {
+      scrollShadowDataTexture->updateScrollShadowData(getInstances());
+    }
+
+    if (textureDataDirty_)
+    {
       textureDataDirty_ = false;
     }
   }
@@ -606,8 +616,8 @@ namespace builtin_scene
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
           }
           // 1f
-          else if (name == "instanceUseSDFTexture" ||
-                   name == "instanceScrollShadowMaxHeight")
+          else if (name == "instanceUseSDFTexture")
+
           {
             attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
@@ -615,16 +625,13 @@ namespace builtin_scene
           else if (name == "instanceTexUvOffset" ||
                    name == "instanceTexUvScale" ||
                    name == "instanceTexUvOffsetR" ||
-                   name == "instanceDimensions" ||
-                   name == "instanceScrollOffset" ||
-                   name == "instanceContentSize")
+                   name == "instanceDimensions")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
           }
           // 4f
           else if (name == "instanceColor" ||
-                   name == "instanceBorderRadius" ||
-                   name == "instanceScrollShadowColor")
+                   name == "instanceBorderRadius")
           {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
           }

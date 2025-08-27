@@ -46,6 +46,7 @@ namespace builtin_scene::materials
     LOAD_UNIFORM_LOCATION("textureTransformation");
     LOAD_UNIFORM_LOCATION("uSdfEnabled");
     LOAD_UNIFORM_LOCATION("borderDataTexture");
+    LOAD_UNIFORM_LOCATION("scrollShadowDataTexture");
     // Fallback uniforms (only present when USE_INSTANCE_SDF is not defined)
     LOAD_UNIFORM_LOCATION("uDimensions");
     LOAD_UNIFORM_LOCATION("uBorderRadius");
@@ -56,6 +57,7 @@ namespace builtin_scene::materials
 
     glContext->uniform1i(uniform("instanceTexAltas"), 0);
     glContext->uniform1i(uniform("borderDataTexture"), 1);
+    glContext->uniform1i(uniform("scrollShadowDataTexture"), 2);
 
     // Set the texture to be flipped by the Y-axis.
     //
@@ -72,6 +74,14 @@ namespace builtin_scene::materials
     if (!borderDataTexture_->initialize(glContext))
     {
       borderDataTexture_.reset();
+      return false;
+    }
+
+    // Initialize scroll shadow data texture manager
+    scrollShadowDataTexture_ = make_unique<CSSScrollShadowTexture>();
+    if (!scrollShadowDataTexture_->initialize(glContext))
+    {
+      scrollShadowDataTexture_.reset();
       return false;
     }
 
@@ -99,6 +109,7 @@ namespace builtin_scene::materials
 
     size_t meshIndicesCount = mesh.indices().size();
     CSSBorderDataTexture *borderDataTexture = getBorderDataTexture();
+    CSSScrollShadowTexture *scrollShadowDataTexture = getScrollShadowDataTexture();
 
     // Set the base matrix once (shared uniform), move the transparent objects +z 0.001
     auto loc = glContext->getUniformLocation(program, "modelMatrix");
@@ -113,7 +124,7 @@ namespace builtin_scene::materials
       WebGLVertexArrayScope vaoScope(glContext, layerInstancesList.vao);
 
       // Draw the layer
-      layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
+      layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture, scrollShadowDataTexture);
       {
         // Draw layer instances to color attachment
         glContext->depthMask(false);
@@ -209,7 +220,7 @@ namespace builtin_scene::materials
         WebGLVertexArrayScope vaoScope(glContext, depthOnlyInstancesList.vao);
 
         // Draw all instances to depth attachment only
-        depthOnlyInstancesList.beforeInstancedDraw(*glContext, nullptr);
+        depthOnlyInstancesList.beforeInstancedDraw(*glContext, nullptr, nullptr);
         {
           glContext->colorMask(false, false, false, false);
           glContext->depthMask(true);
@@ -256,6 +267,10 @@ namespace builtin_scene::materials
     // Bind the border data texture
     if (borderDataTexture_ && borderDataTexture_->isInitialized())
       borderDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture1);
+
+    // Bind the scroll shadow data texture
+    if (scrollShadowDataTexture_ && scrollShadowDataTexture_->isInitialized())
+      scrollShadowDataTexture_->bind(client_graphics::WebGLTextureUnit::kTexture2);
   }
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
@@ -285,6 +300,11 @@ namespace builtin_scene::materials
   CSSBorderDataTexture *WebContentInstancedMaterial::getBorderDataTexture() const
   {
     return borderDataTexture_.get();
+  }
+
+  CSSScrollShadowTexture *WebContentInstancedMaterial::getScrollShadowDataTexture() const
+  {
+    return scrollShadowDataTexture_.get();
   }
 
   WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
