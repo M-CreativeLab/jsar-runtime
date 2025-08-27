@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <deque>
 #include <v8.h>
 
 #include "./dom_parser.hpp"
@@ -17,6 +18,9 @@ namespace dom
     URL,
     Source,
   };
+
+  // Forward declaration
+  class HTMLScriptElement;
   class BrowsingContext : public RuntimeContext
   {
   public:
@@ -96,7 +100,32 @@ namespace dom
       return scriptingContext->updateImportMapFromJSON(json);
     }
 
+    /**
+     * Register a script element in the execution queue for document-order execution.
+     * Only applies to classic scripts that are not async or defer.
+     *
+     * @param script The script element to register.
+     */
+    void registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
+
+    /**
+     * Try to execute the next script in the execution queue.
+     * This is called when a script is ready to execute or when a script finishes execution.
+     */
+    void tryExecuteNextScript();
+
+    /**
+     * Notify that a script has finished executing and can be removed from the queue.
+     *
+     * @param script The script element that finished executing.
+     */
+    void notifyScriptExecutionComplete(std::shared_ptr<HTMLScriptElement> script);
+
   public:
     vector<shared_ptr<Document>> documents;
+
+  private:
+    // Script execution queue for document-order execution
+    std::deque<std::shared_ptr<HTMLScriptElement>> scriptExecutionQueue;
   };
 }

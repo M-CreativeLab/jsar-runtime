@@ -47,6 +47,16 @@ namespace dom
     {
       compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
+
+      // Determine if this script should use the execution queue
+      // Only classic scripts that are not async or defer use the queue
+      if (isClassicScript() && !async && !defer)
+      {
+        usesExecutionQueue = true;
+        auto scriptElement = std::dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
+        browsingContext->registerScriptForExecution(scriptElement);
+      }
+
       loadSource();
     }
     // TODO(yorkie): support "speculationrules"?
@@ -108,8 +118,16 @@ namespace dom
     if (isClassicScript() && defer)
       skipScriptExecution = true;
 
-    if (!skipScriptExecution)
+    // If the script uses the execution queue, don't execute immediately
+    if (usesExecutionQueue)
+    {
+      // Notify the browsing context that this script is ready
+      browsingContext->tryExecuteNextScript();
+    }
+    else if (!skipScriptExecution)
+    {
       executeScript();
+    }
   }
 
   void HTMLScriptElement::scheduleScriptExecution()
@@ -131,6 +149,24 @@ namespace dom
     browsingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
+
+    // Notify the execution queue if this script was using it
+    if (usesExecutionQueue)
+    {
+      auto scriptElement = std::dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
+      browsingContext->notifyScriptExecutionComplete(scriptElement);
+    }
+
     dispatchEvent(dom::DOMEventType::Load);
+  }
+
+  bool HTMLScriptElement::isReadyToExecute() const
+  {
+    return scriptCompiled && !scriptExecutedOnce && compiledScript != nullptr;
+  }
+
+  void HTMLScriptElement::executeScriptFromQueue()
+  {
+    executeScript();
   }
 }
