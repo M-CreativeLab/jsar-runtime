@@ -44,6 +44,16 @@ Note that unlike the classic Web browser, that requires the `navigator.xr.reques
 
 The `navigator.gl` is a `WebGLRenderingContext` or `WebGL2RenderingContext` object, which is created by JSAR and for stereo rendering in WebXR, thus it's xr-compatible by default.
 
+To check whether the current rendering context is `WebGLRenderingContext` or `WebGL2RenderingContext`, you can use the following code:
+
+```js
+if (navigator.gl instanceof WebGLRenderingContext) {
+  console.info('WebGLRenderingContext');
+} else if (navigator.gl instanceof WebGL2RenderingContext) {
+  console.info('WebGL2RenderingContext');
+}
+```
+
 And the above code requested a `immersive-ar` session, and created a `XRWebGLLayer` object with the `navigator.gl` context, and set it as the base layer of the session, these lines of code are necessary to tell the JSAR to render the `navigator.gl` context to the session.
 
 ## Setup your renderer
