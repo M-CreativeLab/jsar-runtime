@@ -18,7 +18,7 @@ impl StyleRule {
   pub fn new(handle: &StyleRuleImpl, read_guard: &SharedRwLockReadGuard) -> Self {
     let block = handle.block.read_with(read_guard);
 
-    // convert handle.selectors to str
+    // Convert handle.selectors to CSS text string
     let mut selectors_text = String::new();
     handle
       .selectors
