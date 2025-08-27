@@ -20,6 +20,7 @@ namespace client_cssom::rules
         , selectors_(inner.selectors())
         , style_(inner.takeBlock())
     {
+      // TODO(yorkie): use C++ css parser to parse from `inner.selectorsText()` instead of current parser from Rust.
     }
 
   public:
