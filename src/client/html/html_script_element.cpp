@@ -48,13 +48,12 @@ namespace dom
       compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
 
-      // Determine if this script should use the execution queue
-      // Only classic scripts that are not async or defer use the queue
+      // Register classic scripts (non-async, non-defer) with execution queue
       if (isClassicScript() && !async && !defer)
       {
         usesExecutionQueue = true;
         auto scriptElement = std::dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
-        browsingContext->registerScriptForExecution(scriptElement);
+        scriptExecutionId = browsingContext->registerScriptForExecution(scriptElement);
       }
 
       loadSource();
@@ -118,15 +117,17 @@ namespace dom
     if (isClassicScript() && defer)
       skipScriptExecution = true;
 
-    // If the script uses the execution queue, don't execute immediately
-    if (usesExecutionQueue)
+    if (!skipScriptExecution)
     {
-      // Notify the browsing context that this script is ready
-      browsingContext->tryExecuteNextScript();
-    }
-    else if (!skipScriptExecution)
-    {
-      executeScript();
+      // If script uses execution queue, let the queue manage execution
+      if (usesExecutionQueue)
+      {
+        browsingContext->tryExecuteNextScript();
+      }
+      else
+      {
+        executeScript();
+      }
     }
   }
 
@@ -138,7 +139,18 @@ namespace dom
 
     // Check if the script is already compiled, then schedule the execution by default.
     if (scriptCompiled)
-      executeScript();
+    {
+      // If script uses execution queue, let the queue manage execution
+      if (usesExecutionQueue)
+      {
+        auto browsingContext = ownerDocument->lock()->browsingContext;
+        browsingContext->tryExecuteNextScript();
+      }
+      else
+      {
+        executeScript();
+      }
+    }
   }
 
   void HTMLScriptElement::executeScript()
@@ -150,11 +162,10 @@ namespace dom
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
 
-    // Notify the execution queue if this script was using it
+    // Notify browsing context if this script was using the execution queue
     if (usesExecutionQueue)
     {
-      auto scriptElement = std::dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
-      browsingContext->notifyScriptExecutionComplete(scriptElement);
+      browsingContext->notifyScriptExecutionComplete(scriptExecutionId);
     }
 
     dispatchEvent(dom::DOMEventType::Load);
@@ -167,6 +178,9 @@ namespace dom
 
   void HTMLScriptElement::executeScriptFromQueue()
   {
-    executeScript();
+    if (isReadyToExecute())
+    {
+      executeScript();
+    }
   }
 }

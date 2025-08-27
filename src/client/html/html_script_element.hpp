@@ -129,5 +129,6 @@ namespace dom
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
     bool usesExecutionQueue = false;
+    std::size_t scriptExecutionId = 0;
   };
 }

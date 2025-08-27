@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <deque>
+#include <unordered_map>
 #include <v8.h>
 
 #include "./dom_parser.hpp"
@@ -19,8 +20,21 @@ namespace dom
     Source,
   };
 
-  // Forward declaration
+  // Forward declaration to avoid circular dependency
   class HTMLScriptElement;
+
+  // Script execution handle to decouple from HTMLScriptElement
+  struct ScriptExecutionHandle
+  {
+    std::size_t scriptId;
+    std::weak_ptr<HTMLScriptElement> scriptElement;
+
+    ScriptExecutionHandle(std::size_t id, std::weak_ptr<HTMLScriptElement> element)
+        : scriptId(id)
+        , scriptElement(element)
+    {
+    }
+  };
   class BrowsingContext : public RuntimeContext
   {
   public:
@@ -101,31 +115,27 @@ namespace dom
     }
 
     /**
-     * Register a script element in the execution queue for document-order execution.
-     * Only applies to classic scripts that are not async or defer.
-     *
-     * @param script The script element to register.
+     * Register a script for document-order execution.
+     * Returns a unique script ID for tracking.
      */
-    void registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
+    std::size_t registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
 
     /**
-     * Try to execute the next script in the execution queue.
-     * This is called when a script is ready to execute or when a script finishes execution.
+     * Try to execute the next script in the queue if it's ready.
      */
     void tryExecuteNextScript();
 
     /**
-     * Notify that a script has finished executing and can be removed from the queue.
-     *
-     * @param script The script element that finished executing.
+     * Notify that a script has completed execution.
      */
-    void notifyScriptExecutionComplete(std::shared_ptr<HTMLScriptElement> script);
+    void notifyScriptExecutionComplete(std::size_t scriptId);
 
   public:
     vector<shared_ptr<Document>> documents;
 
   private:
-    // Script execution queue for document-order execution
-    std::deque<std::shared_ptr<HTMLScriptElement>> scriptExecutionQueue;
+    // Script execution queue using handles to avoid circular dependency
+    std::deque<ScriptExecutionHandle> scriptExecutionQueue;
+    std::size_t nextScriptId = 1;
   };
 }
