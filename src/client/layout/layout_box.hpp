@@ -178,6 +178,9 @@ namespace client_layout
     bool scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
+    // Update scroll shadow properties for the associated instance
+    void updateScrollShadows();
+
     bool hasScrollableOverflowX() const
     {
       return scrollsOverflowX() && scrollWidth() != clientWidth();

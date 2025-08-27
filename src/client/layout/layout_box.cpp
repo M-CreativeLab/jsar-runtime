@@ -1,6 +1,9 @@
 #include <client/dom/node.hpp>
 #include <client/dom/element.hpp>
 #include <common/collision/ray.hpp>
+#include <client/builtin_scene/web_content.hpp>
+#include <client/builtin_scene/instanced_mesh.hpp>
+#include <client/builtin_scene/meshes.hpp>
 
 #include "./geometry/bounding_box.hpp"
 #include "./layout_box.hpp"
@@ -199,8 +202,12 @@ namespace client_layout
     // Performance optimization: check if scrolling is actually needed
     if (scrollable_area && scrollable_area->needsScrolling())
     {
-      scrollable_area->scrollTo(offset);
-      return true;
+      bool scrolled = scrollable_area->scrollTo(offset);
+      if (scrolled)
+      {
+        updateScrollShadows(); // Update scroll shadows after scrolling
+      }
+      return scrolled;
     }
     else
     {
@@ -220,7 +227,12 @@ namespace client_layout
     auto scrollable_area = getScrollableArea();
     if (scrollable_area && scrollable_area->needsScrolling())
     {
-      return scrollable_area->scrollBy(offset);
+      bool scrolled = scrollable_area->scrollBy(offset);
+      if (scrolled)
+      {
+        updateScrollShadows(); // Update scroll shadows after scrolling
+      }
+      return scrolled;
     }
     else
     {
@@ -280,6 +292,58 @@ namespace client_layout
     assert(isScrollContainer());
     assert(getScrollableArea() != nullptr);
     return getScrollableArea()->getScrollOffset();
+  }
+
+  void LayoutBox::updateScrollShadows()
+  {
+    // Only update scroll shadows for scroll containers
+    if (!isScrollContainer() || !hasEntity())
+      return;
+
+    auto scrollableArea = getScrollableArea();
+    if (!scrollableArea)
+      return;
+
+    // Update scroll shadow properties on the associated instance
+    auto updateInstance = [this, scrollableArea](builtin_scene::Scene &scene)
+    {
+      auto webContextCtx = scene.getResource<builtin_scene::WebContentContext>();
+      if (!webContextCtx)
+        return;
+
+      auto &instancedMesh = scene.getComponentChecked<builtin_scene::Mesh3d>(webContextCtx->instancedMeshEntity())
+                              .getHandleCheckedAsRef<builtin_scene::InstancedMeshBase>();
+
+      try
+      {
+        auto &instance = instancedMesh.getInstance(entity());
+
+        // Get current scroll state
+        glm::vec3 scrollOffset = scrollableArea->getScrollOffset();
+        glm::vec3 scrollOrigin = scrollableArea->scrollOrigin();
+        float scrollWidth = scrollableArea->scrollWidth();
+        float scrollHeight = scrollableArea->scrollHeight();
+
+        // Set scroll offset (only x,y components for 2D scrolling)
+        instance.setScrollOffset(glm::vec2(scrollOffset.x, scrollOffset.y));
+
+        // Set content size (total scrollable dimensions)
+        instance.setContentSize(glm::vec2(scrollWidth, scrollHeight));
+
+        // Set default scroll shadow color (dark semi-transparent)
+        instance.setScrollShadowColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
+
+        // Set default max shadow height to 20% of element dimensions
+        instance.setScrollShadowMaxHeight(0.2f);
+      }
+      catch (const std::exception &e)
+      {
+        // Instance might not exist yet, which is fine
+        // This can happen during initial layout before rendering is set up
+      }
+    };
+
+    useSceneWithCallback(updateInstance);
   }
 
   bool LayoutBox::nodeAtPoint(HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset, HitTestPhase phase)
@@ -365,6 +429,9 @@ namespace client_layout
     {
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
+
+      // Update scroll shadows when layout is computed for scroll containers
+      updateScrollShadows();
     }
   }
 
