@@ -154,9 +154,29 @@ namespace dom
     auto it = find(childNodes.begin(), childNodes.end(), refChild);
     if (it != childNodes.end())
     {
-      childNodes.insert(it, newChild);
-      childAddedCallback(newChild);
-      return newChild;
+      if (Node::Is<DocumentFragment>(newChild))
+      {
+        // Append all the child nodes if the node is a `DocumentFragment`.
+        auto fragment = Node::As<DocumentFragment>(newChild);
+        for (auto child : fragment->childNodes)
+          insertBefore(child, refChild);
+        return newChild;
+      }
+      else if (Node::Is<Element>(newChild) ||
+               Node::Is<Text>(newChild) ||
+               Node::Is<Comment>(newChild))
+      {
+        childNodes.insert(it, newChild);
+        childAddedCallback(newChild);
+        return newChild;
+      }
+      else
+      {
+        string msg =
+          "Failed to insert the child: "
+          "the new child node is not a DocumentFragment, Text, Comment or Element.";
+        throw runtime_error(msg);
+      }
     }
     return nullptr;
   }
