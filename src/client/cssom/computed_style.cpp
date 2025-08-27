@@ -16,7 +16,6 @@
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
 #include "./values/specified/background.hpp"
-#include "./values/specified/filter.hpp"
 
 namespace client_cssom
 {
