@@ -34,41 +34,30 @@ rustup target add x86_64-apple-darwin      # For macOS x86_64
 
 **CRITICAL BUILD TIMING - NEVER CANCEL these operations:**
 
-1. **Install dependencies** - 2-3 minutes, set timeout to 5+ minutes:
+1. **Install JavaScript dependencies** - 2-3 minutes, set timeout to 5+ minutes:
    ```bash
-   npm ci
+   npm ci # Clean install, no package-lock.json changes
    ```
-   - **Note**: Use `npm ci` for clean installs, not `npm install`, but if your changes require a fresh install such as:
-      -  add new npm dependencies
-      -  update existing npm dependencies
-      -  remove npm dependencies
-   - **Known Issue**: If npm install fails with "npmmirror" network errors, run:
-     ```bash
-     rm package-lock.json
-     npm config set registry https://registry.npmjs.org/
-     npm ci
-     ```
+   - **Note**: Don't use `npm install` due to potential lockfile changes
 
-2. **Build JavaScript bundle** - CURRENTLY BROKEN due to TypeScript compilation errors:
+2. **Build JavaScript bundle**:
    ```bash
    make jsbundle
    ```
-   - **Status**: Build fails with 173 TypeScript errors in type definitions
-   - **Do NOT use** until TypeScript issues are resolved
    - Expected time when working: 1-2 minutes
 
-3. **Build Rust crates** - 4-5 minutes, set timeout to 10+ minutes:
+3. **Build the project** - 4-5 minutes, set timeout to 10+ minutes:
    ```bash
    # For specific platforms only:
    make darwin     # macOS universal binary (aarch64 + x86_64)
    make android    # Android aarch64
    ```
-   - **CRITICAL**: Rust builds ONLY work on macOS for development
+   - **CRITICAL**: builds ONLY work on macOS for development
    - Build options: `CLEAN=yes`, `RELEASE=yes`, `INSPECTOR=yes`, `VERBOSE=yes`
 
-4. **Test Rust code** (macOS only):
+4. **Test code** (macOS only):
    ```bash
-   cargo test    # Only works on macOS
+   make test    # Only works on macOS
    ```
 
 ### Linting and Code Quality
@@ -138,7 +127,7 @@ npm run docs:preview  # Preview built documentation
    # Only run on macOS:
    make jsbundle        # Currently broken - will fail
    make darwin          # macOS only
-   cargo test           # macOS only
+   make test            # macOS only
    ```
 
 ## Common Development Tasks
@@ -195,21 +184,13 @@ make darwin RELEASE=yes            # macOS builds
 ## NEVER CANCEL Commands
 
 Set these minimum timeouts to avoid premature cancellation:
-- `npm install`: 5+ minutes
+- `npm ci`: 5+ minutes
 - `make jsbundle`: 5+ minutes (when working)
 - `make darwin/android`: 10+ minutes  
 - `cargo test`: 10+ minutes
 - `./tools/clang-format-check.sh`: 2+ minutes
 
 ## Emergency Debugging
-
-**If npm install fails:**
-```bash
-rm package-lock.json
-npm config set registry https://registry.npmjs.org/
-npm cache clean --force
-npm install
-```
 
 **If TypeScript errors block development:**
 - Focus on C++ and documentation work
