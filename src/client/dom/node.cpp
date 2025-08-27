@@ -75,6 +75,7 @@ namespace dom
       , connected(false)
       , nodeName(other.nodeName)
       , nodeType(other.nodeType)
+      , nodeValue_(other.nodeValue_)
       , ownerDocument(other.ownerDocument)
       , parentNode(weak_ptr<Node>())
       , childNodes({})
@@ -210,6 +211,8 @@ namespace dom
       cloned = Comment::CloneComment(shared_from_this());
     else if (nodeType == NodeType::TEXT_NODE)
       cloned = Text::CloneText(shared_from_this());
+    else if (nodeType == NodeType::DOCUMENT_FRAGMENT_NODE)
+      cloned = DocumentFragment::CloneDocumentFragment(shared_from_this());
     else
       cloned = make_shared<Node>(*this);
 

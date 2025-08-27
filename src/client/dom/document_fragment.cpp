@@ -20,6 +20,13 @@ namespace dom
   {
   }
 
+  shared_ptr<Node> DocumentFragment::CloneDocumentFragment(shared_ptr<Node> srcFragment)
+  {
+    auto fragmentNode = dynamic_pointer_cast<DocumentFragment>(srcFragment);
+    assert(fragmentNode != nullptr && "The source node is not a document fragment.");
+    return make_shared<DocumentFragment>(*fragmentNode);
+  }
+
   size_t DocumentFragment::childElementCount() const
   {
     size_t count = 0;

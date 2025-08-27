@@ -17,6 +17,14 @@ namespace dom
     DocumentFragment(const DocumentFragment &other);
     ~DocumentFragment() = default;
 
+    /**
+     * Clone the given document fragment and return a new document fragment with the same properties.
+     *
+     * @param srcFragment The document fragment to clone.
+     * @returns The cloned document fragment in `std::shared_ptr<Node>`.
+     */
+    static std::shared_ptr<Node> CloneDocumentFragment(std::shared_ptr<Node> srcFragment);
+
   public:
     bool isDocumentFragment() const override
     {
