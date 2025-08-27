@@ -1,5 +1,7 @@
 #include "./document_fragment.hpp"
 #include "./node-inl.hpp"
+#include "./element.hpp"
+#include "./node_list-inl.hpp"
 
 namespace dombinding
 {
@@ -26,6 +28,12 @@ namespace dombinding
         InstanceAccessor("children", &DocumentFragment::ChildrenGetter, nullptr),
         InstanceAccessor("firstElementChild", &DocumentFragment::FirstElementChildGetter, nullptr),
         InstanceAccessor("lastElementChild", &DocumentFragment::LastElementChildGetter, nullptr),
+
+        // ParentNode interface methods
+        InstanceMethod("querySelector", &DocumentFragment::QuerySelector),
+        InstanceMethod("querySelectorAll", &DocumentFragment::QuerySelectorAll),
+        InstanceMethod("append", &DocumentFragment::Append),
+        InstanceMethod("prepend", &DocumentFragment::Prepend),
       });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -52,9 +60,10 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "Failed to get 'children' property: not implemented")
-      .ThrowAsJavaScriptException();
-    return env.Undefined();
+
+    auto children = this->node->children();
+    auto list = std::make_unique<dom::NodeList<dom::Element>>(std::move(children));
+    return NodeList::NewInstance(env, std::move(list));
   }
 
   Napi::Value DocumentFragment::FirstElementChildGetter(const Napi::CallbackInfo &info)
@@ -77,5 +86,127 @@ namespace dombinding
     return element != nullptr
              ? Element::NewInstance(env, element)
              : env.Null();
+  }
+
+  Napi::Value DocumentFragment::QuerySelector(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(
+        env, "Failed to execute 'querySelector' on 'DocumentFragment': 1 argument required, but only 0 present.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto selectors = info[0].ToString().Utf8Value();
+    try
+    {
+      std::shared_ptr<dom::Element> element = this->node->querySelector(selectors);
+      return element == nullptr ? env.Null() : Element::NewInstance(env, element);
+    }
+    catch (const std::exception &e)
+    {
+      auto msg = "Failed to execute 'querySelector' on 'DocumentFragment': '" + selectors + "' is not a valid selector.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+  }
+
+  Napi::Value DocumentFragment::QuerySelectorAll(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(
+        env, "Failed to execute 'querySelectorAll' on 'DocumentFragment': 1 argument required, but only 0 present.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto selectors = info[0].ToString().Utf8Value();
+    try
+    {
+      auto list = std::make_unique<dom::NodeList<dom::Element>>(this->node->querySelectorAll(selectors));
+      return NodeList::NewInstance(env, std::move(list));
+    }
+    catch (const std::exception &e)
+    {
+      auto msg = "Failed to execute 'querySelectorAll' on 'DocumentFragment': '" + selectors + "' is not a valid selector.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+  }
+
+  Napi::Value DocumentFragment::Append(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    std::vector<std::shared_ptr<dom::Node>> nodes;
+
+    for (size_t i = 0; i < info.Length(); i++)
+    {
+      auto arg = info[i];
+      if (arg.IsString())
+      {
+        // Create a text node from string
+        auto document = this->node->getOwnerDocumentChecked();
+        auto textNode = document.createTextNode(arg.ToString().Utf8Value());
+        nodes.push_back(textNode);
+      }
+      else if (arg.IsObject())
+      {
+        // Try to extract node from object
+        auto obj = arg.ToObject();
+        if (obj.Has(NODE_IMPL_FIELD))
+        {
+          auto jsNodeImplExternal = obj.Get(NODE_IMPL_FIELD).As<Napi::External<NodeContainer<dom::Node>>>();
+          auto nodeImpl = jsNodeImplExternal.Data()->node;
+          nodes.push_back(nodeImpl);
+        }
+      }
+    }
+
+    this->node->append(nodes);
+    return env.Undefined();
+  }
+
+  Napi::Value DocumentFragment::Prepend(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    std::vector<std::shared_ptr<dom::Node>> nodes;
+
+    for (size_t i = 0; i < info.Length(); i++)
+    {
+      auto arg = info[i];
+      if (arg.IsString())
+      {
+        // Create a text node from string
+        auto document = this->node->getOwnerDocumentChecked();
+        auto textNode = document.createTextNode(arg.ToString().Utf8Value());
+        nodes.push_back(textNode);
+      }
+      else if (arg.IsObject())
+      {
+        // Try to extract node from object
+        auto obj = arg.ToObject();
+        if (obj.Has(NODE_IMPL_FIELD))
+        {
+          auto jsNodeImplExternal = obj.Get(NODE_IMPL_FIELD).As<Napi::External<NodeContainer<dom::Node>>>();
+          auto nodeImpl = jsNodeImplExternal.Data()->node;
+          nodes.push_back(nodeImpl);
+        }
+      }
+    }
+
+    this->node->prepend(nodes);
+    return env.Undefined();
   }
 }
