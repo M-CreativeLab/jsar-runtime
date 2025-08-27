@@ -213,16 +213,29 @@ To contribute to the project, you need to follow the steps below to build this p
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) v18.16.1
-- [Rust](https://www.rust-lang.org/) v1.70.0 or later
+```sh
+$ node -v
+v18.16.1
 
-And you need to add the following targets to your Rust toolchain by your need:
+$ rustc -v
+rustc 1.86.0-nightly (243d2ca4d 2025-01-06)
+```
+
+> Note that JSAR requires Rust nightly toolchain to build.
+
+Depending on your target platform, you'll need to add the corresponding Rust targets:
+
+For macOS builds:
+
+```sh
+$ rustup target add aarch64-apple-darwin
+$ rustup target add x86_64-apple-darwin
+```
+
+For Android builds:
 
 ```sh
 $ rustup target add aarch64-linux-android
-$ rustup target add aarch64-apple-darwin
-$ rustup target add x86_64-apple-darwin
-$ rustup target add x86_64-pc-windows-msvc
 ```
 
 ### Build from source
