@@ -177,10 +177,9 @@ namespace builtin_scene
                                                                glm::vec2 &scrollOffset,
                                                                glm::vec2 &contentSize) const
   {
-    const auto &data = instance.data();
-    shadowColor = data.scrollShadowColor;
-    shadowMaxHeight = data.scrollShadowMaxHeight;
-    scrollOffset = data.scrollOffset;
-    contentSize = data.contentSize;
+    shadowColor = instance.getScrollShadowColor();
+    shadowMaxHeight = instance.getScrollShadowMaxHeight();
+    scrollOffset = instance.getScrollOffset();
+    contentSize = instance.getContentSize();
   }
 }

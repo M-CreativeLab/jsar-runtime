@@ -101,7 +101,7 @@ namespace builtin_scene
 
     borderWidths_ = borderWidth;
     setMaybeInvisible();
-    notifyTextureDataChanged();
+    notifyBorderDataChanged();
   }
 
   void Instance::setBorderWidth(float top, float right, float bottom, float left)
@@ -125,7 +125,7 @@ namespace builtin_scene
     if (anyChanged)
     {
       setMaybeInvisible();
-      notifyTextureDataChanged();
+      notifyBorderDataChanged();
     }
   }
 
@@ -156,11 +156,11 @@ namespace builtin_scene
 
   void Instance::setScrollShadowColor(glm::vec4 shadowColor)
   {
-    if (data_.scrollShadowColor == shadowColor)
+    if (scrollShadowColor_ == shadowColor)
       return; // Skip if there is no change.
 
-    data_.scrollShadowColor = shadowColor;
-    notifyBufferDataChanged();
+    scrollShadowColor_ = shadowColor;
+    notifyScrollShadowDataChanged();
   }
 
   void Instance::setScrollShadowColor(float r, float g, float b, float a)
@@ -170,20 +170,20 @@ namespace builtin_scene
 
   void Instance::setScrollShadowMaxHeight(float maxHeight)
   {
-    if (data_.scrollShadowMaxHeight == maxHeight)
+    if (scrollShadowMaxHeight_ == maxHeight)
       return; // Skip if there is no change.
 
-    data_.scrollShadowMaxHeight = maxHeight;
-    notifyBufferDataChanged();
+    scrollShadowMaxHeight_ = maxHeight;
+    notifyScrollShadowDataChanged();
   }
 
   void Instance::setScrollOffset(glm::vec2 offset)
   {
-    if (data_.scrollOffset == offset)
+    if (scrollOffset_ == offset)
       return; // Skip if there is no change.
 
-    data_.scrollOffset = offset;
-    notifyBufferDataChanged();
+    scrollOffset_ = offset;
+    notifyScrollShadowDataChanged();
   }
 
   void Instance::setScrollOffset(float x, float y)
@@ -193,11 +193,11 @@ namespace builtin_scene
 
   void Instance::setContentSize(glm::vec2 size)
   {
-    if (data_.contentSize == size)
+    if (contentSize_ == size)
       return; // Skip if there is no change.
 
-    data_.contentSize = size;
-    notifyBufferDataChanged();
+    contentSize_ = size;
+    notifyScrollShadowDataChanged();
   }
 
   void Instance::setContentSize(float width, float height)
@@ -262,6 +262,30 @@ namespace builtin_scene
       {
         if (holderPtr->isContentInstancesList())
           dynamic_pointer_cast<ContentInstancesList>(holderPtr)->markTextureDataAsDirty();
+      }
+    }
+  }
+
+  void Instance::notifyBorderDataChanged()
+  {
+    for (auto &holder : holders_)
+    {
+      if (auto holderPtr = holder.lock())
+      {
+        if (holderPtr->isContentInstancesList())
+          dynamic_pointer_cast<ContentInstancesList>(holderPtr)->markBorderDataAsDirty();
+      }
+    }
+  }
+
+  void Instance::notifyScrollShadowDataChanged()
+  {
+    for (auto &holder : holders_)
+    {
+      if (auto holderPtr = holder.lock())
+      {
+        if (holderPtr->isContentInstancesList())
+          dynamic_pointer_cast<ContentInstancesList>(holderPtr)->markScrollShadowDataAsDirty();
       }
     }
   }
@@ -436,7 +460,7 @@ namespace builtin_scene
     InstanceListBase::beforeInstancedDraw(glContext);
 
     // Update border data texture if border data is dirty
-    if (textureDataDirty_ &&
+    if (borderDataDirty_ &&
         borderDataTexture != nullptr &&
         borderDataTexture->isInitialized())
     {
@@ -444,16 +468,20 @@ namespace builtin_scene
     }
 
     // Update scroll shadow data texture if scroll shadow data is dirty
-    if (textureDataDirty_ &&
+    if (scrollShadowDataDirty_ &&
         scrollShadowDataTexture != nullptr &&
         scrollShadowDataTexture->isInitialized())
     {
       scrollShadowDataTexture->updateScrollShadowData(getInstances());
     }
 
-    if (textureDataDirty_)
+    if (borderDataDirty_)
     {
-      textureDataDirty_ = false;
+      borderDataDirty_ = false;
+    }
+    if (scrollShadowDataDirty_)
+    {
+      scrollShadowDataDirty_ = false;
     }
   }
 

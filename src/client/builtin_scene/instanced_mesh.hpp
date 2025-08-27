@@ -44,26 +44,18 @@ namespace builtin_scene
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
         , enableSDFTexture(0.0f)
-        , scrollShadowColor(0.0f, 0.0f, 0.0f, 0.0f)
-        , scrollShadowMaxHeight(0.2f)
-        , scrollOffset(0.0f, 0.0f)
-        , contentSize(0.0f, 0.0f)
     {
     }
-    glm::mat4 transform;         /** element transformation */
-    glm::vec4 color;             /** background color */
-    glm::vec2 texUvOffset;       /** Left or default view texture coordinates */
-    glm::vec2 texUvOffsetR;      /** Right eye texture coordinates */
-    glm::vec2 texUvScale;        /** Shared texture scale for both eyes */
-    uint32_t texLayerIndex;      /** Shared texture layer for both eyes */
-    glm::vec2 dimensions;        /** The dimensions */
-    glm::vec4 borderRadius;      /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
-    uint32_t borderStyle;        /** Border style (0=none, 1=solid, 2=dashed) */
-    float enableSDFTexture;      /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
-    glm::vec4 scrollShadowColor; /** Color for scroll edge shadows (RGBA) */
-    float scrollShadowMaxHeight; /** Maximum height of scroll shadows as proportion of element size (default 0.2 = 20%) */
-    glm::vec2 scrollOffset;      /** Current scroll offset (x, y) */
-    glm::vec2 contentSize;       /** Content size for scroll calculations (width, height) */
+    glm::mat4 transform;    /** element transformation */
+    glm::vec4 color;        /** background color */
+    glm::vec2 texUvOffset;  /** Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR; /** Right eye texture coordinates */
+    glm::vec2 texUvScale;   /** Shared texture scale for both eyes */
+    uint32_t texLayerIndex; /** Shared texture layer for both eyes */
+    glm::vec2 dimensions;   /** The dimensions */
+    glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
+    float enableSDFTexture; /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -78,10 +70,6 @@ namespace builtin_scene
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
          << "  enableSDFTexture=" << data.enableSDFTexture << std::endl
-         << "  scrollShadowColor=" << math3d::to_string(data.scrollShadowColor) << std::endl
-         << "  scrollShadowMaxHeight=" << data.scrollShadowMaxHeight << std::endl
-         << "  scrollOffset=" << math3d::to_string(data.scrollOffset) << std::endl
-         << "  contentSize=" << math3d::to_string(data.contentSize) << std::endl
          << ")";
       return os;
     }
@@ -261,6 +249,27 @@ namespace builtin_scene
       return borderColors_;
     }
 
+    // Getters for scroll shadow fields
+    inline const glm::vec4 &getScrollShadowColor() const
+    {
+      return scrollShadowColor_;
+    }
+
+    inline float getScrollShadowMaxHeight() const
+    {
+      return scrollShadowMaxHeight_;
+    }
+
+    inline const glm::vec2 &getScrollOffset() const
+    {
+      return scrollOffset_;
+    }
+
+    inline const glm::vec2 &getContentSize() const
+    {
+      return contentSize_;
+    }
+
     // Returns if this instance has no borders to draw.
     bool hasNoBorders() const;
 
@@ -273,6 +282,10 @@ namespace builtin_scene
     void notifyBufferDataChanged();
     // Notify the holders that texture data has changed.
     void notifyTextureDataChanged();
+    // Notify the holders that border data has changed.
+    void notifyBorderDataChanged();
+    // Notify the holders that scroll shadow data has changed.
+    void notifyScrollShadowDataChanged();
     // Returns `true` if the instance should be skipped to draw.
     bool skipToDraw() const;
     // Set the instance as maybe invisible based on the state of the instance, such as if it has a transparent color,
@@ -285,6 +298,13 @@ namespace builtin_scene
     InstanceData data_;
     glm::vec4 borderWidths_;
     glm::vec4 borderColors_[4];
+
+    // Scroll shadow data (managed separately from InstanceData for texture-based rendering)
+    glm::vec4 scrollShadowColor_{0.0f, 0.0f, 0.0f, 0.0f};
+    float scrollShadowMaxHeight_{0.2f};
+    glm::vec2 scrollOffset_{0.0f, 0.0f};
+    glm::vec2 contentSize_{0.0f, 0.0f};
+
     RenderQueue renderQueue_;
     RenderLayer renderLayer_;
     bool enabled_ = false;
@@ -438,7 +458,8 @@ namespace builtin_scene
                          std::shared_ptr<client_graphics::WebGLVertexArray> vao,
                          std::shared_ptr<client_graphics::WebGLBuffer> vbo)
         : InstanceListBase(vao, vbo)
-        , textureDataDirty_(true)
+        , borderDataDirty_(true)
+        , scrollShadowDataDirty_(true)
     {
     }
 
@@ -453,13 +474,26 @@ namespace builtin_scene
     {
       return true;
     }
-    inline bool isTextureDataDirty() const
+    inline bool isBorderDataDirty() const
     {
-      return textureDataDirty_;
+      return borderDataDirty_;
+    }
+    inline bool isScrollShadowDataDirty() const
+    {
+      return scrollShadowDataDirty_;
     }
     inline void markTextureDataAsDirty()
     {
-      textureDataDirty_ = true;
+      borderDataDirty_ = true;
+      scrollShadowDataDirty_ = true;
+    }
+    inline void markBorderDataAsDirty()
+    {
+      borderDataDirty_ = true;
+    }
+    inline void markScrollShadowDataAsDirty()
+    {
+      scrollShadowDataDirty_ = true;
     }
 
     /**
@@ -480,7 +514,8 @@ namespace builtin_scene
     InstanceFilter filter;
 
   private:
-    bool textureDataDirty_;
+    bool borderDataDirty_;
+    bool scrollShadowDataDirty_;
   };
 
   /**
