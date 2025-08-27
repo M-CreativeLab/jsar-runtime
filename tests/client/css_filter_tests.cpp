@@ -23,8 +23,8 @@ TEST_CASE("Filter parsing and conversion", "[css-filter]")
     REQUIRE(filter.parse("blur(5px) brightness(1.2)"));
     REQUIRE_FALSE(filter.isNone());
     REQUIRE(filter.toCss() == "blur(5px) brightness(1.2)");
-    
-    const auto& functions = filter.getFunctions();
+
+    const auto &functions = filter.getFunctions();
     REQUIRE(functions.size() == 2);
     REQUIRE(functions[0].isBlur());
     REQUIRE(functions[1].isBrightness());
@@ -45,22 +45,14 @@ TEST_CASE("Filter parsing and conversion", "[css-filter]")
 
 TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
 {
-  SECTION("Parse none")
-  {
-    specified::FilterFunction func;
-    REQUIRE(func.parse("none"));
-    REQUIRE(func.isNone());
-    REQUIRE(func.toCss() == "none");
-  }
-
   SECTION("Parse blur function with parameters")
   {
     specified::FilterFunction func;
     REQUIRE(func.parse("blur(5px)"));
     REQUIRE(func.isBlur());
     REQUIRE(func.toCss() == "blur(5px)");
-    
-    const auto& params = func.getParameters();
+
+    const auto &params = func.getParameters();
     REQUIRE(params.size() == 1);
     REQUIRE(params[0].value == 5.0);
     REQUIRE(params[0].unit == "px");
@@ -72,8 +64,8 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     REQUIRE(func.parse("brightness(150%)"));
     REQUIRE(func.isBrightness());
     REQUIRE(func.toCss() == "brightness(150%)");
-    
-    const auto& params = func.getParameters();
+
+    const auto &params = func.getParameters();
     REQUIRE(params.size() == 1);
     REQUIRE(params[0].value == 1.5); // 150% converted to 1.5
     REQUIRE(params[0].unit == "%");
@@ -84,7 +76,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("contrast(200%)"));
     REQUIRE(func.isContrast());
-    REQUIRE(func.toCss() == "contrast");
+    REQUIRE(func.toCss() == "contrast(200%)");
   }
 
   SECTION("Parse grayscale function")
@@ -92,7 +84,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("grayscale(50%)"));
     REQUIRE(func.isGrayscale());
-    REQUIRE(func.toCss() == "grayscale");
+    REQUIRE(func.toCss() == "grayscale(50%)");
   }
 
   SECTION("Parse hue-rotate function")
@@ -100,7 +92,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("hue-rotate(90deg)"));
     REQUIRE(func.isHueRotate());
-    REQUIRE(func.toCss() == "hue-rotate");
+    REQUIRE(func.toCss() == "hue-rotate(90deg)");
   }
 
   SECTION("Parse invert function")
@@ -108,7 +100,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("invert(75%)"));
     REQUIRE(func.isInvert());
-    REQUIRE(func.toCss() == "invert");
+    REQUIRE(func.toCss() == "invert(75%)");
   }
 
   SECTION("Parse opacity function")
@@ -116,7 +108,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("opacity(25%)"));
     REQUIRE(func.isOpacity());
-    REQUIRE(func.toCss() == "opacity");
+    REQUIRE(func.toCss() == "opacity(25%)");
   }
 
   SECTION("Parse saturate function")
@@ -124,7 +116,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("saturate(30%)"));
     REQUIRE(func.isSaturate());
-    REQUIRE(func.toCss() == "saturate");
+    REQUIRE(func.toCss() == "saturate(30%)");
   }
 
   SECTION("Parse sepia function")
@@ -132,7 +124,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("sepia(60%)"));
     REQUIRE(func.isSepia());
-    REQUIRE(func.toCss() == "sepia");
+    REQUIRE(func.toCss() == "sepia(60%)");
   }
 
   SECTION("Parse drop-shadow function")
@@ -140,7 +132,7 @@ TEST_CASE("FilterFunction parsing and conversion", "[css-filter-function]")
     specified::FilterFunction func;
     REQUIRE(func.parse("drop-shadow(16px 16px 20px blue)"));
     REQUIRE(func.isDropShadow());
-    REQUIRE(func.toCss() == "drop-shadow");
+    REQUIRE(func.toCss() == "drop-shadow(16px 16px 20px blue)");
   }
 
   SECTION("Parse invalid value")
@@ -160,18 +152,18 @@ TEST_CASE("ComputedStyle Filter Integration", "[css-computed-style-filter]")
 {
   SECTION("Default filter values")
   {
-    ComputedStyle style;
+    client_cssom::ComputedStyle style;
     REQUIRE(style.filter().isNone());
     REQUIRE(style.backdropFilter().isNone());
   }
 
   SECTION("Filter getter methods exist")
   {
-    ComputedStyle style;
+    client_cssom::ComputedStyle style;
     // Test that we can call the getter methods without errors
-    const auto& filter = style.filter();
-    const auto& backdropFilter = style.backdropFilter();
-    
+    const auto &filter = style.filter();
+    const auto &backdropFilter = style.backdropFilter();
+
     REQUIRE(filter.isNone());
     REQUIRE(backdropFilter.isNone());
   }

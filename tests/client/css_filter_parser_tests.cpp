@@ -9,7 +9,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("none");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.empty());
   }
@@ -18,7 +18,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("blur(5px)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == FilterFunctionType::kBlur);
@@ -31,7 +31,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("brightness(150%)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == FilterFunctionType::kBrightness);
@@ -44,7 +44,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("hue-rotate(90deg)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == FilterFunctionType::kHueRotate);
@@ -57,14 +57,14 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("blur(5px) brightness(1.2)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 2);
-    
+
     REQUIRE(functions[0].type == FilterFunctionType::kBlur);
     REQUIRE(functions[0].values[0] == 5.0);
     REQUIRE(functions[0].units[0] == "px");
-    
+
     REQUIRE(functions[1].type == FilterFunctionType::kBrightness);
     REQUIRE(functions[1].values[0] == 1.2);
   }
@@ -73,7 +73,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("drop-shadow(16px 16px 20px blue)");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.size() == 1);
     REQUIRE(functions[0].type == FilterFunctionType::kDropShadow);
@@ -84,7 +84,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("invalid-function(10px)");
     auto functions = parser.parse();
-    
+
     REQUIRE_FALSE(parser.isValid());
   }
 
@@ -92,7 +92,7 @@ TEST_CASE("CSS Filter Parser Tests", "[css-filter-parser]")
   {
     CSSFilterParser parser("");
     auto functions = parser.parse();
-    
+
     REQUIRE(parser.isValid());
     REQUIRE(functions.empty());
   }

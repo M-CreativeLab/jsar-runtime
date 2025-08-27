@@ -7,6 +7,7 @@
 #include "./values/specified/length.hpp"
 #include "./values/specified/border.hpp"
 #include "./values/specified/easing.hpp"
+#include "./values/specified/filter.hpp"
 #include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/image.hpp"

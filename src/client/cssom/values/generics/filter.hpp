@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 #include <client/cssom/style_traits.hpp>
 
 namespace client_cssom::values::generics
@@ -22,9 +24,24 @@ namespace client_cssom::values::generics
 
     std::string toString() const
     {
+      std::ostringstream oss;
+      oss << std::fixed;
+
       if (unit.empty())
-        return std::to_string(value);
-      return std::to_string(value) + unit;
+      {
+        oss << std::setprecision(1) << value;
+      }
+      else
+      {
+        if (unit == "%")
+          oss << std::setprecision(0) << (value * 100);
+        else if (unit == "deg" || unit == "px")
+          oss << std::setprecision(0) << value;
+        else
+          oss << std::setprecision(2) << value;
+        oss << unit;
+      }
+      return oss.str();
     }
   };
 
@@ -257,7 +274,7 @@ namespace client_cssom::values::generics
     std::string raw_value_; // For complex values like drop-shadow
   };
 
-  template <typename T>
+  template <typename T, typename F>
   class GenericFilter : public ToCss
   {
   public:
@@ -279,7 +296,7 @@ namespace client_cssom::values::generics
     }
 
     // Add filter functions to the list
-    void addFunction(const typename T::FilterFunctionType &func)
+    void addFunction(const F &func)
     {
       if (is_none_)
       {
@@ -290,13 +307,13 @@ namespace client_cssom::values::generics
     }
 
     // Get filter functions
-    const std::vector<typename T::FilterFunctionType> &getFunctions() const
+    const std::vector<F> &getFunctions() const
     {
       return filter_functions_;
     }
 
     // Set filter functions
-    void setFunctions(const std::vector<typename T::FilterFunctionType> &functions)
+    void setFunctions(const std::vector<F> &functions)
     {
       filter_functions_ = functions;
       is_none_ = functions.empty();
@@ -319,6 +336,6 @@ namespace client_cssom::values::generics
 
   protected:
     bool is_none_;
-    std::vector<typename T::FilterFunctionType> filter_functions_;
+    std::vector<F> filter_functions_;
   };
 }

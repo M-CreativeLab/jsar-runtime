@@ -2,38 +2,32 @@
 
 #include <client/cssom/values/generics/filter.hpp>
 
-namespace client_cssom::values::specified
+namespace client_cssom::values
 {
-  class Filter;
-}
-
-namespace client_cssom::values::computed
-{
-  class FilterFunction : public generics::GenericFilterFunction<FilterFunction>
+  namespace specified
   {
-    using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
+    class FilterFunction;
+    class Filter;
+  }
 
-  public:
-    FilterFunction()
-        : generics::GenericFilterFunction<FilterFunction>(kNone)
-    {
-    }
-
-    // Add typedef for the template parameter dependency
-    using FilterFunctionType = FilterFunction;
-  };
-
-  class Filter : public generics::GenericFilter<Filter>
+  namespace computed
   {
-    using generics::GenericFilter<Filter>::GenericFilter;
-
-  public:
-    Filter()
-        : generics::GenericFilter<Filter>()
+    class FilterFunction : public generics::GenericFilterFunction<FilterFunction>
     {
-    }
+      friend class specified::FilterFunction;
+      friend class specified::Filter;
+      using generics::GenericFilterFunction<FilterFunction>::GenericFilterFunction;
 
-    // Add typedef for the template parameter dependency
-    using FilterFunctionType = FilterFunction;
-  };
+    public:
+      FilterFunction()
+          : generics::GenericFilterFunction<FilterFunction>(kNone)
+      {
+      }
+    };
+
+    class Filter : public generics::GenericFilter<Filter, FilterFunction>
+    {
+      using generics::GenericFilter<Filter, FilterFunction>::GenericFilter;
+    };
+  }
 }
