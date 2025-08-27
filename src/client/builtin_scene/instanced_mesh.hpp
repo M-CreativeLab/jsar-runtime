@@ -561,11 +561,7 @@ namespace builtin_scene
                                                                   "instanceDimensions",
                                                                   "instanceBorderRadius",
                                                                   "instanceBorderStyle",
-                                                                  "instanceUseSDFTexture",
-                                                                  "instanceScrollShadowColor",
-                                                                  "instanceScrollShadowMaxHeight",
-                                                                  "instanceScrollOffset",
-                                                                  "instanceContentSize"};
+                                                                  "instanceUseSDFTexture"};
 
   public:
     InstancedMeshBase() = default;
