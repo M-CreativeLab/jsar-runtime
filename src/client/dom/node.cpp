@@ -210,6 +210,8 @@ namespace dom
       cloned = Comment::CloneComment(shared_from_this());
     else if (nodeType == NodeType::TEXT_NODE)
       cloned = Text::CloneText(shared_from_this());
+    else if (nodeType == NodeType::DOCUMENT_FRAGMENT_NODE)
+      cloned = DocumentFragment::CloneDocumentFragment(shared_from_this());
     else
       cloned = make_shared<Node>(*this);
 
