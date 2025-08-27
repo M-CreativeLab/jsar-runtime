@@ -103,13 +103,38 @@ namespace dom
     browsingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
     scriptCompiled = true;
 
-    // After compile
-    bool skipScriptExecution = false;
-    if (isClassicScript() && defer)
-      skipScriptExecution = true;
+    // Execute policy after compilation
+    auto doc = ownerDocument->lock();
+    if (!doc)
+      return;
 
-    if (!skipScriptExecution)
+    // Async scripts execute as soon as they are ready and do not participate in ordering
+    if (async)
+    {
       executeScript();
+      return;
+    }
+
+    // For defer classic external scripts, make sure DOMContentLoaded is gated
+    if (isClassicScript() && defer && !src.empty() && !pendingDeferTracked_)
+    {
+      doc->incrementPendingDeferScripts();
+      pendingDeferTracked_ = true;
+    }
+
+    // For non-async scripts, do not execute here. Let the Document queue control ordering.
+    // If this script has already been enqueued earlier, nudge the queue to make progress.
+    if (!defer)
+    {
+      doc->processScriptQueue();
+    }
+    else
+    {
+      // Defer scripts will be processed by the document after parsing, before DOMContentLoaded.
+      // Nudge the defer queue so that ready scripts can execute.
+      doc->processDeferScripts();
+    }
+    // Defer scripts will be processed by the document after parsing, before DOMContentLoaded.
   }
 
   void HTMLScriptElement::scheduleScriptExecution()
@@ -118,9 +143,48 @@ namespace dom
       return;
     scriptExecutionScheduled = true;
 
-    // Check if the script is already compiled, then schedule the execution by default.
-    if (scriptCompiled)
-      executeScript();
+    auto doc = ownerDocument->lock();
+    if (!doc)
+      return;
+
+    // Async scripts are not queued; they execute when compiled
+    if (async)
+    {
+      if (scriptCompiled)
+        executeScript();
+      return;
+    }
+
+    // Choose queue type
+    ScriptExecutionType qtype = ScriptExecutionType::INLINE;
+    if (isClassicScript() && defer)
+    {
+      qtype = ScriptExecutionType::DEFER;
+      // Gate DOMContentLoaded as soon as defer external script is scheduled
+      if (!src.empty() && !pendingDeferTracked_)
+      {
+        doc->incrementPendingDeferScripts();
+        pendingDeferTracked_ = true;
+      }
+    }
+    else
+    {
+      qtype = (!src.empty()) ? ScriptExecutionType::EXTERNAL : ScriptExecutionType::INLINE;
+    }
+
+    // Enqueue with a tryExecute callback that respects readiness and single-run semantics
+    weak_ptr<HTMLScriptElement> weakSelf = dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
+    doc->enqueueScript(qtype, [weakSelf]() -> bool
+                       {
+      auto self = weakSelf.lock();
+      if (!self)
+        return true; // element gone, unblock queue
+      if (self->scriptExecutedOnce)
+        return true; // already done
+      if (!self->scriptCompiled)
+        return false; // not ready yet
+      self->executeScript();
+      return true; });
   }
 
   void HTMLScriptElement::executeScript()
@@ -131,6 +195,17 @@ namespace dom
     browsingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
+
+    // Notify document that a defer script has executed (to possibly release DOMContentLoaded)
+    if (defer && pendingDeferTracked_)
+    {
+      if (auto doc = ownerDocument->lock())
+      {
+        doc->onDeferScriptExecuted();
+      }
+      pendingDeferTracked_ = false;
+    }
+
     dispatchEvent(dom::DOMEventType::Load);
   }
 }

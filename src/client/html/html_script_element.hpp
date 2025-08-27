@@ -115,5 +115,7 @@ namespace dom
     bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
+    // Track whether this element has incremented the pending defer counter
+    bool pendingDeferTracked_ = false;
   };
 }

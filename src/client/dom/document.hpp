@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <queue>
+#include <vector>
 #include <pugixml/pugixml.hpp>
 #include <crates/bindings.hpp>
 #include <client/animation/document_timeline.hpp>
@@ -25,6 +27,25 @@ namespace dom
 {
   // Forward declarations
   class HTMLMetaElement;
+
+  // Script execution scheduling types
+  enum class ScriptExecutionType
+  {
+    INLINE,
+    EXTERNAL,
+    DEFER,
+  };
+
+  struct ScriptExecutionEntry
+  {
+    ScriptExecutionType type;
+    std::function<bool()> tryExecute;
+    ScriptExecutionEntry(ScriptExecutionType t, std::function<bool()> cb)
+        : type(t)
+        , tryExecute(std::move(cb))
+    {
+    }
+  };
 
   enum class DocumentCompatMode
   {
@@ -104,6 +125,16 @@ namespace dom
      * Handle viewport meta tag changes and apply them to the window
      */
     void onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element);
+
+    // Script scheduling APIs used by HTMLScriptElement
+    void enqueueScript(ScriptExecutionType type, std::function<bool()> tryExecute);
+    void processScriptQueue();
+    void processDeferScripts();
+
+    // Defer gating for DOMContentLoaded
+    void incrementPendingDeferScripts();
+    void onDeferScriptExecuted();
+    void dispatchDOMContentLoadedIfReady();
 
   protected:
     virtual void onDocumentOpened()
@@ -233,6 +264,14 @@ namespace dom
     std::shared_ptr<DocumentTimeline> timeline_;
     std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> stylesheets_;
     client_cssom::StyleCache style_cache_;
+
+    // Script scheduling queues
+    std::queue<ScriptExecutionEntry> script_execution_queue_;
+    std::vector<ScriptExecutionEntry> defer_scripts_;
+
+    // Gating for DOMContentLoaded against external classic defer scripts
+    int pending_defer_scripts_count_ = 0;
+    bool dom_content_loaded_fired_ = false;
   };
 
   class XMLDocument : public Document
@@ -268,8 +307,6 @@ namespace dom
 
   class HTMLDocument : public Document
   {
-    friend class DocumentEventDispatcher;
-
   public:
     inline static const DocumentType kDocumentType = DocumentType::kHTML;
 
@@ -328,44 +365,10 @@ namespace dom
       return *layout_view_;
     }
 
-    // Returns the current root of text node or element that is dirty, the renderer will draw from this node.
-    // Call this function will reset the cached text or element.
-    [[nodiscard]] inline std::shared_ptr<Node> getDirtyRootTextOrElement() const
+    // Returns the current dirty root element or text node for style/layout recomputation.
+    inline std::shared_ptr<Node> getDirtyRootTextOrElement() const
     {
-      auto node = dirty_root_text_or_element_.lock();
-      dirty_root_text_or_element_.reset();
-      return node;
-    }
-    inline void checkAndSetDirtyRootTextOrElement(std::shared_ptr<Node> node)
-    {
-      if (node == nullptr)
-      {
-        dirty_root_text_or_element_.reset();
-        return;
-      }
-      if (dirty_root_text_or_element_.expired())
-      {
-        dirty_root_text_or_element_ = node;
-        return;
-      }
-
-      auto current_node = dirty_root_text_or_element_.lock();
-      if (node != current_node)
-      {
-        if (node->depth() < current_node->depth())
-        {
-          dirty_root_text_or_element_ = node;
-        }
-        else if (node->depth() == current_node->depth())
-        {
-          dirty_root_text_or_element_ = node->parentNode.lock();
-        }
-      }
-    }
-    // Mark the document cache as dirty, the renderer will draw from the body element.
-    inline void invalidateDocumentCache()
-    {
-      dirty_root_text_or_element_ = body();
+      return dirty_root_text_or_element_.lock();
     }
 
     std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
@@ -382,6 +385,13 @@ namespace dom
     void onStyleSheetsDidChange() override;
 
     bool simulateScrollWithOffset(float offsetX, float offsetY);
+    void invalidateDocumentCache();
+    void checkAndSetDirtyRootTextOrElement(std::shared_ptr<Node> node);
+
+    // Allow dispatcher to access simulateScrollWithOffset
+    friend class DocumentEventDispatcher;
+    // Allow Node to call private dirty marking helper
+    friend class Node;
 
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;

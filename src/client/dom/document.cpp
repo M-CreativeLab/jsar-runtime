@@ -436,6 +436,89 @@ namespace dom
     }
   }
 
+  // Script execution queue implementation
+  void Document::enqueueScript(ScriptExecutionType type,
+                               std::function<bool()> tryExecute)
+  {
+    // For defer scripts, collect them and run after parsing
+    if (type == ScriptExecutionType::DEFER)
+    {
+      defer_scripts_.emplace_back(type, tryExecute);
+      return;
+    }
+
+    // Otherwise, maintain insertion order for inline/external classic scripts
+    script_execution_queue_.emplace(type, tryExecute);
+
+    // If called during parsing, we try process immediately in order
+    processScriptQueue();
+  }
+
+  void Document::processScriptQueue()
+  {
+    // Only execute in order. If the front is not ready, stop to preserve order
+    while (!script_execution_queue_.empty())
+    {
+      auto &entry = script_execution_queue_.front();
+      bool executed = false;
+      if (entry.tryExecute)
+      {
+        executed = entry.tryExecute();
+      }
+      if (!executed)
+      {
+        // Not ready yet (e.g., external script not loaded), maintain order and stop here
+        break;
+      }
+      script_execution_queue_.pop();
+    }
+  }
+
+  void Document::processDeferScripts()
+  {
+    // Execute defer scripts in insertion order; if not ready, try later
+    std::vector<ScriptExecutionEntry> remaining;
+    for (auto &entry : defer_scripts_)
+    {
+      bool executed = false;
+      if (entry.tryExecute)
+        executed = entry.tryExecute();
+      if (!executed)
+        remaining.push_back(entry);
+    }
+    defer_scripts_.swap(remaining);
+  }
+
+  // Defer gating helpers
+  void Document::incrementPendingDeferScripts()
+  {
+    ++pending_defer_scripts_count_;
+  }
+
+  void Document::onDeferScriptExecuted()
+  {
+    if (pending_defer_scripts_count_ > 0)
+      --pending_defer_scripts_count_;
+
+    // Try to make more progress on defer queue, then attempt to fire DOMContentLoaded
+    processDeferScripts();
+    dispatchDOMContentLoadedIfReady();
+  }
+
+  void Document::dispatchDOMContentLoadedIfReady()
+  {
+    if (dom_content_loaded_fired_)
+      return;
+    if (pending_defer_scripts_count_ != 0)
+      return;
+
+    // All required conditions satisfied, dispatch events once
+    dom_content_loaded_fired_ = true;
+    dispatchEvent(DOMEventType::DOMContentLoaded);
+    // TODO(Yorkie): wait for the pending resources to be loaded.
+    dispatchEvent(DOMEventType::Load);
+  }
+
   void Document::openInternal()
   {
     // Connect the window and document before opening this document.
@@ -685,10 +768,17 @@ namespace dom
   {
     Document::afterLoadedCallback();
 
-    // Dispatch the load event.
-    dispatchEvent(DOMEventType::DOMContentLoaded);
-    // TODO(Yorkie): wait for the pending resources to be loaded.
-    dispatchEvent(DOMEventType::Load);
+    // Flush in-order queue
+    processScriptQueue();
+
+    // Try executing defer scripts; run a few passes until stable
+    for (int i = 0; i < 8; ++i)
+    {
+      processDeferScripts();
+    }
+
+    // Gate DOMContentLoaded against pending defer scripts
+    dispatchDOMContentLoadedIfReady();
   }
 
   void HTMLDocument::onDocumentOpened()
@@ -716,6 +806,53 @@ namespace dom
   void HTMLDocument::onStyleSheetsDidChange()
   {
     invalidateDocumentCache();
+  }
+
+  void HTMLDocument::invalidateDocumentCache()
+  {
+    // Mark the entire document as dirty for style/layout recomputation.
+    // Prefer body if present, otherwise the documentElement, otherwise nullptr.
+    std::shared_ptr<Node> dirty;
+    if (auto b = body())
+      dirty = b;
+    else if (auto docEl = documentElement())
+      dirty = docEl;
+    dirty_root_text_or_element_ = dirty;
+  }
+
+  void HTMLDocument::checkAndSetDirtyRootTextOrElement(std::shared_ptr<Node> node)
+  {
+    // Only set if empty or if ancestor relationship indicates broader dirty scope
+    auto current = dirty_root_text_or_element_.lock();
+    if (!current)
+    {
+      dirty_root_text_or_element_ = node;
+      return;
+    }
+
+    // If current is ancestor of node, keep current (already broader)
+    auto ancestor = node;
+    while (ancestor)
+    {
+      if (ancestor.get() == current.get())
+      {
+        // current is ancestor; keep as is
+        return;
+      }
+      ancestor = ancestor->parentNode.lock();
+    }
+
+    // If node is ancestor of current, widen to node
+    auto p = current;
+    while (p)
+    {
+      if (p.get() == node.get())
+      {
+        dirty_root_text_or_element_ = node;
+        return;
+      }
+      p = p->parentNode.lock();
+    }
   }
 
   bool HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)
