@@ -7,6 +7,7 @@
 #include "./values/specified/length.hpp"
 #include "./values/specified/border.hpp"
 #include "./values/specified/easing.hpp"
+#include "./values/specified/filter.hpp"
 #include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/image.hpp"
@@ -448,6 +449,18 @@ namespace client_cssom
     {
       transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
       bitfields_.SetHasTransform(transform_.empty() == false);
+    }
+
+    /**
+     * Visual Effects properties
+     */
+    else if (name == "filter")
+    {
+      filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
+    }
+    else if (name == "backdrop-filter")
+    {
+      backdrop_filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
     }
 
     /**
