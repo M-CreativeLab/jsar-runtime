@@ -488,7 +488,8 @@ namespace builtin_scene
   void ContentInstancesList::clearInstances()
   {
     InstanceListBase::clearInstances();
-    textureDataDirty_ = true;
+    borderDataDirty_ = true;
+    scrollShadowDataDirty_ = true;
   }
 
   void ContentInstancesList::sortInstances(SortingOrder sortingOrder)
