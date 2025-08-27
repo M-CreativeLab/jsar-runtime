@@ -154,6 +154,57 @@ namespace builtin_scene
     notifyBufferDataChanged();
   }
 
+  void Instance::setScrollShadowColor(glm::vec4 shadowColor)
+  {
+    if (data_.scrollShadowColor == shadowColor)
+      return; // Skip if there is no change.
+
+    data_.scrollShadowColor = shadowColor;
+    notifyBufferDataChanged();
+  }
+
+  void Instance::setScrollShadowColor(float r, float g, float b, float a)
+  {
+    setScrollShadowColor(glm::vec4(r, g, b, a));
+  }
+
+  void Instance::setScrollShadowMaxHeight(float maxHeight)
+  {
+    if (data_.scrollShadowMaxHeight == maxHeight)
+      return; // Skip if there is no change.
+
+    data_.scrollShadowMaxHeight = maxHeight;
+    notifyBufferDataChanged();
+  }
+
+  void Instance::setScrollOffset(glm::vec2 offset)
+  {
+    if (data_.scrollOffset == offset)
+      return; // Skip if there is no change.
+
+    data_.scrollOffset = offset;
+    notifyBufferDataChanged();
+  }
+
+  void Instance::setScrollOffset(float x, float y)
+  {
+    setScrollOffset(glm::vec2(x, y));
+  }
+
+  void Instance::setContentSize(glm::vec2 size)
+  {
+    if (data_.contentSize == size)
+      return; // Skip if there is no change.
+
+    data_.contentSize = size;
+    notifyBufferDataChanged();
+  }
+
+  void Instance::setContentSize(float width, float height)
+  {
+    setContentSize(glm::vec2(width, height));
+  }
+
   bool Instance::hasNoBorders() const
   {
     // Fast check for none border style.
@@ -309,7 +360,8 @@ namespace builtin_scene
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
           }
           // 1f
-          else if (name == "instanceUseSDFTexture")
+          else if (name == "instanceUseSDFTexture" ||
+                   name == "instanceScrollShadowMaxHeight")
           {
             attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
@@ -317,13 +369,16 @@ namespace builtin_scene
           else if (name == "instanceTexUvOffset" ||
                    name == "instanceTexUvScale" ||
                    name == "instanceTexUvOffsetR" ||
-                   name == "instanceDimensions")
+                   name == "instanceDimensions" ||
+                   name == "instanceScrollOffset" ||
+                   name == "instanceContentSize")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
           }
           // 4f
           else if (name == "instanceColor" ||
-                   name == "instanceBorderRadius")
+                   name == "instanceBorderRadius" ||
+                   name == "instanceScrollShadowColor")
           {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
           }
@@ -551,7 +606,8 @@ namespace builtin_scene
             attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
           }
           // 1f
-          else if (name == "instanceUseSDFTexture")
+          else if (name == "instanceUseSDFTexture" ||
+                   name == "instanceScrollShadowMaxHeight")
           {
             attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
           }
@@ -559,13 +615,16 @@ namespace builtin_scene
           else if (name == "instanceTexUvOffset" ||
                    name == "instanceTexUvScale" ||
                    name == "instanceTexUvOffsetR" ||
-                   name == "instanceDimensions")
+                   name == "instanceDimensions" ||
+                   name == "instanceScrollOffset" ||
+                   name == "instanceContentSize")
           {
             attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
           }
           // 4f
           else if (name == "instanceColor" ||
-                   name == "instanceBorderRadius")
+                   name == "instanceBorderRadius" ||
+                   name == "instanceScrollShadowColor")
           {
             attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
           }

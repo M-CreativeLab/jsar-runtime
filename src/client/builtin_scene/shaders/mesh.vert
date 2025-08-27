@@ -54,10 +54,18 @@ out float vInstanceUseSDFTexture;
 in vec2 instanceDimensions;
 in vec4 instanceBorderRadius;
 in uint instanceBorderStyle;
+in vec4 instanceScrollShadowColor;
+in float instanceScrollShadowMaxHeight;
+in vec2 instanceScrollOffset;
+in vec2 instanceContentSize;
 out vec2 vInstanceTexCoord;
 out vec2 vInstanceDimensions;
 out vec4 vInstanceBorderRadius;
 out float vInstanceBorderStyle;
+out vec4 vInstanceScrollShadowColor;
+out float vInstanceScrollShadowMaxHeight;
+out vec2 vInstanceScrollOffset;
+out vec2 vInstanceContentSize;
 flat out int vInstanceId;
 out float vSdfDepthScale;
 #endif
@@ -155,6 +163,10 @@ void main()
   vInstanceDimensions = instanceDimensions;
   vInstanceBorderRadius = instanceBorderRadius;
   vInstanceBorderStyle = float(instanceBorderStyle);
+  vInstanceScrollShadowColor = instanceScrollShadowColor;
+  vInstanceScrollShadowMaxHeight = instanceScrollShadowMaxHeight;
+  vInstanceScrollOffset = instanceScrollOffset;
+  vInstanceContentSize = instanceContentSize;
   vInstanceId = gl_InstanceID;
 
   // Compute the depth scale factor for SDF rendering

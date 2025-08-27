@@ -43,18 +43,26 @@ namespace builtin_scene
         , borderRadius(0.0f, 0.0f, 0.0f, 0.0f)
         , borderStyle(0.0f)
         , enableSDFTexture(0.0f)
+        , scrollShadowColor(0.0f, 0.0f, 0.0f, 0.0f)
+        , scrollShadowMaxHeight(0.2f)
+        , scrollOffset(0.0f, 0.0f)
+        , contentSize(0.0f, 0.0f)
     {
     }
-    glm::mat4 transform;    /** element transformation */
-    glm::vec4 color;        /** background color */
-    glm::vec2 texUvOffset;  /** Left or default view texture coordinates */
-    glm::vec2 texUvOffsetR; /** Right eye texture coordinates */
-    glm::vec2 texUvScale;   /** Shared texture scale for both eyes */
-    uint32_t texLayerIndex; /** Shared texture layer for both eyes */
-    glm::vec2 dimensions;   /** The dimensions */
-    glm::vec4 borderRadius; /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
-    uint32_t borderStyle;   /** Border style (0=none, 1=solid, 2=dashed) */
-    float enableSDFTexture; /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
+    glm::mat4 transform;         /** element transformation */
+    glm::vec4 color;             /** background color */
+    glm::vec2 texUvOffset;       /** Left or default view texture coordinates */
+    glm::vec2 texUvOffsetR;      /** Right eye texture coordinates */
+    glm::vec2 texUvScale;        /** Shared texture scale for both eyes */
+    uint32_t texLayerIndex;      /** Shared texture layer for both eyes */
+    glm::vec2 dimensions;        /** The dimensions */
+    glm::vec4 borderRadius;      /** Border radius for each corner (top-left, top-right, bottom-right, bottom-left) */
+    uint32_t borderStyle;        /** Border style (0=none, 1=solid, 2=dashed) */
+    float enableSDFTexture;      /** Whether to use SDF texture rendering (0.0=regular, 1.0=SDF) */
+    glm::vec4 scrollShadowColor; /** Color for scroll edge shadows (RGBA) */
+    float scrollShadowMaxHeight; /** Maximum height of scroll shadows as proportion of element size (default 0.2 = 20%) */
+    glm::vec2 scrollOffset;      /** Current scroll offset (x, y) */
+    glm::vec2 contentSize;       /** Content size for scroll calculations (width, height) */
 
     friend std::ostream &operator<<(std::ostream &os, const InstanceData &data)
     {
@@ -69,6 +77,10 @@ namespace builtin_scene
          << "  borderRadius=" << math3d::to_string(data.borderRadius) << std::endl
          << "  borderStyle=" << data.borderStyle << std::endl
          << "  enableSDFTexture=" << data.enableSDFTexture << std::endl
+         << "  scrollShadowColor=" << math3d::to_string(data.scrollShadowColor) << std::endl
+         << "  scrollShadowMaxHeight=" << data.scrollShadowMaxHeight << std::endl
+         << "  scrollOffset=" << math3d::to_string(data.scrollOffset) << std::endl
+         << "  contentSize=" << math3d::to_string(data.contentSize) << std::endl
          << ")";
       return os;
     }
@@ -179,6 +191,13 @@ namespace builtin_scene
     void setBorderColor(float r, float g, float b, float a);
     void setBorderStyle(float borderStyle);
     void setSDFTextureEnabled(bool);
+    void setScrollShadowColor(glm::vec4 shadowColor);
+    void setScrollShadowColor(float r, float g, float b, float a);
+    void setScrollShadowMaxHeight(float maxHeight);
+    void setScrollOffset(glm::vec2 offset);
+    void setScrollOffset(float x, float y);
+    void setContentSize(glm::vec2 size);
+    void setContentSize(float width, float height);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \
@@ -504,7 +523,11 @@ namespace builtin_scene
                                                                   "instanceDimensions",
                                                                   "instanceBorderRadius",
                                                                   "instanceBorderStyle",
-                                                                  "instanceUseSDFTexture"};
+                                                                  "instanceUseSDFTexture",
+                                                                  "instanceScrollShadowColor",
+                                                                  "instanceScrollShadowMaxHeight",
+                                                                  "instanceScrollOffset",
+                                                                  "instanceContentSize"};
 
   public:
     InstancedMeshBase() = default;

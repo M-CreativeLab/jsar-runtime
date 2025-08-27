@@ -14,6 +14,10 @@ in vec2 vInstanceTexCoord;
 in vec2 vInstanceDimensions;
 in vec4 vInstanceBorderRadius;
 in float vInstanceBorderStyle;
+in vec4 vInstanceScrollShadowColor;
+in float vInstanceScrollShadowMaxHeight;
+in vec2 vInstanceScrollOffset;
+in vec2 vInstanceContentSize;
 flat in int vInstanceId;
 in float vSdfDepthScale;
 
@@ -142,6 +146,67 @@ float dashPattern(vec2 p, vec2 dimensions, float dashLength)
   return step(dashCycle, dashLength);
 }
 
+// Calculate scroll shadow alpha based on scroll position and edge proximity
+// p: point coordinate (relative to center)
+// dimensions: element dimensions (width, height)
+// scrollOffset: current scroll offset (x, y)
+// contentSize: content size (width, height)
+// maxHeight: maximum shadow height as proportion of element size
+vec4 calculateScrollShadows(vec2 p, vec2 dimensions, vec2 scrollOffset, vec2 contentSize, float maxHeight)
+{
+  // Calculate actual shadow distances as proportion of element size
+  float maxShadowWidth = dimensions.x * maxHeight;
+  float maxShadowHeight = dimensions.y * maxHeight;
+  
+  // Calculate scroll bounds
+  vec2 maxScroll = max(vec2(0.0), contentSize - dimensions);
+  
+  // Calculate distance from edges in normalized space
+  vec2 halfDim = dimensions * 0.5;
+  vec2 edgeDistances = halfDim - abs(p);
+  
+  // Calculate shadow alpha for each edge
+  vec4 shadowAlpha = vec4(0.0);
+  
+  // Top shadow (when scrolled down)
+  if (scrollOffset.y > 0.0)
+  {
+    float scrollProgress = min(scrollOffset.y / maxScroll.y, 1.0);
+    float edgeDist = max(0.0, edgeDistances.y - (halfDim.y - maxShadowHeight));
+    float shadowIntensity = scrollProgress * (1.0 - edgeDist / maxShadowHeight);
+    shadowAlpha.x = max(0.0, shadowIntensity);
+  }
+  
+  // Right shadow (when scrolled left)
+  if (scrollOffset.x > 0.0)
+  {
+    float scrollProgress = min(scrollOffset.x / maxScroll.x, 1.0);
+    float edgeDist = max(0.0, edgeDistances.x - (halfDim.x - maxShadowWidth));
+    float shadowIntensity = scrollProgress * (1.0 - edgeDist / maxShadowWidth);
+    shadowAlpha.y = max(0.0, shadowIntensity);
+  }
+  
+  // Bottom shadow (when can scroll down)
+  if (scrollOffset.y < maxScroll.y)
+  {
+    float remainingScroll = (maxScroll.y - scrollOffset.y) / maxScroll.y;
+    float edgeDist = max(0.0, edgeDistances.y - (halfDim.y - maxShadowHeight));
+    float shadowIntensity = remainingScroll * (1.0 - edgeDist / maxShadowHeight);
+    shadowAlpha.z = max(0.0, shadowIntensity);
+  }
+  
+  // Left shadow (when can scroll left)
+  if (scrollOffset.x < maxScroll.x)
+  {
+    float remainingScroll = (maxScroll.x - scrollOffset.x) / maxScroll.x;
+    float edgeDist = max(0.0, edgeDistances.x - (halfDim.x - maxShadowWidth));
+    float shadowIntensity = remainingScroll * (1.0 - edgeDist / maxShadowWidth);
+    shadowAlpha.w = max(0.0, shadowIntensity);
+  }
+  
+  return shadowAlpha;
+}
+
 void main()
 {
   outColor = col;
@@ -222,5 +287,24 @@ void main()
         outColor = vec4(finalColor, finalAlpha);
       }
     }
+
+    // Apply scroll shadows if enabled and color has alpha
+#ifdef USE_INSTANCE_SDF
+    if (vInstanceScrollShadowColor.a > 0.0)
+    {
+      vec4 shadowAlphas = calculateScrollShadows(planeCoord, dimensions, vInstanceScrollOffset, vInstanceContentSize, vInstanceScrollShadowMaxHeight);
+      
+      // Combine all shadow alphas (max of all edges)
+      float totalShadowAlpha = max(max(shadowAlphas.x, shadowAlphas.y), max(shadowAlphas.z, shadowAlphas.w));
+      
+      if (totalShadowAlpha > 0.0)
+      {
+        // Apply shadow with SDF anti-aliasing
+        vec3 shadowColor = mix(outColor.rgb, vInstanceScrollShadowColor.rgb, totalShadowAlpha * vInstanceScrollShadowColor.a);
+        float shadowFinalAlpha = max(outColor.a, totalShadowAlpha * vInstanceScrollShadowColor.a);
+        outColor = vec4(shadowColor, shadowFinalAlpha);
+      }
+    }
+#endif
   }
 }
