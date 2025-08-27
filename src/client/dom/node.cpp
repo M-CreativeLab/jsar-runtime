@@ -75,6 +75,7 @@ namespace dom
       , connected(false)
       , nodeName(other.nodeName)
       , nodeType(other.nodeType)
+      , nodeValue_(other.nodeValue_)
       , ownerDocument(other.ownerDocument)
       , parentNode(weak_ptr<Node>())
       , childNodes({})
