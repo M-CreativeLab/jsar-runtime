@@ -26,15 +26,16 @@ namespace dom
   // Script execution handle to decouple from HTMLScriptElement
   struct ScriptExecutionHandle
   {
-    std::size_t scriptId;
+    uint32_t scriptId;
     std::weak_ptr<HTMLScriptElement> scriptElement;
 
-    ScriptExecutionHandle(std::size_t id, std::weak_ptr<HTMLScriptElement> element)
+    ScriptExecutionHandle(uint32_t id, std::weak_ptr<HTMLScriptElement> element)
         : scriptId(id)
         , scriptElement(element)
     {
     }
   };
+
   class BrowsingContext : public RuntimeContext
   {
   public:
@@ -118,7 +119,7 @@ namespace dom
      * Register a script for document-order execution.
      * Returns a unique script ID for tracking.
      */
-    std::size_t registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
+    uint32_t registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
 
     /**
      * Try to execute the next script in the queue if it's ready.
@@ -128,14 +129,14 @@ namespace dom
     /**
      * Notify that a script has completed execution.
      */
-    void notifyScriptExecutionComplete(std::size_t scriptId);
+    void notifyScriptExecutionComplete(uint32_t script_id);
 
   public:
     vector<shared_ptr<Document>> documents;
 
   private:
     // Script execution queue using handles to avoid circular dependency
-    std::deque<ScriptExecutionHandle> scriptExecutionQueue;
-    std::size_t nextScriptId = 1;
+    std::deque<ScriptExecutionHandle> script_execution_queue;
+    uint32_t next_script_id_ = 1;
   };
 }

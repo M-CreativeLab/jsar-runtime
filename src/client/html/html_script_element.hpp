@@ -84,8 +84,10 @@ namespace dom
     /**
      * Execute the script from the execution queue.
      * This bypasses the normal execution checks since the queue manages ordering.
+     * 
+     * @returns Whether the script was executed.
      */
-    void executeScriptFromQueue();
+    bool executeScriptFromQueue();
 
   public:
     /**

@@ -3,46 +3,44 @@
 
 namespace dom
 {
-  std::size_t BrowsingContext::registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script)
+  uint32_t BrowsingContext::registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script)
   {
-    std::size_t scriptId = nextScriptId++;
-    scriptExecutionQueue.emplace_back(scriptId, std::weak_ptr<HTMLScriptElement>(script));
+    uint32_t script_id = next_script_id_++;
+    script_execution_queue.emplace_back(script_id, std::weak_ptr<HTMLScriptElement>(script));
     // Try to execute if this is the first script in the queue
     tryExecuteNextScript();
-    return scriptId;
+    return script_id;
   }
 
   void BrowsingContext::tryExecuteNextScript()
   {
-    while (!scriptExecutionQueue.empty())
+    while (!script_execution_queue.empty())
     {
-      auto &handle = scriptExecutionQueue.front();
+      auto &handle = script_execution_queue.front();
       auto script = handle.scriptElement.lock();
 
       // If script was destroyed, remove from queue and continue
       if (!script)
       {
-        scriptExecutionQueue.pop_front();
+        script_execution_queue.pop_front();
         continue;
       }
 
-      // Check if the script is ready to execute (compiled and not yet executed)
-      if (script->isReadyToExecute())
-      {
-        script->executeScriptFromQueue();
+      // Execute the script and it will return false if not ready yet
+      if (!script->executeScriptFromQueue())
         return; // Script will call notifyScriptExecutionComplete when done
-      }
 
       // Script not ready yet, stop trying
       break;
     }
   }
 
-  void BrowsingContext::notifyScriptExecutionComplete(std::size_t scriptId)
+  void BrowsingContext::notifyScriptExecutionComplete(uint32_t script_id)
   {
-    if (!scriptExecutionQueue.empty() && scriptExecutionQueue.front().scriptId == scriptId)
+    if (!script_execution_queue.empty() &&
+        script_execution_queue.front().scriptId == script_id)
     {
-      scriptExecutionQueue.pop_front();
+      script_execution_queue.pop_front();
       // Try to execute the next script in the queue
       tryExecuteNextScript();
     }

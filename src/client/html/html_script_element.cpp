@@ -52,7 +52,7 @@ namespace dom
       if (isClassicScript() && !async && !defer)
       {
         usesExecutionQueue = true;
-        auto scriptElement = std::dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
+        auto scriptElement = dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
         scriptExecutionId = browsingContext->registerScriptForExecution(scriptElement);
       }
 
@@ -164,9 +164,7 @@ namespace dom
 
     // Notify browsing context if this script was using the execution queue
     if (usesExecutionQueue)
-    {
       browsingContext->notifyScriptExecutionComplete(scriptExecutionId);
-    }
 
     dispatchEvent(dom::DOMEventType::Load);
   }
@@ -176,11 +174,16 @@ namespace dom
     return scriptCompiled && !scriptExecutedOnce && compiledScript != nullptr;
   }
 
-  void HTMLScriptElement::executeScriptFromQueue()
+  bool HTMLScriptElement::executeScriptFromQueue()
   {
     if (isReadyToExecute())
     {
       executeScript();
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 }
