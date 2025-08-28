@@ -1030,6 +1030,7 @@ private:
     CheckFramebufferStatusCommandBufferResponse res(req, ret);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, &res, options);
+    reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnCreateRenderbuffer(
     CreateRenderbufferCommandBufferRequest *req,

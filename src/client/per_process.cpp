@@ -735,6 +735,14 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(cl
       return resp != nullptr;
     };
     commandbufferResponseCv.wait_for(lock, chrono::milliseconds(timeout), check);
+
+    if (resp == nullptr) [[unlikely]]
+    {
+      cerr << "Timeout waiting for command buffer response() "
+           << "for contextId=" << context->id << ", requestId=" << requestId << endl;
+      assert(false && "Timeout waiting for command buffer response.");
+      return nullptr;
+    }
   }
 
   auto after = chrono::steady_clock::now();
