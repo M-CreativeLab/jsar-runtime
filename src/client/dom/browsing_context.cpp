@@ -1,3 +1,4 @@
+#include <idgen.hpp>
 #include "./browsing_context.hpp"
 #include "../html/html_script_element.hpp"
 
@@ -5,8 +6,10 @@ namespace dom
 {
   uint32_t BrowsingContext::registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script)
   {
-    uint32_t script_id = next_script_id_++;
+    static TrIdGenerator idgen(0x1);
+    uint32_t script_id = idgen.get();
     script_execution_queue.emplace_back(script_id, std::weak_ptr<HTMLScriptElement>(script));
+
     // Try to execute if this is the first script in the queue
     tryExecuteNextScript();
     return script_id;
@@ -41,7 +44,6 @@ namespace dom
         script_execution_queue.front().scriptId == script_id)
     {
       script_execution_queue.pop_front();
-      // Try to execute the next script in the queue
       tryExecuteNextScript();
     }
   }

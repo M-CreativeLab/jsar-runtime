@@ -130,7 +130,9 @@ namespace dom
     bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
+
+    // Whether the script uses the execution queue
     bool usesExecutionQueue = false;
-    std::size_t scriptExecutionId = 0;
+    size_t scriptExecutionId = 0;
   };
 }

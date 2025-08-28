@@ -137,6 +137,5 @@ namespace dom
   private:
     // Script execution queue using handles to avoid circular dependency
     std::deque<ScriptExecutionHandle> script_execution_queue;
-    uint32_t next_script_id_ = 1;
   };
 }
