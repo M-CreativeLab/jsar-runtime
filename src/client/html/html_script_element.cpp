@@ -47,6 +47,15 @@ namespace dom
     {
       compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? SourceTextType::Classic : SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
+
+      // Register classic scripts (non-async, non-defer) with execution queue
+      if (isClassicScript() && !async && !defer)
+      {
+        usesExecutionQueue = true;
+        auto scriptElement = dynamic_pointer_cast<HTMLScriptElement>(shared_from_this());
+        scriptExecutionId = browsingContext->registerScriptForExecution(scriptElement);
+      }
+
       loadSource();
     }
     // TODO(yorkie): support "speculationrules"?
@@ -109,7 +118,17 @@ namespace dom
       skipScriptExecution = true;
 
     if (!skipScriptExecution)
-      executeScript();
+    {
+      // If script uses execution queue, let the queue manage execution
+      if (usesExecutionQueue)
+      {
+        browsingContext->tryExecuteNextScript();
+      }
+      else
+      {
+        executeScript();
+      }
+    }
   }
 
   void HTMLScriptElement::scheduleScriptExecution()
@@ -120,7 +139,18 @@ namespace dom
 
     // Check if the script is already compiled, then schedule the execution by default.
     if (scriptCompiled)
-      executeScript();
+    {
+      // If script uses execution queue, let the queue manage execution
+      if (usesExecutionQueue)
+      {
+        auto browsingContext = ownerDocument->lock()->browsingContext;
+        browsingContext->tryExecuteNextScript();
+      }
+      else
+      {
+        executeScript();
+      }
+    }
   }
 
   void HTMLScriptElement::executeScript()
@@ -131,6 +161,29 @@ namespace dom
     browsingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
+
+    // Notify browsing context if this script was using the execution queue
+    if (usesExecutionQueue)
+      browsingContext->notifyScriptExecutionComplete(scriptExecutionId);
+
     dispatchEvent(dom::DOMEventType::Load);
+  }
+
+  bool HTMLScriptElement::isReadyToExecute() const
+  {
+    return scriptCompiled && !scriptExecutedOnce && compiledScript != nullptr;
+  }
+
+  bool HTMLScriptElement::executeScriptFromQueue()
+  {
+    if (isReadyToExecute())
+    {
+      executeScript();
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 }
