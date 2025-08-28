@@ -850,12 +850,12 @@ private:
   {
     auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
     GLuint shader = glObjectManager.FindShader(req->shader);
-    GLint value;
-    glGetShaderiv(shader, req->pname, &value);
+    GetShaderParamCommandBufferResponse res(req);
+    glGetShaderiv(shader, GL_DELETE_STATUS, reinterpret_cast<GLint*>(&res.deleteStatus));
+    glGetShaderiv(shader, GL_COMPILE_STATUS, reinterpret_cast<GLint*>(&res.compileStatus));
 
-    GetShaderParamCommandBufferResponse res(req, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", options.isDefaultQueue(), res.value);
+      PrintDebugInfo(req, nullptr, nullptr, options);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req,
