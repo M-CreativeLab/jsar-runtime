@@ -14,6 +14,7 @@
 #include "./worker_context.hpp"
 #include "./mutation_record.hpp"
 #include "./mutation_observer.hpp"
+#include "./intersection_observer.hpp"
 
 namespace bindings
 {
@@ -45,6 +46,7 @@ namespace bindings
       // Add Web APIs
       dombinding::MutationRecord::Init(env);
       dombinding::MutationObserver::Init(env);
+      dombinding::IntersectionObserver::Init(env);
 
       // Add others
       dombinding::DOMParser::Init(env);
