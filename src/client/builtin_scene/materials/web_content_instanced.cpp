@@ -181,7 +181,7 @@ namespace builtin_scene::materials
         // Render the container mask
         {
           WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
-          containerInstance->beforeInstancedDraw(*glContext);
+          containerInstance->beforeInstancedDraw(*glContext, scrollShadowDataTexture);
           glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                            meshIndicesCount,
                                            WEBGL_UNSIGNED_INT,
