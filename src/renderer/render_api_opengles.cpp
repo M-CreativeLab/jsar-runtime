@@ -851,8 +851,8 @@ private:
     auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
     GLuint shader = glObjectManager.FindShader(req->shader);
     GetShaderParamCommandBufferResponse res(req);
-    glGetShaderiv(shader, GL_DELETE_STATUS, reinterpret_cast<GLint*>(&res.deleteStatus));
-    glGetShaderiv(shader, GL_COMPILE_STATUS, reinterpret_cast<GLint*>(&res.compileStatus));
+    glGetShaderiv(shader, GL_DELETE_STATUS, reinterpret_cast<GLint *>(&res.deleteStatus));
+    glGetShaderiv(shader, GL_COMPILE_STATUS, reinterpret_cast<GLint *>(&res.compileStatus));
 
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
