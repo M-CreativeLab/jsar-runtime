@@ -253,6 +253,19 @@ namespace client_graphics
     program->setLinkStatus(true);
   }
 
+  void WebGLContext::validateProgram(shared_ptr<WebGLProgram> program)
+  {
+    if (program == nullptr || !program->isValid()) [[unlikely]]
+      return;
+
+    auto req = ValidateProgramCommandBufferRequest(program->id);
+    sendCommandBufferRequest(req);
+
+    // For now, assume validation succeeds. In a full implementation, this should
+    // be set based on the server's validation response.
+    program->setValidateStatus(true);
+  }
+
   void WebGLContext::useProgram(shared_ptr<WebGLProgram> program)
   {
     auto req = UseProgramCommandBufferRequest(program == nullptr ? 0 : program->id);
@@ -274,6 +287,8 @@ namespace client_graphics
      */
     if (pname == WEBGL_LINK_STATUS)
       return static_cast<int>(program->getLinkStatus(false));
+    if (pname == WEBGL_VALIDATE_STATUS)
+      return static_cast<int>(program->getValidateStatus(false));
     if (pname == WEBGL_ACTIVE_ATTRIBUTES)
       return static_cast<int>(program->countActiveAttribs());
     if (pname == WEBGL_ACTIVE_UNIFORMS)
