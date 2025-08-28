@@ -406,6 +406,7 @@ namespace builtin_scene
         : InstanceListBase(vao, vbo)
         , containerIndex_(containerIndex)
         , belongsToContainerId_(std::nullopt)
+        , scrollShadowDataDirty_(true)
     {
     }
 
@@ -432,9 +433,23 @@ namespace builtin_scene
       belongsToContainerId_ = id;
     }
 
+    // Override beforeInstancedDraw to support scroll shadow texture updates
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                             CSSScrollShadowTexture *scrollShadowDataTexture);
+
+    inline bool isScrollShadowDataDirty() const
+    {
+      return scrollShadowDataDirty_;
+    }
+    inline void markScrollShadowDataAsDirty()
+    {
+      scrollShadowDataDirty_ = true;
+    }
+
   private:
     uint32_t containerIndex_;
     std::optional<uint32_t> belongsToContainerId_;
+    bool scrollShadowDataDirty_;
   };
 
   // Derived class for content instances list

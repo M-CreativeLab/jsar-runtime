@@ -286,6 +286,8 @@ namespace builtin_scene
       {
         if (holderPtr->isContentInstancesList())
           dynamic_pointer_cast<ContentInstancesList>(holderPtr)->markScrollShadowDataAsDirty();
+        else if (holderPtr->isContainerInstance())
+          dynamic_pointer_cast<ContainerInstance>(holderPtr)->markScrollShadowDataAsDirty();
       }
     }
   }
@@ -479,6 +481,25 @@ namespace builtin_scene
     {
       borderDataDirty_ = false;
     }
+    if (scrollShadowDataDirty_)
+    {
+      scrollShadowDataDirty_ = false;
+    }
+  }
+
+  void ContainerInstance::beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                                              CSSScrollShadowTexture *scrollShadowDataTexture)
+  {
+    InstanceListBase::beforeInstancedDraw(glContext);
+
+    // Update scroll shadow data texture if scroll shadow data is dirty
+    if (scrollShadowDataDirty_ &&
+        scrollShadowDataTexture != nullptr &&
+        scrollShadowDataTexture->isInitialized())
+    {
+      scrollShadowDataTexture->updateScrollShadowData(getInstances());
+    }
+
     if (scrollShadowDataDirty_)
     {
       scrollShadowDataDirty_ = false;

@@ -199,7 +199,25 @@ namespace builtin_scene::materials
         // Render the content instances
         renderLayer(layer, *contentInstances);
 
-        // Step 4: Disable stencil testing after rendering this container
+        // Step 4: Render container scroll shadows using ContainerInstance
+        // Keep the same stencil testing to ensure shadows only appear within container bounds
+        {
+          WebGLVertexArrayScope vaoScope(glContext, containerInstance->vao);
+          containerInstance->beforeInstancedDraw(*glContext, scrollShadowDataTexture);
+
+          // Set a uniform or flag to indicate this is scroll shadow rendering
+          // The shader will need to distinguish between mask rendering and shadow rendering
+          // For now, we render the container again - shader modifications will be needed
+
+          glContext->drawElementsInstanced(mesh.primitiveTopology(),
+                                           meshIndicesCount,
+                                           WEBGL_UNSIGNED_INT,
+                                           0,
+                                           containerInstance->count());
+          containerInstance->afterInstancedDraw(*glContext);
+        }
+
+        // Step 5: Disable stencil testing after rendering this container
         glContext->disable(WEBGL_STENCIL_TEST);
       }
       else if (hasContent)
