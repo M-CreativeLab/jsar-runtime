@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntersectionObserver Test</title>
+    <style>
+        .container {
+            height: 100vh;
+            overflow-y: scroll;
+            border: 2px solid #333;
+        }
+        .spacer {
+            height: 300px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            margin: 20px;
+        }
+        .target {
+            height: 200px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            margin: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .highlight {
+            background: linear-gradient(45deg, #ff9800, #e68900) !important;
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>IntersectionObserver Test</h1>
+    <p>Scroll to see elements come into view. Intersecting elements will be highlighted.</p>
+    
+    <div class="container" id="container">
+        <div class="spacer">Spacer 1</div>
+        <div class="target" data-index="1">Target Element 1</div>
+        <div class="spacer">Spacer 2</div>
+        <div class="target" data-index="2">Target Element 2</div>
+        <div class="spacer">Spacer 3</div>
+        <div class="target" data-index="3">Target Element 3</div>
+        <div class="spacer">Spacer 4</div>
+        <div class="target" data-index="4">Target Element 4</div>
+        <div class="spacer">Spacer 5</div>
+    </div>
+
+    <div id="status">
+        <h3>Intersection Status:</h3>
+        <ul id="statusList"></ul>
+    </div>
+
+    <script>
+        // Test IntersectionObserver implementation
+        function testIntersectionObserver() {
+            console.log('Testing IntersectionObserver...');
+
+            // Check if IntersectionObserver is available
+            if (typeof IntersectionObserver === 'undefined') {
+                console.error('IntersectionObserver is not available!');
+                document.getElementById('statusList').innerHTML = '<li style="color: red;">❌ IntersectionObserver not available</li>';
+                return;
+            }
+
+            console.log('✅ IntersectionObserver is available');
+            
+            // Create observer with multiple thresholds
+            const observer = new IntersectionObserver((entries, observer) => {
+                console.log('Intersection callback called with', entries.length, 'entries');
+                
+                entries.forEach(entry => {
+                    const target = entry.target;
+                    const index = target.dataset.index;
+                    
+                    console.log(`Target ${index}:`, {
+                        isIntersecting: entry.isIntersecting,
+                        intersectionRatio: entry.intersectionRatio,
+                        boundingClientRect: entry.boundingClientRect,
+                        intersectionRect: entry.intersectionRect,
+                        rootBounds: entry.rootBounds,
+                        time: entry.time
+                    });
+                    
+                    // Update visual state
+                    if (entry.isIntersecting) {
+                        target.classList.add('highlight');
+                        target.textContent = `Target Element ${index} (${Math.round(entry.intersectionRatio * 100)}% visible)`;
+                    } else {
+                        target.classList.remove('highlight');
+                        target.textContent = `Target Element ${index}`;
+                    }
+                    
+                    // Update status list
+                    updateStatus(index, entry.isIntersecting, entry.intersectionRatio);
+                });
+            }, {
+                root: document.getElementById('container'),
+                rootMargin: '0px',
+                threshold: [0, 0.25, 0.5, 0.75, 1.0]
+            });
+
+            // Observe all target elements
+            const targets = document.querySelectorAll('.target');
+            targets.forEach(target => {
+                console.log('Observing target:', target.dataset.index);
+                observer.observe(target);
+            });
+
+            // Test observer properties
+            console.log('Observer root:', observer.root);
+            console.log('Observer rootMargin:', observer.rootMargin);
+            console.log('Observer thresholds:', observer.thresholds);
+
+            // Test takeRecords method
+            setTimeout(() => {
+                const records = observer.takeRecords();
+                console.log('takeRecords returned:', records.length, 'records');
+            }, 1000);
+
+            // Store observer globally for testing
+            window.testObserver = observer;
+        }
+
+        function updateStatus(index, isIntersecting, ratio) {
+            const statusList = document.getElementById('statusList');
+            let statusItem = document.getElementById(`status-${index}`);
+            
+            if (!statusItem) {
+                statusItem = document.createElement('li');
+                statusItem.id = `status-${index}`;
+                statusList.appendChild(statusItem);
+            }
+            
+            const status = isIntersecting ? '👁️ Visible' : '👻 Hidden';
+            const percentage = Math.round(ratio * 100);
+            statusItem.innerHTML = `Target ${index}: ${status} (${percentage}%)`;
+            statusItem.style.color = isIntersecting ? 'green' : 'red';
+        }
+
+        // Test disconnect functionality
+        function testDisconnect() {
+            if (window.testObserver) {
+                console.log('Testing disconnect...');
+                window.testObserver.disconnect();
+                console.log('Observer disconnected');
+                
+                // Clear status
+                document.getElementById('statusList').innerHTML = '<li style="color: orange;">Observer disconnected</li>';
+            }
+        }
+
+        // Test unobserve functionality
+        function testUnobserve() {
+            if (window.testObserver) {
+                const target = document.querySelector('[data-index="1"]');
+                if (target) {
+                    console.log('Testing unobserve for target 1...');
+                    window.testObserver.unobserve(target);
+                    console.log('Target 1 unobserved');
+                }
+            }
+        }
+
+        // Start test when page loads
+        document.addEventListener('DOMContentLoaded', testIntersectionObserver);
+    </script>
+
+    <div style="margin-top: 20px;">
+        <button onclick="testDisconnect()">Test Disconnect</button>
+        <button onclick="testUnobserve()">Test Unobserve Target 1</button>
+        <button onclick="testIntersectionObserver()">Restart Observer</button>
+    </div>
+</body>
+</html>

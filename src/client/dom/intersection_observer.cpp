@@ -5,6 +5,8 @@
 #include <sstream>
 #include <regex>
 #include <common/utility.hpp>
+#include <client/browser/window.hpp>
+#include <client/html/html_document.hpp>
 
 namespace dom
 {
@@ -117,8 +119,41 @@ namespace dom
     else
     {
       // Use viewport bounds when no root specified
-      // For now, use a default viewport size - this should be obtained from the browser window
-      effectiveRootBounds = geometry::DOMRect(0, 0, 1920, 1080);
+      // Get actual viewport size from the browser window
+      try
+      {
+        auto document = target->getOwnerDocument();
+        if (document)
+        {
+          auto htmlDocument = dynamic_pointer_cast<HTMLDocument>(document);
+          if (htmlDocument)
+          {
+            auto window = htmlDocument->defaultView();
+            if (window)
+            {
+              effectiveRootBounds = geometry::DOMRect(0, 0, window->innerWidth(), window->innerHeight());
+            }
+            else
+            {
+              // Fallback to default viewport size
+              effectiveRootBounds = geometry::DOMRect(0, 0, 1920, 1080);
+            }
+          }
+          else
+          {
+            effectiveRootBounds = geometry::DOMRect(0, 0, 1920, 1080);
+          }
+        }
+        else
+        {
+          effectiveRootBounds = geometry::DOMRect(0, 0, 1920, 1080);
+        }
+      }
+      catch (...)
+      {
+        // Fallback to default viewport size on any error
+        effectiveRootBounds = geometry::DOMRect(0, 0, 1920, 1080);
+      }
       effectiveRootBounds = applyRootMargin(effectiveRootBounds);
     }
 
