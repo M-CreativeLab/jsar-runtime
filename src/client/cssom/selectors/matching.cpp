@@ -110,8 +110,7 @@ namespace client_cssom::selectors
         return isFirstOfType(element);
       if (component.isLastOfType())
         return isLastOfType(element);
-      // if (component.isActive())
-      //   return element->isActive();
+      // TODO: Implement support for :active pseudo-class when element->isActive() is available.
     }
 
     // if (component.isRoot())
