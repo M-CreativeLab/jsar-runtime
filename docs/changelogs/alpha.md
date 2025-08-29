@@ -2,6 +2,20 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.10.0
+
+### New Features & Improvements
+
+#### Enhanced Build System
+
+- **Version Management**: Updated project version to 0.10.0 with improved versioning workflow
+- **Documentation**: Enhanced changelog management and version tracking
+
+#### Bug Fixes & Improvements
+
+- **System Stability**: Various stability improvements and bug fixes
+- **Performance**: Optimized rendering pipeline and improved overall performance
+
 ## v0.9.0
 
 ### New Features & Improvements
