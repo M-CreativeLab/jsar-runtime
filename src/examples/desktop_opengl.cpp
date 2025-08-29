@@ -152,6 +152,7 @@ namespace jsar::example
       printf("                            singlepass - Single rendering pass\n");
       printf("  --env-map <path>        Specify environment map directory path\n");
       printf("  --no-env-map            Disable environment map rendering\n");
+      printf("  --system-fonts-dir <dir> Set custom system fonts directory\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Examples:\n");
@@ -161,6 +162,7 @@ namespace jsar::example
       printf("  %s --stereo singlepass\n", programName);
       printf("  %s --env-map /path/to/cubemap  # Use custom environment map\n", programName);
       printf("  %s --no-env-map             # Disable environment map\n", programName);
+      printf("  %s --system-fonts-dir /usr/share/fonts  # Use custom font directory\n", programName);
     }
 
     bool init(int argc, char **argv)
@@ -278,6 +280,21 @@ namespace jsar::example
           samples = atoi(argv[++i]);
           if (samples < 0 || samples > 16)
             samples = 4;
+        }
+        else if (arg == "--system-fonts-dir")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --system-fonts-dir requires a directory path argument\n");
+            help(argv[0]);
+            return false;
+          }
+          string fontsDir = argv[++i];
+          if (setenv("JSAR_SYSTEM_FONTS_DIR", fontsDir.c_str(), 1) != 0)
+          {
+            printf("Error: Failed to set JSAR_SYSTEM_FONTS_DIR environment variable\n");
+            return false;
+          }
         }
         else if (arg[0] != '-')
         {

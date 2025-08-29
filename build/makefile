@@ -19,12 +19,14 @@ define BUILD_INSTALL
 	${MAKE} -C targets/$1 install
 endef
 
-# This macro defines the BUILD_ON process.
-# It first checks if the CLEAN variable is defined.
-# If CLEAN is defined, it calls the CLEAN_AND_RECONFIGURE function with the given argument ($1).
-# Regardless of the CLEAN variable, it then calls the BUILD_INSTALL function with the given argument ($1).
+# This macro defines the `BUILD_ON` process.
+#
+# It first checks if the `CLEAN` variable is defined or if the target directory does not exist.
+# If `CLEAN` is defined or target directory not exists, it calls the `CLEAN_AND_RECONFIGURE` function with the given 
+# argument ($1).
+# Regardless of the `CLEAN` variable, it then calls the BUILD_INSTALL function with the given argument ($1).
 define BUILD_ON
-	@if [ "$(CLEAN)" = "yes" ]; then \
+	@if [ "$(CLEAN)" = "yes" ] || [ ! -d "targets/$1" ]; then \
 		$(call CLEAN_AND_RECONFIGURE,$1); \
 	fi
 	$(call BUILD_INSTALL,$1)

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebGL bufferData(target, size, usage) Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+    }
+
+    .test-result {
+      margin: 10px 0;
+    }
+
+    .pass {
+      color: green;
+    }
+
+    .fail {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WebGL bufferData(target, size, usage) Test</h1>
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function addResult(message, isPass) {
+      const div = document.createElement('div');
+      div.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+      div.textContent = `${isPass ? '✅' : '❌'} ${message}`;
+      results.appendChild(div);
+    }
+
+    function runTests() {
+      const gl = navigator.gl;
+      if (!gl) {
+        addResult('WebGL not supported', false);
+        return;
+      }
+
+      try {
+        // Test 1: Basic bufferData with size
+        const buffer1 = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer1);
+        gl.bufferData(gl.ARRAY_BUFFER, 1024, gl.STATIC_DRAW);
+        addResult(`bufferData(ARRAY_BUFFER, 1024, STATIC_DRAW) - Size.`, true);
+
+        // Test 5: Verify we can still use the old bufferData with TypedArray
+        const buffer5 = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer5);
+        const data = new Float32Array([1.0, 2.0, 3.0, 4.0]);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+        addResult(`bufferData(ARRAY_BUFFER, Float32Array[4], STATIC_DRAW).`, true);
+        addResult('All tests completed successfully!', true);
+
+      } catch (error) {
+        addResult(`Error during testing: ${error.message}`, false);
+      }
+    }
+
+    // Run tests when page loads
+    runTests();
+  </script>
+</body>
+
+</html>

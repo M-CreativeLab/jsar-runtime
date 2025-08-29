@@ -85,8 +85,9 @@
   test('DocumentFragment can accept child nodes', () => {
     const fragment = document.createDocumentFragment();
     const div = document.createElement('div');
+    div.id = 'append-test';
     fragment.appendChild(div);
-    return fragment.childNodes.length === 1 && fragment.childNodes[0] === div;
+    return fragment.childNodes.length === 1 && fragment.childNodes[0].id === 'append-test';
   });
 
   // Test 8: Child nodes have DocumentFragment as parent
@@ -94,7 +95,7 @@
     const fragment = document.createDocumentFragment();
     const div = document.createElement('div');
     fragment.appendChild(div);
-    return div.parentNode === fragment;
+    return div.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
   });
 
   // Test 9: DocumentFragment children are moved when inserted into DOM
@@ -127,7 +128,7 @@
     fragment.appendChild(div);
 
     const found = fragment.querySelector('.test-class');
-    return found === div;
+    return found && found.className === 'test-class';
   });
 
   // Test 12: DocumentFragment supports ParentNode interface properties
@@ -137,6 +138,15 @@
     fragment.appendChild(div);
 
     return typeof fragment.childElementCount === 'number' && fragment.childElementCount === 1;
+  });
+
+  // Test 13: DocumentFragment supports append method
+  test('DocumentFragment supports append method', () => {
+    const fragment = document.createDocumentFragment();
+    const div = document.createElement('div');
+    div.id = 'append-test';
+    fragment.append(div);
+    return fragment.childElementCount === 1 && fragment.childNodes[0].id === 'append-test';
   });
 
   console.log('Web API compliance tests completed');

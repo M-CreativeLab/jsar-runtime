@@ -620,20 +620,18 @@ namespace webgl
       return env.Undefined();
     }
 
-    /**
-     * TODO: support bufferData() with size
-     */
-    if (info[1].IsNumber())
-    {
-      Napi::TypeError::New(env, "bufferData(target, size, usage) is not supported yet.")
-        .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     auto targetInt = info[0].As<Napi::Number>().Int32Value();
     auto target = static_cast<client_graphics::WebGLBufferBindingTarget>(targetInt);
     auto usageInt = info[2].As<Napi::Number>().Int32Value();
     auto usage = static_cast<client_graphics::WebGLBufferUsage>(usageInt);
+
+    // Handle bufferData(target, size, usage) - allocate buffer with given size
+    if (info[1].IsNumber())
+    {
+      auto size = info[1].As<Napi::Number>().Int64Value();
+      glContext_->bufferData(target, size, usage);
+      return env.Undefined();
+    }
 
     auto jsBuffer = info[1];
     void *bufferData = nullptr;

@@ -25,6 +25,12 @@ namespace dombinding
     Napi::Value FirstElementChildGetter(const Napi::CallbackInfo &info);
     Napi::Value LastElementChildGetter(const Napi::CallbackInfo &info);
 
+    // New ParentNode interface methods
+    Napi::Value QuerySelector(const Napi::CallbackInfo &info);
+    Napi::Value QuerySelectorAll(const Napi::CallbackInfo &info);
+    Napi::Value Append(const Napi::CallbackInfo &info);
+    Napi::Value Prepend(const Napi::CallbackInfo &info);
+
   private:
     static thread_local Napi::FunctionReference *constructor;
   };

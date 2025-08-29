@@ -76,6 +76,21 @@ namespace dom
 
   public:
     /**
+     * Check if the script is ready to execute (compiled and not yet executed).
+     * Used by the BrowsingContext execution queue.
+     */
+    bool isReadyToExecute() const;
+
+    /**
+     * Execute the script from the execution queue.
+     * This bypasses the normal execution checks since the queue manages ordering.
+     * 
+     * @returns Whether the script was executed.
+     */
+    bool executeScriptFromQueue();
+
+  public:
+    /**
      * A boolean value that controls how the script should be executed. For classic scripts, if the async property is set to true, the external
      * script will be fetched in parallel to parsing and evaluated as soon as it is available. For module scripts, if the async property is set
      * to true, the script and all their dependencies will be fetched in parallel to parsing and evaluated as soon as they are available.
@@ -115,5 +130,9 @@ namespace dom
     bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
     bool scriptExecutionScheduled = false;
+
+    // Whether the script uses the execution queue
+    bool usesExecutionQueue = false;
+    size_t scriptExecutionId = 0;
   };
 }
