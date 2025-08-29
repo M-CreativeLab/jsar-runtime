@@ -2,11 +2,13 @@
 
 #include <string>
 #include <memory>
-#include <crates/jsbindings/bindings.hpp>
+#include <crates/bindings.hpp>
+#include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/selectors/css_selector_parser.hpp>
+#include <client/cssom/selectors/matching.hpp>
+#include <client/html/html_element.hpp>
 
 #include "./css_grouping_rule.hpp"
-#include "../css_style_declaration.hpp"
-#include "../selectors/css_selector_parser.hpp"
 
 namespace client_cssom::rules
 {

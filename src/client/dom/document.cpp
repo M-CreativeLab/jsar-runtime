@@ -308,6 +308,7 @@ namespace dom
 
   shared_ptr<Element> Document::querySelector(const string &selectors)
   {
+    // TODO(yorkie): use C++ selectors?
     auto s = crates::css2::parsing::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);

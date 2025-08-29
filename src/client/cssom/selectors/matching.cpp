@@ -43,14 +43,14 @@ namespace client_cssom::selectors
         return element->isHovered();
       if (component.isFocus())
         return element->isFocused();
-      if (component.isActive())
-        return element->isActive();
+      // if (component.isActive())
+      //   return element->isActive();
     }
 
-    if (component.isRoot())
-      return element->isRootElement();
-    if (component.isEmpty())
-      return element->isEmpty();
+    // if (component.isRoot())
+    //   return element->isRootElement();
+    // if (component.isEmpty())
+    //   return element->isEmpty();
 
     // Returns false if the above checks did not match.
     return false;
