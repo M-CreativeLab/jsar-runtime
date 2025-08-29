@@ -275,4 +275,75 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     hasNoValue = !result.has_value() || result->size() == 0;
     REQUIRE(hasNoValue);
   }
+
+  SECTION("Parse :where() functional pseudo-class")
+  {
+    // Test simple :where() with single selector
+    auto result = CSSelectorParser::parseSelectors(":where(div)");
+    REQUIRE(result.has_value());
+
+    const auto &selectorList = result.value();
+    REQUIRE(selectorList.size() == 1);
+
+    const auto &selector = selectorList.selectors()[0];
+    REQUIRE(selector.size() == 1);
+
+    const auto &component = selector.components()[0];
+    REQUIRE(component.isPseudoClass());
+    REQUIRE(component.isWhere());
+    REQUIRE(component.argumentSelectorList() != nullptr);
+
+    // Check the argument selector list contains "div"
+    const auto &argSelectors = component.argumentSelectorList();
+    REQUIRE(argSelectors->size() == 1);
+    const auto &argSelector = argSelectors->selectors()[0];
+    REQUIRE(argSelector.size() == 1);
+    REQUIRE(argSelector.components()[0].isLocalName());
+    REQUIRE(argSelector.components()[0].name() == "div");
+
+    // Test :where() with multiple selectors
+    result = CSSelectorParser::parseSelectors(":where(h1, h2, h3)");
+    REQUIRE(result.has_value());
+
+    const auto &multiSelector = result.value().selectors()[0];
+    REQUIRE(multiSelector.size() == 1);
+    REQUIRE(multiSelector.components()[0].isWhere());
+
+    const auto &multiArgSelectors = multiSelector.components()[0].argumentSelectorList();
+    REQUIRE(multiArgSelectors->size() == 3);
+    REQUIRE(multiArgSelectors->selectors()[0].components()[0].name() == "h1");
+    REQUIRE(multiArgSelectors->selectors()[1].components()[0].name() == "h2");
+    REQUIRE(multiArgSelectors->selectors()[2].components()[0].name() == "h3");
+
+    // Test :where() with complex selectors
+    result = CSSelectorParser::parseSelectors(":where(.foo, #bar) span");
+    REQUIRE(result.has_value());
+
+    const auto &complexSelector = result.value().selectors()[0];
+    REQUIRE(complexSelector.size() == 3); // :where(...) + combinator + span
+
+    REQUIRE(complexSelector.components()[0].isWhere());
+    REQUIRE(complexSelector.components()[1].isCombinator());
+    REQUIRE(complexSelector.components()[2].isLocalName());
+    REQUIRE(complexSelector.components()[2].name() == "span");
+
+    const auto &complexArgSelectors = complexSelector.components()[0].argumentSelectorList();
+    REQUIRE(complexArgSelectors->size() == 2);
+    REQUIRE(complexArgSelectors->selectors()[0].components()[0].isClass());
+    REQUIRE(complexArgSelectors->selectors()[0].components()[0].className() == "foo");
+    REQUIRE(complexArgSelectors->selectors()[1].components()[0].isId());
+    REQUIRE(complexArgSelectors->selectors()[1].components()[0].id() == "bar");
+  }
+
+  SECTION("Parse :where() string representation")
+  {
+    auto result = CSSelectorParser::parseSelectors(":where(h1, h2)");
+    REQUIRE(result.has_value());
+
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(str.find(":where(") != std::string::npos);
+    REQUIRE(str.find("h1") != std::string::npos);
+    REQUIRE(str.find("h2") != std::string::npos);
+    REQUIRE(str.find(")") != std::string::npos);
+  }
 }

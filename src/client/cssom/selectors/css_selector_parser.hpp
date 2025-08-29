@@ -68,6 +68,7 @@ namespace client_cssom::selectors
     kNthLastOfType,
     kOnlyChild,
     kOnlyOfType,
+    kWhere,
     kUnknown
   };
 
@@ -79,6 +80,9 @@ namespace client_cssom::selectors
   {
   public:
     Component(ComponentType type, const std::string &name = "", Combinator combinator = Combinator::kUnknown, PseudoClassType pseudoClassType = PseudoClassType::kUnknown);
+
+    // Constructor for functional pseudo-classes like :where()
+    Component(ComponentType type, PseudoClassType pseudoClassType, std::shared_ptr<SelectorList> argumentSelectorList);
 
     // Type checking methods
     bool isLocalName() const
@@ -147,6 +151,10 @@ namespace client_cssom::selectors
     {
       return isPseudoClass() && pseudoClassType_ == PseudoClassType::kLastOfType;
     }
+    bool isWhere() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kWhere;
+    }
 
     // Accessors
     ComponentType type() const
@@ -173,6 +181,10 @@ namespace client_cssom::selectors
     {
       return pseudoClassType_;
     }
+    const std::shared_ptr<SelectorList> &argumentSelectorList() const
+    {
+      return argumentSelectorList_;
+    }
 
     // String representation
     operator std::string() const;
@@ -182,6 +194,7 @@ namespace client_cssom::selectors
     std::string name_;
     Combinator combinator_;
     PseudoClassType pseudoClassType_;
+    std::shared_ptr<SelectorList> argumentSelectorList_; // For functional pseudo-classes like :where()
   };
 
   /**
@@ -289,6 +302,7 @@ namespace client_cssom::selectors
     static std::optional<std::vector<Selector>> parseMultipleSelectors(const std::string &text);
     static std::optional<Selector> parseSingleSelector(const std::string &text);
     static std::optional<Component> parseComponent(const std::string &text, size_t &pos);
+    static std::optional<Component> parseFunctionalPseudoClass(const std::string &name, const std::string &text, size_t &pos);
     static std::optional<Combinator> parseCombinator(const std::string &text, size_t &pos);
     static std::optional<PseudoClassType> parsePseudoClass(const std::string &name);
 
