@@ -5,51 +5,111 @@
   <meta charset="utf-8">
   <title>Simple HTML</title>
   <style>
+    :root {
+      --primary-color: #667eea;
+      --secondary-color: #764ba2;
+      --accent-color: #f093fb;
+      --text-primary: #2d3748;
+      --text-secondary: #4a5568;
+      --text-light: #ffffff;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f7fafc;
+      --bg-gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      --bg-accent-gradient: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --border-radius: 12px;
+      --border-radius-lg: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     body {
-      background-color: #fff;
-      font-size: 40px;
-      color: #6d172e;
+      background: var(--bg-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-attachment: fixed;
     }
 
     img.float-image {
-      border-bottom-right-radius: 50px;
+      border-radius: var(--border-radius-lg);
       height: 300px;
+      width: auto;
       transform: translate3d(0, 0, 0);
-      transition: transform 0.3s ease-in-out;
+      transition: var(--transition);
+      box-shadow: var(--shadow-lg);
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.3);
     }
 
     img.float-image:hover {
-      transform: translate3d(0, 0, 35px);
+      transform: translate3d(0, -10px, 35px) scale(1.05);
+      box-shadow: var(--shadow-xl);
+      border-color: rgba(255, 255, 255, 0.6);
     }
 
     #header {
-      font-size: 100px;
-      text-transform: uppercase;
-      color: transparent;
-      font-weight: 1000;
-      padding: 0 20px;
-      margin: 20px;
-      border: 15px solid #e84c1cd8;
-      background-color: #ca8319d8;
+      font-size: clamp(48px, 8vw, 100px);
+      font-weight: 800;
+      text-align: center;
+      margin: 40px 20px;
+      padding: 30px 40px;
+      background: var(--bg-gradient);
+      -webkit-background-clip: text;
       background-clip: text;
-      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
-      background-blend-mode: luminosity;
-      background-origin: content-box;
-      border-radius: 12px;
-      box-sizing: border-box;
+      -webkit-text-fill-color: transparent;
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       transform: translate3d(0, 0, 15px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius-lg);
+      z-index: -1;
+    }
+
+    #header:hover {
+      transform: translate3d(0, -5px, 25px);
+      box-shadow: var(--shadow-xl);
     }
 
     main {
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      margin: 40px 20px;
-      background-color: rgba(224, 172, 150, 0.594);
+      padding: 40px;
+      margin: 40px auto;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: var(--transition);
     }
 
     main:hover {
-      background-color: rgba(224, 172, 150, 0.352);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-5px);
     }
 
     article {
@@ -57,66 +117,119 @@
     }
 
     article p {
-      width: 100%;
-      font-size: 30px;
-      font-weight: normal;
-      padding: 2rem;
-      box-sizing: border-box;
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 24px;
+      padding: 0;
+      color: var(--text-secondary);
     }
 
     article p.primary {
-      color: #0514a2;
-      line-height: 1.5;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 18px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary-color);
+      margin-bottom: 32px;
     }
 
     .sub {
       display: block;
-      width: 95%;
-      margin: 0 auto;
-      font-family: monospace;
-      padding: 20px;
-      background-color: rgba(173, 98, 98, 0.507);
-      border-radius: 10px;
-      color: rgb(255, 255, 255);
-      font-weight: bold;
-      font-size: 50px;
+      width: 90%;
+      max-width: 600px;
+      margin: 30px auto;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      padding: 24px 32px;
+      background: var(--bg-accent-gradient);
+      border-radius: var(--border-radius);
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 20px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
       transform: translate3d(0, 0, 0);
+      transition: var(--transition);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     span.sub:hover {
-      background-color: rgba(173, 98, 98, 0.87);
-      transform: translate3d(0, 0, 20px);
+      background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+      transform: translate3d(0, -8px, 20px);
+      box-shadow: var(--shadow-xl);
+      color: var(--text-light);
     }
 
     #stereo-image {
-      margin: 20px auto;
-      height: 500px;
-      border-radius: 0 20px 20px 0;
+      margin: 40px auto;
+      height: 400px;
+      width: auto;
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+    }
+
+    #stereo-image:hover {
+      transform: scale(1.02);
+      box-shadow: var(--shadow-xl);
     }
 
     #float-area {
       position: absolute;
-      left: 50vw;
-      width: 50vw;
-      transform: translate3d(10vw, 0, 40px);
+      left: 60vw;
+      width: 35vw;
+      transform: translate3d(0, 0, 40px);
+      z-index: 10;
     }
 
     #float-area>p {
-      color: rgba(69, 24, 205, 0.87);
-      font-size: 30px;
+      color: var(--text-light);
+      font-size: 16px;
       text-align: center;
-      background-color: rgba(224, 172, 150, 0.594);
-      padding: 2rem;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-
     #float-area>p:first-of-type {
-      background-color: rgba(134, 55, 20, 0.352);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.8));
+    }
+
+    #float-area>p:nth-of-type(2) {
+      background: linear-gradient(135deg, rgba(240, 147, 251, 0.9), rgba(102, 126, 234, 0.8));
     }
 
     #float-area>p:last-of-type {
-      background-color: rgb(134, 20, 98);
-      color: #fff;
+      background: linear-gradient(135deg, rgba(118, 75, 162, 0.9), rgba(240, 147, 251, 0.8));
+    }
+
+    #float-area>p:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Footer styling */
+    div:last-of-type {
+      text-align: center;
+      padding: 30px;
+      margin-top: 60px;
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
   <script>
@@ -159,7 +272,7 @@
       </p>
     </article>
   </main>
-  <div>Footer</div>
+  <div>✨ Beautiful JSAR Runtime Demo ✨</div>
   <img class="float-image" src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten"
     style="margin-top: 200px;">
 
