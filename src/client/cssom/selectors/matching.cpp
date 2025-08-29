@@ -140,7 +140,7 @@ namespace client_cssom::selectors
   }
 
   bool matchesSelectorComponent(const Selector &selector,
-                                std::vector<Component>::const_iterator &it,
+                                vector<Component>::const_iterator &it,
                                 const shared_ptr<HTMLElement> element,
                                 MatchingContext &context)
   {
@@ -166,7 +166,7 @@ namespace client_cssom::selectors
         else
         {
           const Component &ancestorComponent = *(++it);
-          std::shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
+          shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
           while (true)
           {
             // If we reached the root element, we can stop.

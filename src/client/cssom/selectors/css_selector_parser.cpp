@@ -6,8 +6,10 @@
 
 namespace client_cssom::selectors
 {
+  using namespace std;
+
   // Component implementation
-  Component::Component(ComponentType type, const std::string &name, Combinator combinator, PseudoClassType pseudoClassType)
+  Component::Component(ComponentType type, const string &name, Combinator combinator, PseudoClassType pseudoClassType)
       : type_(type)
       , name_(name)
       , combinator_(combinator)
@@ -15,9 +17,9 @@ namespace client_cssom::selectors
   {
   }
 
-  Component::operator std::string() const
+  Component::operator string() const
   {
-    std::stringstream ss;
+    stringstream ss;
     switch (type_)
     {
     case ComponentType::kLocalName:
@@ -112,14 +114,14 @@ namespace client_cssom::selectors
   }
 
   // Selector implementation
-  Selector::Selector(std::vector<Component> components)
-      : components_(std::move(components))
+  Selector::Selector(vector<Component> components)
+      : components_(move(components))
   {
   }
 
-  Selector::operator std::string() const
+  Selector::operator string() const
   {
-    std::stringstream ss;
+    stringstream ss;
     for (size_t i = 0; i < components_.size(); ++i)
     {
       if (i > 0 && !components_[i].isCombinator())
@@ -130,47 +132,47 @@ namespace client_cssom::selectors
           // This handles cases like "div.class" (no space between tag and class)
         }
       }
-      ss << static_cast<std::string>(components_[i]);
+      ss << static_cast<string>(components_[i]);
     }
     return ss.str();
   }
 
   // SelectorList implementation
-  SelectorList::SelectorList(std::vector<Selector> selectors)
-      : selectors_(std::move(selectors))
+  SelectorList::SelectorList(vector<Selector> selectors)
+      : selectors_(move(selectors))
   {
   }
 
-  SelectorList::operator std::string() const
+  SelectorList::operator string() const
   {
-    std::stringstream ss;
+    stringstream ss;
     for (size_t i = 0; i < selectors_.size(); ++i)
     {
       if (i > 0)
         ss << ", ";
-      ss << static_cast<std::string>(selectors_[i]);
+      ss << static_cast<string>(selectors_[i]);
     }
     return ss.str();
   }
 
   // CSSelectorParser implementation
-  std::optional<SelectorList> CSSelectorParser::parseSelectors(const std::string &selectorText)
+  optional<SelectorList> CSSelectorParser::parseSelectors(const string &selectorText)
   {
     auto selectors = parseMultipleSelectors(selectorText);
     if (!selectors)
-      return std::nullopt;
+      return nullopt;
 
-    return SelectorList(std::move(*selectors));
+    return SelectorList(move(*selectors));
   }
 
-  std::optional<std::vector<Selector>> CSSelectorParser::parseMultipleSelectors(const std::string &text)
+  optional<vector<Selector>> CSSelectorParser::parseMultipleSelectors(const string &text)
   {
-    std::vector<Selector> selectors;
-    std::stringstream ss(text);
-    std::string selectorText;
+    vector<Selector> selectors;
+    stringstream ss(text);
+    string selectorText;
 
     // Split by comma to get individual selectors
-    while (std::getline(ss, selectorText, ','))
+    while (getline(ss, selectorText, ','))
     {
       // Trim whitespace
       selectorText.erase(0, selectorText.find_first_not_of(" \t\n\r"));
@@ -181,17 +183,17 @@ namespace client_cssom::selectors
 
       auto selector = parseSingleSelector(selectorText);
       if (!selector)
-        return std::nullopt;
+        return nullopt;
 
-      selectors.push_back(std::move(*selector));
+      selectors.push_back(move(*selector));
     }
 
     return selectors;
   }
 
-  std::optional<Selector> CSSelectorParser::parseSingleSelector(const std::string &text)
+  optional<Selector> CSSelectorParser::parseSingleSelector(const string &text)
   {
-    std::vector<Component> components;
+    vector<Component> components;
     size_t pos = 0;
 
     while (pos < text.length())
@@ -204,7 +206,7 @@ namespace client_cssom::selectors
       auto component = parseComponent(text, pos);
       if (component)
       {
-        components.push_back(std::move(*component));
+        components.push_back(move(*component));
 
         // After parsing a component, check for combinators
         // Don't skip whitespace here - let parseCombinator handle it
@@ -220,16 +222,16 @@ namespace client_cssom::selectors
       }
 
       // If we can't parse a component, something is wrong
-      return std::nullopt;
+      return nullopt;
     }
 
-    return Selector(std::move(components));
+    return Selector(move(components));
   }
 
-  std::optional<Component> CSSelectorParser::parseComponent(const std::string &text, size_t &pos)
+  optional<Component> CSSelectorParser::parseComponent(const string &text, size_t &pos)
   {
     if (pos >= text.length())
-      return std::nullopt;
+      return nullopt;
 
     char c = text[pos];
 
@@ -239,7 +241,7 @@ namespace client_cssom::selectors
       ++pos;
       auto name = parseIdentifier(text, pos);
       if (name.empty())
-        return std::nullopt;
+        return nullopt;
       return Component(ComponentType::kID, name);
     }
 
@@ -249,7 +251,7 @@ namespace client_cssom::selectors
       ++pos;
       auto name = parseIdentifier(text, pos);
       if (name.empty())
-        return std::nullopt;
+        return nullopt;
       return Component(ComponentType::kClass, name);
     }
 
@@ -268,7 +270,7 @@ namespace client_cssom::selectors
 
       auto name = parseIdentifier(text, pos);
       if (name.empty())
-        return std::nullopt;
+        return nullopt;
 
       if (isPseudoElement)
       {
@@ -295,24 +297,24 @@ namespace client_cssom::selectors
     {
       auto name = parseIdentifier(text, pos);
       if (name.empty())
-        return std::nullopt;
+        return nullopt;
       return Component(ComponentType::kLocalName, name);
     }
 
-    return std::nullopt;
+    return nullopt;
   }
 
-  std::optional<Combinator> CSSelectorParser::parseCombinator(const std::string &text, size_t &pos)
+  optional<Combinator> CSSelectorParser::parseCombinator(const string &text, size_t &pos)
   {
     if (pos >= text.length())
-      return std::nullopt;
+      return nullopt;
 
     // Skip any leading whitespace to handle cases like "div > p"
     size_t originalPos = pos;
     skipWhitespace(text, pos);
 
     if (pos >= text.length())
-      return std::nullopt;
+      return nullopt;
 
     char c = text[pos];
 
@@ -346,10 +348,10 @@ namespace client_cssom::selectors
 
     // Restore position if we didn't find any combinator
     pos = originalPos;
-    return std::nullopt;
+    return nullopt;
   }
 
-  std::optional<PseudoClassType> CSSelectorParser::parsePseudoClass(const std::string &name)
+  optional<PseudoClassType> CSSelectorParser::parsePseudoClass(const string &name)
   {
     if (name == "hover")
       return PseudoClassType::kHover;
@@ -374,18 +376,18 @@ namespace client_cssom::selectors
     if (name == "only-of-type")
       return PseudoClassType::kOnlyOfType;
 
-    return std::nullopt;
+    return nullopt;
   }
 
-  void CSSelectorParser::skipWhitespace(const std::string &text, size_t &pos)
+  void CSSelectorParser::skipWhitespace(const string &text, size_t &pos)
   {
-    while (pos < text.length() && std::isspace(text[pos]))
+    while (pos < text.length() && isspace(text[pos]))
       ++pos;
   }
 
-  std::string CSSelectorParser::parseIdentifier(const std::string &text, size_t &pos)
+  string CSSelectorParser::parseIdentifier(const string &text, size_t &pos)
   {
-    std::string result;
+    string result;
 
     if (pos >= text.length() || !isIdentifierStart(text[pos]))
       return result;
@@ -401,11 +403,11 @@ namespace client_cssom::selectors
 
   bool CSSelectorParser::isIdentifierStart(char c)
   {
-    return std::isalpha(c) || c == '_' || c == '-';
+    return isalpha(c) || c == '_' || c == '-';
   }
 
   bool CSSelectorParser::isIdentifierChar(char c)
   {
-    return std::isalnum(c) || c == '_' || c == '-';
+    return isalnum(c) || c == '_' || c == '-';
   }
 }
