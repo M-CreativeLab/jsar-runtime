@@ -20,11 +20,9 @@ namespace client_cssom::rules
   public:
     CSSStyleRule(crates::css2::stylesheets::StyleRule &inner)
         : CSSGroupingRule()
-        , style_(inner.takeBlock())
         , selectorText_(inner.selectorsText())
+        , style_(inner.takeBlock())
     {
-      // TODO(yorkie): use C++ css parser to parse from `inner.selectorsText()` instead of current parser from Rust.
-      // RESOLVED: Now using C++ CSS parser instead of Rust parser
       auto parsed = selectors::CSSelectorParser::parseSelectors(selectorText_);
       if (parsed)
       {
@@ -60,8 +58,8 @@ namespace client_cssom::rules
     }
 
   private:
+    std::string selectorText_;
     selectors::SelectorList selectors_; // Native C++ selectors (replaces Rust selectors)
     CSSStyleDeclaration style_;
-    std::string selectorText_;
   };
 }
