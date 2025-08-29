@@ -131,6 +131,22 @@ namespace client_cssom::selectors
     {
       return isPseudoClass() && pseudoClassType_ == PseudoClassType::kFocus;
     }
+    bool isFirstChild() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kFirstChild;
+    }
+    bool isLastChild() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kLastChild;
+    }
+    bool isFirstOfType() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kFirstOfType;
+    }
+    bool isLastOfType() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kLastOfType;
+    }
 
     // Accessors
     ComponentType type() const

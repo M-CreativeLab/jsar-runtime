@@ -6,6 +6,63 @@ namespace client_cssom::selectors
   using namespace std;
   using namespace dom;
 
+  // Helper functions for pseudo-class matching
+  bool isFirstChild(const shared_ptr<HTMLElement> element)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    auto firstChild = parent->firstChild();
+    return firstChild && firstChild == element;
+  }
+
+  bool isLastChild(const shared_ptr<HTMLElement> element)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    auto lastChild = parent->lastChild();
+    return lastChild && lastChild == element;
+  }
+
+  bool isFirstOfType(const shared_ptr<HTMLElement> element)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    // Check all previous siblings to see if any have the same tag name
+    auto currentSibling = element->previousSibling();
+    while (currentSibling)
+    {
+      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+        return false; // Found a sibling of the same type before this element
+      currentSibling = currentSibling->previousSibling();
+    }
+    return true;
+  }
+
+  bool isLastOfType(const shared_ptr<HTMLElement> element)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    // Check all next siblings to see if any have the same tag name
+    auto currentSibling = element->nextSibling();
+    while (currentSibling)
+    {
+      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+        return false; // Found a sibling of the same type after this element
+      currentSibling = currentSibling->nextSibling();
+    }
+    return true;
+  }
+
   bool matchesSelectorList(const SelectorList &selectors, const shared_ptr<HTMLElement> element)
   {
     MatchingContext context;
@@ -45,6 +102,14 @@ namespace client_cssom::selectors
         return element->isHovered();
       if (component.isFocus())
         return element->isFocused();
+      if (component.isFirstChild())
+        return isFirstChild(element);
+      if (component.isLastChild())
+        return isLastChild(element);
+      if (component.isFirstOfType())
+        return isFirstOfType(element);
+      if (component.isLastOfType())
+        return isLastOfType(element);
       // if (component.isActive())
       //   return element->isActive();
     }
