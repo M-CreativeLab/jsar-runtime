@@ -207,7 +207,7 @@ namespace client_cssom::selectors
         components.push_back(std::move(*component));
 
         // After parsing a component, check for combinators
-        skipWhitespace(text, pos);
+        // Don't skip whitespace here - let parseCombinator handle it
         if (pos < text.length())
         {
           auto combinator = parseCombinator(text, pos);
@@ -307,6 +307,13 @@ namespace client_cssom::selectors
     if (pos >= text.length())
       return std::nullopt;
 
+    // Skip any leading whitespace to handle cases like "div > p"
+    size_t originalPos = pos;
+    skipWhitespace(text, pos);
+
+    if (pos >= text.length())
+      return std::nullopt;
+
     char c = text[pos];
 
     switch (c)
@@ -325,24 +332,20 @@ namespace client_cssom::selectors
       return Combinator::kLaterSibling;
     }
 
-    // Check for descendant combinator (whitespace followed by a selector component)
-    if (std::isspace(c))
+    // Check for descendant combinator (whitespace that was skipped above)
+    if (originalPos != pos)
     {
-      size_t originalPos = pos;
-      skipWhitespace(text, pos);
-
-      // If there's content after whitespace and it's not another combinator
-      if (pos < text.length() && text[pos] != '>' && text[pos] != '+' && text[pos] != '~')
+      // We skipped whitespace but didn't find an explicit combinator
+      // This means it's a descendant combinator
+      // Make sure there's content after the whitespace
+      if (pos < text.length())
       {
         return Combinator::kDescendant;
       }
-      else
-      {
-        // Restore position if we didn't find a descendant combinator
-        pos = originalPos;
-      }
     }
 
+    // Restore position if we didn't find any combinator
+    pos = originalPos;
     return std::nullopt;
   }
 
