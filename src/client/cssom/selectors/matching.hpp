@@ -58,4 +58,16 @@ namespace client_cssom::selectors
   bool matchesSelectorComponentNonCombinator(const Component &component,
                                              const std::shared_ptr<dom::HTMLElement> element,
                                              MatchingContext &context);
+
+  /**
+   * Match selector starting from the end (right-to-left matching).
+   *
+   * @param selector The CSS selector.
+   * @param element The element to check.
+   * @param context The matching context.
+   * @returns Whether the element matches the selector.
+   */
+  bool matchesSelectorFromEnd(const Selector &selector,
+                              const std::shared_ptr<dom::HTMLElement> element,
+                              MatchingContext &context);
 }

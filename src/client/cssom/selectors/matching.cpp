@@ -20,8 +20,10 @@ namespace client_cssom::selectors
   bool matchesSelector(const Selector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
   {
     assert(!selector.empty());
-    auto it = selector.components().begin();
-    return matchesSelectorComponent(selector, it, element, context);
+
+    // CSS selectors are matched right-to-left, so we need to start from the end
+    // and work backwards through the components
+    return matchesSelectorFromEnd(selector, element, context);
   }
 
   bool matchesSelectorComponentNonCombinator(const Component &component,
@@ -54,6 +56,85 @@ namespace client_cssom::selectors
 
     // Returns false if the above checks did not match.
     return false;
+  }
+
+  bool matchesSelectorFromEnd(const Selector &selector,
+                              const shared_ptr<HTMLElement> element,
+                              MatchingContext &context)
+  {
+    const auto &components = selector.components();
+    if (components.empty())
+      return false;
+
+    // Start from the end (rightmost component) and work backwards
+    int currentPos = components.size() - 1;
+    shared_ptr<HTMLElement> currentElement = element;
+
+    while (currentPos >= 0)
+    {
+      const auto &component = components[currentPos];
+
+      if (component.isCombinator())
+      {
+        // Move to the next element based on combinator type
+        switch (component.combinator())
+        {
+        case Combinator::kChild:
+          // Child combinator: element must be direct child
+          if (!currentElement->hasTypedParentNode<HTMLElement>())
+            return false;
+          currentElement = currentElement->getParentNodeAs<HTMLElement>();
+          break;
+
+        case Combinator::kDescendant:
+          // Descendant combinator: find an ancestor that matches next component
+          if (!currentElement->hasTypedParentNode<HTMLElement>())
+            return false;
+
+          // Get the next component (to the left) that we need to match
+          if (currentPos == 0)
+            return false; // No component to match
+
+          const auto &ancestorComponent = components[currentPos - 1];
+          shared_ptr<HTMLElement> ancestor = currentElement->getParentNodeAs<HTMLElement>();
+
+          // Search up the ancestor chain
+          while (ancestor != nullptr)
+          {
+            if (matchesSelectorComponentNonCombinator(ancestorComponent, ancestor, context))
+            {
+              currentElement = ancestor;
+              currentPos--; // Skip the ancestor component since we matched it
+              break;
+            }
+            ancestor = ancestor->getParentNodeAs<HTMLElement>();
+          }
+
+          if (ancestor == nullptr)
+            return false; // No matching ancestor found
+          break;
+
+        case Combinator::kNextSibling:
+        case Combinator::kLaterSibling:
+        case Combinator::kPseudoElement:
+        case Combinator::kSlotAssignment:
+        case Combinator::kPart:
+        case Combinator::kUnknown:
+          // TODO: Implement these combinators
+          return false;
+        }
+      }
+      else
+      {
+        // Non-combinator component - check if current element matches
+        if (!matchesSelectorComponentNonCombinator(component, currentElement, context))
+          return false;
+      }
+
+      currentPos--;
+    }
+
+    return true; // All components matched
   }
 
   bool matchesSelectorComponent(const Selector &selector,
