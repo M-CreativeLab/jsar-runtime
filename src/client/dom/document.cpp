@@ -12,6 +12,7 @@
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
 #include "../cssom/selectors/matching.hpp"
+#include "../cssom/selectors/css_selector_parser.hpp"
 
 namespace dom
 {
@@ -308,8 +309,7 @@ namespace dom
 
   shared_ptr<Element> Document::querySelector(const string &selectors)
   {
-    // TODO(yorkie): use C++ selectors?
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
@@ -326,7 +326,7 @@ namespace dom
 
   NodeList<Element> Document::querySelectorAll(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
