@@ -441,11 +441,12 @@ namespace client_cssom::selectors
     string selectorListText = text.substr(startPos, endPos - 1 - startPos);
 
     // Parse the selector list
-    auto argumentSelectorList = parseSelectors(selectorListText);
-    if (!argumentSelectorList)
+    auto argumentSelectors = parseMultipleSelectors(selectorListText);
+    if (!argumentSelectors)
       return nullopt;
 
-    auto selectorListPtr = make_shared<SelectorList>(move(*argumentSelectorList));
+    // Create shared_ptr directly
+    auto selectorListPtr = make_shared<SelectorList>(*argumentSelectors);
 
     // Update position to after the closing parenthesis
     pos = endPos;

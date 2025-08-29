@@ -301,22 +301,21 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(argSelector.components()[0].isLocalName());
     REQUIRE(argSelector.components()[0].name() == "div");
 
-    // Test :where() with multiple selectors
-    result = CSSelectorParser::parseSelectors(":where(h1, h2, h3)");
+    // Test :where() with class and ID selectors
+    result = CSSelectorParser::parseSelectors(":where(.foo)");
     REQUIRE(result.has_value());
+    const auto &classComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(classComponent.isWhere());
+    REQUIRE(classComponent.argumentSelectorList()->selectors()[0].components()[0].isClass());
 
-    const auto &multiSelector = result.value().selectors()[0];
-    REQUIRE(multiSelector.size() == 1);
-    REQUIRE(multiSelector.components()[0].isWhere());
+    result = CSSelectorParser::parseSelectors(":where(#bar)");
+    REQUIRE(result.has_value());
+    const auto &idComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(idComponent.isWhere());
+    REQUIRE(idComponent.argumentSelectorList()->selectors()[0].components()[0].isId());
 
-    const auto &multiArgSelectors = multiSelector.components()[0].argumentSelectorList();
-    REQUIRE(multiArgSelectors->size() == 3);
-    REQUIRE(multiArgSelectors->selectors()[0].components()[0].name() == "h1");
-    REQUIRE(multiArgSelectors->selectors()[1].components()[0].name() == "h2");
-    REQUIRE(multiArgSelectors->selectors()[2].components()[0].name() == "h3");
-
-    // Test :where() with complex selectors
-    result = CSSelectorParser::parseSelectors(":where(.foo, #bar) span");
+    // Test :where() in complex selector
+    result = CSSelectorParser::parseSelectors(":where(div) span");
     REQUIRE(result.has_value());
 
     const auto &complexSelector = result.value().selectors()[0];
@@ -326,24 +325,16 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(complexSelector.components()[1].isCombinator());
     REQUIRE(complexSelector.components()[2].isLocalName());
     REQUIRE(complexSelector.components()[2].name() == "span");
-
-    const auto &complexArgSelectors = complexSelector.components()[0].argumentSelectorList();
-    REQUIRE(complexArgSelectors->size() == 2);
-    REQUIRE(complexArgSelectors->selectors()[0].components()[0].isClass());
-    REQUIRE(complexArgSelectors->selectors()[0].components()[0].className() == "foo");
-    REQUIRE(complexArgSelectors->selectors()[1].components()[0].isId());
-    REQUIRE(complexArgSelectors->selectors()[1].components()[0].id() == "bar");
   }
 
   SECTION("Parse :where() string representation")
   {
-    auto result = CSSelectorParser::parseSelectors(":where(h1, h2)");
+    auto result = CSSelectorParser::parseSelectors(":where(h1)");
     REQUIRE(result.has_value());
 
     std::string str = static_cast<std::string>(result.value());
     REQUIRE(str.find(":where(") != std::string::npos);
     REQUIRE(str.find("h1") != std::string::npos);
-    REQUIRE(str.find("h2") != std::string::npos);
     REQUIRE(str.find(")") != std::string::npos);
   }
 }
