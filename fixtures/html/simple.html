@@ -109,15 +109,15 @@
       padding: 2rem;
     }
 
-    #float-area>p.first {
+    #float-area>p:first-of-type {
       background-color: rgba(134, 55, 20, 0.352);
     }
+
+    #float-area>p:last-of-type {
+      background-color: rgb(134, 20, 98);
+      color: #fff;
+    }
   </style>
-  <script>
-    console.log('Hello, world!');
-    const html = document.firstChild;
-    console.log(html);
-  </script>
   <script src="./simple.js"></script>
 </head>
 
@@ -128,8 +128,9 @@
   <img id="stereo-image" src="./images/sbs-example2.png" spatial="stereo">
   <main>
     <div id="float-area">
-      <p class="first">This is an absolutely positioned div 1</p>
+      <p>This is an absolutely positioned div 1</p>
       <p>This is an absolutely positioned div 2</p>
+      <p>This is an absolutely positioned div 3</p>
     </div>
     <article>
       <p class="primary first">
