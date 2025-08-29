@@ -1,8 +1,8 @@
-#include "css_selector_parser.hpp"
 #include <algorithm>
 #include <sstream>
 #include <cctype>
 #include <regex>
+#include "./css_selector_parser.hpp"
 
 namespace client_cssom::selectors
 {
