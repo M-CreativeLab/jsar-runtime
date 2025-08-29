@@ -185,6 +185,21 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(emptySelector.components()[1].isEmpty());
   }
 
+  SECTION("Parse standalone :root selector")
+  {
+    auto result = CSSelectorParser::parseSelectors(":root");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 1);
+    REQUIRE(selector.components()[0].isRoot());
+    REQUIRE(selector.components()[0].type() == ComponentType::kRoot);
+    
+    // Verify string representation includes :root
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(!str.empty());
+  }
+
   SECTION("Parse pseudo-elements")
   {
     auto result = CSSelectorParser::parseSelectors("p::before");

@@ -7,6 +7,20 @@ namespace client_cssom::selectors
   using namespace dom;
 
   // Helper functions for pseudo-class matching
+  bool isRootElement(const shared_ptr<HTMLElement> element)
+  {
+    try
+    {
+      const auto &document = element->getOwnerDocumentChecked();
+      auto documentElement = document.documentElement();
+      return documentElement && documentElement == element;
+    }
+    catch (...)
+    {
+      return false;
+    }
+  }
+
   bool isFirstChild(const shared_ptr<HTMLElement> element)
   {
     auto parent = element->getParentNode();
@@ -113,8 +127,8 @@ namespace client_cssom::selectors
       // TODO: Implement support for :active pseudo-class when element->isActive() is available.
     }
 
-    // if (component.isRoot())
-    //   return element->isRootElement();
+    if (component.isRoot())
+      return isRootElement(element);
     // if (component.isEmpty())
     //   return element->isEmpty();
 
