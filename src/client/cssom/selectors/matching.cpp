@@ -95,23 +95,25 @@ namespace client_cssom::selectors
           if (currentPos == 0)
             return false; // No component to match
 
-          const auto &ancestorComponent = components[currentPos - 1];
-          shared_ptr<HTMLElement> ancestor = currentElement->getParentNodeAs<HTMLElement>();
-
-          // Search up the ancestor chain
-          while (ancestor != nullptr)
           {
-            if (matchesSelectorComponentNonCombinator(ancestorComponent, ancestor, context))
-            {
-              currentElement = ancestor;
-              currentPos--; // Skip the ancestor component since we matched it
-              break;
-            }
-            ancestor = ancestor->getParentNodeAs<HTMLElement>();
-          }
+            const auto &ancestorComponent = components[currentPos - 1];
+            shared_ptr<HTMLElement> ancestor = currentElement->getParentNodeAs<HTMLElement>();
 
-          if (ancestor == nullptr)
-            return false; // No matching ancestor found
+            // Search up the ancestor chain
+            while (ancestor != nullptr)
+            {
+              if (matchesSelectorComponentNonCombinator(ancestorComponent, ancestor, context))
+              {
+                currentElement = ancestor;
+                currentPos--; // Skip the ancestor component since we matched it
+                break;
+              }
+              ancestor = ancestor->getParentNodeAs<HTMLElement>();
+            }
+
+            if (ancestor == nullptr)
+              return false; // No matching ancestor found
+          }
           break;
 
         case Combinator::kNextSibling:
