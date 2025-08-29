@@ -1,8 +1,10 @@
 #include <iostream>
+#include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/html/html_meta_element.hpp>
-#include <crates/bindings.hpp>
+#include <client/cssom/selectors/css_selector_parser.hpp>
+#include <client/cssom/selectors/matching.hpp>
 
 #include "./node_list-inl.hpp"
 #include "./element.hpp"
@@ -11,8 +13,6 @@
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
-#include "../cssom/selectors/matching.hpp"
-#include "../cssom/selectors/css_selector_parser.hpp"
 
 namespace dom
 {
