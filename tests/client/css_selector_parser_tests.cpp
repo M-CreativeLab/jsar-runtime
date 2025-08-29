@@ -200,6 +200,27 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(!str.empty());
   }
 
+  SECTION("Parse complex selectors with :root")
+  {
+    // Test :root with class selector
+    auto result = CSSelectorParser::parseSelectors(":root.theme-dark");
+    REQUIRE(result.has_value());
+    
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 2);
+    REQUIRE(selector.components()[0].isRoot());
+    REQUIRE(selector.components()[1].isClass());
+    REQUIRE(selector.components()[1].className() == "theme-dark");
+
+    // Test multiple selectors including :root
+    result = CSSelectorParser::parseSelectors(":root, body, html");
+    REQUIRE(result.has_value());
+    REQUIRE(result.value().size() == 3);
+    REQUIRE(result.value().selectors()[0].components()[0].isRoot());
+    REQUIRE(result.value().selectors()[1].components()[0].name() == "body");
+    REQUIRE(result.value().selectors()[2].components()[0].name() == "html");
+  }
+
   SECTION("Parse pseudo-elements")
   {
     auto result = CSSelectorParser::parseSelectors("p::before");
