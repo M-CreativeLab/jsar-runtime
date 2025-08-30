@@ -252,7 +252,7 @@ namespace browser
      * @param pseudoElt The optional pseudo-element to create the computed style for.
      * @param writeCache Whether to write the computed style to the cache.
      *
-     * @return A unique pointer to the created computed style.
+     * @return A shared pointer to the created computed style.
      */
     const std::shared_ptr<client_cssom::ComputedStyle>
     createComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,

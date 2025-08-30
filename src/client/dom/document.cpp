@@ -672,7 +672,6 @@ namespace dom
   {
     styleCache().invalidateCache();
     dirty_root_text_or_element_ = documentElement();
-    std::cout << "Document cache invalidated" << std::endl;
   }
 
   std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const
