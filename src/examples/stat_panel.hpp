@@ -19,12 +19,20 @@
 
 #include "./window_ctx.hpp"
 
+// Forward declaration to avoid circular dependency
+namespace jsar::example
+{
+  class ScreenComponent;
+}
+
+#include "./screen_renderer.hpp"
+
 namespace jsar::example
 {
   /**
    * The panel for rendering scene stats.
    */
-  class StatPanel
+  class StatPanel : public ScreenComponent
   {
     const char *panelVertSource =
       "#version 410 core\n"
@@ -144,7 +152,7 @@ namespace jsar::example
     }
 
   public:
-    void render()
+    void render() override
     {
       auto drawingViewport = windowCtx->drawingViewport();
       glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
