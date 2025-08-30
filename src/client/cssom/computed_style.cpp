@@ -41,20 +41,6 @@ namespace client_cssom
     return ComputedStyle(style, values::computed::Context::From(target_node));
   }
 
-  ComputedStyle ComputedStyle::Make(const CSSStyleDeclaration &style, shared_ptr<dom::Node> target_node, const ComputedStyle *parent_style)
-  {
-    ComputedStyle result(style, values::computed::Context::From(target_node));
-
-    // Set parent context for variable resolution
-    if (parent_style != nullptr)
-    {
-      result.setParentStyleContext(parent_style);
-      result.inheritCustomProperties(*parent_style);
-    }
-
-    return result;
-  }
-
   ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, optional<values::computed::Context> context)
       : map<string, string>()
   {
@@ -261,7 +247,7 @@ namespace client_cssom
     }
 
     // Resolve variables in the value for regular properties
-    string resolvedValue = resolveVariables(value, parent_style_context_);
+    string resolvedValue = resolveVariables(value, context);
 
     // Box model properties
     if (name == "display")
@@ -556,11 +542,6 @@ namespace client_cssom
     }
   }
 
-  void ComputedStyle::setParentStyleContext(const ComputedStyle *parentStyle)
-  {
-    parent_style_context_ = parentStyle;
-  }
-
   bool ComputedStyle::updateCustomProperty(const std::string &name, const std::string &value)
   {
     if (name.length() < 2 || name.substr(0, 2) != "--")
@@ -579,7 +560,7 @@ namespace client_cssom
     return true;
   }
 
-  std::string ComputedStyle::resolveVariables(const std::string &value, const ComputedStyle *parentStyle) const
+  std::string ComputedStyle::resolveVariables(const std::string &value, const values::computed::Context &context) const
   {
     std::string result = value;
     size_t varPos = 0;
@@ -628,20 +609,24 @@ namespace client_cssom
         resolvedValue = getCustomProperty(varName);
       }
       // Then try parent style (inheritance)
-      else if (parentStyle && parentStyle->hasCustomProperty(varName))
-      {
-        resolvedValue = parentStyle->getCustomProperty(varName);
-      }
-      // Use fallback if available
-      else if (!fallback.empty())
-      {
-        resolvedValue = fallback;
-      }
-      // If no resolution possible, keep the var() as-is
       else
       {
-        varPos = endPos + 1;
-        continue;
+        auto inherited_style = context.inheritedStyle();
+        if (inherited_style.has_value() && inherited_style->hasCustomProperty(varName))
+        {
+          resolvedValue = inherited_style->getCustomProperty(varName);
+        }
+        // Use fallback if available
+        else if (!fallback.empty())
+        {
+          resolvedValue = fallback;
+        }
+        // If no resolution possible, keep the var() as-is
+        else
+        {
+          varPos = endPos + 1;
+          continue;
+        }
       }
 
       // Replace the var() function with the resolved value
