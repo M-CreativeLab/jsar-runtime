@@ -18,13 +18,6 @@
 #include <common/font/cache.hpp>
 
 #include "./window_ctx.hpp"
-
-// Forward declaration to avoid circular dependency
-namespace jsar::example
-{
-  class ScreenComponent;
-}
-
 #include "./screen_renderer.hpp"
 
 namespace jsar::example
