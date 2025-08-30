@@ -12,6 +12,7 @@
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
+#include "./variable_reference_tracker.hpp"
 
 namespace client_cssom
 {
@@ -615,8 +616,8 @@ private:                                                \
     // CSS Custom Properties (CSS Variables) support
     std::unordered_map<std::string, std::string> custom_properties_;
 
-    // Variable dependency tracking: maps variable names to properties that use them
-    std::unordered_map<std::string, std::unordered_set<std::string>> variable_dependencies_;
+    // Variable dependency tracking
+    VariableReferenceTracker variable_tracker_;
 
   public:
     /**

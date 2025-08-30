@@ -17,6 +17,7 @@
 #include "./values/specified/transform.hpp"
 #include "./values/specified/background.hpp"
 #include "./parsers/css_variable_parser.hpp"
+#include "./variable_reference_tracker.hpp"
 
 namespace client_cssom
 {
@@ -45,6 +46,18 @@ namespace client_cssom
   ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, optional<values::computed::Context> context)
       : map<string, string>()
   {
+    // Set up variable change callback for recomputation
+    variable_tracker_.setVariableChangeCallback(
+      [this](const std::string &property_name, const std::string &new_value, const values::computed::Context &context)
+      {
+        auto property_it = find(property_name);
+        if (property_it != end())
+        {
+          values::computed::Context mutable_context = context;
+          computeProperty(property_name, property_it->second, mutable_context);
+        }
+      });
+
     update(style, context);
   }
 
@@ -130,10 +143,23 @@ namespace client_cssom
 
     if (other.has_value())
     {
+      // First pass: Set all custom properties
       for (const auto &[propertyName, value] : other.value())
       {
-        setPropertyInternal(propertyName, value);
-        computeProperty(propertyName, value, context);
+        if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
+        {
+          setCustomProperty(propertyName, value);
+        }
+      }
+
+      // Second pass: Process regular properties
+      for (const auto &[propertyName, value] : other.value())
+      {
+        if (!(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
+        {
+          setPropertyInternal(propertyName, value);
+          computeProperty(propertyName, value, context);
+        }
       }
     }
   }
@@ -141,9 +167,21 @@ namespace client_cssom
   size_t ComputedStyle::inheritProperties(const ComputedStyle &other, values::computed::Context &context)
   {
     size_t inherited = 0;
+
+    // First pass: Inherit custom properties
     for (const auto &[propertyName, value] : other)
     {
-      if (IsInheritedProperty(propertyName))
+      if (IsInheritedProperty(propertyName) && propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
+      {
+        setCustomProperty(propertyName, value);
+        inherited += 1;
+      }
+    }
+
+    // Second pass: Inherit regular properties
+    for (const auto &[propertyName, value] : other)
+    {
+      if (IsInheritedProperty(propertyName) && !(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
       {
         auto it = find(propertyName);
         if (it != end())
@@ -195,21 +233,7 @@ namespace client_cssom
       if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
       {
         const auto value = from_style.getPropertyValue(propertyName);
-
-        auto it = find(propertyName);
-        if (it != end())
-        {
-          if (it->second == value)
-            continue;         // No need to update if the value is the same.
-          it->second = value; // Update the existing property.
-        }
-        else
-        {
-          setPropertyInternal(propertyName, value);
-        }
-
-        if (context.has_value())
-          computeProperty(propertyName, value, context.value());
+        setCustomProperty(propertyName, value);
       }
     }
 
@@ -284,14 +308,14 @@ namespace client_cssom
     }
 
     // Clear existing variable dependencies for this property
-    clearVariableDependencies(name);
+    variable_tracker_.clearDependencies(name);
 
     // Track variable dependencies before resolving
     css_variable_parser::CSSVariableParser parser(value);
     auto variableReferences = parser.getVariableReferences();
     for (const auto &varRef : variableReferences)
     {
-      trackVariableDependency(varRef.variable_name, name);
+      variable_tracker_.trackDependency(varRef.variable_name, name);
     }
 
     // Resolve variables in the value for regular properties
@@ -646,39 +670,22 @@ namespace client_cssom
 
   void ComputedStyle::trackVariableDependency(const string &variable_name, const string &property_name)
   {
-    variable_dependencies_[variable_name].insert(property_name);
+    variable_tracker_.trackDependency(variable_name, property_name);
   }
 
   void ComputedStyle::clearVariableDependencies(const string &property_name)
   {
-    // Remove this property from all variable dependency sets
-    for (auto &pair : variable_dependencies_)
-    {
-      pair.second.erase(property_name);
-    }
-
-    // Clean up empty dependency sets
-    for (auto it = variable_dependencies_.begin(); it != variable_dependencies_.end();)
-    {
-      if (it->second.empty())
-      {
-        it = variable_dependencies_.erase(it);
-      }
-      else
-      {
-        ++it;
-      }
-    }
+    variable_tracker_.clearDependencies(property_name);
   }
 
   void ComputedStyle::reResolveVariableDependents(const string &variable_name, const values::computed::Context &context)
   {
-    auto it = variable_dependencies_.find(variable_name);
-    if (it == variable_dependencies_.end())
+    const auto &dependents = variable_tracker_.getDependents(variable_name);
+    if (dependents.empty())
       return; // No dependencies for this variable
 
     // Re-compute all properties that depend on this variable
-    for (const string &property_name : it->second)
+    for (const string &property_name : dependents)
     {
       // Get the original value (with unresolved variables) from the base map
       auto property_it = find(property_name);
