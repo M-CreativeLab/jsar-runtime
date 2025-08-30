@@ -615,6 +615,9 @@ private:                                                \
     // CSS Custom Properties (CSS Variables) support
     std::unordered_map<std::string, std::string> custom_properties_;
 
+    // Variable dependency tracking: maps variable names to properties that use them
+    std::unordered_map<std::string, std::unordered_set<std::string>> variable_dependencies_;
+
   public:
     /**
      * Set a CSS custom property value.
@@ -664,5 +667,29 @@ private:                                                \
      * @returns True if any properties were updated.
      */
     bool updateCustomProperty(const std::string &name, const std::string &value);
+
+  private:
+    /**
+     * Track that a property depends on a variable.
+     *
+     * @param variable_name The name of the CSS variable (with -- prefix).
+     * @param property_name The name of the CSS property that uses this variable.
+     */
+    void trackVariableDependency(const std::string &variable_name, const std::string &property_name);
+
+    /**
+     * Clear variable dependencies for a property.
+     *
+     * @param property_name The name of the CSS property.
+     */
+    void clearVariableDependencies(const std::string &property_name);
+
+    /**
+     * Re-resolve all properties that depend on a given variable.
+     *
+     * @param variable_name The name of the variable that changed.
+     * @param context The computed context for re-resolution.
+     */
+    void reResolveVariableDependents(const std::string &variable_name, const values::computed::Context &context);
   };
 }

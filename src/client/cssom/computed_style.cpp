@@ -183,25 +183,61 @@ namespace client_cssom
     if (from_style.length() == 0)
       return false;
 
+    // Two-pass approach: first process custom properties, then regular properties
+    // This ensures custom properties are available when resolving variables in regular properties
+
+    // First pass: Process all custom properties (CSS variables)
     for (int index = 0; index < from_style.length(); index++)
     {
       const auto propertyName = from_style.item(index);
-      const auto value = from_style.getPropertyValue(propertyName);
 
-      auto it = find(propertyName);
-      if (it != end())
+      // Only process custom properties in the first pass
+      if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
       {
-        if (it->second == value)
-          continue;         // No need to update if the value is the same.
-        it->second = value; // Update the existing property.
-      }
-      else
-      {
-        setPropertyInternal(propertyName, value);
-      }
+        const auto value = from_style.getPropertyValue(propertyName);
 
-      if (context.has_value())
-        computeProperty(propertyName, value, context.value());
+        auto it = find(propertyName);
+        if (it != end())
+        {
+          if (it->second == value)
+            continue;         // No need to update if the value is the same.
+          it->second = value; // Update the existing property.
+        }
+        else
+        {
+          setPropertyInternal(propertyName, value);
+        }
+
+        if (context.has_value())
+          computeProperty(propertyName, value, context.value());
+      }
+    }
+
+    // Second pass: Process all regular properties (non-custom properties)
+    for (int index = 0; index < from_style.length(); index++)
+    {
+      const auto propertyName = from_style.item(index);
+
+      // Only process regular properties in the second pass
+      if (!(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
+      {
+        const auto value = from_style.getPropertyValue(propertyName);
+
+        auto it = find(propertyName);
+        if (it != end())
+        {
+          if (it->second == value)
+            continue;         // No need to update if the value is the same.
+          it->second = value; // Update the existing property.
+        }
+        else
+        {
+          setPropertyInternal(propertyName, value);
+        }
+
+        if (context.has_value())
+          computeProperty(propertyName, value, context.value());
+      }
     }
 
     if (context.has_value())
@@ -245,6 +281,17 @@ namespace client_cssom
     {
       setCustomProperty(name, value);
       return;
+    }
+
+    // Clear existing variable dependencies for this property
+    clearVariableDependencies(name);
+
+    // Track variable dependencies before resolving
+    css_variable_parser::CSSVariableParser parser(value);
+    auto variableReferences = parser.getVariableReferences();
+    for (const auto &varRef : variableReferences)
+    {
+      trackVariableDependency(varRef.variable_name, name);
     }
 
     // Resolve variables in the value for regular properties
@@ -555,8 +602,8 @@ namespace client_cssom
     setCustomProperty(name, value);
 
     // TODO: Re-resolve all properties that depend on this variable
-    // This would require tracking which properties use which variables
-    // For now, this provides the basic infrastructure
+    // Note: This requires a context parameter to be added to this method in the future
+    // For now, this provides the basic infrastructure for tracking dependencies
 
     return true;
   }
@@ -595,5 +642,53 @@ namespace client_cssom
     }
 
     return result;
+  }
+
+  void ComputedStyle::trackVariableDependency(const string &variable_name, const string &property_name)
+  {
+    variable_dependencies_[variable_name].insert(property_name);
+  }
+
+  void ComputedStyle::clearVariableDependencies(const string &property_name)
+  {
+    // Remove this property from all variable dependency sets
+    for (auto &pair : variable_dependencies_)
+    {
+      pair.second.erase(property_name);
+    }
+
+    // Clean up empty dependency sets
+    for (auto it = variable_dependencies_.begin(); it != variable_dependencies_.end();)
+    {
+      if (it->second.empty())
+      {
+        it = variable_dependencies_.erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
+
+  void ComputedStyle::reResolveVariableDependents(const string &variable_name, const values::computed::Context &context)
+  {
+    auto it = variable_dependencies_.find(variable_name);
+    if (it == variable_dependencies_.end())
+      return; // No dependencies for this variable
+
+    // Re-compute all properties that depend on this variable
+    for (const string &property_name : it->second)
+    {
+      // Get the original value (with unresolved variables) from the base map
+      auto property_it = find(property_name);
+      if (property_it != end())
+      {
+        // Re-compute the property with the updated variable value
+        // This creates a mutable copy of the context
+        values::computed::Context mutable_context = context;
+        computeProperty(property_name, property_it->second, mutable_context);
+      }
+    }
   }
 }
