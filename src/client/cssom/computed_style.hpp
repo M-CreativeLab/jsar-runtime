@@ -158,6 +158,9 @@ namespace client_cssom
     // Create a `ComputedStyle` from a `CSSStyleDeclaration` and a target node to create context.
     static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node);
 
+    // Create a `ComputedStyle` with CSS variable inheritance from parent style.
+    static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node, const ComputedStyle *parent_style);
+
   public:
     ComputedStyle() = default;
     ComputedStyle(const ComputedStyle &) = default;
@@ -615,6 +618,9 @@ private:                                                \
     // CSS Custom Properties (CSS Variables) support
     std::unordered_map<std::string, std::string> custom_properties_;
 
+    // Parent style for CSS variable inheritance during computation
+    mutable const ComputedStyle *parent_style_context_ = nullptr;
+
   public:
     /**
      * Set a CSS custom property value.
@@ -655,5 +661,21 @@ private:                                                \
      * @param parentStyle The parent computed style.
      */
     void inheritCustomProperties(const ComputedStyle &parentStyle);
+
+    /**
+     * Set parent style context for variable resolution during computation.
+     *
+     * @param parentStyle The parent computed style.
+     */
+    void setParentStyleContext(const ComputedStyle *parentStyle);
+
+    /**
+     * Update a custom property and trigger re-resolution of dependent properties.
+     *
+     * @param name The custom property name.
+     * @param value The new custom property value.
+     * @returns True if any properties were updated.
+     */
+    bool updateCustomProperty(const std::string &name, const std::string &value);
   };
 }

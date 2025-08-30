@@ -139,6 +139,87 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   }
 }
 
+TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-dom]")
+{
+  SECTION("CSS variable update triggers re-resolution")
+  {
+    ComputedStyle computedStyle;
+    computedStyle.setCustomProperty("--primary-color", "red");
+    
+    // Initial resolution
+    std::string resolved = computedStyle.resolveVariables("var(--primary-color)");
+    REQUIRE(resolved == "red");
+    
+    // Update the variable
+    bool updated = computedStyle.updateCustomProperty("--primary-color", "blue");
+    REQUIRE(updated == true);
+    
+    // Verify new resolution
+    std::string newResolved = computedStyle.resolveVariables("var(--primary-color)");
+    REQUIRE(newResolved == "blue");
+  }
+
+  SECTION("CSS variable inheritance chain")
+  {
+    // Root style with variables
+    ComputedStyle rootStyle;
+    rootStyle.setCustomProperty("--theme-color", "green");
+    rootStyle.setCustomProperty("--font-size", "16px");
+    
+    // Child style inherits from root
+    ComputedStyle childStyle;
+    childStyle.inheritCustomProperties(rootStyle);
+    childStyle.setCustomProperty("--font-size", "14px"); // Override parent
+    
+    // Grandchild inherits from child
+    ComputedStyle grandchildStyle;
+    grandchildStyle.inheritCustomProperties(childStyle);
+    
+    // Check inheritance
+    REQUIRE(grandchildStyle.getCustomProperty("--theme-color") == "green"); // From root
+    REQUIRE(grandchildStyle.getCustomProperty("--font-size") == "14px");   // From child override
+    
+    // Verify resolution with inheritance
+    std::string colorResolved = grandchildStyle.resolveVariables("var(--theme-color)", &childStyle);
+    std::string sizeResolved = grandchildStyle.resolveVariables("var(--font-size)", &childStyle);
+    
+    REQUIRE(colorResolved == "green");
+    REQUIRE(sizeResolved == "14px");
+  }
+
+  SECTION("ComputedStyle::Make with parent inheritance")
+  {
+    // Create parent style with variables
+    CSSStyleDeclaration parentDecl("--main-color: purple; --spacing: 8px;");
+    ComputedStyle parentStyle = ComputedStyle::Make(parentDecl, nullptr);
+    
+    // Create child style that uses parent variables
+    CSSStyleDeclaration childDecl("color: var(--main-color); margin: var(--spacing);");
+    ComputedStyle childStyle = ComputedStyle::Make(childDecl, nullptr, &parentStyle);
+    
+    // Verify inheritance occurred
+    REQUIRE(childStyle.hasCustomProperty("--main-color"));
+    REQUIRE(childStyle.getCustomProperty("--main-color") == "purple");
+    REQUIRE(childStyle.hasCustomProperty("--spacing"));
+    REQUIRE(childStyle.getCustomProperty("--spacing") == "8px");
+  }
+
+  SECTION("Complex variable resolution with nested var() calls")
+  {
+    ComputedStyle style;
+    style.setCustomProperty("--primary", "red");
+    style.setCustomProperty("--fallback", "blue");
+    
+    // Test nested fallback
+    std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))");
+    REQUIRE(resolved == "var(--undefined, blue)"); // Partial resolution
+    
+    // Test multiple variables in one value
+    std::string multipleResolved = style.resolveVariables("border: 1px solid var(--primary)");
+    REQUIRE(multipleResolved == "border: 1px solid red");
+  }
+}
+
 TEST_CASE("PropertyId handles custom properties", "[css-properties]")
 {
   SECTION("Custom property ID creation")

@@ -41,6 +41,20 @@ namespace client_cssom
     return ComputedStyle(style, values::computed::Context::From(target_node));
   }
 
+  ComputedStyle ComputedStyle::Make(const CSSStyleDeclaration &style, shared_ptr<dom::Node> target_node, const ComputedStyle *parent_style)
+  {
+    ComputedStyle result(style, values::computed::Context::From(target_node));
+
+    // Set parent context for variable resolution
+    if (parent_style != nullptr)
+    {
+      result.setParentStyleContext(parent_style);
+      result.inheritCustomProperties(*parent_style);
+    }
+
+    return result;
+  }
+
   ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, optional<values::computed::Context> context)
       : map<string, string>()
   {
@@ -247,7 +261,7 @@ namespace client_cssom
     }
 
     // Resolve variables in the value for regular properties
-    string resolvedValue = resolveVariables(value, nullptr); // TODO: pass parent style for inheritance
+    string resolvedValue = resolveVariables(value, parent_style_context_);
 
     // Box model properties
     if (name == "display")
@@ -540,6 +554,29 @@ namespace client_cssom
         custom_properties_[prop.first] = prop.second;
       }
     }
+  }
+
+  void ComputedStyle::setParentStyleContext(const ComputedStyle *parentStyle)
+  {
+    parent_style_context_ = parentStyle;
+  }
+
+  bool ComputedStyle::updateCustomProperty(const std::string &name, const std::string &value)
+  {
+    if (name.length() < 2 || name.substr(0, 2) != "--")
+      return false;
+
+    std::string oldValue = getCustomProperty(name);
+    if (oldValue == value)
+      return false; // No change
+
+    setCustomProperty(name, value);
+
+    // TODO: Re-resolve all properties that depend on this variable
+    // This would require tracking which properties use which variables
+    // For now, this provides the basic infrastructure
+
+    return true;
   }
 
   std::string ComputedStyle::resolveVariables(const std::string &value, const ComputedStyle *parentStyle) const

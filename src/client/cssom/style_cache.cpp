@@ -24,18 +24,50 @@ namespace client_cssom
     assert(elementOrTextNode != nullptr);
 
     shared_ptr<ComputedStyle> newStyle = nullptr;
+
+    // Get parent style for CSS variable inheritance
+    const ComputedStyle *parentStyle = nullptr;
+    auto parentNode = elementOrTextNode->parentNode.lock();
+    if (parentNode && parentNode->isElementOrText())
+    {
+      auto parentComputedStyle = findStyle(parentNode);
+      if (parentComputedStyle)
+      {
+        parentStyle = parentComputedStyle.get();
+      }
+    }
+
     if (elementOrTextNode->isHTMLElement())
     {
       auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
       assert(element != nullptr && "The element must be an HTMLElement");
-      newStyle = make_shared<ComputedStyle>(useElementStyle ? element->style() : element->defaultStyle(),
-                                            values::computed::Context::From(element));
+
+      // Use the new Make method with parent style inheritance
+      auto declaredStyle = useElementStyle ? element->style() : element->defaultStyle();
+      if (parentStyle)
+      {
+        auto computedStyle = ComputedStyle::Make(declaredStyle, element, parentStyle);
+        newStyle = make_shared<ComputedStyle>(computedStyle);
+      }
+      else
+      {
+        newStyle = make_shared<ComputedStyle>(declaredStyle, values::computed::Context::From(element));
+      }
     }
     else if (elementOrTextNode->isText())
     {
       auto textNode = dynamic_pointer_cast<dom::Text>(elementOrTextNode);
-      newStyle = make_shared<ComputedStyle>(textNode->defaultStyle(),
-                                            values::computed::Context::From(textNode));
+
+      // Use the new Make method with parent style inheritance
+      if (parentStyle)
+      {
+        auto computedStyle = ComputedStyle::Make(textNode->defaultStyle(), textNode, parentStyle);
+        newStyle = make_shared<ComputedStyle>(computedStyle);
+      }
+      else
+      {
+        newStyle = make_shared<ComputedStyle>(textNode->defaultStyle(), values::computed::Context::From(textNode));
+      }
     }
     else
     {
