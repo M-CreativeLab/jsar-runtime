@@ -19,7 +19,8 @@ namespace client_cssom
   }
 
   shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode,
-                                                    bool useElementStyle)
+                                                    bool useElementStyle,
+                                                    bool writeCache)
   {
     assert(elementOrTextNode != nullptr);
 
@@ -44,7 +45,10 @@ namespace client_cssom
     }
 
     assert(newStyle != nullptr);
-    insert({elementOrTextNode->uid, newStyle});
+    if (writeCache)
+    {
+      insert({elementOrTextNode->uid, newStyle});
+    }
     return newStyle;
   }
 

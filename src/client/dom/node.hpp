@@ -297,6 +297,22 @@ namespace dom
     {
       return false;
     }
+    virtual bool isHTMLHeadElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLBodyElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLScriptElement() const
+    {
+      return false;
+    }
+    virtual bool isHTMLStyleElement() const
+    {
+      return false;
+    }
     virtual bool isHTMLMeshElement() const
     {
       return false;

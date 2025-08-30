@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -11,6 +12,7 @@
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
+#include "./variable_reference_tracker.hpp"
 
 namespace client_cssom
 {
@@ -42,6 +44,10 @@ namespace client_cssom
     static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
     static bool IsInheritedProperty(const std::string property)
     {
+      // CSS custom properties always inherit by default
+      if (property.length() >= 2 && property.substr(0, 2) == "--")
+        return true;
+
       static const std::unordered_set<std::string> inherited_properties = {
         "font-size",
         "font-weight",
@@ -477,6 +483,12 @@ namespace client_cssom
       return !transition_properties_.empty();
     }
 
+    void setCustomProperty(const std::string &name, const std::string &value);
+    std::string getCustomProperty(const std::string &name) const;
+    bool hasCustomProperty(const std::string &name) const;
+    void inheritCustomProperties(const ComputedStyle &parentStyle);
+    std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
+
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
     void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
@@ -606,5 +618,11 @@ private:                                                \
 #undef ADD_BOOLEAN_BITFIELD
 
     ComputedStyleBitfields bitfields_;
+
+    // CSS Custom Properties (CSS Variables) support
+    std::unordered_map<std::string, std::string> custom_properties_;
+
+    // Variable dependency tracking
+    VariableReferenceTracker variable_tracker_;
   };
 }
