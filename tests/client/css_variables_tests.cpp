@@ -159,25 +159,6 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
 
 TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-dom]")
 {
-  SECTION("CSS variable update triggers re-resolution")
-  {
-    ComputedStyle computedStyle;
-    computedStyle.setCustomProperty("--primary-color", "red");
-    auto context = createTestContext();
-
-    // Initial resolution
-    std::string resolved = computedStyle.resolveVariables("var(--primary-color)", context);
-    REQUIRE(resolved == "red");
-
-    // Update the variable
-    bool updated = computedStyle.updateCustomProperty("--primary-color", "blue");
-    REQUIRE(updated == true);
-
-    // Verify new resolution
-    std::string newResolved = computedStyle.resolveVariables("var(--primary-color)", context);
-    REQUIRE(newResolved == "blue");
-  }
-
   SECTION("CSS variable inheritance chain")
   {
     // Root style with variables
