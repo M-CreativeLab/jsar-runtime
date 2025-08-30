@@ -29,14 +29,31 @@ namespace browser
 
     shared_ptr<ComputedStyle> computedStyle = document_->styleCache().findStyle(elementOrTextNode);
     if (computedStyle != nullptr)
+    {
       return *computedStyle;
+    }
+    else
+    {
+      auto newComputedStyle = createComputedStyle(elementOrTextNode, pseudoElt, true /* writeCache */);
+      return *newComputedStyle; // Return the newly created computed style.
+    }
+  }
+
+  const shared_ptr<client_cssom::ComputedStyle> Window::createComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
+                                                                            optional<string> pseudoElt,
+                                                                            bool writeCache) const
+  {
+    assert(elementOrTextNode != nullptr && elementOrTextNode->isElementOrText() &&
+           "The element or text node must not be null and must be an element or text node.");
 
     computed::Context context = computed::Context::From(elementOrTextNode);
-    computedStyle = document_->styleCache().createStyle(elementOrTextNode, false);
+    shared_ptr<ComputedStyle> computedStyle = document_->styleCache().createStyle(elementOrTextNode,
+                                                                                  false,
+                                                                                  writeCache);
     computedStyle->update(context);
 
     if (elementOrTextNode->isText())
-      return *computedStyle; // If it's a text node, return the computed style directly.
+      return computedStyle; // If it's a text node, return the computed style directly.
 
     // Get the HTML element from the node.
     auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
@@ -61,7 +78,7 @@ namespace browser
     // Update the style from the element's inline style.
     auto elementStyle = htmlElement->style();
     computedStyle->update(elementStyle, context); // Override the style from the element's.
-    return *computedStyle;
+    return computedStyle;
   }
 
   void Window::applyViewportMeta(const dom::ViewportMeta &viewport_meta)

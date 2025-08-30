@@ -20,7 +20,7 @@ namespace dom
     Auto
   };
 
-  class HTMLScriptElement : public HTMLElement
+  class HTMLScriptElement final : public HTMLElement
   {
   public:
     using HTMLElement::HTMLElement;
@@ -30,6 +30,11 @@ namespace dom
     }
 
   public:
+    bool isHTMLScriptElement() const override
+    {
+      return true;
+    }
+
     // Attribute is not set (default), an empty string, or a JavaScript MIME type indicates a "classic script".
     inline bool isClassicScript()
     {

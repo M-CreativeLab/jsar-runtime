@@ -16,13 +16,17 @@ namespace dom
     }
 
   public:
+    bool isHTMLBodyElement() const override
+    {
+      return true;
+    }
+
     void createdCallback(bool from_scripting) override
     {
       defaultStyle_.setProperty("width", "auto");
       defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("min-width", "100vw");
       defaultStyle_.setProperty("min-height", "100vh");
-      defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 
       HTMLElement::createdCallback(from_scripting);

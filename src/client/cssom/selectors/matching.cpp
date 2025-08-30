@@ -1,4 +1,5 @@
 #include <cstring>
+#include <client/dom/document.hpp>
 #include "./matching.hpp"
 
 namespace client_cssom::selectors

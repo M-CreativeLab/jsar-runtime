@@ -362,12 +362,8 @@ namespace dom
         }
       }
     }
-    // Mark the document cache as dirty, the renderer will draw from the body element.
-    inline void invalidateDocumentCache()
-    {
-      dirty_root_text_or_element_ = body();
-    }
-
+    // Mark the document cache as dirty, the renderer will draw from the document element.
+    void invalidateDocumentCache();
     std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
 
   public:
