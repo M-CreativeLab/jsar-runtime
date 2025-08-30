@@ -13,6 +13,16 @@ namespace client_cssom::selectors
       , name_(name)
       , combinator_(combinator)
       , pseudoClassType_(pseudoClassType)
+      , argumentSelectorList_(nullptr)
+  {
+  }
+
+  Component::Component(ComponentType type, PseudoClassType pseudoClassType, std::shared_ptr<SelectorList> argumentSelectorList)
+      : type_(type)
+      , name_("")
+      , combinator_(Combinator::kUnknown)
+      , pseudoClassType_(pseudoClassType)
+      , argumentSelectorList_(argumentSelectorList)
   {
   }
 
@@ -77,6 +87,14 @@ namespace client_cssom::selectors
         break;
       case PseudoClassType::kOnlyOfType:
         ss << ":only-of-type";
+        break;
+      case PseudoClassType::kWhere:
+        ss << ":where(";
+        if (argumentSelectorList_)
+        {
+          ss << static_cast<string>(*argumentSelectorList_);
+        }
+        ss << ")";
         break;
       default:
         ss << ":" << name_;
@@ -285,6 +303,15 @@ namespace client_cssom::selectors
         if (name == "host")
           return Component(ComponentType::kHost);
 
+        // Check for functional pseudo-classes like :where()
+        if (pos < text.length() && text[pos] == '(')
+        {
+          auto functionalComponent = parseFunctionalPseudoClass(name, text, pos);
+          if (functionalComponent)
+            return functionalComponent;
+          // If functional parsing failed, fall through to regular pseudo-class parsing
+        }
+
         // Regular pseudo-class
         auto pseudoClassType = parsePseudoClass(name);
         return Component(ComponentType::kPseudoClass, name, Combinator::kUnknown, pseudoClassType.value_or(PseudoClassType::kUnknown));
@@ -374,8 +401,57 @@ namespace client_cssom::selectors
       return PseudoClassType::kOnlyChild;
     if (name == "only-of-type")
       return PseudoClassType::kOnlyOfType;
+    if (name == "where")
+      return PseudoClassType::kWhere;
 
     return nullopt;
+  }
+
+  optional<Component> CSSelectorParser::parseFunctionalPseudoClass(const string &name, const string &text, size_t &pos)
+  {
+    if (name != "where")
+      return nullopt; // Only :where() is supported for now
+
+    // Expect opening parenthesis
+    if (pos >= text.length() || text[pos] != '(')
+      return nullopt;
+
+    ++pos; // Skip '('
+
+    // Find the matching closing parenthesis
+    size_t startPos = pos;
+    int parenCount = 1;
+    size_t endPos = pos;
+
+    while (endPos < text.length() && parenCount > 0)
+    {
+      if (text[endPos] == '(')
+        parenCount++;
+      else if (text[endPos] == ')')
+        parenCount--;
+
+      endPos++; // Always move forward
+    }
+
+    if (parenCount != 0)
+      return nullopt; // Unmatched parentheses
+
+    // endPos is now one position after the closing parenthesis
+    // The content is from startPos to endPos-1 (exclusive of closing paren)
+    string selectorListText = text.substr(startPos, endPos - 1 - startPos);
+
+    // Parse the selector list
+    auto argumentSelectors = parseMultipleSelectors(selectorListText);
+    if (!argumentSelectors)
+      return nullopt;
+
+    // Create shared_ptr directly
+    auto selectorListPtr = make_shared<SelectorList>(*argumentSelectors);
+
+    // Update position to after the closing parenthesis
+    pos = endPos;
+
+    return Component(ComponentType::kPseudoClass, PseudoClassType::kWhere, selectorListPtr);
   }
 
   void CSSelectorParser::skipWhitespace(const string &text, size_t &pos)

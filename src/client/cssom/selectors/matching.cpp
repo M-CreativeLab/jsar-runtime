@@ -110,6 +110,15 @@ namespace client_cssom::selectors
         return isFirstOfType(element);
       if (component.isLastOfType())
         return isLastOfType(element);
+      if (component.isWhere())
+      {
+        // :where() matches if any selector in its argument list matches the element
+        if (component.argumentSelectorList())
+        {
+          return matchesSelectorList(*component.argumentSelectorList(), element);
+        }
+        return false; // Empty :where() matches nothing
+      }
       // TODO: Implement support for :active pseudo-class when element->isActive() is available.
     }
 
