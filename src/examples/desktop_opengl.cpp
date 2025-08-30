@@ -1,25 +1,3 @@
-/*
- * Desktop OpenGL Example for JSAR Runtime
- * 
- * This example demonstrates the JSAR runtime with OpenGL rendering on desktop platforms.
- * 
- * Frame Rate Control Features:
- * - VSync mode: Synchronizes rendering with display refresh rate (default)
- * - Manual FPS mode: Limits frame rate to a specific target (10-1000 FPS)
- * 
- * Command Line Options:
- * --fps <value>    Set target FPS and enable manual frame rate control
- * --vsync          Enable vertical sync (default)
- * 
- * Runtime Controls:
- * V key            Toggle between VSync and manual FPS modes
- * + key            Increase target FPS (manual mode only)
- * - key            Decrease target FPS (manual mode only)
- * 
- * The frame rate control allows for easy benchmarking and testing under different
- * performance conditions, providing flexibility for desktop users and developers.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -61,6 +39,8 @@
 namespace jsar::example
 {
   using namespace std;
+
+  class App;
 
   /**
    * Custom the response for the ping-pong RPC.
@@ -127,76 +107,8 @@ namespace jsar::example
     }
   };
 
-  void processInput(GLFWwindow *window, DesktopEmbedder &embedder)
-  {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-      glfwSetWindowShouldClose(window, true);
-
-    static bool isKeySpacePressed = false;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-      isKeySpacePressed = true;
-    if (isKeySpacePressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-    {
-      isKeySpacePressed = false;
-      embedder.constellation->resetContents();
-    }
-  }
-
-  void processFrameRateInput(GLFWwindow *window, App &app)
-  {
-    // Toggle vsync mode with V key
-    static bool isKeyVPressed = false;
-    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
-      isKeyVPressed = true;
-    if (isKeyVPressed && glfwGetKey(window, GLFW_KEY_V) == GLFW_RELEASE)
-    {
-      isKeyVPressed = false;
-      app.useVsync = !app.useVsync;
-      glfwSwapInterval(app.useVsync ? 1 : 0);
-      printf("Frame rate mode: %s (Target FPS: %d)\n",
-             app.useVsync ? "VSync" : "Manual",
-             app.targetFps);
-    }
-
-    // Adjust FPS with +/- keys (only in manual mode)
-    if (!app.useVsync)
-    {
-      static bool isKeyPlusPressed = false;
-      static bool isKeyMinusPressed = false;
-
-      // Increase FPS with + key
-      if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS ||
-          glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
-        isKeyPlusPressed = true;
-      if (isKeyPlusPressed &&
-          (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_RELEASE &&
-           glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE))
-      {
-        isKeyPlusPressed = false;
-        if (app.targetFps < 240)
-        {
-          app.targetFps += (app.targetFps < 60) ? 15 : 30;
-          printf("Target FPS: %d\n", app.targetFps);
-        }
-      }
-
-      // Decrease FPS with - key
-      if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS ||
-          glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
-        isKeyMinusPressed = true;
-      if (isKeyMinusPressed &&
-          (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_RELEASE &&
-           glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE))
-      {
-        isKeyMinusPressed = false;
-        if (app.targetFps > 15)
-        {
-          app.targetFps -= (app.targetFps <= 60) ? 15 : 30;
-          printf("Target FPS: %d\n", app.targetFps);
-        }
-      }
-    }
-  }
+  void processInput(GLFWwindow *window, DesktopEmbedder &embedder);
+  void processFrameRateInput(GLFWwindow *window, App &app);
 
   class App
   {
@@ -827,6 +739,77 @@ namespace jsar::example
     GLuint render_target_;
     GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };
+
+  void processInput(GLFWwindow *window, DesktopEmbedder &embedder)
+  {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+      glfwSetWindowShouldClose(window, true);
+
+    static bool isKeySpacePressed = false;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+      isKeySpacePressed = true;
+    if (isKeySpacePressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+      isKeySpacePressed = false;
+      embedder.constellation->resetContents();
+    }
+  }
+
+  void processFrameRateInput(GLFWwindow *window, App &app)
+  {
+    // Toggle vsync mode with V key
+    static bool isKeyVPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+      isKeyVPressed = true;
+    if (isKeyVPressed && glfwGetKey(window, GLFW_KEY_V) == GLFW_RELEASE)
+    {
+      isKeyVPressed = false;
+      app.useVsync = !app.useVsync;
+      glfwSwapInterval(app.useVsync ? 1 : 0);
+      printf("Frame rate mode: %s (Target FPS: %d)\n",
+             app.useVsync ? "VSync" : "Manual",
+             app.targetFps);
+    }
+
+    // Adjust FPS with +/- keys (only in manual mode)
+    if (!app.useVsync)
+    {
+      static bool isKeyPlusPressed = false;
+      static bool isKeyMinusPressed = false;
+
+      // Increase FPS with + key
+      if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS ||
+          glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+        isKeyPlusPressed = true;
+      if (isKeyPlusPressed &&
+          (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_RELEASE &&
+           glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE))
+      {
+        isKeyPlusPressed = false;
+        if (app.targetFps < 240)
+        {
+          app.targetFps += (app.targetFps < 60) ? 15 : 30;
+          printf("Target FPS: %d\n", app.targetFps);
+        }
+      }
+
+      // Decrease FPS with - key
+      if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS ||
+          glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+        isKeyMinusPressed = true;
+      if (isKeyMinusPressed &&
+          (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_RELEASE &&
+           glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE))
+      {
+        isKeyMinusPressed = false;
+        if (app.targetFps > 15)
+        {
+          app.targetFps -= (app.targetFps <= 60) ? 15 : 30;
+          printf("Target FPS: %d\n", app.targetFps);
+        }
+      }
+    }
+  }
 }
 
 int main(int argc, char **argv)
