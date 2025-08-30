@@ -163,7 +163,7 @@ namespace jsar::example
       printf("  %s --no-env-map             # Disable environment map\n", programName);
       printf("  %s --system-fonts-dir /usr/share/fonts  # Use custom font directory\n", programName);
       printf("  %s --fps 120               # Run at 120 FPS with manual frame rate control\n", programName);
-      printf("  %s --vsync                 # Enable vertical sync (default)\n", programName);
+      printf("  %s --vsync                 # Enable vertical sync (default: disabled)\n", programName);
     }
 
     bool init(int argc, char **argv)
