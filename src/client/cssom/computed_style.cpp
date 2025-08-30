@@ -239,45 +239,55 @@ namespace client_cssom
   {
     using namespace crates::css2;
 
+    // Handle CSS custom properties (variables)
+    if (name.length() >= 2 && name.substr(0, 2) == "--")
+    {
+      setCustomProperty(name, value);
+      return;
+    }
+
+    // Resolve variables in the value for regular properties
+    string resolvedValue = resolveVariables(value, nullptr); // TODO: pass parent style for inheritance
+
     // Box model properties
     if (name == "display")
     {
-      display_ = Parse::ParseSingleValue<values::computed::Display>(value);
+      display_ = Parse::ParseSingleValue<values::computed::Display>(resolvedValue);
       bitfields_.SetHasDisplay(true);
     }
     else if (name == "box-sizing")
     {
-      box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
+      box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(resolvedValue);
       bitfields_.SetHasBoxSizing(true);
     }
     else if (name == "position")
     {
-      position_type_ = Parse::ParseSingleValue<values::specified::PositionType>(value).toComputedValue(context);
+      position_type_ = Parse::ParseSingleValue<values::specified::PositionType>(resolvedValue).toComputedValue(context);
     }
     else if (name == "top")
     {
-      inset_.setTop(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+      inset_.setTop(Parse::ParseSingleValue<values::specified::InsetSize>(resolvedValue).toComputedValue(context));
     }
     else if (name == "right")
     {
-      inset_.setRight(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+      inset_.setRight(Parse::ParseSingleValue<values::specified::InsetSize>(resolvedValue).toComputedValue(context));
     }
     else if (name == "bottom")
     {
-      inset_.setBottom(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+      inset_.setBottom(Parse::ParseSingleValue<values::specified::InsetSize>(resolvedValue).toComputedValue(context));
     }
     else if (name == "left")
     {
-      inset_.setLeft(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+      inset_.setLeft(Parse::ParseSingleValue<values::specified::InsetSize>(resolvedValue).toComputedValue(context));
     }
     else if (name == "overflow-x")
     {
-      overflow_x_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
+      overflow_x_ = Parse::ParseSingleValue<values::computed::Overflow>(resolvedValue);
       bitfields_.SetHasOverflowX(true);
     }
     else if (name == "overflow-y")
     {
-      overflow_y_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
+      overflow_y_ = Parse::ParseSingleValue<values::computed::Overflow>(resolvedValue);
       bitfields_.SetHasOverflowY(true);
     }
 
@@ -391,12 +401,12 @@ namespace client_cssom
     // Color properties
     else if (name == "color")
     {
-      color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
+      color_ = Parse::ParseSingleValue<values::specified::Color>(resolvedValue).toComputedValue(context);
       bitfields_.SetHasColor(true);
     }
     else if (name == "background-color")
     {
-      background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
+      background_color_ = Parse::ParseSingleValue<values::specified::Color>(resolvedValue).toComputedValue(context);
       bitfields_.SetHasBackgroundColor(true);
     }
     else if (name == "background-image")
@@ -496,5 +506,114 @@ namespace client_cssom
   void ComputedStyle::updateBaseComputedStyle()
   {
     // TODO: implement updateBaseComputedStyle
+  }
+
+  // CSS Variables (Custom Properties) Implementation
+
+  void ComputedStyle::setCustomProperty(const std::string &name, const std::string &value)
+  {
+    if (name.length() >= 2 && name.substr(0, 2) == "--")
+    {
+      custom_properties_[name] = value;
+    }
+  }
+
+  std::string ComputedStyle::getCustomProperty(const std::string &name) const
+  {
+    auto it = custom_properties_.find(name);
+    return (it != custom_properties_.end()) ? it->second : "";
+  }
+
+  bool ComputedStyle::hasCustomProperty(const std::string &name) const
+  {
+    return custom_properties_.find(name) != custom_properties_.end();
+  }
+
+  void ComputedStyle::inheritCustomProperties(const ComputedStyle &parentStyle)
+  {
+    // CSS custom properties inherit by default
+    for (const auto &prop : parentStyle.custom_properties_)
+    {
+      // Only inherit if not already set
+      if (custom_properties_.find(prop.first) == custom_properties_.end())
+      {
+        custom_properties_[prop.first] = prop.second;
+      }
+    }
+  }
+
+  std::string ComputedStyle::resolveVariables(const std::string &value, const ComputedStyle *parentStyle) const
+  {
+    std::string result = value;
+    size_t varPos = 0;
+
+    // Look for var() function calls
+    while ((varPos = result.find("var(", varPos)) != std::string::npos)
+    {
+      size_t startPos = varPos + 4; // Skip "var("
+      size_t endPos = result.find(")", startPos);
+
+      if (endPos == std::string::npos)
+        break; // Malformed var() function
+
+      std::string varContent = result.substr(startPos, endPos - startPos);
+
+      // Parse variable name and optional fallback
+      std::string varName;
+      std::string fallback;
+
+      size_t commaPos = varContent.find(",");
+      if (commaPos != std::string::npos)
+      {
+        varName = varContent.substr(0, commaPos);
+        fallback = varContent.substr(commaPos + 1);
+
+        // Trim whitespace
+        varName.erase(0, varName.find_first_not_of(" \t"));
+        varName.erase(varName.find_last_not_of(" \t") + 1);
+        fallback.erase(0, fallback.find_first_not_of(" \t"));
+        fallback.erase(fallback.find_last_not_of(" \t") + 1);
+      }
+      else
+      {
+        varName = varContent;
+        // Trim whitespace
+        varName.erase(0, varName.find_first_not_of(" \t"));
+        varName.erase(varName.find_last_not_of(" \t") + 1);
+      }
+
+      // Resolve the variable
+      std::string resolvedValue;
+
+      // First try local custom properties
+      if (hasCustomProperty(varName))
+      {
+        resolvedValue = getCustomProperty(varName);
+      }
+      // Then try parent style (inheritance)
+      else if (parentStyle && parentStyle->hasCustomProperty(varName))
+      {
+        resolvedValue = parentStyle->getCustomProperty(varName);
+      }
+      // Use fallback if available
+      else if (!fallback.empty())
+      {
+        resolvedValue = fallback;
+      }
+      // If no resolution possible, keep the var() as-is
+      else
+      {
+        varPos = endPos + 1;
+        continue;
+      }
+
+      // Replace the var() function with the resolved value
+      result.replace(varPos, endPos - varPos + 1, resolvedValue);
+
+      // Continue from the end of the replacement
+      varPos += resolvedValue.length();
+    }
+
+    return result;
   }
 }

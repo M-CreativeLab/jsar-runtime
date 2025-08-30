@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -42,6 +43,10 @@ namespace client_cssom
     static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
     static bool IsInheritedProperty(const std::string property)
     {
+      // CSS custom properties always inherit by default
+      if (property.length() >= 2 && property.substr(0, 2) == "--")
+        return true;
+
       static const std::unordered_set<std::string> inherited_properties = {
         "font-size",
         "font-weight",
@@ -606,5 +611,49 @@ private:                                                \
 #undef ADD_BOOLEAN_BITFIELD
 
     ComputedStyleBitfields bitfields_;
+
+    // CSS Custom Properties (CSS Variables) support
+    std::unordered_map<std::string, std::string> custom_properties_;
+
+  public:
+    /**
+     * Set a CSS custom property value.
+     *
+     * @param name The custom property name (should start with --).
+     * @param value The custom property value.
+     */
+    void setCustomProperty(const std::string &name, const std::string &value);
+
+    /**
+     * Get a CSS custom property value.
+     *
+     * @param name The custom property name (should start with --).
+     * @returns The custom property value, or empty string if not found.
+     */
+    std::string getCustomProperty(const std::string &name) const;
+
+    /**
+     * Check if a CSS custom property is defined.
+     *
+     * @param name The custom property name (should start with --).
+     * @returns True if the custom property is defined.
+     */
+    bool hasCustomProperty(const std::string &name) const;
+
+    /**
+     * Resolve CSS var() function calls in a property value.
+     *
+     * @param value The property value that may contain var() functions.
+     * @param parentStyle Optional parent style for inheritance.
+     * @returns The resolved value with var() functions substituted.
+     */
+    std::string resolveVariables(const std::string &value, const ComputedStyle *parentStyle = nullptr) const;
+
+    /**
+     * Inherit custom properties from parent style.
+     *
+     * @param parentStyle The parent computed style.
+     */
+    void inheritCustomProperties(const ComputedStyle &parentStyle);
   };
 }
