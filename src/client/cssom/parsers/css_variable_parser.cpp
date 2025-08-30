@@ -4,13 +4,15 @@
 
 namespace client_cssom::css_variable_parser
 {
-  CSSVariableParser::CSSVariableParser(const std::string &input)
+  using namespace std;
+
+  CSSVariableParser::CSSVariableParser(const string &input)
       : input_(input)
       , is_valid_(true)
   {
   }
 
-  std::string CSSVariableParser::resolveVariables(const VariableResolver &resolver)
+  string CSSVariableParser::resolveVariables(const VariableResolver &resolver)
   {
     if (input_.empty())
     {
@@ -20,7 +22,7 @@ namespace client_cssom::css_variable_parser
     return resolveVariablesRecursive(input_, resolver, 0);
   }
 
-  std::string CSSVariableParser::resolveVariablesRecursive(const std::string &value, const VariableResolver &resolver, int depth)
+  string CSSVariableParser::resolveVariablesRecursive(const string &value, const VariableResolver &resolver, int depth)
   {
     // Prevent infinite recursion
     if (depth > MAX_RECURSION_DEPTH)
@@ -30,7 +32,7 @@ namespace client_cssom::css_variable_parser
       return value;
     }
 
-    std::string result = value;
+    string result = value;
 
     // Keep processing until no more variables are found
     bool found_variable = true;
@@ -43,7 +45,7 @@ namespace client_cssom::css_variable_parser
       while (pos < result.length())
       {
         size_t var_pos = result.find("var(", pos);
-        if (var_pos == std::string::npos)
+        if (var_pos == string::npos)
         {
           break; // No more variables found
         }
@@ -66,7 +68,7 @@ namespace client_cssom::css_variable_parser
         // Try to resolve the variable
         auto resolved_value = resolver(var.variable_name);
 
-        std::string replacement;
+        string replacement;
         if (resolved_value.has_value())
         {
           // Variable found, use its value (don't recurse yet, we'll handle it in the next iteration)
@@ -96,9 +98,9 @@ namespace client_cssom::css_variable_parser
     return result;
   }
 
-  std::vector<VariableReference> CSSVariableParser::getVariableReferences()
+  vector<VariableReference> CSSVariableParser::getVariableReferences()
   {
-    std::vector<VariableReference> references;
+    vector<VariableReference> references;
     size_t pos = 0;
 
     while (pos < input_.length())
@@ -116,38 +118,38 @@ namespace client_cssom::css_variable_parser
     return references;
   }
 
-  std::optional<VariableReference> CSSVariableParser::findNextVariable(size_t start_pos)
+  optional<VariableReference> CSSVariableParser::findNextVariable(size_t start_pos)
   {
     // Look for "var(" pattern
     size_t var_pos = input_.find("var(", start_pos);
-    if (var_pos == std::string::npos)
+    if (var_pos == string::npos)
     {
-      return std::nullopt;
+      return nullopt;
     }
 
     return parseVariableContent(var_pos);
   }
 
-  std::optional<VariableReference> CSSVariableParser::parseVariableContent(size_t start_pos)
+  optional<VariableReference> CSSVariableParser::parseVariableContent(size_t start_pos)
   {
     // start_pos should point to the 'v' in "var("
     if (start_pos + 4 >= input_.length() || input_.substr(start_pos, 4) != "var(")
     {
-      return std::nullopt;
+      return nullopt;
     }
 
     size_t content_start = start_pos + 4;                    // Skip "var("
     size_t paren_end = findMatchingParen(content_start - 1); // -1 to point to the opening paren
 
-    if (paren_end == std::string::npos)
+    if (paren_end == string::npos)
     {
       is_valid_ = false;
       error_message_ = "Unclosed var() function";
-      return std::nullopt;
+      return nullopt;
     }
 
     // Extract content between parentheses
-    std::string content = input_.substr(content_start, paren_end - content_start);
+    string content = input_.substr(content_start, paren_end - content_start);
 
     // Parse variable name and fallback
     auto [var_name, fallback] = parseVariableNameAndFallback(content);
@@ -156,7 +158,7 @@ namespace client_cssom::css_variable_parser
     {
       is_valid_ = false;
       error_message_ = "Empty variable name in var() function";
-      return std::nullopt;
+      return nullopt;
     }
 
     if (fallback.has_value())
@@ -173,7 +175,7 @@ namespace client_cssom::css_variable_parser
   {
     if (start_pos >= input_.length() || input_[start_pos] != '(')
     {
-      return std::string::npos;
+      return string::npos;
     }
 
     int paren_count = 1;
@@ -207,13 +209,13 @@ namespace client_cssom::css_variable_parser
       pos++;
     }
 
-    return (paren_count == 0) ? pos - 1 : std::string::npos;
+    return (paren_count == 0) ? pos - 1 : string::npos;
   }
 
-  std::pair<std::string, std::optional<std::string>> CSSVariableParser::parseVariableNameAndFallback(const std::string &content)
+  pair<string, optional<string>> CSSVariableParser::parseVariableNameAndFallback(const string &content)
   {
     // Find the first comma that's not inside parentheses or quotes
-    size_t comma_pos = std::string::npos;
+    size_t comma_pos = string::npos;
     int paren_count = 0;
     bool in_quotes = false;
     char quote_char = '\0';
@@ -256,24 +258,24 @@ namespace client_cssom::css_variable_parser
       }
     }
 
-    if (comma_pos == std::string::npos)
+    if (comma_pos == string::npos)
     {
       // No fallback
-      return {trim(content), std::nullopt};
+      return {trim(content), nullopt};
     }
     else
     {
       // Has fallback
-      std::string var_name = trim(content.substr(0, comma_pos));
-      std::string fallback = trim(content.substr(comma_pos + 1));
+      string var_name = trim(content.substr(0, comma_pos));
+      string fallback = trim(content.substr(comma_pos + 1));
       return {var_name, fallback};
     }
   }
 
-  std::string CSSVariableParser::trim(const std::string &str)
+  string CSSVariableParser::trim(const string &str)
   {
     auto start = str.find_first_not_of(" \t\n\r\f");
-    if (start == std::string::npos)
+    if (start == string::npos)
     {
       return "";
     }
