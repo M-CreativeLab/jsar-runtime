@@ -6,14 +6,14 @@ namespace client_cssom
   using namespace std;
 
   // Static empty set for returning when no dependencies exist
-  const std::unordered_set<std::string> VariableReferenceTracker::empty_set_;
+  const unordered_set<string> VariableReferenceTracker::empty_set_;
 
-  void VariableReferenceTracker::trackDependency(const std::string &variable_name, const std::string &property_name)
+  void VariableReferenceTracker::trackDependency(const string &variable_name, const string &property_name)
   {
     variable_dependencies_[variable_name].insert(property_name);
   }
 
-  void VariableReferenceTracker::clearDependencies(const std::string &property_name)
+  void VariableReferenceTracker::clearDependencies(const string &property_name)
   {
     // Remove this property from all variable dependency sets
     for (auto &pair : variable_dependencies_)
@@ -35,18 +35,18 @@ namespace client_cssom
     }
   }
 
-  void VariableReferenceTracker::clearVariableDependencies(const std::string &variable_name)
+  void VariableReferenceTracker::clearVariableDependencies(const string &variable_name)
   {
     variable_dependencies_.erase(variable_name);
   }
 
-  const std::unordered_set<std::string> &VariableReferenceTracker::getDependents(const std::string &variable_name) const
+  const unordered_set<string> &VariableReferenceTracker::getDependents(const string &variable_name) const
   {
     auto it = variable_dependencies_.find(variable_name);
     return (it != variable_dependencies_.end()) ? it->second : empty_set_;
   }
 
-  bool VariableReferenceTracker::hasDependents(const std::string &variable_name) const
+  bool VariableReferenceTracker::hasDependents(const string &variable_name) const
   {
     auto it = variable_dependencies_.find(variable_name);
     return it != variable_dependencies_.end() && !it->second.empty();
@@ -54,10 +54,12 @@ namespace client_cssom
 
   void VariableReferenceTracker::setVariableChangeCallback(VariableChangeCallback callback)
   {
-    change_callback_ = std::move(callback);
+    change_callback_ = move(callback);
   }
 
-  void VariableReferenceTracker::notifyVariableChanged(const std::string &variable_name, const std::string &new_value, const values::computed::Context &context)
+  void VariableReferenceTracker::notifyVariableChanged(const string &variable_name,
+                                                       const string &new_value,
+                                                       const values::computed::Context &context)
   {
     if (change_callback_ && hasDependents(variable_name))
     {

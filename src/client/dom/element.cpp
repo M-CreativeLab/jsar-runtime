@@ -161,8 +161,8 @@ namespace dom
       auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
       assert(window != nullptr &&
              "The window must not be null in a TextNode().");
-      auto initial_style = window->getComputedStyle(shared_from_this());
-      recalcStyleDirectly(initial_style);
+      auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
+      recalcStyleDirectly(*initial_style);
     }
   }
 

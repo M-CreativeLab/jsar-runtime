@@ -483,6 +483,12 @@ namespace client_cssom
       return !transition_properties_.empty();
     }
 
+    void setCustomProperty(const std::string &name, const std::string &value);
+    std::string getCustomProperty(const std::string &name) const;
+    bool hasCustomProperty(const std::string &name) const;
+    void inheritCustomProperties(const ComputedStyle &parentStyle);
+    std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
+
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
     void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
@@ -618,79 +624,5 @@ private:                                                \
 
     // Variable dependency tracking
     VariableReferenceTracker variable_tracker_;
-
-  public:
-    /**
-     * Set a CSS custom property value.
-     *
-     * @param name The custom property name (should start with --).
-     * @param value The custom property value.
-     */
-    void setCustomProperty(const std::string &name, const std::string &value);
-
-    /**
-     * Get a CSS custom property value.
-     *
-     * @param name The custom property name (should start with --).
-     * @returns The custom property value, or empty string if not found.
-     */
-    std::string getCustomProperty(const std::string &name) const;
-
-    /**
-     * Check if a CSS custom property is defined.
-     *
-     * @param name The custom property name (should start with --).
-     * @returns True if the custom property is defined.
-     */
-    bool hasCustomProperty(const std::string &name) const;
-
-    /**
-     * Resolve CSS var() function calls in a property value.
-     *
-     * @param value The property value that may contain var() functions.
-     * @param context The computed context for accessing inherited style.
-     * @returns The resolved value with var() functions substituted.
-     */
-    std::string resolveVariables(const std::string &value, const values::computed::Context &context) const;
-
-    /**
-     * Inherit custom properties from parent style.
-     *
-     * @param parentStyle The parent computed style.
-     */
-    void inheritCustomProperties(const ComputedStyle &parentStyle);
-
-    /**
-     * Update a custom property and trigger re-resolution of dependent properties.
-     *
-     * @param name The custom property name.
-     * @param value The new custom property value.
-     * @returns True if any properties were updated.
-     */
-    bool updateCustomProperty(const std::string &name, const std::string &value);
-
-  private:
-    /**
-     * Track that a property depends on a variable.
-     *
-     * @param variable_name The name of the CSS variable (with -- prefix).
-     * @param property_name The name of the CSS property that uses this variable.
-     */
-    void trackVariableDependency(const std::string &variable_name, const std::string &property_name);
-
-    /**
-     * Clear variable dependencies for a property.
-     *
-     * @param property_name The name of the CSS property.
-     */
-    void clearVariableDependencies(const std::string &property_name);
-
-    /**
-     * Re-resolve all properties that depend on a given variable.
-     *
-     * @param variable_name The name of the variable that changed.
-     * @param context The computed context for re-resolution.
-     */
-    void reResolveVariableDependents(const std::string &variable_name, const values::computed::Context &context);
   };
 }

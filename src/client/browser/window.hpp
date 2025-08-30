@@ -238,11 +238,26 @@ namespace browser
      *
      * @param elementOrTextNode The element or text node to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.
-     * 
+     *
      * @todo Implement the pseudo-element support.
      */
-    const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
-                                                        std::optional<std::string> pseudoElt = std::nullopt) const;
+    const client_cssom::ComputedStyle &
+    getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                     std::optional<std::string> pseudoElt = std::nullopt) const;
+
+    /**
+     * Creates a new computed style for the specified element or text node.
+     *
+     * @param elementOrTextNode The element or text node to create the computed style for.
+     * @param pseudoElt The optional pseudo-element to create the computed style for.
+     * @param writeCache Whether to write the computed style to the cache.
+     *
+     * @return A unique pointer to the created computed style.
+     */
+    const std::shared_ptr<client_cssom::ComputedStyle>
+    createComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                        std::optional<std::string> pseudoElt = std::nullopt,
+                        bool writeCache = true) const;
 
     /**
      * Apply viewport meta settings to the window dimensions

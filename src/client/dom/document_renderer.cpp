@@ -43,8 +43,18 @@ namespace dom
       // 2.1 Compute each element's styles.
       auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
       {
-        element->adoptStyle(document_->defaultView()->getComputedStyle(element));
-        return true;
+        if (element->isHTMLHeadElement() ||
+            element->isHTMLScriptElement() ||
+            element->isHTMLStyleElement())
+        {
+          // Skip these kinds of element to traverse its children for style adoption.
+          return false;
+        }
+        else
+        {
+          element->adoptStyle(document_->defaultView()->getComputedStyle(element));
+          return true;
+        }
       };
       auto adoptStyleForText = [this](shared_ptr<Text> textNode)
       {

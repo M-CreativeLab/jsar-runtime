@@ -144,23 +144,34 @@ namespace client_cssom
     if (other.has_value())
     {
       // First pass: Set all custom properties
-      for (const auto &[propertyName, value] : other.value())
+      unordered_map<string, string> cssProperties;
+      for (const auto &[name, value] : other.value())
       {
-        if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
+        auto it = find(name);
+        if (it != end())
         {
-          setCustomProperty(propertyName, value);
+          if (it->second == value)
+            continue;         // No need to update if the value is the same.
+          it->second = value; // Update the existing property.
+        }
+        else
+        {
+          setPropertyInternal(name, value);
+        }
+
+        if (name.length() >= 2 && name.substr(0, 2) == "--")
+        {
+          setCustomProperty(name, value);
+        }
+        else
+        {
+          cssProperties[name] = value;
         }
       }
 
       // Second pass: Process regular properties
-      for (const auto &[propertyName, value] : other.value())
-      {
-        if (!(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
-        {
-          setPropertyInternal(propertyName, value);
-          computeProperty(propertyName, value, context);
-        }
-      }
+      for (const auto &[name, value] : cssProperties)
+        computeProperty(name, value, context);
     }
   }
 
@@ -169,19 +180,10 @@ namespace client_cssom
     size_t inherited = 0;
 
     // First pass: Inherit custom properties
+    unordered_map<string, string> inheritedProperties;
     for (const auto &[propertyName, value] : other)
     {
-      if (IsInheritedProperty(propertyName) && propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
-      {
-        setCustomProperty(propertyName, value);
-        inherited += 1;
-      }
-    }
-
-    // Second pass: Inherit regular properties
-    for (const auto &[propertyName, value] : other)
-    {
-      if (IsInheritedProperty(propertyName) && !(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
+      if (IsInheritedProperty(propertyName))
       {
         auto it = find(propertyName);
         if (it != end())
@@ -194,12 +196,22 @@ namespace client_cssom
         {
           setPropertyInternal(propertyName, value);
         }
-
-        // Compute the property if it is inherited.
-        computeProperty(propertyName, value, context);
         inherited += 1;
+
+        if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
+        {
+          setCustomProperty(propertyName, value);
+        }
+        else
+        {
+          inheritedProperties[propertyName] = value;
+        }
       }
     }
+
+    // Second pass: Inherit regular properties
+    for (const auto &[name, value] : inheritedProperties)
+      computeProperty(name, value, context);
     return inherited;
   }
 
@@ -208,7 +220,11 @@ namespace client_cssom
     resetProperties(context.resetStyle(), context);
     auto inherited_style = context.inheritedStyle();
     if (inherited_style.has_value())
+    {
+      cout << "Inheriting properties from parent style: " << *inherited_style
+           << endl;
       inheritProperties(inherited_style.value(), context);
+    }
 
     // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
     computeShorthandProperties(context);
@@ -225,50 +241,48 @@ namespace client_cssom
     // This ensures custom properties are available when resolving variables in regular properties
 
     // First pass: Process all custom properties (CSS variables)
+    unordered_map<string, string> css_properties;
     for (int index = 0; index < from_style.length(); index++)
     {
-      const auto propertyName = from_style.item(index);
+      string name = from_style.item(index);
+      string value = from_style.getPropertyValue(name);
+
+      auto it = find(name);
+      if (it != end())
+      {
+        if (it->second == value)
+          continue;         // No need to update if the value is the same.
+        it->second = value; // Update the existing property.
+      }
+      else
+      {
+        setPropertyInternal(name, value);
+      }
 
       // Only process custom properties in the first pass
-      if (propertyName.length() >= 2 && propertyName.substr(0, 2) == "--")
+      if (name.length() >= 2 && name.substr(0, 2) == "--")
       {
-        const auto value = from_style.getPropertyValue(propertyName);
-        setCustomProperty(propertyName, value);
+        setCustomProperty(name, value);
+      }
+      else
+      {
+        css_properties[name] = value;
       }
     }
 
     // Second pass: Process all regular properties (non-custom properties)
-    for (int index = 0; index < from_style.length(); index++)
-    {
-      const auto propertyName = from_style.item(index);
-
-      // Only process regular properties in the second pass
-      if (!(propertyName.length() >= 2 && propertyName.substr(0, 2) == "--"))
-      {
-        const auto value = from_style.getPropertyValue(propertyName);
-
-        auto it = find(propertyName);
-        if (it != end())
-        {
-          if (it->second == value)
-            continue;         // No need to update if the value is the same.
-          it->second = value; // Update the existing property.
-        }
-        else
-        {
-          setPropertyInternal(propertyName, value);
-        }
-
-        if (context.has_value())
-          computeProperty(propertyName, value, context.value());
-      }
-    }
-
     if (context.has_value())
     {
-      // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
+      for (const auto &[name, value] : css_properties)
+      {
+        computeProperty(name, value, context.value());
+      }
       computeShorthandProperties(context.value());
     }
+
+    // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
+    if (context.has_value())
+      computeShorthandProperties(context.value());
     updateBaseComputedStyle();
     return true;
   }
@@ -289,6 +303,69 @@ namespace client_cssom
         transition_timing_functions_[index]};
     }
     return nullopt;
+  }
+
+  // CSS Variables (Custom Properties) Implementation
+
+  void ComputedStyle::setCustomProperty(const string &name, const string &value)
+  {
+    custom_properties_[name] = value;
+  }
+
+  string ComputedStyle::getCustomProperty(const string &name) const
+  {
+    auto it = custom_properties_.find(name);
+    return (it != custom_properties_.end()) ? it->second : "";
+  }
+
+  bool ComputedStyle::hasCustomProperty(const string &name) const
+  {
+    return custom_properties_.find(name) != custom_properties_.end();
+  }
+
+  void ComputedStyle::inheritCustomProperties(const ComputedStyle &parentStyle)
+  {
+    // CSS custom properties inherit by default
+    for (const auto &prop : parentStyle.custom_properties_)
+    {
+      // Only inherit if not already set
+      if (custom_properties_.find(prop.first) == custom_properties_.end())
+      {
+        custom_properties_[prop.first] = prop.second;
+      }
+    }
+  }
+
+  string ComputedStyle::resolveVariables(const string &value, const values::computed::Context &context) const
+  {
+    css_variable_parser::CSSVariableParser parser(value);
+
+    // Create a variable resolver function that looks up variables in this style and inherited styles
+    auto resolver = [this, &context](const string &variable_name) -> optional<string>
+    {
+      // First try local custom properties
+      if (hasCustomProperty(variable_name))
+        return getCustomProperty(variable_name);
+
+      // Then try parent style (inheritance)
+      auto inherited_style = context.inheritedStyle();
+      if (inherited_style.has_value() && inherited_style->hasCustomProperty(variable_name))
+        return inherited_style->getCustomProperty(variable_name);
+
+      // Variable not found
+      return nullopt;
+    };
+
+    string result = parser.resolveVariables(resolver);
+
+    // Check if parsing was successful
+    if (!parser.isValid())
+    {
+      // If parsing failed, return the original value
+      return value;
+    }
+
+    return result;
   }
 
   void ComputedStyle::setPropertyInternal(const string &name, const string &value)
@@ -365,110 +442,110 @@ namespace client_cssom
 
     // Margin
     if (name == "margin-top")
-      margin_.setTop(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+      margin_.setTop(Parse::ParseSingleValue<values::specified::MarginSize>(resolvedValue).toComputedValue(context));
     else if (name == "margin-right")
-      margin_.setRight(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+      margin_.setRight(Parse::ParseSingleValue<values::specified::MarginSize>(resolvedValue).toComputedValue(context));
     else if (name == "margin-bottom")
-      margin_.setBottom(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+      margin_.setBottom(Parse::ParseSingleValue<values::specified::MarginSize>(resolvedValue).toComputedValue(context));
     else if (name == "margin-left")
-      margin_.setLeft(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+      margin_.setLeft(Parse::ParseSingleValue<values::specified::MarginSize>(resolvedValue).toComputedValue(context));
 
     // Padding
     if (name == "padding-top")
-      padding_.setTop(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+      padding_.setTop(Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context));
     else if (name == "padding-right")
-      padding_.setRight(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+      padding_.setRight(Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context));
     else if (name == "padding-bottom")
-      padding_.setBottom(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+      padding_.setBottom(Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context));
     else if (name == "padding-left")
-      padding_.setLeft(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+      padding_.setLeft(Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context));
 
     // Sizes
     else if (name == "width")
-      width_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+      width_ = Parse::ParseSingleValue<values::specified::Size>(resolvedValue).toComputedValue(context);
     else if (name == "height")
-      height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+      height_ = Parse::ParseSingleValue<values::specified::Size>(resolvedValue).toComputedValue(context);
     else if (name == "min-width")
-      min_width_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+      min_width_ = Parse::ParseSingleValue<values::specified::Size>(resolvedValue).toComputedValue(context);
     else if (name == "min-height")
-      min_height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+      min_height_ = Parse::ParseSingleValue<values::specified::Size>(resolvedValue).toComputedValue(context);
 
     /**
      * Border properties
      */
     // border-width
     else if (name == "border-top-width")
-      border_width_.top() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+      border_width_.top() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(resolvedValue)
                               .toComputedValue(context);
     else if (name == "border-right-width")
-      border_width_.right() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+      border_width_.right() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(resolvedValue)
                                 .toComputedValue(context);
     else if (name == "border-bottom-width")
-      border_width_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+      border_width_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(resolvedValue)
                                  .toComputedValue(context);
     else if (name == "border-left-width")
-      border_width_.left() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+      border_width_.left() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(resolvedValue)
                                .toComputedValue(context);
     // border-style
     else if (name == "border-top-style")
-      border_style_.top() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+      border_style_.top() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(resolvedValue)
                               .toComputedValue(context);
     else if (name == "border-right-style")
-      border_style_.right() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+      border_style_.right() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(resolvedValue)
                                 .toComputedValue(context);
     else if (name == "border-bottom-style")
-      border_style_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+      border_style_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(resolvedValue)
                                  .toComputedValue(context);
     else if (name == "border-left-style")
-      border_style_.left() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+      border_style_.left() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(resolvedValue)
                                .toComputedValue(context);
     // border-color
     else if (name == "border-top-color")
-      border_color_.top() = Parse::ParseSingleValue<values::specified::Color>(value)
+      border_color_.top() = Parse::ParseSingleValue<values::specified::Color>(resolvedValue)
                               .toComputedValue(context);
     else if (name == "border-right-color")
-      border_color_.right() = Parse::ParseSingleValue<values::specified::Color>(value)
+      border_color_.right() = Parse::ParseSingleValue<values::specified::Color>(resolvedValue)
                                 .toComputedValue(context);
     else if (name == "border-bottom-color")
-      border_color_.bottom() = Parse::ParseSingleValue<values::specified::Color>(value)
+      border_color_.bottom() = Parse::ParseSingleValue<values::specified::Color>(resolvedValue)
                                  .toComputedValue(context);
     else if (name == "border-left-color")
-      border_color_.left() = Parse::ParseSingleValue<values::specified::Color>(value)
+      border_color_.left() = Parse::ParseSingleValue<values::specified::Color>(resolvedValue)
                                .toComputedValue(context);
     // border-radius
     else if (name == "border-top-left-radius")
-      border_radius_.topLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+      border_radius_.topLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(resolvedValue)
                                    .toComputedValue(context);
     else if (name == "border-top-right-radius")
-      border_radius_.topRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+      border_radius_.topRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(resolvedValue)
                                     .toComputedValue(context);
     else if (name == "border-bottom-left-radius")
-      border_radius_.bottomLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+      border_radius_.bottomLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(resolvedValue)
                                       .toComputedValue(context);
     else if (name == "border-bottom-right-radius")
-      border_radius_.bottomRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+      border_radius_.bottomRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(resolvedValue)
                                        .toComputedValue(context);
 
     // Font properties
     if (name == "font-family")
-      fonts_ = parsing::parseFontFamily(value);
+      fonts_ = parsing::parseFontFamily(resolvedValue);
     else if (name == "font-size")
-      font_size_ = Parse::ParseSingleValue<values::specified::FontSize>(value).toComputedValue(context);
+      font_size_ = Parse::ParseSingleValue<values::specified::FontSize>(resolvedValue).toComputedValue(context);
     else if (name == "font-weight")
-      font_weight_ = Parse::ParseSingleValue<values::specified::FontWeight>(value).toComputedValue(context);
+      font_weight_ = Parse::ParseSingleValue<values::specified::FontWeight>(resolvedValue).toComputedValue(context);
     else if (name == "font-style")
-      font_style_ = Parse::ParseSingleValue<values::specified::FontStyle>(value).toComputedValue(context);
+      font_style_ = Parse::ParseSingleValue<values::specified::FontStyle>(resolvedValue).toComputedValue(context);
     else if (name == "line-height")
-      line_height_ = Parse::ParseSingleValue<values::specified::LineHeight>(value).toComputedValue(context);
+      line_height_ = Parse::ParseSingleValue<values::specified::LineHeight>(resolvedValue).toComputedValue(context);
 
     // Visibility properties
     // TODO: implement visibility properties
 
     // Text properties
     else if (name == "text-align")
-      text_align_ = Parse::ParseSingleValue<values::computed::TextAlign>(value);
+      text_align_ = Parse::ParseSingleValue<values::computed::TextAlign>(resolvedValue);
     else if (name == "direction")
-      text_direction_ = Parse::ParseSingleValue<values::computed::Direction>(value);
+      text_direction_ = Parse::ParseSingleValue<values::computed::Direction>(resolvedValue);
 
     // Color properties
     else if (name == "color")
@@ -483,53 +560,53 @@ namespace client_cssom
     }
     else if (name == "background-image")
     {
-      background_image_ = Parse::ParseSingleValue<values::specified::Image>(value).toComputedValue(context);
+      background_image_ = Parse::ParseSingleValue<values::specified::Image>(resolvedValue).toComputedValue(context);
       bitfields_.SetHasBackgroundImage(true);
     }
     else if (name == "background-blend-mode")
     {
-      background_blend_mode_ = Parse::ParseSingleValue<values::specified::BackgroundBlendMode>(value)
+      background_blend_mode_ = Parse::ParseSingleValue<values::specified::BackgroundBlendMode>(resolvedValue)
                                  .toComputedValue(context);
     }
     else if (name == "background-clip")
     {
-      background_clip_ = Parse::ParseSingleValue<values::specified::BackgroundClip>(value).toComputedValue(context);
+      background_clip_ = Parse::ParseSingleValue<values::specified::BackgroundClip>(resolvedValue).toComputedValue(context);
     }
     else if (name == "background-origin")
     {
-      background_origin_ = Parse::ParseSingleValue<values::specified::BackgroundOrigin>(value).toComputedValue(context);
+      background_origin_ = Parse::ParseSingleValue<values::specified::BackgroundOrigin>(resolvedValue).toComputedValue(context);
     }
     else if (name == "background-repeat")
     {
-      background_repeat_ = Parse::ParseSingleValue<values::specified::BackgroundRepeat>(value).toComputedValue(context);
+      background_repeat_ = Parse::ParseSingleValue<values::specified::BackgroundRepeat>(resolvedValue).toComputedValue(context);
     }
 
     // Flexbox
     else if (name == "flex-direction")
-      flex_direction_ = Parse::ParseSingleValue<values::specified::FlexDirection>(value).toComputedValue(context);
+      flex_direction_ = Parse::ParseSingleValue<values::specified::FlexDirection>(resolvedValue).toComputedValue(context);
     else if (name == "align-items")
-      align_items_ = Parse::ParseSingleValue<values::specified::AlignItems>(value);
+      align_items_ = Parse::ParseSingleValue<values::specified::AlignItems>(resolvedValue);
     else if (name == "align-self")
-      align_self_ = Parse::ParseSingleValue<values::specified::AlignSelf>(value);
+      align_self_ = Parse::ParseSingleValue<values::specified::AlignSelf>(resolvedValue);
     else if (name == "align-content")
-      align_content_ = Parse::ParseSingleValue<values::specified::AlignContent>(value);
+      align_content_ = Parse::ParseSingleValue<values::specified::AlignContent>(resolvedValue);
     else if (name == "justify-content")
-      justify_content_ = Parse::ParseSingleValue<values::specified::JustifyContent>(value);
+      justify_content_ = Parse::ParseSingleValue<values::specified::JustifyContent>(resolvedValue);
     else if (name == "justify-self")
-      justify_self_ = Parse::ParseSingleValue<values::specified::JustifySelf>(value);
+      justify_self_ = Parse::ParseSingleValue<values::specified::JustifySelf>(resolvedValue);
     else if (name == "justify-items")
-      justify_items_ = Parse::ParseSingleValue<values::specified::JustifyItems>(value);
+      justify_items_ = Parse::ParseSingleValue<values::specified::JustifyItems>(resolvedValue);
     else if (name == "row-gap")
-      row_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
+      row_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context);
     else if (name == "column-gap")
-      column_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
+      column_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(resolvedValue).toComputedValue(context);
 
     /**
      * Transform properties
      */
     else if (name == "transform")
     {
-      transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
+      transform_ = Parse::ParseSingleValue<values::specified::Transform>(resolvedValue).toComputedValue(context);
       bitfields_.SetHasTransform(transform_.empty() == false);
     }
 
@@ -538,11 +615,11 @@ namespace client_cssom
      */
     else if (name == "filter")
     {
-      filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
+      filter_ = Parse::ParseSingleValue<values::specified::Filter>(resolvedValue).toComputedValue(context);
     }
     else if (name == "backdrop-filter")
     {
-      backdrop_filter_ = Parse::ParseSingleValue<values::specified::Filter>(value).toComputedValue(context);
+      backdrop_filter_ = Parse::ParseSingleValue<values::specified::Filter>(resolvedValue).toComputedValue(context);
     }
 
     /**
@@ -550,22 +627,22 @@ namespace client_cssom
      */
     else if (name == "transition-property")
     {
-      transition_properties_ = Parse::ParseSingleValue<values::specified::TransitionPropertySet>(value)
+      transition_properties_ = Parse::ParseSingleValue<values::specified::TransitionPropertySet>(resolvedValue)
                                  .toComputedValue(context);
     }
     else if (name == "transition-duration")
     {
-      transition_durations_ = Parse::ParseValuesArray<values::specified::Time>(value)
+      transition_durations_ = Parse::ParseValuesArray<values::specified::Time>(resolvedValue)
                                 .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-delay")
     {
-      transition_delays_ = Parse::ParseValuesArray<values::specified::Time>(value)
+      transition_delays_ = Parse::ParseValuesArray<values::specified::Time>(resolvedValue)
                              .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-timing-function")
     {
-      transition_timing_functions_ = Parse::ParseValuesArray<values::specified::TimingFunction>(value)
+      transition_timing_functions_ = Parse::ParseValuesArray<values::specified::TimingFunction>(resolvedValue)
                                        .toComputedValues<values::computed::TimingFunction>(context);
     }
   }
@@ -578,124 +655,5 @@ namespace client_cssom
   void ComputedStyle::updateBaseComputedStyle()
   {
     // TODO: implement updateBaseComputedStyle
-  }
-
-  // CSS Variables (Custom Properties) Implementation
-
-  void ComputedStyle::setCustomProperty(const string &name, const string &value)
-  {
-    if (name.length() >= 2 && name.substr(0, 2) == "--")
-    {
-      custom_properties_[name] = value;
-    }
-  }
-
-  string ComputedStyle::getCustomProperty(const string &name) const
-  {
-    auto it = custom_properties_.find(name);
-    return (it != custom_properties_.end()) ? it->second : "";
-  }
-
-  bool ComputedStyle::hasCustomProperty(const string &name) const
-  {
-    return custom_properties_.find(name) != custom_properties_.end();
-  }
-
-  void ComputedStyle::inheritCustomProperties(const ComputedStyle &parentStyle)
-  {
-    // CSS custom properties inherit by default
-    for (const auto &prop : parentStyle.custom_properties_)
-    {
-      // Only inherit if not already set
-      if (custom_properties_.find(prop.first) == custom_properties_.end())
-      {
-        custom_properties_[prop.first] = prop.second;
-      }
-    }
-  }
-
-  bool ComputedStyle::updateCustomProperty(const string &name, const string &value)
-  {
-    if (name.length() < 2 || name.substr(0, 2) != "--")
-      return false;
-
-    string oldValue = getCustomProperty(name);
-    if (oldValue == value)
-      return false; // No change
-
-    setCustomProperty(name, value);
-
-    // TODO: Re-resolve all properties that depend on this variable
-    // Note: This requires a context parameter to be added to this method in the future
-    // For now, this provides the basic infrastructure for tracking dependencies
-
-    return true;
-  }
-
-  string ComputedStyle::resolveVariables(const string &value, const values::computed::Context &context) const
-  {
-    css_variable_parser::CSSVariableParser parser(value);
-
-    // Create a variable resolver function that looks up variables in this style and inherited styles
-    auto resolver = [this, &context](const string &variable_name) -> std::optional<string>
-    {
-      // First try local custom properties
-      if (hasCustomProperty(variable_name))
-      {
-        return getCustomProperty(variable_name);
-      }
-
-      // Then try parent style (inheritance)
-      auto inherited_style = context.inheritedStyle();
-      if (inherited_style.has_value() && inherited_style->hasCustomProperty(variable_name))
-      {
-        return inherited_style->getCustomProperty(variable_name);
-      }
-
-      // Variable not found
-      return std::nullopt;
-    };
-
-    string result = parser.resolveVariables(resolver);
-
-    // Check if parsing was successful
-    if (!parser.isValid())
-    {
-      // If parsing failed, return the original value
-      return value;
-    }
-
-    return result;
-  }
-
-  void ComputedStyle::trackVariableDependency(const string &variable_name, const string &property_name)
-  {
-    variable_tracker_.trackDependency(variable_name, property_name);
-  }
-
-  void ComputedStyle::clearVariableDependencies(const string &property_name)
-  {
-    variable_tracker_.clearDependencies(property_name);
-  }
-
-  void ComputedStyle::reResolveVariableDependents(const string &variable_name, const values::computed::Context &context)
-  {
-    const auto &dependents = variable_tracker_.getDependents(variable_name);
-    if (dependents.empty())
-      return; // No dependencies for this variable
-
-    // Re-compute all properties that depend on this variable
-    for (const string &property_name : dependents)
-    {
-      // Get the original value (with unresolved variables) from the base map
-      auto property_it = find(property_name);
-      if (property_it != end())
-      {
-        // Re-compute the property with the updated variable value
-        // This creates a mutable copy of the context
-        values::computed::Context mutable_context = context;
-        computeProperty(property_name, property_it->second, mutable_context);
-      }
-    }
   }
 }

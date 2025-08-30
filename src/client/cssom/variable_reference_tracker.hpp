@@ -1,5 +1,4 @@
-#ifndef CLIENT_CSSOM_VARIABLE_REFERENCE_TRACKER_HPP_
-#define CLIENT_CSSOM_VARIABLE_REFERENCE_TRACKER_HPP_
+#pragma once
 
 #include <functional>
 #include <string>
@@ -96,5 +95,3 @@ namespace client_cssom
   };
 
 } // namespace client_cssom
-
-#endif // CLIENT_CSSOM_VARIABLE_REFERENCE_TRACKER_HPP_
