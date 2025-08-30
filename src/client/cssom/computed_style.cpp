@@ -212,10 +212,10 @@ namespace client_cssom
     return true;
   }
 
-  std::optional<ComputedStyle::TransitionProperty> ComputedStyle::getTransitionProperty(uint32_t index) const
+  optional<ComputedStyle::TransitionProperty> ComputedStyle::getTransitionProperty(uint32_t index) const
   {
     if (index >= transition_properties_.size())
-      return std::nullopt;
+      return nullopt;
 
     const auto &property = transition_properties_[index];
     if (index < transition_durations_.size() && index < transition_delays_.size() &&
@@ -227,7 +227,7 @@ namespace client_cssom
         transition_delays_[index],
         transition_timing_functions_[index]};
     }
-    return std::nullopt;
+    return nullopt;
   }
 
   void ComputedStyle::setPropertyInternal(const string &name, const string &value)
@@ -510,7 +510,7 @@ namespace client_cssom
 
   // CSS Variables (Custom Properties) Implementation
 
-  void ComputedStyle::setCustomProperty(const std::string &name, const std::string &value)
+  void ComputedStyle::setCustomProperty(const string &name, const string &value)
   {
     if (name.length() >= 2 && name.substr(0, 2) == "--")
     {
@@ -518,13 +518,13 @@ namespace client_cssom
     }
   }
 
-  std::string ComputedStyle::getCustomProperty(const std::string &name) const
+  string ComputedStyle::getCustomProperty(const string &name) const
   {
     auto it = custom_properties_.find(name);
     return (it != custom_properties_.end()) ? it->second : "";
   }
 
-  bool ComputedStyle::hasCustomProperty(const std::string &name) const
+  bool ComputedStyle::hasCustomProperty(const string &name) const
   {
     return custom_properties_.find(name) != custom_properties_.end();
   }
@@ -542,12 +542,12 @@ namespace client_cssom
     }
   }
 
-  bool ComputedStyle::updateCustomProperty(const std::string &name, const std::string &value)
+  bool ComputedStyle::updateCustomProperty(const string &name, const string &value)
   {
     if (name.length() < 2 || name.substr(0, 2) != "--")
       return false;
 
-    std::string oldValue = getCustomProperty(name);
+    string oldValue = getCustomProperty(name);
     if (oldValue == value)
       return false; // No change
 
@@ -560,28 +560,28 @@ namespace client_cssom
     return true;
   }
 
-  std::string ComputedStyle::resolveVariables(const std::string &value, const values::computed::Context &context) const
+  string ComputedStyle::resolveVariables(const string &value, const values::computed::Context &context) const
   {
-    std::string result = value;
+    string result = value;
     size_t varPos = 0;
 
     // Look for var() function calls
-    while ((varPos = result.find("var(", varPos)) != std::string::npos)
+    while ((varPos = result.find("var(", varPos)) != string::npos)
     {
       size_t startPos = varPos + 4; // Skip "var("
       size_t endPos = result.find(")", startPos);
 
-      if (endPos == std::string::npos)
+      if (endPos == string::npos)
         break; // Malformed var() function
 
-      std::string varContent = result.substr(startPos, endPos - startPos);
+      string varContent = result.substr(startPos, endPos - startPos);
 
       // Parse variable name and optional fallback
-      std::string varName;
-      std::string fallback;
+      string varName;
+      string fallback;
 
       size_t commaPos = varContent.find(",");
-      if (commaPos != std::string::npos)
+      if (commaPos != string::npos)
       {
         varName = varContent.substr(0, commaPos);
         fallback = varContent.substr(commaPos + 1);
@@ -601,7 +601,7 @@ namespace client_cssom
       }
 
       // Resolve the variable
-      std::string resolvedValue;
+      string resolvedValue;
 
       // First try local custom properties
       if (hasCustomProperty(varName))

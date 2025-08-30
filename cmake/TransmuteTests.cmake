@@ -22,6 +22,7 @@ if (TR_BUILD_TESTS)
         ${TR_COMMON_TESTS_SOURCE}
         tests/runtime.cpp
         tests/math.cpp
+        tests/test_presets.cpp
     )
     target_include_directories(TransmuteUnitTests
         PRIVATE

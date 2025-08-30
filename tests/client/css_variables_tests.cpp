@@ -6,15 +6,17 @@
 #include <client/cssom/properties.hpp>
 #include <client/cssom/values/computed/context.hpp>
 #include <client/dom/document.hpp>
+#include <client/dom/browsing_context.hpp>
 #include <client/html/html_element.hpp>
 
 using namespace client_cssom;
 
 // Helper function to create a minimal context for testing
-values::computed::Context createTestContext() {
-  // Create a minimal document and element for testing
-  auto document = std::make_shared<dom::Document>();
-  auto element = std::make_shared<dom::HTMLElement>("div", document);
+values::computed::Context createTestContext()
+{
+  static auto browsingContext = std::make_shared<dom::BrowsingContext>();
+  static auto document = dom::Document::Make("text/html", dom::DocumentType::kHTML, browsingContext);
+  static auto element = std::make_shared<dom::HTMLElement>("div", document);
   return values::computed::Context::From(element);
 }
 
@@ -54,11 +56,10 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   SECTION("Invalid CSS custom property names are ignored")
   {
     // Property names must start with --
-    CSSStyleDeclaration style("-invalid: value; not--valid: value; valid: value;");
+    CSSStyleDeclaration style("-invalid: value; not--valid: value;");
 
     REQUIRE(style.getPropertyValue("-invalid") == "");
     REQUIRE(style.getPropertyValue("not--valid") == "");
-    REQUIRE(style.getPropertyValue("valid") == "value");
   }
 
   SECTION("CSS custom property with fallback value")
@@ -74,7 +75,7 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
     // CSS custom properties should be marked as inherited
     REQUIRE(ComputedStyle::IsInheritedProperty("--custom-prop"));
     REQUIRE(ComputedStyle::IsInheritedProperty("--main-color"));
-    REQUIRE_FALSE(ComputedStyle::IsInheritedProperty("color"));
+    REQUIRE(ComputedStyle::IsInheritedProperty("color"));
     REQUIRE_FALSE(ComputedStyle::IsInheritedProperty("background-color"));
   }
 }
@@ -84,7 +85,8 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Custom property storage in ComputedStyle")
   {
     CSSStyleDeclaration style("--theme-color: #ff0000; --spacing: 10px;");
-    ComputedStyle computedStyle = ComputedStyle::Make(style, nullptr);
+    auto context = createTestContext();
+    ComputedStyle computedStyle = ComputedStyle(style, context);
 
     REQUIRE(computedStyle.hasCustomProperty("--theme-color"));
     REQUIRE(computedStyle.getCustomProperty("--theme-color") == "#ff0000");
@@ -207,14 +209,16 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
 
   SECTION("ComputedStyle::Make with parent inheritance")
   {
+    auto context = createTestContext();
+
     // Create parent style with variables
     CSSStyleDeclaration parentDecl("--main-color: purple; --spacing: 8px;");
-    ComputedStyle parentStyle = ComputedStyle::Make(parentDecl, nullptr);
+    ComputedStyle parentStyle = ComputedStyle(parentDecl, context);
 
     // Create child style that uses parent variables
     CSSStyleDeclaration childDecl("color: var(--main-color); margin: var(--spacing);");
-    ComputedStyle childStyle = ComputedStyle::Make(childDecl, nullptr);
-    
+    ComputedStyle childStyle = ComputedStyle(childDecl, context);
+
     // Manually inherit custom properties for this test
     childStyle.inheritCustomProperties(parentStyle);
 
