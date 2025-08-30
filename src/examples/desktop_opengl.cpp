@@ -146,7 +146,7 @@ namespace jsar::example
       printf("  --no-env-map            Disable environment map rendering\n");
       printf("  --system-fonts-dir <dir> Set custom system fonts directory\n");
       printf("  --fps <value>           Set target FPS and disable vsync (e.g., 30, 60, 120)\n");
-      printf("  --vsync                 Enable vertical sync (default)\n");
+      printf("  --vsync                 Enable vertical sync (default: disabled)\n");
       printf("  --help                  Show this help\n");
       printf("\n");
       printf("Frame Rate Control:\n");
