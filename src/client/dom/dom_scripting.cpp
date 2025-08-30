@@ -2,9 +2,12 @@
 #include <rapidjson/document.h>
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
+#include <iostream>
+#include <sstream>
 
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
+#include "../logger.hpp"
 
 namespace dom
 {
@@ -314,7 +317,146 @@ namespace dom
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
-        V8_SET_GLOBAL_FROM_MAIN(console);
+        // Create custom console object with CDP integration
+        {
+          auto consoleObject = v8::Object::New(isolate);
+
+          // Helper lambda to create console methods
+          auto createConsoleMethod = [&](const char *name, const char *logLevel)
+          {
+            auto callback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+            {
+              v8::Isolate *isolate = info.GetIsolate();
+              v8::HandleScope scope(isolate);
+
+              // Get the log level from the data
+              v8::Local<v8::External> external = info.Data().As<v8::External>();
+              const char *level = static_cast<const char *>(external->Value());
+
+              // Format arguments
+              std::ostringstream oss;
+              for (int i = 0; i < info.Length(); ++i)
+              {
+                if (i > 0)
+                  oss << " ";
+                v8::String::Utf8Value str(isolate, info[i]);
+                oss << *str;
+              }
+              std::string message = oss.str();
+
+              // Log to Node.js console for backwards compatibility
+              if (strcmp(level, "error") == 0 || strcmp(level, "warn") == 0)
+              {
+                std::cerr << message << std::endl;
+              }
+              else
+              {
+                std::cout << message << std::endl;
+              }
+
+              // Log to CDP
+              auto logger = logging::Logger::GetInstance();
+              logging::Logger::Level cdpLevel;
+              if (strcmp(level, "error") == 0)
+              {
+                cdpLevel = logging::Logger::Level::ERROR;
+              }
+              else if (strcmp(level, "warn") == 0)
+              {
+                cdpLevel = logging::Logger::Level::WARNING;
+              }
+              else if (strcmp(level, "debug") == 0)
+              {
+                cdpLevel = logging::Logger::Level::VERBOSE;
+              }
+              else
+              {
+                cdpLevel = logging::Logger::Level::INFO;
+              }
+
+              logger->log(cdpLevel, logging::Logger::Source::CONSOLE_API, message);
+            };
+
+            auto external = v8::External::New(isolate, const_cast<char *>(logLevel));
+            auto func = v8::Function::New(mainContext, callback, external).ToLocalChecked();
+            consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, name).ToLocalChecked(), func).FromJust();
+          };
+
+          // Create console methods
+          createConsoleMethod("log", "log");
+          createConsoleMethod("info", "info");
+          createConsoleMethod("warn", "warn");
+          createConsoleMethod("error", "error");
+          createConsoleMethod("debug", "debug");
+
+          // Special methods
+          auto traceCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::HandleScope scope(isolate);
+
+            std::ostringstream oss;
+            oss << "Trace:";
+            for (int i = 0; i < info.Length(); ++i)
+            {
+              oss << " ";
+              v8::String::Utf8Value str(isolate, info[i]);
+              oss << *str;
+            }
+            std::string message = oss.str();
+
+            std::cout << message << std::endl;
+            auto logger = logging::Logger::GetInstance();
+            logger->log(logging::Logger::Level::INFO, logging::Logger::Source::CONSOLE_API, message);
+          };
+
+          auto assertCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::HandleScope scope(isolate);
+
+            if (info.Length() < 1)
+              return;
+
+            bool condition = info[0]->BooleanValue(isolate);
+            if (!condition)
+            {
+              std::ostringstream oss;
+              if (info.Length() > 1)
+              {
+                oss << "Assertion failed:";
+                for (int i = 1; i < info.Length(); ++i)
+                {
+                  oss << " ";
+                  v8::String::Utf8Value str(isolate, info[i]);
+                  oss << *str;
+                }
+              }
+              else
+              {
+                oss << "Assertion failed";
+              }
+              std::string message = oss.str();
+
+              std::cerr << message << std::endl;
+              auto logger = logging::Logger::GetInstance();
+              logger->log(logging::Logger::Level::ERROR, logging::Logger::Source::CONSOLE_API, message);
+            }
+          };
+
+          auto clearCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            std::cout << "\033[2J\033[1;1H"; // Clear screen escape sequence
+            auto logger = logging::Logger::GetInstance();
+            logger->log(logging::Logger::Level::INFO, logging::Logger::Source::CONSOLE_API, "Console was cleared");
+          };
+
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "trace").ToLocalChecked(), v8::Function::New(mainContext, traceCallback).ToLocalChecked()).FromJust();
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "assert").ToLocalChecked(), v8::Function::New(mainContext, assertCallback).ToLocalChecked()).FromJust();
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "clear").ToLocalChecked(), v8::Function::New(mainContext, clearCallback).ToLocalChecked()).FromJust();
+
+          V8_SET_GLOBAL_FROM_VALUE(console, consoleObject);
+        }
         V8_SET_GLOBAL_FROM_MAIN(performance);
 
         // Basic constructors
@@ -552,7 +694,146 @@ namespace dom
          */
 
         // Baisc objects
-        V8_SET_GLOBAL_FROM_MAIN(console);
+        // Create custom console object with CDP integration (same as main context)
+        {
+          auto consoleObject = v8::Object::New(isolate);
+
+          // Helper lambda to create console methods
+          auto createConsoleMethod = [&](const char *name, const char *logLevel)
+          {
+            auto callback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+            {
+              v8::Isolate *isolate = info.GetIsolate();
+              v8::HandleScope scope(isolate);
+
+              // Get the log level from the data
+              v8::Local<v8::External> external = info.Data().As<v8::External>();
+              const char *level = static_cast<const char *>(external->Value());
+
+              // Format arguments
+              std::ostringstream oss;
+              for (int i = 0; i < info.Length(); ++i)
+              {
+                if (i > 0)
+                  oss << " ";
+                v8::String::Utf8Value str(isolate, info[i]);
+                oss << *str;
+              }
+              std::string message = oss.str();
+
+              // Log to Node.js console for backwards compatibility
+              if (strcmp(level, "error") == 0 || strcmp(level, "warn") == 0)
+              {
+                std::cerr << message << std::endl;
+              }
+              else
+              {
+                std::cout << message << std::endl;
+              }
+
+              // Log to CDP
+              auto logger = logging::Logger::GetInstance();
+              logging::Logger::Level cdpLevel;
+              if (strcmp(level, "error") == 0)
+              {
+                cdpLevel = logging::Logger::Level::ERROR;
+              }
+              else if (strcmp(level, "warn") == 0)
+              {
+                cdpLevel = logging::Logger::Level::WARNING;
+              }
+              else if (strcmp(level, "debug") == 0)
+              {
+                cdpLevel = logging::Logger::Level::VERBOSE;
+              }
+              else
+              {
+                cdpLevel = logging::Logger::Level::INFO;
+              }
+
+              logger->log(cdpLevel, logging::Logger::Source::CONSOLE_API, message);
+            };
+
+            auto external = v8::External::New(isolate, const_cast<char *>(logLevel));
+            auto func = v8::Function::New(mainContext, callback, external).ToLocalChecked();
+            consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, name).ToLocalChecked(), func).FromJust();
+          };
+
+          // Create console methods
+          createConsoleMethod("log", "log");
+          createConsoleMethod("info", "info");
+          createConsoleMethod("warn", "warn");
+          createConsoleMethod("error", "error");
+          createConsoleMethod("debug", "debug");
+
+          // Special methods
+          auto traceCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::HandleScope scope(isolate);
+
+            std::ostringstream oss;
+            oss << "Trace:";
+            for (int i = 0; i < info.Length(); ++i)
+            {
+              oss << " ";
+              v8::String::Utf8Value str(isolate, info[i]);
+              oss << *str;
+            }
+            std::string message = oss.str();
+
+            std::cout << message << std::endl;
+            auto logger = logging::Logger::GetInstance();
+            logger->log(logging::Logger::Level::INFO, logging::Logger::Source::CONSOLE_API, message);
+          };
+
+          auto assertCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::HandleScope scope(isolate);
+
+            if (info.Length() < 1)
+              return;
+
+            bool condition = info[0]->BooleanValue(isolate);
+            if (!condition)
+            {
+              std::ostringstream oss;
+              if (info.Length() > 1)
+              {
+                oss << "Assertion failed:";
+                for (int i = 1; i < info.Length(); ++i)
+                {
+                  oss << " ";
+                  v8::String::Utf8Value str(isolate, info[i]);
+                  oss << *str;
+                }
+              }
+              else
+              {
+                oss << "Assertion failed";
+              }
+              std::string message = oss.str();
+
+              std::cerr << message << std::endl;
+              auto logger = logging::Logger::GetInstance();
+              logger->log(logging::Logger::Level::ERROR, logging::Logger::Source::CONSOLE_API, message);
+            }
+          };
+
+          auto clearCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            std::cout << "\033[2J\033[1;1H"; // Clear screen escape sequence
+            auto logger = logging::Logger::GetInstance();
+            logger->log(logging::Logger::Level::INFO, logging::Logger::Source::CONSOLE_API, "Console was cleared");
+          };
+
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "trace").ToLocalChecked(), v8::Function::New(mainContext, traceCallback).ToLocalChecked()).FromJust();
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "assert").ToLocalChecked(), v8::Function::New(mainContext, assertCallback).ToLocalChecked()).FromJust();
+          consoleObject->Set(mainContext, v8::String::NewFromUtf8(isolate, "clear").ToLocalChecked(), v8::Function::New(mainContext, clearCallback).ToLocalChecked()).FromJust();
+
+          V8_SET_GLOBAL_FROM_VALUE(console, consoleObject);
+        }
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
