@@ -1,9 +1,33 @@
+/*
+ * Desktop OpenGL Example for JSAR Runtime
+ * 
+ * This example demonstrates the JSAR runtime with OpenGL rendering on desktop platforms.
+ * 
+ * Frame Rate Control Features:
+ * - VSync mode: Synchronizes rendering with display refresh rate (default)
+ * - Manual FPS mode: Limits frame rate to a specific target (10-1000 FPS)
+ * 
+ * Command Line Options:
+ * --fps <value>    Set target FPS and enable manual frame rate control
+ * --vsync          Enable vertical sync (default)
+ * 
+ * Runtime Controls:
+ * V key            Toggle between VSync and manual FPS modes
+ * + key            Increase target FPS (manual mode only)
+ * - key            Decrease target FPS (manual mode only)
+ * 
+ * The frame rate control allows for easy benchmarking and testing under different
+ * performance conditions, providing flexibility for desktop users and developers.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <filesystem>
 #include <memory>
 #include <cstring>
+#include <chrono>
+#include <thread>
 
 #ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -118,6 +142,62 @@ namespace jsar::example
     }
   }
 
+  void processFrameRateInput(GLFWwindow *window, App &app)
+  {
+    // Toggle vsync mode with V key
+    static bool isKeyVPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+      isKeyVPressed = true;
+    if (isKeyVPressed && glfwGetKey(window, GLFW_KEY_V) == GLFW_RELEASE)
+    {
+      isKeyVPressed = false;
+      app.useVsync = !app.useVsync;
+      glfwSwapInterval(app.useVsync ? 1 : 0);
+      printf("Frame rate mode: %s (Target FPS: %d)\n",
+             app.useVsync ? "VSync" : "Manual",
+             app.targetFps);
+    }
+
+    // Adjust FPS with +/- keys (only in manual mode)
+    if (!app.useVsync)
+    {
+      static bool isKeyPlusPressed = false;
+      static bool isKeyMinusPressed = false;
+
+      // Increase FPS with + key
+      if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS ||
+          glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+        isKeyPlusPressed = true;
+      if (isKeyPlusPressed &&
+          (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_RELEASE &&
+           glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE))
+      {
+        isKeyPlusPressed = false;
+        if (app.targetFps < 240)
+        {
+          app.targetFps += (app.targetFps < 60) ? 15 : 30;
+          printf("Target FPS: %d\n", app.targetFps);
+        }
+      }
+
+      // Decrease FPS with - key
+      if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS ||
+          glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+        isKeyMinusPressed = true;
+      if (isKeyMinusPressed &&
+          (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_RELEASE &&
+           glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE))
+      {
+        isKeyMinusPressed = false;
+        if (app.targetFps > 15)
+        {
+          app.targetFps -= (app.targetFps <= 60) ? 15 : 30;
+          printf("Target FPS: %d\n", app.targetFps);
+        }
+      }
+    }
+  }
+
   class App
   {
   public:
@@ -153,7 +233,14 @@ namespace jsar::example
       printf("  --env-map <path>        Specify environment map directory path\n");
       printf("  --no-env-map            Disable environment map rendering\n");
       printf("  --system-fonts-dir <dir> Set custom system fonts directory\n");
+      printf("  --fps <value>           Set target FPS and disable vsync (e.g., 30, 60, 120)\n");
+      printf("  --vsync                 Enable vertical sync (default)\n");
       printf("  --help                  Show this help\n");
+      printf("\n");
+      printf("Frame Rate Control:\n");
+      printf("  V key                   Toggle between vsync and manual FPS mode\n");
+      printf("  + key                   Increase target FPS (manual mode only)\n");
+      printf("  - key                   Decrease target FPS (manual mode only)\n");
       printf("\n");
       printf("Examples:\n");
       printf("  %s --mono\n", programName);
@@ -163,6 +250,8 @@ namespace jsar::example
       printf("  %s --env-map /path/to/cubemap  # Use custom environment map\n", programName);
       printf("  %s --no-env-map             # Disable environment map\n", programName);
       printf("  %s --system-fonts-dir /usr/share/fonts  # Use custom font directory\n", programName);
+      printf("  %s --fps 120               # Run at 120 FPS with manual frame rate control\n", programName);
+      printf("  %s --vsync                 # Enable vertical sync (default)\n", programName);
     }
 
     bool init(int argc, char **argv)
@@ -296,6 +385,28 @@ namespace jsar::example
             return false;
           }
         }
+        else if (arg == "--fps")
+        {
+          if (i + 1 >= argc)
+          {
+            printf("Error: --fps requires a frame rate value argument\n");
+            help(argv[0]);
+            return false;
+          }
+          int fps = atoi(argv[++i]);
+          if (fps < 10 || fps > 1000)
+          {
+            printf("Error: FPS must be between 10 and 1000, got '%s'\n", argv[i]);
+            help(argv[0]);
+            return false;
+          }
+          targetFps = fps;
+          useVsync = false; // Disable vsync when manual FPS is set
+        }
+        else if (arg == "--vsync")
+        {
+          useVsync = true;
+        }
         else if (arg[0] != '-')
         {
           // This is the URL argument
@@ -351,7 +462,7 @@ namespace jsar::example
 
       // Make the context available before starting the embedder
       glfwMakeContextCurrent(windowCtx_->window);
-      glfwSwapInterval(1);
+      glfwSwapInterval(useVsync ? 1 : 0); // Enable/disable vsync based on settings
       {
         // Get environment variables for OpenGL context
         const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
@@ -481,11 +592,35 @@ namespace jsar::example
       auto panel = windowCtx_->createStatPanel();
       static bool isEmbedderReady = false;
 
+      // Initialize frame timing
+      lastFrameTime = std::chrono::high_resolution_clock::now();
+
+      printf("Starting with frame rate mode: %s (Target FPS: %d)\n",
+             useVsync ? "VSync" : "Manual",
+             targetFps);
+      printf("Press 'V' to toggle frame rate mode, '+'/'-' to adjust FPS (manual mode only)\n");
+
       while (!glfwWindowShouldClose(windowCtx_->window))
       {
+        // Frame rate control: limit FPS when not using vsync
+        if (!useVsync)
+        {
+          auto currentTime = std::chrono::high_resolution_clock::now();
+          auto frameTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastFrameTime);
+          auto targetFrameTime = std::chrono::microseconds(1000000 / targetFps);
+
+          if (frameTime < targetFrameTime)
+          {
+            auto sleepTime = targetFrameTime - frameTime;
+            std::this_thread::sleep_for(sleepTime);
+          }
+          lastFrameTime = std::chrono::high_resolution_clock::now();
+        }
+
         if (embedder_ != nullptr)
         {
-          processInput(windowCtx_->window, *embedder_); // process input
+          processInput(windowCtx_->window, *embedder_);     // process input
+          processFrameRateInput(windowCtx_->window, *this); // process frame rate control input
 
           {
             auto constellation = embedder_->constellation;
@@ -679,6 +814,11 @@ namespace jsar::example
     string envMapPath = "";    // Path to environment map directory
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
+
+    // Frame rate control variables
+    bool useVsync = true; // Default to vsync enabled
+    int targetFps = 60;   // Target FPS for manual mode
+    std::chrono::high_resolution_clock::time_point lastFrameTime;
 
   private:
     unique_ptr<WindowContext> windowCtx_;
