@@ -89,6 +89,8 @@ namespace client_cssom::selectors
   {
     assert(!component.isCombinator());
 
+    if (component.isUniversal())
+      return true; // Universal selector matches any element
     if (component.isLocalName())
       return strcasecmp(element->tagName.c_str(), component.name().c_str()) == 0;
     if (component.isId())

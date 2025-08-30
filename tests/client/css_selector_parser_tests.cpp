@@ -337,4 +337,161 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(str.find("h1") != std::string::npos);
     REQUIRE(str.find(")") != std::string::npos);
   }
+
+  SECTION("Parse universal selector")
+  {
+    auto result = CSSelectorParser::parseSelectors("*");
+    REQUIRE(result.has_value());
+
+    const auto &selectorList = result.value();
+    REQUIRE(selectorList.size() == 1);
+
+    const auto &selector = selectorList.selectors()[0];
+    REQUIRE(selector.size() == 1);
+
+    const auto &component = selector.components()[0];
+    REQUIRE(component.isUniversal());
+    REQUIRE(component.type() == ComponentType::kUniversal);
+  }
+
+  SECTION("Parse compound selectors with universal selector")
+  {
+    // Universal with class: *.class
+    auto result = CSSelectorParser::parseSelectors("*.myclass");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 2);
+
+    REQUIRE(selector.components()[0].isUniversal());
+    REQUIRE(selector.components()[1].isClass());
+    REQUIRE(selector.components()[1].className() == "myclass");
+
+    // Universal with ID: *#id
+    result = CSSelectorParser::parseSelectors("*#myid");
+    REQUIRE(result.has_value());
+
+    const auto &idSelector = result.value().selectors()[0];
+    REQUIRE(idSelector.size() == 2);
+
+    REQUIRE(idSelector.components()[0].isUniversal());
+    REQUIRE(idSelector.components()[1].isId());
+    REQUIRE(idSelector.components()[1].id() == "myid");
+
+    // Universal with class and ID: *.class#id
+    result = CSSelectorParser::parseSelectors("*.myclass#myid");
+    REQUIRE(result.has_value());
+
+    const auto &compoundSelector = result.value().selectors()[0];
+    REQUIRE(compoundSelector.size() == 3);
+
+    REQUIRE(compoundSelector.components()[0].isUniversal());
+    REQUIRE(compoundSelector.components()[1].isClass());
+    REQUIRE(compoundSelector.components()[1].className() == "myclass");
+    REQUIRE(compoundSelector.components()[2].isId());
+    REQUIRE(compoundSelector.components()[2].id() == "myid");
+  }
+
+  SECTION("Parse universal selector with combinators")
+  {
+    // Descendant: parent *
+    auto result = CSSelectorParser::parseSelectors("div *");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 3);
+
+    REQUIRE(selector.components()[0].isLocalName());
+    REQUIRE(selector.components()[0].name() == "div");
+    REQUIRE(selector.components()[1].isCombinator());
+    REQUIRE(selector.components()[1].combinator() == Combinator::kDescendant);
+    REQUIRE(selector.components()[2].isUniversal());
+
+    // Child: parent > *
+    result = CSSelectorParser::parseSelectors("div > *");
+    REQUIRE(result.has_value());
+
+    const auto &childSelector = result.value().selectors()[0];
+    REQUIRE(childSelector.size() == 3);
+
+    REQUIRE(childSelector.components()[0].isLocalName());
+    REQUIRE(childSelector.components()[0].name() == "div");
+    REQUIRE(childSelector.components()[1].isCombinator());
+    REQUIRE(childSelector.components()[1].combinator() == Combinator::kChild);
+    REQUIRE(childSelector.components()[2].isUniversal());
+
+    // Sibling: element + *
+    result = CSSelectorParser::parseSelectors("h1 + *");
+    REQUIRE(result.has_value());
+
+    const auto &siblingSelector = result.value().selectors()[0];
+    REQUIRE(siblingSelector.size() == 3);
+
+    REQUIRE(siblingSelector.components()[1].combinator() == Combinator::kNextSibling);
+    REQUIRE(siblingSelector.components()[2].isUniversal());
+  }
+
+  SECTION("Parse universal selector with pseudo-classes")
+  {
+    auto result = CSSelectorParser::parseSelectors("*:hover");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 2);
+
+    REQUIRE(selector.components()[0].isUniversal());
+    REQUIRE(selector.components()[1].isPseudoClass());
+    REQUIRE(selector.components()[1].isHover());
+
+    // Multiple pseudo-classes
+    result = CSSelectorParser::parseSelectors("*:focus:hover");
+    REQUIRE(result.has_value());
+
+    const auto &multiPseudoSelector = result.value().selectors()[0];
+    REQUIRE(multiPseudoSelector.size() == 3);
+
+    REQUIRE(multiPseudoSelector.components()[0].isUniversal());
+    REQUIRE(multiPseudoSelector.components()[1].isFocus());
+    REQUIRE(multiPseudoSelector.components()[2].isHover());
+  }
+
+  SECTION("Parse multiple selectors including universal")
+  {
+    auto result = CSSelectorParser::parseSelectors("*, div, .class");
+    REQUIRE(result.has_value());
+
+    const auto &selectorList = result.value();
+    REQUIRE(selectorList.size() == 3);
+
+    // First selector: *
+    REQUIRE(selectorList.selectors()[0].size() == 1);
+    REQUIRE(selectorList.selectors()[0].components()[0].isUniversal());
+
+    // Second selector: div
+    REQUIRE(selectorList.selectors()[1].size() == 1);
+    REQUIRE(selectorList.selectors()[1].components()[0].isLocalName());
+    REQUIRE(selectorList.selectors()[1].components()[0].name() == "div");
+
+    // Third selector: .class
+    REQUIRE(selectorList.selectors()[2].size() == 1);
+    REQUIRE(selectorList.selectors()[2].components()[0].isClass());
+    REQUIRE(selectorList.selectors()[2].components()[0].className() == "class");
+  }
+
+  SECTION("Universal selector string representation")
+  {
+    auto result = CSSelectorParser::parseSelectors("*");
+    REQUIRE(result.has_value());
+
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(str == "*");
+
+    // Test compound selector with universal
+    result = CSSelectorParser::parseSelectors("*.class");
+    REQUIRE(result.has_value());
+
+    str = static_cast<std::string>(result.value());
+    REQUIRE(str.find("*") != std::string::npos);
+    REQUIRE(str.find("class") != std::string::npos);
+  }
 }
