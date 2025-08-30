@@ -4,8 +4,19 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/cssom/properties.hpp>
+#include <client/cssom/values/computed/context.hpp>
+#include <client/dom/document.hpp>
+#include <client/html/html_element.hpp>
 
 using namespace client_cssom;
+
+// Helper function to create a minimal context for testing
+values::computed::Context createTestContext() {
+  // Create a minimal document and element for testing
+  auto document = std::make_shared<dom::Document>();
+  auto element = std::make_shared<dom::HTMLElement>("div", document);
+  return values::computed::Context::From(element);
+}
 
 TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
 {
@@ -86,22 +97,24 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   {
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--main-color", "red");
+    auto context = createTestContext();
 
-    std::string resolved = computedStyle.resolveVariables("var(--main-color)");
+    std::string resolved = computedStyle.resolveVariables("var(--main-color)", context);
     REQUIRE(resolved == "red");
 
-    std::string complexResolved = computedStyle.resolveVariables("1px solid var(--main-color)");
+    std::string complexResolved = computedStyle.resolveVariables("1px solid var(--main-color)", context);
     REQUIRE(complexResolved == "1px solid red");
   }
 
   SECTION("Variable resolution with fallback")
   {
     ComputedStyle computedStyle;
+    auto context = createTestContext();
 
-    std::string resolved = computedStyle.resolveVariables("var(--undefined, blue)");
+    std::string resolved = computedStyle.resolveVariables("var(--undefined, blue)", context);
     REQUIRE(resolved == "blue");
 
-    std::string complexResolved = computedStyle.resolveVariables("var(--undefined, 1px solid black)");
+    std::string complexResolved = computedStyle.resolveVariables("var(--undefined, 1px solid black)", context);
     REQUIRE(complexResolved == "1px solid black");
   }
 
@@ -116,15 +129,17 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
     REQUIRE(childStyle.hasCustomProperty("--inherited-color"));
     REQUIRE(childStyle.getCustomProperty("--inherited-color") == "green");
 
-    std::string resolved = childStyle.resolveVariables("var(--inherited-color)", &parentStyle);
+    auto context = createTestContext();
+    std::string resolved = childStyle.resolveVariables("var(--inherited-color)", context);
     REQUIRE(resolved == "green");
   }
 
   SECTION("Variable resolution preserves unresolvable var() calls")
   {
     ComputedStyle computedStyle;
+    auto context = createTestContext();
 
-    std::string unresolved = computedStyle.resolveVariables("var(--undefined)");
+    std::string unresolved = computedStyle.resolveVariables("var(--undefined)", context);
     REQUIRE(unresolved == "var(--undefined)");
   }
 
@@ -133,8 +148,9 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--primary", "red");
     computedStyle.setCustomProperty("--secondary", "blue");
+    auto context = createTestContext();
 
-    std::string resolved = computedStyle.resolveVariables("linear-gradient(var(--primary), var(--secondary))");
+    std::string resolved = computedStyle.resolveVariables("linear-gradient(var(--primary), var(--secondary))", context);
     REQUIRE(resolved == "linear-gradient(red, blue)");
   }
 }
@@ -145,9 +161,10 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
   {
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--primary-color", "red");
+    auto context = createTestContext();
 
     // Initial resolution
-    std::string resolved = computedStyle.resolveVariables("var(--primary-color)");
+    std::string resolved = computedStyle.resolveVariables("var(--primary-color)", context);
     REQUIRE(resolved == "red");
 
     // Update the variable
@@ -155,7 +172,7 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     REQUIRE(updated == true);
 
     // Verify new resolution
-    std::string newResolved = computedStyle.resolveVariables("var(--primary-color)");
+    std::string newResolved = computedStyle.resolveVariables("var(--primary-color)", context);
     REQUIRE(newResolved == "blue");
   }
 
@@ -180,8 +197,9 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     REQUIRE(grandchildStyle.getCustomProperty("--font-size") == "14px");    // From child override
 
     // Verify resolution with inheritance
-    std::string colorResolved = grandchildStyle.resolveVariables("var(--theme-color)", &childStyle);
-    std::string sizeResolved = grandchildStyle.resolveVariables("var(--font-size)", &childStyle);
+    auto context = createTestContext();
+    std::string colorResolved = grandchildStyle.resolveVariables("var(--theme-color)", context);
+    std::string sizeResolved = grandchildStyle.resolveVariables("var(--font-size)", context);
 
     REQUIRE(colorResolved == "green");
     REQUIRE(sizeResolved == "14px");
@@ -195,7 +213,10 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
 
     // Create child style that uses parent variables
     CSSStyleDeclaration childDecl("color: var(--main-color); margin: var(--spacing);");
-    ComputedStyle childStyle = ComputedStyle::Make(childDecl, nullptr, &parentStyle);
+    ComputedStyle childStyle = ComputedStyle::Make(childDecl, nullptr);
+    
+    // Manually inherit custom properties for this test
+    childStyle.inheritCustomProperties(parentStyle);
 
     // Verify inheritance occurred
     REQUIRE(childStyle.hasCustomProperty("--main-color"));
@@ -209,13 +230,14 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     ComputedStyle style;
     style.setCustomProperty("--primary", "red");
     style.setCustomProperty("--fallback", "blue");
+    auto context = createTestContext();
 
     // Test nested fallback
-    std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))");
+    std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))", context);
     REQUIRE(resolved == "var(--undefined, blue)"); // Partial resolution
 
     // Test multiple variables in one value
-    std::string multipleResolved = style.resolveVariables("border: 1px solid var(--primary)");
+    std::string multipleResolved = style.resolveVariables("border: 1px solid var(--primary)", context);
     REQUIRE(multipleResolved == "border: 1px solid red");
   }
 }
