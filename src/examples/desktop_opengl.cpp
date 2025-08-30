@@ -728,8 +728,8 @@ namespace jsar::example
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
     // Frame rate control variables
-    bool useVsync = true; // Default to vsync enabled
-    int targetFps = 60;   // Target FPS for manual mode
+    bool useVsync = false; // Default to vsync disabled
+    int targetFps = 45;   // Target FPS for manual mode
     std::chrono::high_resolution_clock::time_point lastFrameTime;
 
   private:
