@@ -12,7 +12,7 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   SECTION("Parse CSS custom property declaration")
   {
     CSSStyleDeclaration style("--main-color: red;");
-    
+
     // Check if custom property is stored
     REQUIRE(style.getPropertyValue("--main-color") == "red");
     REQUIRE(style.length() == 1);
@@ -22,7 +22,7 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   SECTION("CSS custom property names are case sensitive")
   {
     CSSStyleDeclaration style("--Main-Color: blue; --main-color: red;");
-    
+
     REQUIRE(style.getPropertyValue("--Main-Color") == "blue");
     REQUIRE(style.getPropertyValue("--main-color") == "red");
     REQUIRE(style.getPropertyValue("--MAIN-COLOR") == "");
@@ -32,9 +32,9 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   SECTION("CSS custom property with var() function")
   {
     CSSStyleDeclaration style("--main-color: red; color: var(--main-color);");
-    
+
     REQUIRE(style.getPropertyValue("--main-color") == "red");
-    
+
     // The raw value should contain var() until resolved
     std::string colorValue = style.getPropertyValue("color");
     REQUIRE(!colorValue.empty());
@@ -44,7 +44,7 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   {
     // Property names must start with --
     CSSStyleDeclaration style("-invalid: value; not--valid: value; valid: value;");
-    
+
     REQUIRE(style.getPropertyValue("-invalid") == "");
     REQUIRE(style.getPropertyValue("not--valid") == "");
     REQUIRE(style.getPropertyValue("valid") == "value");
@@ -53,7 +53,7 @@ TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
   SECTION("CSS custom property with fallback value")
   {
     CSSStyleDeclaration style("color: var(--undefined-prop, blue);");
-    
+
     std::string colorValue = style.getPropertyValue("color");
     REQUIRE(!colorValue.empty());
   }
@@ -74,7 +74,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   {
     CSSStyleDeclaration style("--theme-color: #ff0000; --spacing: 10px;");
     ComputedStyle computedStyle = ComputedStyle::Make(style, nullptr);
-    
+
     REQUIRE(computedStyle.hasCustomProperty("--theme-color"));
     REQUIRE(computedStyle.getCustomProperty("--theme-color") == "#ff0000");
     REQUIRE(computedStyle.hasCustomProperty("--spacing"));
@@ -86,10 +86,10 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   {
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--main-color", "red");
-    
+
     std::string resolved = computedStyle.resolveVariables("var(--main-color)");
     REQUIRE(resolved == "red");
-    
+
     std::string complexResolved = computedStyle.resolveVariables("1px solid var(--main-color)");
     REQUIRE(complexResolved == "1px solid red");
   }
@@ -97,10 +97,10 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Variable resolution with fallback")
   {
     ComputedStyle computedStyle;
-    
+
     std::string resolved = computedStyle.resolveVariables("var(--undefined, blue)");
     REQUIRE(resolved == "blue");
-    
+
     std::string complexResolved = computedStyle.resolveVariables("var(--undefined, 1px solid black)");
     REQUIRE(complexResolved == "1px solid black");
   }
@@ -109,13 +109,13 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   {
     ComputedStyle parentStyle;
     parentStyle.setCustomProperty("--inherited-color", "green");
-    
+
     ComputedStyle childStyle;
     childStyle.inheritCustomProperties(parentStyle);
-    
+
     REQUIRE(childStyle.hasCustomProperty("--inherited-color"));
     REQUIRE(childStyle.getCustomProperty("--inherited-color") == "green");
-    
+
     std::string resolved = childStyle.resolveVariables("var(--inherited-color)", &parentStyle);
     REQUIRE(resolved == "green");
   }
@@ -123,7 +123,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Variable resolution preserves unresolvable var() calls")
   {
     ComputedStyle computedStyle;
-    
+
     std::string unresolved = computedStyle.resolveVariables("var(--undefined)");
     REQUIRE(unresolved == "var(--undefined)");
   }
@@ -133,7 +133,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--primary", "red");
     computedStyle.setCustomProperty("--secondary", "blue");
-    
+
     std::string resolved = computedStyle.resolveVariables("linear-gradient(var(--primary), var(--secondary))");
     REQUIRE(resolved == "linear-gradient(red, blue)");
   }
@@ -145,15 +145,15 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
   {
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--primary-color", "red");
-    
+
     // Initial resolution
     std::string resolved = computedStyle.resolveVariables("var(--primary-color)");
     REQUIRE(resolved == "red");
-    
+
     // Update the variable
     bool updated = computedStyle.updateCustomProperty("--primary-color", "blue");
     REQUIRE(updated == true);
-    
+
     // Verify new resolution
     std::string newResolved = computedStyle.resolveVariables("var(--primary-color)");
     REQUIRE(newResolved == "blue");
@@ -165,24 +165,24 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     ComputedStyle rootStyle;
     rootStyle.setCustomProperty("--theme-color", "green");
     rootStyle.setCustomProperty("--font-size", "16px");
-    
+
     // Child style inherits from root
     ComputedStyle childStyle;
     childStyle.inheritCustomProperties(rootStyle);
     childStyle.setCustomProperty("--font-size", "14px"); // Override parent
-    
+
     // Grandchild inherits from child
     ComputedStyle grandchildStyle;
     grandchildStyle.inheritCustomProperties(childStyle);
-    
+
     // Check inheritance
     REQUIRE(grandchildStyle.getCustomProperty("--theme-color") == "green"); // From root
-    REQUIRE(grandchildStyle.getCustomProperty("--font-size") == "14px");   // From child override
-    
+    REQUIRE(grandchildStyle.getCustomProperty("--font-size") == "14px");    // From child override
+
     // Verify resolution with inheritance
     std::string colorResolved = grandchildStyle.resolveVariables("var(--theme-color)", &childStyle);
     std::string sizeResolved = grandchildStyle.resolveVariables("var(--font-size)", &childStyle);
-    
+
     REQUIRE(colorResolved == "green");
     REQUIRE(sizeResolved == "14px");
   }
@@ -192,11 +192,11 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     // Create parent style with variables
     CSSStyleDeclaration parentDecl("--main-color: purple; --spacing: 8px;");
     ComputedStyle parentStyle = ComputedStyle::Make(parentDecl, nullptr);
-    
+
     // Create child style that uses parent variables
     CSSStyleDeclaration childDecl("color: var(--main-color); margin: var(--spacing);");
     ComputedStyle childStyle = ComputedStyle::Make(childDecl, nullptr, &parentStyle);
-    
+
     // Verify inheritance occurred
     REQUIRE(childStyle.hasCustomProperty("--main-color"));
     REQUIRE(childStyle.getCustomProperty("--main-color") == "purple");
@@ -209,11 +209,11 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     ComputedStyle style;
     style.setCustomProperty("--primary", "red");
     style.setCustomProperty("--fallback", "blue");
-    
+
     // Test nested fallback
     std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))");
     REQUIRE(resolved == "var(--undefined, blue)"); // Partial resolution
-    
+
     // Test multiple variables in one value
     std::string multipleResolved = style.resolveVariables("border: 1px solid var(--primary)");
     REQUIRE(multipleResolved == "border: 1px solid red");
@@ -225,7 +225,7 @@ TEST_CASE("PropertyId handles custom properties", "[css-properties]")
   SECTION("Custom property ID creation")
   {
     CustomPropertyId customProp("--test-property");
-    
+
     REQUIRE(std::string(customProp) == "--test-property");
     REQUIRE(customProp.bit() != 0);
   }
@@ -235,7 +235,7 @@ TEST_CASE("PropertyId handles custom properties", "[css-properties]")
     CustomPropertyId prop1("--same-property");
     CustomPropertyId prop2("--same-property");
     CustomPropertyId prop3("--different-property");
-    
+
     REQUIRE(prop1 == prop2);
     REQUIRE(prop1 != prop3);
   }
@@ -244,7 +244,7 @@ TEST_CASE("PropertyId handles custom properties", "[css-properties]")
   {
     CustomPropertyId customProp("--custom-prop");
     PropertyId propertyId = PropertyId::Custom(customProp);
-    
+
     // This tests the infrastructure exists
     REQUIRE(true); // Basic compilation test
   }
