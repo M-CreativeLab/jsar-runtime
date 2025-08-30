@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Universal Selector (*) Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .test-section h2 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #007acc;
+      padding-bottom: 10px;
+    }
+
+    .example {
+      margin: 15px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .example-title {
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    /* Basic Universal Selector Tests */
+    * {
+      box-sizing: border-box;
+    }
+
+    .basic-test * {
+      border: 2px solid red;
+      margin: 2px;
+      padding: 5px;
+    }
+
+    /* Compound Selector Tests */
+    .compound-test *.highlight {
+      background-color: yellow;
+      font-weight: bold;
+    }
+
+    .compound-test *#special {
+      background-color: lightblue;
+      color: darkblue;
+    }
+
+    .compound-test *.highlight#combo {
+      background-color: lightgreen;
+      color: darkgreen;
+      border: 3px dashed purple;
+    }
+
+    /* Combinator Tests */
+    .combinator-test .parent * {
+      background-color: #ffeeee;
+      margin: 3px;
+    }
+
+    .combinator-test .direct-parent > * {
+      background-color: #eeffee;
+      padding: 8px;
+    }
+
+    .combinator-test .sibling-test h3 + * {
+      background-color: #eeeeff;
+      font-style: italic;
+    }
+
+    .combinator-test .general-sibling h4 ~ * {
+      background-color: #ffffee;
+      text-decoration: underline;
+    }
+
+    /* Pseudo-class Tests */
+    .pseudo-test *:hover {
+      background-color: orange;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .pseudo-test *:focus {
+      outline: 3px solid blue;
+      background-color: lightcyan;
+    }
+
+    .pseudo-test *:first-child {
+      border-left: 5px solid green;
+    }
+
+    .pseudo-test *:last-child {
+      border-right: 5px solid red;
+    }
+
+    /* Complex Selector Tests */
+    .complex-test div * + span {
+      background-color: pink;
+      font-weight: bold;
+    }
+
+    .complex-test .container > *:nth-child(even) {
+      background-color: #f0f0f0;
+    }
+
+    .complex-test .nested * * {
+      border: 1px dotted gray;
+    }
+
+    /* Specificity Test */
+    .specificity-test * {
+      color: red;
+    }
+
+    .specificity-test .specific {
+      color: blue;
+    }
+
+    .specificity-test *#override {
+      color: green;
+    }
+
+    /* Performance Test - Many Elements */
+    .performance-test * {
+      border: 1px solid #ccc;
+      margin: 1px;
+      padding: 2px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Universal Selector (*) Test Cases</h1>
+  <p>This page tests the universal selector (*) implementation in various contexts and combinations.</p>
+
+  <div class="test-section">
+    <h2>1. Basic Universal Selector</h2>
+    <div class="example">
+      <div class="example-title">CSS: .basic-test * { border: 2px solid red; margin: 2px; padding: 5px; }</div>
+      <div class="basic-test">
+        <p>This paragraph should have a red border.</p>
+        <div>This div should have a red border.</div>
+        <span>This span should have a red border.</span>
+        <button>This button should have a red border.</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Compound Selectors with Universal</h2>
+    <div class="example">
+      <div class="example-title">CSS: *.highlight, *#special, *.highlight#combo</div>
+      <div class="compound-test">
+        <p class="highlight">Universal + class selector (*.highlight) - should be yellow</p>
+        <div id="special">Universal + ID selector (*#special) - should be light blue</div>
+        <span class="highlight" id="combo">Universal + class + ID (*.highlight#combo) - should be green</span>
+        <p>Regular paragraph - no special styling</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Combinators with Universal</h2>
+    <div class="example">
+      <div class="example-title">CSS: .parent *, .direct-parent > *, h3 + *, h4 ~ *</div>
+      <div class="combinator-test">
+        <div class="parent">
+          <p>Descendant of .parent (should be light red)</p>
+          <div>
+            <span>Nested descendant (should be light red)</span>
+          </div>
+        </div>
+        
+        <div class="direct-parent">
+          <p>Direct child of .direct-parent (should be light green)</p>
+          <div>
+            <span>Not a direct child (no green background)</span>
+          </div>
+        </div>
+        
+        <div class="sibling-test">
+          <h3>Adjacent Sibling Test</h3>
+          <p>Element immediately following h3 (should be light blue and italic)</p>
+          <div>Second element after h3 (no special styling)</div>
+        </div>
+        
+        <div class="general-sibling">
+          <h4>General Sibling Test</h4>
+          <p>First element after h4 (should be light yellow and underlined)</p>
+          <span>Second element after h4 (should be light yellow and underlined)</span>
+          <div>Third element after h4 (should be light yellow and underlined)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Pseudo-classes with Universal</h2>
+    <div class="example">
+      <div class="example-title">CSS: *:hover, *:focus, *:first-child, *:last-child</div>
+      <div class="pseudo-test">
+        <p>First child (should have green left border)</p>
+        <input type="text" placeholder="Focus me to see blue outline">
+        <button>Hover over me to see orange background</button>
+        <div>Last child (should have red right border)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Complex Selectors</h2>
+    <div class="example">
+      <div class="example-title">CSS: div * + span, .container > *:nth-child(even), .nested * *</div>
+      <div class="complex-test">
+        <div class="container">
+          <p>First child (odd)</p>
+          <div>Second child (even - should be gray)</div>
+          <span>Third child (odd)</span>
+          <article>Fourth child (even - should be gray)</article>
+        </div>
+        
+        <div>
+          <p>Paragraph</p><span>Span after paragraph (should be pink and bold)</span>
+        </div>
+        
+        <div class="nested">
+          <div>
+            <span>Deeply nested element (should have dotted border)</span>
+            <p>Another deeply nested element (should have dotted border)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>6. Specificity Test</h2>
+    <div class="example">
+      <div class="example-title">CSS: * { color: red; }, .specific { color: blue; }, *#override { color: green; }</div>
+      <div class="specificity-test">
+        <p>Universal selector - should be red</p>
+        <p class="specific">Class selector wins over universal - should be blue</p>
+        <p id="override">ID with universal wins - should be green</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>7. Performance Test</h2>
+    <div class="example">
+      <div class="example-title">Testing universal selector performance with many elements</div>
+      <div class="performance-test">
+        <div>Item 1</div><div>Item 2</div><div>Item 3</div><div>Item 4</div><div>Item 5</div>
+        <span>Span 1</span><span>Span 2</span><span>Span 3</span><span>Span 4</span><span>Span 5</span>
+        <p>Para 1</p><p>Para 2</p><p>Para 3</p><p>Para 4</p><p>Para 5</p>
+        <article>Art 1</article><article>Art 2</article><article>Art 3</article>
+        <section>Sec 1</section><section>Sec 2</section><section>Sec 3</section>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>8. Edge Cases</h2>
+    <div class="example">
+      <div class="example-title">Universal selector with various HTML elements</div>
+      <div style="border: 1px solid #ccc; padding: 10px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="border: 1px solid #ddd; padding: 5px;">Table cell</td></tr>
+        </table>
+        <form>
+          <fieldset>
+            <legend>Form elements</legend>
+            <input type="checkbox"> Checkbox
+            <select><option>Option</option></select>
+            <textarea rows="2">Textarea</textarea>
+          </fieldset>
+        </form>
+        <ul>
+          <li>List item 1</li>
+          <li>List item 2</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Add some interactivity for testing
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Universal selector test page loaded');
+      
+      // Log when elements are hovered
+      document.addEventListener('mouseover', function(e) {
+        if (e.target.closest('.pseudo-test')) {
+          console.log('Hovering over element:', e.target.tagName);
+        }
+      });
+      
+      // Log when elements are focused
+      document.addEventListener('focus', function(e) {
+        if (e.target.closest('.pseudo-test')) {
+          console.log('Focused element:', e.target.tagName);
+        }
+      }, true);
+    });
+  </script>
+
+</body>
+
+</html>

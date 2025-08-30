@@ -34,6 +34,9 @@ namespace client_cssom::selectors
     case ComponentType::kLocalName:
       ss << name_;
       break;
+    case ComponentType::kUniversal:
+      ss << "*";
+      break;
     case ComponentType::kID:
       ss << "#" << name_;
       break;
@@ -251,6 +254,13 @@ namespace client_cssom::selectors
       return nullopt;
 
     char c = text[pos];
+
+    // Universal selector (*)
+    if (c == '*')
+    {
+      ++pos;
+      return Component(ComponentType::kUniversal);
+    }
 
     // ID selector (#id)
     if (c == '#')

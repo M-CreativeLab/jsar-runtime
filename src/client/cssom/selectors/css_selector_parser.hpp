@@ -21,6 +21,7 @@ namespace client_cssom::selectors
     kLocalName,     // Tag name (e.g., div, p, h1)
     kID,            // ID selector (e.g., #myid)
     kClass,         // Class selector (e.g., .myclass)
+    kUniversal,     // Universal selector (*)
     kRoot,          // :root pseudo-class
     kEmpty,         // :empty pseudo-class
     kScope,         // :scope pseudo-class
@@ -96,6 +97,10 @@ namespace client_cssom::selectors
     bool isClass() const
     {
       return type_ == ComponentType::kClass;
+    }
+    bool isUniversal() const
+    {
+      return type_ == ComponentType::kUniversal;
     }
     bool isRoot() const
     {
