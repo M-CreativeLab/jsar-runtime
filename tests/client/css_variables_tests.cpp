@@ -236,9 +236,24 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     style.setCustomProperty("--fallback", "blue");
     auto context = createTestContext();
 
-    // Test nested fallback
+    // Test nested fallback - should fully resolve the fallback
     std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))", context);
-    REQUIRE(resolved == "var(--undefined, blue)"); // Partial resolution
+    REQUIRE(resolved == "blue"); // Full resolution of nested var() in fallback
+
+    // Test multiple levels of nesting
+    style.setCustomProperty("--level1", "var(--level2)");
+    style.setCustomProperty("--level2", "var(--level3)");
+    style.setCustomProperty("--level3", "final-value");
+    std::string nestedResolved = style.resolveVariables("var(--level1)", context);
+    REQUIRE(nestedResolved == "final-value");
+
+    // Test fallback chain
+    std::string fallbackChain = style.resolveVariables("var(--missing1, var(--missing2, var(--fallback)))", context);
+    REQUIRE(fallbackChain == "blue");
+
+    // Test mixed resolved and unresolved variables
+    std::string mixedResolved = style.resolveVariables("var(--primary) and var(--missing, fallback-text)", context);
+    REQUIRE(mixedResolved == "red and fallback-text");
 
     // Test multiple variables in one value
     std::string multipleResolved = style.resolveVariables("border: 1px solid var(--primary)", context);

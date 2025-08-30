@@ -16,6 +16,7 @@
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
 #include "./values/specified/background.hpp"
+#include "./parsers/css_variable_parser.hpp"
 
 namespace client_cssom
 {
@@ -562,78 +563,35 @@ namespace client_cssom
 
   string ComputedStyle::resolveVariables(const string &value, const values::computed::Context &context) const
   {
-    string result = value;
-    size_t varPos = 0;
+    css_variable_parser::CSSVariableParser parser(value);
 
-    // Look for var() function calls
-    while ((varPos = result.find("var(", varPos)) != string::npos)
+    // Create a variable resolver function that looks up variables in this style and inherited styles
+    auto resolver = [this, &context](const string &variable_name) -> std::optional<string>
     {
-      size_t startPos = varPos + 4; // Skip "var("
-      size_t endPos = result.find(")", startPos);
-
-      if (endPos == string::npos)
-        break; // Malformed var() function
-
-      string varContent = result.substr(startPos, endPos - startPos);
-
-      // Parse variable name and optional fallback
-      string varName;
-      string fallback;
-
-      size_t commaPos = varContent.find(",");
-      if (commaPos != string::npos)
-      {
-        varName = varContent.substr(0, commaPos);
-        fallback = varContent.substr(commaPos + 1);
-
-        // Trim whitespace
-        varName.erase(0, varName.find_first_not_of(" \t"));
-        varName.erase(varName.find_last_not_of(" \t") + 1);
-        fallback.erase(0, fallback.find_first_not_of(" \t"));
-        fallback.erase(fallback.find_last_not_of(" \t") + 1);
-      }
-      else
-      {
-        varName = varContent;
-        // Trim whitespace
-        varName.erase(0, varName.find_first_not_of(" \t"));
-        varName.erase(varName.find_last_not_of(" \t") + 1);
-      }
-
-      // Resolve the variable
-      string resolvedValue;
-
       // First try local custom properties
-      if (hasCustomProperty(varName))
+      if (hasCustomProperty(variable_name))
       {
-        resolvedValue = getCustomProperty(varName);
+        return getCustomProperty(variable_name);
       }
+
       // Then try parent style (inheritance)
-      else
+      auto inherited_style = context.inheritedStyle();
+      if (inherited_style.has_value() && inherited_style->hasCustomProperty(variable_name))
       {
-        auto inherited_style = context.inheritedStyle();
-        if (inherited_style.has_value() && inherited_style->hasCustomProperty(varName))
-        {
-          resolvedValue = inherited_style->getCustomProperty(varName);
-        }
-        // Use fallback if available
-        else if (!fallback.empty())
-        {
-          resolvedValue = fallback;
-        }
-        // If no resolution possible, keep the var() as-is
-        else
-        {
-          varPos = endPos + 1;
-          continue;
-        }
+        return inherited_style->getCustomProperty(variable_name);
       }
 
-      // Replace the var() function with the resolved value
-      result.replace(varPos, endPos - varPos + 1, resolvedValue);
+      // Variable not found
+      return std::nullopt;
+    };
 
-      // Continue from the end of the replacement
-      varPos += resolvedValue.length();
+    string result = parser.resolveVariables(resolver);
+
+    // Check if parsing was successful
+    if (!parser.isValid())
+    {
+      // If parsing failed, return the original value
+      return value;
     }
 
     return result;
