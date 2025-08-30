@@ -729,7 +729,7 @@ namespace jsar::example
 
     // Frame rate control variables
     bool useVsync = false; // Default to vsync disabled
-    int targetFps = 45;   // Target FPS for manual mode
+    int targetFps = 45;    // Target FPS for manual mode
     std::chrono::high_resolution_clock::time_point lastFrameTime;
 
   private:
