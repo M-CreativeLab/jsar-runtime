@@ -185,7 +185,7 @@ namespace jsar::example
 #ifdef __APPLE__
     if (isDraggingWindow)
     {
-      // updateWindowDragging(window);
+      updateWindowDragging(window);
       return; // Skip normal cursor handling when dragging window
     }
 #endif

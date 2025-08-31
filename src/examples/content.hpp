@@ -4,6 +4,8 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <runtime/content.hpp>
 #include "./bar_component.hpp"
@@ -31,17 +33,19 @@ namespace jsar::example
     }
 
     /**
-     * Get the center position of this content in 3D space.
+     * Get the center position of this content in 3D space from the local base matrix.
      */
-    const glm::vec3 &getCenterPosition() const
-    {
-      return centerPosition_;
-    }
+    glm::vec3 getCenterPosition() const;
 
     /**
-     * Set the center position of this content in 3D space.
+     * Get the rotation quaternion of this content from the local base matrix.
      */
-    void setCenterPosition(const glm::vec3 &position);
+    glm::quat getRotation() const;
+
+    /**
+     * Get the scaling of this content from the local base matrix.
+     */
+    glm::vec3 getScaling() const;
 
     /**
      * Get the underlying content runtime.
@@ -102,9 +106,8 @@ namespace jsar::example
     std::shared_ptr<TrContentRuntime> contentRuntime_;
     std::shared_ptr<BarComponent> barComponent_;
 
-    glm::vec3 centerPosition_;
     bool isDragging_;
     glm::vec2 dragStartMousePos_;
-    glm::vec3 dragStartContentPos_;
+    glm::mat4 dragStartContentMatrix_;
   };
 }

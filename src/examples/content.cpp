@@ -6,10 +6,9 @@ namespace jsar::example
   Content::Content(std::shared_ptr<TrContentRuntime> contentRuntime, uint32_t id)
       : id_(id)
       , contentRuntime_(contentRuntime)
-      , centerPosition_(0.0f, 0.0f, 0.35f) // Default position
       , isDragging_(false)
       , dragStartMousePos_(0.0f)
-      , dragStartContentPos_(0.0f)
+      , dragStartContentMatrix_(1.0f)
   {
     // Note: BarComponent will be created when we have a WindowContext available
   }
@@ -19,7 +18,7 @@ namespace jsar::example
     if (!barComponent_ && windowCtx)
     {
       barComponent_ = std::make_shared<BarComponent>(windowCtx, this);
-      barComponent_->updatePosition(centerPosition_);
+      barComponent_->updatePosition(getCenterPosition());
     }
   }
 
@@ -27,20 +26,66 @@ namespace jsar::example
   {
   }
 
-  void Content::setCenterPosition(const glm::vec3 &position)
+  glm::vec3 Content::getCenterPosition() const
   {
-    centerPosition_ = position;
-    if (barComponent_)
-    {
-      barComponent_->updatePosition(centerPosition_);
-    }
+    if (!contentRuntime_)
+      return glm::vec3(0.0f);
+
+    auto activeSession = contentRuntime_->getActiveXRSession();
+    if (!activeSession)
+      return glm::vec3(0.0f);
+
+    glm::mat4 baseMatrix = activeSession->getLocalBaseMatrix();
+    return glm::vec3(baseMatrix[3]); // Extract translation from matrix
+  }
+
+  glm::quat Content::getRotation() const
+  {
+    if (!contentRuntime_)
+      return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
+    auto activeSession = contentRuntime_->getActiveXRSession();
+    if (!activeSession)
+      return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
+    glm::mat4 baseMatrix = activeSession->getLocalBaseMatrix();
+    // Extract rotation from the upper-left 3x3 part of the matrix
+    glm::mat3 rotationMatrix = glm::mat3(baseMatrix);
+    return glm::quat_cast(rotationMatrix);
+  }
+
+  glm::vec3 Content::getScaling() const
+  {
+    if (!contentRuntime_)
+      return glm::vec3(1.0f);
+
+    auto activeSession = contentRuntime_->getActiveXRSession();
+    if (!activeSession)
+      return glm::vec3(1.0f);
+
+    glm::mat4 baseMatrix = activeSession->getLocalBaseMatrix();
+    // Extract scaling from the matrix
+    glm::vec3 scale;
+    scale.x = glm::length(glm::vec3(baseMatrix[0]));
+    scale.y = glm::length(glm::vec3(baseMatrix[1]));
+    scale.z = glm::length(glm::vec3(baseMatrix[2]));
+    return scale;
   }
 
   void Content::startDrag(const glm::vec2 &mousePosition)
   {
     isDragging_ = true;
     dragStartMousePos_ = mousePosition;
-    dragStartContentPos_ = centerPosition_;
+
+    // Store the current base matrix instead of just position
+    if (contentRuntime_)
+    {
+      auto activeSession = contentRuntime_->getActiveXRSession();
+      if (activeSession)
+      {
+        dragStartContentMatrix_ = activeSession->getLocalBaseMatrix();
+      }
+    }
 
     if (barComponent_)
     {
@@ -50,7 +95,7 @@ namespace jsar::example
 
   void Content::updateDrag(const glm::vec2 &mousePosition)
   {
-    if (!isDragging_)
+    if (!isDragging_ || !contentRuntime_)
       return;
 
     // Calculate the mouse movement delta
@@ -62,7 +107,13 @@ namespace jsar::example
     float scale = 0.001f; // Adjust this value to control drag sensitivity
 
     glm::vec3 worldDelta = glm::vec3(mouseDelta.x * scale, -mouseDelta.y * scale, 0.0f);
-    setCenterPosition(dragStartContentPos_ + worldDelta);
+
+    // Create a new matrix with the updated position
+    glm::mat4 newMatrix = dragStartContentMatrix_;
+    newMatrix[3] += glm::vec4(worldDelta, 0.0f); // Update translation component
+
+    // Update the content runtime's base matrix
+    contentRuntime_->updateLocalBaseMatrix(newMatrix);
   }
 
   void Content::stopDrag()
@@ -80,7 +131,7 @@ namespace jsar::example
     // Update any animation or state for this content
     if (barComponent_)
     {
-      barComponent_->updatePosition(centerPosition_);
+      barComponent_->updatePosition(getCenterPosition());
     }
   }
 

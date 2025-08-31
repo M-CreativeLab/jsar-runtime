@@ -498,13 +498,16 @@ namespace jsar::example
     auto content = make_shared<Content>(contentRuntime, contentId);
     content->setWindowContext(windowCtx_.get());
 
-    // Position content spatially (simple grid layout for now)
+    // Position content spatially (simple grid layout for now) using the base matrix
     float spacing = 2.0f;
     int contentCount = contents_.size();
     float x = (contentCount % 3 - 1) * spacing; // -spacing, 0, spacing, -spacing, ...
     float y = 0.0f;
     float z = 0.35f - (contentCount / 3) * spacing;
-    content->setCenterPosition(glm::vec3(x, y, z));
+
+    // Create a translation matrix for the new position
+    glm::mat4 positionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+    contentRuntime->updateLocalBaseMatrix(positionMatrix);
 
     contents_[contentId] = content;
     printf("Opened content %d at position (%.2f, %.2f, %.2f)\n", contentId, x, y, z);
