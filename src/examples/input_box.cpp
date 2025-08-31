@@ -1,7 +1,8 @@
-#include "./input_box.hpp"
-#include <GLFW/glfw3.h>
 #include <cmath>
 #include <algorithm>
+#include <skia/include/core/SkRect.h>
+#include <skia/include/core/SkRRect.h>
+#include "./input_box.hpp"
 
 namespace jsar::example
 {
@@ -99,7 +100,6 @@ namespace jsar::example
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    int inputWidth = computeInputWidth();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inputWidth, INPUT_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
@@ -145,7 +145,6 @@ namespace jsar::example
     textFont_.setEdging(SkFont::Edging::kSubpixelAntiAlias);
     textFont_.setSubpixel(true);
 
-    int inputWidth = computeInputWidth();
     imageInfo_ = SkImageInfo::MakeN32Premul(inputWidth, INPUT_HEIGHT);
     pixels_.resize(imageInfo_.computeMinByteSize());
   }

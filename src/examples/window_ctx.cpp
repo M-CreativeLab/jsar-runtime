@@ -243,7 +243,6 @@ namespace jsar::example
     glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
 
     GLfloat depth;
-    cout << "Reading depth at screen coord: (" << screenCoord.x << ", " << screenCoord.y << ")\n";
     glReadPixels(screenCoord.x * contentScaling[0],
                  screenCoord.y * contentScaling[1],
                  1,
