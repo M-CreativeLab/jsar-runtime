@@ -4,6 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/geometric.hpp>
 
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
@@ -80,6 +81,7 @@ namespace jsar::example
     void initGLProgram();
     void createGeometry();
     void updateInstanceBuffer();
+    void createBarTexture();
     glm::mat4 calculateBarTransform(const glm::vec3 &contentPosition) const;
 
   private:
@@ -90,15 +92,21 @@ namespace jsar::example
     GLuint vertexVBO_;   // Vertex data for the bar quad
     GLuint instanceVBO_; // Instance transformation matrices and states
     GLuint program_;
+    GLuint barTexture_; // Skia-generated bar texture
 
     // Shader uniforms
     GLint viewMatrixLoc_;
     GLint projectionMatrixLoc_;
+    GLint textureLoc_;
 
     // 3D bar properties
     static constexpr float BAR_WIDTH = 0.25f;     // World space width
-    static constexpr float BAR_HEIGHT = 0.01f;   // World space height
+    static constexpr float BAR_HEIGHT = 0.01f;    // World space height
     static constexpr float BAR_OFFSET_Y = -0.16f; // Offset below content in world space
+
+    // Texture properties
+    static constexpr int TEXTURE_WIDTH = 256;
+    static constexpr int TEXTURE_HEIGHT = 64;
 
     // Vertex data for a quad
     std::vector<float> vertices_;

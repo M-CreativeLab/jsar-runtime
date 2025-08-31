@@ -1,6 +1,13 @@
 #include <iostream>
 #include <algorithm>
 
+#include <skia/include/core/SkCanvas.h>
+#include <skia/include/core/SkSurface.h>
+#include <skia/include/core/SkPaint.h>
+#include <skia/include/core/SkRRect.h>
+#include <skia/include/core/SkImageInfo.h>
+#include <skia/include/core/SkPixmap.h>
+
 #include "./bar_component.hpp"
 #include "./content.hpp"
 
@@ -36,21 +43,22 @@ namespace jsar::example
           "in vec3 BarColor;\n"
           "out vec4 FragColor;\n"
           "\n"
+          "uniform sampler2D barTexture;\n"
+          "\n"
           "void main()\n"
           "{\n"
-          "    // Simple colored bar with gradient effect\n"
-          "    float alpha = 0.8;\n"
-          "    vec3 color = BarColor;\n"
+          "    // Sample the Skia-generated bar texture with Apple design\n"
+          "    vec4 texColor = texture(barTexture, TexCoord);\n"
           "    \n"
-          "    // Add subtle gradient\n"
-          "    float gradientFactor = 1.0 - TexCoord.y * 0.3;\n"
-          "    color *= gradientFactor;\n"
+          "    // Apply the instance color for state-based visual feedback\n"
+          "    vec3 finalColor = texColor.rgb * BarColor;\n"
           "    \n"
-          "    FragColor = vec4(color, alpha);\n"
+          "    FragColor = vec4(finalColor, texColor.a);\n"
           "}\n")
   {
     initGLProgram();
     createGeometry();
+    createBarTexture();
 
     if (glGetError() != GL_NO_ERROR)
       std::cout << "OpenGL error on BarComponent init" << std::endl;
@@ -62,6 +70,7 @@ namespace jsar::example
     glDeleteBuffers(1, &vertexVBO_);
     glDeleteBuffers(1, &instanceVBO_);
     glDeleteProgram(program_);
+    glDeleteTextures(1, &barTexture_);
   }
 
   void BarComponent::addContent(Content *content)
@@ -175,6 +184,7 @@ namespace jsar::example
     // Get uniform locations
     viewMatrixLoc_ = glGetUniformLocation(program_, "view");
     projectionMatrixLoc_ = glGetUniformLocation(program_, "projection");
+    textureLoc_ = glGetUniformLocation(program_, "barTexture");
   }
 
   void BarComponent::createGeometry()
@@ -260,6 +270,71 @@ namespace jsar::example
     glBindVertexArray(0);
   }
 
+  void BarComponent::createBarTexture()
+  {
+    // Create Skia surface for rendering the bar texture with Apple design
+    SkImageInfo info = SkImageInfo::MakeN32Premul(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+
+    // Allocate pixel buffer for the texture
+    size_t pixelBufferSize = info.computeMinByteSize();
+    std::vector<uint8_t> pixelBuffer(pixelBufferSize);
+
+    sk_sp<SkSurface> surface = SkSurface::MakeRasterDirect(info, pixelBuffer.data(), info.minRowBytes());
+
+    if (!surface)
+    {
+      std::cout << "Failed to create Skia surface for bar texture" << std::endl;
+      return;
+    }
+
+    SkCanvas *canvas = surface->getCanvas();
+    canvas->clear(SK_ColorTRANSPARENT);
+
+    // Apple-style bar design with rounded corners and opacity
+    float cornerRadius = 8.0f;
+    SkPaint paint;
+
+    // Base bar with Apple's translucent white
+    paint.setColor(SkColorSetARGB(204, 255, 255, 255)); // 80% opacity white
+    paint.setAntiAlias(true);
+
+    // Create rounded rectangle for the bar
+    SkRect rect = SkRect::MakeWH(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    SkRRect roundedRect = SkRRect::MakeRectXY(rect, cornerRadius, cornerRadius);
+
+    canvas->drawRRect(roundedRect, paint);
+
+    // Add subtle inner shadow effect (Apple style)
+    paint.setColor(SkColorSetARGB(25, 0, 0, 0)); // 10% opacity black
+    SkRect innerRect = rect;
+    innerRect.inset(1, 1);
+    SkRRect innerRoundedRect = SkRRect::MakeRectXY(innerRect, cornerRadius - 1, cornerRadius - 1);
+    canvas->drawRRect(innerRoundedRect, paint);
+
+    // Get pixel data from Skia surface
+    SkPixmap pixmap;
+    if (!surface->peekPixels(&pixmap))
+    {
+      std::cout << "Failed to get pixels from Skia surface" << std::endl;
+      return;
+    }
+
+    // Create OpenGL texture
+    glGenTextures(1, &barTexture_);
+    glBindTexture(GL_TEXTURE_2D, barTexture_);
+
+    // Upload texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixmap.addr());
+
+    // Set texture parameters for smooth scaling
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
   void BarComponent::renderInstanced(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
   {
     if (instances_.empty())
@@ -272,6 +347,11 @@ namespace jsar::example
 
     glUseProgram(program_);
     glBindVertexArray(vao_);
+
+    // Bind the Skia-generated bar texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, barTexture_);
+    glUniform1i(textureLoc_, 0);
 
     // Set uniforms
     glUniformMatrix4fv(viewMatrixLoc_, 1, GL_FALSE, &viewMatrix[0][0]);
@@ -291,23 +371,35 @@ namespace jsar::example
 
   Content *BarComponent::checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
   {
-    // Simple ray-plane intersection for each bar
-    // This is a simplified implementation - could be improved with proper bounding box checks
+    // Ray-plane intersection for each 3D bar plane
+    // The bars are positioned as horizontal planes below content
 
     for (const auto &instance : instances_)
     {
       // Extract bar position from transform matrix
       glm::vec3 barPosition = glm::vec3(instance.transform[3]);
 
-      // Check if ray intersects with the bar plane (simplified)
-      float t = (barPosition.y - rayOrigin.y) / rayDirection.y;
+      // For a horizontal bar plane, the normal is (0, 1, 0) - pointing up
+      glm::vec3 planeNormal = glm::vec3(0, 1, 0);
+
+      // Ray-plane intersection: t = (planePoint - rayOrigin) · planeNormal / (rayDirection · planeNormal)
+      float denominator = glm::dot(rayDirection, planeNormal);
+
+      // Check if ray is parallel to plane (denominator near zero)
+      if (abs(denominator) < 1e-6)
+        continue;
+
+      float t = glm::dot(barPosition - rayOrigin, planeNormal) / denominator;
+
+      // Check if intersection is in front of ray origin
       if (t > 0)
       {
         glm::vec3 intersection = rayOrigin + t * rayDirection;
 
-        // Check if intersection is within bar bounds
+        // Check if intersection is within bar bounds (horizontal plane)
+        // Bar extends BAR_WIDTH/2 in X direction and BAR_WIDTH/2 in Z direction
         if (abs(intersection.x - barPosition.x) <= BAR_WIDTH / 2 &&
-            abs(intersection.z - barPosition.z) <= BAR_HEIGHT / 2)
+            abs(intersection.z - barPosition.z) <= BAR_WIDTH / 2)
         {
           return instance.content;
         }
