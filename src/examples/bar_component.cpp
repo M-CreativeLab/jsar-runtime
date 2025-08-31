@@ -350,7 +350,7 @@ namespace jsar::example
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
+    glDepthMask(GL_TRUE);
 
     glUseProgram(program_);
     glBindVertexArray(vao_);
@@ -367,10 +367,10 @@ namespace jsar::example
     // Draw instances
     glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
 
+    // Reset state
     glBindVertexArray(0);
     glUseProgram(0);
     glDisable(GL_BLEND);
-    glDepthMask(GL_TRUE);
 
     if (glGetError() != GL_NO_ERROR)
       cout << "OpenGL error on BarComponent render" << endl;
