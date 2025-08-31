@@ -17,9 +17,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-
 #include <runtime/embedder.hpp>
-#include "./window_ctx-inl.hpp"
+
+#include "./window_ctx.hpp"
 #include "./screen_renderer.hpp"
 #include "./content.hpp"
 #include "./input_box.hpp"

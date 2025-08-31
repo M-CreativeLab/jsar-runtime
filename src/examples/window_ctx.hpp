@@ -1,12 +1,19 @@
 #pragma once
 
+#include <cmath>
+
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
-#include <GLFW/glfw3native.h>
 #else
 #include <GL/gl.h>
 #endif
+
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <common/viewport.hpp>

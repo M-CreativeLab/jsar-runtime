@@ -31,7 +31,7 @@
 #include <runtime/content.hpp>
 #include <renderer/render_api.hpp>
 
-#include "./window_ctx-inl.hpp"
+#include "./window_ctx.hpp"
 #include "./transmute_browser.hpp"
 
 namespace jsar::example

@@ -1,17 +1,3 @@
-#pragma once
-
-#include <cmath>
-#ifdef __APPLE__
-#include <OpenGL/gl3.h>
-// macOS-specific includes for window customization
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>
-#else
-#include <GL/gl.h>
-#endif
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-
 #include "./window_ctx.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
@@ -185,11 +171,14 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
+    cout << "Cursor moved to: (" << xoffset << ", " << yoffset << ")" << endl
+         << "xrRenderer = " << xrRenderer << endl;
+
     // Handle window dragging on macOS - prioritize dragging and skip bounds checking
 #ifdef __APPLE__
     if (isDraggingWindow)
     {
-      updateWindowDragging(window);
+      // updateWindowDragging(window);
       return; // Skip normal cursor handling when dragging window
     }
 #endif
@@ -247,6 +236,7 @@ namespace jsar::example
     glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
 
     GLfloat depth;
+    cout << "Reading depth at screen coord: (" << screenCoord.x << ", " << screenCoord.y << ")\n";
     glReadPixels(screenCoord.x * contentScaling[0],
                  screenCoord.y * contentScaling[1],
                  1,

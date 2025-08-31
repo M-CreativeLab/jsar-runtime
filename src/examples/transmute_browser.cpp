@@ -33,6 +33,7 @@
 #include <common/xr/types.hpp>
 #include <runtime/embedder.hpp>
 #include <runtime/content.hpp>
+#include <runtime/content_manager.hpp>
 #include <renderer/render_api.hpp>
 
 namespace jsar::example
@@ -680,8 +681,8 @@ namespace jsar::example
 
       if (embedder_ != nullptr)
       {
-        processInput(windowCtx_->window, *embedder_);     // process input
-        processFrameRateInput(windowCtx_->window, *this); // process frame rate control input
+        processInput(windowCtx_->window);          // process input
+        processFrameRateInput(windowCtx_->window); // process frame rate control input
 
         {
           auto constellation = embedder_->constellation;
@@ -910,23 +911,7 @@ namespace jsar::example
     }
   }
 
-  // Global input processing functions
-  void processInput(GLFWwindow *window, DesktopEmbedder &embedder)
-  {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-      glfwSetWindowShouldClose(window, true);
-
-    static bool isKeySpacePressed = false;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-      isKeySpacePressed = true;
-    if (isKeySpacePressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-    {
-      isKeySpacePressed = false;
-      embedder.constellation->resetContents();
-    }
-  }
-
-  void processFrameRateInput(GLFWwindow *window, TransmuteBrowser &browser)
+  void TransmuteBrowser::processFrameRateInput(GLFWwindow *window)
   {
     // Toggle vsync mode with V key
     static bool isKeyVPressed = false;
@@ -935,15 +920,15 @@ namespace jsar::example
     if (isKeyVPressed && glfwGetKey(window, GLFW_KEY_V) == GLFW_RELEASE)
     {
       isKeyVPressed = false;
-      browser.useVsync = !browser.useVsync;
-      glfwSwapInterval(browser.useVsync ? 1 : 0);
+      useVsync = !useVsync;
+      glfwSwapInterval(useVsync ? 1 : 0);
       printf("Frame rate mode: %s (Target FPS: %d)\n",
-             browser.useVsync ? "VSync" : "Manual",
-             browser.targetFps);
+             useVsync ? "VSync" : "Manual",
+             targetFps);
     }
 
     // Adjust FPS with +/- keys (only in manual mode)
-    if (!browser.useVsync)
+    if (!useVsync)
     {
       static bool isKeyPlusPressed = false;
       static bool isKeyMinusPressed = false;
@@ -957,10 +942,10 @@ namespace jsar::example
            glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE))
       {
         isKeyPlusPressed = false;
-        if (browser.targetFps < 240)
+        if (targetFps < 240)
         {
-          browser.targetFps += (browser.targetFps < 60) ? 15 : 30;
-          printf("Target FPS: %d\n", browser.targetFps);
+          targetFps += (targetFps < 60) ? 15 : 30;
+          printf("Target FPS: %d\n", targetFps);
         }
       }
 
@@ -973,10 +958,10 @@ namespace jsar::example
            glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_RELEASE))
       {
         isKeyMinusPressed = false;
-        if (browser.targetFps > 15)
+        if (targetFps > 15)
         {
-          browser.targetFps -= (browser.targetFps <= 60) ? 15 : 30;
-          printf("Target FPS: %d\n", browser.targetFps);
+          targetFps -= (targetFps <= 60) ? 15 : 30;
+          printf("Target FPS: %d\n", targetFps);
         }
       }
     }
