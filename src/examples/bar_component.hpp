@@ -101,7 +101,7 @@ namespace jsar::example
 
     // 3D bar properties
     static constexpr float BAR_WIDTH = 0.20f;     // World space width
-    static constexpr float BAR_HEIGHT = 0.005f;    // World space height
+    static constexpr float BAR_HEIGHT = 0.005f;   // World space height
     static constexpr float BAR_OFFSET_Y = -0.16f; // Offset below content in world space
 
     // Texture properties

@@ -507,19 +507,26 @@ namespace jsar::example
     // Register this content with the bar component
     contentsBarComponent_->addContent(content.get());
 
-    // Position content spatially (simple grid layout for now) using the base matrix
-    float spacing = 2.0f;
-    int contentCount = contents_.size();
-    float x = (contentCount % 3 - 1) * spacing; // -spacing, 0, spacing, -spacing, ...
-    float y = 0.0f;
-    float z = 0.35f - (contentCount / 3) * spacing;
+    // Position content spatially - compute matrix based on viewer base matrix
+    // 1. Get the current viewer base matrix
+    auto xrRenderer = windowCtx_->xrRenderer;
+    assert(xrRenderer != nullptr);
+    glm::mat4 viewerBaseMatrix = xrRenderer->getViewerBaseMatrix();
+
+    // 2. Compute a new matrix which is in front of the viewer base matrix by 0.3m (in z-axis)
+    // Extract forward direction from viewer matrix (negative Z axis)
+    glm::vec3 viewerForward = -glm::vec3(viewerBaseMatrix[2]);
+    glm::vec3 viewerPosition = glm::vec3(viewerBaseMatrix[3]);
+
+    // Position content 0.3m in front of the viewer
+    glm::vec3 contentPosition = viewerPosition + viewerForward * 0.3f;
 
     // Create a translation matrix for the new position
-    glm::mat4 positionMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+    glm::mat4 positionMatrix = glm::translate(glm::mat4(1.0f), contentPosition);
     contentRuntime->updateLocalBaseMatrix(positionMatrix);
 
     contents_[contentId] = content;
-    printf("Opened content %d at position (%.2f, %.2f, %.2f)\n", contentId, x, y, z);
+    printf("Opened content %d at position (%.2f, %.2f, %.2f)\n", contentId, contentPosition.x, contentPosition.y, contentPosition.z);
 
     return content;
   }
@@ -645,10 +652,15 @@ namespace jsar::example
       for (const auto &pair : contents_)
       {
         const auto &content = pair.second;
-        // For now, use a simplified approach - we'll implement proper 3D ray casting later
-        // This is a temporary workaround to make it compile
-        glm::vec3 rayOrigin(0, 0, 0);
-        glm::vec3 rayDirection(0, 0, -1);
+        // Use the main controller target ray from xrRenderer for hit testing
+        auto xrRenderer = windowCtx_->xrRenderer;
+        assert(xrRenderer != nullptr);
+
+        // Extract ray origin and direction from the main controller target ray matrix
+        glm::mat4 controllerMatrix = xrRenderer->getMainControllerTargetRay();
+        glm::vec3 rayOrigin = glm::vec3(controllerMatrix[3]);     // Translation column
+        glm::vec3 rayDirection = -glm::vec3(controllerMatrix[2]); // Negative Z axis (forward)
+
         if (content->isRayInBar(rayOrigin, rayDirection))
         {
           draggedContent_ = content;

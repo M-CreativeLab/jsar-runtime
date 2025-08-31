@@ -135,6 +135,10 @@ namespace jsar::example
       if (mainController != nullptr)
         mainController->setTargetRayBaseMatrix(mainControllerTargetRay);
     }
+    glm::mat4 getMainControllerTargetRay() const
+    {
+      return mainControllerTargetRay;
+    }
 
   private:
     std::shared_ptr<xr::Device> xrDevice = nullptr;
