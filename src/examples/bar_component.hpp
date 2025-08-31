@@ -100,13 +100,13 @@ namespace jsar::example
     GLint textureLoc_;
 
     // 3D bar properties
-    static constexpr float BAR_WIDTH = 0.25f;     // World space width
-    static constexpr float BAR_HEIGHT = 0.01f;    // World space height
+    static constexpr float BAR_WIDTH = 0.20f;     // World space width
+    static constexpr float BAR_HEIGHT = 0.005f;    // World space height
     static constexpr float BAR_OFFSET_Y = -0.16f; // Offset below content in world space
 
     // Texture properties
     static constexpr int TEXTURE_WIDTH = 256;
-    static constexpr int TEXTURE_HEIGHT = 64;
+    static constexpr int TEXTURE_HEIGHT = TEXTURE_WIDTH * (BAR_HEIGHT / BAR_WIDTH);
 
     // Vertex data for a quad
     std::vector<float> vertices_;

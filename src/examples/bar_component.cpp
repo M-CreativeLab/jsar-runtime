@@ -61,7 +61,7 @@ namespace jsar::example
     createBarTexture();
 
     if (glGetError() != GL_NO_ERROR)
-      std::cout << "OpenGL error on BarComponent init" << std::endl;
+      cout << "OpenGL error on BarComponent init" << endl;
   }
 
   BarComponent::~BarComponent()
@@ -75,8 +75,8 @@ namespace jsar::example
 
   void BarComponent::addContent(Content *content)
   {
-    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                           { return instance.content == content; });
+    auto it = find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                      { return instance.content == content; });
 
     if (it == instances_.end())
     {
@@ -87,8 +87,8 @@ namespace jsar::example
 
   void BarComponent::removeContent(Content *content)
   {
-    auto it = std::remove_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                             { return instance.content == content; });
+    auto it = remove_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                        { return instance.content == content; });
 
     if (it != instances_.end())
     {
@@ -99,8 +99,8 @@ namespace jsar::example
 
   void BarComponent::updateContentTransform(Content *content, const glm::mat4 &transform)
   {
-    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                           { return instance.content == content; });
+    auto it = find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                      { return instance.content == content; });
 
     if (it != instances_.end())
     {
@@ -111,8 +111,8 @@ namespace jsar::example
 
   void BarComponent::setContentHovered(Content *content, bool hovered)
   {
-    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                           { return instance.content == content; });
+    auto it = find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                      { return instance.content == content; });
 
     if (it != instances_.end())
     {
@@ -123,8 +123,8 @@ namespace jsar::example
 
   void BarComponent::setContentDragging(Content *content, bool dragging)
   {
-    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                           { return instance.content == content; });
+    auto it = find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                      { return instance.content == content; });
 
     if (it != instances_.end())
     {
@@ -151,16 +151,16 @@ namespace jsar::example
     if (!success)
     {
       glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-      std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                << infoLog << std::endl;
+      cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+           << infoLog << endl;
     }
 
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
       glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-      std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                << infoLog << std::endl;
+      cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+           << infoLog << endl;
     }
 
     // Create shader program
@@ -174,8 +174,8 @@ namespace jsar::example
     if (!success)
     {
       glGetProgramInfoLog(program_, 512, NULL, infoLog);
-      std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                << infoLog << std::endl;
+      cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+           << infoLog << endl;
     }
 
     glDeleteShader(vertexShader);
@@ -273,17 +273,17 @@ namespace jsar::example
   void BarComponent::createBarTexture()
   {
     // Create Skia surface for rendering the bar texture with Apple design
-    SkImageInfo info = SkImageInfo::MakeN32Premul(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    SkImageInfo info = SkImageInfo::MakeN32Premul(TEXTURE_WIDTH * 3,
+                                                  TEXTURE_HEIGHT * 3);
 
     // Allocate pixel buffer for the texture
     size_t pixelBufferSize = info.computeMinByteSize();
-    std::vector<uint8_t> pixelBuffer(pixelBufferSize);
+    vector<uint8_t> pixelBuffer(pixelBufferSize);
 
-    sk_sp<SkSurface> surface = SkSurface::MakeRasterDirect(info, pixelBuffer.data(), info.minRowBytes());
-
+    sk_sp<SkSurface> surface = SkSurfaces::WrapPixels(info, pixelBuffer.data(), info.minRowBytes());
     if (!surface)
     {
-      std::cout << "Failed to create Skia surface for bar texture" << std::endl;
+      cout << "Failed to create Skia surface for bar texture" << endl;
       return;
     }
 
@@ -291,21 +291,20 @@ namespace jsar::example
     canvas->clear(SK_ColorTRANSPARENT);
 
     // Apple-style bar design with rounded corners and opacity
-    float cornerRadius = 8.0f;
+    float cornerRadius = 12.0f;
     SkPaint paint;
 
     // Base bar with Apple's translucent white
-    paint.setColor(SkColorSetARGB(204, 255, 255, 255)); // 80% opacity white
+    paint.setColor(SkColorSetARGB(0.8f * 255, 255, 255, 255)); // 80% opacity white
     paint.setAntiAlias(true);
 
     // Create rounded rectangle for the bar
-    SkRect rect = SkRect::MakeWH(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    SkRect rect = SkRect::MakeWH(info.width(), info.height());
     SkRRect roundedRect = SkRRect::MakeRectXY(rect, cornerRadius, cornerRadius);
-
     canvas->drawRRect(roundedRect, paint);
 
-    // Add subtle inner shadow effect (Apple style)
-    paint.setColor(SkColorSetARGB(25, 0, 0, 0)); // 10% opacity black
+    // Add subtle inner shadow effect
+    paint.setColor(SkColorSetARGB(0.5f * 255, 255, 255, 255)); // 10% opacity black
     SkRect innerRect = rect;
     innerRect.inset(1, 1);
     SkRRect innerRoundedRect = SkRRect::MakeRectXY(innerRect, cornerRadius - 1, cornerRadius - 1);
@@ -315,7 +314,7 @@ namespace jsar::example
     SkPixmap pixmap;
     if (!surface->peekPixels(&pixmap))
     {
-      std::cout << "Failed to get pixels from Skia surface" << std::endl;
+      cout << "Failed to get pixels from Skia surface" << endl;
       return;
     }
 
@@ -324,7 +323,15 @@ namespace jsar::example
     glBindTexture(GL_TEXTURE_2D, barTexture_);
 
     // Upload texture data
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixmap.addr());
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGBA,
+                 info.width(),
+                 info.height(),
+                 0,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 pixmap.addr());
 
     // Set texture parameters for smooth scaling
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -422,7 +429,7 @@ namespace jsar::example
       float padding; // For alignment
     };
 
-    std::vector<InstanceData> instanceData;
+    vector<InstanceData> instanceData;
     instanceData.reserve(instances_.size());
 
     for (const auto &instance : instances_)
@@ -441,7 +448,7 @@ namespace jsar::example
       }
       else
       {
-        data.color = glm::vec3(0.4f, 0.4f, 0.4f); // Default gray
+        data.color = glm::vec3(1.0f, 1.0f, 1.0f);
       }
 
       instanceData.push_back(data);
