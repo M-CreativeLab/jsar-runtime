@@ -45,33 +45,52 @@ namespace dombinding
     v8::EscapableHandleScope scope(isolate);
     v8::Context::Scope contextScope(context);
 
-    // Create a V8 object that will hold console methods
-    auto consoleObject = v8::Object::New(isolate);
+    try
+    {
+      // Attempt to create a NAPI environment from the V8 isolate
+      // In Node.js addons, napi_env is often equivalent to v8::Isolate
+      napi_env env = reinterpret_cast<napi_env>(isolate);
 
-    // Create console methods that call the static LogMessage method directly
-    auto logMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                       {
-                                         // Simple logging without V8 value formatting for now
-                                         Console::LogMessage("log", "console.log called"); })
-                       .ToLocalChecked();
-    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "log").ToLocalChecked(), logMethod).FromJust();
+      // Create a Console instance using the NAPI binding
+      Napi::Object consoleInstance = Console::NewInstance(Napi::Env(env));
 
-    auto infoMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                        { Console::LogMessage("info", "console.info called"); })
-                        .ToLocalChecked();
-    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "info").ToLocalChecked(), infoMethod).FromJust();
+      // Convert the NAPI object to V8 object
+      // NAPI objects are V8 objects under the hood, so we can extract the underlying value
+      napi_value napiValue = consoleInstance;
+      v8::Local<v8::Value> v8Value = *reinterpret_cast<v8::Local<v8::Value> *>(&napiValue);
 
-    auto warnMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                        { Console::LogMessage("warn", "console.warn called"); })
-                        .ToLocalChecked();
-    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "warn").ToLocalChecked(), warnMethod).FromJust();
+      return scope.Escape(v8Value.As<v8::Object>());
+    }
+    catch (...)
+    {
+      // Fallback to simple V8 object if NAPI conversion fails
+      auto consoleObject = v8::Object::New(isolate);
 
-    auto errorMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                         { Console::LogMessage("error", "console.error called"); })
+      // Create simple console methods that call the static LogMessage method directly
+      auto logMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                         {
+                                           // Simple logging without V8 value formatting for now
+                                           Console::LogMessage("log", "console.log called"); })
                          .ToLocalChecked();
-    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "error").ToLocalChecked(), errorMethod).FromJust();
+      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "log").ToLocalChecked(), logMethod).FromJust();
 
-    return scope.Escape(consoleObject);
+      auto infoMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                          { Console::LogMessage("info", "console.info called"); })
+                          .ToLocalChecked();
+      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "info").ToLocalChecked(), infoMethod).FromJust();
+
+      auto warnMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                          { Console::LogMessage("warn", "console.warn called"); })
+                          .ToLocalChecked();
+      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "warn").ToLocalChecked(), warnMethod).FromJust();
+
+      auto errorMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                           { Console::LogMessage("error", "console.error called"); })
+                           .ToLocalChecked();
+      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "error").ToLocalChecked(), errorMethod).FromJust();
+
+      return scope.Escape(consoleObject);
+    }
   }
 
 
