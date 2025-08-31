@@ -22,7 +22,7 @@ namespace jsar::example
   class BarComponent
   {
   public:
-    BarComponent(WindowContext *windowCtx);
+    BarComponent();
     ~BarComponent();
 
     /**
@@ -83,7 +83,6 @@ namespace jsar::example
     glm::mat4 calculateBarTransform(const glm::vec3 &contentPosition) const;
 
   private:
-    WindowContext *windowCtx_;
     std::vector<BarInstance> instances_;
 
     // OpenGL resources for instanced rendering
@@ -97,9 +96,9 @@ namespace jsar::example
     GLint projectionMatrixLoc_;
 
     // 3D bar properties
-    static constexpr float BAR_WIDTH = 0.4f;     // World space width
-    static constexpr float BAR_HEIGHT = 0.08f;   // World space height
-    static constexpr float BAR_OFFSET_Y = -0.1f; // Offset below content in world space
+    static constexpr float BAR_WIDTH = 0.25f;     // World space width
+    static constexpr float BAR_HEIGHT = 0.01f;   // World space height
+    static constexpr float BAR_OFFSET_Y = -0.16f; // Offset below content in world space
 
     // Vertex data for a quad
     std::vector<float> vertices_;

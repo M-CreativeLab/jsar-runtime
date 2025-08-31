@@ -1,14 +1,15 @@
-#include "./bar_component.hpp"
-#include "./content.hpp"
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <algorithm>
 
+#include "./bar_component.hpp"
+#include "./content.hpp"
+
 namespace jsar::example
 {
-  BarComponent::BarComponent(WindowContext *windowCtx)
-      : windowCtx_(windowCtx)
-      , barVertSource_(
+  using namespace std;
+
+  BarComponent::BarComponent()
+      : barVertSource_(
           "#version 410 core\n"
           "layout (location = 0) in vec3 position;\n"
           "layout (location = 1) in vec2 texCoord;\n"
@@ -266,7 +267,8 @@ namespace jsar::example
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
 
     glUseProgram(program_);
     glBindVertexArray(vao_);
@@ -281,9 +283,10 @@ namespace jsar::example
     glBindVertexArray(0);
     glUseProgram(0);
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
 
     if (glGetError() != GL_NO_ERROR)
-      std::cout << "OpenGL error on BarComponent render" << std::endl;
+      cout << "OpenGL error on BarComponent render" << endl;
   }
 
   Content *BarComponent::checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
@@ -366,5 +369,4 @@ namespace jsar::example
     // Create transformation matrix
     return glm::translate(glm::mat4(1.0f), barPosition);
   }
-
 }

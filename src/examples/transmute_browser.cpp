@@ -431,6 +431,9 @@ namespace jsar::example
       }
     }
 
+    // Create contents bar component
+    contentsBarComponent_ = make_shared<BarComponent>();
+
     // Setup screen renderer and GUI
     setupScreenRenderer();
 
@@ -440,9 +443,6 @@ namespace jsar::example
   void TransmuteBrowser::setupScreenRenderer()
   {
     screenRenderer_ = make_unique<ScreenRenderer>(windowCtx_.get());
-
-    // Create shared bar component for 3D rendering
-    sharedBarComponent_ = make_shared<BarComponent>(windowCtx_.get());
 
     // Create stat panel
     statPanel_ = screenRenderer_->createStatPanel();
@@ -502,10 +502,10 @@ namespace jsar::example
     content->setWindowContext(windowCtx_.get());
 
     // Set the shared bar component for 3D rendering
-    content->setBarComponent(sharedBarComponent_);
+    content->setBarComponent(contentsBarComponent_);
 
     // Register this content with the bar component
-    sharedBarComponent_->addContent(content.get());
+    contentsBarComponent_->addContent(content.get());
 
     // Position content spatially (simple grid layout for now) using the base matrix
     float spacing = 2.0f;
@@ -531,10 +531,8 @@ namespace jsar::example
       return false;
 
     // Remove from bar component before closing
-    if (sharedBarComponent_)
-    {
-      sharedBarComponent_->removeContent(it->second.get());
-    }
+    if (contentsBarComponent_)
+      contentsBarComponent_->removeContent(it->second.get());
 
     embedder_->constellation->close(contentId);
     contents_.erase(it);
@@ -796,7 +794,7 @@ namespace jsar::example
           glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
 
           // Render environment map (skybox) for this eye
-          if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+          if (envRenderer_ && envRenderer_->isEnabled())
           {
             auto viewMatrix = xrRenderer->getViewMatrixForEye(viewIndex);
             auto projectionMatrix = xrRenderer->getProjectionMatrix();
@@ -824,6 +822,8 @@ namespace jsar::example
             // Enqueue passes
             embedder_->onOpaquesRenderPass();
             embedder_->onTransparentsRenderPass();
+
+            // TODO(yorkie): support contents bar rendering for multipass?
           }
         }
       }
@@ -844,7 +844,7 @@ namespace jsar::example
         xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
 
         // Render environment map (skybox) - use first eye's view matrix for singlepass
-        if (envMapEnabled && envRenderer_ && envRenderer_->isEnabled())
+        if (envRenderer_ && envRenderer_->isEnabled())
         {
           auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
           auto projectionMatrix = xrRenderer->getProjectionMatrix();
@@ -861,6 +861,28 @@ namespace jsar::example
 
         embedder_->onOpaquesRenderPass();
         embedder_->onTransparentsRenderPass();
+
+        // Render native 3d contents
+        auto renderer = embedder_->constellation->renderer;
+        for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
+        {
+          auto viewMatrix = glm::make_mat4(xrDevice->getViewMatrixForEye(viewIndex));
+          auto projectionMatrix = glm::make_mat4(xrDevice->getProjectionMatrixForEye(viewIndex));
+
+          // Update the viewport if using a double-wide framebuffer
+          if (renderer->useDoubleWideFramebuffer == true)
+          {
+            float width = drawingViewport.width() / 2;
+            glViewport(viewIndex * width,
+                       0,
+                       width,
+                       drawingViewport.height());
+          }
+
+          // Render 3D content bars using instanced rendering
+          if (contentsBarComponent_ && !contents_.empty())
+            contentsBarComponent_->renderInstanced(viewMatrix, projectionMatrix);
+        }
       }
     }
     else
@@ -869,20 +891,6 @@ namespace jsar::example
     }
 
     embedder_->onAfterRendering();
-
-    // Render 3D content bars using instanced rendering
-    if (sharedBarComponent_ && !contents_.empty())
-    {
-      // Use the first eye's view matrix for bar rendering
-      // In a full stereoscopic implementation, we'd render bars for each eye
-      auto xrRenderer = windowCtx_->xrRenderer;
-      if (xrRenderer)
-      {
-        auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
-        auto projectionMatrix = xrRenderer->getProjectionMatrix();
-        sharedBarComponent_->renderInstanced(viewMatrix, projectionMatrix);
-      }
-    }
 
     // Render screen-space GUI
     if (screenRenderer_)

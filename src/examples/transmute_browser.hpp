@@ -100,7 +100,7 @@ namespace jsar::example
     // Screen GUI components
     std::shared_ptr<StatPanel> statPanel_;
     std::shared_ptr<InputBox> urlInputBox_;
-    std::shared_ptr<BarComponent> sharedBarComponent_;
+    std::shared_ptr<BarComponent> contentsBarComponent_;
 
     // Dragging state
     std::shared_ptr<Content> draggedContent_;
