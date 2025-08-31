@@ -36,9 +36,10 @@ namespace jsar::example
     // Calculate vertices for input box positioned at bottom center
     float screenWidth = static_cast<float>(windowCtx_->width);
     float screenHeight = static_cast<float>(windowCtx_->height);
+    int inputWidth = computeInputWidth();
 
     // Convert pixel coordinates to normalized device coordinates
-    float boxWidth = INPUT_WIDTH / screenWidth * 2.0f;
+    float boxWidth = inputWidth / screenWidth * 2.0f;
     float boxHeight = INPUT_HEIGHT / screenHeight * 2.0f;
     float centerX = 0.0f; // Center horizontally
     float bottomY = -1.0f + (MARGIN_BOTTOM + INPUT_HEIGHT) / screenHeight * 2.0f;
@@ -98,34 +99,45 @@ namespace jsar::example
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, INPUT_WIDTH, INPUT_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    int inputWidth = computeInputWidth();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, inputWidth, INPUT_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   void InputBox::resetCanvas()
   {
     int dpr = 1;
-    surface_ = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(INPUT_WIDTH * dpr, INPUT_HEIGHT * dpr));
+    int inputWidth = computeInputWidth();
+    surface_ = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(inputWidth * dpr, INPUT_HEIGHT * dpr));
     canvas_ = surface_->getCanvas();
     canvas_->clear(SK_ColorTRANSPARENT);
 
-    // Background paint (dark background with border)
+    // Apple-themed background paint with opacity and modern styling
     backgroundPaint_.setBlendMode(SkBlendMode::kSrcOver);
     backgroundPaint_.setAntiAlias(true);
     backgroundPaint_.setStyle(SkPaint::kFill_Style);
-    backgroundPaint_.setColor(0xFF2a2a2a); // Dark gray background
 
-    // Text paint
+    // Modern dark background with slight transparency (87% opacity)
+    if (isFocused_)
+    {
+      backgroundPaint_.setColor(0xDE1C1C1E); // Dark with 87% opacity, slightly lighter when focused
+    }
+    else
+    {
+      backgroundPaint_.setColor(0xCC1C1C1E); // Dark with 80% opacity when unfocused
+    }
+
+    // Text paint - system text color
     textPaint_.setBlendMode(SkBlendMode::kSrcOver);
     textPaint_.setAntiAlias(true);
     textPaint_.setStyle(SkPaint::kFill_Style);
-    textPaint_.setColor(0xFFffffff); // White text
+    textPaint_.setColor(0xFFFFFFFF); // Pure white text for contrast
 
-    // Cursor paint
+    // Cursor paint - Apple system blue
     cursorPaint_.setBlendMode(SkBlendMode::kSrcOver);
     cursorPaint_.setAntiAlias(true);
     cursorPaint_.setStyle(SkPaint::kFill_Style);
-    cursorPaint_.setColor(0xFF00ff00); // Green cursor
+    cursorPaint_.setColor(0xFF007AFF); // Apple system blue for cursor
 
     auto typeface = fontMgr_.getTypeface("monospace");
     textFont_.setTypeface(typeface);
@@ -133,7 +145,8 @@ namespace jsar::example
     textFont_.setEdging(SkFont::Edging::kSubpixelAntiAlias);
     textFont_.setSubpixel(true);
 
-    imageInfo_ = SkImageInfo::MakeN32Premul(INPUT_WIDTH, INPUT_HEIGHT);
+    int inputWidth = computeInputWidth();
+    imageInfo_ = SkImageInfo::MakeN32Premul(inputWidth, INPUT_HEIGHT);
     pixels_.resize(imageInfo_.computeMinByteSize());
   }
 
@@ -164,10 +177,11 @@ namespace jsar::example
     surface_->readPixels(imageInfo_, pixels_.data(), imageInfo_.minRowBytes(), 0, 0);
 
     glBindTexture(GL_TEXTURE_2D, texture_);
+    int inputWidth = computeInputWidth();
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  GL_RGBA,
-                 INPUT_WIDTH,
+                 inputWidth,
                  INPUT_HEIGHT,
                  0,
                  GL_RGBA,
@@ -179,22 +193,40 @@ namespace jsar::example
   {
     canvas_->clear(SK_ColorTRANSPARENT);
 
-    // Draw background with border
-    SkRect backgroundRect = SkRect::MakeWH(INPUT_WIDTH, INPUT_HEIGHT);
-    canvas_->drawRect(backgroundRect, backgroundPaint_);
+    // Apple-themed rounded rectangle with modern styling
+    int inputWidth = computeInputWidth();
+    SkRect backgroundRect = SkRect::MakeWH(inputWidth, INPUT_HEIGHT);
 
-    // Draw border
+    // Apple-style corner radius (8pt for input fields)
+    float cornerRadius = 8.0f;
+    SkRRect roundedRect = SkRRect::MakeRectXY(backgroundRect, cornerRadius, cornerRadius);
+
+    // Draw the main background with rounded corners
+    canvas_->drawRRect(roundedRect, backgroundPaint_);
+
+    // Draw border with Apple system colors
     SkPaint borderPaint;
     borderPaint.setStyle(SkPaint::kStroke_Style);
-    borderPaint.setStrokeWidth(2.0f);
-    borderPaint.setColor(isFocused_ ? 0xFF0080ff : 0xFF666666); // Blue when focused, gray otherwise
+    borderPaint.setStrokeWidth(1.5f); // Thinner border, more Apple-like
     borderPaint.setAntiAlias(true);
-    canvas_->drawRect(backgroundRect, borderPaint);
+
+    if (isFocused_)
+    {
+      // Apple system blue with slight transparency
+      borderPaint.setColor(0xFF007AFF); // Apple system blue
+    }
+    else
+    {
+      // Subtle gray border when not focused
+      borderPaint.setColor(0x66FFFFFF); // White with 40% opacity for subtle border
+    }
+
+    canvas_->drawRRect(roundedRect, borderPaint);
 
     // Draw text or placeholder
     std::string displayText = text_.empty() ? placeholder_ : text_;
-    SkPaint &paintToUse = text_.empty() ? (textPaint_.setColor(0xFF888888), textPaint_) : // Gray for placeholder
-                            (textPaint_.setColor(0xFFffffff), textPaint_);                // White for actual text
+    SkPaint &paintToUse = text_.empty() ? (textPaint_.setColor(0xFF8E8E93), textPaint_) : // Apple system gray for placeholder
+                            (textPaint_.setColor(0xFFFFFFFF), textPaint_);                // Pure white for actual text
 
     if (!displayText.empty())
     {
@@ -309,15 +341,27 @@ namespace jsar::example
     // Convert mouse coordinates to our input box bounds
     float screenWidth = static_cast<float>(windowCtx_->width);
     float screenHeight = static_cast<float>(windowCtx_->height);
+    int inputWidth = computeInputWidth();
 
     float centerX = screenWidth / 2.0f;
     float bottomY = screenHeight - MARGIN_BOTTOM - INPUT_HEIGHT;
 
-    float left = centerX - INPUT_WIDTH / 2.0f;
-    float right = centerX + INPUT_WIDTH / 2.0f;
+    float left = centerX - inputWidth / 2.0f;
+    float right = centerX + inputWidth / 2.0f;
     float top = bottomY;
     float bottom = bottomY + INPUT_HEIGHT;
 
     return xpos >= left && xpos <= right && ypos >= top && ypos <= bottom;
+  }
+
+  int InputBox::computeInputWidth() const
+  {
+    int windowWidth = windowCtx_->width;
+    int width = static_cast<int>(windowWidth * INPUT_WIDTH_PERCENTAGE);
+
+    // Clamp to min/max bounds
+    width = std::max(INPUT_MIN_WIDTH, std::min(INPUT_MAX_WIDTH, width));
+
+    return width;
   }
 }

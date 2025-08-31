@@ -76,6 +76,7 @@ namespace jsar::example
     void uploadCanvas();
     void drawInputBox();
     bool isMouseInBounds(double xpos, double ypos) const;
+    int computeInputWidth() const; // Compute width based on window size
 
   private:
     WindowContext *windowCtx_;
@@ -105,7 +106,9 @@ namespace jsar::example
 
     // Layout properties
     static constexpr int INPUT_HEIGHT = 40;
-    static constexpr int INPUT_WIDTH = 400;
+    static constexpr float INPUT_WIDTH_PERCENTAGE = 0.6f; // 60% of window width
+    static constexpr int INPUT_MIN_WIDTH = 300;           // Minimum width
+    static constexpr int INPUT_MAX_WIDTH = 800;           // Maximum width
     static constexpr int MARGIN_BOTTOM = 20;
     static constexpr int PADDING = 10;
 

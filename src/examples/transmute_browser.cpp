@@ -450,25 +450,27 @@ namespace jsar::example
                                                      printf("Opening URL: %s\n", url.c_str());
                                                      openContent(url); });
 
-    // Set up input callbacks for the screen renderer
-    // glfwSetKeyCallback(windowCtx_->window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
-    //                    {
-    //                      auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
-    //                      if (browser && browser->screenRenderer_)
-    //                      {
-    //                        browser->screenRenderer_->handleInput(window, key, action);
-    //                      } });
+    // Set up event handlers through WindowContext instead of directly using GLFW
+    windowCtx_->setKeyInputHandler([this](int key, int scancode, int action, int mods)
+                                   {
+                                     if (screenRenderer_)
+                                     {
+                                       screenRenderer_->handleInput(windowCtx_->window, key, action);
+                                     } });
 
-    // glfwSetCharCallback(windowCtx_->window, [](GLFWwindow *window, unsigned int codepoint)
-    //                     {
-    //                       auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
-    //                       if (browser && browser->screenRenderer_)
-    //                       {
-    //                         browser->screenRenderer_->handleCharInput(window, codepoint);
-    //                       } });
+    windowCtx_->setCharInputHandler([this](unsigned int codepoint)
+                                    {
+                                      if (screenRenderer_)
+                                      {
+                                        screenRenderer_->handleCharInput(windowCtx_->window, codepoint);
+                                      } });
 
-    // Set user pointer for callbacks
-    // glfwSetWindowUserPointer(windowCtx_->window, this);
+    windowCtx_->setUIMouseButtonHandler([this](int button, int action, double xpos, double ypos)
+                                        {
+                                          if (screenRenderer_)
+                                          {
+                                            screenRenderer_->handleMouseButton(windowCtx_->window, button, action, xpos, ypos);
+                                          } });
   }
 
   std::shared_ptr<Content> TransmuteBrowser::openContent(const std::string &url)

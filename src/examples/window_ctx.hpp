@@ -44,8 +44,15 @@ namespace jsar::example
     void handleScroll(double xoffset, double yoffset);
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);
-    void updateAnimation();               // Update smooth animation for viewer controls
-    void setDragRegionHeight(int height); // Set the height of the macOS window drag region
+    void handleKeyInput(int key, int scancode, int action, int mods); // Handle keyboard input
+    void handleCharInput(unsigned int codepoint);                     // Handle character input
+    void updateAnimation();                                           // Update smooth animation for viewer controls
+    void setDragRegionHeight(int height);                             // Set the height of the macOS window drag region
+
+    // Event handler registration for UI components
+    void setKeyInputHandler(std::function<void(int, int, int, int)> handler);
+    void setCharInputHandler(std::function<void(unsigned int)> handler);
+    void setUIMouseButtonHandler(std::function<void(int, int, double, double)> handler);
 
   private:
     void terminate();
@@ -83,6 +90,11 @@ namespace jsar::example
     double lastMouseMoveTime = 0.0;
     static constexpr double SCROLL_THROTTLE_INTERVAL = 0.016; // ~60 FPS (16ms)
     static constexpr double MOUSE_THROTTLE_INTERVAL = 0.016;  // ~60 FPS (16ms)
+
+    // Event handlers for UI components
+    std::function<void(int, int, int, int)> keyInputHandler_;
+    std::function<void(unsigned int)> charInputHandler_;
+    std::function<void(int, int, double, double)> uiMouseButtonHandler_;
 
   private:
     bool terminated = false;

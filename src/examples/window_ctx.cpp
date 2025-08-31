@@ -135,6 +135,12 @@ namespace jsar::example
                           { GetContextAndExecute(window)->handleScroll(xoffset, yoffset); });
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods)
                                { GetContextAndExecute(window)->handleMouseButton(button, action, mods); });
+
+    // Set up key and character input callbacks for UI components
+    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
+                       { GetContextAndExecute(window)->handleKeyInput(key, scancode, action, mods); });
+    glfwSetCharCallback(window, [](GLFWwindow *window, unsigned int codepoint)
+                        { GetContextAndExecute(window)->handleCharInput(codepoint); });
     return xrRenderer;
   }
 
@@ -268,6 +274,14 @@ namespace jsar::example
 
   void WindowContext::handleMouseButton(int button, int action, int mods)
   {
+    // First, check if we have a UI component handler and call it
+    if (uiMouseButtonHandler_)
+    {
+      double xpos, ypos;
+      glfwGetCursorPos(window, &xpos, &ypos);
+      uiMouseButtonHandler_(button, action, xpos, ypos);
+    }
+
     if (xrRenderer == nullptr)
       return;
 
@@ -318,6 +332,42 @@ namespace jsar::example
         middleMousePressed = false;
       }
     }
+  }
+
+  void WindowContext::handleKeyInput(int key, int scancode, int action, int mods)
+  {
+    // First check if we have a UI component handler registered
+    if (keyInputHandler_)
+    {
+      keyInputHandler_(key, scancode, action, mods);
+    }
+
+    // Handle any window-level key events here if needed
+    // For now, we'll just pass through to the UI handler
+  }
+
+  void WindowContext::handleCharInput(unsigned int codepoint)
+  {
+    // First check if we have a UI component handler registered
+    if (charInputHandler_)
+    {
+      charInputHandler_(codepoint);
+    }
+  }
+
+  void WindowContext::setKeyInputHandler(std::function<void(int, int, int, int)> handler)
+  {
+    keyInputHandler_ = handler;
+  }
+
+  void WindowContext::setCharInputHandler(std::function<void(unsigned int)> handler)
+  {
+    charInputHandler_ = handler;
+  }
+
+  void WindowContext::setUIMouseButtonHandler(std::function<void(int, int, double, double)> handler)
+  {
+    uiMouseButtonHandler_ = handler;
   }
 
   void WindowContext::updateAnimation()
