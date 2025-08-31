@@ -345,7 +345,6 @@ namespace dom
   void Document::appendStyleSheet(shared_ptr<client_cssom::CSSStyleSheet> sheet)
   {
     stylesheets_.push_back(sheet);
-    style_cache_.invalidateCache();
     onStyleSheetsDidChange();
   }
 
@@ -667,6 +666,12 @@ namespace dom
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect)
       , layout_view_(nullptr)
   {
+  }
+
+  void HTMLDocument::invalidateDocumentCache()
+  {
+    styleCache().invalidateCache();
+    dirty_root_text_or_element_ = documentElement();
   }
 
   std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const

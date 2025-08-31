@@ -5,14 +5,23 @@
   <meta charset="utf-8">
   <title>Simple HTML</title>
   <style>
+    :root {
+      --primary-color: #0514a2;
+      --secondary-color: #6d172e;
+      --background-color: #fff;
+      --font-size: 40px;
+      --border-radius: 12px;
+      --image-radius: 50px;
+    }
+
     body {
-      background-color: #fff;
-      font-size: 40px;
-      color: #6d172e;
+      background-color: var(--background-color);
+      font-size: var(--font-size);
+      color: var(--secondary-color);
     }
 
     img.float-image {
-      border-bottom-right-radius: 50px;
+      border-bottom-right-radius: var(--image-radius);
       height: 300px;
       transform: translate3d(0, 0, 0);
       transition: transform 0.3s ease-in-out;
@@ -25,17 +34,18 @@
     #header {
       font-size: 100px;
       text-transform: uppercase;
-      color: transparent;
+      /* color: transparent; */
+      color: rgba(255, 255, 255, 0.87);
       font-weight: 1000;
       padding: 0 20px;
       margin: 20px;
       border: 15px solid #e84c1cd8;
       background-color: #ca8319d8;
-      background-clip: text;
+      /* background-clip: text; */
       background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
       background-blend-mode: luminosity;
       background-origin: content-box;
-      border-radius: 12px;
+      border-radius: var(--border-radius);
       box-sizing: border-box;
       transform: translate3d(0, 0, 15px);
     }
@@ -84,7 +94,8 @@
     }
 
     span.sub:hover {
-      background-color: rgba(173, 98, 98, 0.87);
+      /* background-color: rgba(173, 98, 98, 0.87); */
+      background-color: var(--primary-color);
       transform: translate3d(0, 0, 20px);
     }
 
