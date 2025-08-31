@@ -45,236 +45,35 @@ namespace dombinding
     v8::EscapableHandleScope scope(isolate);
     v8::Context::Scope contextScope(context);
 
-    // For now, create a simple V8 object with console methods
-    // TODO: This needs to be properly integrated with the NAPI Console instance
+    // Create a V8 object that will hold console methods
     auto consoleObject = v8::Object::New(isolate);
 
-    // Create console methods that will forward to our Console implementation
-    CreateConsoleMethod(isolate, context, consoleObject, "log", LogCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "info", InfoCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "warn", WarnCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "error", ErrorCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "debug", DebugCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "trace", TraceCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "assert", AssertCallback);
-    CreateConsoleMethod(isolate, context, consoleObject, "clear", ClearCallback);
+    // Create console methods that call the static LogMessage method directly
+    auto logMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                       {
+                                         // Simple logging without V8 value formatting for now
+                                         Console::LogMessage("log", "console.log called"); })
+                       .ToLocalChecked();
+    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "log").ToLocalChecked(), logMethod).FromJust();
+
+    auto infoMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                        { Console::LogMessage("info", "console.info called"); })
+                        .ToLocalChecked();
+    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "info").ToLocalChecked(), infoMethod).FromJust();
+
+    auto warnMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                        { Console::LogMessage("warn", "console.warn called"); })
+                        .ToLocalChecked();
+    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "warn").ToLocalChecked(), warnMethod).FromJust();
+
+    auto errorMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                         { Console::LogMessage("error", "console.error called"); })
+                         .ToLocalChecked();
+    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "error").ToLocalChecked(), errorMethod).FromJust();
+
     return scope.Escape(consoleObject);
   }
 
-  // static
-  void Console::CreateConsoleMethod(v8::Isolate *isolate,
-                                    v8::Local<v8::Context> context,
-                                    v8::Local<v8::Object> consoleObject,
-                                    const char *name,
-                                    v8::FunctionCallback callback)
-  {
-    auto func = v8::Function::New(context, callback).ToLocalChecked();
-    consoleObject->Set(context, v8::String::NewFromUtf8(isolate, name).ToLocalChecked(), func).FromJust();
-  }
-
-  // V8 callback functions that forward to Console instance methods
-  // static
-  void Console::LogCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    // Format arguments using V8 string conversion for compatibility
-    std::ostringstream oss;
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      if (i > 0)
-        oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("log", oss.str());
-  }
-
-  // static
-  void Console::InfoCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    std::ostringstream oss;
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      if (i > 0)
-        oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("info", oss.str());
-  }
-
-  // static
-  void Console::WarnCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    std::ostringstream oss;
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      if (i > 0)
-        oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("warn", oss.str());
-  }
-
-  // static
-  void Console::ErrorCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    std::ostringstream oss;
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      if (i > 0)
-        oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("error", oss.str());
-  }
-
-  // static
-  void Console::DebugCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    std::ostringstream oss;
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      if (i > 0)
-        oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("debug", oss.str());
-  }
-
-  // static
-  void Console::TraceCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    std::ostringstream oss;
-    oss << "Trace:";
-    for (int i = 0; i < info.Length(); ++i)
-    {
-      oss << " ";
-      oss << FormatV8Value(isolate, info[i]);
-    }
-
-    LogMessage("info", oss.str());
-  }
-
-  // static
-  void Console::AssertCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::HandleScope scope(isolate);
-
-    if (info.Length() < 1)
-      return;
-
-    bool condition = info[0]->BooleanValue(isolate);
-    if (!condition)
-    {
-      std::ostringstream oss;
-      if (info.Length() > 1)
-      {
-        oss << "Assertion failed:";
-        for (int i = 1; i < info.Length(); ++i)
-        {
-          oss << " ";
-          oss << FormatV8Value(isolate, info[i]);
-        }
-      }
-      else
-      {
-        oss << "Assertion failed";
-      }
-
-      LogMessage("error", oss.str());
-    }
-  }
-
-  // static
-  void Console::ClearCallback(const v8::FunctionCallbackInfo<v8::Value> &info)
-  {
-    std::cout << "\033[2J\033[1;1H"; // Clear screen escape sequence
-    LogMessage("info", "Console was cleared");
-  }
-
-  // static
-  std::string Console::FormatV8Value(v8::Isolate *isolate, v8::Local<v8::Value> value)
-  {
-    if (value->IsString())
-    {
-      v8::String::Utf8Value str(isolate, value);
-      return std::string(*str);
-    }
-    else if (value->IsNumber())
-    {
-      return std::to_string(value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0));
-    }
-    else if (value->IsBoolean())
-    {
-      return value->BooleanValue(isolate) ? "true" : "false";
-    }
-    else if (value->IsNull())
-    {
-      return "null";
-    }
-    else if (value->IsUndefined())
-    {
-      return "undefined";
-    }
-    else if (value->IsFunction())
-    {
-      return "[Function]";
-    }
-    else if (value->IsArray())
-    {
-      return "[Array]";
-    }
-    else if (value->IsObject())
-    {
-      // Try to stringify as JSON, fallback to [object Object]
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::Local<v8::Object> global = context->Global();
-      v8::Local<v8::Value> json_val;
-      if (global->Get(context, v8::String::NewFromUtf8(isolate, "JSON").ToLocalChecked()).ToLocal(&json_val) && json_val->IsObject())
-      {
-        v8::Local<v8::Object> json = json_val.As<v8::Object>();
-        v8::Local<v8::Value> stringify_val;
-        if (json->Get(context, v8::String::NewFromUtf8(isolate, "stringify").ToLocalChecked()).ToLocal(&stringify_val) && stringify_val->IsFunction())
-        {
-          v8::Local<v8::Function> stringify = stringify_val.As<v8::Function>();
-          v8::Local<v8::Value> result;
-          if (stringify->Call(context, json, 1, &value).ToLocal(&result) && result->IsString())
-          {
-            v8::String::Utf8Value str(isolate, result);
-            return std::string(*str);
-          }
-        }
-      }
-      return "[object Object]";
-    }
-    else
-    {
-      v8::String::Utf8Value str(isolate, value);
-      return std::string(*str);
-    }
-  }
 
   Console::Console(const Napi::CallbackInfo &info)
       : ObjectWrap<Console>(info)

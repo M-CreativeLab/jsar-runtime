@@ -53,35 +53,9 @@ namespace dombinding
     Napi::Value Clear(const Napi::CallbackInfo &info);
 
     /**
-     * Static V8 callback functions for V8 integration
-     */
-    static void LogCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void InfoCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void WarnCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void ErrorCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void DebugCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void TraceCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void AssertCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void ClearCallback(const v8::FunctionCallbackInfo<v8::Value> &info);
-
-    /**
-     * Helper method to create console methods for V8 integration
-     */
-    static void CreateConsoleMethod(v8::Isolate *isolate,
-                                    v8::Local<v8::Context> context,
-                                    v8::Local<v8::Object> consoleObject,
-                                    const char *name,
-                                    v8::FunctionCallback callback);
-
-    /**
      * Helper method to format JavaScript values for logging (NAPI version)
      */
     std::string FormatValue(const Napi::Value &value);
-
-    /**
-     * Helper method to format JavaScript values for logging (V8 version)
-     */
-    static std::string FormatV8Value(v8::Isolate *isolate, v8::Local<v8::Value> value);
 
     /**
      * Helper method to log messages with both stdout/stderr and CDP integration
