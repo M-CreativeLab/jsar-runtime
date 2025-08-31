@@ -1,14 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
-#include <skia/include/core/SkSurface.h>
-#include <skia/include/core/SkCanvas.h>
-#include <skia/include/core/SkPaint.h>
-#include <common/font/cache.hpp>
 
 #include "./window_ctx.hpp"
 
@@ -17,84 +15,96 @@ namespace jsar::example
   class Content;
 
   /**
-   * Bar component that appears beneath each content for dragging.
+   * 3D bar component that appears beneath each content for dragging.
+   * Renders as a true 3D object in world space using instanced rendering.
    * Provides visual feedback and handles mouse interaction for spatial movement.
    */
   class BarComponent
   {
   public:
-    BarComponent(WindowContext *windowCtx, Content *parentContent);
+    BarComponent(WindowContext *windowCtx);
     ~BarComponent();
 
     /**
-     * Render the bar component.
+     * Add a content instance to be rendered with a bar.
      */
-    void render();
+    void addContent(Content *content);
 
     /**
-     * Update the bar position based on content position.
+     * Remove a content instance.
      */
-    void updatePosition(const glm::vec3 &contentCenter);
+    void removeContent(Content *content);
 
     /**
-     * Check if a screen point is within the bar bounds.
+     * Update the transformation matrix for a specific content's bar.
      */
-    bool isPointInBounds(const glm::vec2 &screenPosition) const;
+    void updateContentTransform(Content *content, const glm::mat4 &transform);
 
     /**
-     * Set the hover state of the bar.
+     * Render all bars using instanced rendering.
      */
-    void setHovered(bool hovered)
-    {
-      isHovered_ = hovered;
-    }
+    void renderInstanced(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
 
     /**
-     * Set the dragging state of the bar.
+     * Check if a 3D ray intersects with any bar and return the content.
      */
-    void setDragging(bool dragging)
-    {
-      isDragging_ = dragging;
-    }
+    Content *checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
+
+    /**
+     * Set the hover state for a specific content's bar.
+     */
+    void setContentHovered(Content *content, bool hovered);
+
+    /**
+     * Set the dragging state for a specific content's bar.
+     */
+    void setContentDragging(Content *content, bool dragging);
 
   private:
+    struct BarInstance
+    {
+      Content *content;
+      glm::mat4 transform;
+      bool isHovered;
+      bool isDragging;
+
+      BarInstance(Content *c)
+          : content(c)
+          , transform(1.0f)
+          , isHovered(false)
+          , isDragging(false)
+      {
+      }
+    };
+
     void initGLProgram();
-    void resetCanvas();
-    void uploadCanvas();
-    void drawBar();
+    void createGeometry();
+    void updateInstanceBuffer();
+    glm::mat4 calculateBarTransform(const glm::vec3 &contentPosition) const;
 
   private:
     WindowContext *windowCtx_;
-    Content *parentContent_;
+    std::vector<BarInstance> instances_;
 
-    glm::vec2 screenPosition_;
-    bool isHovered_;
-    bool isDragging_;
-
-    // OpenGL resources
-    GLuint vbo_;
+    // OpenGL resources for instanced rendering
     GLuint vao_;
+    GLuint vertexVBO_;   // Vertex data for the bar quad
+    GLuint instanceVBO_; // Instance transformation matrices and states
     GLuint program_;
-    GLuint texture_;
 
-    // Skia resources
-    sk_sp<SkSurface> surface_;
-    SkCanvas *canvas_;
-    SkPaint backgroundPaint_;
-    SkPaint textPaint_;
-    font::FontCacheManager fontMgr_;
-    SkImageInfo imageInfo_;
-    std::vector<uint8_t> pixels_;
+    // Shader uniforms
+    GLint viewMatrixLoc_;
+    GLint projectionMatrixLoc_;
 
-    // Layout properties
-    static constexpr int BAR_WIDTH = 200;
-    static constexpr int BAR_HEIGHT = 30;
-    static constexpr int BAR_OFFSET_Y = 10; // Offset below content
+    // 3D bar properties
+    static constexpr float BAR_WIDTH = 0.4f;     // World space width
+    static constexpr float BAR_HEIGHT = 0.08f;   // World space height
+    static constexpr float BAR_OFFSET_Y = -0.1f; // Offset below content in world space
 
-    // Vertices for the bar quad
-    float vertices_[16];
+    // Vertex data for a quad
+    std::vector<float> vertices_;
 
-    // Shaders
+    // Shaders for 3D rendering
     const char *barVertSource_;
     const char *barFragSource_;
   };

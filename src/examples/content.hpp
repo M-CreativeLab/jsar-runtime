@@ -64,6 +64,14 @@ namespace jsar::example
     }
 
     /**
+     * Set the shared bar component (used for instanced rendering).
+     */
+    void setBarComponent(std::shared_ptr<BarComponent> barComponent)
+    {
+      barComponent_ = barComponent;
+    }
+
+    /**
      * Check if this content is currently being dragged.
      */
     bool isDragging() const
@@ -97,9 +105,9 @@ namespace jsar::example
     void update();
 
     /**
-     * Check if a point is within the bar area for dragging.
+     * Check if a 3D ray intersects with the bar area for dragging.
      */
-    bool isPointInBar(const glm::vec2 &screenPosition) const;
+    bool isRayInBar(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
 
   private:
     uint32_t id_;

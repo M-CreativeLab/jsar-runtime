@@ -1,77 +1,138 @@
 #include "./bar_component.hpp"
 #include "./content.hpp"
 #include <GLFW/glfw3.h>
-#include <sstream>
+#include <iostream>
+#include <algorithm>
 
 namespace jsar::example
 {
-  BarComponent::BarComponent(WindowContext *windowCtx, Content *parentContent)
+  BarComponent::BarComponent(WindowContext *windowCtx)
       : windowCtx_(windowCtx)
-      , parentContent_(parentContent)
-      , screenPosition_(0.0f)
-      , isHovered_(false)
-      , isDragging_(false)
       , barVertSource_(
           "#version 410 core\n"
-          "layout (location = 0) in vec2 position;\n"
+          "layout (location = 0) in vec3 position;\n"
           "layout (location = 1) in vec2 texCoord;\n"
+          "layout (location = 2) in mat4 instanceTransform;\n" // Instance matrix (locations 2-5)
+          "layout (location = 6) in vec3 instanceColor;\n"     // Instance color for state
+          "\n"
+          "uniform mat4 view;\n"
+          "uniform mat4 projection;\n"
+          "\n"
           "out vec2 TexCoord;\n"
+          "out vec3 BarColor;\n"
+          "\n"
           "void main()\n"
           "{\n"
-          "    gl_Position = vec4(position, 0.0, 1.0);\n"
+          "    gl_Position = projection * view * instanceTransform * vec4(position, 1.0);\n"
           "    TexCoord = texCoord;\n"
+          "    BarColor = instanceColor;\n"
           "}\n")
       , barFragSource_(
           "#version 410 core\n"
           "precision mediump float;\n"
+          "\n"
           "in vec2 TexCoord;\n"
+          "in vec3 BarColor;\n"
           "out vec4 FragColor;\n"
-          "uniform sampler2D texture1;\n"
+          "\n"
           "void main()\n"
           "{\n"
-          "    FragColor = texture(texture1, TexCoord);\n"
+          "    // Simple colored bar with gradient effect\n"
+          "    float alpha = 0.8;\n"
+          "    vec3 color = BarColor;\n"
+          "    \n"
+          "    // Add subtle gradient\n"
+          "    float gradientFactor = 1.0 - TexCoord.y * 0.3;\n"
+          "    color *= gradientFactor;\n"
+          "    \n"
+          "    FragColor = vec4(color, alpha);\n"
           "}\n")
   {
     initGLProgram();
-    resetCanvas();
+    createGeometry();
 
     if (glGetError() != GL_NO_ERROR)
-      printf("OpenGL error on BarComponent init\n");
+      std::cout << "OpenGL error on BarComponent init" << std::endl;
   }
 
   BarComponent::~BarComponent()
   {
     glDeleteVertexArrays(1, &vao_);
-    glDeleteBuffers(1, &vbo_);
+    glDeleteBuffers(1, &vertexVBO_);
+    glDeleteBuffers(1, &instanceVBO_);
     glDeleteProgram(program_);
-    glDeleteTextures(1, &texture_);
+  }
+
+  void BarComponent::addContent(Content *content)
+  {
+    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                           { return instance.content == content; });
+
+    if (it == instances_.end())
+    {
+      instances_.emplace_back(content);
+      updateInstanceBuffer();
+    }
+  }
+
+  void BarComponent::removeContent(Content *content)
+  {
+    auto it = std::remove_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                             { return instance.content == content; });
+
+    if (it != instances_.end())
+    {
+      instances_.erase(it, instances_.end());
+      updateInstanceBuffer();
+    }
+  }
+
+  void BarComponent::updateContentTransform(Content *content, const glm::mat4 &transform)
+  {
+    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                           { return instance.content == content; });
+
+    if (it != instances_.end())
+    {
+      it->transform = calculateBarTransform(glm::vec3(transform[3]));
+      updateInstanceBuffer();
+    }
+  }
+
+  void BarComponent::setContentHovered(Content *content, bool hovered)
+  {
+    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                           { return instance.content == content; });
+
+    if (it != instances_.end())
+    {
+      it->isHovered = hovered;
+      updateInstanceBuffer();
+    }
+  }
+
+  void BarComponent::setContentDragging(Content *content, bool dragging)
+  {
+    auto it = std::find_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                           { return instance.content == content; });
+
+    if (it != instances_.end())
+    {
+      it->isDragging = dragging;
+      updateInstanceBuffer();
+    }
   }
 
   void BarComponent::initGLProgram()
   {
-    glGenVertexArrays(1, &vao_);
-    glBindVertexArray(vao_);
-
-    glGenBuffers(1, &vbo_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    GLuint vertexShader, fragmentShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // Create and compile shaders
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &barVertSource_, NULL);
     glCompileShader(vertexShader);
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &barFragSource_, NULL);
     glCompileShader(fragmentShader);
-    program_ = glCreateProgram();
-    glAttachShader(program_, vertexShader);
-    glAttachShader(program_, fragmentShader);
-    glLinkProgram(program_);
 
     // Check for shader compile errors
     int success;
@@ -80,172 +141,230 @@ namespace jsar::example
     if (!success)
     {
       glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-      printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
+      std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                << infoLog << std::endl;
+    }
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+      glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+      std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+                << infoLog << std::endl;
+    }
+
+    // Create shader program
+    program_ = glCreateProgram();
+    glAttachShader(program_, vertexShader);
+    glAttachShader(program_, fragmentShader);
+    glLinkProgram(program_);
+
+    // Check for linking errors
+    glGetProgramiv(program_, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+      glGetProgramInfoLog(program_, 512, NULL, infoLog);
+      std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+                << infoLog << std::endl;
     }
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    glGenTextures(1, &texture_);
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, BAR_WIDTH, BAR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // Get uniform locations
+    viewMatrixLoc_ = glGetUniformLocation(program_, "view");
+    projectionMatrixLoc_ = glGetUniformLocation(program_, "projection");
   }
 
-  void BarComponent::resetCanvas()
+  void BarComponent::createGeometry()
   {
-    int dpr = 1;
-    surface_ = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(BAR_WIDTH * dpr, BAR_HEIGHT * dpr));
-    canvas_ = surface_->getCanvas();
-    canvas_->clear(SK_ColorTRANSPARENT);
+    // Create a simple quad for the bar
+    vertices_ = {
+      // Positions        // Texture coords
+      -BAR_WIDTH / 2,
+      -BAR_HEIGHT / 2,
+      0.0f,
+      0.0f,
+      0.0f, // Bottom left
+      BAR_WIDTH / 2,
+      -BAR_HEIGHT / 2,
+      0.0f,
+      1.0f,
+      0.0f, // Bottom right
+      BAR_WIDTH / 2,
+      BAR_HEIGHT / 2,
+      0.0f,
+      1.0f,
+      1.0f, // Top right
+      -BAR_WIDTH / 2,
+      BAR_HEIGHT / 2,
+      0.0f,
+      0.0f,
+      1.0f // Top left
+    };
 
-    // Background paint
-    backgroundPaint_.setBlendMode(SkBlendMode::kSrcOver);
-    backgroundPaint_.setAntiAlias(true);
-    backgroundPaint_.setStyle(SkPaint::kFill_Style);
-    backgroundPaint_.setColor(0xFF3a3a3a); // Dark gray background
+    // Create VAO and VBOs
+    glGenVertexArrays(1, &vao_);
+    glBindVertexArray(vao_);
 
-    // Text paint
-    textPaint_.setBlendMode(SkBlendMode::kSrcOver);
-    textPaint_.setAntiAlias(true);
-    textPaint_.setStyle(SkPaint::kFill_Style);
-    textPaint_.setColor(0xFFffffff); // White text
+    // Vertex buffer
+    glGenBuffers(1, &vertexVBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
+    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(float), vertices_.data(), GL_STATIC_DRAW);
 
-    auto typeface = fontMgr_.getTypeface("monospace");
-    SkFont textFont;
-    textFont.setTypeface(typeface);
-    textFont.setSize(12);
-    textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-    textFont.setSubpixel(true);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
 
-    imageInfo_ = SkImageInfo::MakeN32Premul(BAR_WIDTH, BAR_HEIGHT);
-    pixels_.resize(imageInfo_.computeMinByteSize());
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Instance buffer (will be updated dynamically)
+    glGenBuffers(1, &instanceVBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_);
+
+    // Create a proper structure for instance data
+    struct InstanceData
+    {
+      glm::mat4 transform;
+      glm::vec3 color;
+      float padding; // For alignment
+    };
+
+    // Instance matrix (4x4 = 4 vec4 attributes)
+    size_t vec4Size = sizeof(glm::vec4);
+    size_t instanceSize = sizeof(InstanceData);
+
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, transform));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + vec4Size));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 2 * vec4Size));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 3 * vec4Size));
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(4);
+    glEnableVertexAttribArray(5);
+
+    // Instance color
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, color));
+    glEnableVertexAttribArray(6);
+
+    // Set instance divisors
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+    glVertexAttribDivisor(5, 1);
+    glVertexAttribDivisor(6, 1);
+
+    glBindVertexArray(0);
   }
 
-  void BarComponent::render()
+  void BarComponent::renderInstanced(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
   {
-    auto drawingViewport = windowCtx_->drawingViewport();
-    glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
+    if (instances_.empty())
+      return;
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 
     glUseProgram(program_);
     glBindVertexArray(vao_);
-    uploadCanvas();
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Set uniforms
+    glUniformMatrix4fv(viewMatrixLoc_, 1, GL_FALSE, &viewMatrix[0][0]);
+    glUniformMatrix4fv(projectionMatrixLoc_, 1, GL_FALSE, &projectionMatrix[0][0]);
+
+    // Draw instances
+    glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
+
     glBindVertexArray(0);
     glUseProgram(0);
+    glDisable(GL_BLEND);
 
     if (glGetError() != GL_NO_ERROR)
-      printf("OpenGL error on BarComponent render\n");
+      std::cout << "OpenGL error on BarComponent render" << std::endl;
   }
 
-  void BarComponent::updatePosition(const glm::vec3 &contentCenter)
+  Content *BarComponent::checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
   {
-    // Convert 3D content position to 2D screen position
-    // For now, we'll use a simple projection - this should be improved
-    // to use the actual view/projection matrices
+    // Simple ray-plane intersection for each bar
+    // This is a simplified implementation - could be improved with proper bounding box checks
 
-    float screenWidth = static_cast<float>(windowCtx_->width);
-    float screenHeight = static_cast<float>(windowCtx_->height);
+    for (const auto &instance : instances_)
+    {
+      // Extract bar position from transform matrix
+      glm::vec3 barPosition = glm::vec3(instance.transform[3]);
 
-    // Simple orthographic projection for demonstration
-    screenPosition_.x = (contentCenter.x + 1.0f) * screenWidth * 0.5f;
-    screenPosition_.y = (1.0f - contentCenter.y) * screenHeight * 0.5f + BAR_OFFSET_Y;
+      // Check if ray intersects with the bar plane (simplified)
+      float t = (barPosition.y - rayOrigin.y) / rayDirection.y;
+      if (t > 0)
+      {
+        glm::vec3 intersection = rayOrigin + t * rayDirection;
 
-    // Update vertices for the bar quad
-    float left = (screenPosition_.x - BAR_WIDTH / 2.0f) / screenWidth * 2.0f - 1.0f;
-    float right = (screenPosition_.x + BAR_WIDTH / 2.0f) / screenWidth * 2.0f - 1.0f;
-    float top = 1.0f - (screenPosition_.y / screenHeight * 2.0f);
-    float bottom = 1.0f - ((screenPosition_.y + BAR_HEIGHT) / screenHeight * 2.0f);
+        // Check if intersection is within bar bounds
+        if (abs(intersection.x - barPosition.x) <= BAR_WIDTH / 2 &&
+            abs(intersection.z - barPosition.z) <= BAR_HEIGHT / 2)
+        {
+          return instance.content;
+        }
+      }
+    }
 
-    // clang-format off
-    vertices_[0] = right; vertices_[1] = top;    vertices_[2] = 1.0f; vertices_[3] = 0.0f;  // Right top
-    vertices_[4] = right; vertices_[5] = bottom; vertices_[6] = 1.0f; vertices_[7] = 1.0f;  // Right bottom
-    vertices_[8] = left;  vertices_[9] = top;    vertices_[10] = 0.0f; vertices_[11] = 0.0f; // Left top
-    vertices_[12] = left; vertices_[13] = bottom; vertices_[14] = 0.0f; vertices_[15] = 1.0f; // Left bottom
-    // clang-format on
+    return nullptr;
+  }
 
-    // Update vertex buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices_), vertices_);
+  void BarComponent::updateInstanceBuffer()
+  {
+    if (instances_.empty())
+      return;
+
+    // Prepare instance data with colors based on state
+    struct InstanceData
+    {
+      glm::mat4 transform;
+      glm::vec3 color;
+      float padding; // For alignment
+    };
+
+    std::vector<InstanceData> instanceData;
+    instanceData.reserve(instances_.size());
+
+    for (const auto &instance : instances_)
+    {
+      InstanceData data;
+      data.transform = instance.transform;
+
+      // Set color based on state
+      if (instance.isDragging)
+      {
+        data.color = glm::vec3(0.0f, 0.5f, 1.0f); // Blue when dragging
+      }
+      else if (instance.isHovered)
+      {
+        data.color = glm::vec3(0.7f, 0.7f, 0.7f); // Light gray when hovered
+      }
+      else
+      {
+        data.color = glm::vec3(0.4f, 0.4f, 0.4f); // Default gray
+      }
+
+      instanceData.push_back(data);
+    }
+
+    // Update instance buffer
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_);
+    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), instanceData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
-  void BarComponent::uploadCanvas()
+  glm::mat4 BarComponent::calculateBarTransform(const glm::vec3 &contentPosition) const
   {
-    drawBar();
+    // Position the bar below the content
+    glm::vec3 barPosition = contentPosition + glm::vec3(0.0f, BAR_OFFSET_Y, 0.0f);
 
-    // Read pixels from Skia surface to texImage2D
-    surface_->readPixels(imageInfo_, pixels_.data(), imageInfo_.minRowBytes(), 0, 0);
-
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 GL_RGBA,
-                 BAR_WIDTH,
-                 BAR_HEIGHT,
-                 0,
-                 GL_RGBA,
-                 GL_UNSIGNED_BYTE,
-                 pixels_.data());
+    // Create transformation matrix
+    return glm::translate(glm::mat4(1.0f), barPosition);
   }
 
-  void BarComponent::drawBar()
-  {
-    canvas_->clear(SK_ColorTRANSPARENT);
-
-    // Choose background color based on state
-    SkColor backgroundColor = 0xFF3a3a3a; // Default gray
-    if (isDragging_)
-      backgroundColor = 0xFF0080ff; // Blue when dragging
-    else if (isHovered_)
-      backgroundColor = 0xFF505050; // Lighter gray when hovered
-
-    backgroundPaint_.setColor(backgroundColor);
-
-    // Draw background with rounded corners
-    SkRect backgroundRect = SkRect::MakeWH(BAR_WIDTH, BAR_HEIGHT);
-    canvas_->drawRoundRect(backgroundRect, 5.0f, 5.0f, backgroundPaint_);
-
-    // Draw border
-    SkPaint borderPaint;
-    borderPaint.setStyle(SkPaint::kStroke_Style);
-    borderPaint.setStrokeWidth(1.0f);
-    borderPaint.setColor(0xFF666666);
-    borderPaint.setAntiAlias(true);
-    canvas_->drawRoundRect(backgroundRect, 5.0f, 5.0f, borderPaint);
-
-    // Draw content ID and drag hint
-    std::stringstream barText;
-    barText << "Content " << parentContent_->getId() << " ⋮⋮";
-
-    auto typeface = fontMgr_.getTypeface("monospace");
-    SkFont textFont;
-    textFont.setTypeface(typeface);
-    textFont.setSize(12);
-    textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-    textFont.setSubpixel(true);
-
-    canvas_->drawTextBlob(SkTextBlob::MakeFromString(barText.str().c_str(), textFont),
-                          10,
-                          BAR_HEIGHT / 2 + 4, // Center vertically
-                          textPaint_);
-  }
-
-  bool BarComponent::isPointInBounds(const glm::vec2 &screenPosition) const
-  {
-    float left = screenPosition_.x - BAR_WIDTH / 2.0f;
-    float right = screenPosition_.x + BAR_WIDTH / 2.0f;
-    float top = screenPosition_.y;
-    float bottom = screenPosition_.y + BAR_HEIGHT;
-
-    return screenPosition.x >= left && screenPosition.x <= right &&
-           screenPosition.y >= top && screenPosition.y <= bottom;
-  }
 }

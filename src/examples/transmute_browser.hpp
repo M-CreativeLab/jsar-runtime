@@ -24,6 +24,7 @@
 #include "./content.hpp"
 #include "./input_box.hpp"
 #include "./stat_panel.hpp"
+#include "./bar_component.hpp"
 #include "./environment_renderer.hpp"
 
 namespace jsar::example
@@ -99,6 +100,7 @@ namespace jsar::example
     // Screen GUI components
     std::shared_ptr<StatPanel> statPanel_;
     std::shared_ptr<InputBox> urlInputBox_;
+    std::shared_ptr<BarComponent> sharedBarComponent_;
 
     // Dragging state
     std::shared_ptr<Content> draggedContent_;

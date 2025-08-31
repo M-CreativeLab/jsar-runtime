@@ -441,6 +441,9 @@ namespace jsar::example
   {
     screenRenderer_ = make_unique<ScreenRenderer>(windowCtx_.get());
 
+    // Create shared bar component for 3D rendering
+    sharedBarComponent_ = make_shared<BarComponent>(windowCtx_.get());
+
     // Create stat panel
     statPanel_ = screenRenderer_->createStatPanel();
 
@@ -498,6 +501,12 @@ namespace jsar::example
     auto content = make_shared<Content>(contentRuntime, contentId);
     content->setWindowContext(windowCtx_.get());
 
+    // Set the shared bar component for 3D rendering
+    content->setBarComponent(sharedBarComponent_);
+
+    // Register this content with the bar component
+    sharedBarComponent_->addContent(content.get());
+
     // Position content spatially (simple grid layout for now) using the base matrix
     float spacing = 2.0f;
     int contentCount = contents_.size();
@@ -520,6 +529,12 @@ namespace jsar::example
     auto it = contents_.find(contentId);
     if (it == contents_.end())
       return false;
+
+    // Remove from bar component before closing
+    if (sharedBarComponent_)
+    {
+      sharedBarComponent_->removeContent(it->second.get());
+    }
 
     embedder_->constellation->close(contentId);
     contents_.erase(it);
@@ -628,10 +643,15 @@ namespace jsar::example
     if (leftButton == GLFW_PRESS && !draggedContent_)
     {
       // Start dragging - check if mouse is over any content bar
+      // TODO: Convert to 3D ray casting for proper 3D bar interaction
       for (const auto &pair : contents_)
       {
         const auto &content = pair.second;
-        if (content->isPointInBar(mousePos))
+        // For now, use a simplified approach - we'll implement proper 3D ray casting later
+        // This is a temporary workaround to make it compile
+        glm::vec3 rayOrigin(0, 0, 0);
+        glm::vec3 rayDirection(0, 0, -1);
+        if (content->isRayInBar(rayOrigin, rayDirection))
         {
           draggedContent_ = content;
           content->startDrag(mousePos);
@@ -850,13 +870,17 @@ namespace jsar::example
 
     embedder_->onAfterRendering();
 
-    // Render content bars
-    for (const auto &pair : contents_)
+    // Render 3D content bars using instanced rendering
+    if (sharedBarComponent_ && !contents_.empty())
     {
-      const auto &content = pair.second;
-      if (content->getBarComponent())
+      // Use the first eye's view matrix for bar rendering
+      // In a full stereoscopic implementation, we'd render bars for each eye
+      auto xrRenderer = windowCtx_->xrRenderer;
+      if (xrRenderer)
       {
-        content->getBarComponent()->render();
+        auto viewMatrix = xrRenderer->getViewMatrixForEye(0);
+        auto projectionMatrix = xrRenderer->getProjectionMatrix();
+        sharedBarComponent_->renderInstanced(viewMatrix, projectionMatrix);
       }
     }
 

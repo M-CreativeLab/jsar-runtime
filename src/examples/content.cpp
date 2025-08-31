@@ -15,11 +15,8 @@ namespace jsar::example
 
   void Content::setWindowContext(WindowContext *windowCtx)
   {
-    if (!barComponent_ && windowCtx)
-    {
-      barComponent_ = std::make_shared<BarComponent>(windowCtx, this);
-      barComponent_->updatePosition(getCenterPosition());
-    }
+    // Note: Bar component is now shared across all content instances
+    // This method is kept for compatibility but bar creation is handled externally
   }
 
   Content::~Content()
@@ -89,7 +86,7 @@ namespace jsar::example
 
     if (barComponent_)
     {
-      barComponent_->setDragging(true);
+      barComponent_->setContentDragging(this, true);
     }
   }
 
@@ -122,24 +119,32 @@ namespace jsar::example
 
     if (barComponent_)
     {
-      barComponent_->setDragging(false);
+      barComponent_->setContentDragging(this, false);
     }
   }
 
   void Content::update()
   {
-    // Update any animation or state for this content
+    // Update the bar component with new transform if needed
     if (barComponent_)
     {
-      barComponent_->updatePosition(getCenterPosition());
+      if (contentRuntime_)
+      {
+        auto activeSession = contentRuntime_->getActiveXRSession();
+        if (activeSession)
+        {
+          barComponent_->updateContentTransform(this, activeSession->getLocalBaseMatrix());
+        }
+      }
     }
   }
 
-  bool Content::isPointInBar(const glm::vec2 &screenPosition) const
+  bool Content::isRayInBar(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
   {
     if (!barComponent_)
       return false;
 
-    return barComponent_->isPointInBounds(screenPosition);
+    Content *hitContent = barComponent_->checkRayIntersection(rayOrigin, rayDirection);
+    return hitContent == this;
   }
 }
