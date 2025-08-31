@@ -1,7 +1,8 @@
-#include "./console.hpp"
+
 #include <iostream>
 #include <sstream>
-#include "../../client/logger.hpp"
+#include <client/logger.hpp>
+#include "./console.hpp"
 
 namespace dombinding
 {
@@ -14,7 +15,16 @@ namespace dombinding
   {
     Napi::HandleScope scope(env);
 
-    Napi::Function func = DefineClass(env, "Console", {InstanceMethod("log", &Console::Log), InstanceMethod("info", &Console::Info), InstanceMethod("warn", &Console::Warn), InstanceMethod("error", &Console::Error), InstanceMethod("debug", &Console::Debug), InstanceMethod("trace", &Console::Trace), InstanceMethod("assert", &Console::Assert), InstanceMethod("clear", &Console::Clear)});
+    Napi::Function func = DefineClass(env,
+                                      "Console",
+                                      {InstanceMethod("log", &Console::Log),
+                                       InstanceMethod("info", &Console::Info),
+                                       InstanceMethod("warn", &Console::Warn),
+                                       InstanceMethod("error", &Console::Error),
+                                       InstanceMethod("debug", &Console::Debug),
+                                       InstanceMethod("trace", &Console::Trace),
+                                       InstanceMethod("assert", &Console::Assert),
+                                       InstanceMethod("clear", &Console::Clear)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -48,7 +58,6 @@ namespace dombinding
     CreateConsoleMethod(isolate, context, consoleObject, "trace", TraceCallback);
     CreateConsoleMethod(isolate, context, consoleObject, "assert", AssertCallback);
     CreateConsoleMethod(isolate, context, consoleObject, "clear", ClearCallback);
-
     return scope.Escape(consoleObject);
   }
 
@@ -267,10 +276,7 @@ namespace dombinding
     }
   }
 
-  // static
-  void Console::LogMessage(const char *level, const std::string &message)
-
-    Console::Console(const Napi::CallbackInfo &info)
+  Console::Console(const Napi::CallbackInfo &info)
       : ObjectWrap<Console>(info)
   {
     Napi::Env env = info.Env();
