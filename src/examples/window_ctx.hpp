@@ -56,8 +56,8 @@ namespace jsar::example
     int height;
     float aspect = 1.0f;
     float contentScaling[2];
-    GLFWwindow *window;
-    StatPanel *statPanel;
+    GLFWwindow *window = nullptr;
+    StatPanel *statPanel = nullptr;
     XRStereoscopicRenderer *xrRenderer = nullptr;
 
     // Mouse control state

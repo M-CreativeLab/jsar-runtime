@@ -107,10 +107,13 @@ namespace jsar::example
   inline WindowContext *GetContextAndExecute(GLFWwindow *window,
                                              std::function<void(WindowContext *)> callback = nullptr)
   {
+    assert(window != nullptr && "Window is not initialized.");
     WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
-    assert(ctx != nullptr);
+    assert(ctx != nullptr && "Failed to retrieve user pointer.");
     if (callback)
+    {
       callback(ctx);
+    }
     return ctx;
   }
 
@@ -171,8 +174,6 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
-    cout << "Cursor moved to: (" << xoffset << ", " << yoffset << ")" << endl
-         << "xrRenderer = " << xrRenderer << endl;
 
     // Handle window dragging on macOS - prioritize dragging and skip bounds checking
 #ifdef __APPLE__

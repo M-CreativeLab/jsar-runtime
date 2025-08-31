@@ -451,24 +451,24 @@ namespace jsar::example
                                                      openContent(url); });
 
     // Set up input callbacks for the screen renderer
-    glfwSetKeyCallback(windowCtx_->window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
-                       {
-                         auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
-                         if (browser && browser->screenRenderer_)
-                         {
-                           browser->screenRenderer_->handleInput(window, key, action);
-                         } });
+    // glfwSetKeyCallback(windowCtx_->window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
+    //                    {
+    //                      auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
+    //                      if (browser && browser->screenRenderer_)
+    //                      {
+    //                        browser->screenRenderer_->handleInput(window, key, action);
+    //                      } });
 
-    glfwSetCharCallback(windowCtx_->window, [](GLFWwindow *window, unsigned int codepoint)
-                        {
-                          auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
-                          if (browser && browser->screenRenderer_)
-                          {
-                            browser->screenRenderer_->handleCharInput(window, codepoint);
-                          } });
+    // glfwSetCharCallback(windowCtx_->window, [](GLFWwindow *window, unsigned int codepoint)
+    //                     {
+    //                       auto *browser = static_cast<TransmuteBrowser *>(glfwGetWindowUserPointer(window));
+    //                       if (browser && browser->screenRenderer_)
+    //                       {
+    //                         browser->screenRenderer_->handleCharInput(window, codepoint);
+    //                       } });
 
     // Set user pointer for callbacks
-    glfwSetWindowUserPointer(windowCtx_->window, this);
+    // glfwSetWindowUserPointer(windowCtx_->window, this);
   }
 
   std::shared_ptr<Content> TransmuteBrowser::openContent(const std::string &url)
