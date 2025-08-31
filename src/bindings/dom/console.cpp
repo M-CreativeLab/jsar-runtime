@@ -3,12 +3,14 @@
 #include <sstream>
 #include <client/logger.hpp>
 #include "./console.hpp"
+#include "./runtime_context.hpp"
 
 namespace dombinding
 {
   using namespace std;
 
   thread_local Napi::FunctionReference *Console::constructor = nullptr;
+  v8::Global<v8::Object> Console::globalConsoleObject;
 
   // static
   void Console::Init(Napi::Env env)
@@ -29,6 +31,14 @@ namespace dombinding
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.SetInstanceData(constructor);
+
+    // Create the global console object instance and store it
+    Napi::Object consoleInstance = NewInstance(env);
+
+    // Convert to V8 object and store in global
+    v8::Local<v8::Object> v8Console = convertNapiValueToV8Local<v8::Object>(consoleInstance);
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    globalConsoleObject.Reset(isolate, v8Console);
   }
 
   // static
@@ -45,52 +55,8 @@ namespace dombinding
     v8::EscapableHandleScope scope(isolate);
     v8::Context::Scope contextScope(context);
 
-    try
-    {
-      // Attempt to create a NAPI environment from the V8 isolate
-      // In Node.js addons, napi_env is often equivalent to v8::Isolate
-      napi_env env = reinterpret_cast<napi_env>(isolate);
-
-      // Create a Console instance using the NAPI binding
-      Napi::Object consoleInstance = Console::NewInstance(Napi::Env(env));
-
-      // Convert the NAPI object to V8 object
-      // NAPI objects are V8 objects under the hood, so we can extract the underlying value
-      napi_value napiValue = consoleInstance;
-      v8::Local<v8::Value> v8Value = *reinterpret_cast<v8::Local<v8::Value> *>(&napiValue);
-
-      return scope.Escape(v8Value.As<v8::Object>());
-    }
-    catch (...)
-    {
-      // Fallback to simple V8 object if NAPI conversion fails
-      auto consoleObject = v8::Object::New(isolate);
-
-      // Create simple console methods that call the static LogMessage method directly
-      auto logMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                         {
-                                           // Simple logging without V8 value formatting for now
-                                           Console::LogMessage("log", "console.log called"); })
-                         .ToLocalChecked();
-      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "log").ToLocalChecked(), logMethod).FromJust();
-
-      auto infoMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                          { Console::LogMessage("info", "console.info called"); })
-                          .ToLocalChecked();
-      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "info").ToLocalChecked(), infoMethod).FromJust();
-
-      auto warnMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                          { Console::LogMessage("warn", "console.warn called"); })
-                          .ToLocalChecked();
-      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "warn").ToLocalChecked(), warnMethod).FromJust();
-
-      auto errorMethod = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                           { Console::LogMessage("error", "console.error called"); })
-                           .ToLocalChecked();
-      consoleObject->Set(context, v8::String::NewFromUtf8(isolate, "error").ToLocalChecked(), errorMethod).FromJust();
-
-      return scope.Escape(consoleObject);
-    }
+    // Return the stored global console object as a local
+    return scope.Escape(v8::Local<v8::Object>::New(isolate, globalConsoleObject));
   }
 
 
@@ -129,7 +95,19 @@ namespace dombinding
     }
     else if (value.IsArray())
     {
-      return "[Array]";
+      // Try to stringify as JSON, fallback to [Array]
+      try
+      {
+        Napi::Object global = value.Env().Global();
+        Napi::Object json = global.Get("JSON").As<Napi::Object>();
+        Napi::Function stringify = json.Get("stringify").As<Napi::Function>();
+        Napi::Value result = stringify.Call({value});
+        return result.As<Napi::String>().Utf8Value();
+      }
+      catch (...)
+      {
+        return "[Array]";
+      }
     }
     else if (value.IsObject())
     {
@@ -284,11 +262,34 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     std::ostringstream oss;
-    oss << "Trace:";
+    oss << "Trace";
+
+    // Add any arguments to the trace output
     for (size_t i = 0; i < info.Length(); ++i)
     {
-      oss << " ";
-      oss << FormatValue(info[i]);
+      oss << " " << FormatValue(info[i]);
+    }
+
+    // Get stack trace by creating an Error object and accessing its stack property
+    try
+    {
+      Napi::Error error = Napi::Error::New(env, "");
+      Napi::Value stackProperty = error.Value().Get("stack");
+      if (stackProperty.IsString())
+      {
+        std::string stackTrace = stackProperty.As<Napi::String>().Utf8Value();
+        // Remove the first line which is just "Error" and add our trace message
+        size_t firstNewline = stackTrace.find('\n');
+        if (firstNewline != std::string::npos)
+        {
+          oss << "\n"
+              << stackTrace.substr(firstNewline + 1);
+        }
+      }
+    }
+    catch (...)
+    {
+      // If getting stack trace fails, just output the arguments
     }
 
     LogMessage("info", oss.str());
