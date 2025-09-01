@@ -1,4 +1,5 @@
 #include <cstring>
+#include <sstream>
 #include <client/dom/document.hpp>
 #include "./matching.hpp"
 
@@ -112,6 +113,55 @@ namespace client_cssom::selectors
       return element->id == component.id();
     if (component.isClass())
       return element->classList().contains(component.name());
+    if (component.isAttribute())
+    {
+      const std::string &attrName = component.attributeName();
+      const std::string &attrValue = component.attributeValue();
+
+      // Check if element has the attribute
+      if (!element->hasAttribute(attrName))
+        return false;
+
+      // For existence check, just having the attribute is enough
+      if (component.attributeMatchType() == AttributeMatchType::kExists)
+        return true;
+
+      // Get the actual attribute value
+      std::string elementAttrValue = element->getAttribute(attrName);
+
+      switch (component.attributeMatchType())
+      {
+      case AttributeMatchType::kExact:
+        return elementAttrValue == attrValue;
+      case AttributeMatchType::kWhitespace:
+      {
+        // Check if attrValue appears as a whole word in a whitespace-separated list
+        std::istringstream iss(elementAttrValue);
+        std::string word;
+        while (iss >> word)
+        {
+          if (word == attrValue)
+            return true;
+        }
+        return false;
+      }
+      case AttributeMatchType::kPrefix:
+        return elementAttrValue.length() >= attrValue.length() &&
+               elementAttrValue.substr(0, attrValue.length()) == attrValue;
+      case AttributeMatchType::kSuffix:
+        return elementAttrValue.length() >= attrValue.length() &&
+               elementAttrValue.substr(elementAttrValue.length() - attrValue.length()) == attrValue;
+      case AttributeMatchType::kSubstring:
+        return elementAttrValue.find(attrValue) != std::string::npos;
+      case AttributeMatchType::kDashPrefix:
+        return elementAttrValue == attrValue ||
+               (elementAttrValue.length() > attrValue.length() &&
+                elementAttrValue.substr(0, attrValue.length()) == attrValue &&
+                elementAttrValue[attrValue.length()] == '-');
+      default:
+        return false;
+      }
+    }
 
     if (component.isPseudoClass())
     {
