@@ -123,16 +123,17 @@ namespace builtin_scene::materials
           // Depth write only pass, disable color writes and enable depth writes
           glContext->colorMask(false, false, false, false);
           glContext->depthMask(true);
+          glContext->disable(WEBGL_BLEND);
         }
         else
         {
           // Normal pass, enable color writes and disable depth writes
           glContext->colorMask(true, true, true, true);
           glContext->depthMask(false);
+          glContext->enable(WEBGL_BLEND);
+          glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
         }
 
-        glContext->enable(WEBGL_BLEND);
-        glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
         glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                          meshIndicesCount,
                                          WEBGL_UNSIGNED_INT,
@@ -154,7 +155,7 @@ namespace builtin_scene::materials
       bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
       bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
 
-      if (hasScrollableContainer && hasContent)
+      if (hasScrollableContainer)
       {
         // Step 2: Render scrollable container instance as stencil mask
         glContext->enable(WEBGL_STENCIL_TEST);
@@ -194,13 +195,15 @@ namespace builtin_scene::materials
         }
 
         // Step 3: Render content with stencil testing enabled
-        glContext->colorMask(true, true, true, true);             // Re-enable color buffer writes
-        glContext->stencilMask(0);                                // Disable writing to stencil buffer
-        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
-        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
+        if (hasContent)
+        {
+          glContext->stencilMask(0);                                // Disable writing to stencil buffer
+          glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
+          glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
 
-        // Render the content instances
-        renderLayer(layer, *contentInstances);
+          // Render the content instances
+          renderLayer(layer, *contentInstances);
+        }
 
         // Step 4: Disable stencil testing after rendering this container
         glContext->disable(WEBGL_STENCIL_TEST);

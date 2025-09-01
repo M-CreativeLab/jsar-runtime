@@ -221,8 +221,6 @@ namespace client_cssom
     auto inherited_style = context.inheritedStyle();
     if (inherited_style.has_value())
     {
-      cout << "Inheriting properties from parent style: " << *inherited_style
-           << endl;
       inheritProperties(inherited_style.value(), context);
     }
 
