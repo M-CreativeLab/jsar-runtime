@@ -408,9 +408,21 @@ namespace client_layout
       // Search for the containing block for absolute positioning.
       if (is_absolute_positioned)
       {
-        auto containing_block = containingScrollContainer();
-        if (containing_block != nullptr)
-          scrollable_area = containing_block->getScrollableArea();
+        auto absolute_container = containerForAbsolutePosition();
+        if (absolute_container != nullptr)
+        {
+          auto baseFragment = absolute_container->accumulatedFragment();
+          resulting_fragment = baseFragment.position(nodeFragment);
+
+          if (absolute_container->isBox() && absolute_container->isScrollContainer())
+            scrollable_area = dynamic_pointer_cast<const LayoutBox>(absolute_container)->getScrollableArea();
+        }
+        else
+        {
+          auto containing_block = containingScrollContainer();
+          if (containing_block != nullptr)
+            scrollable_area = containing_block->getScrollableArea();
+        }
       }
     }
     else
