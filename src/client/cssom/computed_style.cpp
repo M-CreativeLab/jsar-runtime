@@ -578,6 +578,14 @@ namespace client_cssom
     {
       background_repeat_ = Parse::ParseSingleValue<values::specified::BackgroundRepeat>(resolvedValue).toComputedValue(context);
     }
+    else if (name == "background-size")
+    {
+      background_size_ = Parse::ParseSingleValue<values::specified::BackgroundSize>(resolvedValue).toComputedValue(context);
+    }
+    else if (name == "background-position")
+    {
+      background_position_ = Parse::ParseSingleValue<values::specified::BackgroundPosition>(resolvedValue).toComputedValue(context);
+    }
 
     // Flexbox
     else if (name == "flex-direction")
