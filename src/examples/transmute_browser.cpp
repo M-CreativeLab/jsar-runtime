@@ -448,10 +448,12 @@ namespace jsar::example
     statPanel_ = screenRenderer_->createStatPanel();
 
     // Create URL input box
-    urlInputBox_ = screenRenderer_->createInputBox("Enter URL...", [this](const std::string &url)
-                                                   {
-                                                     printf("Opening URL: %s\n", url.c_str());
-                                                     openContent(url); });
+    auto onSubmit = [this](const string &url)
+    {
+      printf("Opening URL: %s\n", url.c_str());
+      openContent(url);
+    };
+    urlInputBox_ = screenRenderer_->createInputBox("Ask Copilot or type a URL", onSubmit);
 
     // Set up event handlers through WindowContext instead of directly using GLFW
     windowCtx_->setKeyInputHandler([this](int key, int scancode, int action, int mods)
