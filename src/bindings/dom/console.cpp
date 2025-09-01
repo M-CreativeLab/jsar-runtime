@@ -9,7 +9,7 @@ namespace dombinding
   using namespace std;
 
   thread_local Napi::FunctionReference *Console::constructor = nullptr;
-  v8::Global<v8::Object> Console::globalConsoleObject;
+  thread_local v8::Global<v8::Object> Console::globalConsoleObject;
 
   // static
   void Console::Init(Napi::Env env)
