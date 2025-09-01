@@ -661,7 +661,24 @@ namespace client_layout
 
   shared_ptr<LayoutObject> LayoutObject::containerForAbsolutePosition() const
   {
-    // TODO: implement this method.
+    // Walk up the ancestor chain to find the nearest positioned ancestor
+    auto object = parent();
+    while (object != nullptr)
+    {
+      // Check if this ancestor establishes a positioning context
+      auto element = dom::Node::As<dom::Element>(object->node());
+      if (element != nullptr && element->hasAdoptedStyle())
+      {
+        const auto &elementStyle = element->adoptedStyleRef();
+        if (object->computeIsAbsoluteContainer(elementStyle))
+        {
+          return object;
+        }
+      }
+      object = object->parent();
+    }
+
+    // If no positioned ancestor found, return nullptr to indicate root level positioning
     return nullptr;
   }
 
@@ -673,7 +690,12 @@ namespace client_layout
 
   bool LayoutObject::computeIsAbsoluteContainer(const client_cssom::ComputedStyle &style) const
   {
-    // TODO: implement this method.
+    // An element establishes an absolute positioning context if it has a position value other than static
+    if (style.hasProperty("position"))
+    {
+      auto position = style.getPropertyValue("position");
+      return position == "relative" || position == "absolute" || position == "fixed" || position == "sticky";
+    }
     return false;
   }
 
@@ -710,7 +732,35 @@ namespace client_layout
 
   shared_ptr<LayoutBlock> LayoutObject::containingBlockForAbsolutePosition() const
   {
-    // TODO: implement this method.
+    // Walk up the ancestor chain to find the nearest positioned ancestor
+    auto object = parent();
+    while (object != nullptr)
+    {
+      // Check if this ancestor establishes a positioning context
+      auto element = dom::Node::As<dom::Element>(object->node());
+      if (element != nullptr && element->hasAdoptedStyle())
+      {
+        const auto &elementStyle = element->adoptedStyleRef();
+        if (object->computeIsAbsoluteContainer(elementStyle))
+        {
+          // Found a positioned ancestor, return it as a LayoutBlock if possible
+          if (object->isLayoutBlock())
+            return dynamic_pointer_cast<LayoutBlock>(object);
+
+          // If the positioned ancestor is not a block, continue searching for the nearest block
+          while (object != nullptr)
+          {
+            if (object->isLayoutBlock())
+              return dynamic_pointer_cast<LayoutBlock>(object);
+            object = object->parent();
+          }
+        }
+      }
+      object = object->parent();
+    }
+
+    // If no positioned ancestor found, return the root containing block
+    // This falls back to the default behavior for the initial containing block
     return nullptr;
   }
 
