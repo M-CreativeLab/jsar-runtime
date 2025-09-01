@@ -109,7 +109,8 @@ namespace jsar::example
     static constexpr int INPUT_MIN_WIDTH = 300;           // Minimum width
     static constexpr int INPUT_MAX_WIDTH = 800;           // Maximum width
     static constexpr int MARGIN_BOTTOM = 20;
-    static constexpr int PADDING = 10;
+    static constexpr int PADDING_LEFT = 20;
+    static constexpr int PADDING_TOP = 10;
 
     // Vertices for the input box quad (positioned at bottom center of screen)
     float vertices_[16];

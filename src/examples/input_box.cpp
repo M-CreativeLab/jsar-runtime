@@ -106,11 +106,14 @@ namespace jsar::example
 
   void InputBox::resetCanvas()
   {
-    int dpr = 1;
+    int dpr = 2;
     int inputWidth = computeInputWidth();
-    surface_ = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(inputWidth * dpr, INPUT_HEIGHT * dpr));
+
+    imageInfo_ = SkImageInfo::MakeN32Premul(inputWidth * dpr, INPUT_HEIGHT * dpr);
+    surface_ = SkSurfaces::Raster(imageInfo_);
     canvas_ = surface_->getCanvas();
     canvas_->clear(SK_ColorTRANSPARENT);
+    canvas_->setMatrix(SkMatrix::Scale(dpr, dpr));
 
     // Apple-themed background paint with opacity and modern styling
     backgroundPaint_.setBlendMode(SkBlendMode::kSrcOver);
@@ -145,7 +148,6 @@ namespace jsar::example
     textFont_.setEdging(SkFont::Edging::kSubpixelAntiAlias);
     textFont_.setSubpixel(true);
 
-    imageInfo_ = SkImageInfo::MakeN32Premul(inputWidth, INPUT_HEIGHT);
     pixels_.resize(imageInfo_.computeMinByteSize());
   }
 
@@ -176,12 +178,11 @@ namespace jsar::example
     surface_->readPixels(imageInfo_, pixels_.data(), imageInfo_.minRowBytes(), 0, 0);
 
     glBindTexture(GL_TEXTURE_2D, texture_);
-    int inputWidth = computeInputWidth();
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  GL_RGBA,
-                 inputWidth,
-                 INPUT_HEIGHT,
+                 imageInfo_.width(),
+                 imageInfo_.height(),
                  0,
                  GL_RGBA,
                  GL_UNSIGNED_BYTE,
@@ -193,12 +194,13 @@ namespace jsar::example
     canvas_->clear(SK_ColorTRANSPARENT);
 
     // Apple-themed rounded rectangle with modern styling
-    int inputWidth = computeInputWidth();
-    SkRect backgroundRect = SkRect::MakeWH(inputWidth, INPUT_HEIGHT);
+    int inputBoxWidth = computeInputWidth();
+    int inputBoxHeight = INPUT_HEIGHT;
+    SkRect backgroundRect = SkRect::MakeWH(inputBoxWidth, inputBoxHeight);
 
     // Apple-style corner radius (8pt for input fields)
-    float cornerRadius = 8.0f;
-    SkRRect roundedRect = SkRRect::MakeRectXY(backgroundRect, cornerRadius, cornerRadius);
+    float cornerRadius = backgroundRect.height();
+    SkRRect roundedRect = SkRRect::MakeRectXY(backgroundRect.makeInset(4, 4), cornerRadius, cornerRadius);
 
     // Draw the main background with rounded corners
     canvas_->drawRRect(roundedRect, backgroundPaint_);
@@ -206,13 +208,13 @@ namespace jsar::example
     // Draw border with Apple system colors
     SkPaint borderPaint;
     borderPaint.setStyle(SkPaint::kStroke_Style);
-    borderPaint.setStrokeWidth(1.5f); // Thinner border, more Apple-like
+    borderPaint.setStrokeWidth(2.5f); // Thinner border, more Apple-like
     borderPaint.setAntiAlias(true);
 
     if (isFocused_)
     {
       // Apple system blue with slight transparency
-      borderPaint.setColor(0xFF007AFF); // Apple system blue
+      borderPaint.setColor(0x66007AFF); // Apple system blue
     }
     else
     {
@@ -223,15 +225,15 @@ namespace jsar::example
     canvas_->drawRRect(roundedRect, borderPaint);
 
     // Draw text or placeholder
-    std::string displayText = text_.empty() ? placeholder_ : text_;
+    string displayText = text_.empty() ? placeholder_ : text_;
     SkPaint &paintToUse = text_.empty() ? (textPaint_.setColor(0xFF8E8E93), textPaint_) : // Apple system gray for placeholder
                             (textPaint_.setColor(0xFFFFFFFF), textPaint_);                // Pure white for actual text
 
     if (!displayText.empty())
     {
       canvas_->drawTextBlob(SkTextBlob::MakeFromString(displayText.c_str(), textFont_),
-                            PADDING,
-                            INPUT_HEIGHT / 2 + 5, // Center vertically
+                            PADDING_LEFT,
+                            inputBoxHeight / 2 + 5, // Center vertically
                             paintToUse);
     }
 
@@ -243,7 +245,7 @@ namespace jsar::example
       if (shouldShowCursor)
       {
         // Calculate cursor position based on text width up to cursor position
-        std::string textBeforeCursor = text_.substr(0, std::min(cursorPosition_, text_.length()));
+        string textBeforeCursor = text_.substr(0, min(cursorPosition_, text_.length()));
         float textWidth = 0.0f;
         if (!textBeforeCursor.empty())
         {
@@ -252,8 +254,11 @@ namespace jsar::example
           textWidth = bounds.width();
         }
 
-        float cursorX = PADDING + textWidth;
-        canvas_->drawRect(SkRect::MakeXYWH(cursorX, PADDING, 2, INPUT_HEIGHT - 2 * PADDING), cursorPaint_);
+        canvas_->drawRect(SkRect::MakeXYWH(PADDING_LEFT + textWidth, // X position
+                                           PADDING_TOP,              // Y position
+                                           2,
+                                           inputBoxHeight - 2 * PADDING_TOP),
+                          cursorPaint_);
       }
     }
   }
