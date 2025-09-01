@@ -315,12 +315,8 @@ namespace dom
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
-        // Create custom console object with CDP integration using the Console binding
-        {
-          auto consoleObject = dombinding::Console::CreateV8Console(isolate, mainContext);
-          V8_SET_GLOBAL_FROM_VALUE(console, consoleObject);
-        }
         V8_SET_GLOBAL_FROM_MAIN(performance);
+        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate, mainContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
@@ -558,10 +554,7 @@ namespace dom
 
         // Baisc objects
         // Create custom console object with CDP integration using the Console binding
-        {
-          auto consoleObject = dombinding::Console::CreateV8Console(isolate, workerContext);
-          V8_SET_GLOBAL_FROM_VALUE(console, consoleObject);
-        }
+        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate, workerContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
