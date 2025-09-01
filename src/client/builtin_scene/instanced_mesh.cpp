@@ -654,17 +654,12 @@ namespace builtin_scene
 
     glContext_ = glContext;
     mesh3d_ = mesh3d;
-    depthOnlyInstances_ = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
-                                                            glContext->createVertexArray(),
-                                                            glContext->createBuffer());
   }
 
   void InstancedMeshBase::configureInstanceAttribs(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh3d)
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr && "WebGL2 context must not be null.");
-    if (program != nullptr)
-      depthOnlyInstances_->configureAttribs(glContext, program, mesh3d);
   }
 
   void InstancedMeshBase::updateInstancesList(shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty)
@@ -815,14 +810,7 @@ namespace builtin_scene
       }
     }
 
-    // 4. Update depth-only instances with all instances for use in `DepthOnlyPass`.
-    //
-    // Sorting is disabled for depth-only instances because the depth pass does not require front-to-back or
-    // back-to-front ordering. This improves performance, as sorting is unnecessary when only depth information is
-    // written and no blending occurs.
-    depthOnlyInstances_->update(idToInstanceMap_, ContentInstancesList::SortingOrder::kNone /* Disable sorting */);
-
-    // 5. Mark the structure as clean after updating.
+    // 4. Mark the structure as clean after updating.
     isStructureDirty_ = false;
   }
 }

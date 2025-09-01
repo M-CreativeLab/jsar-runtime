@@ -162,15 +162,6 @@ namespace builtin_scene::materials
         glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_REPLACE); // Replace stencil value on pass
         glContext->stencilMask(0xff);
 
-        if (inDepthWritePass)
-        {
-          glContext->depthMask(true);
-        }
-        else
-        {
-          glContext->depthMask(false);
-        }
-
         /**
          * Stencil masking format: [4 bits for container index | 4 bits for layer index]
          * 
