@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <client/cssom/values/generics/background.hpp>
 #include <client/cssom/values/computed/background.hpp>
 
@@ -214,6 +215,118 @@ namespace client_cssom::values::specified
 
       // Default to Repeat if none match
       return computed::BackgroundRepeat::Repeat();
+    }
+  };
+
+  class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>,
+                         public Parse,
+                         public ToComputedValue<computed::BackgroundSize>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "auto")
+        tag_ = kAuto;
+      else if (input == "cover")
+        tag_ = kCover;
+      else if (input == "contain")
+        tag_ = kContain;
+      else if (input.find('%') != std::string::npos)
+      {
+        tag_ = kPercentage;
+        width_ = std::stof(input.substr(0, input.find('%')));
+      }
+      else if (input.find("px") != std::string::npos)
+      {
+        tag_ = kLength;
+        width_ = std::stof(input.substr(0, input.find("px")));
+      }
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundSize toComputedValue(computed::Context &) const override
+    {
+      if (isAuto())
+        return computed::BackgroundSize::Auto();
+      else if (isCover())
+        return computed::BackgroundSize::Cover();
+      else if (isContain())
+        return computed::BackgroundSize::Contain();
+      else if (isLength())
+        return computed::BackgroundSize::Length(width_);
+      else if (isPercentage())
+        return computed::BackgroundSize::Percentage(width_);
+      else if (isTwoValues())
+        return computed::BackgroundSize::TwoValues(width_, height_);
+
+      // Default to Auto if none match
+      return computed::BackgroundSize::Auto();
+    }
+  };
+
+  class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>,
+                             public Parse,
+                             public ToComputedValue<computed::BackgroundPosition>
+  {
+    friend class Parse;
+
+  public:
+    using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
+
+    bool parse(const std::string &input) override
+    {
+      if (input == "center")
+        tag_ = kCenter;
+      else if (input == "left")
+        tag_ = kLeft;
+      else if (input == "right")
+        tag_ = kRight;
+      else if (input == "top")
+        tag_ = kTop;
+      else if (input == "bottom")
+        tag_ = kBottom;
+      else if (input.find('%') != std::string::npos)
+      {
+        tag_ = kPercentage;
+        x_ = std::stof(input.substr(0, input.find('%')));
+      }
+      else if (input.find("px") != std::string::npos)
+      {
+        tag_ = kLength;
+        x_ = std::stof(input.substr(0, input.find("px")));
+      }
+      else
+        return false;
+      return true;
+    }
+
+    computed::BackgroundPosition toComputedValue(computed::Context &) const override
+    {
+      if (isCenter())
+        return computed::BackgroundPosition::Center();
+      else if (isLeft())
+        return computed::BackgroundPosition::Left();
+      else if (isRight())
+        return computed::BackgroundPosition::Right();
+      else if (isTop())
+        return computed::BackgroundPosition::Top();
+      else if (isBottom())
+        return computed::BackgroundPosition::Bottom();
+      else if (isLength())
+        return computed::BackgroundPosition::Length(x_);
+      else if (isPercentage())
+        return computed::BackgroundPosition::Percentage(x_);
+      else if (isTwoValues())
+        return computed::BackgroundPosition::TwoValues(x_, y_);
+
+      // Default to Center if none match
+      return computed::BackgroundPosition::Center();
     }
   };
 }

@@ -153,3 +153,133 @@ TEST_CASE("BackgroundRepeat parsing and conversion", "[css-background-repeat]")
     REQUIRE(repeat.isRepeat());
   }
 }
+
+TEST_CASE("BackgroundSize parsing and conversion", "[css-background-size]")
+{
+  SECTION("Parse auto")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("auto"));
+    REQUIRE(size.isAuto());
+    REQUIRE(size.toCss() == "auto");
+  }
+
+  SECTION("Parse cover")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("cover"));
+    REQUIRE(size.isCover());
+    REQUIRE(size.toCss() == "cover");
+  }
+
+  SECTION("Parse contain")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("contain"));
+    REQUIRE(size.isContain());
+    REQUIRE(size.toCss() == "contain");
+  }
+
+  SECTION("Parse length")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("100px"));
+    REQUIRE(size.isLength());
+    REQUIRE(size.getWidth() == 100.0f);
+    REQUIRE(size.toCss() == "100.000000px");
+  }
+
+  SECTION("Parse percentage")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.parse("50%"));
+    REQUIRE(size.isPercentage());
+    REQUIRE(size.getWidth() == 50.0f);
+    REQUIRE(size.toCss() == "50.000000%");
+  }
+
+  SECTION("Parse invalid value")
+  {
+    specified::BackgroundSize size;
+    REQUIRE_FALSE(size.parse("invalid-value"));
+  }
+
+  SECTION("Default value")
+  {
+    specified::BackgroundSize size;
+    REQUIRE(size.isAuto());
+  }
+}
+
+TEST_CASE("BackgroundPosition parsing and conversion", "[css-background-position]")
+{
+  SECTION("Parse center")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("center"));
+    REQUIRE(position.isCenter());
+    REQUIRE(position.toCss() == "center");
+  }
+
+  SECTION("Parse left")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("left"));
+    REQUIRE(position.isLeft());
+    REQUIRE(position.toCss() == "left");
+  }
+
+  SECTION("Parse right")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("right"));
+    REQUIRE(position.isRight());
+    REQUIRE(position.toCss() == "right");
+  }
+
+  SECTION("Parse top")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("top"));
+    REQUIRE(position.isTop());
+    REQUIRE(position.toCss() == "top");
+  }
+
+  SECTION("Parse bottom")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("bottom"));
+    REQUIRE(position.isBottom());
+    REQUIRE(position.toCss() == "bottom");
+  }
+
+  SECTION("Parse length")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("10px"));
+    REQUIRE(position.isLength());
+    REQUIRE(position.getX() == 10.0f);
+    REQUIRE(position.toCss() == "10.000000px");
+  }
+
+  SECTION("Parse percentage")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("25%"));
+    REQUIRE(position.isPercentage());
+    REQUIRE(position.getX() == 25.0f);
+    REQUIRE(position.toCss() == "25.000000%");
+  }
+
+  SECTION("Parse invalid value")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("invalid-value"));
+  }
+
+  SECTION("Default value")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.isCenter());
+  }
+}
