@@ -655,7 +655,8 @@ namespace client_layout
 
   shared_ptr<LayoutObject> LayoutObject::containerForFixedPosition() const
   {
-    // TODO: implement this method.
+    // Fixed positioned elements are positioned relative to the viewport
+    // Return nullptr to indicate viewport-level positioning
     return nullptr;
   }
 
@@ -684,7 +685,14 @@ namespace client_layout
 
   bool LayoutObject::computeIsFixedContainer(const client_cssom::ComputedStyle &style) const
   {
-    // TODO: implement this method.
+    // An element establishes a fixed positioning context if it has position: fixed
+    // or other properties that create a new stacking context like transform, filter, etc.
+    // For now, we implement the basic case for position: fixed
+    if (style.hasProperty("position"))
+    {
+      auto position = style.getPropertyValue("position");
+      return position == "fixed";
+    }
     return false;
   }
 
@@ -726,7 +734,9 @@ namespace client_layout
 
   shared_ptr<LayoutBlock> LayoutObject::containingBlockForFixedPosition() const
   {
-    // TODO: implement this method.
+    // Fixed positioned elements are typically positioned relative to the viewport
+    // In most cases, this would be the root element or initial containing block
+    // For now, return nullptr to indicate viewport-relative positioning
     return nullptr;
   }
 
