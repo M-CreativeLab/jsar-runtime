@@ -6,12 +6,16 @@
 #include <thread>
 #include <chrono>
 
+using namespace std;
 using namespace builtin_scene::ecs;
 
 class TestComponent : public Component
 {
 public:
-  TestComponent(int value) : value(value) {}
+  TestComponent(int value)
+      : value(value)
+  {
+  }
 
 public:
   int value;
@@ -20,7 +24,10 @@ public:
 class TestComponent2 : public Component
 {
 public:
-  TestComponent2(float value) : value(value) {}
+  TestComponent2(float value)
+      : value(value)
+  {
+  }
 
 public:
   float value;
@@ -30,7 +37,10 @@ class TestSystem : public System
 {
 public:
   using System::System;
-  TestSystem(int id) : id(id) {}
+  TestSystem(int id)
+      : id(id)
+  {
+  }
 
   const std::string name() const override
   {
@@ -192,28 +202,33 @@ class ParallelTestSystem : public System
 {
 public:
   using System::System;
-  ParallelTestSystem(int id, std::atomic<int>* counter, std::atomic<int>* maxConcurrent) 
-    : id(id), counter(counter), maxConcurrent(maxConcurrent) {}
+  ParallelTestSystem(int id, std::atomic<int> *counter, std::atomic<int> *maxConcurrent)
+      : id(id)
+      , counter(counter)
+      , maxConcurrent(maxConcurrent)
+  {
+  }
 
   const std::string name() const override
   {
     return "ParallelTestSystem_" + std::to_string(id);
   }
-  
+
   void onExecute() override
   {
     // Increment active counter
     int current = counter->fetch_add(1) + 1;
-    
+
     // Update max concurrent if needed
     int currentMax = maxConcurrent->load();
-    while (current > currentMax && !maxConcurrent->compare_exchange_weak(currentMax, current)) {
+    while (current > currentMax && !maxConcurrent->compare_exchange_weak(currentMax, current))
+    {
       currentMax = maxConcurrent->load();
     }
-    
+
     // Simulate some work
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    
+
     // Decrement counter
     counter->fetch_sub(1);
     executed = true;
@@ -221,59 +236,59 @@ public:
 
   bool executed = false;
   int id = 0;
-  std::atomic<int>* counter;
-  std::atomic<int>* maxConcurrent;
+  std::atomic<int> *counter;
+  std::atomic<int> *maxConcurrent;
 };
 
 TEST_CASE("Parallel system execution", "[ecs][parallel]")
 {
   auto app = std::make_shared<Example>();
-  
+
   // Test data for tracking concurrent execution
   std::atomic<int> activeCounter{0};
   std::atomic<int> maxConcurrent{0};
-  
+
   // Create multiple test systems
   auto system1 = std::make_shared<ParallelTestSystem>(1, &activeCounter, &maxConcurrent);
   auto system2 = std::make_shared<ParallelTestSystem>(2, &activeCounter, &maxConcurrent);
   auto system3 = std::make_shared<ParallelTestSystem>(3, &activeCounter, &maxConcurrent);
   auto system4 = std::make_shared<ParallelTestSystem>(4, &activeCounter, &maxConcurrent);
-  
+
   app->addSystem(SchedulerLabel::kUpdate, system1);
   app->addSystem(SchedulerLabel::kUpdate, system2);
   app->addSystem(SchedulerLabel::kUpdate, system3);
   app->addSystem(SchedulerLabel::kUpdate, system4);
-  
+
   SECTION("Sequential execution (default)")
   {
     // Default should be sequential
     REQUIRE(app->isParallelSystemsEnabled() == false);
-    
+
     app->start();
-    
+
     // All systems should have executed
     REQUIRE(system1->executed);
     REQUIRE(system2->executed);
     REQUIRE(system3->executed);
     REQUIRE(system4->executed);
-    
+
     // Max concurrent should be 1 for sequential execution
     REQUIRE(maxConcurrent.load() == 1);
   }
-  
+
   SECTION("Parallel execution enabled")
   {
     app->setParallelSystemsEnabled(true);
     REQUIRE(app->isParallelSystemsEnabled() == true);
-    
+
     app->start();
-    
+
     // All systems should have executed
     REQUIRE(system1->executed);
     REQUIRE(system2->executed);
     REQUIRE(system3->executed);
     REQUIRE(system4->executed);
-    
+
     // Max concurrent should be greater than 1 for parallel execution
     REQUIRE(maxConcurrent.load() > 1);
   }
@@ -284,23 +299,23 @@ TEST_CASE("Environment variable configuration", "[ecs][config]")
   SECTION("Parallel systems enabled via environment")
   {
     // Set environment variable
-    std::setenv("JSAR_PARALLEL_SYSTEMS", "1", 1);
-    std::setenv("JSAR_PARALLEL_RENDER", "true", 1);
-    
-    auto app = std::make_shared<App>();
-    
+    setenv("JSAR_PARALLEL_SYSTEMS", "1", 1);
+    setenv("JSAR_PARALLEL_RENDER", "true", 1);
+
+    auto app = make_shared<App>();
+
     REQUIRE(app->isParallelSystemsEnabled() == true);
     REQUIRE(app->isParallelRenderEnabled() == true);
-    
+
     // Clean up
-    std::unsetenv("JSAR_PARALLEL_SYSTEMS");
-    std::unsetenv("JSAR_PARALLEL_RENDER");
+    unsetenv("JSAR_PARALLEL_SYSTEMS");
+    unsetenv("JSAR_PARALLEL_RENDER");
   }
-  
+
   SECTION("Parallel execution disabled by default")
   {
-    auto app = std::make_shared<App>();
-    
+    auto app = make_shared<App>();
+
     REQUIRE(app->isParallelSystemsEnabled() == false);
     REQUIRE(app->isParallelRenderEnabled() == false);
   }
@@ -308,22 +323,22 @@ TEST_CASE("Environment variable configuration", "[ecs][config]")
 
 TEST_CASE("Runtime configuration API", "[ecs][config]")
 {
-  auto app = std::make_shared<App>();
-  
+  auto app = make_shared<App>();
+
   // Initially disabled
   REQUIRE(app->isParallelSystemsEnabled() == false);
   REQUIRE(app->isParallelRenderEnabled() == false);
-  
+
   // Enable parallel systems
   app->setParallelSystemsEnabled(true);
   REQUIRE(app->isParallelSystemsEnabled() == true);
   REQUIRE(app->isParallelRenderEnabled() == false); // Should not affect render
-  
+
   // Enable parallel render
   app->setParallelRenderEnabled(true);
   REQUIRE(app->isParallelSystemsEnabled() == true);
   REQUIRE(app->isParallelRenderEnabled() == true);
-  
+
   // Disable both
   app->setParallelSystemsEnabled(false);
   app->setParallelRenderEnabled(false);
