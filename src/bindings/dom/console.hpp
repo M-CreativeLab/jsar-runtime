@@ -63,6 +63,6 @@ namespace dombinding
     static void LogMessage(const char *level, const std::string &message);
 
     static thread_local Napi::FunctionReference *constructor;
-    static v8::Global<v8::Object> globalConsoleObject;
+    static thread_local v8::Global<v8::Object> globalConsoleObject;
   };
 }

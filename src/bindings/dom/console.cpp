@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <sstream>
 #include <client/logger.hpp>
@@ -67,7 +66,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
   }
 
-  std::string Console::FormatValue(const Napi::Value &value)
+  string Console::FormatValue(const Napi::Value &value)
   {
     if (value.IsString())
     {
@@ -75,7 +74,7 @@ namespace dombinding
     }
     else if (value.IsNumber())
     {
-      return std::to_string(value.As<Napi::Number>().DoubleValue());
+      return to_string(value.As<Napi::Number>().DoubleValue());
     }
     else if (value.IsBoolean())
     {
@@ -131,16 +130,16 @@ namespace dombinding
     }
   }
 
-  void Console::LogMessage(const char *level, const std::string &message)
+  void Console::LogMessage(const char *level, const string &message)
   {
     // Log to Node.js console for backwards compatibility
     if (strcmp(level, "error") == 0 || strcmp(level, "warn") == 0)
     {
-      std::cerr << message << std::endl;
+      cerr << message << endl;
     }
     else
     {
-      std::cout << message << std::endl;
+      cout << message << endl;
     }
 
     // Log to CDP
@@ -172,7 +171,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     // Format arguments
-    std::ostringstream oss;
+    ostringstream oss;
     for (size_t i = 0; i < info.Length(); ++i)
     {
       if (i > 0)
@@ -190,7 +189,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     // Format arguments
-    std::ostringstream oss;
+    ostringstream oss;
     for (size_t i = 0; i < info.Length(); ++i)
     {
       if (i > 0)
@@ -208,7 +207,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     // Format arguments
-    std::ostringstream oss;
+    ostringstream oss;
     for (size_t i = 0; i < info.Length(); ++i)
     {
       if (i > 0)
@@ -226,7 +225,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     // Format arguments
-    std::ostringstream oss;
+    ostringstream oss;
     for (size_t i = 0; i < info.Length(); ++i)
     {
       if (i > 0)
@@ -244,7 +243,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     // Format arguments
-    std::ostringstream oss;
+    ostringstream oss;
     for (size_t i = 0; i < info.Length(); ++i)
     {
       if (i > 0)
@@ -261,7 +260,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    std::ostringstream oss;
+    ostringstream oss;
     oss << "Trace";
 
     // Add any arguments to the trace output
@@ -277,10 +276,10 @@ namespace dombinding
       Napi::Value stackProperty = error.Value().Get("stack");
       if (stackProperty.IsString())
       {
-        std::string stackTrace = stackProperty.As<Napi::String>().Utf8Value();
+        string stackTrace = stackProperty.As<Napi::String>().Utf8Value();
         // Remove the first line which is just "Error" and add our trace message
         size_t firstNewline = stackTrace.find('\n');
-        if (firstNewline != std::string::npos)
+        if (firstNewline != string::npos)
         {
           oss << "\n"
               << stackTrace.substr(firstNewline + 1);
@@ -307,7 +306,7 @@ namespace dombinding
     bool condition = info[0].ToBoolean().Value();
     if (!condition)
     {
-      std::ostringstream oss;
+      ostringstream oss;
       if (info.Length() > 1)
       {
         oss << "Assertion failed:";
@@ -332,7 +331,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    std::cout << "\033[2J\033[1;1H"; // Clear screen escape sequence
+    cout << "\033[2J\033[1;1H"; // Clear screen escape sequence
     LogMessage("info", "Console was cleared");
     return env.Undefined();
   }
