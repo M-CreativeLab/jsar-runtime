@@ -3,6 +3,9 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+#include <thread>
+#include <future>
+#include <vector>
 
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
@@ -129,12 +132,43 @@ namespace builtin_scene::web_renderer
     if (list.size() == 0)
       return;
 
-    for (auto &item : list)
+    // Check if parallel rendering is enabled
+    auto app = getApplication<ecs::App>();
+    bool enableParallel = app && app->isParallelRenderEnabled();
+
+    if (!enableParallel || list.size() <= 1)
     {
-      ecs::EntityId entity = item.first;
-      WebContent &content = *item.second;
-      if (render(entity, content))
-        content.setSurfaceDirty(true);
+      // Sequential execution
+      for (auto &item : list)
+      {
+        ecs::EntityId entity = item.first;
+        WebContent &content = *item.second;
+        if (render(entity, content))
+          content.setSurfaceDirty(true);
+      }
+    }
+    else
+    {
+      // Parallel execution
+      std::vector<std::future<void>> futures;
+      futures.reserve(list.size());
+
+      for (auto &item : list)
+      {
+        ecs::EntityId entity = item.first;
+        WebContent &content = *item.second;
+
+        futures.emplace_back(std::async(std::launch::async, [this, entity, &content]()
+                                        {
+          if (render(entity, content))
+            content.setSurfaceDirty(true); }));
+      }
+
+      // Wait for all rendering tasks to complete
+      for (auto &future : futures)
+      {
+        future.wait();
+      }
     }
   }
 

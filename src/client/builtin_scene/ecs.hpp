@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <typeindex>
+#include <cstdlib>
 #include <idgen.hpp>
 #include <common/utility.hpp>
 
@@ -551,6 +552,12 @@ namespace builtin_scene::ecs
      * This method should be called in the main loop of the app.
      */
     void run();
+    /**
+     * Run all systems in the set once with optional parallel execution.
+     *
+     * @param enableParallel Whether to enable parallel execution of systems.
+     */
+    void run(bool enableParallel);
 
   protected:
     std::vector<std::shared_ptr<System>> systems_;
@@ -573,6 +580,12 @@ namespace builtin_scene::ecs
   public:
     App()
     {
+      // Initialize parallel execution settings from environment variables
+      const char *parallelSystems = std::getenv("JSAR_PARALLEL_SYSTEMS");
+      const char *parallelRender = std::getenv("JSAR_PARALLEL_RENDER");
+
+      enableParallelSystems_ = parallelSystems ? (std::string(parallelSystems) == "1" || std::string(parallelSystems) == "true") : false;
+      enableParallelRender_ = parallelRender ? (std::string(parallelRender) == "1" || std::string(parallelRender) == "true") : false;
     }
     virtual ~App() = default;
 
@@ -767,6 +780,49 @@ namespace builtin_scene::ecs
      */
     void removeSystem(SystemId id);
 
+  public:
+    /**
+     * Enable or disable parallel execution of systems within each scheduler label.
+     * When enabled, systems in the same scheduler label can run concurrently.
+     *
+     * @param enable Whether to enable parallel system execution.
+     */
+    inline void setParallelSystemsEnabled(bool enable)
+    {
+      enableParallelSystems_ = enable;
+    }
+
+    /**
+     * Enable or disable parallel execution of WebContent rendering.
+     * When enabled, multiple WebContent entities can be rendered concurrently.
+     *
+     * @param enable Whether to enable parallel render execution.
+     */
+    inline void setParallelRenderEnabled(bool enable)
+    {
+      enableParallelRender_ = enable;
+    }
+
+    /**
+     * Check if parallel system execution is enabled.
+     *
+     * @returns Whether parallel system execution is enabled.
+     */
+    inline bool isParallelSystemsEnabled() const
+    {
+      return enableParallelSystems_;
+    }
+
+    /**
+     * Check if parallel render execution is enabled.
+     *
+     * @returns Whether parallel render execution is enabled.
+     */
+    inline bool isParallelRenderEnabled() const
+    {
+      return enableParallelRender_;
+    }
+
   protected:
     /**
      * The derived class should call this method when the environment is ready to start the ECS.
@@ -794,6 +850,9 @@ namespace builtin_scene::ecs
     // mutexes to make the ECS thread-safe.
     std::shared_mutex mutexForEntities_;
     std::shared_mutex mutexForSystems_;
+    // parallel execution configuration
+    bool enableParallelSystems_ = false;
+    bool enableParallelRender_ = false;
   };
 
   /**

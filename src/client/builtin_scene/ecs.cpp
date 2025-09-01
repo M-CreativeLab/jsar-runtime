@@ -5,6 +5,10 @@
 #include <iomanip>
 #endif
 
+#include <thread>
+#include <future>
+#include <vector>
+
 namespace builtin_scene::ecs
 {
   using namespace std;
@@ -33,8 +37,35 @@ namespace builtin_scene::ecs
 
   void ISystemSet::run()
   {
-    for (auto &system : systems_)
-      system->runOnce();
+    run(false); // Default to sequential execution for backwards compatibility
+  }
+
+  void ISystemSet::run(bool enableParallel)
+  {
+    if (!enableParallel || systems_.size() <= 1)
+    {
+      // Sequential execution
+      for (auto &system : systems_)
+        system->runOnce();
+    }
+    else
+    {
+      // Parallel execution
+      std::vector<std::future<void>> futures;
+      futures.reserve(systems_.size());
+
+      for (auto &system : systems_)
+      {
+        futures.emplace_back(std::async(std::launch::async, [&system]()
+                                        { system->runOnce(); }));
+      }
+
+      // Wait for all systems to complete
+      for (auto &future : futures)
+      {
+        future.wait();
+      }
+    }
   }
 
   bool App::removeEntity(EntityId entity)
@@ -102,7 +133,7 @@ namespace builtin_scene::ecs
     if (systemSets_.find(label) == systemSets_.end())
       return;
     auto systemSet = systemSets_[label];
-    systemSet->run();
+    systemSet->run(enableParallelSystems_);
   }
 
   void System::runOnce()
