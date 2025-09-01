@@ -14,6 +14,8 @@ namespace client_cssom::selectors
       , combinator_(combinator)
       , pseudoClassType_(pseudoClassType)
       , argumentSelectorList_(nullptr)
+      , attributeMatchType_(AttributeMatchType::kUnknown)
+      , attributeValue_("")
   {
   }
 
@@ -23,6 +25,19 @@ namespace client_cssom::selectors
       , combinator_(Combinator::kUnknown)
       , pseudoClassType_(pseudoClassType)
       , argumentSelectorList_(argumentSelectorList)
+      , attributeMatchType_(AttributeMatchType::kUnknown)
+      , attributeValue_("")
+  {
+  }
+
+  Component::Component(ComponentType type, const string &attributeName, AttributeMatchType matchType, const string &attributeValue)
+      : type_(type)
+      , name_(attributeName)
+      , combinator_(Combinator::kUnknown)
+      , pseudoClassType_(PseudoClassType::kUnknown)
+      , argumentSelectorList_(nullptr)
+      , attributeMatchType_(matchType)
+      , attributeValue_(attributeValue)
   {
   }
 
@@ -42,6 +57,35 @@ namespace client_cssom::selectors
       break;
     case ComponentType::kClass:
       ss << "." << name_;
+      break;
+    case ComponentType::kAttribute:
+      ss << "[" << name_;
+      switch (attributeMatchType_)
+      {
+      case AttributeMatchType::kExists:
+        break; // Just [attr]
+      case AttributeMatchType::kExact:
+        ss << "=\"" << attributeValue_ << "\"";
+        break;
+      case AttributeMatchType::kWhitespace:
+        ss << "~=\"" << attributeValue_ << "\"";
+        break;
+      case AttributeMatchType::kPrefix:
+        ss << "^=\"" << attributeValue_ << "\"";
+        break;
+      case AttributeMatchType::kSuffix:
+        ss << "$=\"" << attributeValue_ << "\"";
+        break;
+      case AttributeMatchType::kSubstring:
+        ss << "*=\"" << attributeValue_ << "\"";
+        break;
+      case AttributeMatchType::kDashPrefix:
+        ss << "|=\"" << attributeValue_ << "\"";
+        break;
+      default:
+        break;
+      }
+      ss << "]";
       break;
     case ComponentType::kRoot:
       ss << ":root";
@@ -282,6 +326,12 @@ namespace client_cssom::selectors
       return Component(ComponentType::kClass, name);
     }
 
+    // Attribute selector ([attr] or [attr=value])
+    if (c == '[')
+    {
+      return parseAttributeSelector(text, pos);
+    }
+
     // Pseudo-class or pseudo-element (:pseudo or ::pseudo)
     if (c == ':')
     {
@@ -494,5 +544,126 @@ namespace client_cssom::selectors
   bool CSSelectorParser::isIdentifierChar(char c)
   {
     return isalnum(c) || c == '_' || c == '-';
+  }
+
+  optional<Component> CSSelectorParser::parseAttributeSelector(const string &text, size_t &pos)
+  {
+    if (pos >= text.length() || text[pos] != '[')
+      return nullopt;
+
+    ++pos; // Skip '['
+
+    skipWhitespace(text, pos);
+
+    // Parse attribute name
+    auto attributeName = parseIdentifier(text, pos);
+    if (attributeName.empty())
+      return nullopt;
+
+    skipWhitespace(text, pos);
+
+    // Check if it's just [attr] (existence check)
+    if (pos < text.length() && text[pos] == ']')
+    {
+      ++pos;
+      return Component(ComponentType::kAttribute, attributeName, AttributeMatchType::kExists);
+    }
+
+    // Parse attribute match operator
+    AttributeMatchType matchType = AttributeMatchType::kUnknown;
+    if (pos < text.length())
+    {
+      char c = text[pos];
+      if (c == '=')
+      {
+        matchType = AttributeMatchType::kExact;
+        ++pos;
+      }
+      else if (pos + 1 < text.length() && text[pos + 1] == '=')
+      {
+        switch (c)
+        {
+        case '~':
+          matchType = AttributeMatchType::kWhitespace;
+          break;
+        case '^':
+          matchType = AttributeMatchType::kPrefix;
+          break;
+        case '$':
+          matchType = AttributeMatchType::kSuffix;
+          break;
+        case '*':
+          matchType = AttributeMatchType::kSubstring;
+          break;
+        case '|':
+          matchType = AttributeMatchType::kDashPrefix;
+          break;
+        default:
+          return nullopt;
+        }
+        pos += 2; // Skip operator and '='
+      }
+      else
+      {
+        return nullopt; // Invalid operator
+      }
+    }
+    else
+    {
+      return nullopt; // Unexpected end
+    }
+
+    skipWhitespace(text, pos);
+
+    // Parse attribute value
+    string attributeValue;
+    if (pos < text.length())
+    {
+      char c = text[pos];
+      if (c == '"' || c == '\'')
+      {
+        // Quoted string
+        char quote = c;
+        ++pos;
+        while (pos < text.length() && text[pos] != quote)
+        {
+          if (text[pos] == '\\' && pos + 1 < text.length())
+          {
+            // Handle escape sequences
+            ++pos;
+            if (pos < text.length())
+            {
+              attributeValue += text[pos];
+              ++pos;
+            }
+          }
+          else
+          {
+            attributeValue += text[pos];
+            ++pos;
+          }
+        }
+        if (pos < text.length() && text[pos] == quote)
+          ++pos; // Skip closing quote
+        else
+          return nullopt; // Unclosed string
+      }
+      else
+      {
+        // Unquoted identifier
+        attributeValue = parseIdentifier(text, pos);
+        if (attributeValue.empty())
+          return nullopt;
+      }
+    }
+
+    skipWhitespace(text, pos);
+
+    // Expect closing ']'
+    if (pos >= text.length() || text[pos] != ']')
+      return nullopt;
+    ++pos;
+
+    return Component(ComponentType::kAttribute, attributeName, matchType, attributeValue);
   }
 }

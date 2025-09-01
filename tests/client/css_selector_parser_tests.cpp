@@ -530,4 +530,155 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(str.find("*") != std::string::npos);
     REQUIRE(str.find("class") != std::string::npos);
   }
+
+  SECTION("Parse attribute selectors")
+  {
+    // Test [attr] existence selector
+    auto result = CSSelectorParser::parseSelectors("[disabled]");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 1);
+
+    const auto &component = selector.components()[0];
+    REQUIRE(component.isAttribute());
+    REQUIRE(component.attributeName() == "disabled");
+    REQUIRE(component.attributeMatchType() == AttributeMatchType::kExists);
+
+    // Test [attr=value] exact match
+    result = CSSelectorParser::parseSelectors("[type=\"text\"]");
+    REQUIRE(result.has_value());
+
+    const auto &exactSelector = result.value().selectors()[0];
+    REQUIRE(exactSelector.size() == 1);
+
+    const auto &exactComponent = exactSelector.components()[0];
+    REQUIRE(exactComponent.isAttribute());
+    REQUIRE(exactComponent.attributeName() == "type");
+    REQUIRE(exactComponent.attributeValue() == "text");
+    REQUIRE(exactComponent.attributeMatchType() == AttributeMatchType::kExact);
+
+    // Test [attr^=value] prefix match
+    result = CSSelectorParser::parseSelectors("[href^=\"https\"]");
+    REQUIRE(result.has_value());
+
+    const auto &prefixComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(prefixComponent.isAttribute());
+    REQUIRE(prefixComponent.attributeName() == "href");
+    REQUIRE(prefixComponent.attributeValue() == "https");
+    REQUIRE(prefixComponent.attributeMatchType() == AttributeMatchType::kPrefix);
+
+    // Test [attr$=value] suffix match
+    result = CSSelectorParser::parseSelectors("[src$=\".jpg\"]");
+    REQUIRE(result.has_value());
+
+    const auto &suffixComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(suffixComponent.attributeMatchType() == AttributeMatchType::kSuffix);
+    REQUIRE(suffixComponent.attributeValue() == ".jpg");
+
+    // Test [attr*=value] substring match
+    result = CSSelectorParser::parseSelectors("[class*=\"highlight\"]");
+    REQUIRE(result.has_value());
+
+    const auto &substringComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(substringComponent.attributeMatchType() == AttributeMatchType::kSubstring);
+    REQUIRE(substringComponent.attributeValue() == "highlight");
+
+    // Test [attr~=value] whitespace-separated list
+    result = CSSelectorParser::parseSelectors("[class~=\"button\"]");
+    REQUIRE(result.has_value());
+
+    const auto &whitespaceComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(whitespaceComponent.attributeMatchType() == AttributeMatchType::kWhitespace);
+    REQUIRE(whitespaceComponent.attributeValue() == "button");
+
+    // Test [attr|=value] dash-separated prefix
+    result = CSSelectorParser::parseSelectors("[lang|=\"en\"]");
+    REQUIRE(result.has_value());
+
+    const auto &dashComponent = result.value().selectors()[0].components()[0];
+    REQUIRE(dashComponent.attributeMatchType() == AttributeMatchType::kDashPrefix);
+    REQUIRE(dashComponent.attributeValue() == "en");
+  }
+
+  SECTION("Parse specific examples: link[rel=\"modulepreload\"]")
+  {
+    auto result = CSSelectorParser::parseSelectors("link[rel=\"modulepreload\"]");
+    REQUIRE(result.has_value());
+
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 2);
+
+    // Tag component
+    REQUIRE(selector.components()[0].isLocalName());
+    REQUIRE(selector.components()[0].name() == "link");
+
+    // Attribute component
+    const auto &attrComponent = selector.components()[1];
+    REQUIRE(attrComponent.isAttribute());
+    REQUIRE(attrComponent.attributeName() == "rel");
+    REQUIRE(attrComponent.attributeValue() == "modulepreload");
+    REQUIRE(attrComponent.attributeMatchType() == AttributeMatchType::kExact);
+
+    // Test complex selector with multiple attributes
+    result = CSSelectorParser::parseSelectors("input[type=\"text\"][disabled]");
+    REQUIRE(result.has_value());
+
+    const auto &complexSelector = result.value().selectors()[0];
+    REQUIRE(complexSelector.size() == 3);
+
+    REQUIRE(complexSelector.components()[0].isLocalName());
+    REQUIRE(complexSelector.components()[0].name() == "input");
+
+    REQUIRE(complexSelector.components()[1].isAttribute());
+    REQUIRE(complexSelector.components()[1].attributeName() == "type");
+    REQUIRE(complexSelector.components()[1].attributeValue() == "text");
+
+    REQUIRE(complexSelector.components()[2].isAttribute());
+    REQUIRE(complexSelector.components()[2].attributeName() == "disabled");
+    REQUIRE(complexSelector.components()[2].attributeMatchType() == AttributeMatchType::kExists);
+  }
+
+  SECTION("Parse attribute selectors with unquoted values")
+  {
+    auto result = CSSelectorParser::parseSelectors("[type=text]");
+    REQUIRE(result.has_value());
+
+    const auto &component = result.value().selectors()[0].components()[0];
+    REQUIRE(component.isAttribute());
+    REQUIRE(component.attributeName() == "type");
+    REQUIRE(component.attributeValue() == "text");
+    REQUIRE(component.attributeMatchType() == AttributeMatchType::kExact);
+  }
+
+  SECTION("Attribute selector string representation")
+  {
+    auto result = CSSelectorParser::parseSelectors("[disabled]");
+    REQUIRE(result.has_value());
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(str == "[disabled]");
+
+    result = CSSelectorParser::parseSelectors("link[rel=\"modulepreload\"]");
+    REQUIRE(result.has_value());
+    str = static_cast<std::string>(result.value());
+    REQUIRE(str.find("link") != std::string::npos);
+    REQUIRE(str.find("[rel=\"modulepreload\"]") != std::string::npos);
+
+    result = CSSelectorParser::parseSelectors("[href^=\"https\"]");
+    REQUIRE(result.has_value());
+    str = static_cast<std::string>(result.value());
+    REQUIRE(str == "[href^=\"https\"]");
+  }
+
+  SECTION("Attribute selectors with spaces")
+  {
+    auto result = CSSelectorParser::parseSelectors("[ data-value = \"test\" ]");
+    REQUIRE(result.has_value());
+
+    const auto &component = result.value().selectors()[0].components()[0];
+    REQUIRE(component.isAttribute());
+    REQUIRE(component.attributeName() == "data-value");
+    REQUIRE(component.attributeValue() == "test");
+    REQUIRE(component.attributeMatchType() == AttributeMatchType::kExact);
+  }
 }

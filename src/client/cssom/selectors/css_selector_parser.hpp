@@ -22,6 +22,7 @@ namespace client_cssom::selectors
     kID,            // ID selector (e.g., #myid)
     kClass,         // Class selector (e.g., .myclass)
     kUniversal,     // Universal selector (*)
+    kAttribute,     // Attribute selector (e.g., [attr], [attr=value])
     kRoot,          // :root pseudo-class
     kEmpty,         // :empty pseudo-class
     kScope,         // :scope pseudo-class
@@ -29,6 +30,22 @@ namespace client_cssom::selectors
     kPseudoElement, // Pseudo-elements (e.g., ::before, ::after)
     kPseudoClass,   // Other pseudo-classes (e.g., :hover, :focus)
     kCombinator,    // Combinators (>, +, ~, space)
+    kUnknown
+  };
+
+  /**
+   * CSS Attribute Selector Match Types
+   * These define how attribute values are matched
+   */
+  enum class AttributeMatchType
+  {
+    kExists,     // [attr] - attribute exists
+    kExact,      // [attr=value] - exact match
+    kWhitespace, // [attr~=value] - whitespace-separated list contains value
+    kPrefix,     // [attr^=value] - starts with value
+    kSuffix,     // [attr$=value] - ends with value
+    kSubstring,  // [attr*=value] - contains value as substring
+    kDashPrefix, // [attr|=value] - equals value or starts with value-
     kUnknown
   };
 
@@ -85,6 +102,9 @@ namespace client_cssom::selectors
     // Constructor for functional pseudo-classes like :where()
     Component(ComponentType type, PseudoClassType pseudoClassType, std::shared_ptr<SelectorList> argumentSelectorList);
 
+    // Constructor for attribute selectors
+    Component(ComponentType type, const std::string &attributeName, AttributeMatchType matchType, const std::string &attributeValue = "");
+
     // Type checking methods
     bool isLocalName() const
     {
@@ -101,6 +121,10 @@ namespace client_cssom::selectors
     bool isUniversal() const
     {
       return type_ == ComponentType::kUniversal;
+    }
+    bool isAttribute() const
+    {
+      return type_ == ComponentType::kAttribute;
     }
     bool isRoot() const
     {
@@ -191,6 +215,20 @@ namespace client_cssom::selectors
       return argumentSelectorList_;
     }
 
+    // Attribute selector accessors
+    const std::string &attributeName() const
+    {
+      return name_; // For attribute components, name_ holds the attribute name
+    }
+    const std::string &attributeValue() const
+    {
+      return attributeValue_;
+    }
+    AttributeMatchType attributeMatchType() const
+    {
+      return attributeMatchType_;
+    }
+
     // String representation
     operator std::string() const;
 
@@ -200,6 +238,10 @@ namespace client_cssom::selectors
     Combinator combinator_;
     PseudoClassType pseudoClassType_;
     std::shared_ptr<SelectorList> argumentSelectorList_; // For functional pseudo-classes like :where()
+
+    // Attribute selector specific fields
+    AttributeMatchType attributeMatchType_;
+    std::string attributeValue_;
   };
 
   /**
@@ -308,6 +350,7 @@ namespace client_cssom::selectors
     static std::optional<Selector> parseSingleSelector(const std::string &text);
     static std::optional<Component> parseComponent(const std::string &text, size_t &pos);
     static std::optional<Component> parseFunctionalPseudoClass(const std::string &name, const std::string &text, size_t &pos);
+    static std::optional<Component> parseAttributeSelector(const std::string &text, size_t &pos);
     static std::optional<Combinator> parseCombinator(const std::string &text, size_t &pos);
     static std::optional<PseudoClassType> parsePseudoClass(const std::string &name);
 
