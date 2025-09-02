@@ -95,6 +95,208 @@ namespace builtin_scene::web_renderer
     return borderBox;
   }
 
+  // Helper function to calculate background size based on background-size property
+  SkSize calculateBackgroundSize(const sk_sp<SkImage> &image,
+                                 const SkRect &positioningArea,
+                                 const ComputedStyle &style)
+  {
+    if (!image)
+      return SkSize::Make(0, 0);
+
+    float intrinsicWidth = static_cast<float>(image->width());
+    float intrinsicHeight = static_cast<float>(image->height());
+    float areaWidth = positioningArea.width();
+    float areaHeight = positioningArea.height();
+
+    const auto &backgroundSize = style.backgroundSize();
+
+    if (backgroundSize.isAuto())
+    {
+      // Use intrinsic dimensions
+      return SkSize::Make(intrinsicWidth, intrinsicHeight);
+    }
+    else if (backgroundSize.isCover())
+    {
+      // Scale to cover entire area, maintaining aspect ratio
+      float scaleX = areaWidth / intrinsicWidth;
+      float scaleY = areaHeight / intrinsicHeight;
+      float scale = std::max(scaleX, scaleY);
+      return SkSize::Make(intrinsicWidth * scale, intrinsicHeight * scale);
+    }
+    else if (backgroundSize.isContain())
+    {
+      // Scale to fit within area, maintaining aspect ratio
+      float scaleX = areaWidth / intrinsicWidth;
+      float scaleY = areaHeight / intrinsicHeight;
+      float scale = std::min(scaleX, scaleY);
+      return SkSize::Make(intrinsicWidth * scale, intrinsicHeight * scale);
+    }
+    else if (backgroundSize.isLength())
+    {
+      // Use specified length, maintaining aspect ratio
+      float length = backgroundSize.getWidth();
+      float scale = length / intrinsicWidth;
+      return SkSize::Make(length, intrinsicHeight * scale);
+    }
+    else if (backgroundSize.isPercentage())
+    {
+      // Use percentage of positioning area, maintaining aspect ratio
+      float percentage = backgroundSize.getWidth() / 100.0f;
+      float width = areaWidth * percentage;
+      float scale = width / intrinsicWidth;
+      return SkSize::Make(width, intrinsicHeight * scale);
+    }
+    else if (backgroundSize.isTwoValues())
+    {
+      // Use specified width and height
+      return SkSize::Make(backgroundSize.getWidth(), backgroundSize.getHeight());
+    }
+
+    // Fallback to auto
+    return SkSize::Make(intrinsicWidth, intrinsicHeight);
+  }
+
+  // Helper function to calculate background position based on background-position property
+  SkPoint calculateBackgroundPosition(const SkSize &imageSize,
+                                      const SkRect &positioningArea,
+                                      const ComputedStyle &style)
+  {
+    const auto &backgroundPosition = style.backgroundPosition();
+    float areaWidth = positioningArea.width();
+    float areaHeight = positioningArea.height();
+
+    if (backgroundPosition.isCenter())
+    {
+      // Center both horizontally and vertically
+      float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
+      float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isLeft())
+    {
+      // Left edge horizontally, center vertically
+      float x = positioningArea.fLeft;
+      float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isRight())
+    {
+      // Right edge horizontally, center vertically
+      float x = positioningArea.fRight - imageSize.width();
+      float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isTop())
+    {
+      // Center horizontally, top edge vertically
+      float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
+      float y = positioningArea.fTop;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isBottom())
+    {
+      // Center horizontally, bottom edge vertically
+      float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
+      float y = positioningArea.fBottom - imageSize.height();
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isLength())
+    {
+      // Use specified length for x, center vertically
+      float x = positioningArea.fLeft + backgroundPosition.getX();
+      float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isPercentage())
+    {
+      // Use percentage for x, center vertically
+      float percentage = backgroundPosition.getX() / 100.0f;
+      float x = positioningArea.fLeft + (areaWidth - imageSize.width()) * percentage;
+      float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isTwoValues())
+    {
+      // Use specified x and y values
+      float x = positioningArea.fLeft + backgroundPosition.getX();
+      float y = positioningArea.fTop + backgroundPosition.getY();
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isThreeValues())
+    {
+      // Handle 3-value syntax: keyword offset keyword
+      float x, y;
+
+      auto hKeyword = backgroundPosition.getHorizontalKeyword();
+      auto vKeyword = backgroundPosition.getVerticalKeyword();
+      float hOffset = backgroundPosition.getHorizontalOffset();
+      float vOffset = backgroundPosition.getVerticalOffset();
+
+      using Keyword = client_cssom::values::generics::BackgroundPositionKeyword;
+
+      // Calculate horizontal position
+      if (hKeyword == Keyword::kLeftKeyword)
+        x = positioningArea.fLeft + hOffset;
+      else if (hKeyword == Keyword::kRightKeyword)
+        x = positioningArea.fRight - imageSize.width() - hOffset;
+      else if (hKeyword == Keyword::kCenterKeyword)
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f + hOffset;
+      else
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f; // Default to center
+
+      // Calculate vertical position
+      if (vKeyword == Keyword::kTopKeyword)
+        y = positioningArea.fTop + vOffset;
+      else if (vKeyword == Keyword::kBottomKeyword)
+        y = positioningArea.fBottom - imageSize.height() - vOffset;
+      else if (vKeyword == Keyword::kCenterKeyword)
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f + vOffset;
+      else
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f; // Default to center
+
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isFourValues())
+    {
+      // Handle 4-value syntax: keyword offset keyword offset
+      float x, y;
+
+      auto hKeyword = backgroundPosition.getHorizontalKeyword();
+      auto vKeyword = backgroundPosition.getVerticalKeyword();
+      float hOffset = backgroundPosition.getHorizontalOffset();
+      float vOffset = backgroundPosition.getVerticalOffset();
+
+      using Keyword = client_cssom::values::generics::BackgroundPositionKeyword;
+
+      // Calculate horizontal position
+      if (hKeyword == Keyword::kLeftKeyword)
+        x = positioningArea.fLeft + hOffset;
+      else if (hKeyword == Keyword::kRightKeyword)
+        x = positioningArea.fRight - imageSize.width() - hOffset;
+      else if (hKeyword == Keyword::kCenterKeyword)
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f + hOffset;
+      else
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f; // Default to center
+
+      // Calculate vertical position
+      if (vKeyword == Keyword::kTopKeyword)
+        y = positioningArea.fTop + vOffset;
+      else if (vKeyword == Keyword::kBottomKeyword)
+        y = positioningArea.fBottom - imageSize.height() - vOffset;
+      else if (vKeyword == Keyword::kCenterKeyword)
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f + vOffset;
+      else
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f; // Default to center
+
+      return SkPoint::Make(x, y);
+    }
+
+    // Fallback to center
+    float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
+    float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
+    return SkPoint::Make(x, y);
+  }
+
   // Helper function to draw background image with repeat pattern
 
   void InitSystem::onExecute()
@@ -918,23 +1120,42 @@ namespace builtin_scene::web_renderer
     if (!image)
       return;
 
-    float imageWidth = static_cast<float>(image->width());
-    float imageHeight = static_cast<float>(image->height());
+    // Calculate the background size based on background-size property
+    SkSize imageSize = calculateBackgroundSize(image, positioningArea, style);
+    float imageWidth = imageSize.width();
+    float imageHeight = imageSize.height();
+
+    // Calculate the background position based on background-position property
+    SkPoint imagePosition = calculateBackgroundPosition(imageSize, positioningArea, style);
 
     if (style.backgroundRepeat().isRepeat())
     {
       // Repeat both horizontally and vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      // Start from the calculated position and tile in both directions
+      float startX = imagePosition.x();
+      float startY = imagePosition.y();
+
+      // Adjust start position to ensure full coverage
+      while (startX > positioningArea.fLeft)
+        startX -= imageWidth;
+      while (startY > positioningArea.fTop)
+        startY -= imageHeight;
+
+      for (float y = startY; y < positioningArea.fBottom; y += imageHeight)
       {
-        for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+        for (float x = startX; x < positioningArea.fRight; x += imageWidth)
         {
           SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
           // Clip to positioning area
           if (destRect.intersect(positioningArea))
           {
-            SkRect srcRect = SkRect::MakeWH(
-              destRect.width() * imageWidth / imageWidth,
-              destRect.height() * imageHeight / imageHeight);
+            // Calculate source rect proportionally
+            float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
+            float srcTop = (destRect.fTop - y) / imageHeight * image->height();
+            float srcRight = srcLeft + (destRect.width() / imageWidth * image->width());
+            float srcBottom = srcTop + (destRect.height() / imageHeight * image->height());
+
+            SkRect srcRect = SkRect::MakeLTRB(srcLeft, srcTop, srcRight, srcBottom);
             canvas->drawImageRect(image,
                                   srcRect,
                                   destRect,
@@ -948,14 +1169,24 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundRepeat().isRepeatX())
     {
       // Repeat only horizontally
-      for (float x = positioningArea.fLeft; x < positioningArea.fRight; x += imageWidth)
+      float startX = imagePosition.x();
+      float y = imagePosition.y();
+
+      // Adjust start position to ensure full coverage
+      while (startX > positioningArea.fLeft)
+        startX -= imageWidth;
+
+      for (float x = startX; x < positioningArea.fRight; x += imageWidth)
       {
-        SkRect destRect = SkRect::MakeXYWH(x, positioningArea.fTop, imageWidth, imageHeight);
+        SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
         if (destRect.intersect(positioningArea))
         {
-          SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
+          float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
+          float srcTop = (destRect.fTop - y) / imageHeight * image->height();
+          float srcRight = srcLeft + (destRect.width() / imageWidth * image->width());
+          float srcBottom = srcTop + (destRect.height() / imageHeight * image->height());
+
+          SkRect srcRect = SkRect::MakeLTRB(srcLeft, srcTop, srcRight, srcBottom);
           canvas->drawImageRect(image,
                                 srcRect,
                                 destRect,
@@ -968,14 +1199,24 @@ namespace builtin_scene::web_renderer
     else if (style.backgroundRepeat().isRepeatY())
     {
       // Repeat only vertically
-      for (float y = positioningArea.fTop; y < positioningArea.fBottom; y += imageHeight)
+      float x = imagePosition.x();
+      float startY = imagePosition.y();
+
+      // Adjust start position to ensure full coverage
+      while (startY > positioningArea.fTop)
+        startY -= imageHeight;
+
+      for (float y = startY; y < positioningArea.fBottom; y += imageHeight)
       {
-        SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, y, imageWidth, imageHeight);
+        SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
         if (destRect.intersect(positioningArea))
         {
-          SkRect srcRect = SkRect::MakeWH(
-            destRect.width() * imageWidth / imageWidth,
-            destRect.height() * imageHeight / imageHeight);
+          float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
+          float srcTop = (destRect.fTop - y) / imageHeight * image->height();
+          float srcRight = srcLeft + (destRect.width() / imageWidth * image->width());
+          float srcBottom = srcTop + (destRect.height() / imageHeight * image->height());
+
+          SkRect srcRect = SkRect::MakeLTRB(srcLeft, srcTop, srcRight, srcBottom);
           canvas->drawImageRect(image,
                                 srcRect,
                                 destRect,
@@ -987,13 +1228,19 @@ namespace builtin_scene::web_renderer
     }
     else if (style.backgroundRepeat().isNoRepeat())
     {
-      // No repeat - draw once at the positioning area origin
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      // No repeat - draw once at the calculated position and size
+      SkRect destRect = SkRect::MakeXYWH(imagePosition.x(), imagePosition.y(), imageWidth, imageHeight);
       if (destRect.intersect(positioningArea))
       {
-        SkRect srcRect = SkRect::MakeWH(
-          destRect.width() * imageWidth / imageWidth,
-          destRect.height() * imageHeight / imageHeight);
+        // Calculate source rect proportionally
+        float scaleX = imageWidth / image->width();
+        float scaleY = imageHeight / image->height();
+        float srcLeft = (destRect.fLeft - imagePosition.x()) / scaleX;
+        float srcTop = (destRect.fTop - imagePosition.y()) / scaleY;
+        float srcRight = srcLeft + destRect.width() / scaleX;
+        float srcBottom = srcTop + destRect.height() / scaleY;
+
+        SkRect srcRect = SkRect::MakeLTRB(srcLeft, srcTop, srcRight, srcBottom);
         canvas->drawImageRect(image,
                               srcRect,
                               destRect,
@@ -1005,7 +1252,7 @@ namespace builtin_scene::web_renderer
     else
     {
       // Default to no repeat for unsupported values (space, round)
-      SkRect destRect = SkRect::MakeXYWH(positioningArea.fLeft, positioningArea.fTop, imageWidth, imageHeight);
+      SkRect destRect = SkRect::MakeXYWH(imagePosition.x(), imagePosition.y(), imageWidth, imageHeight);
       if (destRect.intersect(positioningArea))
       {
         canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);

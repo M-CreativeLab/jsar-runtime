@@ -1,3 +1,6 @@
+#include <sstream>
+#include <vector>
+#include <numeric>
 #include <crates/bindings.hpp>
 
 #include "./computed_style.hpp"
@@ -578,6 +581,10 @@ namespace client_cssom
     {
       background_repeat_ = Parse::ParseSingleValue<values::specified::BackgroundRepeat>(resolvedValue).toComputedValue(context);
     }
+    else if (name == "background-size")
+    {
+      background_size_ = Parse::ParseSingleValue<values::specified::BackgroundSize>(resolvedValue).toComputedValue(context);
+    }
 
     // Flexbox
     else if (name == "flex-direction")
@@ -647,7 +654,24 @@ namespace client_cssom
 
   void ComputedStyle::computeShorthandProperties(values::computed::Context &context)
   {
-    // TODO: implement shorthand properties
+    bool hasBackgroundPositionX = hasProperty("background-position-x");
+    bool hasBackgroundPositionY = hasProperty("background-position-y");
+
+    if (hasBackgroundPositionX || hasBackgroundPositionY)
+    {
+      string shorthandValue;
+      vector<string> parts;
+      if (hasBackgroundPositionX)
+        parts.push_back(getPropertyValue("background-position-x"));
+      if (hasBackgroundPositionY)
+        parts.push_back(getPropertyValue("background-position-y"));
+      shorthandValue = accumulate(parts.begin(), parts.end(), string(), [](const string &a, const string &b)
+                                  { return a.empty() ? b : (a + " " + b); });
+
+      string resolvedValue = resolveVariables(shorthandValue, context);
+      background_position_ = Parse::ParseSingleValue<values::specified::BackgroundPosition>(resolvedValue)
+                               .toComputedValue(context);
+    }
   }
 
   void ComputedStyle::updateBaseComputedStyle()
