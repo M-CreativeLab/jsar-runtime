@@ -732,6 +732,10 @@ namespace dom
       return false;
 
     bool scrolled = layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
+    if (scrolled)
+    {
+      invalidateDocumentCache();
+    }
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
     return scrolled;
   }

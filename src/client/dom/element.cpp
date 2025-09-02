@@ -797,6 +797,8 @@ namespace dom
     // Throttle scroll events for better performance
     if (!shouldThrottleScrollEvent())
     {
+      markAsDirty();
+
       last_scroll_event_time_ = chrono::steady_clock::now();
       dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
     }
