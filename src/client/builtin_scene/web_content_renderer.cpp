@@ -222,6 +222,74 @@ namespace builtin_scene::web_renderer
       float y = positioningArea.fTop + backgroundPosition.getY();
       return SkPoint::Make(x, y);
     }
+    else if (backgroundPosition.isThreeValues())
+    {
+      // Handle 3-value syntax: keyword offset keyword
+      float x, y;
+
+      auto hKeyword = backgroundPosition.getHorizontalKeyword();
+      auto vKeyword = backgroundPosition.getVerticalKeyword();
+      float hOffset = backgroundPosition.getHorizontalOffset();
+      float vOffset = backgroundPosition.getVerticalOffset();
+
+      using Keyword = client_cssom::values::generics::GenericBackgroundPosition<client_cssom::values::computed::BackgroundPosition>::Keyword;
+
+      // Calculate horizontal position
+      if (hKeyword == Keyword::kLeftKeyword)
+        x = positioningArea.fLeft + hOffset;
+      else if (hKeyword == Keyword::kRightKeyword)
+        x = positioningArea.fRight - imageSize.width() - hOffset;
+      else if (hKeyword == Keyword::kCenterKeyword)
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f + hOffset;
+      else
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f; // Default to center
+
+      // Calculate vertical position
+      if (vKeyword == Keyword::kTopKeyword)
+        y = positioningArea.fTop + vOffset;
+      else if (vKeyword == Keyword::kBottomKeyword)
+        y = positioningArea.fBottom - imageSize.height() - vOffset;
+      else if (vKeyword == Keyword::kCenterKeyword)
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f + vOffset;
+      else
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f; // Default to center
+
+      return SkPoint::Make(x, y);
+    }
+    else if (backgroundPosition.isFourValues())
+    {
+      // Handle 4-value syntax: keyword offset keyword offset
+      float x, y;
+
+      auto hKeyword = backgroundPosition.getHorizontalKeyword();
+      auto vKeyword = backgroundPosition.getVerticalKeyword();
+      float hOffset = backgroundPosition.getHorizontalOffset();
+      float vOffset = backgroundPosition.getVerticalOffset();
+
+      using Keyword = client_cssom::values::generics::GenericBackgroundPosition<client_cssom::values::computed::BackgroundPosition>::Keyword;
+
+      // Calculate horizontal position
+      if (hKeyword == Keyword::kLeftKeyword)
+        x = positioningArea.fLeft + hOffset;
+      else if (hKeyword == Keyword::kRightKeyword)
+        x = positioningArea.fRight - imageSize.width() - hOffset;
+      else if (hKeyword == Keyword::kCenterKeyword)
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f + hOffset;
+      else
+        x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f; // Default to center
+
+      // Calculate vertical position
+      if (vKeyword == Keyword::kTopKeyword)
+        y = positioningArea.fTop + vOffset;
+      else if (vKeyword == Keyword::kBottomKeyword)
+        y = positioningArea.fBottom - imageSize.height() - vOffset;
+      else if (vKeyword == Keyword::kCenterKeyword)
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f + vOffset;
+      else
+        y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f; // Default to center
+
+      return SkPoint::Make(x, y);
+    }
 
     // Fallback to center
     float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;

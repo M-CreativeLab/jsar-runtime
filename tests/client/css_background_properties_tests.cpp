@@ -271,10 +271,119 @@ TEST_CASE("BackgroundPosition parsing and conversion", "[css-background-position
     REQUIRE(position.toCss() == "25.000000%");
   }
 
+  SECTION("Parse two values - keywords")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("left top"));
+    REQUIRE(position.isTwoValues());
+    REQUIRE(position.getX() == 0.0f);
+    REQUIRE(position.getY() == 0.0f);
+    REQUIRE(position.toCss() == "0.000000px 0.000000px");
+  }
+
+  SECTION("Parse two values - center center")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("center center"));
+    REQUIRE(position.isTwoValues());
+    REQUIRE(position.getX() == 50.0f);
+    REQUIRE(position.getY() == 50.0f);
+  }
+
+  SECTION("Parse two values - lengths")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("20px 30px"));
+    REQUIRE(position.isTwoValues());
+    REQUIRE(position.getX() == 20.0f);
+    REQUIRE(position.getY() == 30.0f);
+    REQUIRE(position.toCss() == "20.000000px 30.000000px");
+  }
+
+  SECTION("Parse two values - percentages")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("75% 25%"));
+    REQUIRE(position.isTwoValues());
+    REQUIRE(position.getX() == 75.0f);
+    REQUIRE(position.getY() == 25.0f);
+  }
+
+  SECTION("Parse two values - mixed")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("left 50%"));
+    REQUIRE(position.isTwoValues());
+    REQUIRE(position.getX() == 0.0f);
+    REQUIRE(position.getY() == 50.0f);
+  }
+
+  SECTION("Parse three values - left offset top")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("left 10px top"));
+    REQUIRE(position.isThreeValues());
+    REQUIRE(position.getHorizontalOffset() == 10.0f);
+    REQUIRE(position.getVerticalOffset() == 0.0f);
+    REQUIRE(position.toCss() == "left 10.000000px top");
+  }
+
+  SECTION("Parse three values - top offset right")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("top 15px right"));
+    REQUIRE(position.isThreeValues());
+    REQUIRE(position.getVerticalOffset() == 15.0f);
+    REQUIRE(position.getHorizontalOffset() == 0.0f);
+  }
+
+  SECTION("Parse four values - left offset top offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("left 10px top 20px"));
+    REQUIRE(position.isFourValues());
+    REQUIRE(position.getHorizontalOffset() == 10.0f);
+    REQUIRE(position.getVerticalOffset() == 20.0f);
+    REQUIRE(position.toCss() == "left 10.000000px top 20.000000px");
+  }
+
+  SECTION("Parse four values - bottom offset right offset")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE(position.parse("bottom 5px right 15px"));
+    REQUIRE(position.isFourValues());
+    REQUIRE(position.getVerticalOffset() == 5.0f);
+    REQUIRE(position.getHorizontalOffset() == 15.0f);
+  }
+
   SECTION("Parse invalid value")
   {
     specified::BackgroundPosition position;
     REQUIRE_FALSE(position.parse("invalid-value"));
+  }
+
+  SECTION("Parse invalid two values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("invalid invalid"));
+  }
+
+  SECTION("Parse invalid three values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("left top bottom"));  // conflicting keywords
+  }
+
+  SECTION("Parse invalid four values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("left right top bottom"));  // conflicting keywords
+  }
+
+  SECTION("Parse too many values")
+  {
+    specified::BackgroundPosition position;
+    REQUIRE_FALSE(position.parse("left 10px top 20px center"));
   }
 
   SECTION("Default value")

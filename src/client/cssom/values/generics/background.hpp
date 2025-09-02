@@ -600,6 +600,18 @@ namespace client_cssom::values::generics
       kLength,
       kPercentage,
       kTwoValues,
+      kThreeValues,
+      kFourValues,
+    };
+
+    enum Keyword : uint8_t
+    {
+      kNone = 0,
+      kCenterKeyword,
+      kLeftKeyword,
+      kRightKeyword,
+      kTopKeyword,
+      kBottomKeyword,
     };
 
   public:
@@ -635,20 +647,36 @@ namespace client_cssom::values::generics
     {
       return T(kTwoValues, x, y);
     }
+    static T ThreeValues(Keyword hKeyword, float hOffset, Keyword vKeyword)
+    {
+      return T(kThreeValues, 0.0f, 0.0f, hKeyword, hOffset, vKeyword, 0.0f);
+    }
+    static T FourValues(Keyword hKeyword, float hOffset, Keyword vKeyword, float vOffset)
+    {
+      return T(kFourValues, 0.0f, 0.0f, hKeyword, hOffset, vKeyword, vOffset);
+    }
 
   public:
     GenericBackgroundPosition()
         : tag_(kCenter)
         , x_(0.0f)
         , y_(0.0f)
+        , h_keyword_(kNone)
+        , h_offset_(0.0f)
+        , v_keyword_(kNone)
+        , v_offset_(0.0f)
     {
     }
 
   protected:
-    GenericBackgroundPosition(Tag tag, float x = 0.0f, float y = 0.0f)
+    GenericBackgroundPosition(Tag tag, float x = 0.0f, float y = 0.0f, Keyword h_keyword = kNone, float h_offset = 0.0f, Keyword v_keyword = kNone, float v_offset = 0.0f)
         : tag_(tag)
         , x_(x)
         , y_(y)
+        , h_keyword_(h_keyword)
+        , h_offset_(h_offset)
+        , v_keyword_(v_keyword)
+        , v_offset_(v_offset)
     {
     }
 
@@ -673,8 +701,34 @@ namespace client_cssom::values::generics
         return std::to_string(x_) + "%";
       case kTwoValues:
         return std::to_string(x_) + "px " + std::to_string(y_) + "px";
+      case kThreeValues:
+        return keywordToString(h_keyword_) + " " + std::to_string(h_offset_) + "px " + keywordToString(v_keyword_);
+      case kFourValues:
+        return keywordToString(h_keyword_) + " " + std::to_string(h_offset_) + "px " +
+               keywordToString(v_keyword_) + " " + std::to_string(v_offset_) + "px";
       }
       return "";
+    }
+
+  private:
+    std::string keywordToString(Keyword keyword) const
+    {
+      switch (keyword)
+      {
+      case kCenterKeyword:
+        return "center";
+      case kLeftKeyword:
+        return "left";
+      case kRightKeyword:
+        return "right";
+      case kTopKeyword:
+        return "top";
+      case kBottomKeyword:
+        return "bottom";
+      case kNone:
+      default:
+        return "";
+      }
     }
 
     inline bool isCenter() const
@@ -709,6 +763,14 @@ namespace client_cssom::values::generics
     {
       return tag_ == kTwoValues;
     }
+    inline bool isThreeValues() const
+    {
+      return tag_ == kThreeValues;
+    }
+    inline bool isFourValues() const
+    {
+      return tag_ == kFourValues;
+    }
 
     inline float getX() const
     {
@@ -718,10 +780,30 @@ namespace client_cssom::values::generics
     {
       return y_;
     }
+    inline Keyword getHorizontalKeyword() const
+    {
+      return h_keyword_;
+    }
+    inline float getHorizontalOffset() const
+    {
+      return h_offset_;
+    }
+    inline Keyword getVerticalKeyword() const
+    {
+      return v_keyword_;
+    }
+    inline float getVerticalOffset() const
+    {
+      return v_offset_;
+    }
 
   protected:
     Tag tag_;
     float x_;
     float y_;
+    Keyword h_keyword_;
+    float h_offset_;
+    Keyword v_keyword_;
+    float v_offset_;
   };
 }
