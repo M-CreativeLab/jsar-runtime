@@ -14,6 +14,7 @@
 #include "./worker_context.hpp"
 #include "./mutation_record.hpp"
 #include "./mutation_observer.hpp"
+#include "./console.hpp"
 
 namespace bindings
 {
@@ -50,6 +51,10 @@ namespace bindings
       dombinding::DOMParser::Init(env);
       dombinding::BrowsingContext::Init(env, exports);
       dombinding::WorkerContext::Init(env, exports);
+
+      // Add Console
+      dombinding::Console::Init(env);
+
       return exports;
     }
   }
