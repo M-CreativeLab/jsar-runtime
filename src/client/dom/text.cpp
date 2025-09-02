@@ -221,8 +221,8 @@ namespace dom
         updated = true;
     }
 
-    // Mark WebContent as ready for rendering after first successful style adoption.
-    if (updated && textBoxes_.size() > 0)
+    // Mark WebContent as ready for rendering after style adoption (prevents initial flicker).
+    if (textBoxes_.size() > 0)
     {
       auto boxesCopy = textBoxes_; // Capture boxes by value for the lambda
       auto markContentReady = [boxesCopy](builtin_scene::Scene &scene)
