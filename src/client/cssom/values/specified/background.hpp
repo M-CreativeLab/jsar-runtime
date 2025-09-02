@@ -344,19 +344,19 @@ namespace client_cssom::values::specified
       return token == "top" || token == "bottom" || token == "center";
     }
 
-    Keyword stringToKeyword(const std::string &token)
+    generics::BackgroundPositionKeyword stringToKeyword(const std::string &token)
     {
       if (token == "center")
-        return kCenterKeyword;
+        return generics::BackgroundPositionKeyword::kCenterKeyword;
       if (token == "left")
-        return kLeftKeyword;
+        return generics::BackgroundPositionKeyword::kLeftKeyword;
       if (token == "right")
-        return kRightKeyword;
+        return generics::BackgroundPositionKeyword::kRightKeyword;
       if (token == "top")
-        return kTopKeyword;
+        return generics::BackgroundPositionKeyword::kTopKeyword;
       if (token == "bottom")
-        return kBottomKeyword;
-      return kNone;
+        return generics::BackgroundPositionKeyword::kBottomKeyword;
+      return generics::BackgroundPositionKeyword::kNone;
     }
 
     bool isLengthOrPercentage(const std::string &token)

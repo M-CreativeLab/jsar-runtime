@@ -232,7 +232,7 @@ namespace builtin_scene::web_renderer
       float hOffset = backgroundPosition.getHorizontalOffset();
       float vOffset = backgroundPosition.getVerticalOffset();
 
-      using Keyword = client_cssom::values::generics::GenericBackgroundPosition<client_cssom::values::computed::BackgroundPosition>::Keyword;
+      using Keyword = client_cssom::values::generics::BackgroundPositionKeyword;
 
       // Calculate horizontal position
       if (hKeyword == Keyword::kLeftKeyword)
@@ -266,7 +266,7 @@ namespace builtin_scene::web_renderer
       float hOffset = backgroundPosition.getHorizontalOffset();
       float vOffset = backgroundPosition.getVerticalOffset();
 
-      using Keyword = client_cssom::values::generics::GenericBackgroundPosition<client_cssom::values::computed::BackgroundPosition>::Keyword;
+      using Keyword = client_cssom::values::generics::BackgroundPositionKeyword;
 
       // Calculate horizontal position
       if (hKeyword == Keyword::kLeftKeyword)
