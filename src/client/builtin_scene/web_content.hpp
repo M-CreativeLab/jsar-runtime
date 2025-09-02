@@ -326,6 +326,14 @@ namespace builtin_scene
     {
       is_surface_dirty_ = dirty;
     }
+    inline bool isContentReady() const
+    {
+      return content_ready_;
+    }
+    inline void setContentReady(bool ready)
+    {
+      content_ready_ = ready;
+    }
 
     /**
      * Get the rounded rectangle representing the border geometry.
@@ -370,6 +378,8 @@ namespace builtin_scene
     bool is_content_dirty_ = true;
     // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
     bool is_surface_dirty_ = true;
+    // The flag to indicate if the content is ready for rendering (prevents initial flickering).
+    bool content_ready_ = false;
   };
 
   class WebContentContext : public ecs::Resource

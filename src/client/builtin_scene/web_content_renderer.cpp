@@ -324,8 +324,8 @@ namespace builtin_scene::web_renderer
   {
     auto selectDirtyContent = [](const WebContent &content) -> bool
     {
-      // Only select content that has a canvas and is dirty
-      return content.canvas() != nullptr && content.isContentDirty();
+      // Only select content that has a canvas, is dirty, and is ready for rendering
+      return content.canvas() != nullptr && content.isContentDirty() && content.isContentReady();
     };
     auto list = queryEntitiesWithComponent<WebContent>(selectDirtyContent);
     if (list.size() == 0)
