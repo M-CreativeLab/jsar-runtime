@@ -1059,7 +1059,12 @@ namespace builtin_scene::web_renderer
 
               // Get the background positioning area based on background-origin
               SkRect positioningArea = getBackgroundPositioningArea(roundedRect, fragment, style);
-              drawImage(canvas, bitmap.asImage(), positioningArea, fillPaint.value(), style);
+
+              // Get the repeatable area based on background-clip (same as clipping area)
+              SkRRect repeatableRRect = getBackgroundClippingArea(roundedRect, fragment, style);
+              SkRect repeatableArea = repeatableRRect.rect();
+
+              drawImage(canvas, bitmap.asImage(), positioningArea, repeatableArea, fillPaint.value(), style);
             }
             canvas->restore();
             textureRequired = true;
@@ -1117,6 +1122,17 @@ namespace builtin_scene::web_renderer
                                          const SkPaint &paint,
                                          const ComputedStyle &style)
   {
+    // Use positioning area as repeatable area for backward compatibility
+    drawImage(canvas, image, positioningArea, positioningArea, paint, style);
+  }
+
+  void RenderBackgroundSystem::drawImage(SkCanvas *canvas,
+                                         const sk_sp<SkImage> &image,
+                                         const SkRect &positioningArea,
+                                         const SkRect &repeatableArea,
+                                         const SkPaint &paint,
+                                         const ComputedStyle &style)
+  {
     if (!image)
       return;
 
@@ -1135,19 +1151,19 @@ namespace builtin_scene::web_renderer
       float startX = imagePosition.x();
       float startY = imagePosition.y();
 
-      // Adjust start position to ensure full coverage
-      while (startX > positioningArea.fLeft)
+      // Adjust start position to ensure full coverage of repeatable area
+      while (startX > repeatableArea.fLeft)
         startX -= imageWidth;
-      while (startY > positioningArea.fTop)
+      while (startY > repeatableArea.fTop)
         startY -= imageHeight;
 
-      for (float y = startY; y < positioningArea.fBottom; y += imageHeight)
+      for (float y = startY; y < repeatableArea.fBottom; y += imageHeight)
       {
-        for (float x = startX; x < positioningArea.fRight; x += imageWidth)
+        for (float x = startX; x < repeatableArea.fRight; x += imageWidth)
         {
           SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
-          // Clip to positioning area
-          if (destRect.intersect(positioningArea))
+          // Clip to repeatable area
+          if (destRect.intersect(repeatableArea))
           {
             // Calculate source rect proportionally
             float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
@@ -1172,14 +1188,14 @@ namespace builtin_scene::web_renderer
       float startX = imagePosition.x();
       float y = imagePosition.y();
 
-      // Adjust start position to ensure full coverage
-      while (startX > positioningArea.fLeft)
+      // Adjust start position to ensure full coverage of repeatable area
+      while (startX > repeatableArea.fLeft)
         startX -= imageWidth;
 
-      for (float x = startX; x < positioningArea.fRight; x += imageWidth)
+      for (float x = startX; x < repeatableArea.fRight; x += imageWidth)
       {
         SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
-        if (destRect.intersect(positioningArea))
+        if (destRect.intersect(repeatableArea))
         {
           float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
           float srcTop = (destRect.fTop - y) / imageHeight * image->height();
@@ -1202,14 +1218,14 @@ namespace builtin_scene::web_renderer
       float x = imagePosition.x();
       float startY = imagePosition.y();
 
-      // Adjust start position to ensure full coverage
-      while (startY > positioningArea.fTop)
+      // Adjust start position to ensure full coverage of repeatable area
+      while (startY > repeatableArea.fTop)
         startY -= imageHeight;
 
-      for (float y = startY; y < positioningArea.fBottom; y += imageHeight)
+      for (float y = startY; y < repeatableArea.fBottom; y += imageHeight)
       {
         SkRect destRect = SkRect::MakeXYWH(x, y, imageWidth, imageHeight);
-        if (destRect.intersect(positioningArea))
+        if (destRect.intersect(repeatableArea))
         {
           float srcLeft = (destRect.fLeft - x) / imageWidth * image->width();
           float srcTop = (destRect.fTop - y) / imageHeight * image->height();
@@ -1230,7 +1246,7 @@ namespace builtin_scene::web_renderer
     {
       // No repeat - draw once at the calculated position and size
       SkRect destRect = SkRect::MakeXYWH(imagePosition.x(), imagePosition.y(), imageWidth, imageHeight);
-      if (destRect.intersect(positioningArea))
+      if (destRect.intersect(repeatableArea))
       {
         // Calculate source rect proportionally
         float scaleX = imageWidth / image->width();
@@ -1253,7 +1269,7 @@ namespace builtin_scene::web_renderer
     {
       // Default to no repeat for unsupported values (space, round)
       SkRect destRect = SkRect::MakeXYWH(imagePosition.x(), imagePosition.y(), imageWidth, imageHeight);
-      if (destRect.intersect(positioningArea))
+      if (destRect.intersect(repeatableArea))
       {
         canvas->drawImageRect(image, destRect, SkSamplingOptions(), &paint);
       }
