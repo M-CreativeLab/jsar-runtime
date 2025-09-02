@@ -220,28 +220,6 @@ namespace dom
       if (box->setStyle(adoptedStyleRef()))
         updated = true;
     }
-
-    // Mark WebContent as ready for rendering after style adoption (prevents initial flicker).
-    if (textBoxes_.size() > 0)
-    {
-      auto boxesCopy = textBoxes_; // Capture boxes by value for the lambda
-      auto markContentReady = [boxesCopy](builtin_scene::Scene &scene)
-      {
-        for (auto box : boxesCopy)
-        {
-          if (box->hasEntity())
-          {
-            auto webContent = scene.getComponent<builtin_scene::WebContent>(box->entity());
-            if (webContent != nullptr && !webContent->isContentReady())
-            {
-              webContent->setContentReady(true);
-            }
-          }
-        }
-      };
-      useSceneWithCallback(markContentReady);
-    }
-
     return updated;
   }
 }

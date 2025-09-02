@@ -863,28 +863,6 @@ namespace dom
       if (box->setStyle(animated_style))
         updated = true;
     }
-
-    // 5. Mark WebContent as ready for rendering after style adoption (prevents initial flicker).
-    if (boxes_.size() > 0)
-    {
-      auto boxesCopy = boxes_; // Capture boxes by value for the lambda
-      auto markContentReady = [boxesCopy](builtin_scene::Scene &scene)
-      {
-        for (auto box : boxesCopy)
-        {
-          if (box->hasEntity())
-          {
-            auto webContent = scene.getComponent<builtin_scene::WebContent>(box->entity());
-            if (webContent != nullptr && !webContent->isContentReady())
-            {
-              webContent->setContentReady(true);
-            }
-          }
-        }
-      };
-      useSceneWithCallback(markContentReady);
-    }
-
     return updated;
   }
 

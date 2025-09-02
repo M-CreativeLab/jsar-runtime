@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <cmath>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkRRect.h>
@@ -177,6 +178,25 @@ namespace builtin_scene
     }
     inline void setFragment(const client_layout::Fragment &fragment)
     {
+      // Check if size changed significantly to determine if background clearing is needed
+      if (last_fragment_.has_value())
+      {
+        const auto &prev = last_fragment_.value();
+        float widthDiff = std::abs(fragment.contentWidth() - prev.contentWidth());
+        float heightDiff = std::abs(fragment.contentHeight() - prev.contentHeight());
+
+        // If size changed by more than 1 pixel, we need to clear background
+        if (widthDiff > 1.0f || heightDiff > 1.0f)
+        {
+          setNeedsBackgroundClear(true);
+        }
+      }
+      else
+      {
+        // First time setting fragment, need to clear
+        setNeedsBackgroundClear(true);
+      }
+
       last_fragment_ = fragment;
     }
 
@@ -326,13 +346,13 @@ namespace builtin_scene
     {
       is_surface_dirty_ = dirty;
     }
-    inline bool isContentReady() const
+    inline bool needsBackgroundClear() const
     {
-      return content_ready_;
+      return needs_background_clear_;
     }
-    inline void setContentReady(bool ready)
+    inline void setNeedsBackgroundClear(bool needsClear)
     {
-      content_ready_ = ready;
+      needs_background_clear_ = needsClear;
     }
 
     /**
@@ -378,8 +398,8 @@ namespace builtin_scene
     bool is_content_dirty_ = true;
     // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
     bool is_surface_dirty_ = true;
-    // The flag to indicate if the content is ready for rendering (prevents initial flickering).
-    bool content_ready_ = false;
+    // The flag to indicate if the background needs to be cleared before rendering (prevents unnecessary clearing).
+    bool needs_background_clear_ = true;
   };
 
   class WebContentContext : public ecs::Resource

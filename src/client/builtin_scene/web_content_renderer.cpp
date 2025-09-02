@@ -324,8 +324,8 @@ namespace builtin_scene::web_renderer
   {
     auto selectDirtyContent = [](const WebContent &content) -> bool
     {
-      // Only select content that has a canvas, is dirty, and is ready for rendering
-      return content.canvas() != nullptr && content.isContentDirty() && content.isContentReady();
+      // Only select content that has a canvas and is dirty
+      return content.canvas() != nullptr && content.isContentDirty();
     };
     auto list = queryEntitiesWithComponent<WebContent>(selectDirtyContent);
     if (list.size() == 0)
@@ -789,7 +789,13 @@ namespace builtin_scene::web_renderer
       return false;
 
     auto canvas = content.canvas();
-    canvas->clear(SK_ColorTRANSPARENT);
+
+    // Only clear the canvas when it's actually necessary to prevent flickering during progressive loading
+    if (content.needsBackgroundClear())
+    {
+      canvas->clear(SK_ColorTRANSPARENT);
+      content.setNeedsBackgroundClear(false); // Clear flag after clearing canvas
+    }
 
     float top = 0.0f;
     float left = 0.0f;

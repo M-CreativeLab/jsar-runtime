@@ -100,6 +100,7 @@ namespace builtin_scene
 
     setContentDirty(true);
     setSurfaceDirty(true);
+    setNeedsBackgroundClear(true); // Surface resize requires background clearing
     return true;
   }
 
@@ -183,6 +184,22 @@ namespace builtin_scene
 
     // Mark the content as dirty if setting a new style.
     setContentDirty(true);
+
+    // Determine if background clearing is needed by checking if background-related properties changed
+    bool backgroundChanged = false;
+    if (style_.hasProperty("background-color") ||
+        style_.hasProperty("background-image") ||
+        style_.hasProperty("background") ||
+        style_.hasProperty("border-radius"))
+    {
+      backgroundChanged = true;
+    }
+
+    // Always clear on first style setting, or when background properties change
+    if (backgroundChanged)
+    {
+      setNeedsBackgroundClear(true);
+    }
   }
 
   // TODO(yorkie): consider the change of the device pixel ratio.
