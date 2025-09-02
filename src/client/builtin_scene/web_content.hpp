@@ -553,6 +553,13 @@ namespace builtin_scene
                      const SkRect &positioningArea,
                      const SkPaint &,
                      const client_cssom::ComputedStyle &);
+      // Draw the image with separate positioning and repeatable areas.
+      void drawImage(SkCanvas *,
+                     const sk_sp<SkImage> &,
+                     const SkRect &positioningArea,
+                     const SkRect &repeatableArea,
+                     const SkPaint &,
+                     const client_cssom::ComputedStyle &);
     };
 
     class RenderImageSystem final : public RenderContentBaseSystem
