@@ -576,7 +576,7 @@ namespace client_cssom
     values::computed::BackgroundOrigin background_origin_ = values::computed::BackgroundOrigin::PaddingBox();
     values::computed::BackgroundRepeat background_repeat_ = values::computed::BackgroundRepeat::Repeat();
     values::computed::BackgroundSize background_size_ = values::computed::BackgroundSize::Auto();
-    values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Center();
+    values::computed::BackgroundPosition background_position_ = values::computed::BackgroundPosition::Default();
 
     // 3D Transforms
     values::computed::Transform transform_;

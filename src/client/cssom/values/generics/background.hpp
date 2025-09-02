@@ -635,6 +635,10 @@ namespace client_cssom::values::generics
     };
 
   public:
+    static T Default()
+    {
+      return T(kTwoValues, 0, 0);
+    }
     static T Center()
     {
       return T(kCenter);
