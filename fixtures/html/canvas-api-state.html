@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: State Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+
+    .info {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: State Management</h1>
+  <p class="description">Tests Canvas 2D state management operations: save(), restore() - managing drawing state stack</p>
+
+  <div class="test-section">
+    <div class="test-title">1. Basic save/restore - preserving and restoring state</div>
+    <canvas id="basicStateCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. Nested state management - multiple save/restore levels</div>
+    <canvas id="nestedStateCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. Transform state management - translations, rotations, scales</div>
+    <canvas id="transformStateCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. Style state management - colors, line properties</div>
+    <canvas id="styleStateCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">5. Complex state scenarios - real-world usage patterns</div>
+    <canvas id="complexStateCanvas" width="500" height="250"></canvas>
+    <div class="info" id="stateInfo"></div>
+  </div>
+
+  <script>
+    // Helper function to draw a labeled rectangle
+    function drawLabeledRect(ctx, x, y, width, height, label, color = '#74b9ff') {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, width, height);
+      ctx.fillStyle = '#333';
+      ctx.font = '12px Arial';
+      ctx.fillText(label, x + 5, y + height / 2 + 4);
+    }
+
+    // Test 1: Basic save/restore
+    function testBasicState() {
+      const canvas = document.getElementById('basicStateCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing basic save/restore operations...');
+      
+      // Initial state
+      ctx.fillStyle = '#ff6b6b';
+      ctx.strokeStyle = '#e17055';
+      ctx.lineWidth = 2;
+      drawLabeledRect(ctx, 20, 20, 80, 60, 'Initial', '#ff6b6b');
+      
+      // Save current state
+      ctx.save();
+      console.log('State saved');
+      
+      // Modify state
+      ctx.fillStyle = '#4ecdc4';
+      ctx.strokeStyle = '#00b894';
+      ctx.lineWidth = 5;
+      drawLabeledRect(ctx, 120, 20, 80, 60, 'Modified', '#4ecdc4');
+      
+      // Further modify state
+      ctx.fillStyle = '#ffe66d';
+      ctx.strokeStyle = '#fdcb6e';
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = 0.7;
+      drawLabeledRect(ctx, 220, 20, 80, 60, 'Further', '#ffe66d');
+      
+      // Restore to saved state
+      ctx.restore();
+      console.log('State restored');
+      
+      // Should be back to initial state
+      drawLabeledRect(ctx, 320, 20, 80, 60, 'Restored', '#ff6b6b');
+      
+      // Demonstrate that state is truly restored
+      drawLabeledRect(ctx, 420, 20, 80, 60, 'Confirmed', '#ff6b6b');
+      
+      // Draw state indicators
+      ctx.fillStyle = '#636e72';
+      ctx.font = '10px Arial';
+      ctx.fillText('save()', 120, 100);
+      ctx.fillText('restore()', 320, 100);
+      
+      console.log('Basic save/restore test completed');
+    }
+
+    // Test 2: Nested state management
+    function testNestedState() {
+      const canvas = document.getElementById('nestedStateCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing nested save/restore operations...');
+      
+      // Level 0 (initial)
+      ctx.fillStyle = '#a29bfe';
+      ctx.lineWidth = 2;
+      drawLabeledRect(ctx, 20, 20, 60, 40, 'Level 0', '#a29bfe');
+      
+      // Save level 0
+      ctx.save(); // Save 1
+      console.log('Level 0 saved');
+      
+      // Level 1
+      ctx.fillStyle = '#fd79a8';
+      ctx.lineWidth = 4;
+      ctx.translate(100, 0);
+      drawLabeledRect(ctx, 20, 20, 60, 40, 'Level 1', '#fd79a8');
+      
+      // Save level 1
+      ctx.save(); // Save 2
+      console.log('Level 1 saved');
+      
+      // Level 2
+      ctx.fillStyle = '#74b9ff';
+      ctx.lineWidth = 6;
+      ctx.rotate(Math.PI / 12);
+      ctx.scale(1.2, 1.2);
+      drawLabeledRect(ctx, 20, 20, 60, 40, 'Level 2', '#74b9ff');
+      
+      // Save level 2
+      ctx.save(); // Save 3
+      console.log('Level 2 saved');
+      
+      // Level 3
+      ctx.fillStyle = '#00b894';
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = 0.7;
+      drawLabeledRect(ctx, 20, 80, 60, 40, 'Level 3', '#00b894');
+      
+      // Restore to level 2
+      ctx.restore(); // Restore from save 3
+      console.log('Restored to level 2');
+      drawLabeledRect(ctx, 20, 140, 60, 40, 'Back L2', '#74b9ff');
+      
+      // Restore to level 1
+      ctx.restore(); // Restore from save 2
+      console.log('Restored to level 1');
+      drawLabeledRect(ctx, 100, 20, 60, 40, 'Back L1', '#fd79a8');
+      
+      // Restore to level 0
+      ctx.restore(); // Restore from save 1
+      console.log('Restored to level 0');
+      drawLabeledRect(ctx, 300, 20, 60, 40, 'Back L0', '#a29bfe');
+      
+      console.log('Nested save/restore test completed');
+    }
+
+    // Test 3: Transform state management
+    function testTransformState() {
+      const canvas = document.getElementById('transformStateCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing transform state management...');
+      
+      // Helper function to draw coordinate axes
+      function drawAxes(ctx, length = 30) {
+        ctx.save();
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(length, 0);
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#27ae60';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, length);
+        ctx.stroke();
+        ctx.restore();
+      }
+      
+      // Original coordinate system
+      ctx.save();
+      ctx.translate(50, 50);
+      drawAxes(ctx);
+      ctx.fillStyle = '#2d3436';
+      ctx.font = '12px Arial';
+      ctx.fillText('Origin', 35, 15);
+      ctx.restore();
+      
+      // Apply transformations and save
+      ctx.save();
+      ctx.translate(150, 50);
+      ctx.rotate(Math.PI / 6);
+      drawAxes(ctx);
+      ctx.fillStyle = '#2d3436';
+      ctx.font = '12px Arial';
+      ctx.fillText('T+R', 35, 15);
+      
+      // Add more transformations
+      ctx.save();
+      ctx.scale(1.5, 0.8);
+      ctx.translate(50, 0);
+      drawAxes(ctx);
+      ctx.fillText('T+R+S+T', 35, 15);
+      
+      // Restore one level
+      ctx.restore();
+      ctx.translate(100, 50);
+      drawAxes(ctx);
+      ctx.fillText('Restore 1', 35, 15);
+      
+      // Restore to original
+      ctx.restore();
+      ctx.translate(350, 50);
+      drawAxes(ctx);
+      ctx.fillStyle = '#2d3436';
+      ctx.font = '12px Arial';
+      ctx.fillText('Restore All', 35, 15);
+      
+      // Demonstrate transform isolation
+      for (let i = 0; i < 5; i++) {
+        ctx.save();
+        ctx.translate(50 + i * 80, 140);
+        ctx.rotate(i * Math.PI / 4);
+        ctx.fillStyle = `hsl(${i * 60}, 70%, 60%)`;
+        ctx.fillRect(-15, -15, 30, 30);
+        ctx.restore();
+      }
+      
+      console.log('Transform state management test completed');
+    }
+
+    // Test 4: Style state management
+    function testStyleState() {
+      const canvas = document.getElementById('styleStateCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing style state management...');
+      
+      // Initial style state
+      ctx.fillStyle = '#ff6b6b';
+      ctx.strokeStyle = '#2d3436';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 1.0;
+      ctx.font = '16px Arial';
+      
+      // Draw with initial styles
+      ctx.fillRect(20, 20, 50, 50);
+      ctx.strokeRect(20, 20, 50, 50);
+      ctx.fillText('Initial', 25, 100);
+      
+      // Save initial state
+      ctx.save();
+      
+      // Modify all style properties
+      ctx.fillStyle = '#4ecdc4';
+      ctx.strokeStyle = '#00b894';
+      ctx.lineWidth = 6;
+      ctx.globalAlpha = 0.7;
+      ctx.font = '20px Arial';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([10, 5]);
+      
+      ctx.fillRect(100, 20, 50, 50);
+      ctx.strokeRect(100, 20, 50, 50);
+      ctx.fillText('Modified', 100, 100);
+      
+      // Save modified state
+      ctx.save();
+      
+      // Modify further
+      ctx.fillStyle = '#ffe66d';
+      ctx.strokeStyle = '#fdcb6e';
+      ctx.lineWidth = 10;
+      ctx.globalAlpha = 0.4;
+      ctx.font = '12px Arial';
+      ctx.setLineDash([5, 15]);
+      
+      ctx.fillRect(180, 20, 50, 50);
+      ctx.strokeRect(180, 20, 50, 50);
+      ctx.fillText('Further', 185, 100);
+      
+      // Restore to modified state
+      ctx.restore();
+      ctx.fillRect(260, 20, 50, 50);
+      ctx.strokeRect(260, 20, 50, 50);
+      ctx.fillText('Restored', 260, 100);
+      
+      // Restore to initial state
+      ctx.restore();
+      ctx.fillRect(340, 20, 50, 50);
+      ctx.strokeRect(340, 20, 50, 50);
+      ctx.fillText('Initial', 345, 100);
+      
+      // Test specific style properties
+      ctx.save();
+      ctx.translate(50, 140);
+      
+      // Test globalCompositeOperation
+      ctx.fillStyle = '#fd79a8';
+      ctx.fillRect(0, 0, 40, 40);
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = '#74b9ff';
+      ctx.fillRect(20, 20, 40, 40);
+      ctx.restore();
+      
+      ctx.fillStyle = '#2d3436';
+      ctx.font = '10px Arial';
+      ctx.fillText('Composite', 70, 20);
+      
+      ctx.restore();
+      
+      console.log('Style state management test completed');
+    }
+
+    // Test 5: Complex state scenarios
+    function testComplexState() {
+      const canvas = document.getElementById('complexStateCanvas');
+      const ctx = canvas.getContext('2d');
+      const infoDiv = document.getElementById('stateInfo');
+      
+      console.log('Testing complex state scenarios...');
+      
+      let saveCount = 0;
+      let restoreCount = 0;
+      
+      // Function to track saves
+      const originalSave = ctx.save.bind(ctx);
+      const originalRestore = ctx.restore.bind(ctx);
+      
+      ctx.save = function() {
+        saveCount++;
+        return originalSave();
+      };
+      
+      ctx.restore = function() {
+        restoreCount++;
+        return originalRestore();
+      };
+      
+      // Scenario 1: Drawing a complex scene with multiple objects
+      function drawComplexObject(x, y, size, color, rotation = 0) {
+        ctx.save(); // Save current state
+        
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.scale(size, size);
+        
+        // Object base
+        ctx.fillStyle = color;
+        ctx.fillRect(-20, -20, 40, 40);
+        
+        // Object details
+        ctx.save(); // Save transformed state
+        ctx.fillStyle = 'white';
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(-15, -15, 10, 10);
+        ctx.fillRect(5, -15, 10, 10);
+        ctx.fillRect(-5, 5, 20, 10);
+        ctx.restore(); // Restore to transformed state
+        
+        // Object outline
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-20, -20, 40, 40);
+        
+        ctx.restore(); // Restore to original state
+      }
+      
+      // Draw scene with multiple objects
+      const objects = [
+        { x: 70, y: 70, size: 0.8, color: '#ff6b6b', rotation: 0 },
+        { x: 170, y: 50, size: 1.0, color: '#4ecdc4', rotation: Math.PI / 6 },
+        { x: 270, y: 70, size: 0.6, color: '#ffe66d', rotation: Math.PI / 4 },
+        { x: 370, y: 60, size: 1.2, color: '#fd79a8', rotation: -Math.PI / 8 },
+        { x: 120, y: 140, size: 0.9, color: '#a29bfe', rotation: Math.PI / 3 }
+      ];
+      
+      objects.forEach(obj => {
+        drawComplexObject(obj.x, obj.y, obj.size, obj.color, obj.rotation);
+      });
+      
+      // Scenario 2: Nested drawing with state management
+      ctx.save(); // Save scene state
+      ctx.translate(50, 200);
+      
+      // Draw a hierarchical structure
+      ctx.save(); // Level 1
+      ctx.fillStyle = '#74b9ff';
+      ctx.fillRect(0, 0, 100, 30);
+      
+      ctx.save(); // Level 2
+      ctx.translate(10, 10);
+      ctx.fillStyle = '#0984e3';
+      ctx.fillRect(0, 0, 20, 10);
+      
+      ctx.save(); // Level 3
+      ctx.translate(25, 0);
+      ctx.fillStyle = '#2d3436';
+      ctx.fillRect(0, 0, 50, 10);
+      ctx.restore(); // Back to level 2
+      
+      ctx.translate(0, 15);
+      ctx.fillRect(0, 0, 80, 5);
+      ctx.restore(); // Back to level 1
+      
+      ctx.translate(110, 0);
+      ctx.fillStyle = '#00b894';
+      ctx.fillRect(0, 0, 80, 30);
+      ctx.restore(); // Back to scene state
+      
+      ctx.restore(); // Back to original state
+      
+      // Display state information
+      infoDiv.innerHTML = `
+        <strong>State Management Statistics:</strong><br>
+        • Total save() calls: ${saveCount}<br>
+        • Total restore() calls: ${restoreCount}<br>
+        • Objects drawn: ${objects.length}<br>
+        • Maximum nesting level: 3<br>
+        • State stack balanced: ${saveCount === restoreCount ? '✅ Yes' : '❌ No'}
+      `;
+      
+      console.log(`State management stats - Saves: ${saveCount}, Restores: ${restoreCount}`);
+      console.log('Complex state scenarios test completed');
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas API state management tests...');
+      
+      try {
+        testBasicState();
+        testNestedState();
+        testTransformState();
+        testStyleState();
+        testComplexState();
+        
+        console.log('All state management tests completed successfully!');
+      } catch (error) {
+        console.error('Error during state management tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    window.addEventListener('load', runAllTests);
+  </script>
+
+</body>
+
+</html>

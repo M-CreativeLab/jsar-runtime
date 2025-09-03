@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: Style Properties</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: Style Properties</h1>
+  <p class="description">Tests Canvas 2D style properties: fillStyle, strokeStyle, lineWidth, lineCap, lineJoin, globalAlpha, globalCompositeOperation</p>
+
+  <div class="test-section">
+    <div class="test-title">1. Fill and stroke styles - colors, gradients, patterns</div>
+    <canvas id="fillStrokeCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. Line properties - lineWidth, lineCap, lineJoin</div>
+    <canvas id="linePropertiesCanvas" width="600" height="250"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. Global alpha - transparency effects</div>
+    <canvas id="globalAlphaCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. Global composite operations - blending modes</div>
+    <canvas id="compositeCanvas" width="600" height="400"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">5. Line dash patterns - setLineDash()</div>
+    <canvas id="lineDashCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <script>
+    // Test 1: Fill and stroke styles
+    function testFillStrokeStyles() {
+      const canvas = document.getElementById('fillStrokeCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing fill and stroke styles...');
+      
+      // Solid colors
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(20, 20, 60, 60);
+      
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(100, 20, 60, 60);
+      
+      // RGBA colors
+      ctx.fillStyle = 'rgba(255, 230, 109, 0.7)';
+      ctx.fillRect(180, 20, 60, 60);
+      
+      // HSL colors
+      ctx.fillStyle = 'hsl(300, 76%, 72%)';
+      ctx.fillRect(260, 20, 60, 60);
+      
+      // Linear gradient
+      const linearGradient = ctx.createLinearGradient(340, 20, 400, 80);
+      linearGradient.addColorStop(0, '#ff6b6b');
+      linearGradient.addColorStop(0.5, '#4ecdc4');
+      linearGradient.addColorStop(1, '#ffe66d');
+      ctx.fillStyle = linearGradient;
+      ctx.fillRect(340, 20, 60, 60);
+      
+      // Radial gradient
+      const radialGradient = ctx.createRadialGradient(450, 50, 10, 450, 50, 30);
+      radialGradient.addColorStop(0, '#fd79a8');
+      radialGradient.addColorStop(1, '#fdcb6e');
+      ctx.fillStyle = radialGradient;
+      ctx.fillRect(420, 20, 60, 60);
+      
+      // Pattern (create a small pattern canvas)
+      const patternCanvas = document.createElement('canvas');
+      patternCanvas.width = 20;
+      patternCanvas.height = 20;
+      const patternCtx = patternCanvas.getContext('2d');
+      patternCtx.fillStyle = '#a29bfe';
+      patternCtx.fillRect(0, 0, 10, 10);
+      patternCtx.fillRect(10, 10, 10, 10);
+      patternCtx.fillStyle = '#74b9ff';
+      patternCtx.fillRect(10, 0, 10, 10);
+      patternCtx.fillRect(0, 10, 10, 10);
+      
+      const pattern = ctx.createPattern(patternCanvas, 'repeat');
+      ctx.fillStyle = pattern;
+      ctx.fillRect(500, 20, 60, 60);
+      
+      // Complex stroke styles
+      ctx.beginPath();
+      ctx.moveTo(50, 120);
+      ctx.lineTo(150, 120);
+      ctx.lineTo(150, 160);
+      ctx.lineTo(100, 180);
+      ctx.lineTo(50, 160);
+      ctx.closePath();
+      
+      const strokeGradient = ctx.createLinearGradient(50, 120, 150, 180);
+      strokeGradient.addColorStop(0, '#e17055');
+      strokeGradient.addColorStop(1, '#00b894');
+      ctx.strokeStyle = strokeGradient;
+      ctx.lineWidth = 6;
+      ctx.stroke();
+      
+      console.log('Fill and stroke styles test completed');
+    }
+
+    // Test 2: Line properties
+    function testLineProperties() {
+      const canvas = document.getElementById('linePropertiesCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing line properties...');
+      
+      // Line width variations
+      ctx.strokeStyle = '#2d3436';
+      const lineWidths = [1, 3, 6, 10, 15];
+      for (let i = 0; i < lineWidths.length; i++) {
+        ctx.lineWidth = lineWidths[i];
+        ctx.beginPath();
+        ctx.moveTo(50, 30 + i * 30);
+        ctx.lineTo(200, 30 + i * 30);
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = '#636e72';
+        ctx.font = '12px Arial';
+        ctx.fillText(`${lineWidths[i]}px`, 210, 35 + i * 30);
+      }
+      
+      // Line cap styles
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = '#e17055';
+      
+      const lineCaps = ['butt', 'round', 'square'];
+      for (let i = 0; i < lineCaps.length; i++) {
+        ctx.lineCap = lineCaps[i];
+        ctx.beginPath();
+        ctx.moveTo(320, 40 + i * 40);
+        ctx.lineTo(450, 40 + i * 40);
+        ctx.stroke();
+        
+        // Draw guides
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(320, 25 + i * 40);
+        ctx.lineTo(320, 55 + i * 40);
+        ctx.moveTo(450, 25 + i * 40);
+        ctx.lineTo(450, 55 + i * 40);
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = '#636e72';
+        ctx.font = '12px Arial';
+        ctx.fillText(lineCaps[i], 460, 45 + i * 40);
+        
+        ctx.strokeStyle = '#e17055';
+        ctx.lineWidth = 12;
+      }
+      
+      // Line join styles
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#00b894';
+      
+      const lineJoins = ['miter', 'round', 'bevel'];
+      for (let i = 0; i < lineJoins.length; i++) {
+        ctx.lineJoin = lineJoins[i];
+        ctx.beginPath();
+        ctx.moveTo(50 + i * 100, 200);
+        ctx.lineTo(100 + i * 100, 180);
+        ctx.lineTo(150 + i * 100, 200);
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = '#636e72';
+        ctx.font = '12px Arial';
+        ctx.fillText(lineJoins[i], 75 + i * 100, 220);
+      }
+      
+      console.log('Line properties test completed');
+    }
+
+    // Test 3: Global alpha
+    function testGlobalAlpha() {
+      const canvas = document.getElementById('globalAlphaCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing global alpha...');
+      
+      // Background rectangles
+      ctx.fillStyle = '#74b9ff';
+      ctx.fillRect(20, 20, 100, 100);
+      ctx.fillRect(150, 20, 100, 100);
+      ctx.fillRect(280, 20, 100, 100);
+      ctx.fillRect(410, 20, 100, 100);
+      
+      // Different alpha values
+      const alphaValues = [1.0, 0.7, 0.4, 0.1];
+      for (let i = 0; i < alphaValues.length; i++) {
+        ctx.globalAlpha = alphaValues[i];
+        ctx.fillStyle = '#e17055';
+        ctx.fillRect(40 + i * 130, 40, 60, 60);
+        
+        // Label
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = '#2d3436';
+        ctx.font = '14px Arial';
+        ctx.fillText(`α = ${alphaValues[i]}`, 45 + i * 130, 140);
+      }
+      
+      // Reset global alpha
+      ctx.globalAlpha = 1.0;
+      
+      // Overlapping shapes with alpha
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#fd79a8';
+      ctx.beginPath();
+      ctx.arc(100, 160, 30, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.fillStyle = '#fdcb6e';
+      ctx.beginPath();
+      ctx.arc(130, 160, 30, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.fillStyle = '#a29bfe';
+      ctx.beginPath();
+      ctx.arc(115, 180, 30, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.globalAlpha = 1.0;
+      
+      console.log('Global alpha test completed');
+    }
+
+    // Test 4: Global composite operations
+    function testCompositeOperations() {
+      const canvas = document.getElementById('compositeCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing global composite operations...');
+      
+      const operations = [
+        'source-over', 'source-in', 'source-out', 'source-atop',
+        'destination-over', 'destination-in', 'destination-out', 'destination-atop',
+        'lighter', 'copy', 'xor', 'multiply',
+        'screen', 'overlay', 'darken', 'lighten',
+        'color-dodge', 'color-burn', 'hard-light', 'soft-light'
+      ];
+      
+      const cols = 5;
+      const cellWidth = 110;
+      const cellHeight = 90;
+      
+      for (let i = 0; i < operations.length; i++) {
+        const x = (i % cols) * cellWidth + 20;
+        const y = Math.floor(i / cols) * cellHeight + 20;
+        
+        ctx.save();
+        
+        // Draw base rectangle (destination)
+        ctx.fillStyle = '#4ecdc4';
+        ctx.fillRect(x, y, 50, 50);
+        
+        // Set composite operation
+        ctx.globalCompositeOperation = operations[i];
+        
+        // Draw overlapping circle (source)
+        ctx.fillStyle = '#ff6b6b';
+        ctx.beginPath();
+        ctx.arc(x + 35, y + 35, 25, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Label
+        ctx.fillStyle = '#2d3436';
+        ctx.font = '10px Arial';
+        ctx.fillText(operations[i], x, y + 70);
+      }
+      
+      console.log('Global composite operations test completed');
+    }
+
+    // Test 5: Line dash patterns
+    function testLineDash() {
+      const canvas = document.getElementById('lineDashCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing line dash patterns...');
+      
+      ctx.strokeStyle = '#2d3436';
+      ctx.lineWidth = 3;
+      
+      // Solid line (default)
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(50, 30);
+      ctx.lineTo(550, 30);
+      ctx.stroke();
+      ctx.fillStyle = '#636e72';
+      ctx.font = '12px Arial';
+      ctx.fillText('Solid (default)', 50, 20);
+      
+      // Simple dash
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath();
+      ctx.moveTo(50, 60);
+      ctx.lineTo(550, 60);
+      ctx.stroke();
+      ctx.fillText('Dash [10, 5]', 50, 50);
+      
+      // Long dash, short gap
+      ctx.setLineDash([20, 5]);
+      ctx.beginPath();
+      ctx.moveTo(50, 90);
+      ctx.lineTo(550, 90);
+      ctx.stroke();
+      ctx.fillText('Long dash [20, 5]', 50, 80);
+      
+      // Dot pattern
+      ctx.setLineDash([2, 8]);
+      ctx.beginPath();
+      ctx.moveTo(50, 120);
+      ctx.lineTo(550, 120);
+      ctx.stroke();
+      ctx.fillText('Dots [2, 8]', 50, 110);
+      
+      // Complex pattern
+      ctx.setLineDash([15, 5, 5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(50, 150);
+      ctx.lineTo(550, 150);
+      ctx.stroke();
+      ctx.fillText('Complex [15, 5, 5, 5]', 50, 140);
+      
+      // Varied pattern
+      ctx.setLineDash([20, 3, 3, 3, 3, 3, 3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(50, 180);
+      ctx.lineTo(550, 180);
+      ctx.stroke();
+      ctx.fillText('Morse code style [20, 3, 3, 3, 3, 3, 3, 3]', 50, 170);
+      
+      // Reset to solid
+      ctx.setLineDash([]);
+      
+      console.log('Line dash patterns test completed');
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas API style properties tests...');
+      
+      try {
+        testFillStrokeStyles();
+        testLineProperties();
+        testGlobalAlpha();
+        testCompositeOperations();
+        testLineDash();
+        
+        console.log('All style properties tests completed successfully!');
+      } catch (error) {
+        console.error('Error during style properties tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    window.addEventListener('load', runAllTests);
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: Path Operations</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: Path Operations</h1>
+  <p class="description">Tests Canvas 2D path operations: beginPath, moveTo, lineTo, arc, bezierCurveTo, quadraticCurveTo, ellipse, rect, closePath</p>
+
+  <div class="test-section">
+    <div class="test-title">1. Basic paths - moveTo, lineTo, closePath</div>
+    <canvas id="basicPathsCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. Curved paths - quadraticCurveTo and bezierCurveTo</div>
+    <canvas id="curvedPathsCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. Circular paths - arc and ellipse</div>
+    <canvas id="circularPathsCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. Complex paths - combined operations</div>
+    <canvas id="complexPathsCanvas" width="500" height="200"></canvas>
+  </div>
+
+  <script>
+    // Test 1: Basic path operations
+    function testBasicPaths() {
+      const canvas = document.getElementById('basicPathsCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing basic path operations...');
+      
+      // Triangle
+      ctx.beginPath();
+      ctx.moveTo(50, 50);
+      ctx.lineTo(100, 150);
+      ctx.lineTo(0, 150);
+      ctx.closePath();
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fill();
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Open path (zigzag)
+      ctx.beginPath();
+      ctx.moveTo(150, 50);
+      ctx.lineTo(200, 100);
+      ctx.lineTo(250, 50);
+      ctx.lineTo(300, 100);
+      ctx.lineTo(350, 50);
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      
+      // Rectangle using lineTo
+      ctx.beginPath();
+      ctx.moveTo(400, 60);
+      ctx.lineTo(480, 60);
+      ctx.lineTo(480, 140);
+      ctx.lineTo(400, 140);
+      ctx.closePath();
+      ctx.fillStyle = '#ffe66d';
+      ctx.fill();
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      console.log('Basic paths test completed');
+    }
+
+    // Test 2: Curved paths
+    function testCurvedPaths() {
+      const canvas = document.getElementById('curvedPathsCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing curved path operations...');
+      
+      // Quadratic curve - simple wave
+      ctx.beginPath();
+      ctx.moveTo(20, 100);
+      ctx.quadraticCurveTo(70, 50, 120, 100);
+      ctx.quadraticCurveTo(170, 150, 220, 100);
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      
+      // Bezier curve - S-shape
+      ctx.beginPath();
+      ctx.moveTo(250, 50);
+      ctx.bezierCurveTo(300, 50, 300, 150, 350, 150);
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      
+      // Complex quadratic - heart shape
+      ctx.beginPath();
+      ctx.moveTo(450, 100);
+      ctx.quadraticCurveTo(430, 70, 400, 100);
+      ctx.quadraticCurveTo(400, 130, 450, 160);
+      ctx.quadraticCurveTo(500, 130, 500, 100);
+      ctx.quadraticCurveTo(470, 70, 450, 100);
+      ctx.fillStyle = 'rgba(255, 107, 107, 0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#d63031';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      console.log('Curved paths test completed');
+    }
+
+    // Test 3: Circular paths
+    function testCircularPaths() {
+      const canvas = document.getElementById('circularPathsCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing circular path operations...');
+      
+      // Full circle
+      ctx.beginPath();
+      ctx.arc(75, 100, 40, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fill();
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Arc (partial circle)
+      ctx.beginPath();
+      ctx.arc(175, 100, 40, 0, Math.PI);
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      
+      // Counter-clockwise arc
+      ctx.beginPath();
+      ctx.arc(275, 100, 40, 0, Math.PI, true);
+      ctx.strokeStyle = '#ffe66d';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      
+      // Ellipse
+      ctx.beginPath();
+      ctx.ellipse(400, 100, 60, 30, 0, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(116, 185, 255, 0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#0984e3';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Rotated ellipse
+      ctx.beginPath();
+      ctx.ellipse(450, 100, 40, 20, Math.PI / 4, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(253, 203, 110, 0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#e17055';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      console.log('Circular paths test completed');
+    }
+
+    // Test 4: Complex combined paths
+    function testComplexPaths() {
+      const canvas = document.getElementById('complexPathsCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing complex combined path operations...');
+      
+      // Flower shape using multiple curves
+      ctx.beginPath();
+      ctx.moveTo(100, 100);
+      
+      // Petal 1
+      ctx.quadraticCurveTo(80, 80, 100, 60);
+      ctx.quadraticCurveTo(120, 80, 100, 100);
+      
+      // Petal 2
+      ctx.quadraticCurveTo(120, 120, 140, 100);
+      ctx.quadraticCurveTo(120, 80, 100, 100);
+      
+      // Petal 3
+      ctx.quadraticCurveTo(120, 120, 100, 140);
+      ctx.quadraticCurveTo(80, 120, 100, 100);
+      
+      // Petal 4
+      ctx.quadraticCurveTo(80, 120, 60, 100);
+      ctx.quadraticCurveTo(80, 80, 100, 100);
+      
+      ctx.fillStyle = '#fd79a8';
+      ctx.fill();
+      ctx.strokeStyle = '#e84393';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Star using straight lines
+      ctx.beginPath();
+      const centerX = 250;
+      const centerY = 100;
+      const outerRadius = 40;
+      const innerRadius = 20;
+      const spikes = 5;
+      
+      for (let i = 0; i < spikes * 2; i++) {
+        const angle = (i * Math.PI) / spikes;
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#fdcb6e';
+      ctx.fill();
+      ctx.strokeStyle = '#e17055';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // House shape using rect and triangle
+      ctx.beginPath();
+      ctx.rect(350, 120, 80, 60);
+      ctx.moveTo(350, 120);
+      ctx.lineTo(390, 80);
+      ctx.lineTo(430, 120);
+      ctx.closePath();
+      ctx.fillStyle = '#a29bfe';
+      ctx.fill();
+      ctx.strokeStyle = '#6c5ce7';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Door
+      ctx.beginPath();
+      ctx.rect(375, 150, 15, 30);
+      ctx.fillStyle = '#2d3436';
+      ctx.fill();
+      
+      // Window
+      ctx.beginPath();
+      ctx.rect(400, 140, 20, 20);
+      ctx.fillStyle = '#74b9ff';
+      ctx.fill();
+      ctx.strokeStyle = '#0984e3';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      console.log('Complex paths test completed');
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas API path operations tests...');
+      
+      try {
+        testBasicPaths();
+        testCurvedPaths();
+        testCircularPaths();
+        testComplexPaths();
+        
+        console.log('All path operations tests completed successfully!');
+      } catch (error) {
+        console.error('Error during path operations tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    window.addEventListener('load', runAllTests);
+  </script>
+
+</body>
+
+</html>
