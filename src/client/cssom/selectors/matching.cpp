@@ -79,6 +79,81 @@ namespace client_cssom::selectors
     return true;
   }
 
+  bool isNthChild(const shared_ptr<HTMLElement> element, int a, int b)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    // Count the element's position among all element siblings (1-indexed)
+    int position = 1;
+    auto currentSibling = element->previousSibling();
+    while (currentSibling)
+    {
+      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+      if (siblingElement)
+        position++;
+      currentSibling = currentSibling->previousSibling();
+    }
+
+    // Check if position matches the an+b formula
+    if (a == 0)
+    {
+      // Simple position match (e.g., nth-child(3))
+      return position == b;
+    }
+    else if (a > 0)
+    {
+      // Forward sequence (e.g., 2n+1)
+      if (position < b)
+        return false;
+      return (position - b) % a == 0;
+    }
+    else
+    {
+      // Backward sequence (e.g., -n+3)
+      if (position > b)
+        return false;
+      return (b - position) % (-a) == 0;
+    }
+  }
+
+  bool isNthOfType(const shared_ptr<HTMLElement> element, int a, int b)
+  {
+    auto parent = element->getParentNode();
+    if (!parent)
+      return false;
+
+    // Count the element's position among siblings of the same type (1-indexed)
+    int position = 1;
+    auto currentSibling = element->previousSibling();
+    while (currentSibling)
+    {
+      auto siblingElement = dynamic_pointer_cast<HTMLElement>(currentSibling);
+      if (siblingElement && strcasecmp(siblingElement->tagName.c_str(), element->tagName.c_str()) == 0)
+        position++;
+      currentSibling = currentSibling->previousSibling();
+    }
+
+    // Check if position matches the an+b formula
+    if (a == 0)
+    {
+      return position == b;
+    }
+    else if (a > 0)
+    {
+      if (position < b)
+        return false;
+      return (position - b) % a == 0;
+    }
+    else
+    {
+      if (position > b)
+        return false;
+      return (b - position) % (-a) == 0;
+    }
+  }
+
   bool matchesSelectorList(const SelectorList &selectors, const shared_ptr<HTMLElement> element)
   {
     MatchingContext context;
@@ -185,6 +260,14 @@ namespace client_cssom::selectors
           return matchesSelectorList(*component.argumentSelectorList(), element);
         }
         return false; // Empty :where() matches nothing
+      }
+      if (component.isNthChild())
+      {
+        return isNthChild(element, component.nthA(), component.nthB());
+      }
+      if (component.isNthOfType())
+      {
+        return isNthOfType(element, component.nthA(), component.nthB());
       }
       // TODO: Implement support for :active pseudo-class when element->isActive() is available.
     }

@@ -47,6 +47,7 @@ The new CSS selector parser is implemented in `src/client/cssom/selectors/` and 
 - `:first-child`, `:last-child`
 - `:first-of-type`, `:last-of-type`
 - `:only-child`, `:only-of-type`
+- `:nth-child()`, `:nth-of-type()` (supports `odd`, `even`, numbers, and `an+b` formulas)
 - `:root`, `:empty`, `:host`
 
 ### Pseudo-elements
@@ -107,6 +108,26 @@ auto selectors = CSSelectorParser::parseSelectors("div > p:hover");
 
 // Match against element
 bool matches = matchesSelectorList(*selectors, element);
+```
+
+### nth-child Selector Examples
+```cpp
+// Parse various nth-child patterns
+auto oddSelector = CSSelectorParser::parseSelectors("li:nth-child(odd)");
+auto evenSelector = CSSelectorParser::parseSelectors("tr:nth-child(even)");
+auto specificSelector = CSSelectorParser::parseSelectors("div:nth-child(3)");
+auto formulaSelector = CSSelectorParser::parseSelectors("p:nth-child(3n+2)");
+auto negativeSelector = CSSelectorParser::parseSelectors("span:nth-child(-n+3)");
+
+// Access nth-child parameters
+auto component = oddSelector->selectors()[0].components()[1];
+assert(component.isNthChild());
+assert(component.nthA() == 2);  // 'a' coefficient in 2n+1
+assert(component.nthB() == 1);  // 'b' constant in 2n+1
+
+// String representation preserves original format
+std::string str = static_cast<std::string>(*oddSelector);
+assert(str == "li:nth-child(odd)");
 ```
 
 ## Performance Characteristics
@@ -190,7 +211,6 @@ make test
 
 ### Planned Features
 1. **Advanced Pseudo-classes**
-   - `:nth-child()`, `:nth-of-type()`
    - `:not()`, `:is()`, `:where()`
    - `:has()` (if CSS4 support needed)
 
