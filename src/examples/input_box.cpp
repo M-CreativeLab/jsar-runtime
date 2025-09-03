@@ -28,9 +28,6 @@ namespace jsar::example
 
   InputBox::~InputBox()
   {
-    canvas_ = nullptr;
-    fontMgr_ = nullptr;
-
     glDeleteVertexArrays(1, &vao_);
     glDeleteBuffers(1, &vbo_);
     glDeleteProgram(program_);

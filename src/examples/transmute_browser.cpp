@@ -734,6 +734,7 @@ namespace jsar::example
       // Update smooth animation for viewer controls
       windowCtx_->updateAnimation();
 
+      // Render all the contents
       renderContent();
 
       // Swap the buffers and poll events
@@ -745,6 +746,7 @@ namespace jsar::example
 
     // Shutdown window context firstly
     windowCtx_->shutdown();
+    glfwTerminate();
 
     // Shutdown the embedder when the window is closed.
     if (embedder_ != nullptr)

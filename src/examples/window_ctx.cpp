@@ -98,7 +98,7 @@ namespace jsar::example
     glfwSetMouseButtonCallback(window, nullptr);
     glfwSetKeyCallback(window, nullptr);
     glfwSetCharCallback(window, nullptr);
-    glfwTerminate();
+    glfwDestroyWindow(window);
 
     terminated = true;
     window = nullptr;
