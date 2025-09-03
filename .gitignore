@@ -63,3 +63,7 @@ node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
 docs/api/browser-compat-data/all.json
+
+# Test files
+*_test.cpp
+*_test

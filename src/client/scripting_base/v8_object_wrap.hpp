@@ -19,11 +19,12 @@ namespace scripting_base
    *
    * @tparam T The class to wrap.
    * @tparam D The type of the optional inner instance.
+   * @tparam BaseT The base class type for inheritance (void if no inheritance).
    */
-  template <typename T, typename D = void>
+  template <typename T, typename D = void, typename BaseT = void>
   class ObjectWrap
   {
-    friend class ObjectWrap<T, D>;
+    friend class ObjectWrap<T, D, BaseT>;
 
   public:
     /**
@@ -39,6 +40,17 @@ namespace scripting_base
     static v8::Local<v8::Function> ConstructorFunction(v8::Isolate *isolate)
     {
       return constructor_handle_.Get(isolate);
+    }
+
+    /**
+     * Get the function template for this class. Used for inheritance.
+     *
+     * @param isolate The v8::Isolate instance
+     * @returns The function template for this class
+     */
+    static v8::Local<v8::FunctionTemplate> GetFunctionTemplate(v8::Isolate *isolate)
+    {
+      return function_template_.Get(isolate);
     }
 
     /**
@@ -120,6 +132,20 @@ namespace scripting_base
     }
 
     /**
+     * Safely unwrap the v8::Object to get the base class instance
+     *
+     * @tparam BaseType The base class type to unwrap to
+     * @param object The v8::Object to unwrap
+     * @returns The instance of the base class or nullptr if invalid
+     */
+    template <typename BaseType>
+    static BaseType *UnwrapAs(v8::Local<v8::Object> object)
+    {
+      T *instance = Unwrap(object);
+      return static_cast<BaseType *>(instance);
+    }
+
+    /**
      * Initialize the class and return the constructor function.
      *
      * @param isolate The v8::Isolate instance
@@ -133,13 +159,29 @@ namespace scripting_base
 
       v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate);
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
-      tpl->SetCallHandler(ObjectWrap<T, D>::CallHandler);
+      tpl->SetCallHandler(ObjectWrap<T, D, BaseT>::CallHandler);
       tpl->InstanceTemplate()->Set(isolate, "constructor", tpl, v8::PropertyAttribute::ReadOnly);
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+      // Set up inheritance if BaseT is specified
+      if constexpr (!std::is_same_v<BaseT, void>)
+      {
+        // Ensure base class is initialized first
+        BaseT::Initialize(isolate);
+        v8::Local<v8::FunctionTemplate> baseTpl = BaseT::GetFunctionTemplate(isolate);
+        if (!baseTpl.IsEmpty())
+        {
+          tpl->Inherit(baseTpl);
+        }
+      }
+
       T::ConfigureFunctionTemplate(isolate, tpl);
 
+      // Store the function template for inheritance
+      ObjectWrap<T, D, BaseT>::function_template_.Reset(isolate, tpl);
+
       v8::Local<v8::Function> constructor = tpl->GetFunction(context).ToLocalChecked();
-      ObjectWrap<T, D>::constructor_handle_.Reset(isolate, constructor);
+      ObjectWrap<T, D, BaseT>::constructor_handle_.Reset(isolate, constructor);
       return constructor;
     }
 
@@ -235,5 +277,6 @@ namespace scripting_base
 
   private:
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;
+    static thread_local inline v8::Persistent<v8::FunctionTemplate> function_template_;
   };
 }
