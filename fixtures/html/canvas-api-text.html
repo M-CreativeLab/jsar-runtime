@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API: Text Operations</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      border: 2px solid #333;
+      background-color: white;
+      margin: 10px;
+      display: block;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 10px;
+    }
+
+    .info {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API: Text Operations</h1>
+  <p class="description">Tests Canvas 2D text operations: fillText, strokeText, measureText, font properties, textAlign, textBaseline</p>
+
+  <div class="test-section">
+    <div class="test-title">1. Basic text rendering - fillText and strokeText</div>
+    <canvas id="basicTextCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">2. Font properties - size, family, style, weight</div>
+    <canvas id="fontPropertiesCanvas" width="600" height="250"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">3. Text alignment - textAlign property</div>
+    <canvas id="textAlignCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">4. Text baseline - textBaseline property</div>
+    <canvas id="textBaselineCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <div class="test-section">
+    <div class="test-title">5. Text measurement - measureText API</div>
+    <canvas id="measureTextCanvas" width="600" height="200"></canvas>
+    <div class="info" id="measureInfo"></div>
+  </div>
+
+  <script>
+    // Test 1: Basic text rendering
+    function testBasicText() {
+      const canvas = document.getElementById('basicTextCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing basic text operations...');
+      
+      // Set basic font
+      ctx.font = '24px Arial';
+      
+      // Filled text
+      ctx.fillStyle = '#2d3436';
+      ctx.fillText('Filled Text', 50, 50);
+      
+      // Stroked text
+      ctx.strokeStyle = '#e17055';
+      ctx.lineWidth = 2;
+      ctx.strokeText('Stroked Text', 250, 50);
+      
+      // Combined filled and stroked text
+      ctx.fillStyle = '#74b9ff';
+      ctx.fillText('Combined Text', 450, 50);
+      ctx.strokeStyle = '#0984e3';
+      ctx.lineWidth = 1;
+      ctx.strokeText('Combined Text', 450, 50);
+      
+      // Different colors
+      ctx.fillStyle = '#fd79a8';
+      ctx.fillText('Pink Text', 50, 100);
+      
+      ctx.fillStyle = '#fdcb6e';
+      ctx.fillText('Yellow Text', 200, 100);
+      
+      ctx.fillStyle = '#00b894';
+      ctx.fillText('Green Text', 350, 100);
+      
+      // Text with transparency
+      ctx.fillStyle = 'rgba(116, 185, 255, 0.7)';
+      ctx.fillText('Semi-transparent Text', 50, 150);
+      
+      console.log('Basic text test completed');
+    }
+
+    // Test 2: Font properties
+    function testFontProperties() {
+      const canvas = document.getElementById('fontPropertiesCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing font properties...');
+      
+      ctx.fillStyle = '#2d3436';
+      
+      // Different font sizes
+      ctx.font = '12px Arial';
+      ctx.fillText('12px size', 50, 30);
+      
+      ctx.font = '18px Arial';
+      ctx.fillText('18px size', 150, 30);
+      
+      ctx.font = '24px Arial';
+      ctx.fillText('24px size', 250, 30);
+      
+      ctx.font = '32px Arial';
+      ctx.fillText('32px size', 370, 30);
+      
+      // Different font families
+      ctx.font = '20px Arial';
+      ctx.fillText('Arial font', 50, 70);
+      
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Sans-serif font', 200, 70);
+      
+      ctx.font = '20px monospace';
+      ctx.fillText('Monospace font', 380, 70);
+      
+      // Font styles
+      ctx.font = 'normal 20px Arial';
+      ctx.fillText('Normal style', 50, 110);
+      
+      ctx.font = 'italic 20px Arial';
+      ctx.fillText('Italic style', 200, 110);
+      
+      ctx.font = 'oblique 20px Arial';
+      ctx.fillText('Oblique style', 350, 110);
+      
+      // Font weights
+      ctx.font = 'normal 20px Arial';
+      ctx.fillText('Normal weight', 50, 150);
+      
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText('Bold weight', 220, 150);
+      
+      ctx.font = '300 20px Arial';
+      ctx.fillText('Light weight', 380, 150);
+      
+      // Combined properties
+      ctx.font = 'bold italic 24px serif';
+      ctx.fillText('Bold Italic Serif', 50, 190);
+      
+      ctx.font = '600 18px monospace';
+      ctx.fillText('600 weight monospace', 300, 190);
+      
+      console.log('Font properties test completed');
+    }
+
+    // Test 3: Text alignment
+    function testTextAlign() {
+      const canvas = document.getElementById('textAlignCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing text alignment...');
+      
+      ctx.font = '18px Arial';
+      ctx.fillStyle = '#2d3436';
+      
+      // Draw reference lines
+      const centerX = 300;
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX, 0);
+      ctx.lineTo(centerX, canvas.height);
+      ctx.stroke();
+      
+      // Different text alignments
+      ctx.textAlign = 'left';
+      ctx.fillText('Left aligned text', centerX, 40);
+      
+      ctx.textAlign = 'center';
+      ctx.fillText('Center aligned text', centerX, 70);
+      
+      ctx.textAlign = 'right';
+      ctx.fillText('Right aligned text', centerX, 100);
+      
+      ctx.textAlign = 'start';
+      ctx.fillText('Start aligned text', centerX, 130);
+      
+      ctx.textAlign = 'end';
+      ctx.fillText('End aligned text', centerX, 160);
+      
+      // Draw smaller reference points for clarity
+      ctx.fillStyle = '#e74c3c';
+      const alignments = ['left', 'center', 'right', 'start', 'end'];
+      for (let i = 0; i < alignments.length; i++) {
+        const y = 40 + i * 30;
+        ctx.beginPath();
+        ctx.arc(centerX, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      console.log('Text alignment test completed');
+    }
+
+    // Test 4: Text baseline
+    function testTextBaseline() {
+      const canvas = document.getElementById('textBaselineCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      console.log('Testing text baseline...');
+      
+      ctx.font = '18px Arial';
+      ctx.fillStyle = '#2d3436';
+      
+      // Draw reference line
+      const baselineY = 100;
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, baselineY);
+      ctx.lineTo(canvas.width, baselineY);
+      ctx.stroke();
+      
+      // Different baselines
+      const baselines = ['alphabetic', 'top', 'hanging', 'middle', 'ideographic', 'bottom'];
+      const startX = 50;
+      
+      for (let i = 0; i < baselines.length; i++) {
+        const x = startX + i * 90;
+        ctx.textBaseline = baselines[i];
+        ctx.fillText(baselines[i], x, baselineY);
+        
+        // Draw reference point
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath();
+        ctx.arc(x, baselineY, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#2d3436';
+      }
+      
+      console.log('Text baseline test completed');
+    }
+
+    // Test 5: Text measurement
+    function testMeasureText() {
+      const canvas = document.getElementById('measureTextCanvas');
+      const ctx = canvas.getContext('2d');
+      const infoDiv = document.getElementById('measureInfo');
+      
+      console.log('Testing text measurement...');
+      
+      ctx.font = '24px Arial';
+      ctx.fillStyle = '#2d3436';
+      
+      const texts = [
+        'Hello World',
+        'Canvas API',
+        'Text Measurement',
+        'UPPERCASE TEXT',
+        'lowercase text'
+      ];
+      
+      let measurements = [];
+      
+      for (let i = 0; i < texts.length; i++) {
+        const text = texts[i];
+        const y = 40 + i * 30;
+        
+        // Measure text
+        const metrics = ctx.measureText(text);
+        measurements.push({
+          text: text,
+          width: metrics.width
+        });
+        
+        // Draw text
+        ctx.fillText(text, 20, y);
+        
+        // Draw width indicator
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, y + 5);
+        ctx.lineTo(20 + metrics.width, y + 5);
+        ctx.stroke();
+        
+        // Show width value
+        ctx.fillStyle = '#636e72';
+        ctx.font = '12px Arial';
+        ctx.fillText(`Width: ${metrics.width.toFixed(2)}px`, 20 + metrics.width + 10, y);
+        ctx.font = '24px Arial';
+        ctx.fillStyle = '#2d3436';
+      }
+      
+      // Display measurements in info div
+      let infoHTML = '<strong>Text Measurements:</strong><br>';
+      measurements.forEach(m => {
+        infoHTML += `"${m.text}": ${m.width.toFixed(2)}px<br>`;
+      });
+      infoDiv.innerHTML = infoHTML;
+      
+      console.log('Text measurement test completed');
+      console.log('Measurements:', measurements);
+    }
+
+    // Run all tests
+    function runAllTests() {
+      console.log('Starting Canvas API text operations tests...');
+      
+      try {
+        testBasicText();
+        testFontProperties();
+        testTextAlign();
+        testTextBaseline();
+        testMeasureText();
+        
+        console.log('All text operations tests completed successfully!');
+      } catch (error) {
+        console.error('Error during text operations tests:', error);
+      }
+    }
+
+    // Run tests when page loads
+    runAllTests();
+  </script>
+
+</body>
+
+</html>
