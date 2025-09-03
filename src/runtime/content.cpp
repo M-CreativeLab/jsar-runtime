@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <glm/glm.hpp>
 #include <idgen.hpp>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -245,6 +246,18 @@ bool TrContentRuntime::removeXRSession(xr::TrXRSession *session)
     return true;
   }
   return false;
+}
+
+void TrContentRuntime::updateLocalBaseMatrix(const glm::mat4 &matrix)
+{
+  // Update all XRSession instances' local base matrices
+  for (auto *session : xrSessionsStack)
+  {
+    if (session != nullptr)
+    {
+      session->setLocalBaseMatrix(matrix);
+    }
+  }
 }
 
 void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout)

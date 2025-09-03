@@ -562,10 +562,6 @@ namespace builtin_scene
      */
     bool removeInstance(ecs::EntityId id);
 
-    inline ContentInstancesList &getDepthOnlyInstancesList() const
-    {
-      return *depthOnlyInstances_;
-    }
     inline size_t countLayers() const
     {
       return layeredInstances_.size();
@@ -637,7 +633,6 @@ namespace builtin_scene
     mutable std::shared_mutex mutex_;
     InstanceMap idToInstanceMap_;
     std::vector<LayeredInstancesData *> layeredInstances_; // Store pointers to active LayeredInstancesData objects
-    std::shared_ptr<ContentInstancesList> depthOnlyInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

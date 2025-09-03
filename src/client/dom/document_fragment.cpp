@@ -1,5 +1,5 @@
 #include <functional>
-#include <crates/bindings.hpp>
+#include <client/cssom/selectors/css_selector_parser.hpp>
 #include <client/cssom/selectors/matching.hpp>
 
 #include "./document_fragment.hpp"
@@ -61,11 +61,11 @@ namespace dom
 
   shared_ptr<Element> DocumentFragment::querySelector(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
-    auto selectorList = s.value();
+    const auto &selectorList = s.value();
 
     // Helper function for recursive search
     function<shared_ptr<Element>(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node) -> shared_ptr<Element>
@@ -102,12 +102,12 @@ namespace dom
 
   NodeList<Element> DocumentFragment::querySelectorAll(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
     NodeList<Element> elements(false);
-    auto selectorList = s.value();
+    const auto &selectorList = s.value();
 
     // Helper function for recursive search
     function<void(shared_ptr<Node>)> searchInNode = [&](shared_ptr<Node> node)

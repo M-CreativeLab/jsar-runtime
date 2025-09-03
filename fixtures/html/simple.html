@@ -5,14 +5,23 @@
   <meta charset="utf-8">
   <title>Simple HTML</title>
   <style>
+    :root {
+      --primary-color: #0514a2;
+      --secondary-color: #6d172e;
+      --background-color: #fff;
+      --font-size: 40px;
+      --border-radius: 12px;
+      --image-radius: 50px;
+    }
+
     body {
-      background-color: #fff;
-      font-size: 40px;
-      color: #6d172e;
+      background-color: var(--background-color);
+      font-size: var(--font-size);
+      color: var(--secondary-color);
     }
 
     img.float-image {
-      border-bottom-right-radius: 50px;
+      border-bottom-right-radius: var(--image-radius);
       height: 300px;
       transform: translate3d(0, 0, 0);
       transition: transform 0.3s ease-in-out;
@@ -25,17 +34,18 @@
     #header {
       font-size: 100px;
       text-transform: uppercase;
-      color: transparent;
+      /* color: transparent; */
+      color: rgba(255, 255, 255, 0.87);
       font-weight: 1000;
       padding: 0 20px;
       margin: 20px;
       border: 15px solid #e84c1cd8;
       background-color: #ca8319d8;
-      background-clip: text;
+      /* background-clip: text; */
       background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
       background-blend-mode: luminosity;
       background-origin: content-box;
-      border-radius: 12px;
+      border-radius: var(--border-radius);
       box-sizing: border-box;
       transform: translate3d(0, 0, 15px);
     }
@@ -64,7 +74,7 @@
       box-sizing: border-box;
     }
 
-    article p.primary {
+    article p:where(.primary) {
       color: #0514a2;
       line-height: 1.5;
     }
@@ -84,7 +94,8 @@
     }
 
     span.sub:hover {
-      background-color: rgba(173, 98, 98, 0.87);
+      /* background-color: rgba(173, 98, 98, 0.87); */
+      background-color: var(--primary-color);
       transform: translate3d(0, 0, 20px);
     }
 
@@ -108,8 +119,15 @@
       background-color: rgba(224, 172, 150, 0.594);
       padding: 2rem;
     }
-    #float-area>p.first {
+
+
+    #float-area>p:first-of-type {
       background-color: rgba(134, 55, 20, 0.352);
+    }
+
+    #float-area>p:last-of-type {
+      background-color: rgb(134, 20, 98);
+      color: #fff;
     }
   </style>
   <script>
@@ -127,12 +145,15 @@
   <img id="stereo-image" src="./images/sbs-example2.png" spatial="stereo">
   <main>
     <div id="float-area">
-      <p class="first">This is an absolutely positioned div 1</p>
+      <p>This is an absolutely positioned div 1</p>
       <p>This is an absolutely positioned div 2</p>
+      <p>This is an absolutely positioned div 3</p>
     </div>
     <article>
       <p class="primary first">
-        A range of organizations join the World Wide Web Consortium as Members to work with us to drive the direction of core web technologies and exchange ideas with industry and research leaders. We rotate randomly a few of our Member organizations' logos underneath.
+        A range of organizations join the World Wide Web Consortium as Members to work with us to drive the direction of
+        core web technologies and exchange ideas with industry and research leaders. We rotate randomly a few of our
+        Member organizations' logos underneath.
       </p>
       <p>
         1 October 2024 was W3C's 30th anniversary. We celebrated at our annual TPAC our three decades, advances in the
@@ -152,6 +173,12 @@
   <div>Footer</div>
   <img class="float-image" src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten"
     style="margin-top: 200px;">
+
+  <script>
+    const header = document.querySelector('#switch');
+    header.textContent += (' (foobar=' + window['foobar'] + ')');
+  </script>
+  <script src="./simple-module.js" type="module"></script>
 </body>
 
 </html>

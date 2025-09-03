@@ -1,8 +1,10 @@
 #include <iostream>
+#include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/html/html_meta_element.hpp>
-#include <crates/bindings.hpp>
+#include <client/cssom/selectors/css_selector_parser.hpp>
+#include <client/cssom/selectors/matching.hpp>
 
 #include "./node_list-inl.hpp"
 #include "./element.hpp"
@@ -11,7 +13,6 @@
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
-#include "../cssom/selectors/matching.hpp"
 
 namespace dom
 {
@@ -308,7 +309,7 @@ namespace dom
 
   shared_ptr<Element> Document::querySelector(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
@@ -325,7 +326,7 @@ namespace dom
 
   NodeList<Element> Document::querySelectorAll(const string &selectors)
   {
-    auto s = crates::css2::parsing::parseSelectors(selectors);
+    auto s = client_cssom::selectors::CSSelectorParser::parseSelectors(selectors);
     if (s == nullopt)
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
@@ -344,7 +345,6 @@ namespace dom
   void Document::appendStyleSheet(shared_ptr<client_cssom::CSSStyleSheet> sheet)
   {
     stylesheets_.push_back(sheet);
-    style_cache_.invalidateCache();
     onStyleSheetsDidChange();
   }
 
@@ -666,6 +666,12 @@ namespace dom
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect)
       , layout_view_(nullptr)
   {
+  }
+
+  void HTMLDocument::invalidateDocumentCache()
+  {
+    styleCache().invalidateCache();
+    dirty_root_text_or_element_ = documentElement();
   }
 
   std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const

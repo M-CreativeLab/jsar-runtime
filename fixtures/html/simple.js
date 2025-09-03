@@ -87,3 +87,7 @@ run(async () => {
   //   + 'foobar'
   //   + '</div>';
 });
+
+window['foobar'] = Math.random();
+console.info('set global foobar =', window['foobar']);
+console.info('script end');

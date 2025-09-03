@@ -468,4 +468,356 @@ namespace client_cssom::values::generics
   protected:
     Tag tag_;
   };
+
+  template <typename T>
+  class GenericBackgroundSize : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kAuto = 0,
+      kLength,
+      kPercentage,
+      kCover,
+      kContain,
+      kTwoValues,
+    };
+
+  public:
+    static T Auto()
+    {
+      return T(kAuto);
+    }
+    static T Length(float value)
+    {
+      return T(kLength, value);
+    }
+    static T Percentage(float value)
+    {
+      return T(kPercentage, value);
+    }
+    static T Cover()
+    {
+      return T(kCover);
+    }
+    static T Contain()
+    {
+      return T(kContain);
+    }
+    static T TwoValues(float width, float height)
+    {
+      return T(kTwoValues, width, height);
+    }
+
+  public:
+    GenericBackgroundSize()
+        : tag_(kAuto)
+        , width_(0.0f)
+        , height_(0.0f)
+    {
+    }
+
+  protected:
+    GenericBackgroundSize(Tag tag, float width = 0.0f, float height = 0.0f)
+        : tag_(tag)
+        , width_(width)
+        , height_(height)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kAuto:
+        return "auto";
+      case kLength:
+        return std::to_string(width_) + "px";
+      case kPercentage:
+        return std::to_string(width_) + "%";
+      case kCover:
+        return "cover";
+      case kContain:
+        return "contain";
+      case kTwoValues:
+        return std::to_string(width_) + "px " + std::to_string(height_) + "px";
+      }
+      return "";
+    }
+
+    inline bool isAuto() const
+    {
+      return tag_ == kAuto;
+    }
+    inline bool isLength() const
+    {
+      return tag_ == kLength;
+    }
+    inline bool isPercentage() const
+    {
+      return tag_ == kPercentage;
+    }
+    inline bool isCover() const
+    {
+      return tag_ == kCover;
+    }
+    inline bool isContain() const
+    {
+      return tag_ == kContain;
+    }
+    inline bool isTwoValues() const
+    {
+      return tag_ == kTwoValues;
+    }
+
+    inline float getWidth() const
+    {
+      return width_;
+    }
+    inline float getHeight() const
+    {
+      return height_;
+    }
+
+  protected:
+    Tag tag_;
+    float width_;
+    float height_;
+  };
+
+  enum class BackgroundPositionKeyword
+  {
+    kNone = 0,
+    kCenterKeyword,
+    kLeftKeyword,
+    kRightKeyword,
+    kTopKeyword,
+    kBottomKeyword,
+  };
+
+  inline std::string to_string(const BackgroundPositionKeyword &keyword)
+  {
+    switch (keyword)
+    {
+    case BackgroundPositionKeyword::kCenterKeyword:
+      return "center";
+    case BackgroundPositionKeyword::kLeftKeyword:
+      return "left";
+    case BackgroundPositionKeyword::kRightKeyword:
+      return "right";
+    case BackgroundPositionKeyword::kTopKeyword:
+      return "top";
+    case BackgroundPositionKeyword::kBottomKeyword:
+      return "bottom";
+    case BackgroundPositionKeyword::kNone:
+    default:
+      return "";
+    }
+  }
+
+  template <typename T>
+  class GenericBackgroundPosition : public ToCss
+  {
+  protected:
+    enum Tag : uint8_t
+    {
+      kCenter = 0,
+      kLeft,
+      kRight,
+      kTop,
+      kBottom,
+      kLength,
+      kPercentage,
+      kTwoValues,
+      kThreeValues,
+      kFourValues,
+    };
+
+  public:
+    static T Default()
+    {
+      return T(kTwoValues, 0, 0);
+    }
+    static T Center()
+    {
+      return T(kCenter);
+    }
+    static T Left()
+    {
+      return T(kLeft);
+    }
+    static T Right()
+    {
+      return T(kRight);
+    }
+    static T Top()
+    {
+      return T(kTop);
+    }
+    static T Bottom()
+    {
+      return T(kBottom);
+    }
+    static T Length(float value)
+    {
+      return T(kLength, value);
+    }
+    static T Percentage(float value)
+    {
+      return T(kPercentage, value);
+    }
+    static T TwoValues(float x, float y)
+    {
+      return T(kTwoValues, x, y);
+    }
+    static T ThreeValues(BackgroundPositionKeyword hKeyword,
+                         float hOffset,
+                         BackgroundPositionKeyword vKeyword)
+    {
+      return T(kThreeValues, 0.0f, 0.0f, hKeyword, hOffset, vKeyword, 0.0f);
+    }
+    static T FourValues(BackgroundPositionKeyword hKeyword,
+                        float hOffset,
+                        BackgroundPositionKeyword vKeyword,
+                        float vOffset)
+    {
+      return T(kFourValues, 0.0f, 0.0f, hKeyword, hOffset, vKeyword, vOffset);
+    }
+
+  public:
+    GenericBackgroundPosition()
+        : tag_(kCenter)
+        , x_(0.0f)
+        , y_(0.0f)
+        , h_keyword_(BackgroundPositionKeyword::kNone)
+        , h_offset_(0.0f)
+        , v_keyword_(BackgroundPositionKeyword::kNone)
+        , v_offset_(0.0f)
+    {
+    }
+
+  protected:
+    GenericBackgroundPosition(Tag tag,
+                              float x = 0.0f,
+                              float y = 0.0f,
+                              BackgroundPositionKeyword h_keyword = BackgroundPositionKeyword::kNone,
+                              float h_offset = 0.0f,
+                              BackgroundPositionKeyword v_keyword = BackgroundPositionKeyword::kNone,
+                              float v_offset = 0.0f)
+        : tag_(tag)
+        , x_(x)
+        , y_(y)
+        , h_keyword_(h_keyword)
+        , h_offset_(h_offset)
+        , v_keyword_(v_keyword)
+        , v_offset_(v_offset)
+    {
+    }
+
+  public:
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case kCenter:
+        return "center";
+      case kLeft:
+        return "left";
+      case kRight:
+        return "right";
+      case kTop:
+        return "top";
+      case kBottom:
+        return "bottom";
+      case kLength:
+        return std::to_string(x_) + "px";
+      case kPercentage:
+        return std::to_string(x_) + "%";
+      case kTwoValues:
+        return std::to_string(x_) + "px " + std::to_string(y_) + "px";
+      case kThreeValues:
+        return to_string(h_keyword_) + " " + std::to_string(h_offset_) + "px " + to_string(v_keyword_);
+      case kFourValues:
+        return to_string(h_keyword_) + " " + std::to_string(h_offset_) + "px " +
+               to_string(v_keyword_) + " " + std::to_string(v_offset_) + "px";
+      }
+      return "";
+    }
+
+    inline bool isCenter() const
+    {
+      return tag_ == kCenter;
+    }
+    inline bool isLeft() const
+    {
+      return tag_ == kLeft;
+    }
+    inline bool isRight() const
+    {
+      return tag_ == kRight;
+    }
+    inline bool isTop() const
+    {
+      return tag_ == kTop;
+    }
+    inline bool isBottom() const
+    {
+      return tag_ == kBottom;
+    }
+    inline bool isLength() const
+    {
+      return tag_ == kLength;
+    }
+    inline bool isPercentage() const
+    {
+      return tag_ == kPercentage;
+    }
+    inline bool isTwoValues() const
+    {
+      return tag_ == kTwoValues;
+    }
+    inline bool isThreeValues() const
+    {
+      return tag_ == kThreeValues;
+    }
+    inline bool isFourValues() const
+    {
+      return tag_ == kFourValues;
+    }
+
+    inline float getX() const
+    {
+      return x_;
+    }
+    inline float getY() const
+    {
+      return y_;
+    }
+    inline BackgroundPositionKeyword getHorizontalKeyword() const
+    {
+      return h_keyword_;
+    }
+    inline float getHorizontalOffset() const
+    {
+      return h_offset_;
+    }
+    inline BackgroundPositionKeyword getVerticalKeyword() const
+    {
+      return v_keyword_;
+    }
+    inline float getVerticalOffset() const
+    {
+      return v_offset_;
+    }
+
+  protected:
+    Tag tag_;
+    float x_;
+    float y_;
+    float h_offset_;
+    float v_offset_;
+    BackgroundPositionKeyword h_keyword_;
+    BackgroundPositionKeyword v_keyword_;
+  };
 }

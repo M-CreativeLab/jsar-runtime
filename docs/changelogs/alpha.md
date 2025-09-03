@@ -2,6 +2,61 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.10.0
+
+### New Features & Improvements
+
+#### DOM & Web APIs
+
+- **Custom Fonts Support**: Added support for custom fonts directory via `JSAR_SYSTEM_FONTS_DIR` environment variable (#255)
+- **DocumentFragment API**: Complete implementation with ParentNode interface support including `cloneNode()` and proper insert logic (#245, #249, #247)
+- **Document API Extensions**: Added support for `createDocumentFragment()` and `createComment()` methods (#235, #233)
+- **Script Execution**: Implemented proper blocking script execution order for HTMLScriptElement (#251)
+- **Viewport Meta**: Added viewport meta parsing and configuring window width & height (#237)
+
+#### WebGL Enhancements
+
+- **Buffer Operations**: Implemented `bufferData(target, size, usage)` support in WebGL bindings (#248)
+- **Vertex Operations**: Added WebGL `vertexAttrib` and `clearBuffer` methods (#205)
+
+#### CSS & Styling
+
+- **CSS Selectors**: Exposed selectors text at style rule level (#239)
+- **CSS Filters**: Implemented parsing for CSS `filter` and `backdrop-filter` properties with parameter support (#238)
+- **Overflow Handling**: Added support for nested CSS overflow scroll behavior (#229)
+
+#### 3D Graphics & Rendering
+
+- **3D Gaussian Splatting**: Implemented PLY loader for 3D Gaussian Splatting models in `<model>` tag (#223)
+- **Layered Rendering**: Added overflow-based and layer-based rendering for web content instances (#225, #220)
+- **SDF Text Rendering**: Implemented Signed Distance Field text rendering for improved text anti-aliasing (#198)
+
+#### Developer Tools & Debugging
+
+- **Inspector Integration**: Added content CDP (Chrome DevTools Protocol) proxy and implemented Log domain (#214)
+- **Network Monitoring**: Added network service to listen for network state changes (#164)
+
+### Bug Fixes & Performance
+
+#### Graphics & Rendering
+
+- **Shader Performance**: Cached shader's `COMPILE_STATUS` to avoid blocking calls (#254)
+- **Buffer Management**: Fixed `dataSize` handling in `BufferDataCommandBufferRequest`
+- **Framebuffer Status**: Added proper response handling for `CheckFramebufferStatus()`
+- **Texture Bindings**: Fixed multiple texture bindings per target for rendering units (#215)
+- **3D Gaussian Splatting**: Optimized GPU performance and compression format to use 1 texel (#212)
+
+#### Build System & Tooling
+
+- **Build Configuration**: Fixed target directory configuration when directory doesn't exist
+- **Package Optimization**: Removed deprecated XSML support to reduce package size (#218)
+
+#### Documentation & Development
+
+- **Test Coverage**: Added GLSL patcher test case
+- **Documentation**: Updated Rust version notes and navigator.gl type checking guide
+- **Development Workflow**: Updated copilot instructions for npm ci usage
+
 ## v0.9.0
 
 ### New Features & Improvements

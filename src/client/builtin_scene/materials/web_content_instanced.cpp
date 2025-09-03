@@ -105,6 +105,8 @@ namespace builtin_scene::materials
     glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
     glContext->uniformMatrix4fv(loc.value(), false, matToUpdate);
 
+    bool inDepthWritePass = false;
+
     // b) Render layeredInstances_ in order (0-1-2-...)
     // First render scrollable container masks for each layer, then render regular content with stencil testing
     auto renderLayer = [&](RenderLayer layer, ContentInstancesList &layerInstancesList)
@@ -116,9 +118,22 @@ namespace builtin_scene::materials
       layerInstancesList.beforeInstancedDraw(*glContext, borderDataTexture);
       {
         // Draw layer instances to color attachment
-        glContext->depthMask(false);
-        glContext->enable(WEBGL_BLEND);
-        glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        if (inDepthWritePass)
+        {
+          // Depth write only pass, disable color writes and enable depth writes
+          glContext->colorMask(false, false, false, false);
+          glContext->depthMask(true);
+          glContext->disable(WEBGL_BLEND);
+        }
+        else
+        {
+          // Normal pass, enable color writes and disable depth writes
+          glContext->colorMask(true, true, true, true);
+          glContext->depthMask(false);
+          glContext->enable(WEBGL_BLEND);
+          glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        }
+
         glContext->drawElementsInstanced(mesh.primitiveTopology(),
                                          meshIndicesCount,
                                          WEBGL_UNSIGNED_INT,
@@ -140,7 +155,7 @@ namespace builtin_scene::materials
       bool hasScrollableContainer = containerInstance != nullptr && containerInstance->count() > 0;
       bool hasContent = contentInstances != nullptr && contentInstances->count() > 0;
 
-      if (hasScrollableContainer && hasContent)
+      if (hasScrollableContainer)
       {
         // Step 2: Render scrollable container instance as stencil mask
         glContext->enable(WEBGL_STENCIL_TEST);
@@ -180,13 +195,15 @@ namespace builtin_scene::materials
         }
 
         // Step 3: Render content with stencil testing enabled
-        glContext->colorMask(true, true, true, true);             // Re-enable color buffer writes
-        glContext->stencilMask(0);                                // Disable writing to stencil buffer
-        glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
-        glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
+        if (hasContent)
+        {
+          glContext->stencilMask(0);                                // Disable writing to stencil buffer
+          glContext->stencilFunc(WEBGL_EQUAL, maskRef, 0xff);       // Only render when the mask matches exactly
+          glContext->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP); // Don't modify stencil when rendering content
 
-        // Render the content instances
-        renderLayer(layer, *contentInstances);
+          // Render the content instances
+          renderLayer(layer, *contentInstances);
+        }
 
         // Step 4: Disable stencil testing after rendering this container
         glContext->disable(WEBGL_STENCIL_TEST);
@@ -198,33 +215,23 @@ namespace builtin_scene::materials
       }
     };
 
+    // Iterate layers and render
+    inDepthWritePass = false;
     instancedMesh.iterateLayers(renderLayerWithMask);
 
     // d) Execute DepthOnlyPass once after all layers are rendered (if enabled)
     if (instancedMesh.isDepthOnlyPassEnabled())
     {
-      auto &depthOnlyInstancesList = instancedMesh.getDepthOnlyInstancesList();
-      if (depthOnlyInstancesList.count() > 0) [[likely]]
-      {
-        WebGLVertexArrayScope vaoScope(glContext, depthOnlyInstancesList.vao);
+      // Clear the stencil buffer for later use
+      glContext->clearStencil(0);
+      glContext->clear(WEBGL_STENCIL_BUFFER_BIT);
 
-        // Draw all instances to depth attachment only
-        depthOnlyInstancesList.beforeInstancedDraw(*glContext, nullptr);
-        {
-          glContext->colorMask(false, false, false, false);
-          glContext->depthMask(true);
-          glContext->disable(WEBGL_BLEND);
-          glContext->drawElementsInstanced(mesh.primitiveTopology(),
-                                           meshIndicesCount,
-                                           WEBGL_UNSIGNED_INT,
-                                           0,
-                                           depthOnlyInstancesList.count());
+      // Iterate layers and write depth
+      inDepthWritePass = true;
+      instancedMesh.iterateLayers(renderLayerWithMask);
 
-          // Restore the color mask state
-          glContext->colorMask(true, true, true, true);
-        }
-        depthOnlyInstancesList.afterInstancedDraw(*glContext);
-      }
+      // Reset the state
+      glContext->colorMask(true, true, true, true);
     }
   }
 

@@ -159,29 +159,24 @@ namespace commandbuffers
         , dataSize(srcSize)
         , usage(usage)
     {
-      if (srcData == nullptr)
+      if (srcSize > 0 && srcData != nullptr)
       {
-        dataSize = 0;
-      }
-      else if (srcSize > 0)
-      {
-        data = malloc(srcSize);
-        if (data != nullptr)
-          memcpy(data, srcData, srcSize);
+        this->data = malloc(srcSize);
+        if (this->data != nullptr)
+          memcpy(this->data, srcData, srcSize);
       }
     }
     BufferDataCommandBufferRequest(const BufferDataCommandBufferRequest &that, bool clone = false)
         : TrCommandBufferSimpleRequest(that, clone)
         , target(that.target)
-        , dataSize(0)
+        , dataSize(that.dataSize)
         , data(nullptr)
         , usage(that.usage)
     {
       if (clone == true && that.data != nullptr)
       {
-        dataSize = that.dataSize;
-        data = malloc(dataSize);
-        memcpy(data, that.data, dataSize);
+        this->data = malloc(dataSize);
+        memcpy(this->data, that.data, dataSize);
       }
     }
     ~BufferDataCommandBufferRequest()
@@ -197,16 +192,19 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      message->addRawSegment(dataSize, data);
+      if (dataSize > 0 && data != nullptr)
+        message->addRawSegment(dataSize, data);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
       auto dataSegment = message.getSegment(0);
-      auto dataSize = dataSegment->getSize();
-      this->dataSize = dataSize;
-      this->data = malloc(dataSize);
-      memcpy(this->data, dataSegment->getData(), dataSize);
+      if (dataSegment != nullptr)
+      {
+        this->dataSize = dataSegment->getSize();
+        this->data = malloc(this->dataSize);
+        memcpy(this->data, dataSegment->getData(), this->dataSize);
+      }
     }
     std::string toString(const char *line_prefix) const override
     {

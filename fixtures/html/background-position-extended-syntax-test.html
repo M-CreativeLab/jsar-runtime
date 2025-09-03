@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Background Position Extended Syntax Test</title>
+  <style>
+    body {
+      background-color: #fff;
+      margin: 20px;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .box {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      position: relative;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRkY2QjZCIi8+CjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjE1IiBmaWxsPSIjRkZGIi8+Cjx0ZXh0IHg9IjIwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzMzMyI+WDwvdGV4dD4KPC9zdmc+');
+      background-repeat: no-repeat;
+    }
+
+    .label {
+      position: absolute;
+      bottom: -25px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* 1-value syntax */
+    .bg-center {
+      background-position: center;
+    }
+
+    .bg-left {
+      background-position: left;
+    }
+
+    .bg-right {
+      background-position: right;
+    }
+
+    .bg-top {
+      background-position: top;
+    }
+
+    .bg-bottom {
+      background-position: bottom;
+    }
+
+    .bg-10px {
+      background-position: 10px;
+    }
+
+    .bg-25percent {
+      background-position: 25%;
+    }
+
+    /* 2-value syntax */
+    .bg-left-top {
+      background-position: left top;
+    }
+
+    .bg-center-center {
+      background-position: center center;
+    }
+
+    .bg-right-bottom {
+      background-position: right bottom;
+    }
+
+    .bg-20px-30px {
+      background-position: 20px 30px;
+    }
+
+    .bg-75percent-25percent {
+      background-position: 75% 25%;
+    }
+
+    .bg-left-50percent {
+      background-position: left 50%;
+    }
+
+    /* 3-value syntax */
+    .bg-left-10px-top {
+      background-position: left 10px top;
+    }
+
+    .bg-right-20px-bottom {
+      background-position: right 20px bottom;
+    }
+
+    .bg-top-15px-center {
+      background-position: top 15px center;
+    }
+
+    .bg-bottom-25px-left {
+      background-position: bottom 25px left;
+    }
+
+    /* 4-value syntax */
+    .bg-left-10px-top-20px {
+      background-position: left 10px top 20px;
+    }
+
+    .bg-right-15px-bottom-25px {
+      background-position: right 15px bottom 25px;
+    }
+
+    .bg-left-5px-bottom-10px {
+      background-position: left 5px bottom 10px;
+    }
+
+    .bg-right-30px-top-5px {
+      background-position: right 30px top 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Background Position Extended Syntax Test</h1>
+  <p>This page demonstrates all supported background-position syntax variations: 1-value, 2-value, 3-value, and 4-value
+    syntax.</p>
+
+  <h2>1-Value Syntax</h2>
+  <div class="container">
+    <div class="box bg-center">
+      <div class="label">center</div>
+    </div>
+    <div class="box bg-left">
+      <div class="label">left</div>
+    </div>
+    <div class="box bg-right">
+      <div class="label">right</div>
+    </div>
+    <div class="box bg-top">
+      <div class="label">top</div>
+    </div>
+    <div class="box bg-bottom">
+      <div class="label">bottom</div>
+    </div>
+    <div class="box bg-10px">
+      <div class="label">10px</div>
+    </div>
+    <div class="box bg-25percent">
+      <div class="label">25%</div>
+    </div>
+  </div>
+
+  <h2>2-Value Syntax</h2>
+  <div class="container">
+    <div class="box bg-left-top">
+      <div class="label">left top</div>
+    </div>
+    <div class="box bg-center-center">
+      <div class="label">center center</div>
+    </div>
+    <div class="box bg-right-bottom">
+      <div class="label">right bottom</div>
+    </div>
+    <div class="box bg-20px-30px">
+      <div class="label">20px 30px</div>
+    </div>
+    <div class="box bg-75percent-25percent">
+      <div class="label">75% 25%</div>
+    </div>
+    <div class="box bg-left-50percent">
+      <div class="label">left 50%</div>
+    </div>
+  </div>
+
+  <h2>3-Value Syntax</h2>
+  <div class="container">
+    <div class="box bg-left-10px-top">
+      <div class="label">left 10px top</div>
+    </div>
+    <div class="box bg-right-20px-bottom">
+      <div class="label">right 20px bottom</div>
+    </div>
+    <div class="box bg-top-15px-center">
+      <div class="label">top 15px center</div>
+    </div>
+    <div class="box bg-bottom-25px-left">
+      <div class="label">bottom 25px left</div>
+    </div>
+  </div>
+
+  <h2>4-Value Syntax</h2>
+  <div class="container">
+    <div class="box bg-left-10px-top-20px">
+      <div class="label">left 10px top 20px</div>
+    </div>
+    <div class="box bg-right-15px-bottom-25px">
+      <div class="label">right 15px bottom 25px</div>
+    </div>
+    <div class="box bg-left-5px-bottom-10px">
+      <div class="label">left 5px bottom 10px</div>
+    </div>
+    <div class="box bg-right-30px-top-5px">
+      <div class="label">right 30px top 5px</div>
+    </div>
+  </div>
+
+  <h2>Test Results</h2>
+  <p>Each box above should show a red square with a white circle containing an "X" positioned according to the specified
+    background-position value. The background image is 40x40 pixels.</p>
+
+  <h3>Expected Behavior:</h3>
+  <ul>
+    <li><strong>1-value:</strong> Keywords position on one axis, center on the other. Length/percentage positions
+      horizontally, centers vertically.</li>
+    <li><strong>2-value:</strong> First value is horizontal, second is vertical.</li>
+    <li><strong>3-value:</strong> One keyword with offset, one keyword without offset.</li>
+    <li><strong>4-value:</strong> Two keywords, each with their respective offsets.</li>
+  </ul>
+</body>
+
+</html>

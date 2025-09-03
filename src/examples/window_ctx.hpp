@@ -1,12 +1,19 @@
 #pragma once
 
+#include <cmath>
+
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
-#include <GLFW/glfw3native.h>
 #else
 #include <GL/gl.h>
 #endif
+
 #include <GLFW/glfw3.h>
+#ifdef __APPLE__
+#define GLFW_EXPOSE_NATIVE_COCOA
+#include <GLFW/glfw3native.h>
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <common/viewport.hpp>
@@ -26,6 +33,7 @@ namespace jsar::example
     WindowContext(int width, int height);
 
   public:
+    void shutdown();
     bool isTerminated()
     {
       return terminated;
@@ -37,11 +45,17 @@ namespace jsar::example
     void handleScroll(double xoffset, double yoffset);
     void handleCursorMove(double xoffset, double yoffset);
     void handleMouseButton(int button, int action, int mods);
-    void updateAnimation();               // Update smooth animation for viewer controls
-    void setDragRegionHeight(int height); // Set the height of the macOS window drag region
+    void handleKeyInput(int key, int scancode, int action, int mods); // Handle keyboard input
+    void handleCharInput(unsigned int codepoint);                     // Handle character input
+    void updateAnimation();                                           // Update smooth animation for viewer controls
+    void setDragRegionHeight(int height);                             // Set the height of the macOS window drag region
+
+    // Event handler registration for UI components
+    void setKeyInputHandler(std::function<void(int, int, int, int)> handler);
+    void setCharInputHandler(std::function<void(unsigned int)> handler);
+    void setUIMouseButtonHandler(std::function<void(int, int, double, double)> handler);
 
   private:
-    void terminate();
     void initWindow(GLFWmonitor *monitor = nullptr);
 
   public:
@@ -49,8 +63,8 @@ namespace jsar::example
     int height;
     float aspect = 1.0f;
     float contentScaling[2];
-    GLFWwindow *window;
-    StatPanel *statPanel;
+    GLFWwindow *window = nullptr;
+    StatPanel *statPanel = nullptr;
     XRStereoscopicRenderer *xrRenderer = nullptr;
 
     // Mouse control state
@@ -76,6 +90,11 @@ namespace jsar::example
     double lastMouseMoveTime = 0.0;
     static constexpr double SCROLL_THROTTLE_INTERVAL = 0.016; // ~60 FPS (16ms)
     static constexpr double MOUSE_THROTTLE_INTERVAL = 0.016;  // ~60 FPS (16ms)
+
+    // Event handlers for UI components
+    std::function<void(int, int, int, int)> keyInputHandler_;
+    std::function<void(unsigned int)> charInputHandler_;
+    std::function<void(int, int, double, double)> uiMouseButtonHandler_;
 
   private:
     bool terminated = false;

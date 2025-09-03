@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Grid Areas Layout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Grid Areas Container */
+    .grid-container {
+      display: grid;
+      border: none;
+      box-sizing: border-box;
+      background-color: #c9d4df5f;
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "header header header"
+        "sidebar main aside"
+        "footer footer footer";
+      gap: 20px;
+      padding: 20px;
+      width: 100%;
+      min-height: 80vh;
+    }
+
+    /* Grid Items with Areas */
+    .grid-header {
+      grid-area: header;
+      background: rgba(100, 5, 5, 0.8);
+      color: white;
+      text-align: center;
+      padding: 30px;
+      border-radius: 15px;
+      transform: translateZ(5px);
+    }
+
+    .grid-sidebar {
+      grid-area: sidebar;
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 20px;
+      padding: 30px;
+      transform: translateZ(10px);
+    }
+
+    .grid-main {
+      grid-area: main;
+      background: rgba(0, 200, 100, 0.85);
+      border-radius: 20px;
+      padding: 30px;
+      transform: translateZ(10px);
+    }
+
+    .grid-aside {
+      grid-area: aside;
+      background: rgba(255, 150, 0, 0.85);
+      border-radius: 20px;
+      padding: 30px;
+      transform: translateZ(10px);
+    }
+
+    .grid-footer {
+      grid-area: footer;
+      background: rgba(150, 0, 255, 0.85);
+      color: white;
+      text-align: center;
+      padding: 30px;
+      border-radius: 15px;
+      transform: translateZ(5px);
+    }
+
+    .grid-item:hover {
+      transform: translateZ(15px);
+    }
+
+    /* Content styling */
+    .content-box {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+
+    /* Header */
+    header.page-header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header class="page-header">
+    <h1>Grid Areas Layout</h1>
+  </header>
+
+  <main class="grid-container">
+    <section class="grid-header grid-item">
+      <h2>Grid Header Area</h2>
+      <p>This spans across all columns</p>
+    </section>
+
+    <section class="grid-sidebar grid-item">
+      <h3>Sidebar</h3>
+      <div class="content-box">
+        <p>Navigation menu</p>
+      </div>
+      <div class="content-box">
+        <p>Side widgets</p>
+      </div>
+    </section>
+
+    <section class="grid-main grid-item">
+      <h3>Main Content</h3>
+      <div class="content-box">
+        <p>Primary content area with the most space allocated.</p>
+      </div>
+      <div class="content-box">
+        <p>Additional main content that takes up the central area.</p>
+      </div>
+      <div class="content-box">
+        <p>More content demonstrating the main area's flexibility.</p>
+      </div>
+    </section>
+
+    <section class="grid-aside grid-item">
+      <h3>Aside</h3>
+      <div class="content-box">
+        <p>Secondary info</p>
+      </div>
+      <div class="content-box">
+        <p>Related links</p>
+      </div>
+    </section>
+
+    <section class="grid-footer grid-item">
+      <h2>Grid Footer Area</h2>
+      <p>Footer spanning full width at bottom</p>
+    </section>
+  </main>
+</body>
+
+</html>

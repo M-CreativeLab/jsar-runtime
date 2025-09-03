@@ -7,7 +7,7 @@
 
 namespace dom
 {
-  class HTMLStyleElement : public HTMLElement
+  class HTMLStyleElement final : public HTMLElement
   {
     using HTMLElement::HTMLElement;
 
@@ -18,6 +18,11 @@ namespace dom
     }
 
   public:
+    bool isHTMLStyleElement() const override
+    {
+      return true;
+    }
+
     void createdCallback(bool from_scripting) override;
     void connectedCallback() override;
 

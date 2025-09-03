@@ -393,20 +393,27 @@ namespace client_graphics
 
   int WebGLContext::getShaderParameter(shared_ptr<WebGLShader> shader, int pname)
   {
+    if (pname == WEBGL_SHADER_TYPE)
+      return static_cast<int>(shader->type);
+    if (pname == WEBGL_COMPILE_STATUS &&
+        shader->hasCompileStatus())
+      return static_cast<int>(shader->getCompileStatus());
+
+    // Otherwise, send a command buffer request and wait for the response.
     auto req = GetShaderParamCommandBufferRequest(shader->id, pname);
     sendCommandBufferRequest(req, true);
 
     auto resp = recvResponse<GetShaderParamCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req);
-    if (resp != nullptr) [[likely]]
-    {
-      int value = resp->value;
-      delete resp;
-      return value;
-    }
+    assert(resp != nullptr && "Response should not be null");
+
+    shader->setShaderParameters(resp->deleteStatus,
+                                resp->compileStatus);
+    if (pname == WEBGL_DELETE_STATUS)
+      return static_cast<int>(resp->deleteStatus);
+    else if (pname == WEBGL_COMPILE_STATUS)
+      return static_cast<int>(resp->compileStatus);
     else
-    {
-      throw runtime_error("Failed to get shader parameter: timeout.");
-    }
+      throw runtime_error("Unsupported shader parameter: " + to_string(pname));
   }
 
   string WebGLContext::getShaderInfoLog(shared_ptr<WebGLShader> shader)
