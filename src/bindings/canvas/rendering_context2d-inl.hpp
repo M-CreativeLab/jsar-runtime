@@ -173,6 +173,25 @@ namespace canvasbinding
   }
 
   template <typename ObjectType, typename CanvasType>
+  Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::StrokeRect(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "4 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    auto x = info[0].ToNumber().FloatValue();
+    auto y = info[1].ToNumber().FloatValue();
+    auto width = info[2].ToNumber().FloatValue();
+    auto height = info[3].ToNumber().FloatValue();
+    contextImpl->strokeRect(x, y, width, height);
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename CanvasType>
   Napi::Value CanvasRenderingContext2DBase<ObjectType, CanvasType>::ClearRect(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

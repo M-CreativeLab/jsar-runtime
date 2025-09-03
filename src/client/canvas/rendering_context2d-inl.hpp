@@ -410,6 +410,18 @@ namespace canvas
   }
 
   template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::strokeRect(float x, float y, float width, float height)
+  {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    auto strokePaint = getStrokePaint();
+    // TODO: shadow painting
+    skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), strokePaint);
+    this->notifyCanvasUpdated();
+  }
+
+  template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::clearRect(float x, float y, float width, float height)
   {
     skPaint->setStyle(SkPaint::kFill_Style);
