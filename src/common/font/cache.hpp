@@ -279,6 +279,19 @@ namespace font
   class FontCacheManager
   {
   public:
+    static FontCacheManager *GetInstance()
+    {
+      if (s_Instance == nullptr)
+      {
+        s_Instance = new FontCacheManager();
+        assert(s_Instance != nullptr && "Failed to create FontCacheManager instance");
+      }
+      return s_Instance;
+    }
+
+  private:
+    static inline FontCacheManager *s_Instance = nullptr;
+
     FontCacheManager()
         : fontMgr_(sk_make_sp<MutipleDirectoriesFontMgr>())
         , fontCollection_(sk_make_sp<skia::textlayout::FontCollection>())

@@ -95,12 +95,12 @@ namespace jsar::example
 
     // Content management
     std::unordered_map<uint32_t, std::shared_ptr<Content>> contents_;
+    std::shared_ptr<BarComponent> contentsBarComponent_;
     uint32_t nextContentId_ = 1;
 
     // Screen GUI components
     std::shared_ptr<StatPanel> statPanel_;
     std::shared_ptr<InputBox> urlInputBox_;
-    std::shared_ptr<BarComponent> contentsBarComponent_;
 
     // Dragging state
     std::shared_ptr<Content> draggedContent_;

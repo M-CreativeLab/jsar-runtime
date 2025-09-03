@@ -14,7 +14,11 @@ namespace jsar::example
       , isFocused_(false)
       , cursorPosition_(0)
       , lastCursorBlink_(0.0)
+      , canvas_(nullptr)
+      , fontMgr_(font::FontCacheManager::GetInstance())
   {
+    assert(fontMgr_ != nullptr);
+
     initGLProgram();
     resetCanvas();
 
@@ -142,7 +146,7 @@ namespace jsar::example
     cursorPaint_.setStyle(SkPaint::kFill_Style);
     cursorPaint_.setColor(0xFF007AFF); // Apple system blue for cursor
 
-    auto typeface = fontMgr_.getTypeface("monospace");
+    auto typeface = fontMgr_->getTypeface("monospace");
     textFont_.setTypeface(typeface);
     textFont_.setSize(14);
     textFont_.setEdging(SkFont::Edging::kSubpixelAntiAlias);

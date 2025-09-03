@@ -51,6 +51,7 @@ namespace jsar::example
   public:
     StatPanel(WindowContext *windowCtx)
         : windowCtx(windowCtx)
+        , fontMgr(font::FontCacheManager::GetInstance())
     {
       initGLProgram();
       resetCanvas();
@@ -134,7 +135,7 @@ namespace jsar::example
       textPaint.setStyle(SkPaint::kFill_Style);
       textPaint.setColor(0xFF5b8c00);
 
-      auto typeface = fontMgr.getTypeface("monospace");
+      auto typeface = fontMgr->getTypeface("monospace");
       textFont.setTypeface(typeface);
       textFont.setSize(14);
       textFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
@@ -215,7 +216,7 @@ namespace jsar::example
     SkCanvas *canvas;
     SkPaint textPaint;
     SkFont textFont;
-    font::FontCacheManager fontMgr;
+    font::FontCacheManager *fontMgr;
 
     SkImageInfo imageInfo;
     std::vector<uint8_t> pixels;
