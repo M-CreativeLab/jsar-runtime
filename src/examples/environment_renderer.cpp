@@ -844,6 +844,9 @@ void main()
           float texU = (theta + M_PI) / (2.0f * M_PI);
           float texV = (phi + M_PI / 2.0f) / M_PI;
 
+          // Fix Y-axis reversal: flip V coordinate since image coordinates start at top-left
+          texV = 1.0f - texV;
+
           // Clamp texture coordinates
           texU = fmaxf(0.0f, fminf(1.0f, texU));
           texV = fmaxf(0.0f, fminf(1.0f, texV));
