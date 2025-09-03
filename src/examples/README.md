@@ -2,6 +2,41 @@
 
 This directory contains examples demonstrating the JSAR Runtime capabilities with the new TransmuteBrowser architecture.
 
+## Bar Component Refactoring
+
+The bar component has been refactored to improve separation of concerns and code modularity. See the detailed refactoring documentation below.
+
+### Architecture Overview
+
+The monolithic `BarComponent` has been split into three specialized components:
+
+1. **ContentBarCanvas** - Handles UI rendering with Skia Canvas and Apple-style design
+2. **ContentBar3d** - Handles 3D scene integration with OpenGL rendering
+3. **EventProxy** - Manages event forwarding between components
+
+The original `BarComponent` now acts as a facade that maintains API compatibility while coordinating the specialized components.
+
+### Key Benefits
+
+- **Separation of Concerns**: 3D scene logic completely separated from UI rendering logic
+- **Event Decoupling**: Canvas subcomponents can handle events independently
+- **API Compatibility**: Existing code continues to work without changes
+- **Enhanced Extensibility**: Easy to extend both 3D and UI functionality independently
+
+### Usage
+
+```cpp
+// Existing API continues to work
+BarComponent barComponent;
+barComponent.addContent(content);
+barComponent.setContentHovered(content, true);
+
+// Advanced usage - access individual components
+auto canvas = barComponent.getCanvasComponent();
+auto bar3d = barComponent.get3dComponent();
+auto eventProxy = barComponent.getEventProxy();
+```
+
 ## Transmute Browser
 
 The `desktop_opengl` example demonstrates a complete spatial web browser example.
