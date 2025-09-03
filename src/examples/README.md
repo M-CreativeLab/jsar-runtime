@@ -34,8 +34,12 @@ The `desktop_opengl` example demonstrates a complete spatial web browser example
   - Sky blue when looking up
   - Warm horizon colors when looking horizontally
   - Earth brown when looking down
+- **360° Panorama Support**: Load PNG/JPG panorama images with equirectangular projection
+- **Cube Map Support**: Load traditional cube map directories with 6 face images
 - **Control Options**:
-  - `--env-map` - Enable environment map (default)
+  - `--env-map /path/to/panorama.jpg` - Load a 360° panorama image
+  - `--env-map /path/to/cubemap/` - Load cube map from directory
+  - `--env-map` - Use default procedural environment
   - `--no-env-map` - Disable environment map for solid black background
 
 ### XR Rendering Support
@@ -51,12 +55,18 @@ The `desktop_opengl` example demonstrates a complete spatial web browser example
 ## Default with environment map
 ./transmute_browser
 
-# Stereo rendering with environment map
-./transmute_browser --stereo singlepass
+# Load a 360° panorama image
+./transmute_browser --env-map /path/to/panorama.jpg
+
+# Load cube map from directory
+./transmute_browser --env-map /path/to/cubemap_directory/
+
+# Stereo rendering with panorama
+./transmute_browser --stereo singlepass --env-map /path/to/panorama.jpg
 
 # Disable environment map for solid black background
 ./transmute_browser --no-env-map
 
-# Custom window size with environment map
-./transmute_browser -w 1920 -h 1080 --env-map
+# Custom window size with panorama
+./transmute_browser -w 1920 -h 1080 --env-map /path/to/panorama.jpg
 ```
