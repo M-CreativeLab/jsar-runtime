@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Flexbox Wrap Layout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Flexbox Wrap Container */
+    .flex-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-content: space-around;
+      border: none;
+      box-sizing: border-box;
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      width: 100%;
+      min-height: 70vh;
+    }
+
+    /* Flex Items */
+    .flex-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 20px;
+      padding: 30px;
+      transform: translateZ(10px);
+      flex: 0 0 calc(30% - 10px);
+      text-align: center;
+    }
+
+    .flex-item:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translateZ(15px);
+    }
+
+    .flex-item:nth-child(2n) {
+      background: rgba(0, 200, 100, 0.85);
+    }
+
+    .flex-item:nth-child(3n) {
+      background: rgba(255, 150, 0, 0.85);
+    }
+
+    .flex-item:nth-child(4n) {
+      background: rgba(150, 0, 255, 0.85);
+    }
+
+    /* Header */
+    header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Flexbox Wrap Layout</h1>
+  </header>
+
+  <main class="flex-container">
+    <section class="flex-item">
+      <h3>Item 1</h3>
+      <p>Wrapping test</p>
+    </section>
+
+    <section class="flex-item">
+      <h3>Item 2</h3>
+      <p>Flex wrap demo</p>
+    </section>
+
+    <section class="flex-item">
+      <h3>Item 3</h3>
+      <p>Multi-line layout</p>
+    </section>
+
+    <section class="flex-item">
+      <h3>Item 4</h3>
+      <p>Fourth item wraps</p>
+    </section>
+
+    <section class="flex-item">
+      <h3>Item 5</h3>
+      <p>Fifth item line</p>
+    </section>
+
+    <section class="flex-item">
+      <h3>Item 6</h3>
+      <p>Sixth item line</p>
+    </section>
+  </main>
+</body>
+
+</html>
