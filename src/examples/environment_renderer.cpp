@@ -38,14 +38,22 @@ out vec3 texCoords;
 
 uniform mat4 view;
 uniform mat4 projection;
+uniform float parallaxScale;
 
 void main()
 {
     texCoords = position;
     
-    // Remove translation from view matrix for skybox
-    mat4 rotView = mat4(mat3(view));
-    vec4 pos = projection * rotView * vec4(position, 1.0);
+    // Create modified view matrix with scaled translation for immersive parallax effect
+    mat4 parallaxView = mat4(mat3(view)); // Start with rotation only
+    
+    // Add scaled translation for immersive feel
+    parallaxView[3][0] = view[3][0] * parallaxScale; // X translation
+    parallaxView[3][1] = view[3][1] * parallaxScale; // Y translation
+    parallaxView[3][2] = view[3][2] * parallaxScale; // Z translation
+    parallaxView[3][3] = 1.0; // Keep W component as 1
+    
+    vec4 pos = projection * parallaxView * vec4(position, 1.0);
     
     // Set z to w so that after perspective division, z will be 1.0 (maximum depth)
     gl_Position = pos.xyww;
@@ -80,6 +88,7 @@ void main()
       , viewMatrixLocation_(-1)
       , projectionMatrixLocation_(-1)
       , cubeMapLocation_(-1)
+      , parallaxScaleLocation_(-1)
   {
   }
 
@@ -131,6 +140,7 @@ void main()
     viewMatrixLocation_ = glGetUniformLocation(shaderProgram_, "view");
     projectionMatrixLocation_ = glGetUniformLocation(shaderProgram_, "projection");
     cubeMapLocation_ = glGetUniformLocation(shaderProgram_, "skybox");
+    parallaxScaleLocation_ = glGetUniformLocation(shaderProgram_, "parallaxScale");
 
     initialized_ = true;
     cout << "Environment Renderer initialized successfully" << endl;
@@ -154,6 +164,9 @@ void main()
     // Set uniforms
     glUniformMatrix4fv(viewMatrixLocation_, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(projectionMatrixLocation_, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+    // Set parallax scale for immersive camera movement effect (small value for subtle effect)
+    glUniform1f(parallaxScaleLocation_, 0.05f);
 
     // Bind cube map texture
     glActiveTexture(GL_TEXTURE0);

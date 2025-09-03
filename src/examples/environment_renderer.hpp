@@ -105,6 +105,7 @@ namespace jsar::example
     GLint viewMatrixLocation_;
     GLint projectionMatrixLocation_;
     GLint cubeMapLocation_;
+    GLint parallaxScaleLocation_;
 
     // Shader source code
     static const char *vertexShaderSource_;
