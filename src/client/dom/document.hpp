@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <chrono>
 #include <pugixml/pugixml.hpp>
 #include <crates/bindings.hpp>
 #include <client/animation/document_timeline.hpp>
@@ -380,7 +381,13 @@ namespace dom
     bool simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
+    bool shouldThrottleScrollEvent() const;
+
     std::shared_ptr<client_layout::LayoutView> layout_view_;
     mutable std::weak_ptr<Node> dirty_root_text_or_element_;
+
+    // Scroll performance optimization
+    std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // ~60fps throttling
   };
 }
