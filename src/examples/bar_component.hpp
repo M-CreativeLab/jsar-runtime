@@ -10,26 +10,23 @@
 #include <GLFW/glfw3.h>
 
 #include "./window_ctx.hpp"
-#include "./content_bar_canvas.hpp"
+#include "./canvas_system.hpp"
 #include "./content_bar_3d.hpp"
-#include "./event_proxy.hpp"
 
 namespace jsar::example
 {
   class Content;
-  class ContentBarCanvas;
+  class CanvasSystem;
   class ContentBar3d;
-  class EventProxy;
 
   /**
    * 3D bar component that appears beneath each content for dragging.
-   * Refactored to use ContentBar3d for 3D scene integration and ContentBarCanvas for UI rendering.
-   * Maintains API compatibility while providing separation of concerns through event proxy.
+   * Refactored to use CanvasSystem for GUI drawing and ContentBar3d as a Mesh.
+   * Maintains API compatibility while using the new canvas system architecture.
    * 
-   * This class now acts as a facade that coordinates between the specialized components:
-   * - ContentBar3d: Handles OpenGL rendering, 3D positioning, instanced rendering, ray intersection
-   * - ContentBarCanvas: Handles Skia Canvas rendering, Apple-style design, UI elements
-   * - EventProxy: Manages event forwarding between 3D and Canvas components
+   * This class now acts as a facade that coordinates between:
+   * - CanvasSystem: Handles Skia Canvas rendering and ray event processing
+   * - ContentBar3d: Inherits from Mesh, handles 3D positioning and mesh rendering
    */
   class BarComponent
   {
@@ -53,11 +50,6 @@ namespace jsar::example
     void updateContentTransform(Content *content, const glm::mat4 &transform);
 
     /**
-     * Render all bars using instanced rendering.
-     */
-    void renderInstanced(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
-
-    /**
      * Check if a 3D ray intersects with any bar and return the content.
      */
     Content *checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const;
@@ -73,9 +65,9 @@ namespace jsar::example
     void setContentDragging(Content *content, bool dragging);
 
     /**
-     * Get access to the canvas component for advanced UI customization.
+     * Get access to the canvas system for advanced GUI customization.
      */
-    std::shared_ptr<ContentBarCanvas> getCanvasComponent() const
+    std::shared_ptr<CanvasSystem> getCanvasSystem() const
     {
       return canvas_;
     }
@@ -88,21 +80,9 @@ namespace jsar::example
       return bar3d_;
     }
 
-    /**
-     * Get access to the event proxy for custom event handling.
-     */
-    std::shared_ptr<EventProxy> getEventProxy() const
-    {
-      return eventProxy_;
-    }
-
   private:
-    void setupEventProxy();
-
-  private:
-    // New component-based architecture
-    std::shared_ptr<ContentBarCanvas> canvas_;
+    // New canvas-based architecture
+    std::shared_ptr<CanvasSystem> canvas_;
     std::shared_ptr<ContentBar3d> bar3d_;
-    std::shared_ptr<EventProxy> eventProxy_;
   };
 }

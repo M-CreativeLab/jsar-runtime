@@ -1,71 +1,43 @@
 #include <iostream>
 #include <algorithm>
 
+#include <common/command_buffers/webgl_constants.hpp>
+
 #include "./content_bar_3d.hpp"
 #include "./content.hpp"
 
 namespace jsar::example
 {
   using namespace std;
+  using namespace builtin_scene;
 
-  ContentBar3d::ContentBar3d(std::shared_ptr<ContentBarCanvas> canvas)
-      : canvas_(canvas)
-      , barTexture_(0)
-      , barVertSource_(
-          "#version 410 core\n"
-          "layout (location = 0) in vec3 position;\n"
-          "layout (location = 1) in vec2 texCoord;\n"
-          "layout (location = 2) in mat4 instanceTransform;\n" // Instance matrix (locations 2-5)
-          "layout (location = 6) in vec3 instanceColor;\n"     // Instance color for state
-          "\n"
-          "uniform mat4 view;\n"
-          "uniform mat4 projection;\n"
-          "\n"
-          "out vec2 TexCoord;\n"
-          "out vec3 BarColor;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    gl_Position = projection * view * instanceTransform * vec4(position, 1.0);\n"
-          "    TexCoord = texCoord;\n"
-          "    BarColor = instanceColor;\n"
-          "}\n")
-      , barFragSource_(
-          "#version 410 core\n"
-          "precision mediump float;\n"
-          "\n"
-          "in vec2 TexCoord;\n"
-          "in vec3 BarColor;\n"
-          "out vec4 FragColor;\n"
-          "\n"
-          "uniform sampler2D barTexture;\n"
-          "\n"
-          "void main()\n"
-          "{\n"
-          "    // Sample the Skia-generated bar texture with Apple design\n"
-          "    vec4 texColor = texture(barTexture, TexCoord);\n"
-          "    \n"
-          "    // Apply the instance color for state-based visual feedback\n"
-          "    vec3 finalColor = texColor.rgb * BarColor;\n"
-          "    \n"
-          "    FragColor = vec4(finalColor, texColor.a);\n"
-          "}\n")
+  ContentBar3d::ContentBar3d(std::shared_ptr<CanvasSystem> canvas)
+      : Mesh("ContentBar3d", PrimitiveTopology::TRIANGLES)
+      , canvas_(canvas)
   {
-    initGLProgram();
-    createGeometry();
-    updateTextureFromCanvas();
+    initializeMeshGeometry();
 
-    if (glGetError() != GL_NO_ERROR)
-      cout << "OpenGL error on ContentBar3d init" << endl;
+    // Register ray event handler with canvas system
+    canvas_->registerRayEventHandler([this](const RayEvent &event) -> bool
+                                     {
+                                       processRayEvent(event);
+                                       return true; // Handle all ray events
+                                     });
   }
 
   ContentBar3d::~ContentBar3d()
   {
-    glDeleteVertexArrays(1, &vao_);
-    glDeleteBuffers(1, &vertexVBO_);
-    glDeleteBuffers(1, &instanceVBO_);
-    glDeleteProgram(program_);
-    // Note: barTexture_ is owned by ContentBarCanvas, don't delete it here
+    // Mesh destructor will handle cleanup
+  }
+
+  float ContentBar3d::area()
+  {
+    return BAR_WIDTH * BAR_HEIGHT;
+  }
+
+  float ContentBar3d::volume()
+  {
+    return 0.0f; // 2D bar has no volume
   }
 
   void ContentBar3d::addContent(Content *content)
@@ -76,20 +48,15 @@ namespace jsar::example
     if (it == instances_.end())
     {
       instances_.emplace_back(content);
-      updateInstanceBuffer();
     }
   }
 
   void ContentBar3d::removeContent(Content *content)
   {
-    auto it = remove_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
-                        { return instance.content == content; });
-
-    if (it != instances_.end())
-    {
-      instances_.erase(it, instances_.end());
-      updateInstanceBuffer();
-    }
+    instances_.erase(
+      remove_if(instances_.begin(), instances_.end(), [content](const BarInstance &instance)
+                { return instance.content == content; }),
+      instances_.end());
   }
 
   void ContentBar3d::updateContentTransform(Content *content, const glm::mat4 &transform)
@@ -99,9 +66,49 @@ namespace jsar::example
 
     if (it != instances_.end())
     {
-      it->transform = calculateBarTransform(glm::vec3(transform[3]));
-      updateInstanceBuffer();
+      it->transform = transform;
     }
+  }
+
+  Content *ContentBar3d::checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
+  {
+    // Create ray event and process it
+    RayEvent event;
+    event.type = RayEventType::Move;
+    event.rayOrigin = rayOrigin;
+    event.rayDirection = rayDirection;
+
+    // Simple ray-plane intersection for each bar instance
+    for (const auto &instance : instances_)
+    {
+      // Calculate bar position from transform
+      glm::vec3 barPosition = glm::vec3(instance.transform[3]);
+      barPosition.y += BAR_OFFSET_Y;
+
+      // Simple ray-plane intersection (assuming bar is on XZ plane)
+      float t = (barPosition.y - rayOrigin.y) / rayDirection.y;
+      if (t > 0)
+      {
+        glm::vec3 intersectionPoint = rayOrigin + t * rayDirection;
+
+        // Check if intersection is within bar bounds
+        float halfWidth = BAR_WIDTH * 0.5f;
+        if (abs(intersectionPoint.x - barPosition.x) <= halfWidth &&
+            abs(intersectionPoint.z - barPosition.z) <= halfWidth)
+        {
+          // Calculate local position for the event
+          event.localPosition.x = (intersectionPoint.x - barPosition.x + halfWidth) / BAR_WIDTH;
+          event.localPosition.y = (intersectionPoint.z - barPosition.z + halfWidth) / BAR_WIDTH;
+
+          // Forward event to canvas system
+          const_cast<CanvasSystem *>(canvas_.get())->processRayEvent(event);
+
+          return instance.content;
+        }
+      }
+    }
+
+    return nullptr;
   }
 
   void ContentBar3d::setContentHovered(Content *content, bool hovered)
@@ -112,11 +119,8 @@ namespace jsar::example
     if (it != instances_.end())
     {
       it->isHovered = hovered;
-      updateInstanceBuffer();
+      canvas_->updateContentState(content, hovered, it->isDragging);
     }
-
-    // Forward to canvas via event proxy
-    canvas_->handleCanvasEvent(content, "hover", &hovered);
   }
 
   void ContentBar3d::setContentDragging(Content *content, bool dragging)
@@ -127,284 +131,60 @@ namespace jsar::example
     if (it != instances_.end())
     {
       it->isDragging = dragging;
-      updateInstanceBuffer();
+      canvas_->updateContentState(content, it->isHovered, dragging);
     }
-
-    // Forward to canvas via event proxy
-    canvas_->handleCanvasEvent(content, "drag", &dragging);
   }
 
-  Content *ContentBar3d::checkRayIntersection(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection) const
-  {
-    // Ray-plane intersection for each 3D bar plane
-    // The bars are positioned as horizontal planes below content
-
-    for (const auto &instance : instances_)
-    {
-      // Extract bar position from transform matrix
-      glm::vec3 barPosition = glm::vec3(instance.transform[3]);
-
-      // For a horizontal bar plane, the normal is (0, 1, 0) - pointing up
-      glm::vec3 planeNormal = glm::vec3(0, 1, 0);
-
-      // Ray-plane intersection: t = (planePoint - rayOrigin) · planeNormal / (rayDirection · planeNormal)
-      float denominator = glm::dot(rayDirection, planeNormal);
-
-      // Check if ray is parallel to plane (denominator near zero)
-      if (abs(denominator) < 1e-6)
-        continue;
-
-      float t = glm::dot(barPosition - rayOrigin, planeNormal) / denominator;
-
-      // Check if intersection is in front of ray origin
-      if (t > 0)
-      {
-        glm::vec3 intersection = rayOrigin + t * rayDirection;
-
-        // Check if intersection is within bar bounds (horizontal plane)
-        // Bar extends BAR_WIDTH/2 in X direction and BAR_WIDTH/2 in Z direction
-        if (abs(intersection.x - barPosition.x) <= BAR_WIDTH / 2 &&
-            abs(intersection.z - barPosition.z) <= BAR_WIDTH / 2)
-        {
-          return instance.content;
-        }
-      }
-    }
-
-    return nullptr;
-  }
-
-  void ContentBar3d::renderInstanced(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
-  {
-    if (instances_.empty())
-      return;
-
-    updateTextureFromCanvas();
-
-    glUseProgram(program_);
-    glBindVertexArray(vao_);
-
-    // Bind the texture from ContentBarCanvas
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, barTexture_);
-    glUniform1i(textureLoc_, 0);
-
-    // Set uniforms
-    glUniformMatrix4fv(viewMatrixLoc_, 1, GL_FALSE, &viewMatrix[0][0]);
-    glUniformMatrix4fv(projectionMatrixLoc_, 1, GL_FALSE, &projectionMatrix[0][0]);
-
-    {
-      glEnable(GL_DEPTH_TEST);
-      glDepthMask(GL_TRUE);
-
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
-    }
-
-    // Reset state
-    glBindVertexArray(0);
-    glUseProgram(0);
-    glDisable(GL_BLEND);
-
-    if (glGetError() != GL_NO_ERROR)
-      cout << "OpenGL error on ContentBar3d render" << endl;
-  }
-
-  void ContentBar3d::initGLProgram()
-  {
-    // Create and compile shaders
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &barVertSource_, NULL);
-    glCompileShader(vertexShader);
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &barFragSource_, NULL);
-    glCompileShader(fragmentShader);
-
-    // Check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-      glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-           << infoLog << endl;
-    }
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-      glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-           << infoLog << endl;
-    }
-
-    // Create shader program
-    program_ = glCreateProgram();
-    glAttachShader(program_, vertexShader);
-    glAttachShader(program_, fragmentShader);
-    glLinkProgram(program_);
-
-    // Check for linking errors
-    glGetProgramiv(program_, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-      glGetProgramInfoLog(program_, 512, NULL, infoLog);
-      cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-           << infoLog << endl;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    // Get uniform locations
-    viewMatrixLoc_ = glGetUniformLocation(program_, "view");
-    projectionMatrixLoc_ = glGetUniformLocation(program_, "projection");
-    textureLoc_ = glGetUniformLocation(program_, "barTexture");
-  }
-
-  void ContentBar3d::createGeometry()
+  void ContentBar3d::initializeMeshGeometry()
   {
     // Create a simple quad for the bar
-    vertices_ = {
-      // Positions        // Texture coords
-      -BAR_WIDTH / 2,
-      -BAR_HEIGHT / 2,
-      0.0f,
-      0.0f,
-      0.0f, // Bottom left
-      BAR_WIDTH / 2,
-      -BAR_HEIGHT / 2,
-      0.0f,
-      1.0f,
-      0.0f, // Bottom right
-      BAR_WIDTH / 2,
-      BAR_HEIGHT / 2,
-      0.0f,
-      1.0f,
-      1.0f, // Top right
-      -BAR_WIDTH / 2,
-      BAR_HEIGHT / 2,
-      0.0f,
-      0.0f,
-      1.0f // Top left
-    };
+    float halfWidth = BAR_WIDTH * 0.5f;
+    float halfHeight = BAR_HEIGHT * 0.5f;
 
-    // Create VAO and VBOs
-    glGenVertexArrays(1, &vao_);
-    glBindVertexArray(vao_);
+    // Define vertices for a quad (position + UV coordinates)
+    Vertex v1(glm::vec3(-halfWidth, -halfHeight, 0), glm::vec3(0, 1, 0), glm::vec2(0, 0));
+    Vertex v2(glm::vec3(halfWidth, -halfHeight, 0), glm::vec3(0, 1, 0), glm::vec2(1, 0));
+    Vertex v3(glm::vec3(halfWidth, halfHeight, 0), glm::vec3(0, 1, 0), glm::vec2(1, 1));
+    Vertex v4(glm::vec3(-halfWidth, halfHeight, 0), glm::vec3(0, 1, 0), glm::vec2(0, 1));
 
-    // Vertex buffer
-    glGenBuffers(1, &vertexVBO_);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
-    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(float), vertices_.data(), GL_STATIC_DRAW);
+    // Add vertices to mesh
+    insertVertex(v1);
+    insertVertex(v2);
+    insertVertex(v3);
+    insertVertex(v4);
 
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
+    // Define indices for two triangles forming a quad
+    Indices<uint32_t> indices = {0, 1, 2, 0, 2, 3};
+    updateIndices(indices);
 
-    // Texture coordinate attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // Instance buffer (will be updated dynamically)
-    glGenBuffers(1, &instanceVBO_);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_);
-
-    // Create a proper structure for instance data
-    struct InstanceData
-    {
-      glm::mat4 transform;
-      glm::vec3 color;
-      float padding; // For alignment
-    };
-
-    // Instance matrix (4x4 = 4 vec4 attributes)
-    size_t vec4Size = sizeof(glm::vec4);
-    size_t instanceSize = sizeof(InstanceData);
-
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, transform));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + vec4Size));
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 2 * vec4Size));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, instanceSize, (void *)(offsetof(InstanceData, transform) + 3 * vec4Size));
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
-    glEnableVertexAttribArray(4);
-    glEnableVertexAttribArray(5);
-
-    // Instance color
-    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, instanceSize, (void *)offsetof(InstanceData, color));
-    glEnableVertexAttribArray(6);
-
-    // Set instance divisors
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribDivisor(3, 1);
-    glVertexAttribDivisor(4, 1);
-    glVertexAttribDivisor(5, 1);
-    glVertexAttribDivisor(6, 1);
-
-    glBindVertexArray(0);
+    // Enable required vertex attributes
+    enableAttribute(Vertex::ATTRIBUTE_POSITION);
+    enableAttribute(Vertex::ATTRIBUTE_NORMAL);
+    enableAttribute(Vertex::ATTRIBUTE_UV0);
   }
 
-  void ContentBar3d::updateInstanceBuffer()
+  void ContentBar3d::processRayEvent(const RayEvent &event)
   {
-    if (instances_.empty())
-      return;
-
-    // Prepare instance data with colors based on state
-    struct InstanceData
+    // Process ray events forwarded from canvas system
+    // This could trigger additional 3D-specific behaviors
+    switch (event.type)
     {
-      glm::mat4 transform;
-      glm::vec3 color;
-      float padding; // For alignment
-    };
-
-    vector<InstanceData> instanceData;
-    instanceData.reserve(instances_.size());
-
-    for (const auto &instance : instances_)
-    {
-      InstanceData data;
-      data.transform = instance.transform;
-
-      // Set color based on state
-      if (instance.isDragging)
-      {
-        data.color = glm::vec3(0.0f, 0.5f, 1.0f); // Blue when dragging
-      }
-      else if (instance.isHovered)
-      {
-        data.color = glm::vec3(0.7f, 0.7f, 0.7f); // Light gray when hovered
-      }
-      else
-      {
-        data.color = glm::vec3(1.0f, 1.0f, 1.0f);
-      }
-
-      instanceData.push_back(data);
+    case RayEventType::Down:
+      // Handle ray down event
+      break;
+    case RayEventType::Up:
+      // Handle ray up event
+      break;
+    case RayEventType::Move:
+      // Handle ray move event
+      break;
     }
-
-    // Update instance buffer
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO_);
-    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), instanceData.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-  }
-
-  void ContentBar3d::updateTextureFromCanvas()
-  {
-    // Get the texture from the canvas component
-    barTexture_ = canvas_->generateBarTexture();
   }
 
   glm::mat4 ContentBar3d::calculateBarTransform(const glm::vec3 &contentPosition) const
   {
-    // Position the bar below the content
-    glm::vec3 barPosition = contentPosition + glm::vec3(0.0f, BAR_OFFSET_Y, 0.0f);
-
-    // Create transformation matrix
-    return glm::translate(glm::mat4(1.0f), barPosition);
+    glm::mat4 transform = glm::mat4(1.0f);
+    transform = glm::translate(transform, contentPosition + glm::vec3(0, BAR_OFFSET_Y, 0));
+    return transform;
   }
 }
