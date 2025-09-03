@@ -108,6 +108,34 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
+  class ValidateProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<ValidateProgramCommandBufferRequest,
+                                            COMMAND_BUFFER_VALIDATE_PROGRAM_REQ>
+  {
+  public:
+    ValidateProgramCommandBufferRequest() = delete;
+    ValidateProgramCommandBufferRequest(uint32_t clientId)
+        : TrCommandBufferSimpleRequest()
+        , clientId(clientId)
+    {
+    }
+    ValidateProgramCommandBufferRequest(const ValidateProgramCommandBufferRequest &that, bool clone = false)
+        : TrCommandBufferSimpleRequest(that)
+        , clientId(that.clientId)
+    {
+    }
+
+    std::string toString(const char *line_prefix) const override
+    {
+      std::stringstream ss;
+      ss << TrCommandBufferSimpleRequest::toString(line_prefix) << "(" << clientId << ")";
+      return ss.str();
+    }
+
+  public:
+    uint32_t clientId;
+  };
+
   class ActiveInfo
   {
   public:

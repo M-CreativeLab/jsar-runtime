@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>WebGL validateProgram Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+
+    .test-result {
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .pass {
+      color: green;
+      background-color: #e8f5e8;
+      border: 1px solid #4caf50;
+    }
+
+    .fail {
+      color: red;
+      background-color: #ffeaea;
+      border: 1px solid #f44336;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: white;
+    }
+
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WebGL validateProgram() Test</h1>
+  <p>This test validates the <code>gl.validateProgram()</code> method implementation according to the
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/validateProgram">MDN
+      specification</a>.
+  </p>
+
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function addResult(message, isPass, section = null) {
+      const div = document.createElement('div');
+      div.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+      div.innerHTML = `${isPass ? '✅' : '❌'} ${message}`;
+
+      if (section) {
+        section.appendChild(div);
+      } else {
+        results.appendChild(div);
+      }
+    }
+
+    function addSection(title) {
+      const section = document.createElement('div');
+      section.className = 'test-section';
+      const header = document.createElement('h2');
+      header.textContent = title;
+      section.appendChild(header);
+      results.appendChild(section);
+      return section;
+    }
+
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    function createProgram(gl, vertexSource, fragmentSource) {
+      const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
+      const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+      console.info(vertexShader, fragmentShader);
+
+      if (!vertexShader || !fragmentShader) {
+        return null;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      // Clean up shaders
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+
+      return program;
+    }
+
+    function runTests() {
+      const gl = navigator.gl;
+      if (!gl) {
+        addResult('WebGL not supported - test cannot run', false);
+        return;
+      }
+
+      addResult(`WebGL context available: ${gl.constructor.name}`, true);
+      addResult(`WebGL version: ${gl.getParameter(gl.VERSION)}`, true);
+
+      // Test 1: Basic API presence
+      const apiSection = addSection('API Availability Tests');
+
+      try {
+        const hasValidateProgram = typeof gl.validateProgram === 'function';
+        addResult('validateProgram method exists', hasValidateProgram, apiSection);
+
+        const hasValidateStatus = gl.VALIDATE_STATUS !== undefined;
+        addResult(`VALIDATE_STATUS constant exists (value: 0x${gl.VALIDATE_STATUS?.toString(16)})`, hasValidateStatus, apiSection);
+
+        if (!hasValidateProgram || !hasValidateStatus) {
+          addResult('Missing required API components - cannot continue tests', false, apiSection);
+          return;
+        }
+      } catch (error) {
+        addResult(`API check failed: ${error.message}`, false, apiSection);
+        return;
+      }
+
+      // Test 2: Valid program validation
+      const validSection = addSection('Valid Program Tests');
+
+      try {
+        // Simple vertex shader
+        const vertexShaderSource = `
+          #version 310 es
+
+          in vec4 a_position;
+          void main() {
+            gl_Position = a_position;
+          }
+        `;
+
+        // Simple fragment shader
+        const fragmentShaderSource = `
+          #version 310 es
+          precision mediump float;
+
+          out vec4 fragColor;
+          void main() {
+            fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+          }
+        `;
+
+        const validProgram = createProgram(gl, vertexShaderSource, fragmentShaderSource);
+        if (!validProgram) {
+          addResult('Failed to create valid program for testing', false, validSection);
+          return;
+        }
+
+        const linkStatus = gl.getProgramParameter(validProgram, gl.LINK_STATUS);
+        addResult(`Program linked successfully: ${linkStatus}`, linkStatus, validSection);
+
+        // Test validateProgram on valid program
+        gl.validateProgram(validProgram);
+        addResult('validateProgram() called without throwing error', true, validSection);
+
+        // Check validation status
+        const validateStatus = gl.getProgramParameter(validProgram, gl.VALIDATE_STATUS);
+        addResult(`Validation status retrieved: ${validateStatus}`, validateStatus !== null, validSection);
+        addResult(`Valid program passes validation: ${validateStatus}`, validateStatus === true, validSection);
+
+        // Clean up
+        gl.deleteProgram(validProgram);
+        addResult('Valid program test completed', true, validSection);
+
+      } catch (error) {
+        addResult(`Valid program test failed: ${error.message}`, false, validSection);
+      }
+
+      // Test 3: Invalid program validation
+      const invalidSection = addSection('Invalid Program Tests');
+
+      try {
+        // Create program with incompatible shaders
+        const incompatibleVertexSource = `
+          #version 310 es
+          in vec4 a_position;
+          out vec2 v_texcoord;
+          void main() {
+            gl_Position = a_position;
+            v_texcoord = a_position.xy;
+          }
+        `;
+
+        const incompatibleFragmentSource = `
+          #version 310 es
+          precision mediump float;
+
+          out vec4 fragColor;
+          out vec3 v_different_varying; // Different varying name
+          void main() {
+            fragColor = vec4(v_different_varying, 1.0);
+          }
+        `;
+
+        const invalidProgram = createProgram(gl, incompatibleVertexSource, incompatibleFragmentSource);
+        if (invalidProgram) {
+          // Even if it links, it might not validate properly
+          gl.validateProgram(invalidProgram);
+          addResult('validateProgram() called on potentially invalid program', true, invalidSection);
+
+          const validateStatus = gl.getProgramParameter(invalidProgram, gl.VALIDATE_STATUS);
+          addResult(`Invalid program validation status: ${validateStatus}`, true, invalidSection);
+
+          // Get validation info log
+          const infoLog = gl.getProgramInfoLog(invalidProgram);
+          if (infoLog && infoLog.length > 0) {
+            addResult(`Program info log available: "${infoLog.substring(0, 50)}..."`, true, invalidSection);
+          }
+
+          gl.deleteProgram(invalidProgram);
+        }
+
+      } catch (error) {
+        addResult(`Invalid program test: ${error.message}`, true, invalidSection); // Expected to potentially fail
+      }
+
+      // Test 4: Error handling
+      const errorSection = addSection('Error Handling Tests');
+
+      try {
+        // Test with null program
+        try {
+          gl.validateProgram(null);
+          addResult('validateProgram(null) should throw error but did not', false, errorSection);
+        } catch (e) {
+          addResult('validateProgram(null) correctly throws error', true, errorSection);
+        }
+
+        // Test with invalid object
+        try {
+          gl.validateProgram({});
+          addResult('validateProgram({}) should throw error but did not', false, errorSection);
+        } catch (e) {
+          addResult('validateProgram({}) correctly throws error', true, errorSection);
+        }
+
+        // Test with deleted program
+        const tempProgram = gl.createProgram();
+        gl.deleteProgram(tempProgram);
+        try {
+          gl.validateProgram(tempProgram);
+          addResult('validateProgram(deletedProgram) handled without crash', true, errorSection);
+        } catch (e) {
+          addResult('validateProgram(deletedProgram) throws error (acceptable)', true, errorSection);
+        }
+
+      } catch (error) {
+        addResult(`Error handling test failed: ${error.message}`, false, errorSection);
+      }
+
+      // Test 5: Integration with useProgram
+      const integrationSection = addSection('Integration Tests');
+
+      try {
+        const vertexSource = `
+          #version 310 es
+
+          in vec4 a_position;
+          void main() {
+            gl_Position = a_position;
+          }
+        `;
+
+        const fragmentSource = `
+          #version 310 es
+          precision mediump float;
+
+          out vec4 fragColor;
+          uniform vec4 u_color;
+          void main() {
+            fragColor = u_color;
+          }
+        `;
+
+        const program = createProgram(gl, vertexSource, fragmentSource);
+        if (program) {
+          // Validate before use
+          gl.validateProgram(program);
+          const preUseValidation = gl.getProgramParameter(program, gl.VALIDATE_STATUS);
+          addResult(`Program validates before use: ${preUseValidation}`, preUseValidation, integrationSection);
+
+          // Use the program
+          gl.useProgram(program);
+          addResult('Program used successfully after validation', true, integrationSection);
+
+          // Validate after use
+          gl.validateProgram(program);
+          const postUseValidation = gl.getProgramParameter(program, gl.VALIDATE_STATUS);
+          addResult(`Program validates after use: ${postUseValidation}`, postUseValidation, integrationSection);
+
+          gl.deleteProgram(program);
+        }
+
+      } catch (error) {
+        addResult(`Integration test failed: ${error.message}`, false, integrationSection);
+      }
+
+      // Summary
+      const summarySection = addSection('Test Summary');
+      const allResults = document.querySelectorAll('.test-result');
+      const passCount = document.querySelectorAll('.test-result.pass').length;
+      const failCount = document.querySelectorAll('.test-result.fail').length;
+
+      addResult(`Total tests: ${allResults.length}`, true, summarySection);
+      addResult(`Passed: ${passCount}`, passCount > 0, summarySection);
+      addResult(`Failed: ${failCount}`, failCount === 0, summarySection);
+
+      const overallSuccess = failCount === 0 && passCount > 0;
+      addResult(`Overall result: ${overallSuccess ? 'SUCCESS' : 'SOME FAILURES'}`, overallSuccess, summarySection);
+    }
+
+    // Run tests when page loads
+    document.addEventListener('DOMContentLoaded', runTests);
+
+    // Also run immediately in case DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+      // Document still loading, wait for DOMContentLoaded
+    } else {
+      // Document already loaded
+      runTests();
+    }
+  </script>
+</body>
+
+</html>

@@ -243,6 +243,29 @@ namespace webgl
   }
 
   template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::ValidateProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "validateProgram() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    // check if the argument is a WebGLProgram type
+    if (!WebGLProgram::IsInstanceOf(info[0]))
+    {
+      Napi::TypeError::New(env, "validateProgram() takes a WebGLProgram as argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    glContext_->validateProgram(program->handle());
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
   Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::UseProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
