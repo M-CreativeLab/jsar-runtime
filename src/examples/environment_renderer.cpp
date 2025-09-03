@@ -8,6 +8,10 @@
 #include <ios>
 #include <sys/stat.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
@@ -186,12 +190,24 @@ void main()
       }
       else
       {
-        cerr << "Path is not a directory: " << filePath << ". Only directory-based cube maps are supported." << endl;
-        return false;
+        // Path is a file - check if it's a single panorama image
+        string extension = filePath.substr(filePath.find_last_of(".") + 1);
+        transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+        if (extension == "png" || extension == "jpg" || extension == "jpeg")
+        {
+          cout << "Detected panorama image file: " << filePath << endl;
+          return loadPanoramaImage(filePath);
+        }
+        else
+        {
+          cerr << "Unsupported file format: " << filePath << ". Only PNG/JPG panorama images and cube map directories are supported." << endl;
+          return false;
+        }
       }
     }
 
-    cerr << "Could not access directory: " << filePath << endl;
+    cerr << "Could not access file or directory: " << filePath << endl;
     return false;
   }
 
@@ -719,6 +735,151 @@ void main()
 
     hasCubeMapTexture_ = true;
     cout << "Successfully loaded cube map from directory: " << directoryPath << endl;
+    return true;
+  }
+
+  bool EnvironmentRenderer::loadPanoramaImage(const string &filePath)
+  {
+    cout << "Loading 360-degree panorama image: " << filePath << endl;
+
+#ifdef __APPLE__
+    // Load the panorama image using Core Graphics
+    vector<unsigned char> imageData;
+    int imgWidth, imgHeight, imgChannels;
+
+    if (!loadImageWithCoreGraphics(filePath, imageData, imgWidth, imgHeight, imgChannels))
+    {
+      cerr << "Failed to load panorama image: " << filePath << endl;
+      return false;
+    }
+
+    cout << "Loaded panorama image: " << imgWidth << "x" << imgHeight << " channels: " << imgChannels << endl;
+
+    // Convert the equirectangular panorama to a cube map
+    if (!convertEquirectangularToCubeMap(imageData, imgWidth, imgHeight, imgChannels))
+    {
+      cerr << "Failed to convert panorama to cube map: " << filePath << endl;
+      return false;
+    }
+
+    hasCubeMapTexture_ = true;
+    cout << "Successfully loaded and converted panorama image: " << filePath << endl;
+    return true;
+#else
+    // On non-macOS platforms, panorama loading is not implemented
+    cerr << "Panorama image loading not implemented on this platform. Using procedural environment instead." << endl;
+    createProceduralCubeMap();
+    return true;
+#endif
+  }
+
+  bool EnvironmentRenderer::convertEquirectangularToCubeMap(const vector<unsigned char> &panoramaData,
+                                                            int panoramaWidth,
+                                                            int panoramaHeight,
+                                                            int panoramaChannels)
+  {
+    cout << "Converting equirectangular panorama to cube map..." << endl;
+
+    // Create OpenGL cube map texture
+    if (cubeMapTexture_ != 0)
+    {
+      glDeleteTextures(1, &cubeMapTexture_);
+    }
+
+    glGenTextures(1, &cubeMapTexture_);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture_);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    // Define cube face size - using 512x512 for good quality
+    const int faceSize = 512;
+    vector<unsigned char> faceData(faceSize * faceSize * 3);
+
+    // Generate each cube face
+    for (int face = 0; face < 6; face++)
+    {
+      for (int y = 0; y < faceSize; y++)
+      {
+        for (int x = 0; x < faceSize; x++)
+        {
+          // Convert cube face coordinates to normalized [-1, 1] range
+          float u = (2.0f * x / (faceSize - 1)) - 1.0f;
+          float v = (2.0f * y / (faceSize - 1)) - 1.0f;
+
+          // Calculate 3D direction vector for this cube face and pixel
+          glm::vec3 dir;
+          switch (face)
+          {
+          case 0: // +X (right)
+            dir = glm::vec3(1.0f, -v, -u);
+            break;
+          case 1: // -X (left)
+            dir = glm::vec3(-1.0f, -v, u);
+            break;
+          case 2: // +Y (top)
+            dir = glm::vec3(u, 1.0f, v);
+            break;
+          case 3: // -Y (bottom)
+            dir = glm::vec3(u, -1.0f, -v);
+            break;
+          case 4: // +Z (front)
+            dir = glm::vec3(u, -v, 1.0f);
+            break;
+          case 5: // -Z (back)
+            dir = glm::vec3(-u, -v, -1.0f);
+            break;
+          }
+          dir = glm::normalize(dir);
+
+          // Convert 3D direction to equirectangular coordinates
+          float theta = atan2f(dir.z, dir.x); // Azimuthal angle
+          float phi = asinf(dir.y);           // Polar angle
+
+          // Convert to texture coordinates [0, 1]
+          float texU = (theta + M_PI) / (2.0f * M_PI);
+          float texV = (phi + M_PI / 2.0f) / M_PI;
+
+          // Clamp texture coordinates
+          texU = fmaxf(0.0f, fminf(1.0f, texU));
+          texV = fmaxf(0.0f, fminf(1.0f, texV));
+
+          // Sample the panorama image
+          int panoramaX = (int)(texU * (panoramaWidth - 1));
+          int panoramaY = (int)(texV * (panoramaHeight - 1));
+
+          // Clamp to image bounds
+          panoramaX = fmaxf(0, fminf(panoramaWidth - 1, panoramaX));
+          panoramaY = fmaxf(0, fminf(panoramaHeight - 1, panoramaY));
+
+          int panoramaIndex = (panoramaY * panoramaWidth + panoramaX) * panoramaChannels;
+          int faceIndex = (y * faceSize + x) * 3;
+
+          // Copy RGB data (handle both RGB and RGBA source)
+          faceData[faceIndex] = panoramaData[panoramaIndex];         // R
+          faceData[faceIndex + 1] = panoramaData[panoramaIndex + 1]; // G
+          faceData[faceIndex + 2] = panoramaData[panoramaIndex + 2]; // B
+        }
+      }
+
+      // Upload face data to OpenGL
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, faceSize, faceSize, 0, GL_RGB, GL_UNSIGNED_BYTE, faceData.data());
+
+      GLenum error = glGetError();
+      if (error != GL_NO_ERROR)
+      {
+        cerr << "OpenGL error creating cube face " << face << " (error: " << error << ")" << endl;
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        return false;
+      }
+    }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    cout << "Successfully converted panorama to cube map (" << faceSize << "x" << faceSize << " faces)" << endl;
     return true;
   }
 

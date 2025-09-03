@@ -59,15 +59,25 @@ namespace jsar::example
     }
 
     /**
-     * Load a new cube map from file (HDR or DDS format).
+     * Load a new cube map from file (HDR or DDS format) or directory.
      */
     bool loadCubeMap(const std::string &filePath);
+
+    /**
+     * Load a 360-degree panorama image (PNG/JPG format with equirectangular projection).
+     * @param filePath Path to the panorama image file
+     */
+    bool loadPanoramaImage(const std::string &filePath);
 
   private:
     void createShaders();
     void createCubeGeometry();
     void createProceduralCubeMap();
     bool loadDirectoryCubeMap(const std::string &directoryPath);
+    bool convertEquirectangularToCubeMap(const std::vector<unsigned char> &panoramaData,
+                                         int panoramaWidth,
+                                         int panoramaHeight,
+                                         int panoramaChannels);
     void destroyResources();
     void createPlaceholderFace(GLenum target, int faceIndex);
 
