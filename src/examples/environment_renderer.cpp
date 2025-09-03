@@ -911,5 +911,4 @@ void main()
 
     hasCubeMapTexture_ = false;
   }
-
-} // namespace jsar::example
+}
