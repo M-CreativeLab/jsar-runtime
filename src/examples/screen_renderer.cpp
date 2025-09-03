@@ -4,12 +4,18 @@
 
 namespace jsar::example
 {
+  using namespace std;
+
   ScreenRenderer::ScreenRenderer(WindowContext *windowCtx)
       : windowCtx_(windowCtx)
   {
   }
 
   ScreenRenderer::~ScreenRenderer()
+  {
+  }
+
+  void ScreenRenderer::shutdown()
   {
     components_.clear();
   }

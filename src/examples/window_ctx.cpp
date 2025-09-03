@@ -88,6 +88,22 @@ namespace jsar::example
     initWindow(nullptr);
   }
 
+  void WindowContext::shutdown()
+  {
+    if (terminated)
+      return;
+
+    glfwSetCursorPosCallback(window, nullptr);
+    glfwSetScrollCallback(window, nullptr);
+    glfwSetMouseButtonCallback(window, nullptr);
+    glfwSetKeyCallback(window, nullptr);
+    glfwSetCharCallback(window, nullptr);
+    glfwTerminate();
+
+    terminated = true;
+    window = nullptr;
+  }
+
   TrViewport WindowContext::drawingViewport()
   {
     return TrViewport(width * contentScaling[0], height * contentScaling[1]);
@@ -422,12 +438,6 @@ namespace jsar::example
         currentViewerPosition = xrRenderer->viewerPosition();
       }
     }
-  }
-
-  void WindowContext::terminate()
-  {
-    glfwTerminate();
-    terminated = true;
   }
 
   void WindowContext::initWindow(GLFWmonitor *monitor)

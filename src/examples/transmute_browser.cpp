@@ -742,7 +742,9 @@ namespace jsar::example
         glBindFramebuffer(GL_FRAMEBUFFER, resolved_fbo_);
       glfwPollEvents();
     }
-    glfwTerminate();
+
+    // Shutdown window context firstly
+    windowCtx_->shutdown();
 
     // Shutdown the embedder when the window is closed.
     if (embedder_ != nullptr)
@@ -751,6 +753,10 @@ namespace jsar::example
     // Shutdown environment renderer
     if (envRenderer_ != nullptr)
       envRenderer_->shutdown();
+
+    // Shutdown screen renderer
+    if (screenRenderer_ != nullptr)
+      screenRenderer_->shutdown();
   }
 
   void TransmuteBrowser::renderContent()

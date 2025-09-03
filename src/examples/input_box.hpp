@@ -99,7 +99,7 @@ namespace jsar::example
     SkPaint textPaint_;
     SkPaint cursorPaint_;
     SkFont textFont_;
-    font::FontCacheManager fontMgr_;
+    font::FontCacheManager *fontMgr_;
     SkImageInfo imageInfo_;
     std::vector<uint8_t> pixels_;
 
