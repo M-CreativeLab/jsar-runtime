@@ -10,15 +10,26 @@
 #include <GLFW/glfw3.h>
 
 #include "./window_ctx.hpp"
+#include "./content_bar_canvas.hpp"
+#include "./content_bar_3d.hpp"
+#include "./event_proxy.hpp"
 
 namespace jsar::example
 {
   class Content;
+  class ContentBarCanvas;
+  class ContentBar3d;
+  class EventProxy;
 
   /**
    * 3D bar component that appears beneath each content for dragging.
-   * Renders as a true 3D object in world space using instanced rendering.
-   * Provides visual feedback and handles mouse interaction for spatial movement.
+   * Refactored to use ContentBar3d for 3D scene integration and ContentBarCanvas for UI rendering.
+   * Maintains API compatibility while providing separation of concerns through event proxy.
+   * 
+   * This class now acts as a facade that coordinates between the specialized components:
+   * - ContentBar3d: Handles OpenGL rendering, 3D positioning, instanced rendering, ray intersection
+   * - ContentBarCanvas: Handles Skia Canvas rendering, Apple-style design, UI elements
+   * - EventProxy: Manages event forwarding between 3D and Canvas components
    */
   class BarComponent
   {
@@ -61,58 +72,37 @@ namespace jsar::example
      */
     void setContentDragging(Content *content, bool dragging);
 
-  private:
-    struct BarInstance
+    /**
+     * Get access to the canvas component for advanced UI customization.
+     */
+    std::shared_ptr<ContentBarCanvas> getCanvasComponent() const
     {
-      Content *content;
-      glm::mat4 transform;
-      bool isHovered;
-      bool isDragging;
+      return canvas_;
+    }
 
-      BarInstance(Content *c)
-          : content(c)
-          , transform(1.0f)
-          , isHovered(false)
-          , isDragging(false)
-      {
-      }
-    };
+    /**
+     * Get access to the 3D component for advanced 3D customization.
+     */
+    std::shared_ptr<ContentBar3d> get3dComponent() const
+    {
+      return bar3d_;
+    }
 
-    void initGLProgram();
-    void createGeometry();
-    void updateInstanceBuffer();
-    void createBarTexture();
-    glm::mat4 calculateBarTransform(const glm::vec3 &contentPosition) const;
+    /**
+     * Get access to the event proxy for custom event handling.
+     */
+    std::shared_ptr<EventProxy> getEventProxy() const
+    {
+      return eventProxy_;
+    }
 
   private:
-    std::vector<BarInstance> instances_;
+    void setupEventProxy();
 
-    // OpenGL resources for instanced rendering
-    GLuint vao_;
-    GLuint vertexVBO_;   // Vertex data for the bar quad
-    GLuint instanceVBO_; // Instance transformation matrices and states
-    GLuint program_;
-    GLuint barTexture_; // Skia-generated bar texture
-
-    // Shader uniforms
-    GLint viewMatrixLoc_;
-    GLint projectionMatrixLoc_;
-    GLint textureLoc_;
-
-    // 3D bar properties
-    static constexpr float BAR_WIDTH = 0.20f;     // World space width
-    static constexpr float BAR_HEIGHT = 0.005f;   // World space height
-    static constexpr float BAR_OFFSET_Y = -0.16f; // Offset below content in world space
-
-    // Texture properties
-    static constexpr int TEXTURE_WIDTH = 256;
-    static constexpr int TEXTURE_HEIGHT = TEXTURE_WIDTH * (BAR_HEIGHT / BAR_WIDTH);
-
-    // Vertex data for a quad
-    std::vector<float> vertices_;
-
-    // Shaders for 3D rendering
-    const char *barVertSource_;
-    const char *barFragSource_;
+  private:
+    // New component-based architecture
+    std::shared_ptr<ContentBarCanvas> canvas_;
+    std::shared_ptr<ContentBar3d> bar3d_;
+    std::shared_ptr<EventProxy> eventProxy_;
   };
 }
