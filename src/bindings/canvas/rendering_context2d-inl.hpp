@@ -34,6 +34,7 @@ namespace canvasbinding
       T::InstanceMethod("fillRect", &T::FillRect),
       T::InstanceMethod("fillText", &T::FillText),
       T::InstanceMethod("stroke", &T::Stroke),
+      T::InstanceMethod("strokeRect", &T::StrokeRect),
       T::InstanceMethod("clearRect", &T::ClearRect),
       T::InstanceMethod("setLineDash", &T::SetLineDash),
       // Path methods
