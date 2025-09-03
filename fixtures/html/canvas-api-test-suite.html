@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas API Test Suite</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .test-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-left: 4px solid #74b9ff;
+    }
+
+    .test-card h3 {
+      margin-top: 0;
+      color: #2d3436;
+    }
+
+    .test-card p {
+      color: #636e72;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+
+    .test-link {
+      display: inline-block;
+      background: #74b9ff;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    .test-link:hover {
+      background: #0984e3;
+    }
+
+    .info-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .info-section h3 {
+      color: #2d3436;
+      margin-top: 0;
+    }
+
+    .api-list {
+      column-count: 2;
+      column-gap: 30px;
+      margin: 15px 0;
+    }
+
+    .api-list li {
+      margin-bottom: 5px;
+      color: #636e72;
+      page-break-inside: avoid;
+    }
+
+    .existing-tests {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+
+    .existing-tests h4 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Canvas API Test Suite</h1>
+  <p class="description">Comprehensive test coverage for Canvas 2D API operations in JSAR Runtime</p>
+
+  <div class="test-grid">
+    <div class="test-card">
+      <h3>Basic Drawing Operations</h3>
+      <p>Tests fundamental drawing operations including fillRect, strokeRect, and clearRect with various colors, styles, and combinations.</p>
+      <a href="canvas-api-basic-drawing.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>Path Operations</h3>
+      <p>Tests all path drawing operations including beginPath, moveTo, lineTo, curves, arcs, and complex path combinations.</p>
+      <a href="canvas-api-paths.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>Text Operations</h3>
+      <p>Tests text rendering capabilities including fillText, strokeText, font properties, alignment, baseline, and text measurement.</p>
+      <a href="canvas-api-text.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>Transform Operations</h3>
+      <p>Tests coordinate system transformations including translate, rotate, scale, matrix transforms, and combined operations.</p>
+      <a href="canvas-api-transforms.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>Image Data Operations</h3>
+      <p>Tests pixel-level operations including createImageData, getImageData, putImageData, and pixel manipulation techniques.</p>
+      <a href="canvas-api-image-data.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>Style Properties</h3>
+      <p>Tests styling capabilities including fillStyle, strokeStyle, line properties, gradients, patterns, and composite operations.</p>
+      <a href="canvas-api-styles.html" class="test-link">Run Test</a>
+    </div>
+
+    <div class="test-card">
+      <h3>State Management</h3>
+      <p>Tests drawing state management using save() and restore() operations, including nested states and complex scenarios.</p>
+      <a href="canvas-api-state.html" class="test-link">Run Test</a>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h3>Canvas 2D API Coverage</h3>
+    <p>These test pages provide comprehensive coverage of the Canvas 2D API as implemented in JSAR Runtime:</p>
+    
+    <div class="api-list">
+      <ul>
+        <li><strong>Drawing methods:</strong> fillRect, strokeRect, clearRect, fill, stroke</li>
+        <li><strong>Path methods:</strong> beginPath, closePath, moveTo, lineTo</li>
+        <li><strong>Curve methods:</strong> bezierCurveTo, quadraticCurveTo, arc, arcTo, ellipse</li>
+        <li><strong>Text methods:</strong> fillText, strokeText, measureText</li>
+        <li><strong>Transform methods:</strong> translate, rotate, scale, transform, setTransform</li>
+        <li><strong>Image methods:</strong> drawImage, createImageData, getImageData, putImageData</li>
+        <li><strong>State methods:</strong> save, restore</li>
+        <li><strong>Style properties:</strong> fillStyle, strokeStyle, lineWidth, lineCap, lineJoin</li>
+        <li><strong>Text properties:</strong> font, textAlign, textBaseline</li>
+        <li><strong>Global properties:</strong> globalAlpha, globalCompositeOperation</li>
+        <li><strong>Line dash:</strong> setLineDash, getLineDash</li>
+        <li><strong>Gradients:</strong> createLinearGradient, createRadialGradient</li>
+        <li><strong>Patterns:</strong> createPattern</li>
+      </ul>
+    </div>
+
+    <div class="existing-tests">
+      <h4>Existing Canvas Tests</h4>
+      <p>The following Canvas tests were already available in the fixtures/html directory:</p>
+      <ul>
+        <li><a href="canvas.html">canvas.html</a> - Basic Canvas with quadratic curves and animation</li>
+        <li><a href="canvas-leaferjs.html">canvas-leaferjs.html</a> - Canvas integration with LeafjerJS library</li>
+        <li><a href="canvas-chartjs.html">canvas-chartjs.html</a> - Canvas integration with Chart.js library</li>
+        <li><a href="offscreen-canvas.html">offscreen-canvas.html</a> - OffscreenCanvas API test</li>
+      </ul>
+    </div>
+
+    <h3>Usage</h3>
+    <p>Each test page includes:</p>
+    <ul>
+      <li>Visual test cases with expected output</li>
+      <li>Detailed console logging for debugging</li>
+      <li>Comprehensive API coverage for its category</li>
+      <li>Error handling and status reporting</li>
+    </ul>
+    
+    <p>Open the browser's developer console while running tests to see detailed execution logs and any error messages.</p>
+  </div>
+
+</body>
+
+</html>
