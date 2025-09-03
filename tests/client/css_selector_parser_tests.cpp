@@ -681,4 +681,120 @@ TEST_CASE("CSS Selector Parser Tests", "[css-selector-parser]")
     REQUIRE(component.attributeValue() == "test");
     REQUIRE(component.attributeMatchType() == AttributeMatchType::kExact);
   }
+
+  SECTION("Parse nth-child selectors")
+  {
+    // Test simple number nth-child(3)
+    auto result = CSSelectorParser::parseSelectors("div:nth-child(3)");
+    REQUIRE(result.has_value());
+    
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 2);
+    REQUIRE(selector.components()[0].isLocalName());
+    REQUIRE(selector.components()[0].name() == "div");
+    REQUIRE(selector.components()[1].isPseudoClass());
+    REQUIRE(selector.components()[1].isNthChild());
+    REQUIRE(selector.components()[1].nthA() == 0);
+    REQUIRE(selector.components()[1].nthB() == 3);
+
+    // Test string representation
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(str == "div:nth-child(3)");
+
+    // Test odd keyword
+    result = CSSelectorParser::parseSelectors("p:nth-child(odd)");
+    REQUIRE(result.has_value());
+    const auto &oddComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(oddComponent.isNthChild());
+    REQUIRE(oddComponent.nthA() == 2);
+    REQUIRE(oddComponent.nthB() == 1);
+    str = static_cast<std::string>(result.value());
+    REQUIRE(str == "p:nth-child(odd)");
+
+    // Test even keyword
+    result = CSSelectorParser::parseSelectors("span:nth-child(even)");
+    REQUIRE(result.has_value());
+    const auto &evenComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(evenComponent.isNthChild());
+    REQUIRE(evenComponent.nthA() == 2);
+    REQUIRE(evenComponent.nthB() == 0);
+    str = static_cast<std::string>(result.value());
+    REQUIRE(str == "span:nth-child(even)");
+
+    // Test an+b formula: 3n+2
+    result = CSSelectorParser::parseSelectors("li:nth-child(3n+2)");
+    REQUIRE(result.has_value());
+    const auto &formulaComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(formulaComponent.isNthChild());
+    REQUIRE(formulaComponent.nthA() == 3);
+    REQUIRE(formulaComponent.nthB() == 2);
+
+    // Test negative coefficient: -n+3  
+    result = CSSelectorParser::parseSelectors("div:nth-child(-n+3)");
+    REQUIRE(result.has_value());
+    const auto &negComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(negComponent.isNthChild());
+    REQUIRE(negComponent.nthA() == -1);
+    REQUIRE(negComponent.nthB() == 3);
+
+    // Test just 'n' (equivalent to 1n+0)
+    result = CSSelectorParser::parseSelectors("*:nth-child(n)");
+    REQUIRE(result.has_value());
+    const auto &nComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(nComponent.isNthChild());
+    REQUIRE(nComponent.nthA() == 1);
+    REQUIRE(nComponent.nthB() == 0);
+
+    // Test complex formula: 2n-1 (equivalent to 2n+-1)
+    result = CSSelectorParser::parseSelectors("tr:nth-child(2n-1)");
+    REQUIRE(result.has_value());
+    const auto &complexComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(complexComponent.isNthChild());
+    REQUIRE(complexComponent.nthA() == 2);
+    REQUIRE(complexComponent.nthB() == -1);
+  }
+
+  SECTION("Parse nth-of-type selectors")
+  {
+    // Test nth-of-type with number
+    auto result = CSSelectorParser::parseSelectors("h2:nth-of-type(2)");
+    REQUIRE(result.has_value());
+    
+    const auto &component = result.value().selectors()[0].components()[1];
+    REQUIRE(component.isPseudoClass());
+    REQUIRE(component.isNthOfType());
+    REQUIRE(component.nthA() == 0);
+    REQUIRE(component.nthB() == 2);
+
+    // Test nth-of-type with formula
+    result = CSSelectorParser::parseSelectors("img:nth-of-type(2n+1)");
+    REQUIRE(result.has_value());
+    const auto &formulaComponent = result.value().selectors()[0].components()[1];
+    REQUIRE(formulaComponent.isNthOfType());
+    REQUIRE(formulaComponent.nthA() == 2);
+    REQUIRE(formulaComponent.nthB() == 1);
+
+    // Test string representation
+    std::string str = static_cast<std::string>(result.value());
+    REQUIRE(str == "img:nth-of-type(odd)"); // 2n+1 should display as "odd"
+  }
+
+  SECTION("Complex selectors with nth-child")
+  {
+    // Test complex selector with nth-child
+    auto result = CSSelectorParser::parseSelectors(".container > div:nth-child(2n+1)");
+    REQUIRE(result.has_value());
+    
+    const auto &selector = result.value().selectors()[0];
+    REQUIRE(selector.size() == 4); // .container > div :nth-child(2n+1)
+    REQUIRE(selector.components()[0].isClass());
+    REQUIRE(selector.components()[0].className() == "container");
+    REQUIRE(selector.components()[1].isCombinator());
+    REQUIRE(selector.components()[1].combinator() == Combinator::kChild);
+    REQUIRE(selector.components()[2].isLocalName());
+    REQUIRE(selector.components()[2].name() == "div");
+    REQUIRE(selector.components()[3].isNthChild());
+    REQUIRE(selector.components()[3].nthA() == 2);
+    REQUIRE(selector.components()[3].nthB() == 1);
+  }
 }

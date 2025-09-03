@@ -16,6 +16,8 @@ namespace client_cssom::selectors
       , argumentSelectorList_(nullptr)
       , attributeMatchType_(AttributeMatchType::kUnknown)
       , attributeValue_("")
+      , nthA_(0)
+      , nthB_(0)
   {
   }
 
@@ -27,6 +29,8 @@ namespace client_cssom::selectors
       , argumentSelectorList_(argumentSelectorList)
       , attributeMatchType_(AttributeMatchType::kUnknown)
       , attributeValue_("")
+      , nthA_(0)
+      , nthB_(0)
   {
   }
 
@@ -38,6 +42,21 @@ namespace client_cssom::selectors
       , argumentSelectorList_(nullptr)
       , attributeMatchType_(matchType)
       , attributeValue_(attributeValue)
+      , nthA_(0)
+      , nthB_(0)
+  {
+  }
+
+  Component::Component(ComponentType type, PseudoClassType pseudoClassType, int nthA, int nthB)
+      : type_(type)
+      , name_("")
+      , combinator_(Combinator::kUnknown)
+      , pseudoClassType_(pseudoClassType)
+      , argumentSelectorList_(nullptr)
+      , attributeMatchType_(AttributeMatchType::kUnknown)
+      , attributeValue_("")
+      , nthA_(nthA)
+      , nthB_(nthB)
   {
   }
 
@@ -140,6 +159,67 @@ namespace client_cssom::selectors
         if (argumentSelectorList_)
         {
           ss << static_cast<string>(*argumentSelectorList_);
+        }
+        ss << ")";
+        break;
+      case PseudoClassType::kNthChild:
+        ss << ":nth-child(";
+        if (nthA_ == 0)
+        {
+          ss << nthB_; // Simple number like :nth-child(3)
+        }
+        else if (nthA_ == 2 && nthB_ == 1)
+        {
+          ss << "odd"; // Special case for 2n+1
+        }
+        else if (nthA_ == 2 && nthB_ == 0)
+        {
+          ss << "even"; // Special case for 2n
+        }
+        else
+        {
+          // General an+b format
+          if (nthA_ == 1)
+            ss << "n";
+          else if (nthA_ == -1)
+            ss << "-n";
+          else
+            ss << nthA_ << "n";
+          
+          if (nthB_ > 0)
+            ss << "+" << nthB_;
+          else if (nthB_ < 0)
+            ss << nthB_; // Negative sign already included
+        }
+        ss << ")";
+        break;
+      case PseudoClassType::kNthOfType:
+        ss << ":nth-of-type(";
+        if (nthA_ == 0)
+        {
+          ss << nthB_;
+        }
+        else if (nthA_ == 2 && nthB_ == 1)
+        {
+          ss << "odd";
+        }
+        else if (nthA_ == 2 && nthB_ == 0)
+        {
+          ss << "even";
+        }
+        else
+        {
+          if (nthA_ == 1)
+            ss << "n";
+          else if (nthA_ == -1)
+            ss << "-n";
+          else
+            ss << nthA_ << "n";
+          
+          if (nthB_ > 0)
+            ss << "+" << nthB_;
+          else if (nthB_ < 0)
+            ss << nthB_;
         }
         ss << ")";
         break;
@@ -469,49 +549,82 @@ namespace client_cssom::selectors
 
   optional<Component> CSSelectorParser::parseFunctionalPseudoClass(const string &name, const string &text, size_t &pos)
   {
-    if (name != "where")
-      return nullopt; // Only :where() is supported for now
-
-    // Expect opening parenthesis
-    if (pos >= text.length() || text[pos] != '(')
-      return nullopt;
-
-    ++pos; // Skip '('
-
-    // Find the matching closing parenthesis
-    size_t startPos = pos;
-    int parenCount = 1;
-    size_t endPos = pos;
-
-    while (endPos < text.length() && parenCount > 0)
+    if (name == "where")
     {
-      if (text[endPos] == '(')
-        parenCount++;
-      else if (text[endPos] == ')')
-        parenCount--;
+      // Expect opening parenthesis
+      if (pos >= text.length() || text[pos] != '(')
+        return nullopt;
 
-      endPos++; // Always move forward
+      ++pos; // Skip '('
+
+      // Find the matching closing parenthesis
+      size_t startPos = pos;
+      int parenCount = 1;
+      size_t endPos = pos;
+
+      while (endPos < text.length() && parenCount > 0)
+      {
+        if (text[endPos] == '(')
+          parenCount++;
+        else if (text[endPos] == ')')
+          parenCount--;
+
+        endPos++; // Always move forward
+      }
+
+      if (parenCount != 0)
+        return nullopt; // Unmatched parentheses
+
+      // endPos is now one position after the closing parenthesis
+      // The content is from startPos to endPos-1 (exclusive of closing paren)
+      string selectorListText = text.substr(startPos, endPos - 1 - startPos);
+
+      // Parse the selector list
+      auto argumentSelectors = parseMultipleSelectors(selectorListText);
+      if (!argumentSelectors)
+        return nullopt;
+
+      // Create shared_ptr directly
+      auto selectorListPtr = make_shared<SelectorList>(*argumentSelectors);
+
+      // Update position to after the closing parenthesis
+      pos = endPos;
+
+      return Component(ComponentType::kPseudoClass, PseudoClassType::kWhere, selectorListPtr);
+    }
+    else if (name == "nth-child" || name == "nth-of-type")
+    {
+      // Expect opening parenthesis
+      if (pos >= text.length() || text[pos] != '(')
+        return nullopt;
+
+      ++pos; // Skip '('
+
+      // Find the closing parenthesis
+      size_t startPos = pos;
+      size_t endPos = pos;
+      while (endPos < text.length() && text[endPos] != ')')
+        endPos++;
+
+      if (endPos >= text.length())
+        return nullopt; // No closing parenthesis
+
+      // Extract the content inside parentheses
+      string content = text.substr(startPos, endPos - startPos);
+      
+      // Parse the an+b formula
+      int a = 0, b = 0;
+      if (!parseNthFormula(content, a, b))
+        return nullopt;
+
+      // Update position to after the closing parenthesis
+      pos = endPos + 1;
+
+      PseudoClassType pseudoType = (name == "nth-child") ? PseudoClassType::kNthChild : PseudoClassType::kNthOfType;
+      return Component(ComponentType::kPseudoClass, pseudoType, a, b);
     }
 
-    if (parenCount != 0)
-      return nullopt; // Unmatched parentheses
-
-    // endPos is now one position after the closing parenthesis
-    // The content is from startPos to endPos-1 (exclusive of closing paren)
-    string selectorListText = text.substr(startPos, endPos - 1 - startPos);
-
-    // Parse the selector list
-    auto argumentSelectors = parseMultipleSelectors(selectorListText);
-    if (!argumentSelectors)
-      return nullopt;
-
-    // Create shared_ptr directly
-    auto selectorListPtr = make_shared<SelectorList>(*argumentSelectors);
-
-    // Update position to after the closing parenthesis
-    pos = endPos;
-
-    return Component(ComponentType::kPseudoClass, PseudoClassType::kWhere, selectorListPtr);
+    return nullopt; // Unsupported functional pseudo-class
   }
 
   void CSSelectorParser::skipWhitespace(const string &text, size_t &pos)
@@ -665,5 +778,98 @@ namespace client_cssom::selectors
     ++pos;
 
     return Component(ComponentType::kAttribute, attributeName, matchType, attributeValue);
+  }
+
+  bool CSSelectorParser::parseNthFormula(const string &formula, int &a, int &b)
+  {
+    // Trim whitespace
+    string trimmed = formula;
+    size_t start = trimmed.find_first_not_of(" \t");
+    if (start == string::npos)
+      return false;
+    trimmed = trimmed.substr(start);
+    size_t end = trimmed.find_last_not_of(" \t");
+    if (end != string::npos)
+      trimmed = trimmed.substr(0, end + 1);
+
+    // Handle special cases
+    if (trimmed == "odd")
+    {
+      a = 2;
+      b = 1;
+      return true;
+    }
+    if (trimmed == "even")
+    {
+      a = 2;
+      b = 0;
+      return true;
+    }
+
+    // Check for just a number (e.g., "3")
+    if (trimmed.find('n') == string::npos)
+    {
+      try
+      {
+        a = 0;
+        b = stoi(trimmed);
+        return true;
+      }
+      catch (...)
+      {
+        return false;
+      }
+    }
+
+    // Parse an+b format
+    size_t nPos = trimmed.find('n');
+    if (nPos == string::npos)
+      return false;
+
+    // Parse 'a' coefficient
+    string aPart = trimmed.substr(0, nPos);
+    if (aPart.empty() || aPart == "+")
+    {
+      a = 1;
+    }
+    else if (aPart == "-")
+    {
+      a = -1;
+    }
+    else
+    {
+      try
+      {
+        a = stoi(aPart);
+      }
+      catch (...)
+      {
+        return false;
+      }
+    }
+
+    // Parse 'b' constant (if present)
+    b = 0;
+    if (nPos + 1 < trimmed.length())
+    {
+      string bPart = trimmed.substr(nPos + 1);
+      // Remove leading + if present
+      if (!bPart.empty() && bPart[0] == '+')
+        bPart = bPart.substr(1);
+      
+      if (!bPart.empty())
+      {
+        try
+        {
+          b = stoi(bPart);
+        }
+        catch (...)
+        {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 }
