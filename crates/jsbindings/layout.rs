@@ -268,6 +268,7 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum AlignItems {
+    Normal,
     Start,
     End,
     FlexStart,
@@ -280,6 +281,7 @@ mod ffi {
   #[derive(Clone, Copy, Debug)]
   enum AlignSelf {
     Auto,
+    Normal,
     Start,
     End,
     FlexStart,
@@ -291,6 +293,7 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum AlignContent {
+    Normal,
     Start,
     End,
     FlexStart,
@@ -304,6 +307,7 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum JustifyItems {
+    Normal,
     Start,
     End,
     FlexStart,
@@ -315,6 +319,8 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum JustifySelf {
+    Auto,
+    Normal,
     Start,
     End,
     FlexStart,
@@ -326,6 +332,7 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum JustifyContent {
+    Normal,
     Start,
     End,
     FlexStart,
@@ -915,14 +922,32 @@ impl_justify_items_like_from_taffy!(JustifyItems);
 impl_justify_items_like_from_taffy!(JustifySelf);
 impl_align_or_justify_content_from_taffy!(JustifyContent);
 
-impl_default_for!(AlignItems, Stretch);
+impl_default_for!(AlignItems, Normal);
 impl_default_for!(AlignSelf, Auto);
-impl_default_for!(AlignContent, Stretch);
-impl_default_for!(JustifyItems, Stretch);
-impl_default_for!(JustifySelf, Stretch);
-impl_default_for!(JustifyContent, Stretch);
+impl_default_for!(AlignContent, Normal);
+impl_default_for!(JustifyItems, Normal);
+impl_default_for!(JustifySelf, Auto);
+impl_default_for!(JustifyContent, Normal);
 
 // Option from
+
+impl From<Option<taffy::AlignItems>> for ffi::AlignItems {
+  fn from(value: Option<taffy::AlignItems>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::AlignItems::Normal,
+    }
+  }
+}
+
+impl From<ffi::AlignItems> for Option<taffy::AlignItems> {
+  fn from(value: ffi::AlignItems) -> Self {
+    match value {
+      ffi::AlignItems::Normal => None,
+      _ => Some(value.into()),
+    }
+  }
+}
 
 impl From<Option<taffy::AlignSelf>> for ffi::AlignSelf {
   fn from(value: Option<taffy::AlignSelf>) -> Self {
@@ -937,6 +962,80 @@ impl From<ffi::AlignSelf> for Option<taffy::AlignSelf> {
   fn from(value: ffi::AlignSelf) -> Self {
     match value {
       ffi::AlignSelf::Auto => None,
+      ffi::AlignSelf::Normal => None,
+      _ => Some(value.into()),
+    }
+  }
+}
+
+impl From<Option<taffy::AlignContent>> for ffi::AlignContent {
+  fn from(value: Option<taffy::AlignContent>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::AlignContent::Normal,
+    }
+  }
+}
+
+impl From<ffi::AlignContent> for Option<taffy::AlignContent> {
+  fn from(value: ffi::AlignContent) -> Self {
+    match value {
+      ffi::AlignContent::Normal => None,
+      _ => Some(value.into()),
+    }
+  }
+}
+
+impl From<Option<taffy::JustifyItems>> for ffi::JustifyItems {
+  fn from(value: Option<taffy::JustifyItems>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::JustifyItems::Normal,
+    }
+  }
+}
+
+impl From<ffi::JustifyItems> for Option<taffy::JustifyItems> {
+  fn from(value: ffi::JustifyItems) -> Self {
+    match value {
+      ffi::JustifyItems::Normal => None,
+      _ => Some(value.into()),
+    }
+  }
+}
+
+impl From<Option<taffy::JustifySelf>> for ffi::JustifySelf {
+  fn from(value: Option<taffy::JustifySelf>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::JustifySelf::Auto,
+    }
+  }
+}
+
+impl From<ffi::JustifySelf> for Option<taffy::JustifySelf> {
+  fn from(value: ffi::JustifySelf) -> Self {
+    match value {
+      ffi::JustifySelf::Auto => None,
+      ffi::JustifySelf::Normal => None,
+      _ => Some(value.into()),
+    }
+  }
+}
+
+impl From<Option<taffy::JustifyContent>> for ffi::JustifyContent {
+  fn from(value: Option<taffy::JustifyContent>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::JustifyContent::Normal,
+    }
+  }
+}
+
+impl From<ffi::JustifyContent> for Option<taffy::JustifyContent> {
+  fn from(value: ffi::JustifyContent) -> Self {
+    match value {
+      ffi::JustifyContent::Normal => None,
       _ => Some(value.into()),
     }
   }
@@ -997,27 +1096,12 @@ impl From<taffy::Style> for ffi::Style {
       margin: style.margin.into(),
       padding: style.padding.into(),
       border: style.border.into(),
-      align_items: style
-        .align_items
-        .unwrap_or(taffy::AlignItems::Stretch)
-        .into(),
+      align_items: style.align_items.into(),
       align_self: style.align_self.into(),
-      align_content: style
-        .align_content
-        .unwrap_or(taffy::AlignContent::Stretch)
-        .into(),
-      justify_items: style
-        .justify_items
-        .unwrap_or(taffy::JustifyItems::Stretch)
-        .into(),
-      justify_self: style
-        .justify_self
-        .unwrap_or(taffy::JustifySelf::Stretch)
-        .into(),
-      justify_content: style
-        .justify_content
-        .unwrap_or(taffy::JustifyContent::Stretch)
-        .into(),
+      align_content: style.align_content.into(),
+      justify_items: style.justify_items.into(),
+      justify_self: style.justify_self.into(),
+      justify_content: style.justify_content.into(),
       gap: style.gap.into(),
 
       flex_direction: style.flex_direction.into(),
@@ -1236,12 +1320,12 @@ impl From<ffi::Style> for taffy::Style {
       margin: value.margin.into(),
       padding: value.padding.into(),
       border: value.border.into(),
-      align_items: Some(value.align_items.into()),
+      align_items: value.align_items.into(),
       align_self: value.align_self.into(),
-      align_content: Some(value.align_content.into()),
-      justify_items: Some(value.justify_items.into()),
-      justify_self: Some(value.justify_self.into()),
-      justify_content: Some(value.justify_content.into()),
+      align_content: value.align_content.into(),
+      justify_items: value.justify_items.into(),
+      justify_self: value.justify_self.into(),
+      justify_content: value.justify_content.into(),
       gap: value.gap.into(),
       flex_direction: value.flex_direction.into(),
       flex_wrap: value.flex_wrap.into(),

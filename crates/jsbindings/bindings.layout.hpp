@@ -174,6 +174,7 @@ namespace crates::layout2
   XX(Absolute, "absolute")
 
 #define BOX_ALIGNMENT_MAP(XX) \
+  XX(Normal, "normal")        \
   XX(Start, "start")          \
   XX(End, "end")              \
   XX(FlexStart, "flex-start") \
@@ -183,6 +184,7 @@ namespace crates::layout2
   XX(Stretch, "stretch")
 
 #define CONTENT_SPACING_MAP(XX)     \
+  XX(Normal, "normal")              \
   XX(Start, "start")                \
   XX(End, "end")                    \
   XX(FlexStart, "flex-start")       \
@@ -529,7 +531,7 @@ namespace crates::layout2
       }
     };
 
-    template <typename T, typename I, I defaultValue = I::Stretch>
+    template <typename T, typename I, I defaultValue = I::Normal>
     class BoxAlignmentProperty : public CSSKeyword<I, defaultValue>
     {
       using CSSKeyword<I, defaultValue>::CSSKeyword;
@@ -580,36 +582,42 @@ namespace crates::layout2
       }
     };
 
-    class AlignItems : public BoxAlignmentProperty<AlignItems, holocron::layout::AlignItems>
+    template <typename T, typename I>
+    class BoxSelfAlignmentProperty : public BoxAlignmentProperty<T, I, I::Auto>
     {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
-    };
-
-    class AlignSelf : public BoxAlignmentProperty<AlignSelf, holocron::layout::AlignSelf, holocron::layout::AlignSelf::Auto>
-    {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
+      using BoxAlignmentProperty<T, I, I::Auto>::BoxAlignmentProperty;
 
     public:
-      static AlignSelf Auto()
+      static T Auto()
       {
-        return AlignSelf(holocron::layout::AlignSelf::Auto);
+        return T(I::Auto);
       }
 
     protected:
-      std::optional<holocron::layout::AlignSelf> parse(const std::string &input) override
+      std::optional<I> parse(const std::string &input) override
       {
         if (input == "auto")
-          return holocron::layout::AlignSelf::Auto;
-        return BoxAlignmentProperty::parse(input);
+          return I::Auto;
+        return BoxAlignmentProperty<T, I, I::Auto>::parse(input);
       }
 
     public:
       std::string stringify() const override
       {
-        if (handle_ == holocron::layout::AlignSelf::Auto)
+        if (this->handle_ == I::Auto)
           return "auto";
-        return BoxAlignmentProperty::stringify();
+        return BoxAlignmentProperty<T, I, I::Auto>::stringify();
       }
+    };
+
+    class AlignItems : public BoxAlignmentProperty<AlignItems, holocron::layout::AlignItems>
+    {
+      using BoxAlignmentProperty::BoxAlignmentProperty;
+    };
+
+    class AlignSelf : public BoxSelfAlignmentProperty<AlignSelf, holocron::layout::AlignSelf>
+    {
+      using BoxSelfAlignmentProperty::BoxSelfAlignmentProperty;
     };
 
     class JustifyItems : public BoxAlignmentProperty<JustifyItems, holocron::layout::JustifyItems>
@@ -617,9 +625,9 @@ namespace crates::layout2
       using BoxAlignmentProperty::BoxAlignmentProperty;
     };
 
-    class JustifySelf : public BoxAlignmentProperty<JustifySelf, holocron::layout::JustifySelf>
+    class JustifySelf : public BoxSelfAlignmentProperty<JustifySelf, holocron::layout::JustifySelf>
     {
-      using BoxAlignmentProperty::BoxAlignmentProperty;
+      using BoxSelfAlignmentProperty::BoxSelfAlignmentProperty;
     };
 
     template <typename T, typename I>

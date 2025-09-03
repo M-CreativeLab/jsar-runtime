@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Grid Alignment Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Container for multiple grid demos */
+    .demo-section {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f0f0f05f;
+      border-radius: 10px;
+    }
+
+    /* Grid Alignment Containers */
+    .grid-center {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 150px);
+      justify-items: center;
+      align-items: center;
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    .grid-stretch {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 150px);
+      justify-items: stretch;
+      align-items: stretch;
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      margin: 10px 0;
+    }
+
+    .grid-space-between {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-template-rows: repeat(2, 120px);
+      justify-content: space-between;
+      align-content: space-around;
+      background-color: #c9d4df5f;
+      gap: 10px;
+      padding: 20px;
+      margin: 10px 0;
+      min-height: 400px;
+    }
+
+    .grid-end {
+      display: grid;
+      grid-template-columns: repeat(3, 150px);
+      grid-template-rows: repeat(2, 100px);
+      justify-content: end;
+      align-content: end;
+      background-color: #c9d4df5f;
+      gap: 15px;
+      padding: 20px;
+      margin: 10px 0;
+      min-height: 350px;
+    }
+
+    /* Grid Items */
+    .grid-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 15px;
+      padding: 20px;
+      transform: translateZ(10px);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid-item:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translateZ(15px);
+    }
+
+    .grid-item:nth-child(2n) {
+      background: rgba(0, 200, 100, 0.85);
+    }
+
+    .grid-item:nth-child(3n) {
+      background: rgba(255, 150, 0, 0.85);
+    }
+
+    .grid-item:nth-child(4n) {
+      background: rgba(150, 0, 255, 0.85);
+    }
+
+    .grid-item.small {
+      padding: 15px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Grid Alignment Test</h1>
+  </header>
+
+  <div class="demo-section">
+    <h2>Center Alignment</h2>
+    <div class="grid-center">
+      <div class="grid-item small">
+        <h3>1</h3>
+      </div>
+      <div class="grid-item">
+        <h3>2</h3>
+      </div>
+      <div class="grid-item small">
+        <h3>3</h3>
+      </div>
+      <div class="grid-item">
+        <h3>4</h3>
+      </div>
+      <div class="grid-item small">
+        <h3>5</h3>
+      </div>
+      <div class="grid-item">
+        <h3>6</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Stretch Alignment</h2>
+    <div class="grid-stretch">
+      <div class="grid-item">
+        <h3>Stretch 1</h3>
+      </div>
+      <div class="grid-item">
+        <h3>Stretch 2</h3>
+      </div>
+      <div class="grid-item">
+        <h3>Stretch 3</h3>
+      </div>
+      <div class="grid-item">
+        <h3>Stretch 4</h3>
+      </div>
+      <div class="grid-item">
+        <h3>Stretch 5</h3>
+      </div>
+      <div class="grid-item">
+        <h3>Stretch 6</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>Space Between/Around</h2>
+    <div class="grid-space-between">
+      <div class="grid-item">
+        <h3>A</h3>
+      </div>
+      <div class="grid-item">
+        <h3>B</h3>
+      </div>
+      <div class="grid-item">
+        <h3>C</h3>
+      </div>
+      <div class="grid-item">
+        <h3>D</h3>
+      </div>
+      <div class="grid-item">
+        <h3>E</h3>
+      </div>
+      <div class="grid-item">
+        <h3>F</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>End Alignment</h2>
+    <div class="grid-end">
+      <div class="grid-item">
+        <h3>End 1</h3>
+      </div>
+      <div class="grid-item">
+        <h3>End 2</h3>
+      </div>
+      <div class="grid-item">
+        <h3>End 3</h3>
+      </div>
+      <div class="grid-item">
+        <h3>End 4</h3>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
