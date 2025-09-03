@@ -732,12 +732,19 @@ namespace dom
       return false;
 
     bool scrolled = layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
-
-    // Throttle scroll events for better performance
-    if (!shouldThrottleScrollEvent())
+    if (scrolled)
     {
-      last_scroll_event_time_ = std::chrono::steady_clock::now();
-      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      // TODO(yorkie): no need to invalidate the document cache on scroll, will optimize later that only invalidate
+      // the cache for the affected elements.
+      invalidateDocumentCache();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        // Dispatch the scroll event.
+        last_scroll_event_time_ = std::chrono::steady_clock::now();
+        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      }
     }
     return scrolled;
   }

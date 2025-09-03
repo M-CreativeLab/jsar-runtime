@@ -377,6 +377,6 @@ namespace dom
 
     // Scroll performance optimization
     std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
-    static constexpr std::chrono::milliseconds scroll_throttle_duration_{16}; // ~60fps throttling
+    static constexpr std::chrono::milliseconds scroll_throttle_duration_{1000 / 45}; // ~45fps throttling
   };
 }
