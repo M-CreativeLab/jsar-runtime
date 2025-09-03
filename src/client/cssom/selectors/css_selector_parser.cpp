@@ -185,7 +185,7 @@ namespace client_cssom::selectors
             ss << "-n";
           else
             ss << nthA_ << "n";
-          
+
           if (nthB_ > 0)
             ss << "+" << nthB_;
           else if (nthB_ < 0)
@@ -215,7 +215,7 @@ namespace client_cssom::selectors
             ss << "-n";
           else
             ss << nthA_ << "n";
-          
+
           if (nthB_ > 0)
             ss << "+" << nthB_;
           else if (nthB_ < 0)
@@ -611,7 +611,7 @@ namespace client_cssom::selectors
 
       // Extract the content inside parentheses
       string content = text.substr(startPos, endPos - startPos);
-      
+
       // Parse the an+b formula
       int a = 0, b = 0;
       if (!parseNthFormula(content, a, b))
@@ -856,7 +856,7 @@ namespace client_cssom::selectors
       // Remove leading + if present
       if (!bPart.empty() && bPart[0] == '+')
         bPart = bPart.substr(1);
-      
+
       if (!bPart.empty())
       {
         try

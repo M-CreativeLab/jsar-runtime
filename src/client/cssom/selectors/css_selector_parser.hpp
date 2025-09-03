@@ -105,7 +105,7 @@ namespace client_cssom::selectors
     // Constructor for attribute selectors
     Component(ComponentType type, const std::string &attributeName, AttributeMatchType matchType, const std::string &attributeValue = "");
 
-    // Constructor for nth-child/nth-of-type pseudo-classes  
+    // Constructor for nth-child/nth-of-type pseudo-classes
     Component(ComponentType type, PseudoClassType pseudoClassType, int nthA, int nthB);
 
     // Type checking methods
