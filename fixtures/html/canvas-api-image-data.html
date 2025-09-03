@@ -33,7 +33,7 @@
       padding: 15px;
       background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .test-title {
@@ -106,14 +106,14 @@
       const canvas = document.getElementById('createImageDataCanvas');
       const ctx = canvas.getContext('2d');
       const infoDiv = document.getElementById('createInfo');
-      
+
       console.log('Testing createImageData operations...');
-      
+
       try {
         // Create blank image data
         const imageData1 = ctx.createImageData(100, 50);
         console.log('Created ImageData 100x50:', imageData1);
-        
+
         // Fill with random colors
         const data1 = imageData1.data;
         for (let i = 0; i < data1.length; i += 4) {
@@ -123,11 +123,11 @@
           data1[i + 3] = 255;                 // Alpha
         }
         ctx.putImageData(imageData1, 20, 20);
-        
+
         // Create another image data from existing
         const imageData2 = ctx.createImageData(imageData1);
         console.log('Created ImageData from existing:', imageData2);
-        
+
         // Fill with gradient
         const data2 = imageData2.data;
         for (let y = 0; y < imageData2.height; y++) {
@@ -140,11 +140,11 @@
           }
         }
         ctx.putImageData(imageData2, 150, 20);
-        
+
         // Create with specific dimensions
         const imageData3 = ctx.createImageData(80, 100);
         const data3 = imageData3.data;
-        
+
         // Create checkerboard pattern
         for (let y = 0; y < imageData3.height; y++) {
           for (let x = 0; x < imageData3.width; x++) {
@@ -158,14 +158,14 @@
           }
         }
         ctx.putImageData(imageData3, 20, 100);
-        
+
         infoDiv.innerHTML = `
           <strong>Created ImageData objects:</strong><br>
           • Random colors: ${imageData1.width}x${imageData1.height} (${imageData1.data.length} bytes)<br>
           • Gradient: ${imageData2.width}x${imageData2.height} (${imageData2.data.length} bytes)<br>
           • Checkerboard: ${imageData3.width}x${imageData3.height} (${imageData3.data.length} bytes)
         `;
-        
+
         console.log('createImageData test completed');
       } catch (error) {
         console.error('Error in createImageData test:', error);
@@ -180,19 +180,19 @@
       const targetCanvas = document.getElementById('getImageDataCanvas');
       const targetCtx = targetCanvas.getContext('2d');
       const infoDiv = document.getElementById('getInfo');
-      
+
       console.log('Testing getImageData operations...');
-      
+
       try {
         // Draw some content to source canvas
         sourceCtx.fillStyle = '#ff6b6b';
         sourceCtx.fillRect(20, 20, 60, 40);
-        
+
         sourceCtx.fillStyle = '#4ecdc4';
         sourceCtx.beginPath();
         sourceCtx.arc(120, 40, 25, 0, 2 * Math.PI);
         sourceCtx.fill();
-        
+
         sourceCtx.fillStyle = '#ffe66d';
         sourceCtx.beginPath();
         sourceCtx.moveTo(50, 80);
@@ -200,32 +200,32 @@
         sourceCtx.lineTo(20, 120);
         sourceCtx.closePath();
         sourceCtx.fill();
-        
+
         sourceCtx.strokeStyle = '#333';
         sourceCtx.lineWidth = 2;
         sourceCtx.strokeRect(120, 80, 60, 40);
-        
+
         // Get full canvas image data
         const fullImageData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
         console.log('Full canvas ImageData:', fullImageData);
-        
+
         // Get partial image data
         const partialImageData = sourceCtx.getImageData(20, 20, 100, 80);
         console.log('Partial ImageData:', partialImageData);
-        
+
         // Put the image data to target canvas
         targetCtx.putImageData(fullImageData, 0, 0);
-        
+
         // Analyze pixel data
         const data = fullImageData.data;
         let redPixels = 0, greenPixels = 0, bluePixels = 0, transparentPixels = 0;
-        
+
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const a = data[i + 3];
-          
+
           if (a === 0) {
             transparentPixels++;
           } else if (r > g && r > b) {
@@ -236,7 +236,7 @@
             bluePixels++;
           }
         }
-        
+
         infoDiv.innerHTML = `
           <strong>Image Data Analysis:</strong><br>
           • Full canvas: ${fullImageData.width}x${fullImageData.height} (${fullImageData.data.length} bytes)<br>
@@ -246,7 +246,7 @@
           • Blue-dominant pixels: ${bluePixels}<br>
           • Transparent pixels: ${transparentPixels}
         `;
-        
+
         console.log('getImageData test completed');
       } catch (error) {
         console.error('Error in getImageData test:', error);
@@ -260,36 +260,36 @@
       const sourceCtx = sourceCanvas.getContext('2d');
       const targetCanvas = document.getElementById('putImageDataCanvas');
       const targetCtx = targetCanvas.getContext('2d');
-      
+
       console.log('Testing putImageData operations...');
-      
+
       try {
         // Create original content
         sourceCtx.fillStyle = '#fd79a8';
         sourceCtx.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
-        
+
         sourceCtx.fillStyle = '#74b9ff';
         sourceCtx.beginPath();
         sourceCtx.arc(100, 75, 50, 0, 2 * Math.PI);
         sourceCtx.fill();
-        
+
         sourceCtx.fillStyle = '#00b894';
         sourceCtx.fillRect(50, 100, 100, 30);
-        
+
         // Get image data
         const imageData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
-        
+
         // Put image data to different positions on target canvas
         targetCtx.putImageData(imageData, 0, 0);
-        
+
         // Put partial image data
         const partialData = sourceCtx.getImageData(25, 25, 50, 50);
         targetCtx.putImageData(partialData, 150, 100);
-        
+
         // Put with clipping (putImageData with dirty rectangle)
         const clippedData = sourceCtx.getImageData(75, 50, 50, 50);
         targetCtx.putImageData(clippedData, 150, 25, 10, 10, 30, 30);
-        
+
         console.log('putImageData test completed');
       } catch (error) {
         console.error('Error in putImageData test:', error);
@@ -306,9 +306,9 @@
       const grayscaleCtx = grayscaleCanvas.getContext('2d');
       const invertCanvas = document.getElementById('invertCanvas');
       const invertCtx = invertCanvas.getContext('2d');
-      
+
       console.log('Testing pixel manipulation...');
-      
+
       try {
         // Create original content
         originalCtx.fillStyle = '#ff6b6b';
@@ -319,10 +319,10 @@
         originalCtx.fillRect(20, 70, 40, 30);
         originalCtx.fillStyle = '#fd79a8';
         originalCtx.fillRect(80, 70, 40, 30);
-        
+
         // Get original image data
         const originalData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
-        
+
         // Red filter
         const redData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
         for (let i = 0; i < redData.data.length; i += 4) {
@@ -330,7 +330,7 @@
           redData.data[i + 2] = 0; // Remove blue
         }
         redCtx.putImageData(redData, 0, 0);
-        
+
         // Grayscale filter
         const grayscaleData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
         for (let i = 0; i < grayscaleData.data.length; i += 4) {
@@ -340,7 +340,7 @@
           grayscaleData.data[i + 2] = gray;
         }
         grayscaleCtx.putImageData(grayscaleData, 0, 0);
-        
+
         // Invert filter
         const invertData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
         for (let i = 0; i < invertData.data.length; i += 4) {
@@ -349,7 +349,7 @@
           invertData.data[i + 2] = 255 - invertData.data[i + 2]; // Invert blue
         }
         invertCtx.putImageData(invertData, 0, 0);
-        
+
         console.log('Pixel manipulation test completed');
       } catch (error) {
         console.error('Error in pixel manipulation test:', error);
@@ -360,9 +360,9 @@
     function testPatternGeneration() {
       const canvas = document.getElementById('patternCanvas');
       const ctx = canvas.getContext('2d');
-      
+
       console.log('Testing pattern generation with image data...');
-      
+
       try {
         // Generate noise pattern
         const noiseData = ctx.createImageData(100, 100);
@@ -374,7 +374,7 @@
           noiseData.data[i + 3] = 255;
         }
         ctx.putImageData(noiseData, 20, 20);
-        
+
         // Generate gradient pattern
         const gradientData = ctx.createImageData(100, 100);
         for (let y = 0; y < 100; y++) {
@@ -387,7 +387,7 @@
           }
         }
         ctx.putImageData(gradientData, 140, 20);
-        
+
         // Generate circular pattern
         const circleData = ctx.createImageData(100, 100);
         const centerX = 50, centerY = 50;
@@ -403,7 +403,7 @@
           }
         }
         ctx.putImageData(circleData, 260, 20);
-        
+
         console.log('Pattern generation test completed');
       } catch (error) {
         console.error('Error in pattern generation test:', error);
@@ -413,14 +413,14 @@
     // Run all tests
     function runAllTests() {
       console.log('Starting Canvas API image data operations tests...');
-      
+
       try {
         testCreateImageData();
         testGetImageData();
         testPutImageData();
         testPixelManipulation();
         testPatternGeneration();
-        
+
         console.log('All image data operations tests completed successfully!');
       } catch (error) {
         console.error('Error during image data operations tests:', error);
