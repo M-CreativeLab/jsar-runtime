@@ -2,26 +2,33 @@
 
 This directory contains examples demonstrating the JSAR Runtime capabilities with the new TransmuteBrowser architecture.
 
-## Bar Component Refactoring
+## Canvas System Architecture
 
-The bar component has been refactored to improve separation of concerns and code modularity. See the detailed refactoring documentation below.
+The bar component has been completely redesigned based on reviewer feedback to use a modern Canvas system approach.
 
 ### Architecture Overview
 
-The monolithic `BarComponent` has been split into three specialized components:
+The new architecture consists of two main components:
 
-1. **ContentBarCanvas** - Handles UI rendering with Skia Canvas and Apple-style design
-2. **ContentBar3d** - Handles 3D scene integration with OpenGL rendering
-3. **EventProxy** - Manages event forwarding between components
+1. **CanvasSystem** - Modern Skia-based GUI drawing with direct ray event handling
+2. **ContentBar3d** - Mesh-based 3D component that inherits from `builtin_scene::Mesh`
 
-The original `BarComponent` now acts as a facade that maintains API compatibility while coordinating the specialized components.
+The original `BarComponent` now acts as a facade that maintains API compatibility.
 
-### Key Benefits
+### Key Features
 
-- **Separation of Concerns**: 3D scene logic completely separated from UI rendering logic
-- **Event Decoupling**: Canvas subcomponents can handle events independently
-- **API Compatibility**: Existing code continues to work without changes
-- **Enhanced Extensibility**: Easy to extend both 3D and UI functionality independently
+#### Canvas System
+- **Skia Integration**: Uses Skia Canvas for modern GUI drawing capabilities
+- **Direct Ray Events**: Processes ray move, down, and up events directly
+- **Flexible Rendering**: Can be rendered via ScreenRenderer (screen-space) or MeshRenderer (3D mesh)
+- **Apple-style Design**: Built-in Apple-style visual feedback and design
+- **Event Handlers**: Extensible ray event handling system
+
+#### ContentBar3d as Mesh
+- **Mesh Inheritance**: Inherits from `builtin_scene::Mesh` for proper 3D integration
+- **MeshRenderer Compatible**: Can be rendered using the standard MeshRenderer
+- **Ray Intersection**: Advanced ray-plane intersection for 3D interaction
+- **Geometry Management**: Proper vertex/index buffer management
 
 ### Usage
 
@@ -31,11 +38,40 @@ BarComponent barComponent;
 barComponent.addContent(content);
 barComponent.setContentHovered(content, true);
 
-// Advanced usage - access individual components
-auto canvas = barComponent.getCanvasComponent();
+// Access canvas system for GUI customization
+auto canvas = barComponent.getCanvasSystem();
+canvas->registerRayEventHandler([](const RayEvent& event) {
+    // Custom ray event handling
+    return true;
+});
+
+// Access 3D component as a Mesh
 auto bar3d = barComponent.get3dComponent();
-auto eventProxy = barComponent.getEventProxy();
+// bar3d can now be used with MeshRenderer
 ```
+
+### Ray Event System
+
+The canvas system provides a unified ray event interface:
+
+```cpp
+enum class RayEventType { Move, Down, Up };
+
+struct RayEvent {
+    RayEventType type;
+    glm::vec3 rayOrigin;
+    glm::vec3 rayDirection; 
+    glm::vec2 localPosition; // Normalized 0-1 coordinates
+};
+```
+
+### Benefits
+
+- **No Event Proxy**: Eliminated complex event forwarding mechanisms
+- **Direct Ray Handling**: Canvas processes ray events without intermediaries  
+- **Mesh Integration**: ContentBar3d works seamlessly with existing Mesh/MeshRenderer systems
+- **Simplified Architecture**: Cleaner separation between GUI and 3D concerns
+- **Modern GUI**: Skia-based rendering for advanced visual effects
 
 ## Transmute Browser
 
