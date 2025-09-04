@@ -14,6 +14,7 @@
 #include <common/xr/types.hpp>
 #include <runtime/macros.h>
 #include <xr/device.hpp>
+#include <xr/render_pass_queue_builder.hpp>
 
 #include "./gles/context_storage.hpp"
 #include "./render_api.hpp"
@@ -184,6 +185,11 @@ namespace renderer
 
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
+    /**
+     * XR render pass queue builder for converting command buffer requests
+     * to GPU render pass encoder queues.
+     */
+    std::unique_ptr<xr::XRRenderPassQueueBuilder> xrRenderPassQueueBuilder;
     /**
      * The last frame has OOM error or not.
      */

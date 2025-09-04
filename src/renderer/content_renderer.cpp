@@ -50,6 +50,7 @@ namespace renderer
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
+    xrRenderPassQueueBuilder = make_unique<xr::XRRenderPassQueueBuilder>();
   }
 
   TrContentRenderer::~TrContentRenderer()
@@ -256,6 +257,26 @@ namespace renderer
         else
         {
           frame->addCommandBuffer(req, viewIndex);
+
+          // Add the command buffer request to the XR render pass queue builder
+          // Create a copy of the request for the queue builder since the original
+          // will be managed by the frame's command buffer list
+          auto reqCopy = frame->cloneCommandBuffer(req);
+          if (reqCopy != nullptr)
+          {
+            xrRenderPassQueueBuilder->addCommandBufferRequest(reqCopy);
+
+            // Build render pass encoders and add them to the frame
+            // This is done immediately for now, but could be optimized to batch
+            auto renderPassEncoders = xrRenderPassQueueBuilder->buildRenderPassQueue();
+            for (auto &encoder : renderPassEncoders)
+            {
+              frame->addRenderPassEncoder(std::move(encoder));
+            }
+
+            // Clear the queue builder after processing
+            xrRenderPassQueueBuilder->clear();
+          }
         }
       }
     }

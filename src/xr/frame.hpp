@@ -9,6 +9,7 @@
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/macros.hpp"
 #include "common/command_buffers/command_buffers.hpp"
+#include "common/command_buffers/gpu/gpu_renderpass_encoder.hpp"
 
 using namespace std;
 
@@ -267,6 +268,31 @@ namespace xr
     void moveCommandBuffersTo(StereoRenderingFrame &dst, int passIndex);
     void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex = 0);
     vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
+    /**
+     * Get the vector of GPU render pass encoders for this frame.
+     *
+     * @returns Reference to the vector of GPU render pass encoders.
+     */
+    inline vector<commandbuffers::GPURenderPassEncoder> &getRenderPassEncoders()
+    {
+      return m_RenderPassEncoders;
+    }
+    /**
+     * Add a GPU render pass encoder to this frame.
+     *
+     * @param encoder The GPU render pass encoder to add.
+     */
+    inline void addRenderPassEncoder(commandbuffers::GPURenderPassEncoder encoder)
+    {
+      m_RenderPassEncoders.push_back(std::move(encoder));
+    }
+    /**
+     * Clear all GPU render pass encoders from this frame.
+     */
+    inline void clearRenderPassEncoders()
+    {
+      m_RenderPassEncoders.clear();
+    }
     bool started();
     bool started(int passIndex);
     bool ended();
@@ -383,6 +409,12 @@ namespace xr
     vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass;
     vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?
+
+    /**
+     * Vector of GPU render pass encoders for this frame.
+     * This enables fine-grained control over multiple render passes per frame.
+     */
+    vector<commandbuffers::GPURenderPassEncoder> m_RenderPassEncoders;
 
     friend class Device;
     friend class renderer::TrContentRenderer;
