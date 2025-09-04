@@ -189,7 +189,7 @@ namespace renderer
      * XR render pass queue builder for converting command buffer requests
      * to GPU render pass encoder queues.
      */
-    std::unique_ptr<xr::XRRenderPassQueueBuilder> xrRenderPassQueueBuilder;
+    std::unique_ptr<xr::GPURenderPassQueueBuilder> xrRenderPassQueueBuilder;
     /**
      * The last frame has OOM error or not.
      */

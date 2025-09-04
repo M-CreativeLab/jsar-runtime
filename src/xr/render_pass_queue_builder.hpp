@@ -9,7 +9,7 @@
 namespace xr
 {
   /**
-   * XRRenderPassQueueBuilder is responsible for collecting TrCommandBufferRequest objects
+   * GPURenderPassQueueBuilder is responsible for collecting TrCommandBufferRequest objects
    * and building a queue/vector of GPURenderPassEncoder objects.
    * 
    * This class provides:
@@ -18,11 +18,11 @@ namespace xr
    * - Thread-safe operations for concurrent access
    * - Efficient queue updates and resource management
    */
-  class XRRenderPassQueueBuilder
+  class GPURenderPassQueueBuilder
   {
   public:
-    XRRenderPassQueueBuilder();
-    ~XRRenderPassQueueBuilder();
+    GPURenderPassQueueBuilder();
+    ~GPURenderPassQueueBuilder();
 
   public:
     /**

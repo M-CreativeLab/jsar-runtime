@@ -50,7 +50,7 @@ namespace renderer
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
-    xrRenderPassQueueBuilder = make_unique<xr::XRRenderPassQueueBuilder>();
+    xrRenderPassQueueBuilder = make_unique<xr::GPURenderPassQueueBuilder>();
   }
 
   TrContentRenderer::~TrContentRenderer()

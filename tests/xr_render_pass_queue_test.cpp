@@ -49,12 +49,12 @@ void testStereoRenderingFrameRenderPassEncoders()
   cout << "✅ StereoRenderingFrame render pass encoder tests passed!" << endl;
 }
 
-void testXRRenderPassQueueBuilder()
+void testGPURenderPassQueueBuilder()
 {
-  cout << "Testing XRRenderPassQueueBuilder functionality..." << endl;
+  cout << "Testing GPURenderPassQueueBuilder functionality..." << endl;
   
   // Create a queue builder
-  XRRenderPassQueueBuilder builder;
+  GPURenderPassQueueBuilder builder;
   
   // Test initial state
   assert(!builder.hasRequests());
@@ -80,7 +80,7 @@ void testXRRenderPassQueueBuilder()
   // Clean up the request since we created it
   delete request;
   
-  cout << "✅ XRRenderPassQueueBuilder tests passed!" << endl;
+  cout << "✅ GPURenderPassQueueBuilder tests passed!" << endl;
 }
 
 void testIntegration()
@@ -91,7 +91,7 @@ void testIntegration()
   StereoRenderingFrame frame(true, 2);
   
   // Create a queue builder
-  XRRenderPassQueueBuilder builder;
+  GPURenderPassQueueBuilder builder;
   
   // Add multiple command buffer requests
   std::vector<TestCommandBufferRequest*> requests;
@@ -128,7 +128,7 @@ int main()
   try
   {
     testStereoRenderingFrameRenderPassEncoders();
-    testXRRenderPassQueueBuilder();
+    testGPURenderPassQueueBuilder();
     testIntegration();
     
     cout << "🎉 All tests passed successfully!" << endl;
