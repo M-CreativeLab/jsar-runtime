@@ -64,7 +64,7 @@ impl VisitorMut for MyGLSLPatcher {
 
 fn patch_glsl_source_from_str(s: &str) -> String {
   use glsl_lang::{
-    ast::TranslationUnit, lexer::v2_full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
+    ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
