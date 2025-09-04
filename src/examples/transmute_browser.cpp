@@ -615,24 +615,6 @@ namespace jsar::example
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
       assert(false && "Failed to create the render target framebuffer");
 
-    // If multisample is enabled, create a resolved framebuffer
-    if (multisampleEnabled)
-    {
-      glGenFramebuffers(1, &resolved_fbo_);
-      glBindFramebuffer(GL_FRAMEBUFFER, resolved_fbo_);
-
-      // Create a texture to resolve the multisample framebuffer
-      GLuint depth_renderbuffer;
-      glGenRenderbuffers(1, &depth_renderbuffer);
-      glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
-      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
-      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
-      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
-
-      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        assert(false && "Failed to create the resolved framebuffer");
-    }
-
     glGetError();                         // Clear the error state
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer
   }
@@ -752,6 +734,7 @@ namespace jsar::example
       // Update smooth animation for viewer controls
       windowCtx_->updateAnimation();
 
+      // Render all the contents
       renderContent();
 
       // Swap the buffers and poll events
@@ -760,6 +743,9 @@ namespace jsar::example
         glBindFramebuffer(GL_FRAMEBUFFER, resolved_fbo_);
       glfwPollEvents();
     }
+
+    // Shutdown window context firstly
+    windowCtx_->shutdown();
     glfwTerminate();
 
     // Shutdown the embedder when the window is closed.
@@ -769,6 +755,10 @@ namespace jsar::example
     // Shutdown environment renderer
     if (envRenderer_ != nullptr)
       envRenderer_->shutdown();
+
+    // Shutdown screen renderer
+    if (screenRenderer_ != nullptr)
+      screenRenderer_->shutdown();
   }
 
   void TransmuteBrowser::renderContent()
@@ -908,9 +898,7 @@ namespace jsar::example
 
     // Render screen-space GUI
     if (screenRenderer_)
-    {
       screenRenderer_->render();
-    }
 
     // Blit the render target to the default framebuffer
     glBindFramebuffer(GL_READ_FRAMEBUFFER, render_target_);
@@ -925,21 +913,6 @@ namespace jsar::example
                       drawingViewport.height(),
                       GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                       GL_NEAREST);
-
-    if (multisampleEnabled)
-    {
-      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
-      glBlitFramebuffer(0,
-                        0,
-                        drawingViewport.width(),
-                        drawingViewport.height(),
-                        0,
-                        0,
-                        drawingViewport.width(),
-                        drawingViewport.height(),
-                        GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
-                        GL_NEAREST);
-    }
 
     // Unbind the framebuffers before swapping buffers
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

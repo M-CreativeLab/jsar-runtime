@@ -4,12 +4,18 @@
 
 namespace jsar::example
 {
+  using namespace std;
+
   ScreenRenderer::ScreenRenderer(WindowContext *windowCtx)
       : windowCtx_(windowCtx)
   {
   }
 
   ScreenRenderer::~ScreenRenderer()
+  {
+  }
+
+  void ScreenRenderer::shutdown()
   {
     components_.clear();
   }
@@ -30,26 +36,27 @@ namespace jsar::example
 
   void ScreenRenderer::render()
   {
+    glDisable(GL_DEPTH_TEST); // Disable depth test for UI rendering
+    glDepthMask(GL_FALSE);    // Disable depth writes for UI rendering
+
     for (auto &component : components_)
-    {
       component->render();
-    }
+
+    // Reset states
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
   }
 
   void ScreenRenderer::handleInput(GLFWwindow *window, int key, int action)
   {
     for (auto &component : components_)
-    {
       component->handleInput(window, key, action);
-    }
   }
 
   void ScreenRenderer::handleMouseButton(GLFWwindow *window, int button, int action, double xpos, double ypos)
   {
     for (auto &component : components_)
-    {
       component->handleMouseButton(window, button, action, xpos, ypos);
-    }
   }
 
   void ScreenRenderer::handleCharInput(GLFWwindow *window, unsigned int codepoint)

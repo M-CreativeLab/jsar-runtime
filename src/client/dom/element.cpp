@@ -793,12 +793,16 @@ namespace dom
       return false;
 
     bool scrolled = layoutBox->scrollBy(offset);
-
-    // Throttle scroll events for better performance
-    if (!shouldThrottleScrollEvent())
+    if (scrolled)
     {
-      last_scroll_event_time_ = chrono::steady_clock::now();
-      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      markAsDirty();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        last_scroll_event_time_ = chrono::steady_clock::now();
+        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      }
     }
     return scrolled;
   }

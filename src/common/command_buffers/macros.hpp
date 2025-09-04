@@ -10,6 +10,7 @@
   XX(LINK_PROGRAM, LinkProgramCommandBufferRequest, "GL::LinkProgram")                                                           \
   XX(USE_PROGRAM, UseProgramCommandBufferRequest, "GL::UseProgram")                                                              \
   XX(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest, "GL::BindAttribLocation")                                     \
+  XX(VALIDATE_PROGRAM, ValidateProgramCommandBufferRequest, "GL::ValidateProgram")                                               \
   XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest, "GL::GetProgramParam")                                              \
   XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest, "GL::GetProgramInfoLog")                                       \
   XX(ATTACH_SHADER, AttachShaderCommandBufferRequest, "GL::AttachShader")                                                        \

@@ -33,6 +33,7 @@ namespace jsar::example
     WindowContext(int width, int height);
 
   public:
+    void shutdown();
     bool isTerminated()
     {
       return terminated;
@@ -55,7 +56,6 @@ namespace jsar::example
     void setUIMouseButtonHandler(std::function<void(int, int, double, double)> handler);
 
   private:
-    void terminate();
     void initWindow(GLFWmonitor *monitor = nullptr);
 
   public:

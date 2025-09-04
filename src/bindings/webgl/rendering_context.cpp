@@ -688,6 +688,7 @@ namespace webgl
     InstanceMethod("createProgram", &T::CreateProgram),                         \
     InstanceMethod("deleteProgram", &T::DeleteProgram),                         \
     InstanceMethod("linkProgram", &T::LinkProgram),                             \
+    InstanceMethod("validateProgram", &T::ValidateProgram),                     \
     InstanceMethod("useProgram", &T::UseProgram),                               \
     InstanceMethod("bindAttribLocation", &T::BindAttribLocation),               \
     InstanceMethod("getProgramParameter", &T::GetProgramParameter),             \

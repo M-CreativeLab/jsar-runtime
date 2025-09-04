@@ -140,8 +140,10 @@ void main()
       return;
     }
 
-    // Disable depth writing (but keep depth testing to ensure skybox is behind everything)
-    glDepthMask(GL_FALSE);
+    // Disable depth test and depth writing to ensure skybox is rendered behind all other geometry
+    if (glIsEnabled(GL_DEPTH_TEST))
+      glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE); // ensure skybox does not write to depth buffer
 
     glUseProgram(shaderProgram_);
 

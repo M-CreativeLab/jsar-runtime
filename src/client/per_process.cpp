@@ -400,7 +400,7 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::preload()
 {
-  fontCacheManager = std::make_unique<font::FontCacheManager>();
+  fontCacheManager = font::FontCacheManager::GetInstance();
 }
 
 void TrClientContextPerProcess::start()

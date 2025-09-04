@@ -1,0 +1,252 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>CSS Overflow Comprehensive Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .test-box {
+      border: 2px solid #333;
+      background-color: white;
+      padding: 10px;
+      height: 150px;
+      width: 250px;
+    }
+
+    .test-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .content {
+      background-color: #e3f2fd;
+      padding: 10px;
+      border: 1px solid #2196f3;
+    }
+
+    /* Overflow: visible (default) */
+    .overflow-visible {
+      overflow: visible;
+    }
+
+    /* Overflow: hidden */
+    .overflow-hidden {
+      overflow: hidden;
+    }
+
+    /* Overflow: scroll */
+    .overflow-scroll {
+      overflow: scroll;
+    }
+
+    /* Overflow: auto */
+    .overflow-auto {
+      overflow: auto;
+    }
+
+    /* Overflow-x and overflow-y combinations */
+    .overflow-x-hidden {
+      overflow-x: hidden;
+      overflow-y: scroll;
+    }
+
+    .overflow-y-hidden {
+      overflow-x: scroll;
+      overflow-y: hidden;
+    }
+
+    /* Text overflow */
+    .text-overflow {
+      width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid #ccc;
+      padding: 5px;
+      background-color: #fff3e0;
+    }
+
+    /* Overflow with positioned elements */
+    .positioned-overflow {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .positioned-child {
+      position: absolute;
+      top: 50px;
+      left: 200px;
+      width: 100px;
+      height: 100px;
+      background-color: #ff5722;
+      color: white;
+      padding: 10px;
+    }
+
+    /* Overflow with flexbox */
+    .flex-overflow {
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 10px;
+    }
+
+    .flex-item {
+      min-width: 150px;
+      height: 80px;
+      background-color: #4caf50;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    /* Nested overflow */
+    .nested-outer {
+      overflow: hidden;
+      background-color: #ffeb3b;
+      padding: 10px;
+    }
+
+    .nested-inner {
+      overflow: scroll;
+      height: 80px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+
+    /* Long content for testing */
+    .long-content {
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Overflow Comprehensive Test</h1>
+  <p>This page tests various CSS overflow properties and scenarios.</p>
+
+  <div class="container">
+    <!-- Overflow: visible -->
+    <div class="test-box overflow-visible">
+      <div class="test-title">overflow: visible</div>
+      <div class="content">
+        This content is longer than the container and will overflow outside the boundaries. The overflow: visible property allows content to extend beyond the container's edges, which is the default behavior.
+      </div>
+    </div>
+
+    <!-- Overflow: hidden -->
+    <div class="test-box overflow-hidden">
+      <div class="test-title">overflow: hidden</div>
+      <div class="content">
+        This content is longer than the container but will be clipped and hidden. The overflow: hidden property cuts off any content that extends beyond the container's boundaries without providing scrollbars.
+      </div>
+    </div>
+
+    <!-- Overflow: scroll -->
+    <div class="test-box overflow-scroll">
+      <div class="test-title">overflow: scroll</div>
+      <div class="content">
+        This content is longer than the container and will show scrollbars. The overflow: scroll property always shows scrollbars, even if the content fits within the container boundaries.
+      </div>
+    </div>
+
+    <!-- Overflow: auto -->
+    <div class="test-box overflow-auto">
+      <div class="test-title">overflow: auto</div>
+      <div class="content">
+        This content is longer than the container and will show scrollbars only when needed. The overflow: auto property dynamically shows or hides scrollbars based on whether content overflows.
+      </div>
+    </div>
+
+    <!-- Overflow-x: hidden, overflow-y: scroll -->
+    <div class="test-box overflow-x-hidden">
+      <div class="test-title">overflow-x: hidden, overflow-y: scroll</div>
+      <div class="content">
+        This content has horizontal overflow hidden but vertical scrolling enabled. This is useful for preventing horizontal scrolling while allowing vertical navigation through content.
+      </div>
+    </div>
+
+    <!-- Overflow-x: scroll, overflow-y: hidden -->
+    <div class="test-box overflow-y-hidden">
+      <div class="test-title">overflow-x: scroll, overflow-y: hidden</div>
+      <div class="content">
+        This content has vertical overflow hidden but horizontal scrolling enabled. This creates a horizontally scrollable area while preventing vertical overflow from being accessible.
+      </div>
+    </div>
+  </div>
+
+  <h2>Text Overflow</h2>
+  <div class="text-overflow">
+    This is a very long text that will be truncated with an ellipsis because it exceeds the container width
+  </div>
+
+  <h2>Overflow with Positioned Elements</h2>
+  <div class="test-box positioned-overflow">
+    <div class="test-title">Positioned element overflow</div>
+    <div class="positioned-child">
+      Positioned element that extends beyond parent
+    </div>
+  </div>
+
+  <h2>Flexbox with Horizontal Overflow</h2>
+  <div class="test-box flex-overflow">
+    <div class="flex-item">Item 1</div>
+    <div class="flex-item">Item 2</div>
+    <div class="flex-item">Item 3</div>
+    <div class="flex-item">Item 4</div>
+    <div class="flex-item">Item 5</div>
+  </div>
+
+  <h2>Nested Overflow Containers</h2>
+  <div class="test-box nested-outer">
+    <div class="test-title">Nested overflow containers</div>
+    <div class="nested-inner">
+      <div class="long-content">
+        This is the inner scrollable content that has its own overflow behavior nested within an outer container that also has overflow control. This tests how overflow behaves in nested scenarios.
+        <br><br>
+        Additional content to make this scrollable vertically. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        <br><br>
+        More content to ensure scrolling behavior is properly tested in nested overflow contexts.
+      </div>
+    </div>
+  </div>
+
+  <h2>Performance Test - Large Content</h2>
+  <div class="test-box overflow-auto">
+    <div class="test-title">Large content performance</div>
+    <div class="content long-content">
+      This section contains a large amount of content to test overflow performance:
+      <br><br>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+      <br><br>
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      <br><br>
+      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+      <br><br>
+      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+      <br><br>
+      Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
+    </div>
+  </div>
+
+</body>
+
+</html>

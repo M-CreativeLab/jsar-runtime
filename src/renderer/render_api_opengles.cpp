@@ -611,6 +611,17 @@ private:
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
+  TR_OPENGL_FUNC void OnValidateProgram(ValidateProgramCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    auto glContext = reqContentRenderer->getContextGL();
+    GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+    glValidateProgram(program);
+    reqContentRenderer->getContextGL()->MarkAsDirty();
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
   TR_OPENGL_FUNC void OnBindAttribLocation(BindAttribLocationCommandBufferRequest *req,
                                            renderer::TrContentRenderer *reqContentRenderer,
                                            ApiCallOptions &options)
@@ -2864,6 +2875,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(DELETE_PROGRAM, DeleteProgramCommandBufferRequest, DeleteProgram)
       ADD_COMMAND_BUFFER_HANDLER(LINK_PROGRAM, LinkProgramCommandBufferRequest, LinkProgram)
       ADD_COMMAND_BUFFER_HANDLER(USE_PROGRAM, UseProgramCommandBufferRequest, UseProgram)
+      ADD_COMMAND_BUFFER_HANDLER(VALIDATE_PROGRAM, ValidateProgramCommandBufferRequest, ValidateProgram)
       ADD_COMMAND_BUFFER_HANDLER(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest, BindAttribLocation)
       ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest, GetProgramParameter)
       ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest, GetProgramInfoLog)

@@ -732,8 +732,27 @@ namespace dom
       return false;
 
     bool scrolled = layoutBox->scrollBy(glm::vec3(offsetX, offsetY, 0));
-    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+    if (scrolled)
+    {
+      // TODO(yorkie): no need to invalidate the document cache on scroll, will optimize later that only invalidate
+      // the cache for the affected elements.
+      invalidateDocumentCache();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        // Dispatch the scroll event.
+        last_scroll_event_time_ = std::chrono::steady_clock::now();
+        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      }
+    }
     return scrolled;
+  }
+
+  bool HTMLDocument::shouldThrottleScrollEvent() const
+  {
+    auto now = std::chrono::steady_clock::now();
+    return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 
   void Document::onViewportMetaChanged(std::shared_ptr<dom::HTMLMetaElement> meta_element)

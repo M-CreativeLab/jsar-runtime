@@ -347,10 +347,6 @@ namespace jsar::example
     if (instances_.empty())
       return;
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
 
     glUseProgram(program_);
     glBindVertexArray(vao_);
@@ -364,8 +360,15 @@ namespace jsar::example
     glUniformMatrix4fv(viewMatrixLoc_, 1, GL_FALSE, &viewMatrix[0][0]);
     glUniformMatrix4fv(projectionMatrixLoc_, 1, GL_FALSE, &projectionMatrix[0][0]);
 
-    // Draw instances
-    glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
+    {
+      glEnable(GL_DEPTH_TEST);
+      glDepthMask(GL_TRUE);
+
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, instances_.size());
+    }
 
     // Reset state
     glBindVertexArray(0);

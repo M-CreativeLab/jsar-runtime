@@ -105,6 +105,9 @@ namespace client_cssom::selectors
     // Constructor for attribute selectors
     Component(ComponentType type, const std::string &attributeName, AttributeMatchType matchType, const std::string &attributeValue = "");
 
+    // Constructor for nth-child/nth-of-type pseudo-classes
+    Component(ComponentType type, PseudoClassType pseudoClassType, int nthA, int nthB);
+
     // Type checking methods
     bool isLocalName() const
     {
@@ -184,6 +187,14 @@ namespace client_cssom::selectors
     {
       return isPseudoClass() && pseudoClassType_ == PseudoClassType::kWhere;
     }
+    bool isNthChild() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kNthChild;
+    }
+    bool isNthOfType() const
+    {
+      return isPseudoClass() && pseudoClassType_ == PseudoClassType::kNthOfType;
+    }
 
     // Accessors
     ComponentType type() const
@@ -229,6 +240,16 @@ namespace client_cssom::selectors
       return attributeMatchType_;
     }
 
+    // nth-child/nth-of-type accessors (for an+b formula)
+    int nthA() const
+    {
+      return nthA_;
+    }
+    int nthB() const
+    {
+      return nthB_;
+    }
+
     // String representation
     operator std::string() const;
 
@@ -242,6 +263,10 @@ namespace client_cssom::selectors
     // Attribute selector specific fields
     AttributeMatchType attributeMatchType_;
     std::string attributeValue_;
+
+    // nth-child/nth-of-type specific fields (for an+b formula)
+    int nthA_; // 'a' coefficient in an+b
+    int nthB_; // 'b' constant in an+b
   };
 
   /**
@@ -359,5 +384,6 @@ namespace client_cssom::selectors
     static std::string parseIdentifier(const std::string &text, size_t &pos);
     static bool isIdentifierStart(char c);
     static bool isIdentifierChar(char c);
+    static bool parseNthFormula(const std::string &formula, int &a, int &b);
   };
 }

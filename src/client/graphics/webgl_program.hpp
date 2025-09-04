@@ -43,12 +43,28 @@ namespace client_graphics
       linkStatus_ = linkStatus;
     }
     /**
+     * It sets the validate status of the program.
+     *
+     * @param validateStatus The validate status of the program.
+     */
+    void setValidateStatus(bool validateStatus)
+    {
+      validateStatus_ = validateStatus;
+    }
+    /**
      * This method gets the current link status of the program.
      *
      * @param sync If `true`, it will wait for the program to be completed before returning the link status.
      * @returns The current link status of the program.
      */
     bool getLinkStatus(bool sync = false) const;
+    /**
+     * This method gets the current validate status of the program.
+     *
+     * @param sync If `true`, it will wait for the program to be completed before returning the validate status.
+     * @returns The current validate status of the program.
+     */
+    bool getValidateStatus(bool sync = false) const;
     /**
      * @returns The number of active attributes in the program.
      */
@@ -212,6 +228,7 @@ namespace client_graphics
     mutable std::condition_variable setCompletedCv_;
 
     bool linkStatus_ = false;
+    bool validateStatus_ = false;
     std::map<int, WebGLActiveInfo> activeAttribs_;
     std::map<int, WebGLActiveInfo> activeUniforms_;
     std::unordered_map<std::string, WebGLAttribLocation> attribLocations_;

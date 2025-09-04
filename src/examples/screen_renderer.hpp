@@ -47,6 +47,11 @@ namespace jsar::example
     ~ScreenRenderer();
 
     /**
+     * Shutdown the screen renderer and release resources.
+     */
+    void shutdown();
+
+    /**
      * Add a component to the screen renderer.
      */
     void addComponent(std::shared_ptr<ScreenComponent> component);
