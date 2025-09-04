@@ -393,6 +393,7 @@ namespace client_layout
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
 
     Fragment resulting_fragment;
+    shared_ptr<const LayoutObject> container = nullptr;
     shared_ptr<const client_scroll::ScrollableArea> scrollable_area = nullptr;
     bool is_absolute_positioned = isAbsolutelyPositioned();
     bool is_fixed_positioned = isFixedPositioned();
@@ -414,14 +415,12 @@ namespace client_layout
           auto baseFragment = absolute_container->accumulatedFragment();
           resulting_fragment = baseFragment.position(nodeFragment);
 
-          if (absolute_container->isBox() && absolute_container->isScrollContainer())
-            scrollable_area = dynamic_pointer_cast<const LayoutBox>(absolute_container)->getScrollableArea();
+          // Use the absolute container as the box for scroll offset.
+          container = absolute_container;
         }
         else
         {
-          auto containing_block = containingScrollContainer();
-          if (containing_block != nullptr)
-            scrollable_area = containing_block->getScrollableArea();
+          container = containingScrollContainer();
         }
       }
     }
@@ -431,10 +430,14 @@ namespace client_layout
 
       // Returns the fragment with the parent's offset.
       resulting_fragment = baseFragment.position(nodeFragment);
+      container = parent_box;
+    }
 
-      // Use the parent as the scrollable area if the parent is a scroll container.
-      if (parent_box->isBox() && parent_box->isScrollContainer())
-        scrollable_area = dynamic_pointer_cast<const LayoutBox>(parent_box)->getScrollableArea();
+    if (container &&
+        container->isBox() &&
+        container->isScrollContainer())
+    {
+      scrollable_area = dynamic_pointer_cast<const LayoutBox>(container)->getScrollableArea();
     }
 
     // Move the fragment by the scroll offset if the `scrollable_area` is set.
