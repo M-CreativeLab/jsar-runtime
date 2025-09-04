@@ -13,7 +13,9 @@ namespace xr
 
   XRRenderPassQueueBuilder::~XRRenderPassQueueBuilder()
   {
-    clear();
+    // Clear without deleting since we don't own the requests
+    lock_guard<mutex> lock(m_Mutex);
+    m_PendingRequests.clear();
   }
 
   void XRRenderPassQueueBuilder::addCommandBufferRequest(TrCommandBufferBase *request)
@@ -50,14 +52,8 @@ namespace xr
   {
     lock_guard<mutex> lock(m_Mutex);
 
-    // Clean up any pending requests
-    for (auto *request : m_PendingRequests)
-    {
-      if (request != nullptr)
-      {
-        delete request;
-      }
-    }
+    // Clear the pending requests list without deleting the requests
+    // since they are owned by the StereoRenderingFrame
     m_PendingRequests.clear();
   }
 

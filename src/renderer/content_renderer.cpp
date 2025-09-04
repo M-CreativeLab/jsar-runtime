@@ -259,24 +259,20 @@ namespace renderer
           frame->addCommandBuffer(req, viewIndex);
 
           // Add the command buffer request to the XR render pass queue builder
-          // Create a copy of the request for the queue builder since the original
-          // will be managed by the frame's command buffer list
-          auto reqCopy = frame->cloneCommandBuffer(req);
-          if (reqCopy != nullptr)
+          // Note: We pass the request for processing but don't transfer ownership
+          // since the frame already owns it
+          xrRenderPassQueueBuilder->addCommandBufferRequest(req);
+
+          // Build render pass encoders and add them to the frame
+          auto renderPassEncoders = xrRenderPassQueueBuilder->buildRenderPassQueue();
+          for (auto &encoder : renderPassEncoders)
           {
-            xrRenderPassQueueBuilder->addCommandBufferRequest(reqCopy);
-
-            // Build render pass encoders and add them to the frame
-            // This is done immediately for now, but could be optimized to batch
-            auto renderPassEncoders = xrRenderPassQueueBuilder->buildRenderPassQueue();
-            for (auto &encoder : renderPassEncoders)
-            {
-              frame->addRenderPassEncoder(std::move(encoder));
-            }
-
-            // Clear the queue builder after processing
-            xrRenderPassQueueBuilder->clear();
+            frame->addRenderPassEncoder(std::move(encoder));
           }
+
+          // Clear the queue builder after processing (but don't delete the requests
+          // since they're owned by the frame)
+          xrRenderPassQueueBuilder->clear();
         }
       }
     }

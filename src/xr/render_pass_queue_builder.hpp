@@ -27,6 +27,8 @@ namespace xr
   public:
     /**
      * Add a command buffer request to be processed into render pass encoders.
+     * Note: The builder does not take ownership of the request - it only
+     * references it for processing.
      * 
      * @param request The command buffer request to add.
      */
@@ -42,6 +44,7 @@ namespace xr
 
     /**
      * Clear all accumulated command buffer requests and reset the builder.
+     * Note: This does not delete the requests since the builder does not own them.
      */
     void clear();
 

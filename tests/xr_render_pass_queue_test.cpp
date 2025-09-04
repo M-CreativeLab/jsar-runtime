@@ -77,6 +77,9 @@ void testXRRenderPassQueueBuilder()
   assert(!builder.hasRequests());
   assert(builder.getRequestCount() == 0);
   
+  // Clean up the request since we created it
+  delete request;
+  
   cout << "✅ XRRenderPassQueueBuilder tests passed!" << endl;
 }
 
@@ -91,9 +94,11 @@ void testIntegration()
   XRRenderPassQueueBuilder builder;
   
   // Add multiple command buffer requests
+  std::vector<TestCommandBufferRequest*> requests;
   for (int i = 0; i < 3; i++)
   {
     auto* request = new TestCommandBufferRequest();
+    requests.push_back(request);
     builder.addCommandBufferRequest(request);
   }
   
@@ -106,6 +111,12 @@ void testIntegration()
   
   // Verify integration
   assert(frame.getRenderPassEncoders().size() == 3);
+  
+  // Clean up the requests since we created them
+  for (auto* request : requests)
+  {
+    delete request;
+  }
   
   cout << "✅ Integration tests passed!" << endl;
 }
