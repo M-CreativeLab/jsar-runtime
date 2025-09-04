@@ -648,6 +648,7 @@ namespace dom
     auto renderQueue = Node::getRenderQueue();
     if (adopted_style_ != nullptr) [[likely]]
     {
+      renderQueue.isPositioned = adopted_style_->isPositioned();
       renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
 
       // Update the translateZ from the layout box

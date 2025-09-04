@@ -15,6 +15,7 @@ namespace builtin_scene
         : base(base)
         , zIndex(0)
         , translateZ(0)
+        , isPositioned(false)
     {
     }
     RenderQueue(const RenderQueue &) = default;
@@ -31,6 +32,7 @@ namespace builtin_scene
       os << "RenderQueue(base=" << queue.base
          << ", zIndex=" << queue.zIndex
          << ", translateZ=" << queue.translateZ
+         << ", isPositioned=" << (queue.isPositioned ? "true" : "false")
          << ")";
       return os;
     }
@@ -42,5 +44,7 @@ namespace builtin_scene
     int zIndex = 0;
     // CSS: transform: translateZ()
     float translateZ = 0;
+    // CSS: position (absolute, relative, fixed, sticky vs static)
+    bool isPositioned = false;
   };
 }
