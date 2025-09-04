@@ -393,6 +393,7 @@ namespace client_layout
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
 
     Fragment resulting_fragment;
+    shared_ptr<const LayoutObject> container = nullptr;
     shared_ptr<const client_scroll::ScrollableArea> scrollable_area = nullptr;
     bool is_absolute_positioned = isAbsolutelyPositioned();
     bool is_fixed_positioned = isFixedPositioned();
@@ -408,9 +409,19 @@ namespace client_layout
       // Search for the containing block for absolute positioning.
       if (is_absolute_positioned)
       {
-        auto containing_block = containingScrollContainer();
-        if (containing_block != nullptr)
-          scrollable_area = containing_block->getScrollableArea();
+        auto absolute_container = containerForAbsolutePosition();
+        if (absolute_container != nullptr)
+        {
+          auto baseFragment = absolute_container->accumulatedFragment();
+          resulting_fragment = baseFragment.position(nodeFragment);
+
+          // Use the absolute container as the box for scroll offset.
+          container = absolute_container;
+        }
+        else
+        {
+          container = containingScrollContainer();
+        }
       }
     }
     else
@@ -419,10 +430,14 @@ namespace client_layout
 
       // Returns the fragment with the parent's offset.
       resulting_fragment = baseFragment.position(nodeFragment);
+      container = parent_box;
+    }
 
-      // Use the parent as the scrollable area if the parent is a scroll container.
-      if (parent_box->isBox() && parent_box->isScrollContainer())
-        scrollable_area = dynamic_pointer_cast<const LayoutBox>(parent_box)->getScrollableArea();
+    if (container &&
+        container->isBox() &&
+        container->isScrollContainer())
+    {
+      scrollable_area = dynamic_pointer_cast<const LayoutBox>(container)->getScrollableArea();
     }
 
     // Move the fragment by the scroll offset if the `scrollable_area` is set.
@@ -655,25 +670,55 @@ namespace client_layout
 
   shared_ptr<LayoutObject> LayoutObject::containerForFixedPosition() const
   {
-    // TODO: implement this method.
+    // Fixed positioned elements are positioned relative to the viewport
+    // Return nullptr to indicate viewport-level positioning
     return nullptr;
   }
 
   shared_ptr<LayoutObject> LayoutObject::containerForAbsolutePosition() const
   {
-    // TODO: implement this method.
+    // Walk up the ancestor chain to find the nearest positioned ancestor
+    auto object = parent();
+    while (object != nullptr)
+    {
+      // Check if this ancestor establishes a positioning context
+      auto element = dom::Node::As<dom::Element>(object->node());
+      if (element != nullptr && element->hasAdoptedStyle())
+      {
+        const auto &elementStyle = element->adoptedStyleRef();
+        if (object->computeIsAbsoluteContainer(elementStyle))
+        {
+          return object;
+        }
+      }
+      object = object->parent();
+    }
+
+    // If no positioned ancestor found, return nullptr to indicate root level positioning
     return nullptr;
   }
 
   bool LayoutObject::computeIsFixedContainer(const client_cssom::ComputedStyle &style) const
   {
-    // TODO: implement this method.
+    // An element establishes a fixed positioning context if it has position: fixed
+    // or other properties that create a new stacking context like transform, filter, etc.
+    // For now, we implement the basic case for position: fixed
+    if (style.hasProperty("position"))
+    {
+      auto position = style.getPropertyValue("position");
+      return position == "fixed";
+    }
     return false;
   }
 
   bool LayoutObject::computeIsAbsoluteContainer(const client_cssom::ComputedStyle &style) const
   {
-    // TODO: implement this method.
+    // An element establishes an absolute positioning context if it has a position value other than static
+    if (style.hasProperty("position"))
+    {
+      auto position = style.getPropertyValue("position");
+      return position == "relative" || position == "absolute" || position == "fixed" || position == "sticky";
+    }
     return false;
   }
 
@@ -704,13 +749,43 @@ namespace client_layout
 
   shared_ptr<LayoutBlock> LayoutObject::containingBlockForFixedPosition() const
   {
-    // TODO: implement this method.
+    // Fixed positioned elements are typically positioned relative to the viewport
+    // In most cases, this would be the root element or initial containing block
+    // For now, return nullptr to indicate viewport-relative positioning
     return nullptr;
   }
 
   shared_ptr<LayoutBlock> LayoutObject::containingBlockForAbsolutePosition() const
   {
-    // TODO: implement this method.
+    // Walk up the ancestor chain to find the nearest positioned ancestor
+    auto object = parent();
+    while (object != nullptr)
+    {
+      // Check if this ancestor establishes a positioning context
+      auto element = dom::Node::As<dom::Element>(object->node());
+      if (element != nullptr && element->hasAdoptedStyle())
+      {
+        const auto &elementStyle = element->adoptedStyleRef();
+        if (object->computeIsAbsoluteContainer(elementStyle))
+        {
+          // Found a positioned ancestor, return it as a LayoutBlock if possible
+          if (object->isLayoutBlock())
+            return dynamic_pointer_cast<LayoutBlock>(object);
+
+          // If the positioned ancestor is not a block, continue searching for the nearest block
+          while (object != nullptr)
+          {
+            if (object->isLayoutBlock())
+              return dynamic_pointer_cast<LayoutBlock>(object);
+            object = object->parent();
+          }
+        }
+      }
+      object = object->parent();
+    }
+
+    // If no positioned ancestor found, return the root containing block
+    // This falls back to the default behavior for the initial containing block
     return nullptr;
   }
 
