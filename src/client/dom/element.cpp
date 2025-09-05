@@ -657,7 +657,7 @@ namespace dom
         auto parentElement = getParentElement();
         while (parentElement != nullptr)
         {
-          auto parentStyle = parentElement->adopted_style_;
+          const auto &parentStyle = parentElement->adopted_style_;
           if (parentStyle != nullptr && parentStyle->isPositioned())
           {
             renderQueue.isPositioned = true;

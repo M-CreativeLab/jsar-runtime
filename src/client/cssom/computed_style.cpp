@@ -410,6 +410,10 @@ namespace client_cssom
       box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(resolvedValue);
       bitfields_.SetHasBoxSizing(true);
     }
+    else if (name == "z-index")
+    {
+      z_index_ = stoi(resolvedValue);
+    }
     else if (name == "position")
     {
       position_type_ = Parse::ParseSingleValue<values::specified::PositionType>(resolvedValue).toComputedValue(context);
