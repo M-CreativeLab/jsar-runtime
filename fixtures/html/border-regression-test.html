@@ -1,0 +1,577 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Border Regression Test - JSAR Runtime</title>
+  <style>
+    :root {
+      --test-color-1: #ff6b6b;
+      --test-color-2: #4ecdc4;
+      --test-color-3: #45b7d1;
+      --test-color-4: #96ceb4;
+      --test-width: 200px;
+      --test-height: 120px;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #555;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+      margin-top: 40px;
+    }
+
+    .test-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .test-item {
+      width: var(--test-width);
+      height: var(--test-height);
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      margin: 10px auto;
+    }
+
+    /* Border Style Tests */
+    .border-solid {
+      border: 5px solid var(--test-color-1);
+    }
+
+    .border-dashed {
+      border: 5px dashed var(--test-color-2);
+    }
+
+    .border-dotted {
+      border: 5px dotted var(--test-color-3);
+    }
+
+    .border-double {
+      border: 8px double var(--test-color-4);
+    }
+
+    .border-groove {
+      border: 6px groove var(--test-color-1);
+    }
+
+    .border-ridge {
+      border: 6px ridge var(--test-color-2);
+    }
+
+    .border-inset {
+      border: 6px inset var(--test-color-3);
+    }
+
+    .border-outset {
+      border: 6px outset var(--test-color-4);
+    }
+
+    .border-none {
+      border: none;
+      background-color: #eeeeee;
+    }
+
+    .border-hidden {
+      border: 5px hidden var(--test-color-1);
+      background-color: #eeeeee;
+    }
+
+    /* Border Width Tests */
+    .border-thin {
+      border: thin solid var(--test-color-1);
+    }
+
+    .border-medium {
+      border: medium solid var(--test-color-2);
+    }
+
+    .border-thick {
+      border: thick solid var(--test-color-3);
+    }
+
+    .border-1px {
+      border: 1px solid var(--test-color-1);
+    }
+
+    .border-3px {
+      border: 3px solid var(--test-color-2);
+    }
+
+    .border-10px {
+      border: 10px solid var(--test-color-3);
+    }
+
+    .border-20px {
+      border: 20px solid var(--test-color-4);
+    }
+
+    /* Border Radius Tests */
+    .radius-5px {
+      border: 4px solid var(--test-color-1);
+      border-radius: 5px;
+    }
+
+    .radius-10px {
+      border: 4px solid var(--test-color-2);
+      border-radius: 10px;
+    }
+
+    .radius-20px {
+      border: 4px solid var(--test-color-3);
+      border-radius: 20px;
+    }
+
+    .radius-50px {
+      border: 4px solid var(--test-color-4);
+      border-radius: 50px;
+    }
+
+    .radius-50-percent {
+      border: 4px solid var(--test-color-1);
+      border-radius: 50%;
+    }
+
+    .radius-mixed {
+      border: 4px solid var(--test-color-2);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 15px;
+      border-bottom-left-radius: 30px;
+    }
+
+    /* Per-Side Border Tests */
+    .border-top-only {
+      border-top: 8px solid var(--test-color-1);
+    }
+
+    .border-right-only {
+      border-right: 8px solid var(--test-color-2);
+    }
+
+    .border-bottom-only {
+      border-bottom: 8px solid var(--test-color-3);
+    }
+
+    .border-left-only {
+      border-left: 8px solid var(--test-color-4);
+    }
+
+    .border-mixed-styles {
+      border-top: 5px solid var(--test-color-1);
+      border-right: 5px dashed var(--test-color-2);
+      border-bottom: 5px dotted var(--test-color-3);
+      border-left: 5px double var(--test-color-4);
+    }
+
+    .border-mixed-widths {
+      border-top: 2px solid var(--test-color-1);
+      border-right: 6px solid var(--test-color-1);
+      border-bottom: 10px solid var(--test-color-1);
+      border-left: 14px solid var(--test-color-1);
+    }
+
+    /* Border Color Tests */
+    .border-hex {
+      border: 5px solid #ff0000;
+    }
+
+    .border-rgb {
+      border: 5px solid rgb(255, 165, 0);
+    }
+
+    .border-rgba {
+      border: 5px solid rgba(0, 255, 0, 0.7);
+    }
+
+    .border-hsl {
+      border: 5px solid hsl(240, 100%, 50%);
+    }
+
+    .border-hsla {
+      border: 5px solid hsla(300, 100%, 50%, 0.8);
+    }
+
+    .border-named {
+      border: 5px solid purple;
+    }
+
+    .border-currentcolor {
+      color: #ff6b6b;
+      border: 5px solid currentColor;
+    }
+
+    .border-transparent {
+      border: 5px solid transparent;
+      background-color: #eeeeee;
+    }
+
+    /* Complex Integration Tests */
+    .complex-test-1 {
+      border: 3px solid var(--test-color-1);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      box-sizing: border-box;
+    }
+
+    .complex-test-2 {
+      border-top: 5px groove var(--test-color-2);
+      border-right: 3px ridge var(--test-color-3);
+      border-bottom: 7px inset var(--test-color-4);
+      border-left: 4px outset var(--test-color-1);
+      border-radius: 10px 20px 15px 25px;
+      padding: 15px;
+      background: linear-gradient(45deg, #f0f0f0, #ffffff);
+    }
+
+    .complex-test-3 {
+      border: 2px dashed var(--test-color-3);
+      border-radius: 8px;
+      padding: 10px;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="10" height="10" fill="%23f0f0f0"/><rect x="10" y="10" width="10" height="10" fill="%23f0f0f0"/></svg>');
+      background-size: 20px 20px;
+    }
+
+    /* Interaction with Transform */
+    .border-transform {
+      border: 4px solid var(--test-color-1);
+      border-radius: 10px;
+      transform: rotate(5deg) scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .border-transform:hover {
+      transform: rotate(-5deg) scale(1.1);
+    }
+
+    /* Pseudo-element Tests */
+    .border-before {
+      position: relative;
+      border: 2px solid var(--test-color-2);
+    }
+
+    .border-before::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      border: 2px dashed var(--test-color-1);
+      border-radius: 5px;
+      z-index: -1;
+    }
+
+    /* Description text styling */
+    .description {
+      font-size: 12px;
+      font-weight: normal;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Border Regression Test Suite</h1>
+  <p>This page tests comprehensive border functionality in JSAR Runtime including styles, widths, radius, colors, and complex combinations.</p>
+
+  <div class="test-section">
+    <h2>Border Style Tests</h2>
+    <div class="test-grid">
+      <div class="test-item border-solid">
+        border: solid
+        <div class="description">5px solid</div>
+      </div>
+      <div class="test-item border-dashed">
+        border: dashed
+        <div class="description">5px dashed</div>
+      </div>
+      <div class="test-item border-dotted">
+        border: dotted
+        <div class="description">5px dotted</div>
+      </div>
+      <div class="test-item border-double">
+        border: double
+        <div class="description">8px double</div>
+      </div>
+      <div class="test-item border-groove">
+        border: groove
+        <div class="description">6px groove</div>
+      </div>
+      <div class="test-item border-ridge">
+        border: ridge
+        <div class="description">6px ridge</div>
+      </div>
+      <div class="test-item border-inset">
+        border: inset
+        <div class="description">6px inset</div>
+      </div>
+      <div class="test-item border-outset">
+        border: outset
+        <div class="description">6px outset</div>
+      </div>
+      <div class="test-item border-none">
+        border: none
+        <div class="description">no border</div>
+      </div>
+      <div class="test-item border-hidden">
+        border: hidden
+        <div class="description">5px hidden</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Border Width Tests</h2>
+    <div class="test-grid">
+      <div class="test-item border-thin">
+        border: thin
+        <div class="description">thin keyword</div>
+      </div>
+      <div class="test-item border-medium">
+        border: medium
+        <div class="description">medium keyword</div>
+      </div>
+      <div class="test-item border-thick">
+        border: thick
+        <div class="description">thick keyword</div>
+      </div>
+      <div class="test-item border-1px">
+        border: 1px
+        <div class="description">1px width</div>
+      </div>
+      <div class="test-item border-3px">
+        border: 3px
+        <div class="description">3px width</div>
+      </div>
+      <div class="test-item border-10px">
+        border: 10px
+        <div class="description">10px width</div>
+      </div>
+      <div class="test-item border-20px">
+        border: 20px
+        <div class="description">20px width</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Border Radius Tests</h2>
+    <div class="test-grid">
+      <div class="test-item radius-5px">
+        radius: 5px
+        <div class="description">5px uniform</div>
+      </div>
+      <div class="test-item radius-10px">
+        radius: 10px
+        <div class="description">10px uniform</div>
+      </div>
+      <div class="test-item radius-20px">
+        radius: 20px
+        <div class="description">20px uniform</div>
+      </div>
+      <div class="test-item radius-50px">
+        radius: 50px
+        <div class="description">50px uniform</div>
+      </div>
+      <div class="test-item radius-50-percent">
+        radius: 50%
+        <div class="description">50% (circle)</div>
+      </div>
+      <div class="test-item radius-mixed">
+        mixed corners
+        <div class="description">20px 5px 15px 30px</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Per-Side Border Tests</h2>
+    <div class="test-grid">
+      <div class="test-item border-top-only">
+        border-top only
+        <div class="description">8px solid top</div>
+      </div>
+      <div class="test-item border-right-only">
+        border-right only
+        <div class="description">8px solid right</div>
+      </div>
+      <div class="test-item border-bottom-only">
+        border-bottom only
+        <div class="description">8px solid bottom</div>
+      </div>
+      <div class="test-item border-left-only">
+        border-left only
+        <div class="description">8px solid left</div>
+      </div>
+      <div class="test-item border-mixed-styles">
+        mixed styles
+        <div class="description">solid/dashed/dotted/double</div>
+      </div>
+      <div class="test-item border-mixed-widths">
+        mixed widths
+        <div class="description">2px/6px/10px/14px</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Border Color Tests</h2>
+    <div class="test-grid">
+      <div class="test-item border-hex">
+        hex color
+        <div class="description">#ff0000</div>
+      </div>
+      <div class="test-item border-rgb">
+        rgb color
+        <div class="description">rgb(255, 165, 0)</div>
+      </div>
+      <div class="test-item border-rgba">
+        rgba color
+        <div class="description">rgba(0, 255, 0, 0.7)</div>
+      </div>
+      <div class="test-item border-hsl">
+        hsl color
+        <div class="description">hsl(240, 100%, 50%)</div>
+      </div>
+      <div class="test-item border-hsla">
+        hsla color
+        <div class="description">hsla(300, 100%, 50%, 0.8)</div>
+      </div>
+      <div class="test-item border-named">
+        named color
+        <div class="description">purple</div>
+      </div>
+      <div class="test-item border-currentcolor">
+        currentColor
+        <div class="description">inherits text color</div>
+      </div>
+      <div class="test-item border-transparent">
+        transparent
+        <div class="description">invisible border</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Complex Integration Tests</h2>
+    <div class="test-grid">
+      <div class="test-item complex-test-1">
+        Complex 1
+        <div class="description">border + radius + padding + margin</div>
+      </div>
+      <div class="test-item complex-test-2">
+        Complex 2
+        <div class="description">mixed sides + mixed radius + background</div>
+      </div>
+      <div class="test-item complex-test-3">
+        Complex 3
+        <div class="description">dashed + background pattern</div>
+      </div>
+      <div class="test-item border-transform">
+        Transform Test
+        <div class="description">hover to see transform</div>
+      </div>
+      <div class="test-item border-before">
+        Pseudo-element
+        <div class="description">border with ::before</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Edge Cases and Stress Tests</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      
+      <!-- Zero-width borders -->
+      <div style="border: 0px solid red; padding: 20px; background: #f0f0f0; text-align: center;">
+        Zero-width border
+        <div class="description">border: 0px solid red</div>
+      </div>
+
+      <!-- Very thick borders -->
+      <div style="border: 50px solid rgba(255, 107, 107, 0.3); padding: 10px; background: white; text-align: center; box-sizing: border-box; height: 120px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+        Very thick border
+        <div class="description">50px thick with transparency</div>
+      </div>
+
+      <!-- Nested borders -->
+      <div style="border: 5px solid #ff6b6b; padding: 10px; background: white;">
+        <div style="border: 3px dashed #4ecdc4; padding: 10px; background: #f9f9f9;">
+          <div style="border: 1px dotted #45b7d1; padding: 10px; text-align: center; background: white;">
+            Nested borders
+            <div class="description">3 levels deep</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Very large radius -->
+      <div style="border: 3px solid #96ceb4; border-radius: 100px; width: 200px; height: 120px; display: flex; align-items: center; justify-content: center; background: white; text-align: center;">
+        Large radius
+        <div class="description">100px radius</div>
+      </div>
+
+      <!-- Multiple border properties -->
+      <div style="
+        border-top: 8px groove #ff6b6b;
+        border-right: 6px ridge #4ecdc4;
+        border-bottom: 4px inset #45b7d1;
+        border-left: 10px outset #96ceb4;
+        border-top-left-radius: 30px;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 20px;
+        border-bottom-left-radius: 15px;
+        padding: 15px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      ">
+        Ultimate test
+        <div class="description">All features combined</div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="margin-top: 40px; padding: 20px; text-align: center; color: #666; border-top: 2px solid #ddd;">
+    <p>Border Regression Test Suite for JSAR Runtime - Tests comprehensive border functionality including styles, widths, radius, colors, and complex combinations.</p>
+    <p>This page should render consistently across different platforms and serve as a reference for border implementation quality.</p>
+  </footer>
+
+</body>
+
+</html>
