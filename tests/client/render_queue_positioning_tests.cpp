@@ -21,6 +21,60 @@ TEST_CASE("RenderQueue Positioning Tests", "[render-queue-positioning]")
     REQUIRE_FALSE(positioned < nonPositioned);
   }
 
+  SECTION("Children of positioned elements inherit positioned context")
+  {
+    // Simulate a positioned parent element
+    RenderQueue positionedParent(100);
+    positionedParent.zIndex = 0;
+    positionedParent.isPositioned = true;
+    
+    // Child element inherits positioned context even if not directly positioned
+    RenderQueue childOfPositioned(101);
+    childOfPositioned.zIndex = 0;
+    childOfPositioned.isPositioned = true; // Should be true due to positioned ancestor
+    
+    // Non-positioned element at same level
+    RenderQueue nonPositioned(102);
+    nonPositioned.zIndex = 0;
+    nonPositioned.isPositioned = false;
+    
+    // Child of positioned element should render after non-positioned
+    REQUIRE(nonPositioned < childOfPositioned);
+    REQUIRE_FALSE(childOfPositioned < nonPositioned);
+  }
+
+  SECTION("Text content inherits positioned context from parent")
+  {
+    // Simulate text content of a positioned element
+    RenderQueue textInPositioned(100);
+    textInPositioned.zIndex = 0;
+    textInPositioned.isPositioned = true; // Inherited from positioned parent
+    
+    // Text in non-positioned element
+    RenderQueue textInNonPositioned(101);
+    textInNonPositioned.zIndex = 0;
+    textInNonPositioned.isPositioned = false;
+    
+    // Text in positioned element should render after text in non-positioned
+    REQUIRE(textInNonPositioned < textInPositioned);
+    REQUIRE_FALSE(textInPositioned < textInNonPositioned);
+  }
+
+  SECTION("Deeply nested children inherit positioned context")
+  {
+    // Grandchild of positioned element should also inherit positioned context
+    RenderQueue grandchildOfPositioned(100);
+    grandchildOfPositioned.zIndex = 0;
+    grandchildOfPositioned.isPositioned = true; // Inherited through chain
+    
+    RenderQueue nonPositioned(101);
+    nonPositioned.zIndex = 0;
+    nonPositioned.isPositioned = false;
+    
+    // Grandchild should still render after non-positioned
+    REQUIRE(nonPositioned < grandchildOfPositioned);
+  }
+
   SECTION("Positioned elements with higher zIndex still render after non-positioned with lower zIndex")
   {
     RenderQueue nonPositioned(100);
@@ -100,6 +154,45 @@ TEST_CASE("RenderQueue Positioning Tests", "[render-queue-positioning]")
     // When zIndex is not 0, positioning should not affect order
     // They should be equal except for base number
     REQUIRE(nonPositioned < positioned); // Only base differs
+  }
+
+  SECTION("Mixed scenario: positioned parent with multiple children vs non-positioned elements")
+  {
+    // Simulate complex DOM structure:
+    // <div style="position: relative"> <!-- positioned parent -->
+    //   <p>text content</p>         <!-- child text -->
+    //   <span>child element</span>   <!-- child element -->
+    // </div>
+    // <div>static content</div>      <!-- non-positioned sibling -->
+    
+    // Positioned parent
+    RenderQueue positionedParent(100);
+    positionedParent.zIndex = 0;
+    positionedParent.isPositioned = true;
+    
+    // Child text inherits positioned context
+    RenderQueue childText(101);
+    childText.zIndex = 0;
+    childText.isPositioned = true; // Inherited
+    
+    // Child element inherits positioned context
+    RenderQueue childElement(102);
+    childElement.zIndex = 0;
+    childElement.isPositioned = true; // Inherited
+    
+    // Non-positioned sibling
+    RenderQueue staticSibling(103);
+    staticSibling.zIndex = 0;
+    staticSibling.isPositioned = false;
+    
+    // All children of positioned element should render after static sibling
+    REQUIRE(staticSibling < positionedParent);
+    REQUIRE(staticSibling < childText);
+    REQUIRE(staticSibling < childElement);
+    
+    // Within the positioned context, order by base
+    REQUIRE(positionedParent < childText);
+    REQUIRE(childText < childElement);
   }
 
   SECTION("Output operator includes isPositioned")

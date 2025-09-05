@@ -648,7 +648,25 @@ namespace dom
     auto renderQueue = Node::getRenderQueue();
     if (adopted_style_ != nullptr) [[likely]]
     {
+      // Set isPositioned based on this element's style or positioned ancestors
       renderQueue.isPositioned = adopted_style_->isPositioned();
+
+      // If this element is not positioned, check if any ancestor is positioned
+      if (!renderQueue.isPositioned)
+      {
+        auto parentElement = getParentElement();
+        while (parentElement != nullptr)
+        {
+          auto parentStyle = parentElement->adopted_style_;
+          if (parentStyle != nullptr && parentStyle->isPositioned())
+          {
+            renderQueue.isPositioned = true;
+            break;
+          }
+          parentElement = parentElement->getParentElement();
+        }
+      }
+
       renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
 
       // Update the translateZ from the layout box

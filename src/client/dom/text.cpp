@@ -106,10 +106,11 @@ namespace dom
     auto parentElement = getParentElement();
     if (parentElement != nullptr)
     {
-      // Text will inherit the parent's render queue properties: zIndex and translateZ.
+      // Text will inherit the parent's render queue properties: zIndex, translateZ, and isPositioned.
       auto parentRenderQueue = parentElement->getRenderQueue();
       renderQueue.zIndex = parentRenderQueue.zIndex;
       renderQueue.translateZ = parentRenderQueue.translateZ;
+      renderQueue.isPositioned = parentRenderQueue.isPositioned;
     }
     return renderQueue;
   }
