@@ -594,6 +594,10 @@ namespace client_cssom
     // Flexbox
     else if (name == "flex-direction")
       flex_direction_ = Parse::ParseSingleValue<values::specified::FlexDirection>(resolvedValue).toComputedValue(context);
+    else if (name == "flex-grow")
+      flex_grow_ = stof(resolvedValue);
+    else if (name == "flex-shrink")
+      flex_shrink_ = stof(resolvedValue);
     else if (name == "align-items")
       align_items_ = Parse::ParseSingleValue<values::specified::AlignItems>(resolvedValue);
     else if (name == "align-self")
