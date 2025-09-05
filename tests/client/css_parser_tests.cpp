@@ -304,10 +304,10 @@ TEST_CASE("CSS Parser Tests", "[css-parser]")
     REQUIRE(rules.size() == 1);
     auto style_rule = dynamic_cast<CSSStyleRule*>(rules[0].get());
     
-    string css_text = style_rule->toCSSText();
-    REQUIRE(css_text.find("body") != string::npos);
-    REQUIRE(css_text.find("color: red") != string::npos);
-    REQUIRE(css_text.find("font-size: 16px") != string::npos);
+    std::string css_text = style_rule->toCSSText();
+    REQUIRE(css_text.find("body") != std::string::npos);
+    REQUIRE(css_text.find("color: red") != std::string::npos);
+    REQUIRE(css_text.find("font-size: 16px") != std::string::npos);
   }
 
   SECTION("Parse attribute selectors")

@@ -93,7 +93,7 @@ namespace client_cssom::css_tokenizer
     // At-keyword
     if (c == '@')
     {
-      if (would_start_identifier())
+      if (position_ + 1 < length_ && is_identifier_start(peek_char()))
       {
         auto token = consume_at_keyword();
         token.start_position = token_start;

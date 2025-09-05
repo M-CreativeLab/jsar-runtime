@@ -495,7 +495,7 @@ namespace client_cssom::css_parser
       }
       else
       {
-        if (!value.empty() && value.back() != ' ' && token.type != TokenType::kComma && 
+        if (!value.empty() && value.back() != ' ' && token.type != TokenType::kComma &&
             !first_token && value.back() != '(' && value.back() != ',')
         {
           value += " ";
