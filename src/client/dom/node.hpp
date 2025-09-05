@@ -329,10 +329,8 @@ namespace dom
     }
 
     // The render queue of this node.
-    virtual builtin_scene::RenderQueue getRenderQueue() const
-    {
-      return builtin_scene::RenderQueue(depth());
-    }
+    builtin_scene::RenderQueue getRenderQueue(bool forceCompute = false) const;
+    virtual builtin_scene::RenderQueue computeRenderQueue() const;
 
     /**
      * Set the node value.
@@ -637,6 +635,7 @@ namespace dom
     std::string nodeValue_;
     // If this node could be rendered, `false` by default.
     std::optional<bool> renderable = std::nullopt;
+    mutable std::optional<builtin_scene::RenderQueue> renderQueue_;
     // The mutation observers of this node.
     std::vector<std::shared_ptr<MutationObserver>> mutationObservers;
 

@@ -293,8 +293,7 @@ namespace builtin_scene
             elementComponent->node != nullptr &&
             elementComponent->node->isElementOrText())
         {
-          const auto &elementRenderQueue = elementComponent->node->getRenderQueue();
-          if (instance.setRenderQueue(elementComponent->node->getRenderQueue()))
+          if (instance.setRenderQueue(elementComponent->node->computeRenderQueue()))
             needsUpdate = true;
         }
 

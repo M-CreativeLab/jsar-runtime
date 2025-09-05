@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <optional>
 #include <crates/bindings.hpp>
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
@@ -327,9 +328,15 @@ namespace client_cssom
     {
       return !position_type_.isStatic();
     }
-    inline int zIndex() const
+    inline bool hasZIndex() const
     {
-      return z_index_;
+      return bitfields_.HasZIndex();
+    }
+    inline std::optional<int> zIndex() const
+    {
+      return bitfields_.HasZIndex()
+               ? std::make_optional(z_index_)
+               : std::nullopt;
     }
 
     inline Visibility visibility() const
@@ -623,6 +630,7 @@ private:                                                \
       ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
       ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
       ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
+      ADD_BOOLEAN_BITFIELD(has_z_index_, HasZIndex);
       ADD_BOOLEAN_BITFIELD(has_transform_, HasTransform);
     };
 #undef ADD_BOOLEAN_BITFIELD

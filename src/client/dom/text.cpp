@@ -100,14 +100,14 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  builtin_scene::RenderQueue Text::getRenderQueue() const
+  builtin_scene::RenderQueue Text::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
     auto parentElement = getParentElement();
     if (parentElement != nullptr)
     {
-      // Text will inherit the parent's render queue properties: zIndex and translateZ.
-      auto parentRenderQueue = parentElement->getRenderQueue();
+      // Text will inherit the parent's render queue properties: zIndex and translateZ
+      auto parentRenderQueue = parentElement->getRenderQueue(true);
       renderQueue.zIndex = parentRenderQueue.zIndex;
       renderQueue.translateZ = parentRenderQueue.translateZ;
     }

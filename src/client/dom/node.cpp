@@ -313,6 +313,18 @@ namespace dom
     return ref;
   }
 
+  builtin_scene::RenderQueue Node::getRenderQueue(bool forceCompute) const
+  {
+    if (forceCompute || !renderQueue_.has_value())
+      renderQueue_ = computeRenderQueue();
+    return renderQueue_.value();
+  }
+
+  builtin_scene::RenderQueue Node::computeRenderQueue() const
+  {
+    return builtin_scene::RenderQueue(depth());
+  }
+
   void Node::setNodeValue(std::string newValue)
   {
     switch (nodeType)

@@ -643,18 +643,41 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
-  builtin_scene::RenderQueue Element::getRenderQueue() const
+  RenderQueue Element::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
+
+    // Update the translateZ from the layout box
+    auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
+    if (layoutBox != nullptr) [[likely]]
+      renderQueue.translateZ = layoutBox->getTranslateZ();
+
+    // Update the zIndex from the adopted style
     if (adopted_style_ != nullptr) [[likely]]
     {
-      renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
+      RenderQueue containerRenderQueue;
+      auto containerBox = principalBox()->containerForAbsolutePosition();
+      if (containerBox != nullptr)
+        containerRenderQueue = containerBox->nodeRef().getRenderQueue();
 
-      // Update the translateZ from the layout box
-      auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
-      if (layoutBox != nullptr) [[likely]]
-        renderQueue.translateZ = layoutBox->getTranslateZ();
+      bool isThisPositioned = adopted_style_->isPositioned();
+      if (isThisPositioned)
+      {
+        if (!adopted_style_->hasZIndex())
+        {
+          renderQueue.zIndex = containerRenderQueue.zIndex + 0.1f;
+        }
+        else
+        {
+          renderQueue.zIndex = adopted_style_->zIndex().value_or(0);
+        }
+      }
+      else
+      {
+        renderQueue.zIndex = containerRenderQueue.zIndex;
+      }
     }
+
     return renderQueue;
   }
 
