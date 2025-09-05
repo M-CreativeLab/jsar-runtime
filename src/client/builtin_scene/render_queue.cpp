@@ -14,15 +14,8 @@ namespace builtin_scene
     //
     if (!math_utils::ApproximatelyEqual(translateZ, other.translateZ))
       return translateZ < other.translateZ;
-
-    // Calculate effective zIndex based on positioning
-    // Magic number 0.1 only applies to non-positioned elements with zIndex=0
-    float thisEffectiveZIndex = (isPositioned || zIndex != 0) ? static_cast<float>(zIndex) : 0.1f;
-    float otherEffectiveZIndex = (other.isPositioned || other.zIndex != 0) ? static_cast<float>(other.zIndex) : 0.1f;
-
-    if (!math_utils::ApproximatelyEqual(thisEffectiveZIndex, otherEffectiveZIndex))
-      return thisEffectiveZIndex < otherEffectiveZIndex;
-
+    if (zIndex != other.zIndex)
+      return zIndex < other.zIndex;
     return base < other.base;
   }
 
@@ -35,8 +28,7 @@ namespace builtin_scene
   {
     return base == other.base &&
            zIndex == other.zIndex &&
-           math_utils::ApproximatelyEqual(translateZ, other.translateZ) &&
-           isPositioned == other.isPositioned;
+           math_utils::ApproximatelyEqual(translateZ, other.translateZ);
   }
 
   bool RenderQueue::operator!=(const RenderQueue &other) const

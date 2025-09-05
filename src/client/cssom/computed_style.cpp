@@ -413,6 +413,7 @@ namespace client_cssom
     else if (name == "z-index")
     {
       z_index_ = stoi(resolvedValue);
+      bitfields_.SetHasZIndex(true);
     }
     else if (name == "position")
     {

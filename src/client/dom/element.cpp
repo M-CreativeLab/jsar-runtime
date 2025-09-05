@@ -643,37 +643,41 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
-  builtin_scene::RenderQueue Element::getRenderQueue() const
+  RenderQueue Element::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
+
+    // Update the translateZ from the layout box
+    auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
+    if (layoutBox != nullptr) [[likely]]
+      renderQueue.translateZ = layoutBox->getTranslateZ();
+
+    // Update the zIndex from the adopted style
     if (adopted_style_ != nullptr) [[likely]]
     {
-      // Set isPositioned based on this element's style or positioned ancestors
-      renderQueue.isPositioned = adopted_style_->isPositioned();
+      RenderQueue containerRenderQueue;
+      auto containerBox = principalBox()->containerForAbsolutePosition();
+      if (containerBox != nullptr)
+        containerRenderQueue = containerBox->nodeRef().getRenderQueue();
 
-      // If this element is not positioned, check if any ancestor is positioned
-      if (!renderQueue.isPositioned)
+      bool isThisPositioned = adopted_style_->isPositioned();
+      if (isThisPositioned)
       {
-        auto parentElement = getParentElement();
-        while (parentElement != nullptr)
+        if (!adopted_style_->hasZIndex())
         {
-          const auto &parentStyle = parentElement->adopted_style_;
-          if (parentStyle != nullptr && parentStyle->isPositioned())
-          {
-            renderQueue.isPositioned = true;
-            break;
-          }
-          parentElement = parentElement->getParentElement();
+          renderQueue.zIndex = containerRenderQueue.zIndex + 0.1f;
+        }
+        else
+        {
+          renderQueue.zIndex = adopted_style_->zIndex().value_or(0);
         }
       }
-
-      renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
-
-      // Update the translateZ from the layout box
-      auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
-      if (layoutBox != nullptr) [[likely]]
-        renderQueue.translateZ = layoutBox->getTranslateZ();
+      else
+      {
+        renderQueue.zIndex = containerRenderQueue.zIndex;
+      }
     }
+
     return renderQueue;
   }
 
