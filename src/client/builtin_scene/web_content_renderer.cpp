@@ -1327,7 +1327,7 @@ namespace builtin_scene::web_renderer
       , clientContext_(TrClientContextPerProcess::Get())
       , fontCollection_(clientContext_->getFontCacheManager())
       , paragraphBuilder_(nullptr)
-      , sdfGenerator_(text::sdf::SDFParams(8, 0.25f))
+      , sdfGenerator_(text::sdf::SDFParams(6, 0.25f))
   {
   }
 
