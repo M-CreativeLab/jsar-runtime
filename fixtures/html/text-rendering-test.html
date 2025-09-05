@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>文字渲染测试 - Text Rendering Test</title>
+  <title>Text Rendering Test</title>
   <style>
     :root {
       --primary-color: #333;
@@ -108,9 +108,9 @@
     .font-weight-900 { font-weight: 900; }
 
     /* Font Style Tests */
-    .font-style-normal { font-style: normal; }
+    /* .font-style-normal { font-style: normal; }
     .font-style-italic { font-style: italic; }
-    .font-style-oblique { font-style: oblique; }
+    .font-style-oblique { font-style: oblique; } */
 
     /* Text Decoration Tests */
     .text-decoration-none { text-decoration: none; }
@@ -643,14 +643,6 @@ are preserved.</p>
       </div>
       
       <div class="test-item">
-        <div class="test-label">Numbers and special characters</div>
-        <p class="mixed-text">
-          数字测试：0123456789 ½ ¼ ¾ ² ³ ± × ÷ ≠ ≤ ≥ ∞ π α β γ δ ε ζ η θ
-          特殊字符：!@#$%^&*()_+-=[]{}|;':\",./<>?`~
-        </p>
-      </div>
-      
-      <div class="test-item">
         <div class="test-label">Text shadow effect</div>
         <p class="mixed-text text-shadow-test">
           带阴影的文本效果。Text with shadow effect. 这段文字有阴影效果。
@@ -695,28 +687,6 @@ are preserved.</p>
   <script>
     // Set timestamp
     document.getElementById('timestamp').textContent = new Date().toLocaleString();
-    
-    // Generate performance test content
-    const performanceText = document.getElementById('performanceText');
-    const testSentences = [
-      '这是一个性能测试句子。',
-      'This is a performance test sentence.',
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      '测试文字渲染性能和内存使用情况。',
-      'Testing text rendering performance and memory usage.',
-      '🚀 JSAR Runtime 性能测试 🚀',
-      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-      '多语言混合性能测试文本内容。'
-    ];
-    
-    let performanceContent = '';
-    for (let i = 0; i < 50; i++) {
-      performanceContent += testSentences[i % testSentences.length] + ' ';
-      if ((i + 1) % 10 === 0) {
-        performanceContent += '<br>';
-      }
-    }
-    performanceText.innerHTML = performanceContent;
     
     // Console log for debugging
     console.log('Text Rendering Test Page loaded successfully');
