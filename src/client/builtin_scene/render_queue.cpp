@@ -9,7 +9,7 @@ namespace builtin_scene
   {
     // Priority is determined by:
     //   1. translateZ: Physical depth in 3D space
-    //   2. Effective zIndex: For positioned elements use zIndex, for non-positioned use 0.1 when zIndex=0
+    //   2. zIndex: Logical stacking order
     //   3. base: Base queue number
     //
     if (!math_utils::ApproximatelyEqual(translateZ, other.translateZ))
