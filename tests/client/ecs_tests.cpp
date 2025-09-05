@@ -345,3 +345,99 @@ TEST_CASE("Runtime configuration API", "[ecs][config]")
   REQUIRE(app->isParallelSystemsEnabled() == false);
   REQUIRE(app->isParallelRenderEnabled() == false);
 }
+
+// Test system for component access concurrency
+class ComponentAccessTestSystem : public System
+{
+public:
+  using System::System;
+  ComponentAccessTestSystem(int id, std::atomic<int> *accessCounter)
+      : id(id)
+      , accessCounter(accessCounter)
+  {
+  }
+
+  const std::string name() const override
+  {
+    return "ComponentAccessTestSystem_" + std::to_string(id);
+  }
+
+  void onExecute() override
+  {
+    // Simulate concurrent component access
+    auto entities = queryEntities<TestComponent>();
+    for (auto entityId : entities)
+    {
+      auto component = getComponent<TestComponent>(entityId);
+      if (component)
+      {
+        // Increment counter to track successful concurrent access
+        accessCounter->fetch_add(1);
+        
+        // Simulate some work on the component
+        volatile int temp = component->value;
+        (void)temp; // Suppress unused variable warning
+      }
+    }
+    executed = true;
+  }
+
+  bool executed = false;
+  int id = 0;
+  std::atomic<int> *accessCounter;
+};
+
+TEST_CASE("Thread-safe component access in parallel systems", "[ecs][parallel][thread-safety]")
+{
+  auto app = std::make_shared<Example>();
+  app->registerComponent<TestComponent>();
+
+  // Create test entities with components
+  auto entity1 = app->spawn(TestComponent{1});
+  auto entity2 = app->spawn(TestComponent{2});
+  auto entity3 = app->spawn(TestComponent{3});
+
+  // Test data for tracking concurrent access
+  std::atomic<int> accessCounter{0};
+
+  // Create multiple systems that will access components concurrently
+  auto system1 = std::make_shared<ComponentAccessTestSystem>(1, &accessCounter);
+  auto system2 = std::make_shared<ComponentAccessTestSystem>(2, &accessCounter);
+  auto system3 = std::make_shared<ComponentAccessTestSystem>(3, &accessCounter);
+
+  app->addSystem(SchedulerLabel::kUpdate, system1);
+  app->addSystem(SchedulerLabel::kUpdate, system2);
+  app->addSystem(SchedulerLabel::kUpdate, system3);
+
+  SECTION("Parallel component access")
+  {
+    app->setParallelSystemsEnabled(true);
+    REQUIRE(app->isParallelSystemsEnabled() == true);
+
+    app->start();
+
+    // All systems should have executed
+    REQUIRE(system1->executed);
+    REQUIRE(system2->executed);
+    REQUIRE(system3->executed);
+
+    // Each system should have accessed all 3 entities (3 systems * 3 entities = 9 accesses)
+    REQUIRE(accessCounter.load() == 9);
+  }
+
+  SECTION("Sequential component access (control test)")
+  {
+    app->setParallelSystemsEnabled(false);
+    REQUIRE(app->isParallelSystemsEnabled() == false);
+
+    app->start();
+
+    // All systems should have executed
+    REQUIRE(system1->executed);
+    REQUIRE(system2->executed);
+    REQUIRE(system3->executed);
+
+    // Same number of accesses, but sequentially
+    REQUIRE(accessCounter.load() == 9);
+  }
+}

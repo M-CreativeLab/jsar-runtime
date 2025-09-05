@@ -352,10 +352,7 @@ namespace builtin_scene::ecs
      * @param entity The entity to check.
      * @returns `true` if the component set contains the component of the given entity, `false` otherwise.
      */
-    inline bool contains(EntityId entity)
-    {
-      return entityToIndexMap_.find(entity) != entityToIndexMap_.end();
-    }
+    bool contains(EntityId entity);
     /**
      * Replace the component of the given entity with the new component.
      *
@@ -383,6 +380,8 @@ namespace builtin_scene::ecs
     std::unordered_map<size_t, EntityId> indexToEntityMap_;
     std::unordered_map<EntityId, std::weak_ptr<T>> entityToComponentCache_;
     size_t size_ = 0;
+    // Mutex to protect component data structures for thread safety
+    mutable std::shared_mutex componentMutex_;
   };
 
   /**
@@ -556,6 +555,9 @@ namespace builtin_scene::ecs
      * Run all systems in the set once with optional parallel execution.
      *
      * @param enableParallel Whether to enable parallel execution of systems.
+     * 
+     * Note: When parallel execution is enabled, system chains (created with system->chain()) 
+     * will still execute sequentially within each chain to maintain proper ordering.
      */
     void run(bool enableParallel);
 
@@ -785,6 +787,10 @@ namespace builtin_scene::ecs
      * Enable or disable parallel execution of systems within each scheduler label.
      * When enabled, systems in the same scheduler label can run concurrently.
      *
+     * Thread Safety: Component access is protected by internal mutexes. However,
+     * systems should be designed to avoid conflicting writes to the same component
+     * data when possible for optimal performance.
+     *
      * @param enable Whether to enable parallel system execution.
      */
     inline void setParallelSystemsEnabled(bool enable)
@@ -795,6 +801,9 @@ namespace builtin_scene::ecs
     /**
      * Enable or disable parallel execution of WebContent rendering.
      * When enabled, multiple WebContent entities can be rendered concurrently.
+     *
+     * Thread Safety: WebContent dirty state is protected by atomic operations
+     * for safe concurrent access.
      *
      * @param enable Whether to enable parallel render execution.
      */

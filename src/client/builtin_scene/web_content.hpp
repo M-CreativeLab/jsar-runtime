@@ -367,9 +367,11 @@ namespace builtin_scene
     bool is_sdf_texture_ = false;
 
     // The flag to indicate if the content is dirty and needs to be rendered to the surface.
-    bool is_content_dirty_ = true;
+    // Using atomic for thread safety in parallel rendering.
+    std::atomic<bool> is_content_dirty_{true};
     // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
-    bool is_surface_dirty_ = true;
+    // Using atomic for thread safety in parallel rendering.
+    std::atomic<bool> is_surface_dirty_{true};
   };
 
   class WebContentContext : public ecs::Resource

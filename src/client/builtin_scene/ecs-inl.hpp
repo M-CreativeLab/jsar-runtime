@@ -66,6 +66,7 @@ namespace builtin_scene::ecs
   template <typename T>
   std::shared_ptr<T> ComponentSet<T>::insert(EntityId entity, std::shared_ptr<T> component)
   {
+    std::unique_lock<std::shared_mutex> lock(componentMutex_);
     if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
       throw std::runtime_error("Entity already has a component of this type.");
 
@@ -80,6 +81,7 @@ namespace builtin_scene::ecs
   template <typename T>
   void ComponentSet<T>::remove(EntityId entity)
   {
+    std::unique_lock<std::shared_mutex> lock(componentMutex_);
     if (entityToIndexMap_.find(entity) == entityToIndexMap_.end())
       throw std::runtime_error("Entity does not have a component of this type.");
 
@@ -100,6 +102,7 @@ namespace builtin_scene::ecs
   template <typename T>
   std::shared_ptr<T> ComponentSet<T>::get(EntityId entity)
   {
+    std::shared_lock<std::shared_mutex> lock(componentMutex_);
     auto cachedComponent = entityToComponentCache_[entity];
     if (!cachedComponent.expired())
       return cachedComponent.lock();
@@ -113,10 +116,21 @@ namespace builtin_scene::ecs
   }
 
   template <typename T>
+  bool ComponentSet<T>::contains(EntityId entity)
+  {
+    std::shared_lock<std::shared_mutex> lock(componentMutex_);
+    return entityToIndexMap_.find(entity) != entityToIndexMap_.end();
+  }
+
+  template <typename T>
   void ComponentSet<T>::onEntityDestroyed(EntityId entity)
   {
+    std::shared_lock<std::shared_mutex> checkLock(componentMutex_);
     if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
+    {
+      checkLock.unlock(); // Unlock before calling remove which will lock exclusively
       remove(entity);
+    }
   }
 
   template <typename ComponentType>

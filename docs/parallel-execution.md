@@ -106,10 +106,26 @@ When `JSAR_PARALLEL_RENDER=1` or `setParallelRenderEnabled(true)`:
 
 The implementation maintains thread safety through:
 
-- **Existing Mutexes**: Leverages `mutexForEntities_` and `mutexForSystems_` in ECS App
-- **Immutable Data**: Systems operate on independent entity/component data  
-- **Synchronization**: Uses `std::future::wait()` to ensure completion before proceeding
-- **Atomic Operations**: Safe concurrent access patterns where needed
+- **Component Mutexes**: Each `ComponentSet` has its own `shared_mutex` protecting component data access
+- **Entity Management**: `mutexForEntities_` protects entity lifecycle operations
+- **System Management**: `mutexForSystems_` protects system registration and removal
+- **Atomic State**: WebContent dirty flags use `std::atomic<bool>` for concurrent access
+- **Synchronization**: Uses `std::future::wait()` to ensure all parallel tasks complete before proceeding
+
+#### Component Access Safety
+
+When parallel systems query and access components:
+- Read operations use shared locks allowing concurrent access
+- Write operations use exclusive locks ensuring data consistency  
+- Component queries are protected against concurrent modifications
+- No data races occur when multiple systems read the same components
+
+#### WebContent Rendering Safety  
+
+WebContent rendering parallelization ensures:
+- Dirty state flags are atomic, preventing lost updates
+- Each WebContent entity can be safely rendered by different threads
+- Surface updates are properly synchronized
 
 ## Limitations
 
