@@ -307,6 +307,36 @@ namespace client_layout
 
   bool LayoutBox::hasHitTestableOverflow() const
   {
+    // We only consider hit-testable overflow when both axes are 'visible'.
+    // `hasNonVisibleOverflow()` is set when either overflow-x or overflow-y is NOT visible (i.e. establishes a clip).
+    // For overflow:visible we must allow descendants that paint (and therefore can be hit) outside the border box
+    // per CSS 2.1 visual overflow / hit-testing semantics.
+    if (hasNonVisibleOverflow())
+      return false;
+
+    // Fast path: if there are no element children, nothing can extend beyond us.
+    auto selfBBox = physicalBorderBoxRect();
+    const glm::vec3 selfMin = selfBBox.minimumWorld;
+    const glm::vec3 selfMax = selfBBox.maximumWorld;
+
+    for (auto child = slowFirstChild(); child; child = child->nextSibling())
+    {
+      if (!child->isBox())
+        continue; // Only element (box) children can produce overflow boxes here.
+
+      auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
+      if (!childBox)
+        continue;
+
+      auto childBBox = childBox->physicalBorderBoxRect();
+      const glm::vec3 cMin = childBBox.minimumWorld;
+      const glm::vec3 cMax = childBBox.maximumWorld;
+
+      // If any component lies outside our border box, we have hit-testable overflow.
+      if (cMin.x < selfMin.x || cMin.y < selfMin.y || cMin.z < selfMin.z ||
+          cMax.x > selfMax.x || cMax.y > selfMax.y || cMax.z > selfMax.z)
+        return true;
+    }
     return false;
   }
 
@@ -315,7 +345,31 @@ namespace client_layout
     optional<geometry::BoundingBox> overflowBox = nullopt;
     if (hasHitTestableOverflow())
     {
-      // TODO(yorkie): handle the hit test for the box with overflow.
+      // overflow:visible => union of self + children (minimal implementation)
+      auto selfBBox = physicalBorderBoxRect();
+      glm::vec3 unionMin = selfBBox.minimumWorld;
+      glm::vec3 unionMax = selfBBox.maximumWorld;
+
+      for (auto child = slowFirstChild(); child; child = child->nextSibling())
+      {
+        if (!child->isBox())
+          continue;
+        auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
+        if (!childBox)
+          continue;
+        auto childBBox = childBox->physicalBorderBoxRect();
+        unionMin.x = std::min(unionMin.x, childBBox.minimumWorld.x);
+        unionMin.y = std::min(unionMin.y, childBBox.minimumWorld.y);
+        unionMin.z = std::min(unionMin.z, childBBox.minimumWorld.z);
+        unionMax.x = std::max(unionMax.x, childBBox.maximumWorld.x);
+        unionMax.y = std::max(unionMax.y, childBBox.maximumWorld.y);
+        unionMax.z = std::max(unionMax.z, childBBox.maximumWorld.z);
+      }
+
+      // Apply accumulated offset (same semantics as clipped path below)
+      unionMin += accumulatedOffset;
+      unionMax += accumulatedOffset;
+      return ray.intersectsBoxMinMax(unionMin, unionMax);
     }
     else
     {
