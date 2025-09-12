@@ -319,15 +319,8 @@ namespace client_layout
     const glm::vec3 selfMin = selfBBox.minimumWorld;
     const glm::vec3 selfMax = selfBBox.maximumWorld;
 
-    for (auto child = slowFirstChild(); child; child = child->nextSibling())
+    for (const auto &childBox : getChildBoxes())
     {
-      if (!child->isBox())
-        continue; // Only element (box) children can produce overflow boxes here.
-
-      auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
-      if (!childBox)
-        continue;
-
       auto childBBox = childBox->physicalBorderBoxRect();
       const glm::vec3 cMin = childBBox.minimumWorld;
       const glm::vec3 cMax = childBBox.maximumWorld;
@@ -350,13 +343,8 @@ namespace client_layout
       glm::vec3 unionMin = selfBBox.minimumWorld;
       glm::vec3 unionMax = selfBBox.maximumWorld;
 
-      for (auto child = slowFirstChild(); child; child = child->nextSibling())
+      for (const auto &childBox : getChildBoxes())
       {
-        if (!child->isBox())
-          continue;
-        auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
-        if (!childBox)
-          continue;
         auto childBBox = childBox->physicalBorderBoxRect();
         unionMin.x = std::min(unionMin.x, childBBox.minimumWorld.x);
         unionMin.y = std::min(unionMin.y, childBBox.minimumWorld.y);
@@ -458,5 +446,19 @@ namespace client_layout
   {
     setHasValidCachedGeometry(false);
     // TODO(yorkie): invalidate the cached geometry of the parent.
+  }
+
+  std::vector<std::shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
+  {
+    std::vector<std::shared_ptr<LayoutBox>> childBoxes;
+    for (auto child = slowFirstChild(); child; child = child->nextSibling())
+    {
+      if (!child->isBox())
+        continue;
+      auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
+      if (childBox)
+        childBoxes.push_back(childBox);
+    }
+    return childBoxes;
   }
 }
