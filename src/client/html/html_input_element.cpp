@@ -204,4 +204,67 @@ namespace dom
       }
     }
   }
+
+  void HTMLInputElement::handleClick()
+  {
+    // Only handle click for checkbox and radio buttons
+    std::string input_type = type();
+    if (input_type != "checkbox" && input_type != "radio")
+      return;
+
+    // Don't handle click if disabled
+    if (disabled())
+      return;
+
+    if (input_type == "checkbox")
+    {
+      // Toggle checked state for checkbox
+      setChecked(!checked_);
+      // Clear indeterminate state when user clicks
+      setIndeterminate(false);
+    }
+    else if (input_type == "radio")
+    {
+      // For radio buttons, uncheck all other radio buttons with the same name
+      // and check this one
+      if (!checked_)
+      {
+        // Find other radio buttons with the same name and uncheck them
+        std::string radio_name = name();
+        if (!radio_name.empty())
+        {
+          // TODO: Implement radio group handling
+          // For now, just set this radio button as checked
+        }
+        setChecked(true);
+      }
+    }
+
+    // Trigger change event
+    triggerChangeEvent();
+  }
+
+  void HTMLInputElement::triggerChangeEvent()
+  {
+    // TODO: Implement proper event dispatching
+    // For now, this is a placeholder for change event triggering
+    // This should create and dispatch a 'change' event
+  }
+
+  void HTMLInputElement::click()
+  {
+    // Handle checkbox/radio interaction first
+    handleClick();
+
+    // Then call parent click implementation for any additional behavior
+    HTMLElement::click();
+  }
+
+  void HTMLInputElement::updateVisualRepresentation()
+  {
+    // This method will be called by the layout system
+    // The actual visual update will be handled by LayoutHTMLInput
+    // We just need to mark the layout as needing an update
+    // TODO: Add proper layout invalidation mechanism
+  }
 }

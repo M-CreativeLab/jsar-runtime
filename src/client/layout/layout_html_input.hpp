@@ -21,5 +21,10 @@ namespace client_layout
   private:
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+
+    // Methods for rendering checkbox/radio controls
+    void updateInputVisuals();
+    void renderCheckboxOrRadio();
+    bool needsCustomRendering() const;
   };
 }
