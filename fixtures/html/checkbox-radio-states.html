@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkbox and Radio Button Visual States Reference</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .state-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .state-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.2);
+        }
+        .state-card h3 {
+            margin: 0 0 15px 0;
+            color: #007bff;
+            font-size: 16px;
+        }
+        .control-wrapper {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        input[type="checkbox"], input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+        .description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .section-title {
+            font-size: 24px;
+            color: #007bff;
+            margin: 30px 0 20px 0;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .implementation-note {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .implementation-note h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Checkbox & Radio Button Visual States</h1>
+        <p class="subtitle">JSAR Runtime Implementation Reference</p>
+        
+        <div class="implementation-note">
+            <h4>Implementation Notes</h4>
+            <p>This reference shows all visual states supported by the JSAR runtime checkbox and radio button implementation. 
+            Each control is rendered using Skia canvas with pixel-perfect appearance that matches standard browser rendering.</p>
+            <ul>
+                <li><strong>Colors:</strong> Standard browser colors with proper contrast ratios</li>
+                <li><strong>Shapes:</strong> Rounded rectangles for checkboxes, circles for radio buttons</li>
+                <li><strong>States:</strong> All standard HTML5 states including indeterminate</li>
+                <li><strong>Accessibility:</strong> High contrast mode support and proper disabled styling</li>
+            </ul>
+        </div>
+
+        <h2 class="section-title">Checkbox States</h2>
+        <div class="state-grid">
+            <div class="state-card">
+                <h3>Unchecked</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb1">
+                    <label for="cb1">Default state</label>
+                </div>
+                <div class="description">
+                    Empty checkbox with border and white background
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Checked</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb2" checked>
+                    <label for="cb2">Checked state</label>
+                </div>
+                <div class="description">
+                    Checkbox with checkmark symbol
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Indeterminate</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb3">
+                    <label for="cb3">Indeterminate state</label>
+                </div>
+                <div class="description">
+                    Checkbox with horizontal bar (set via JavaScript)
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Disabled Unchecked</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb4" disabled>
+                    <label for="cb4">Disabled unchecked</label>
+                </div>
+                <div class="description">
+                    Grayed out, non-interactive
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Disabled Checked</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb5" checked disabled>
+                    <label for="cb5">Disabled checked</label>
+                </div>
+                <div class="description">
+                    Grayed out with visible checkmark
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Required</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb6" required>
+                    <label for="cb6">Required field *</label>
+                </div>
+                <div class="description">
+                    Required for form validation
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Focused</h3>
+                <div class="control-wrapper">
+                    <input type="checkbox" id="cb7">
+                    <label for="cb7">Focus me!</label>
+                </div>
+                <div class="description">
+                    Click or tab to see focus outline
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Radio Button States</h2>
+        <div class="state-grid">
+            <div class="state-card">
+                <h3>Unselected</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r1" name="group1">
+                    <label for="r1">Default state</label>
+                </div>
+                <div class="description">
+                    Empty circle with border
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Selected</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r2" name="group2" checked>
+                    <label for="r2">Selected state</label>
+                </div>
+                <div class="description">
+                    Circle with filled dot
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Disabled Unselected</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r3" name="group3" disabled>
+                    <label for="r3">Disabled unselected</label>
+                </div>
+                <div class="description">
+                    Grayed out, non-interactive
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Disabled Selected</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r4" name="group4" checked disabled>
+                    <label for="r4">Disabled selected</label>
+                </div>
+                <div class="description">
+                    Grayed out with visible dot
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Required Group</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r5a" name="group5" value="a" required>
+                    <label for="r5a">Option A</label><br>
+                    <input type="radio" id="r5b" name="group5" value="b" required>
+                    <label for="r5b">Option B</label>
+                </div>
+                <div class="description">
+                    Required radio group
+                </div>
+            </div>
+            
+            <div class="state-card">
+                <h3>Focused</h3>
+                <div class="control-wrapper">
+                    <input type="radio" id="r6" name="group6">
+                    <label for="r6">Focus me!</label>
+                </div>
+                <div class="description">
+                    Click or tab to see focus outline
+                </div>
+            </div>
+        </div>
+        
+        <div class="implementation-note">
+            <h4>Technical Implementation Details</h4>
+            <p><strong>Rendering Engine:</strong> Skia Canvas API for high-quality graphics</p>
+            <p><strong>Color Scheme:</strong></p>
+            <ul>
+                <li>Border: #767676 (normal), #AAAAAA (disabled)</li>
+                <li>Background: #FFFFFF (normal), #F5F5F5 (disabled)</li>
+                <li>Check/Dot: #333333 (normal), #AAAAAA (disabled)</li>
+            </ul>
+            <p><strong>Dimensions:</strong> 1em × 1em (adjustable via CSS)</p>
+            <p><strong>Border Radius:</strong> 2px for checkboxes, 50% for radio buttons</p>
+        </div>
+    </div>
+
+    <script>
+        // Set up indeterminate state for the demo
+        document.getElementById('cb3').indeterminate = true;
+        
+        // Add some interactive behavior for demonstration
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+            input.addEventListener('change', function() {
+                console.log(`${this.type} changed:`, {
+                    checked: this.checked,
+                    value: this.value,
+                    name: this.name,
+                    indeterminate: this.indeterminate
+                });
+            });
+        });
+    </script>
+</body>
+</html>

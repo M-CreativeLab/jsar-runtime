@@ -17,6 +17,7 @@ TEST_CASE("HTMLInputElement checkbox functionality", "[HTMLInputElement]")
   // Test initial unchecked state
   REQUIRE(checkbox.checked() == false);
   REQUIRE(checkbox.indeterminate() == false);
+  REQUIRE(checkbox.focused() == false);
   
   // Test setting checked state
   checkbox.setChecked(true);
@@ -25,6 +26,13 @@ TEST_CASE("HTMLInputElement checkbox functionality", "[HTMLInputElement]")
   // Test indeterminate state
   checkbox.setIndeterminate(true);
   REQUIRE(checkbox.indeterminate() == true);
+  
+  // Test focus state
+  checkbox.focus();
+  REQUIRE(checkbox.focused() == true);
+  
+  checkbox.blur();
+  REQUIRE(checkbox.focused() == false);
   
   // Test that click toggles checked state when not disabled
   checkbox.setChecked(false);

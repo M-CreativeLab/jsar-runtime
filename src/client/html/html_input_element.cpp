@@ -267,4 +267,18 @@ namespace dom
     // We just need to mark the layout as needing an update
     // TODO: Add proper layout invalidation mechanism
   }
+
+  void HTMLInputElement::focus()
+  {
+    focused_ = true;
+    updateVisualRepresentation();
+    HTMLElement::focus();
+  }
+
+  void HTMLInputElement::blur()
+  {
+    focused_ = false;
+    updateVisualRepresentation();
+    HTMLElement::blur();
+  }
 }

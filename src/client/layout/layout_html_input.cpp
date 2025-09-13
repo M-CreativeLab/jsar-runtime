@@ -87,6 +87,7 @@ namespace client_layout
       bool checked = input_element.checked();
       bool disabled = input_element.disabled();
       bool indeterminate = input_element.indeterminate();
+      bool focused = input_element.focused();
 
       // Clear the canvas
       canvas->clear(SK_ColorTRANSPARENT);
@@ -105,6 +106,7 @@ namespace client_layout
       SkColor borderColor = disabled ? SkColorSetARGB(255, 170, 170, 170) : SkColorSetARGB(255, 118, 118, 118);
       SkColor backgroundColor = disabled ? SkColorSetARGB(255, 245, 245, 245) : SK_ColorWHITE;
       SkColor checkColor = disabled ? SkColorSetARGB(255, 170, 170, 170) : SkColorSetARGB(255, 51, 51, 51);
+      SkColor focusColor = SkColorSetARGB(255, 0, 123, 255); // Blue focus outline
 
       if (type == "checkbox")
       {
@@ -198,6 +200,30 @@ namespace client_layout
 
           float dotRadius = radius * 0.4f;
           canvas->drawCircle(centerX, centerY, dotRadius, dotPaint);
+        }
+      }
+
+      // Draw focus outline if focused and not disabled
+      if (focused && !disabled)
+      {
+        SkPaint focusPaint;
+        focusPaint.setColor(focusColor);
+        focusPaint.setStyle(SkPaint::kStroke_Style);
+        focusPaint.setStrokeWidth(2.0f);
+        focusPaint.setAntiAlias(true);
+
+        if (type == "checkbox")
+        {
+          SkRRect focusRect = SkRRect::MakeRectXY(
+            controlRect.makeInset(-3.0f, -3.0f), 3.0f, 3.0f);
+          canvas->drawRRect(focusRect, focusPaint);
+        }
+        else if (type == "radio")
+        {
+          float centerX = controlRect.centerX();
+          float centerY = controlRect.centerY();
+          float focusRadius = size * 0.5f + 3.0f;
+          canvas->drawCircle(centerX, centerY, focusRadius, focusPaint);
         }
       }
 

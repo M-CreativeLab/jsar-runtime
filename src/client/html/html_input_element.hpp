@@ -123,6 +123,14 @@ namespace dom
       indeterminate_ = value;
     }
 
+    // Focus state support
+    bool focused() const
+    {
+      return focused_;
+    }
+    void focus() override;
+    void blur() override;
+
   private:
     void createdCallback(bool from_scripting) override;
     void attributeChangedCallback(const std::string &name,
@@ -135,6 +143,7 @@ namespace dom
     std::string value_;
     bool checked_ = false;
     bool indeterminate_ = false;
+    bool focused_ = false;
     std::string custom_validity_message_;
   };
 }
