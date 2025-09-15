@@ -450,14 +450,14 @@ namespace client_layout
 
   vector<shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
   {
-    vector<shared_ptr<LayoutBox>> childBoxes;
-    for (auto child = slowFirstChild(); child; child = child->nextSibling())
+    auto children = virtualChildren();
+    if (!children)
+      return {};
+    std::vector<std::shared_ptr<LayoutBox>> childBoxes;
+    for (const auto &child : *children)
     {
-      if (!child->isBox())
-        continue;
-      auto childBox = static_pointer_cast<LayoutBox>(child);
-      if (childBox)
-        childBoxes.push_back(childBox);
+      if (child->isBox())
+        childBoxes.push_back(static_pointer_cast<LayoutBox>(child));
     }
     return childBoxes;
   }
