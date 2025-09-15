@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Overflow HitTest Test</title>
+  <title>Overflow Hit Testing Test</title>
   <style>
     html,
     body {
@@ -39,6 +39,7 @@
       background: #333;
       color: #fff;
       overflow: visible;
+      padding: 1rem;
       /* explicit */
       outline: 1px dashed #999;
     }
@@ -61,7 +62,7 @@
 
     #staticBtn {
       position: static;
-      top: 100px;
+      top: 80px;
       background: #8fdaff;
       color: #fff;
       border: none;
@@ -78,7 +79,7 @@
       /* make top effective */
       position: absolute;
       /* intentionally beyond parent height (60px) */
-      margin-top: 200px;
+      margin-top: 150px;
       background: #007cba;
       color: #fff;
       border: none;
@@ -131,6 +132,7 @@
 
     <button id="normalBtn">Normal Button</button>
     <div id="container">
+      <p>Container</p>
       <button id="staticBtn" class="static-btn">Static Button</button>
       <button id="overflowBtn" class="overflow-btn">Overflow Button</button>
     </div>
