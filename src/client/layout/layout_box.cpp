@@ -448,14 +448,14 @@ namespace client_layout
     // TODO(yorkie): invalidate the cached geometry of the parent.
   }
 
-  std::vector<std::shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
+  vector<shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
   {
-    std::vector<std::shared_ptr<LayoutBox>> childBoxes;
+    vector<shared_ptr<LayoutBox>> childBoxes;
     for (auto child = slowFirstChild(); child; child = child->nextSibling())
     {
       if (!child->isBox())
         continue;
-      auto childBox = std::dynamic_pointer_cast<LayoutBox>(child);
+      auto childBox = static_pointer_cast<LayoutBox>(child);
       if (childBox)
         childBoxes.push_back(childBox);
     }
