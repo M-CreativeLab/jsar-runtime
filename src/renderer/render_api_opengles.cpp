@@ -331,7 +331,7 @@ private:
 
         GLint depthFunc;
         glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
-        DEBUG(logTag, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
+        DEBUG(logTag, "      Func=%s", gles::glDepthOrStencilFuncToString(depthFunc).c_str());
 
         GLboolean depthWriteMask;
         glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask);
@@ -354,6 +354,30 @@ private:
         GLint stencilMask;
         glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilMask);
         DEBUG(logTag, "      Mask=%d", stencilMask);
+
+        GLint stencilFunc;
+        glGetIntegerv(GL_STENCIL_FUNC, &stencilFunc);
+        GLint stencilRef;
+        glGetIntegerv(GL_STENCIL_REF, &stencilRef);
+        GLint stencilValueMask;
+        glGetIntegerv(GL_STENCIL_VALUE_MASK, &stencilValueMask);
+        DEBUG(logTag,
+              "      Func=%s Ref=%d ValueMask=%d",
+              gles::glDepthOrStencilFuncToString(stencilFunc).c_str(),
+              stencilRef,
+              stencilValueMask);
+
+        GLint stencilFail;
+        glGetIntegerv(GL_STENCIL_FAIL, &stencilFail);
+        GLint stencilZFail;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, &stencilZFail);
+        GLint stencilZPass;
+        glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, &stencilZPass);
+        DEBUG(logTag,
+              "      Fail=%s ZFail=%s ZPass=%s",
+              gles::glStencilOpToString(stencilFail).c_str(),
+              gles::glStencilOpToString(stencilZFail).c_str(),
+              gles::glStencilOpToString(stencilZPass).c_str());
       }
     }
 
@@ -591,6 +615,17 @@ private:
   {
     GLuint program;
     reqContentRenderer->getContextGL()->useProgram(req->clientId, program);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnValidateProgram(ValidateProgramCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    auto glContext = reqContentRenderer->getContextGL();
+    GLuint program = glContext->ObjectManagerRef().FindProgram(req->clientId);
+    glValidateProgram(program);
+    reqContentRenderer->getContextGL()->MarkAsDirty();
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -833,12 +868,12 @@ private:
   {
     auto &glObjectManager = reqContentRenderer->getContextGL()->ObjectManagerRef();
     GLuint shader = glObjectManager.FindShader(req->shader);
-    GLint value;
-    glGetShaderiv(shader, req->pname, &value);
+    GetShaderParamCommandBufferResponse res(req);
+    glGetShaderiv(shader, GL_DELETE_STATUS, reinterpret_cast<GLint *>(&res.deleteStatus));
+    glGetShaderiv(shader, GL_COMPILE_STATUS, reinterpret_cast<GLint *>(&res.compileStatus));
 
-    GetShaderParamCommandBufferResponse res(req, value);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-      DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", options.isDefaultQueue(), res.value);
+      PrintDebugInfo(req, nullptr, nullptr, options);
     reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req,
@@ -1013,6 +1048,7 @@ private:
     CheckFramebufferStatusCommandBufferResponse res(req, ret);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, &res, options);
+    reqContentRenderer->sendCommandBufferResponse(res);
   }
   TR_OPENGL_FUNC void OnCreateRenderbuffer(
     CreateRenderbufferCommandBufferRequest *req,
@@ -1473,7 +1509,7 @@ private:
       return;
     }
 
-    GLint size = req->conponentSize;
+    GLint size = req->componentSize;
     GLenum type = req->componentType;
     GLboolean normalized = req->normalized;
     GLsizei stride = req->stride;
@@ -1533,6 +1569,150 @@ private:
     }
 
     glVertexAttribDivisor(loc.value(), req->divisor);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttribI4i(VertexAttribI4iCommandBufferRequest *req,
+                                        renderer::TrContentRenderer *reqContentRenderer,
+                                        ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribI4i(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttribI4i(loc.value(), req->v0, req->v1, req->v2, req->v3);
+    if (CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall) [[unlikely]]
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttribI4ui(VertexAttribI4uiCommandBufferRequest *req,
+                                         renderer::TrContentRenderer *reqContentRenderer,
+                                         ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribI4ui(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttribI4ui(loc.value(), req->v0, req->v1, req->v2, req->v3);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttribI4iv(VertexAttribI4ivCommandBufferRequest *req,
+                                         renderer::TrContentRenderer *reqContentRenderer,
+                                         ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribI4iv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttribI4iv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttribI4uiv(VertexAttribI4uivCommandBufferRequest *req,
+                                          renderer::TrContentRenderer *reqContentRenderer,
+                                          ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttribI4uiv(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttribI4uiv(loc.value(), req->values.data());
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttrib1f(VertexAttrib1fCommandBufferRequest *req,
+                                       renderer::TrContentRenderer *reqContentRenderer,
+                                       ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib1f(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib1f(loc.value(), req->v0);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttrib2f(VertexAttrib2fCommandBufferRequest *req,
+                                       renderer::TrContentRenderer *reqContentRenderer,
+                                       ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib2f(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib2f(loc.value(), req->v0, req->v1);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttrib3f(VertexAttrib3fCommandBufferRequest *req,
+                                       renderer::TrContentRenderer *reqContentRenderer,
+                                       ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib3f(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib3f(loc.value(), req->v0, req->v1, req->v2);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnVertexAttrib4f(VertexAttrib4fCommandBufferRequest *req,
+                                       renderer::TrContentRenderer *reqContentRenderer,
+                                       ApiCallOptions &options)
+  {
+    optional<GLint> loc = reqContentRenderer->getContextGL()->getAttribLoc(req);
+    if (loc == nullopt) [[unlikely]]
+    {
+      DEBUG(LOG_TAG_ERROR,
+            "vertexAttrib4f(): Failed to get location for attrib '%s' in program %d",
+            req->locationQueryName.c_str(),
+            req->program);
+      return;
+    }
+
+    glVertexAttrib4f(loc.value(), req->v0, req->v1, req->v2, req->v3);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -2365,11 +2545,64 @@ private:
   }
   TR_OPENGL_FUNC void OnClear(ClearCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
   {
-    if (options.executingPassType != ExecutingPassType::kOffscreenPass) [[unlikely]]
-      return;
-
     GLbitfield mask = req->mask;
-    glClear(mask);
+    // Only the following cases we allow to clear the buffers:
+    // a) Stencil buffer only is free to clear at any time.
+    // b) The executing pass is Offscreen pass, which means it's not rendering to XR session directly.
+    if (mask == GL_STENCIL_BUFFER_BIT ||
+        options.executingPassType == ExecutingPassType::kOffscreenPass)
+    {
+      glClear(mask);
+      if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+        PrintDebugInfo(req, nullptr, nullptr, options);
+    }
+    else
+    {
+      return;
+    }
+  }
+  TR_OPENGL_FUNC void OnClearBufferfv(ClearBufferfvCommandBufferRequest *req,
+                                      renderer::TrContentRenderer *reqContentRenderer,
+                                      ApiCallOptions &options)
+  {
+    GLenum buffer = req->buffer;
+    GLint drawbuffer = req->drawbuffer;
+    const GLfloat *value = req->values.data();
+    glClearBufferfv(buffer, drawbuffer, value);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnClearBufferiv(ClearBufferivCommandBufferRequest *req,
+                                      renderer::TrContentRenderer *reqContentRenderer,
+                                      ApiCallOptions &options)
+  {
+    GLenum buffer = req->buffer;
+    GLint drawbuffer = req->drawbuffer;
+    const GLint *value = req->values.data();
+    glClearBufferiv(buffer, drawbuffer, value);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnClearBufferuiv(ClearBufferuivCommandBufferRequest *req,
+                                       renderer::TrContentRenderer *reqContentRenderer,
+                                       ApiCallOptions &options)
+  {
+    GLenum buffer = req->buffer;
+    GLint drawbuffer = req->drawbuffer;
+    const GLuint *value = req->values.data();
+    glClearBufferuiv(buffer, drawbuffer, value);
+    if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+      PrintDebugInfo(req, nullptr, nullptr, options);
+  }
+  TR_OPENGL_FUNC void OnClearBufferfi(ClearBufferfiCommandBufferRequest *req,
+                                      renderer::TrContentRenderer *reqContentRenderer,
+                                      ApiCallOptions &options)
+  {
+    GLenum buffer = req->buffer;
+    GLint drawbuffer = req->drawbuffer;
+    GLfloat depth = req->depth;
+    GLint stencil = req->stencil;
+    glClearBufferfi(buffer, drawbuffer, depth, stencil);
     if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
       PrintDebugInfo(req, nullptr, nullptr, options);
   }
@@ -2580,7 +2813,6 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
   content_renderer->onCommandBuffersExecuting();
   ContextGLApp *contentGlContext = content_renderer->getContextGL();
   ContextGLApp contextBaseState = ContextGLApp("tmp", contentGlContext);
-
   bool should_move_to_offscreen_pass = false;
   for (auto it = list.begin(); it != list.end();)
   {
@@ -2650,6 +2882,7 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(DELETE_PROGRAM, DeleteProgramCommandBufferRequest, DeleteProgram)
       ADD_COMMAND_BUFFER_HANDLER(LINK_PROGRAM, LinkProgramCommandBufferRequest, LinkProgram)
       ADD_COMMAND_BUFFER_HANDLER(USE_PROGRAM, UseProgramCommandBufferRequest, UseProgram)
+      ADD_COMMAND_BUFFER_HANDLER(VALIDATE_PROGRAM, ValidateProgramCommandBufferRequest, ValidateProgram)
       ADD_COMMAND_BUFFER_HANDLER(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest, BindAttribLocation)
       ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest, GetProgramParameter)
       ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest, GetProgramInfoLog)
@@ -2705,6 +2938,10 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, VertexAttribPointer)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, VertexAttribIPointer)
       ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, VertexAttribDivisor)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4I, VertexAttribI4iCommandBufferRequest, VertexAttribI4i)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4UI, VertexAttribI4uiCommandBufferRequest, VertexAttribI4ui)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4IV, VertexAttribI4ivCommandBufferRequest, VertexAttribI4iv)
+      ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_I4UIV, VertexAttribI4uivCommandBufferRequest, VertexAttribI4uiv)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, UniformBlockBinding)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM1F, Uniform1fCommandBufferRequest, Uniform1f)
       ADD_COMMAND_BUFFER_HANDLER(UNIFORM1FV, Uniform1fvCommandBufferRequest, Uniform1fv)
@@ -2764,6 +3001,10 @@ bool RHI_OpenGL::ExecuteCommandBuffer(vector<commandbuffers::TrCommandBufferBase
       ADD_COMMAND_BUFFER_HANDLER(CLEAR_DEPTH, ClearDepthCommandBufferRequest, ClearDepth)
       ADD_COMMAND_BUFFER_HANDLER(CLEAR_STENCIL, ClearStencilCommandBufferRequest, ClearStencil)
       ADD_COMMAND_BUFFER_HANDLER(CLEAR, ClearCommandBufferRequest, Clear)
+      ADD_COMMAND_BUFFER_HANDLER(CLEAR_BUFFERFV, ClearBufferfvCommandBufferRequest, ClearBufferfv)
+      ADD_COMMAND_BUFFER_HANDLER(CLEAR_BUFFERIV, ClearBufferivCommandBufferRequest, ClearBufferiv)
+      ADD_COMMAND_BUFFER_HANDLER(CLEAR_BUFFERUIV, ClearBufferuivCommandBufferRequest, ClearBufferuiv)
+      ADD_COMMAND_BUFFER_HANDLER(CLEAR_BUFFERFI, ClearBufferfiCommandBufferRequest, ClearBufferfi)
       ADD_COMMAND_BUFFER_HANDLER(GET_BOOLEANV, GetBooleanvCommandBufferRequest, GetBooleanv)
       ADD_COMMAND_BUFFER_HANDLER(GET_INTEGERV, GetIntegervCommandBufferRequest, GetIntegerv)
       ADD_COMMAND_BUFFER_HANDLER(GET_FLOATV, GetFloatvCommandBufferRequest, GetFloatv)

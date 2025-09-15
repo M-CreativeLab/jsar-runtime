@@ -17,14 +17,14 @@ namespace client_scroll
     float scrollHeight() const;
 
     glm::vec3 getScrollOffset() const;
-    inline void scrollBy(const glm::vec3 &offset)
+    inline bool scrollBy(const glm::vec3 &offset)
     {
       // Performance optimization: early exit if offset is zero
       if (offset.x == 0.0f && offset.y == 0.0f && offset.z == 0.0f)
-        return;
-      scrollTo(scroll_offset_ + offset);
+        return false;
+      return scrollTo(scroll_offset_ + offset);
     }
-    void scrollTo(const glm::vec3 &offset);
+    bool scrollTo(const glm::vec3 &offset);
 
     // Performance optimization: check if scrolling is needed
     inline bool needsScrolling() const
@@ -53,6 +53,9 @@ namespace client_scroll
     }
 
     void updateAfterLayout(const client_layout::Fragment &);
+
+  public:
+    friend std::ostream &operator<<(std::ostream &, const ScrollableArea &);
 
   private:
     glm::vec3 scroll_origin_;

@@ -50,7 +50,10 @@ namespace dom
 
   void RuntimeContext::setBaseURI(const string newBaseURI)
   {
-    baseURI = newBaseURI;
+    if (!newBaseURI.empty())
+      baseURI = newBaseURI;
+    else
+      baseURI = "about:blank"; // Default base URI if not set.
   }
 
   void ResolveResource(const v8::FunctionCallbackInfo<v8::Value> &info)

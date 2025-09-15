@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <filesystem>
+#include <cstdlib>
 #include <assert.h>
 
 #include <skia/include/core/SkData.h>
@@ -278,6 +279,19 @@ namespace font
   class FontCacheManager
   {
   public:
+    static FontCacheManager *GetInstance()
+    {
+      if (s_Instance == nullptr)
+      {
+        s_Instance = new FontCacheManager();
+        assert(s_Instance != nullptr && "Failed to create FontCacheManager instance");
+      }
+      return s_Instance;
+    }
+
+  private:
+    static inline FontCacheManager *s_Instance = nullptr;
+
     FontCacheManager()
         : fontMgr_(sk_make_sp<MutipleDirectoriesFontMgr>())
         , fontCollection_(sk_make_sp<skia::textlayout::FontCollection>())
@@ -288,6 +302,18 @@ namespace font
 #elif __ANDROID__
       addFontsAt("/system/fonts");
 #endif
+
+      // Check for custom system fonts directory from environment variable
+      const char *customFontsDir = std::getenv("JSAR_SYSTEM_FONTS_DIR");
+      if (customFontsDir != nullptr)
+      {
+        std::string fontPath(customFontsDir);
+        if (std::filesystem::exists(fontPath) && std::filesystem::is_directory(fontPath))
+        {
+          addFontsAt(fontPath);
+        }
+      }
+
       fontCollection_->setDefaultFontManager(fontMgr_);
       printSummary();
     }

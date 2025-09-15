@@ -1198,6 +1198,7 @@ namespace crates::css2
     public:
       StyleRule(holocron::css::stylesheets::StyleRule &inner)
           : CssRule(CssRuleType::kStyle)
+          , selectorsText_(holocron::css::stylesheets::getStyleRuleSelectorsText(inner))
       {
         auto selectors = holocron::css::stylesheets::getStyleRuleSelectors(inner);
         selectors_ = std::make_unique<selectors::SelectorList>(*selectors);
@@ -1207,6 +1208,10 @@ namespace crates::css2
       }
 
     public:
+      const std::string &selectorsText() const
+      {
+        return selectorsText_;
+      }
       const selectors::SelectorList &selectors() const
       {
         return *selectors_;
@@ -1221,6 +1226,7 @@ namespace crates::css2
       }
 
     private:
+      std::string selectorsText_;
       std::unique_ptr<selectors::SelectorList> selectors_;
       std::unique_ptr<properties::PropertyDeclarationBlock> block_;
     };

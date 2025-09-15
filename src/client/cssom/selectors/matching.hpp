@@ -2,8 +2,8 @@
 
 #include <string>
 #include <memory>
-#include <crates/bindings.hpp>
 #include <client/html/html_element.hpp>
+#include "./css_selector_parser.hpp"
 
 namespace client_cssom::selectors
 {
@@ -20,7 +20,7 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selectors.
    */
-  bool matchesSelectorList(const crates::css2::selectors::SelectorList &selectors,
+  bool matchesSelectorList(const SelectorList &selectors,
                            const std::shared_ptr<dom::HTMLElement> element);
 
   /**
@@ -30,7 +30,7 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selector.
    */
-  bool matchesSelector(const crates::css2::selectors::Selector &selector,
+  bool matchesSelector(const Selector &selector,
                        const std::shared_ptr<dom::HTMLElement> element,
                        MatchingContext &context);
 
@@ -42,8 +42,32 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selector component.
    */
-  bool matchesSelectorComponent(const crates::css2::selectors::Selector &selector,
-                                std::vector<crates::css2::selectors::Component>::const_iterator &it,
-                                const shared_ptr<dom::HTMLElement> element,
+  bool matchesSelectorComponent(const Selector &selector,
+                                std::vector<Component>::const_iterator &it,
+                                const std::shared_ptr<dom::HTMLElement> element,
                                 MatchingContext &context);
+
+  /**
+   * Check if the element matches the specified selector component.
+   * NOTE: The component should not be a combinator.
+   *
+   * @param component The CSS selector component.
+   * @param element The element to check.
+   * @returns Whether the element matches the component.
+   */
+  bool matchesSelectorComponentNonCombinator(const Component &component,
+                                             const std::shared_ptr<dom::HTMLElement> element,
+                                             MatchingContext &context);
+
+  /**
+   * Match selector starting from the end (right-to-left matching).
+   *
+   * @param selector The CSS selector.
+   * @param element The element to check.
+   * @param context The matching context.
+   * @returns Whether the element matches the selector.
+   */
+  bool matchesSelectorFromEnd(const Selector &selector,
+                              const std::shared_ptr<dom::HTMLElement> element,
+                              MatchingContext &context);
 }

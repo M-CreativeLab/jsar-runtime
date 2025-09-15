@@ -3,6 +3,8 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <deque>
+#include <unordered_map>
 #include <v8.h>
 
 #include "./dom_parser.hpp"
@@ -17,6 +19,23 @@ namespace dom
     URL,
     Source,
   };
+
+  // Forward declaration to avoid circular dependency
+  class HTMLScriptElement;
+
+  // Script execution handle to decouple from HTMLScriptElement
+  struct ScriptExecutionHandle
+  {
+    uint32_t scriptId;
+    std::weak_ptr<HTMLScriptElement> scriptElement;
+
+    ScriptExecutionHandle(uint32_t id, std::weak_ptr<HTMLScriptElement> element)
+        : scriptId(id)
+        , scriptElement(element)
+    {
+    }
+  };
+
   class BrowsingContext : public RuntimeContext
   {
   public:
@@ -29,22 +48,35 @@ namespace dom
      * @param url The url of the document.
      * @param type The type of the document.
      * @param input_type The source of the document.
+     * @param base_uri The base URI of the document, used for resolving relative URLs.
      * @returns The created document.
      */
     template <typename DocumentType>
-    shared_ptr<DocumentType> create(const std::string &url, DOMParsingType type, InputType input_type)
+    shared_ptr<DocumentType> create(const std::string &url,
+                                    DOMParsingType type,
+                                    InputType input_type,
+                                    const std::string &base_uri)
     {
       shared_ptr<DocumentType> document;
       if (type == DOMParsingType::HTML)
         document = make_shared<DocumentType>(getSharedPtr<BrowsingContext>(), true);
       else
         throw std::runtime_error("Unsupported document type");
+
       if (input_type == InputType::Source)
-        document->setSource(url, true);
+      {
+        document->setSource(url);
+        document->baseURI = base_uri;
+      }
       else if (input_type == InputType::URL)
+      {
         document->setUrl(url);
+      }
       else
+      {
         assert(false && "The input type must be url or source");
+      }
+
       documents.push_back(document);
       return document;
     }
@@ -83,7 +115,27 @@ namespace dom
       return scriptingContext->updateImportMapFromJSON(json);
     }
 
+    /**
+     * Register a script for document-order execution.
+     * Returns a unique script ID for tracking.
+     */
+    uint32_t registerScriptForExecution(std::shared_ptr<HTMLScriptElement> script);
+
+    /**
+     * Try to execute the next script in the queue if it's ready.
+     */
+    void tryExecuteNextScript();
+
+    /**
+     * Notify that a script has completed execution.
+     */
+    void notifyScriptExecutionComplete(uint32_t script_id);
+
   public:
     vector<shared_ptr<Document>> documents;
+
+  private:
+    // Script execution queue using handles to avoid circular dependency
+    std::deque<ScriptExecutionHandle> script_execution_queue;
   };
 }

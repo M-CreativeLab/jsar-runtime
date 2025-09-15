@@ -161,8 +161,8 @@ namespace dom
       auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
       assert(window != nullptr &&
              "The window must not be null in a TextNode().");
-      auto initial_style = window->getComputedStyle(shared_from_this());
-      recalcStyleDirectly(initial_style);
+      auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
+      recalcStyleDirectly(*initial_style);
     }
   }
 
@@ -643,18 +643,41 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
-  builtin_scene::RenderQueue Element::getRenderQueue() const
+  RenderQueue Element::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
+
+    // Update the translateZ from the layout box
+    auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
+    if (layoutBox != nullptr) [[likely]]
+      renderQueue.translateZ = layoutBox->getTranslateZ();
+
+    // Update the zIndex from the adopted style
     if (adopted_style_ != nullptr) [[likely]]
     {
-      renderQueue.zIndex = adopted_style_->isPositioned() ? adopted_style_->zIndex() : 0;
+      RenderQueue containerRenderQueue;
+      auto containerBox = principalBox()->containerForAbsolutePosition();
+      if (containerBox != nullptr)
+        containerRenderQueue = containerBox->nodeRef().getRenderQueue();
 
-      // Update the translateZ from the layout box
-      auto layoutBox = dynamic_pointer_cast<const client_layout::LayoutBox>(principalBox());
-      if (layoutBox != nullptr) [[likely]]
-        renderQueue.translateZ = layoutBox->getTranslateZ();
+      bool isThisPositioned = adopted_style_->isPositioned();
+      if (isThisPositioned)
+      {
+        if (!adopted_style_->hasZIndex())
+        {
+          renderQueue.zIndex = containerRenderQueue.zIndex + 0.1f;
+        }
+        else
+        {
+          renderQueue.zIndex = adopted_style_->zIndex().value_or(0);
+        }
+      }
+      else
+      {
+        renderQueue.zIndex = containerRenderQueue.zIndex;
+      }
     }
+
     return renderQueue;
   }
 
@@ -774,30 +797,37 @@ namespace dom
     dispatchEventInternal(events::PointerEvent::Click());
   }
 
-  void Element::simulateScrollWithOffset(float offsetX, float offsetY)
+  bool Element::simulateScrollWithOffset(float offsetX, float offsetY)
   {
     auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(principalBox());
-    if (layoutBox == nullptr)
-      return;
+    if (layoutBox == nullptr ||
+        !layoutBox->isScrollContainer())
+      return false;
     assert(layoutBox->isBox() && "The layout box is not a box.");
 
-    glm::vec3 offset;
+    glm::vec3 offset = glm::vec3(0, 0, 0);
     if (layoutBox->scrollsOverflowX())
       offset.x = offsetX;
     if (layoutBox->scrollsOverflowY())
       offset.y = offsetY;
+    // TODO(yorkie): support z-axis scrolling
 
     if (offset.x == 0 && offset.y == 0)
-      return;
+      return false;
 
-    layoutBox->scrollBy(offset);
-
-    // Throttle scroll events for better performance
-    if (!shouldThrottleScrollEvent())
+    bool scrolled = layoutBox->scrollBy(offset);
+    if (scrolled)
     {
-      last_scroll_event_time_ = std::chrono::steady_clock::now();
-      dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      markAsDirty();
+
+      // Throttle scroll events for better performance
+      if (!shouldThrottleScrollEvent())
+      {
+        last_scroll_event_time_ = chrono::steady_clock::now();
+        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+      }
     }
+    return scrolled;
   }
 
   bool Element::setActionState(bool &state, bool value)
@@ -816,7 +846,7 @@ namespace dom
 
   bool Element::shouldThrottleScrollEvent() const
   {
-    auto now = std::chrono::steady_clock::now();
+    auto now = chrono::steady_clock::now();
     return (now - last_scroll_event_time_) < scroll_throttle_duration_;
   }
 

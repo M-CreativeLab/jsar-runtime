@@ -2,6 +2,7 @@
 #include <rapidjson/document.h>
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
+#include <bindings/dom/console.hpp>
 
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
@@ -314,8 +315,8 @@ namespace dom
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
-        V8_SET_GLOBAL_FROM_MAIN(console);
         V8_SET_GLOBAL_FROM_MAIN(performance);
+        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate, mainContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
@@ -552,7 +553,8 @@ namespace dom
          */
 
         // Baisc objects
-        V8_SET_GLOBAL_FROM_MAIN(console);
+        // Create custom console object with CDP integration using the Console binding
+        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate, workerContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);

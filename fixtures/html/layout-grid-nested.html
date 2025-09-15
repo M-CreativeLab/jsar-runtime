@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Grid Nested Layout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    h4 {
+      font-size: 35px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Outer Grid Container */
+    .grid-container-outer {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "header header"
+        "sidebar main"
+        "footer footer";
+      border: none;
+      box-sizing: border-box;
+      background-color: #c9d4df5f;
+      gap: 20px;
+      padding: 20px;
+      width: 100%;
+      min-height: 80vh;
+    }
+
+    /* Inner Grid Containers */
+    .grid-container-inner {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 15px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 15px;
+    }
+
+    .grid-container-inner.three-col {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto;
+    }
+
+    .grid-container-inner.vertical {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    /* Grid Areas */
+    .grid-header {
+      grid-area: header;
+      background: rgba(100, 5, 5, 0.8);
+      color: white;
+      text-align: center;
+      padding: 30px;
+      border-radius: 15px;
+      transform: translateZ(5px);
+    }
+
+    .grid-sidebar {
+      grid-area: sidebar;
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 20px;
+      padding: 20px;
+      transform: translateZ(10px);
+    }
+
+    .grid-main {
+      grid-area: main;
+      background: rgba(0, 200, 100, 0.85);
+      border-radius: 20px;
+      padding: 20px;
+      transform: translateZ(10px);
+    }
+
+    .grid-footer {
+      grid-area: footer;
+      background: rgba(150, 0, 255, 0.85);
+      color: white;
+      text-align: center;
+      padding: 30px;
+      border-radius: 15px;
+      transform: translateZ(5px);
+    }
+
+    /* Nested Grid Items */
+    .grid-item {
+      background: rgba(255, 150, 0, 0.85);
+      border-radius: 15px;
+      padding: 20px;
+      transform: translateZ(10px);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .grid-item:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translateZ(15px);
+    }
+
+    .grid-item.nested {
+      background: rgba(200, 100, 255, 0.85);
+      padding: 15px;
+      transform: translateZ(8px);
+    }
+
+    .grid-item.nested:nth-child(2n) {
+      background: rgba(100, 255, 200, 0.85);
+    }
+
+    .grid-item.nested:nth-child(3n) {
+      background: rgba(255, 200, 100, 0.85);
+    }
+
+    /* Special nested layouts */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+
+    .card-header {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .card-content {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .card-footer {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    /* Header */
+    header.page-header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header class="page-header">
+    <h1>Grid Nested Layout</h1>
+  </header>
+
+  <main class="grid-container-outer">
+    <section class="grid-header">
+      <h2>Nested Grid Header</h2>
+      <p>Contains nested grid layouts below</p>
+    </section>
+
+    <section class="grid-sidebar">
+      <h3>Sidebar with Nested Grid</h3>
+      <div class="grid-container-inner vertical">
+        <div class="grid-item nested">
+          <h4>Nav 1</h4>
+        </div>
+        <div class="grid-item nested">
+          <h4>Nav 2</h4>
+        </div>
+        <div class="grid-item nested">
+          <h4>Nav 3</h4>
+        </div>
+      </div>
+      
+      <div class="card-grid">
+        <div class="card-header">
+          <h4>Widget</h4>
+        </div>
+        <div class="card-content">
+          <p>Nested card layout</p>
+        </div>
+        <div class="card-footer">
+          <p>Footer</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-main">
+      <h3>Main Content Area</h3>
+      <div class="grid-container-inner three-col">
+        <div class="grid-item nested">
+          <h4>Article 1</h4>
+          <p>Content card</p>
+        </div>
+        <div class="grid-item nested">
+          <h4>Article 2</h4>
+          <p>Content card</p>
+        </div>
+        <div class="grid-item nested">
+          <h4>Article 3</h4>
+          <p>Content card</p>
+        </div>
+      </div>
+
+      <div class="grid-container-inner">
+        <div class="grid-item nested">
+          <h4>Feature A</h4>
+          <p>2x2 grid</p>
+        </div>
+        <div class="grid-item nested">
+          <h4>Feature B</h4>
+          <p>Equal sizing</p>
+        </div>
+        <div class="grid-item nested">
+          <h4>Feature C</h4>
+          <p>Nested layout</p>
+        </div>
+        <div class="grid-item nested">
+          <h4>Feature D</h4>
+          <p>Grid system</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-footer">
+      <h2>Nested Grid Footer</h2>
+      <p>Complex layouts made simple with CSS Grid</p>
+    </section>
+  </main>
+</body>
+
+</html>

@@ -9,6 +9,19 @@ Technical insights, community updates, and deep dives into the spatial web revol
 
 ## Latest Posts
 
+### [Render Gaussian Splatting Models with `<model>` Element](./blogs/render-3dgs-models-with-model-element.md)
+*August 2025 • Technical Deep Dive*
+
+A comprehensive introduction to the Web-native 3D Gaussian Splatting rendering at JSAR Runtime. Learn how to embed photorealistic 3DGS models as easily as images, understand the technical implementation, and explore advanced features.
+
+**What's covered:**
+- HTML `<model>` element usage
+- File format support (.spz, .ksplat and .ply) and performance considerations
+- Advanced shader optimizations and compression techniques
+- Future plans about the 3DGS
+
+---
+
 ### [Understanding the Spatial Web Browser Engine (JSAR)](./blogs/spatial-browser-engine.md)
 *August 2025 • Technical Architecture • Deep Dive*
 

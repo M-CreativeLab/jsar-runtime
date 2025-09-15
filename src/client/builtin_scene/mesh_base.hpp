@@ -533,7 +533,18 @@ namespace builtin_scene
     /**
      * When the `Mesh` has been initialized for `Mesh3d`, it's used to perform additional setup for specific mesh types.
      */
-    virtual void onMesh3dInitialized(const Mesh3d &mesh3d, std::shared_ptr<client_graphics::WebGL2Context>);
+    virtual void onMesh3dInitialized(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGL2Context>);
+    /**
+     * Configuring the vertex attribs before initializing material.
+     */
+    virtual void onConfigureVertexAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>)
+    {
+      // Default implementation does nothing.
+    }
+    virtual void onConfigureInstanceAttribs(std::shared_ptr<Mesh3d>, std::shared_ptr<client_graphics::WebGLProgram>)
+    {
+      // Default implementation does nothing.
+    }
 
   public:
     /**

@@ -51,12 +51,6 @@ namespace builtin_scene
      */
     void renderPass(vector<ecs::EntityId> &roots, RenderPass, optional<XRRenderTarget>);
     /**
-     * Render the volume mask with the given renderer.
-     *
-     * @param renderTarget The XR render target.
-     */
-    void renderVolumeMask(RenderPass, std::optional<XRRenderTarget>);
-    /**
      * Render the mesh with the given renderer.
      *
      * @param entity The entity to render.

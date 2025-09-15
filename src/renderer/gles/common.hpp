@@ -96,9 +96,10 @@ namespace gles
    */
   std::string glUniformTypesToString(GLenum type);
   /**
-   * Converts a depth function `GLenum` to a string.
+   * Converts a depth or stencil function `GLenum` to a string.
   */
-  std::string glDepthFuncToString(GLenum func);
+  std::string glDepthOrStencilFuncToString(GLenum func);
+  std::string glStencilOpToString(GLenum op);
   /**
    * Converts a blending function `GLenum` to a string.
    */

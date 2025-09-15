@@ -17,8 +17,8 @@ euclid = "0.22"
 fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
-glsl-lang = { version = "0.7.2", features = ["lexer-v2-full"] }
-glsl-lang-pp = { version = "0.7.2", features = ["full"] }
+glsl-lang = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904", features = ["lexer-full"] }
+glsl-lang-pp = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904", features = ["full"] }
 headers = "0.3"
 hyper = "0.14"
 hyper-rustls = { version = "0.24", default-features = false, features = [
@@ -67,3 +67,15 @@ taffy = { version = "0.8.0" }
 time = "0.1.41"
 url = "2.5"
 uuid = { version = "1.8.0", features = ["v4"] }
+
+# Patch to use the forked glsl-lang repository.
+[patch.crates-io]
+glsl-lang       = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+glsl-lang-pp    = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+glsl-lang-lexer = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+glsl-lang-types = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+glsl-lang-quote = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+glsl-lang-cli   = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+lang-util        = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+lang-util-derive = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }
+lang-util-dev    = { git = "https://github.com/jsar-project/glsl-lang", branch = "20250904" }

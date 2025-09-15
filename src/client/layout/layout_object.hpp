@@ -170,7 +170,7 @@ namespace client_layout
     }
 
     int recalcLayer() const;
-    void updateLayer(bool includeDescendants = true);
+    void updateLayer(std::shared_ptr<const LayoutBlock> scrollContainer, bool includeDescendants = true);
 
     inline std::shared_ptr<dom::Node> node() const
     {
@@ -395,7 +395,6 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlock() const;
     std::shared_ptr<LayoutBlock> containingBlockForFixedPosition() const;
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
-
     std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
 
     bool isHorizontalWritingMode() const

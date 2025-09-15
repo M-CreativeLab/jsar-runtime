@@ -80,7 +80,7 @@ namespace builtin_scene
       bufferInitialized_ = true;
   }
 
-  void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext)
+  void GaussianSplatsMesh::updateSplatBuffer(shared_ptr<WebGL2Context> glContext, shared_ptr<WebGLVertexArray> vao)
   {
     if (!glContext ||
         !bufferInitialized_ ||
@@ -96,11 +96,14 @@ namespace builtin_scene
       indexData.push_back(splat.index);
 
     // Upload to GPU
-    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
-    glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
-                          indexData.size() * sizeof(uint32_t),
-                          indexData.data(),
-                          WebGLBufferUsage::kDynamicDraw);
+    {
+      WebGLVertexArrayScope vaoScope(glContext, vao);
+      glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, splatInstanceBuffer_);
+      glContext->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
+                            indexData.size() * sizeof(uint32_t),
+                            indexData.data(),
+                            WebGLBufferUsage::kDynamicDraw);
+    }
     setDirty(false);
 
     DEBUG("GaussianSplatsMesh", "Updated GPU buffer with %zu sorted indices", sortedSplats_.size());
@@ -208,7 +211,7 @@ namespace builtin_scene
     }
   }
 
-  void GaussianSplatsMesh::onMesh3dInitialized(const Mesh3d &mesh3d,
+  void GaussianSplatsMesh::onMesh3dInitialized(shared_ptr<Mesh3d> mesh3d,
                                                shared_ptr<WebGL2Context> glContext)
   {
     // Call parent implementation first
@@ -218,7 +221,7 @@ namespace builtin_scene
     glContext_ = glContext;
 
     // Initialize the splat buffer
-    setupSplatBuffer(glContext, mesh3d.vertexArrayObject());
+    setupSplatBuffer(glContext, mesh3d->vertexArrayObject());
   }
 
   size_t GaussianSplatsMesh::iterateInstanceAttributes(shared_ptr<WebGLProgram> program,

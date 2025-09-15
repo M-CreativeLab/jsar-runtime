@@ -491,7 +491,7 @@ __[`WebGLRenderingContext.uniformMatrix[234]fv()`](https://developer.mozilla.org
 
 > Specifies a matrix value for a uniform variable.
 
-__[`WebGLRenderingContext.vertexAttrib[1234]f[v]()`](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/vertexAttrib)__ (*NI*)
+__[`WebGLRenderingContext.vertexAttrib[1234]f[v]()`](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/vertexAttrib)__
 
 > Specifies the value of a generic vertex attribute.
 
@@ -687,7 +687,7 @@ __[`WebGL2RenderingContext.drawBuffers()`](https://developer.mozilla.org/en-US/d
 
 > Specifies a list of color buffers to be drawn into.
 
-__[`WebGL2RenderingContext.clearBuffer[fiuv]()`](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBuffer)__ (*NI*)
+__[`WebGL2RenderingContext.clearBuffer[fiuv]()`](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBuffer)__
 
 > Clears buffers from the currently bound framebuffer.
 

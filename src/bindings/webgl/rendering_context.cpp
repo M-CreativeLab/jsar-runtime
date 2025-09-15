@@ -688,6 +688,7 @@ namespace webgl
     InstanceMethod("createProgram", &T::CreateProgram),                         \
     InstanceMethod("deleteProgram", &T::DeleteProgram),                         \
     InstanceMethod("linkProgram", &T::LinkProgram),                             \
+    InstanceMethod("validateProgram", &T::ValidateProgram),                     \
     InstanceMethod("useProgram", &T::UseProgram),                               \
     InstanceMethod("bindAttribLocation", &T::BindAttribLocation),               \
     InstanceMethod("getProgramParameter", &T::GetProgramParameter),             \
@@ -730,6 +731,10 @@ namespace webgl
     InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),     \
     InstanceMethod("disableVertexAttribArray", &T::DisableVertexAttribArray),   \
     InstanceMethod("vertexAttribPointer", &T::VertexAttribPointer),             \
+    InstanceMethod("vertexAttrib1f", &T::VertexAttrib1f),                       \
+    InstanceMethod("vertexAttrib2f", &T::VertexAttrib2f),                       \
+    InstanceMethod("vertexAttrib3f", &T::VertexAttrib3f),                       \
+    InstanceMethod("vertexAttrib4f", &T::VertexAttrib4f),                       \
     InstanceMethod("getActiveAttrib", &T::GetActiveAttrib),                     \
     InstanceMethod("getActiveUniform", &T::GetActiveUniform),                   \
     InstanceMethod("getAttribLocation", &T::GetAttribLocation),                 \
@@ -806,6 +811,14 @@ namespace webgl
     InstanceMethod("uniformBlockBinding", &T::UniformBlockBinding),                       \
     InstanceMethod("vertexAttribIPointer", &T::VertexAttribIPointer),                     \
     InstanceMethod("vertexAttribDivisor", &T::VertexAttribDivisor),                       \
+    InstanceMethod("vertexAttribI4i", &T::VertexAttribI4i),                               \
+    InstanceMethod("vertexAttribI4ui", &T::VertexAttribI4ui),                             \
+    InstanceMethod("vertexAttribI4iv", &T::VertexAttribI4iv),                             \
+    InstanceMethod("vertexAttribI4uiv", &T::VertexAttribI4uiv),                           \
+    InstanceMethod("clearBufferfv", &T::ClearBufferfv),                                   \
+    InstanceMethod("clearBufferiv", &T::ClearBufferiv),                                   \
+    InstanceMethod("clearBufferuiv", &T::ClearBufferuiv),                                 \
+    InstanceMethod("clearBufferfi", &T::ClearBufferfi),                                   \
     InstanceMethod("drawBuffers", &T::DrawBuffers),                                       \
     InstanceMethod("drawArraysInstanced", &T::DrawArraysInstanced),                       \
     InstanceMethod("drawElementsInstanced", &T::DrawElementsInstanced),                   \
@@ -1430,9 +1443,9 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[3].IsBoolean())
+    if (!info[3].IsNumber())
     {
-      Napi::TypeError::New(env, "vertexAttribIPointer() 4th argument(stride) must be a boolean.")
+      Napi::TypeError::New(env, "vertexAttribIPointer() 4th argument(stride) must be a number.")
         .ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -1481,6 +1494,110 @@ namespace webgl
     auto divisor = info[1].As<Napi::Number>().Uint32Value();
 
     glContext_->vertexAttribDivisor(index, divisor);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::VertexAttribI4i(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "vertexAttribI4i() takes 5 arguments: index, v0, v1, v2, v3.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().Int32Value();
+    auto v1 = info[2].As<Napi::Number>().Int32Value();
+    auto v2 = info[3].As<Napi::Number>().Int32Value();
+    auto v3 = info[4].As<Napi::Number>().Int32Value();
+
+    glContext_->vertexAttribI4i(static_cast<int>(index), v0, v1, v2, v3);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::VertexAttribI4ui(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "vertexAttribI4ui() takes 5 arguments: index, v0, v1, v2, v3.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().Uint32Value();
+    auto v1 = info[2].As<Napi::Number>().Uint32Value();
+    auto v2 = info[3].As<Napi::Number>().Uint32Value();
+    auto v3 = info[4].As<Napi::Number>().Uint32Value();
+
+    glContext_->vertexAttribI4ui(static_cast<int>(index), v0, v1, v2, v3);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::VertexAttribI4iv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "vertexAttribI4iv() takes 2 arguments: index, values.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    if (!info[1].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "vertexAttribI4iv() 2nd argument(values) must be a typed array.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto typedArray = info[1].As<Napi::TypedArray>();
+    auto arrayBuffer = typedArray.ArrayBuffer();
+    auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+
+    // Convert pointer to vector
+    std::vector<int> values(data, data + 4);
+    glContext_->vertexAttribI4iv(static_cast<int>(index), values);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::VertexAttribI4uiv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "vertexAttribI4uiv() takes 2 arguments: index, values.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    if (!info[1].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "vertexAttribI4uiv() 2nd argument(values) must be a typed array.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto typedArray = info[1].As<Napi::TypedArray>();
+    auto arrayBuffer = typedArray.ArrayBuffer();
+    auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+
+    // Convert pointer to vector
+    std::vector<uint> values(data, data + 4);
+    glContext_->vertexAttribI4uiv(static_cast<int>(index), values);
     return env.Undefined();
   }
 
@@ -1670,6 +1787,231 @@ namespace webgl
     auto offset = info[5].As<Napi::Number>().Uint32Value();
 
     glContext_->drawRangeElements(static_cast<client_graphics::WebGLDrawMode>(mode), start, end, count, type, offset);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::ClearBufferfv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "clearBufferfv() takes 3 arguments.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfv() 1st argument(buffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfv() 2nd argument(drawbuffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsArray() && !info[2].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "clearBufferfv() 3rd argument(values) must be an array or typed array.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
+    int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
+    std::vector<float> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const float *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(float);
+      values.assign(data, data + length);
+    }
+    else if (info[2].IsArray())
+    {
+      auto array = info[2].As<Napi::Array>();
+      uint32_t length = array.Length();
+      values.reserve(length);
+      for (uint32_t i = 0; i < length; i++)
+      {
+        Napi::Value element = array[i];
+        if (!element.IsNumber())
+        {
+          Napi::TypeError::New(env, "clearBufferfv() array elements must be numbers.")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        values.push_back(element.As<Napi::Number>().FloatValue());
+      }
+    }
+    glContext_->clearBufferfv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::ClearBufferiv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "clearBufferiv() takes 3 arguments.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferiv() 1st argument(buffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferiv() 2nd argument(drawbuffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsArray() && !info[2].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "clearBufferiv() 3rd argument(values) must be an array or typed array.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
+    int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
+    std::vector<int> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const int32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(int32_t);
+      values.assign(data, data + length);
+    }
+    else if (info[2].IsArray())
+    {
+      auto array = info[2].As<Napi::Array>();
+      uint32_t length = array.Length();
+      values.reserve(length);
+      for (uint32_t i = 0; i < length; i++)
+      {
+        Napi::Value element = array[i];
+        if (!element.IsNumber())
+        {
+          Napi::TypeError::New(env, "clearBufferiv() array elements must be numbers.")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        values.push_back(element.As<Napi::Number>().Int32Value());
+      }
+    }
+    glContext_->clearBufferiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::ClearBufferuiv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "clearBufferuiv() takes 3 arguments.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferuiv() 1st argument(buffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferuiv() 2nd argument(drawbuffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsTypedArray() && !info[2].IsArray())
+    {
+      Napi::TypeError::New(env, "clearBufferuiv() 3rd argument(values) must be a typed array or array.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
+    int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
+    std::vector<unsigned int> values;
+
+    if (info[2].IsTypedArray())
+    {
+      auto typedArray = info[2].As<Napi::TypedArray>();
+      auto arrayBuffer = typedArray.ArrayBuffer();
+      auto data = reinterpret_cast<const uint32_t *>(static_cast<uint8_t *>(arrayBuffer.Data()) + typedArray.ByteOffset());
+      size_t length = typedArray.ByteLength() / sizeof(uint32_t);
+      values.assign(data, data + length);
+    }
+    else
+    {
+      auto array = info[2].As<Napi::Array>();
+      values.reserve(array.Length());
+      for (uint32_t i = 0; i < array.Length(); i++)
+      {
+        values.push_back(array.Get(i).As<Napi::Number>().Uint32Value());
+      }
+    }
+    glContext_->clearBufferuiv(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, values);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::ClearBufferfi(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "clearBufferfi() takes 4 arguments.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfi() 1st argument(buffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfi() 2nd argument(drawbuffer) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfi() 3rd argument(depth) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[3].IsNumber())
+    {
+      Napi::TypeError::New(env, "clearBufferfi() 4th argument(stencil) must be a number.")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t buffer = info[0].As<Napi::Number>().Uint32Value();
+    int32_t drawbuffer = info[1].As<Napi::Number>().Int32Value();
+    float depth = info[2].As<Napi::Number>().FloatValue();
+    int32_t stencil = info[3].As<Napi::Number>().Int32Value();
+    glContext_->clearBufferfi(static_cast<client_graphics::WebGLFramebufferAttachmentType>(buffer), drawbuffer, depth, stencil);
     return env.Undefined();
   }
 }

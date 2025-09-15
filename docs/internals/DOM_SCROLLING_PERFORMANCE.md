@@ -8,21 +8,25 @@ The scrolling performance has been optimized through several targeted improvemen
 
 ## 1. Scroll Event Throttling
 
-**Location**: `src/client/dom/element.cpp`, `src/client/dom/element.hpp`
+**Location**: `src/client/dom/element.cpp`, `src/client/dom/element.hpp`, `src/client/dom/document.cpp`, `src/client/dom/document.hpp`
 
 **Problem**: Scroll events were dispatched on every scroll operation without any rate limiting, causing performance issues with rapid scrolling.
 
-**Solution**: Added 16ms throttling (~60fps) to scroll event dispatching.
+**Solution**: Added 16ms throttling (~60fps) to scroll event dispatching for both Element and HTMLDocument classes.
 
 ```cpp
-// Added to Element class
+// Added to Element and HTMLDocument classes
 static constexpr std::chrono::milliseconds scroll_throttle_duration_{16};
 std::chrono::steady_clock::time_point last_scroll_event_time_;
 
 bool shouldThrottleScrollEvent() const;
 ```
 
-**Impact**: Reduces event frequency from unlimited to maximum 60fps, significantly reducing CPU overhead.
+**Implementation Details**:
+- **Element::simulateScrollWithOffset()**: Already had throttling implemented
+- **HTMLDocument::simulateScrollWithOffset()**: Throttling newly added for consistency and performance
+
+**Impact**: Reduces event frequency from unlimited to maximum 60fps, significantly reducing CPU overhead for both element-level and document-level scrolling.
 
 ## 2. Optimized Scroll Bounds Checking
 

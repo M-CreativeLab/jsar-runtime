@@ -2,6 +2,7 @@
 #include <client/dom/document.hpp>
 #include <client/builtin_scene/meshes/loaders/ksplat_loader.hpp>
 #include <client/builtin_scene/meshes/loaders/spz_loader.hpp>
+#include <client/builtin_scene/meshes/loaders/ply_loader.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/layout/layout_model3d.hpp>
@@ -200,6 +201,10 @@ namespace dom
       {
         return ModelType::SPZ;
       }
+      else if (typeHint == "ply")
+      {
+        return ModelType::PLY;
+      }
     }
 
     // Auto-detect from file extension
@@ -216,6 +221,10 @@ namespace dom
       else if (ext == "spz")
       {
         return ModelType::SPZ;
+      }
+      else if (ext == "ply")
+      {
+        return ModelType::PLY;
       }
       else if (ext == "gltf")
       {
@@ -341,10 +350,51 @@ namespace dom
         cerr << "SPZ parsing failed" << endl;
       }
     }
+    else if (modelType == ModelType::PLY)
+    {
+      // Use PLY parser to parse the model data
+      vector<builtin_scene::GaussianSplat> parsedSplats;
+      if (model_loaders::PlyLoader::Load(modelData, parsedSplats))
+      {
+        // Convert builtin_scene::GaussianSplat to HTMLModelElement::GaussianSplat for layout
+        vector<GaussianSplat> elementSplats;
+        elementSplats.reserve(parsedSplats.size());
+
+        for (const auto &splat : parsedSplats)
+        {
+          GaussianSplat elementSplat;
+          elementSplat.position[0] = splat.position[0];
+          elementSplat.position[1] = splat.position[1];
+          elementSplat.position[2] = splat.position[2];
+          elementSplat.color[0] = splat.color[0];
+          elementSplat.color[1] = splat.color[1];
+          elementSplat.color[2] = splat.color[2];
+          elementSplat.opacity = splat.opacity;
+          elementSplat.scale[0] = splat.scale[0];
+          elementSplat.scale[1] = splat.scale[1];
+          elementSplat.scale[2] = splat.scale[2];
+          elementSplat.rotation[0] = splat.rotation[0];
+          elementSplat.rotation[1] = splat.rotation[1];
+          elementSplat.rotation[2] = splat.rotation[2];
+          elementSplat.rotation[3] = splat.rotation[3];
+          elementSplats.push_back(elementSplat);
+        }
+
+        // Store parsed splats for layout
+        parsed_splats_ = move(elementSplats);
+        cout << "Successfully parsed .ply file with " << parsed_splats_->size() << " splats" << endl;
+      }
+      else
+      {
+        cerr << "Failed to parse PLY file"
+             << (src_.empty() ? "" : " (" + src_ + ")")
+             << ": invalid format or corrupted data" << endl;
+      }
+    }
     else
     {
       cerr << "Model type not supported: GLTF/GLB model format is not yet supported." << endl;
-      cerr << "Please use .ksplat or .spz format for 3D Gaussian Splatting models." << endl;
+      cerr << "Please use .ksplat, .spz, or .ply format for 3D Gaussian Splatting models." << endl;
       // Model loading failed - do not set as loaded
     }
 

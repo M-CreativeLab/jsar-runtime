@@ -31,8 +31,8 @@ namespace client_layout
 
     auto context = client_cssom::values::computed::Context::From(document);
     client_cssom::CSSStyleDeclaration initialStyle;
-    initialStyle.setProperty("width", "100%");
-    initialStyle.setProperty("height", "100%");
+    initialStyle.setProperty("width", "100vw");
+    initialStyle.setProperty("height", "100vh");
 
     view->setStyle(client_cssom::ComputedStyle(initialStyle, context));
     return view;
@@ -76,6 +76,7 @@ namespace client_layout
 
     // Use taffy to compute the layout.
     bool r = LayoutBlockFlow::computeLayout(avilableSpace);
+    didComputeLayoutOnce(avilableSpace);
 
     // Traverse the children of the view and call `didComputeLayout` for each child.
     // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content

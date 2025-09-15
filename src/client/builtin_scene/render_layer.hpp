@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include "./ecs.hpp"
 
 namespace builtin_scene
@@ -15,7 +16,46 @@ namespace builtin_scene
     {
     }
 
+    int index() const
+    {
+      return index_;
+    }
+
+    operator int() const
+    {
+      return index_;
+    }
+
+    bool operator==(const RenderLayer &other) const
+    {
+      return index_ == other.index_;
+    }
+    bool operator!=(const RenderLayer &other) const
+    {
+      return index_ != other.index_;
+    }
+    bool operator<(const RenderLayer &other) const
+    {
+      return index_ < other.index_;
+    }
+    bool operator>(const RenderLayer &other) const
+    {
+      return index_ > other.index_;
+    }
+
   private:
     int index_;
+  };
+}
+
+namespace std
+{
+  template <>
+  struct hash<builtin_scene::RenderLayer>
+  {
+    inline size_t operator()(const builtin_scene::RenderLayer &layer) const noexcept
+    {
+      return hash<int>()(layer.index());
+    }
   };
 }

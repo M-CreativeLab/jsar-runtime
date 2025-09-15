@@ -334,19 +334,20 @@ namespace commandbuffers
   {
   public:
     GetShaderParamCommandBufferResponse() = delete;
-    GetShaderParamCommandBufferResponse(GetShaderParamCommandBufferRequest *req, int32_t value)
+    GetShaderParamCommandBufferResponse(GetShaderParamCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req)
-        , value(value)
     {
     }
     GetShaderParamCommandBufferResponse(const GetShaderParamCommandBufferResponse &that, bool clone)
         : TrCommandBufferSimpleResponse(that, clone)
-        , value(that.value)
+        , deleteStatus(that.deleteStatus)
+        , compileStatus(that.compileStatus)
     {
     }
 
   public:
-    int32_t value;
+    bool deleteStatus;
+    bool compileStatus;
   };
 
   class GetShaderInfoLogCommandBufferRequest final

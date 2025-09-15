@@ -39,7 +39,7 @@ namespace builtin_scene
     // The base number of the render queue.
     uint32_t base;
     // CSS: z-index
-    int zIndex = 0;
+    float zIndex = 0;
     // CSS: transform: translateZ()
     float translateZ = 0;
   };

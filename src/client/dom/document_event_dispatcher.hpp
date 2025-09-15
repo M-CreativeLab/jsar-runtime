@@ -31,6 +31,8 @@ namespace dom
 
     // Prepare setup for the `scroll` events, it will search for an element that is scrollable.
     bool prepareSetupForScroll(Element &innerTarget, const glm::vec3 &p);
+    void buildScrollContainerChain(Element &innerTarget);
+    bool tryScrollCurrentTarget(float movementInX, float movementInY);
     void onScroll(const glm::vec3 &p);
     void endScroll();
 
@@ -44,6 +46,7 @@ namespace dom
     bool is_click_in_progress_ = false;
 
     std::weak_ptr<Node> current_scroll_target_;
+    std::vector<std::weak_ptr<Node>> scroll_container_chain_; // Chain of scroll containers from deepest to shallowest
     glm::vec3 current_scroll_start_point_;
     glm::vec3 current_scroll_end_point_;
     bool is_scroll_in_progress_ = false;

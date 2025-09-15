@@ -54,8 +54,6 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir)
     args.push_back("--preserve-symlinks");
     args.push_back("--preserve-symlinks-main");
   }
-  args.push_back("-r");
-  args.push_back(scriptsDir + "/jsar-bootstrap-babylon.js");
   args.push_back(scriptsDir + "/jsar-client-entry.js");
 
   // TODO: Check if we are in debug mode
@@ -402,7 +400,7 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::preload()
 {
-  fontCacheManager = std::make_unique<font::FontCacheManager>();
+  fontCacheManager = font::FontCacheManager::GetInstance();
 }
 
 void TrClientContextPerProcess::start()
@@ -737,6 +735,14 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(cl
       return resp != nullptr;
     };
     commandbufferResponseCv.wait_for(lock, chrono::milliseconds(timeout), check);
+
+    if (resp == nullptr) [[unlikely]]
+    {
+      cerr << "Timeout waiting for command buffer response() "
+           << "for contextId=" << context->id << ", requestId=" << requestId << endl;
+      assert(false && "Timeout waiting for command buffer response.");
+      return nullptr;
+    }
   }
 
   auto after = chrono::steady_clock::now();

@@ -243,6 +243,29 @@ namespace webgl
   }
 
   template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::ValidateProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "validateProgram() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    // check if the argument is a WebGLProgram type
+    if (!WebGLProgram::IsInstanceOf(info[0]))
+    {
+      Napi::TypeError::New(env, "validateProgram() takes a WebGLProgram as argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    glContext_->validateProgram(program->handle());
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
   Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::UseProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -620,20 +643,18 @@ namespace webgl
       return env.Undefined();
     }
 
-    /**
-     * TODO: support bufferData() with size
-     */
-    if (info[1].IsNumber())
-    {
-      Napi::TypeError::New(env, "bufferData(target, size, usage) is not supported yet.")
-        .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     auto targetInt = info[0].As<Napi::Number>().Int32Value();
     auto target = static_cast<client_graphics::WebGLBufferBindingTarget>(targetInt);
     auto usageInt = info[2].As<Napi::Number>().Int32Value();
     auto usage = static_cast<client_graphics::WebGLBufferUsage>(usageInt);
+
+    // Handle bufferData(target, size, usage) - allocate buffer with given size
+    if (info[1].IsNumber())
+    {
+      auto size = info[1].As<Napi::Number>().Int64Value();
+      glContext_->bufferData(target, size, usage);
+      return env.Undefined();
+    }
 
     auto jsBuffer = info[1];
     void *bufferData = nullptr;
@@ -1486,6 +1507,88 @@ namespace webgl
     auto offset = info[5].ToNumber().Uint32Value();
 
     glContext_->vertexAttribPointer(index, size, type, normalized, stride, offset);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib1f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "vertexAttrib1f() takes 2 arguments: index, x.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib1f(index, v0);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib2f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "vertexAttrib2f() takes 3 arguments: index, v0, v1.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib2f(index, v0, v1);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib3f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "vertexAttrib3f() takes 4 arguments: index, v0, v1, v2.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
+    auto v2 = info[3].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib3f(index, v0, v1, v2);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::VertexAttrib4f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "vertexAttrib4f() takes 5 arguments: index, v0, v1, v2, v3.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto index = info[0].As<Napi::Number>().Uint32Value();
+    auto v0 = info[1].As<Napi::Number>().FloatValue();
+    auto v1 = info[2].As<Napi::Number>().FloatValue();
+    auto v2 = info[3].As<Napi::Number>().FloatValue();
+    auto v3 = info[4].As<Napi::Number>().FloatValue();
+
+    glContext_->vertexAttrib4f(index, v0, v1, v2, v3);
     return env.Undefined();
   }
 

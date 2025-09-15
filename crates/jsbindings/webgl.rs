@@ -64,7 +64,7 @@ impl VisitorMut for MyGLSLPatcher {
 
 fn patch_glsl_source_from_str(s: &str) -> String {
   use glsl_lang::{
-    ast::TranslationUnit, lexer::v2_full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
+    ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
@@ -199,6 +199,38 @@ uniform mat4 modelViewMatrices[2];
 in vec3 position;
 void main() {
     gl_Position = modelMatrix * viewMatrices[gl_ViewID_OVR] * vec4(position, 1.);
+}
+"#
+    )
+  }
+
+  #[test]
+  #[ignore]
+  fn test_patch_glsl_source_elif_expand() {
+    let source_str = r#"
+#version 300 es
+#define CS1
+#define CS2
+#define CS3
+
+vec3 test() {
+#if defined(CS1)
+  return vec3(1.0, 0.0, 0.0);
+#elif defined(CS2)
+  return vec3(2.0, 0.0, 0.0);
+#elif defined(CS3)
+  return vec3(3.0, 1.0, 0.0);
+#else
+  return vec3(0.0, 0.0, 1.0);
+#endif
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+vec3 test() {
+    return vec3(1., 0., 0.);
 }
 "#
     )

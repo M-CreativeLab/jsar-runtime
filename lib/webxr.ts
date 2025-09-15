@@ -1,10 +1,10 @@
 const webxrNative = process._linkedBinding('transmute:webxr');
-let globalXRSystem: XRSystem = null;
+let globalXRSystem = null;
 
 /**
  * @returns The `XRSystem` object.
  */
-export function getXRSystem(): XRSystem {
+export function getXRSystem() {
   if (globalXRSystem == null) {
     globalXRSystem = webxrNative.getXRSystem();
   }

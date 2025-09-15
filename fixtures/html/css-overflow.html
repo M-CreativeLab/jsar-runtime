@@ -6,33 +6,67 @@
   <title>CSS Overflow</title>
   <style>
     body {
-      background-color: #fff;
       font-size: 40px;
       color: #6d172e;
+      width: 100%;
     }
+
     header {
+      overflow: auto;
+      background-color: rgba(0, 174, 255, 0.274);
+      padding: 2rem;
+      height: 20px;
+      width: 80vw;
+      margin-top: 10px;
+    }
+
+    header h1 {
+      background-color: #6d172e;
+      color: #fff;
+      margin: 0;
+      width: 85vw;
+    }
+
+    p {
+      box-sizing: border-box;
+      padding: 1rem;
+      width: 100%;
+    }
+
+    main {
+      background-color: #b1733d58;
+    }
+
+    .first {
+      margin-top: 5px;
+      background-color: #ebb3c2;
       overflow: scroll;
+      height: 150px;
+    }
+
+    .divider {
+      height: 1050px;
+      background-color: #1ebb89;
+      width: 100%;
     }
   </style>
 </head>
 
 <body>
   <header>
-    <h1 id="header" style="overflow: auto;">CSS Overflow</h1>
+    <h1 id="title">CSS Overflow</h1>
   </header>
   <main>
-    <p class="primary first">
+    <div class="primary first">
       A range of organizations join the World Wide Web Consortium as Members to work with us to drive the direction of
       core web technologies and exchange ideas with industry and research leaders. We rotate randomly a few of our
-      Member
-      organizations' logos underneath.
-    </p>
-    <p style="overflow: hidden;">
+      Member organizations' logos underneath.
+    </div>
+    <p style="background-color: transparent; color: #fff;">
       1 October 2024 was W3C's 30th anniversary. We celebrated at our annual TPAC our three decades, advances in the
-      Web,
-      the impact of our standards on the world, imagined a bright future, and enjoyed ourselves at an authentic evening
-      of
-      talks and a gala.
+      Web, the impact of our standards on the world, imagined a bright future, and enjoyed ourselves at an authentic
+      evening
+      of talks and a gala.
     </p>
     <!--foobar-->
     <p>
@@ -40,6 +74,7 @@
       inappropriate to cite this document as other than work in progress.
     </p>
   </main>
+  <div class="divider"></div>
   <div>Footer</div>
 </body>
 

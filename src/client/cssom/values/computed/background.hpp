@@ -9,6 +9,8 @@ namespace client_cssom::values::specified
   class BackgroundClip;
   class BackgroundOrigin;
   class BackgroundRepeat;
+  class BackgroundSize;
+  class BackgroundPosition;
 }
 
 namespace client_cssom::values::computed
@@ -73,5 +75,15 @@ namespace client_cssom::values::computed
   class BackgroundRepeat : public generics::GenericBackgroundRepeat<BackgroundRepeat>
   {
     using generics::GenericBackgroundRepeat<BackgroundRepeat>::GenericBackgroundRepeat;
+  };
+
+  class BackgroundSize : public generics::GenericBackgroundSize<BackgroundSize>
+  {
+    using generics::GenericBackgroundSize<BackgroundSize>::GenericBackgroundSize;
+  };
+
+  class BackgroundPosition : public generics::GenericBackgroundPosition<BackgroundPosition>
+  {
+    using generics::GenericBackgroundPosition<BackgroundPosition>::GenericBackgroundPosition;
   };
 }

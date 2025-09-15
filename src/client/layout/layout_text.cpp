@@ -177,7 +177,7 @@ namespace client_layout
   {
     LayoutObject::styleDidChange();
 
-    updateLayer(false);
+    updateLayer(containingScrollContainer(), false);
   }
 
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)

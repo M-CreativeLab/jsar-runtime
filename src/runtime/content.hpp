@@ -237,6 +237,13 @@ public: // WebXR methods
    * @returns true if the session is removed successfully.
    */
   bool removeXRSession(xr::TrXRSession *session);
+  /**
+   * Update the local base matrix for all XR sessions.
+   * This will update all XRSession instances' local base matrices.
+   *
+   * @param matrix The new local base matrix.
+   */
+  void updateLocalBaseMatrix(const glm::mat4 &matrix);
 
 #ifdef TR_ENABLE_INSPECTOR
 public: // Inspector methods

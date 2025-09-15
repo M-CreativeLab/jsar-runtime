@@ -19,8 +19,8 @@ Thank you for your interest in contributing to JSAR Runtime! This document provi
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** v18.16.1 or later
-- **Rust** v1.70.0 or later (with nightly toolchain)
+- **Node.js** v18.16.1
+- **Rust** v1.86.0 or later (with nightly toolchain)
 - **Platform-specific tools:**
   - macOS: Xcode Command Line Tools
   - Linux: GCC or Clang

@@ -100,14 +100,14 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  builtin_scene::RenderQueue Text::getRenderQueue() const
+  builtin_scene::RenderQueue Text::computeRenderQueue() const
   {
-    auto renderQueue = Node::getRenderQueue();
+    auto renderQueue = Node::computeRenderQueue();
     auto parentElement = getParentElement();
     if (parentElement != nullptr)
     {
-      // Text will inherit the parent's render queue properties: zIndex and translateZ.
-      auto parentRenderQueue = parentElement->getRenderQueue();
+      // Text will inherit the parent's render queue properties: zIndex and translateZ
+      auto parentRenderQueue = parentElement->getRenderQueue(true);
       renderQueue.zIndex = parentRenderQueue.zIndex;
       renderQueue.translateZ = parentRenderQueue.translateZ;
     }
@@ -123,8 +123,8 @@ namespace dom
       auto window = getOwnerDocumentReferenceAs<HTMLDocument>(true)->defaultView();
       assert(window != nullptr &&
              "The window must not be null in a TextNode().");
-      auto initial_style = window->getComputedStyle(shared_from_this());
-      recalcStyleDirectly(initial_style);
+      auto initial_style = window->createComputedStyle(shared_from_this(), nullopt, false);
+      recalcStyleDirectly(*initial_style);
     }
 
     // Trigger text change at the beginning to ensure the text boxes are updated.

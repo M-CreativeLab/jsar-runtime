@@ -135,32 +135,6 @@ namespace builtin_scene
           gaussianMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
         }
       }
-      else
-      {
-        // Handle regular InstancedMeshBase
-        auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
-
-        // Configure for the opaque instances.
-        {
-          auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
-          WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
-          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
-        }
-
-        // Configure for the transparent instances.
-        {
-          auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
-          WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
-          mesh3d->iterateEnabledAttributes(program, configureAttribute);
-
-          glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
-          instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
-        }
-      }
     }
   }
 
@@ -363,57 +337,8 @@ namespace builtin_scene
     return matToUpdate;
   }
 
-  void SceneRenderer::addVolumeMask(function<void(EntityId, SceneRenderer &)> drawMaskGeometry)
-  {
-    assert(drawMaskGeometry != nullptr);
-    assert(volumeMask_.has_value());
-
-    // Clear the stencil buffer before drawing the volume mask.
-    glContext_->clearStencil(0x00);
-    glContext_->clear(WEBGL_STENCIL_BUFFER_BIT);
-
-    glContext_->enable(WEBGL_DEPTH_TEST);
-    glContext_->colorMask(false, false, false, false);
-    glContext_->depthMask(false);
-
-    glContext_->enable(WEBGL_STENCIL_TEST);
-    glContext_->stencilFunc(WEBGL_ALWAYS, volumeMaskStencilRef_, 0xff);
-    glContext_->stencilOp(WEBGL_KEEP,
-                          WEBGL_KEEP,
-                          WEBGL_REPLACE);
-    glContext_->stencilMask(0xff);
-    {
-      drawMaskGeometry(volumeMask_.value(), *this);
-    }
-    glContext_->colorMask(true, true, true, true);
-    glContext_->depthMask(true);
-    glContext_->disable(WEBGL_STENCIL_TEST);
-  }
-
-  void SceneRenderer::removeVolumeMask()
-  {
-    assert(volumeMask_.has_value());
-    glContext_->stencilMask(0x00);
-  }
-
-  void SceneRenderer::enableVolumeMask()
-  {
-    glContext_->enable(WEBGL_STENCIL_TEST);
-    glContext_->stencilFunc(WEBGL_EQUAL, volumeMaskStencilRef_, 0xff);
-    glContext_->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP);
-    glContext_->stencilMask(0x00);
-  }
-
-  void SceneRenderer::disableVolumeMask()
-  {
-    glContext_->disable(WEBGL_STENCIL_TEST);
-  }
-
   void SceneRenderer::onBeforeRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    if (isVolumeMaskEnabled())
-      enableVolumeMask();
-
     if (renderPass == RenderPass::kOpaques)
     {
       glContext_->enable(WEBGL_DEPTH_TEST);
@@ -429,9 +354,8 @@ namespace builtin_scene
       glContext_->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
     }
   }
+
   void SceneRenderer::onAfterRender(const RenderPass renderPass, std::optional<XRRenderTarget> renderTarget)
   {
-    if (isVolumeMaskEnabled())
-      disableVolumeMask();
   }
 }

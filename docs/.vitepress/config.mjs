@@ -122,7 +122,6 @@ export default defineConfig({
             },
             { text: 'Audio', link: '/manual/features/audio' },
             { text: 'Image', link: '/manual/features/image' },
-            { text: 'Debugging', link: '/manual/features/debugging' },
           ]
         },
         {
@@ -136,17 +135,8 @@ export default defineConfig({
           text: 'Developer Tools',
           collapsed: false,
           items: [
-            { text: 'Debugging', link: '/manual/developer-tools/debugging' },
-            { text: 'Preview', link: '/manual/developer-tools/preview' },
-            {
-              text: 'Developer Tools',
-              collapsed: true,
-              items: [
-                { text: 'Intro Features', link: '/manual/developer-tools/intro-features' },
-                { text: 'Intro GUI', link: '/manual/developer-tools/intro-gui' },
-                { text: 'Packaging', link: '/manual/developer-tools/packaging' }
-              ]
-            }
+            { text: 'Using Chrome DevTools', link: '/manual/developer-tools/using-chrome-devtools' },
+            { text: 'Debugging with ADB', link: '/manual/developer-tools/debugging-with-adb' },
           ]
         },
         {

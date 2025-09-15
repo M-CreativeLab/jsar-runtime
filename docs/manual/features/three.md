@@ -82,9 +82,21 @@ const renderer = new THREE.WebGLRenderer({
 
 There is a difference in the renderer setup as you can see. Instead of constructing the renderer via `new THREE.WebGLRenderer()`, at JSAR, you need to pass a mock canvas element and the given WebGL/WebGL2 rendering context.
 
-This is because at the scenario of JSAR, the WebGL context is already created and managed by the XR device, there is no need to create a new one and a new canvas for that. Thus JSAR exposes the context via `navigator.gl` and you can pass it to the renderer.
+This is because at the scenario of JSAR, the WebGL context is already created and managed by the XR device, there is no need to create a new one and a new canvas for that. Thus JSAR exposes the context via `navigator.gl` and you can pass it to the renderer that you used to create the scene.
 
-> Note: `navigator.gl` is a WebGL/WebGL2 rendering context that is created and managed by the runtime.
+> `navigator.gl` is a WebGL/WebGL2 rendering context that is created and managed by the runtime.
+>
+
+> To check whether the current rendering context is `WebGLRenderingContext` or `WebGL2RenderingContext`, you can use the following code:
+>
+>```js
+>if (navigator.gl instanceof WebGLRenderingContext) {
+>  console.info('WebGLRenderingContext');
+>} else if (navigator.gl instanceof WebGL2RenderingContext) {
+>  console.info('WebGL2RenderingContext');
+>}
+>```
+>
 
 ## Create XR content
 

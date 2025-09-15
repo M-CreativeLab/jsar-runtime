@@ -35,20 +35,6 @@ namespace builtin_scene
     return true;
   }
 
-  void Instance::translate(float tx, float ty, float tz)
-  {
-    auto &transform = data_.transform;
-    transform = glm::translate(transform, glm::vec3(tx, ty, tz));
-    notifyBufferDataChanged();
-  }
-
-  void Instance::scale(float sx, float sy, float sz)
-  {
-    auto &transform = data_.transform;
-    transform = glm::scale(transform, glm::vec3(sx, sy, sz));
-    notifyBufferDataChanged();
-  }
-
   void Instance::setTransform(const glm::mat4 &transformationMatrix)
   {
     auto &transform = data_.transform;
@@ -188,7 +174,7 @@ namespace builtin_scene
     return false;
   }
 
-  void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)
+  void Instance::addHolder(shared_ptr<InstanceListBase> holder)
   {
     // Check if the holder is already added.
     for (auto &h : holders_)
@@ -201,9 +187,9 @@ namespace builtin_scene
     holders_.push_back(holder);
   }
 
-  void Instance::removeHolder(std::shared_ptr<RenderableInstancesList> holder)
+  void Instance::removeHolder(shared_ptr<InstanceListBase> holder)
   {
-    holders_.erase(remove_if(holders_.begin(), holders_.end(), [holder](const weak_ptr<RenderableInstancesList> &h)
+    holders_.erase(remove_if(holders_.begin(), holders_.end(), [holder](const weak_ptr<InstanceListBase> &h)
                              { return h.lock() == holder; }),
                    holders_.end());
   }
@@ -222,7 +208,10 @@ namespace builtin_scene
     for (auto &holder : holders_)
     {
       if (auto holderPtr = holder.lock())
-        holderPtr->markTextureDataAsDirty();
+      {
+        if (holderPtr->isContentInstancesList())
+          dynamic_pointer_cast<ContentInstancesList>(holderPtr)->markTextureDataAsDirty();
+      }
     }
   }
 
@@ -244,19 +233,120 @@ namespace builtin_scene
                       hasNoBorders();
   }
 
-  RenderableInstancesList::RenderableInstancesList(InstanceFilter filter,
-                                                   shared_ptr<WebGLVertexArray> vao,
-                                                   shared_ptr<WebGLBuffer> instanceVbo)
-      : filter(filter)
-      , vao(vao)
+  InstanceListBase::InstanceListBase(shared_ptr<WebGLVertexArray> vao,
+                                     shared_ptr<WebGLBuffer> instanceVbo)
+      : vao(vao)
       , instanceVbo(instanceVbo)
       , bufferDataDirty_(true)
-      , textureDataDirty_(true)
   {
-    assert(filter != InstanceFilter::kAll);
   }
 
-  void RenderableInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
+  size_t InstanceListBase::configureAttribs(shared_ptr<WebGL2Context> glContext,
+                                            shared_ptr<WebGLProgram> program,
+                                            shared_ptr<Mesh3d> mesh3d)
+  {
+    WebGLVertexArrayScope vaoScope(glContext, vao);
+
+    glContext->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, mesh3d->elementBufferObject());
+    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+    auto configureVertexAttrib = [&](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+    {
+      glContext->vertexAttribPointer(index,
+                                     attrib.size(),
+                                     attrib.type(),
+                                     attrib.normalized(),
+                                     stride,
+                                     offset);
+      glContext->enableVertexAttribArray(index);
+    };
+    mesh3d->iterateEnabledAttributes(program, configureVertexAttrib);
+
+    // Make sure the `vbo` is currently bound.
+    glContext->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
+    auto configureInstanceAttrib = [&glContext](const IVertexAttribute &attrib,
+                                                int index,
+                                                size_t stride,
+                                                size_t offset)
+    {
+      glContext->enableVertexAttribArray(index);
+      glContext->vertexAttribPointer(index,
+                                     attrib.size(),
+                                     attrib.type(),
+                                     attrib.normalized(),
+                                     stride,
+                                     offset);
+      glContext->vertexAttribDivisor(index, 1);
+    };
+
+    // Iterate through the instance attributes and call `configureInstanceAttrib` to configure them.
+    size_t attribsCount = 0;
+    size_t offset = 0;
+    for (size_t i = 0; i < InstancedMeshBase::INSTANCE_ATTRIBUTES.size(); i++)
+    {
+      auto &name = InstancedMeshBase::INSTANCE_ATTRIBUTES[i];
+      auto attribLocation = glContext->getAttribLocation(program, name);
+      if (attribLocation.has_value())
+      {
+        auto instanceIndex = attribLocation.value().index.value_or(-1);
+        if (name == "instanceTransform")
+        {
+          for (int i = 0; i < 4; i++)
+          {
+            auto matrixRowIndex = instanceIndex + i;
+            VertexAttribute<float, 4> attrib(name, matrixRowIndex, VertexFormat::kFloat32x4);
+            configureInstanceAttrib(attrib, matrixRowIndex, InstancedMeshBase::STRIDE, offset);
+            offset += attrib.byteLength();
+            attribsCount += 1;
+          }
+        }
+        else
+        {
+          unique_ptr<IVertexAttribute> attrib = nullptr;
+          // 1u
+          if (name == "instanceLayerIndex" ||
+              name == "instanceBorderStyle")
+          {
+            attrib = make_unique<VertexAttribute<uint32_t, 1>>(name, instanceIndex, VertexFormat::kUint32);
+          }
+          // 1f
+          else if (name == "instanceUseSDFTexture")
+          {
+            attrib = make_unique<VertexAttribute<float, 1>>(name, instanceIndex, VertexFormat::kFloat32);
+          }
+          // 2f
+          else if (name == "instanceTexUvOffset" ||
+                   name == "instanceTexUvScale" ||
+                   name == "instanceTexUvOffsetR" ||
+                   name == "instanceDimensions")
+          {
+            attrib = make_unique<VertexAttribute<float, 2>>(name, instanceIndex, VertexFormat::kFloat32x2);
+          }
+          // 4f
+          else if (name == "instanceColor" ||
+                   name == "instanceBorderRadius")
+          {
+            attrib = make_unique<VertexAttribute<float, 4>>(name, instanceIndex, VertexFormat::kFloat32x4);
+          }
+          else
+          {
+            assert(false && "Unknown instance attribute name.");
+          }
+
+          assert(attrib != nullptr);
+          configureInstanceAttrib(*attrib, instanceIndex, InstancedMeshBase::STRIDE, offset);
+          offset += attrib->byteLength();
+          attribsCount += 1;
+        }
+      }
+      else
+      {
+        cerr << "The instance attribute " << name << " is not found." << endl;
+      }
+    }
+    return attribsCount;
+  }
+
+  void ContentInstancesList::update(const InstanceMap &instances, SortingOrder sortingOrder)
   {
     clearInstances(); // Clear the instances first.
 
@@ -268,7 +358,9 @@ namespace builtin_scene
         continue;
 
       if (filter == InstanceFilter::kAll)
+      {
         addInstance(instance);
+      }
       else if (filter == InstanceFilter::kOpaque)
       {
         if (instance->isOpaque_)
@@ -281,6 +373,33 @@ namespace builtin_scene
       }
     }
 
+    sortInstances(sortingOrder);
+    markTextureDataAsDirty();
+  }
+
+  void ContentInstancesList::beforeInstancedDraw(client_graphics::WebGL2Context &glContext,
+                                                 CSSBorderDataTexture *borderDataTexture)
+  {
+    InstanceListBase::beforeInstancedDraw(glContext);
+
+    // Update border data texture if border data is dirty
+    if (textureDataDirty_ &&
+        borderDataTexture != nullptr &&
+        borderDataTexture->isInitialized())
+    {
+      borderDataTexture->updateBorderData(getInstances());
+      textureDataDirty_ = false;
+    }
+  }
+
+  void ContentInstancesList::clearInstances()
+  {
+    InstanceListBase::clearInstances();
+    textureDataDirty_ = true;
+  }
+
+  void ContentInstancesList::sortInstances(SortingOrder sortingOrder)
+  {
     if (sortingOrder != SortingOrder::kNone && list_.size() > 1)
     {
       // Sorting the instances by z-index and the sorting order.
@@ -300,12 +419,19 @@ namespace builtin_scene
       };
       sort(list_.begin(), list_.end(), sortInstances);
     }
-
-    markBufferAsDirty();
-    markTextureDataAsDirty();
   }
 
-  size_t RenderableInstancesList::copyToArrayData(vector<InstanceData> &dst)
+  void ContainerInstance::setInstance(std::shared_ptr<Instance> instance)
+  {
+    clearInstances();
+    if (instance != nullptr)
+    {
+      addInstance(instance);
+      belongsToContainerId_ = instance->belongsToContainerId_;
+    }
+  }
+
+  size_t InstanceListBase::copyToArrayData(vector<InstanceData> &dst)
   {
     size_t len = 0;
     for (auto &instance : list_)
@@ -321,7 +447,7 @@ namespace builtin_scene
     return len * sizeof(InstanceData);
   }
 
-  void RenderableInstancesList::beforeInstancedDraw(WebGL2Context &glContext, CSSBorderDataTexture *borderDataTexture)
+  void InstanceListBase::beforeInstancedDraw(WebGL2Context &glContext)
   {
     // Update instance VBO if structure is dirty
     if (bufferDataDirty_)
@@ -331,28 +457,22 @@ namespace builtin_scene
       if ((len = copyToArrayData(array)) > 0)
       {
         glContext.bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, instanceVbo);
-        glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer, len, array.data(), WebGLBufferUsage::kDynamicDraw);
+        glContext.bufferData(WebGLBufferBindingTarget::kArrayBuffer,
+                             len,
+                             array.data(),
+                             WebGLBufferUsage::kDynamicDraw);
       }
       bufferDataDirty_ = false;
     }
-
-    // Update border data texture if border data is dirty
-    if (textureDataDirty_ &&
-        borderDataTexture != nullptr &&
-        borderDataTexture->isInitialized())
-    {
-      borderDataTexture->updateBorderData(getInstances());
-      textureDataDirty_ = false;
-    }
   }
 
-  void RenderableInstancesList::afterInstancedDraw(WebGL2Context &glContext)
+  void InstanceListBase::afterInstancedDraw(WebGL2Context &glContext)
   {
   }
 
-  std::vector<std::shared_ptr<Instance>> RenderableInstancesList::getInstances() const
+  vector<shared_ptr<Instance>> InstanceListBase::getInstances() const
   {
-    std::vector<std::shared_ptr<Instance>> instances;
+    vector<shared_ptr<Instance>> instances;
     for (const auto &weakInstance : list_)
     {
       if (!weakInstance.expired())
@@ -367,7 +487,7 @@ namespace builtin_scene
     return instances;
   }
 
-  void RenderableInstancesList::clearInstances()
+  void InstanceListBase::clearInstances()
   {
     for (auto &instance : list_)
     {
@@ -380,10 +500,9 @@ namespace builtin_scene
     }
     list_.clear();
     bufferDataDirty_ = true;
-    textureDataDirty_ = true;
   }
 
-  void RenderableInstancesList::addInstance(std::shared_ptr<Instance> instance)
+  void InstanceListBase::addInstance(shared_ptr<Instance> instance)
   {
     if (TR_UNLIKELY(instance == nullptr))
       return;
@@ -528,29 +647,170 @@ namespace builtin_scene
     return removed;
   }
 
-  void InstancedMeshBase::setup(shared_ptr<WebGL2Context> glContext,
-                                shared_ptr<WebGLVertexArray> opaqueVao,
-                                shared_ptr<WebGLBuffer> opaqueInstanceVbo,
-                                shared_ptr<WebGLVertexArray> transparentVao,
-                                shared_ptr<WebGLBuffer> transparentInstanceVbo)
+  void InstancedMeshBase::setup(shared_ptr<WebGL2Context> glContext, shared_ptr<Mesh3d> mesh3d)
   {
-    assert(glContext != nullptr);
+    assert(glContext != nullptr && "WebGL2 context must not be null.");
+    assert(mesh3d != nullptr && "Mesh3d must not be null.");
+
     glContext_ = glContext;
-    opaqueInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kOpaque, opaqueVao, opaqueInstanceVbo);
-    transparentInstances_ = make_shared<RenderableInstancesList>(
-      InstanceFilter::kTransparent, transparentVao, transparentInstanceVbo);
+    mesh3d_ = mesh3d;
   }
 
-  void InstancedMeshBase::updateInstancesList(bool ignoreDirty)
+  void InstancedMeshBase::configureInstanceAttribs(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh3d)
+  {
+    auto glContext = glContext_.lock();
+    assert(glContext != nullptr && "WebGL2 context must not be null.");
+  }
+
+  void InstancedMeshBase::updateInstancesList(shared_ptr<client_graphics::WebGLProgram> program, bool ignoreDirty)
   {
     if (!isStructureDirty_ && !ignoreDirty)
       return;
 
-    shared_lock<shared_mutex> lock(mutex_);
-    opaqueInstances_->update(idToInstanceMap_);
-    transparentInstances_->update(idToInstanceMap_,
-                                  RenderableInstancesList::SortingOrder::kFrontToBack);
+    auto glContext = glContext_.lock();
+    auto mesh3d = mesh3d_.lock();
+    if (glContext == nullptr || mesh3d == nullptr)
+    {
+      cerr << "InstancedMeshBase::updateInstancesList(): WebGL2 context or Mesh3d is not set."
+           << endl;
+      return;
+    }
+
+    unique_lock<shared_mutex> lock(mutex_);
+
+    // Update layered instances based on RenderLayer from instances
+    set<RenderLayer> allLayers;
+    map<RenderLayer, InstanceMap> contentInstanceMaps;
+    map<RenderLayer, InstanceMap> containerInstanceMaps;
+    for (auto &[id, instance] : idToInstanceMap_)
+    {
+      if (instance != nullptr)
+      {
+        RenderLayer layer = instance->renderLayer_;
+        bool shouldInsertLayer = false;
+        if (!instance->skipToDraw())
+        {
+          contentInstanceMaps[layer][id] = instance;
+          shouldInsertLayer = true;
+        }
+        if (instance->isContainer_)
+        {
+          containerInstanceMaps[layer][id] = instance;
+          shouldInsertLayer = true;
+        }
+        if (shouldInsertLayer)
+          allLayers.insert(layer);
+      }
+    }
+
+    // Helper lambda to get or create cached LayeredInstancesData
+    auto getOrCreateLayerData = [&](RenderLayer layer, uint32_t containerIndex) -> LayeredInstancesData &
+    {
+      // Key format: "<layer>_<containerIndex>"
+      string key = to_string(static_cast<int>(layer)) + "_" + to_string(containerIndex);
+      auto it = layerDataPool_.find(key);
+      if (it == layerDataPool_.end())
+      {
+        // Create new LayeredInstancesData with VAO/VBO only once
+        LayeredInstancesData newLayerData(layer);
+
+        // Initialize container instance for the new layer data
+        newLayerData.containerInstance = make_shared<ContainerInstance>(containerIndex,
+                                                                        glContext->createVertexArray(),
+                                                                        glContext->createBuffer());
+        newLayerData.containerInstance->configureAttribs(glContext, program, mesh3d);
+
+        // Initialize content instances for the new layer data
+        newLayerData.contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
+                                                                          glContext->createVertexArray(),
+                                                                          glContext->createBuffer());
+        newLayerData.contentInstances->configureAttribs(glContext, program, mesh3d);
+
+        // Move to the pool and get the iterator
+        it = layerDataPool_.emplace(key, move(newLayerData)).first;
+      }
+      return it->second;
+    };
+
+    // 1. Clear existing layered instances (only pointers, not the actual data)
+    layeredInstances_.clear();
+
+    // 2. Initialize default layer data if not already done
+    if (!defaultLayerData_.has_value())
+    {
+      defaultLayerData_ = LayeredInstancesData(RenderLayer()); // Default layer
+      defaultLayerData_->containerInstance = nullptr;          // No container for default layer
+      defaultLayerData_->contentInstances = make_shared<ContentInstancesList>(InstanceFilter::kTransparent,
+                                                                              glContext->createVertexArray(),
+                                                                              glContext->createBuffer());
+      defaultLayerData_->contentInstances->configureAttribs(glContext, program, mesh3d);
+    }
+    else
+    {
+      // Clear previous content from default layer
+      defaultLayerData_->contentInstances->clearInstances();
+    }
+
+    // 3. Process each layer
+    for (const auto &layer : allLayers)
+    {
+      // Map to track which container instance each content instance belongs to
+      unordered_map<uint32_t, LayeredInstancesData *> layeredDataMap;
+
+      // 3.1 Process container instances for this layer
+      bool ownsContainer = containerInstanceMaps.find(layer) != containerInstanceMaps.end();
+      if (ownsContainer)
+      {
+        uint32_t containerIndex = 0;
+        for (const auto &[id, instance] : containerInstanceMaps[layer])
+        {
+          LayeredInstancesData &layerData = getOrCreateLayerData(layer, containerIndex++);
+          layerData.containerInstance->setInstance(instance);
+          layerData.contentInstances->clearInstances(); // Clear previous content to rebuild
+          layeredDataMap[id] = &layerData;
+        }
+      }
+
+      // 3.2 Process content instances for this layer
+      if (contentInstanceMaps.find(layer) != contentInstanceMaps.end())
+      {
+        for (const auto &[id, instance] : contentInstanceMaps[layer])
+        {
+          auto belongsToContainer = layeredDataMap.find(instance->belongsToContainerId_) != layeredDataMap.end();
+          if (!belongsToContainer)
+          {
+            defaultLayerData_->contentInstances->addInstance(instance);
+          }
+          else
+          {
+            LayeredInstancesData *layerData = layeredDataMap[instance->belongsToContainerId_];
+            if (layerData != nullptr && layerData->contentInstances != nullptr)
+              layerData->contentInstances->addInstance(instance);
+          }
+        }
+      }
+
+      // 3.3 Add active layers to the layeredInstances_ list
+      {
+        // Add default layer to the active instances if it was used
+        if (defaultLayerData_->contentInstances->count() > 0)
+        {
+          defaultLayerData_->sortContentInstances();
+          defaultLayerData_->contentInstances->markTextureDataAsDirty();
+          layeredInstances_.push_back(&defaultLayerData_.value());
+        }
+
+        // Add container-specific layer data to the active instances
+        for (auto &[_, layerData] : layeredDataMap)
+        {
+          layerData->sortContentInstances();
+          layerData->contentInstances->markTextureDataAsDirty();
+          layeredInstances_.push_back(layerData);
+        }
+      }
+    }
+
+    // 4. Mark the structure as clean after updating.
     isStructureDirty_ = false;
   }
 }

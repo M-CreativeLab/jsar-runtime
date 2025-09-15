@@ -14,9 +14,9 @@ namespace logging
 {
 
   /**
- * Client-side logger that sends log messages to DevTools via CDP Log domain
- * Singleton pattern for global access
- */
+   * Client-side logger that sends log messages to DevTools via CDP Log domain
+   * Singleton pattern for global access
+   */
   class Logger
   {
   public:

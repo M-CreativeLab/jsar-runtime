@@ -586,7 +586,7 @@ private: // other fields
   uv_loop_t *scriptingEventLoop = nullptr;
   std::shared_ptr<ScriptEnvironment> scriptingEnv = nullptr;
   std::optional<std::thread::id> scriptingThreadId = std::nullopt;
-  unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
+  font::FontCacheManager *fontCacheManager = nullptr;
   unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 
 private:
