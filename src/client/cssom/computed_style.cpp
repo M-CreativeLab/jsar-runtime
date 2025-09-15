@@ -76,21 +76,10 @@ namespace client_cssom
 
     // Position
     layoutStyle.setPosition(position_type_.toLayoutValue());
-    if (position_type_.isStatic())
-    {
-      auto autoInset = crates::layout2::styles::LengthPercentageAuto::Auto();
-      layoutStyle.setTop(autoInset);
-      layoutStyle.setRight(autoInset);
-      layoutStyle.setBottom(autoInset);
-      layoutStyle.setLeft(autoInset);
-    }
-    else
-    {
-      layoutStyle.setTop(inset_.top().toLayoutValue());
-      layoutStyle.setRight(inset_.right().toLayoutValue());
-      layoutStyle.setBottom(inset_.bottom().toLayoutValue());
-      layoutStyle.setLeft(inset_.left().toLayoutValue());
-    }
+    layoutStyle.setTop(inset_.top().toLayoutValue());
+    layoutStyle.setRight(inset_.right().toLayoutValue());
+    layoutStyle.setBottom(inset_.bottom().toLayoutValue());
+    layoutStyle.setLeft(inset_.left().toLayoutValue());
 
     // Sizes
     layoutStyle.setWidth(width_.toLayoutValue());
