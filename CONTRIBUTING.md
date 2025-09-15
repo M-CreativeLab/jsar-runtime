@@ -160,15 +160,38 @@ make test
 
 ## Commit Message Conventions
 
-We follow conventional commit messages to maintain a clear project history:
+We follow Angular's [Commit Message Guidelines][] to maintain a clear project history:
+
+[Commit Message Guidelines]: https://github.com/angular/angular/blob/20.3.0/CONTRIBUTING.md#commit
 
 ### Format
 ```
 <type>(<scope>): <description>
-
+<BLANK LINE>
 [optional body]
-
+<BLANK LINE>
 [optional footer(s)]
+```
+
+The header(`<type>(<scope>): <description>`) is mandatory and the scope of the header is optional.
+
+Any line of the commit message cannot be longer 100 characters! This allows the message to be easier to read on GitHub as well as in various git tools.
+
+The footer should contain a closing reference to an issue if any.
+
+```
+<type>(<scope>): <short summary>
+  │       │             │
+  │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
+  │       │
+  │       └─⫸ Commit Scope: common|runtime|renderer|parser|graphics|input|network|xr|
+  │                          client|bindings|web-content|elements|layout|dom|css|html|canvas|
+  │                          animations|window|media|scripting|webxr|webgl|
+  │                          changelog|website|tests|examples|
+  |                          browser|android|darwin|
+  │                          inspector|devtools
+  │
+  └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test
 ```
 
 ### Types
@@ -183,14 +206,33 @@ We follow conventional commit messages to maintain a clear project history:
 - `ci`: Changes to CI configuration files and scripts
 
 ### Examples
+
+The following are **good** commit message examples:
+
+```bash
+docs(changelog): update changelog to beta.5
+```
+
 ```bash
 feat(webxr): add hand tracking support for spatial interactions
+```
 
+```bash
 fix(rendering): resolve memory leak in texture management
+```
 
+```bash
 docs(contributing): add comprehensive development guidelines
+```
 
+```bash
 test(dom): add unit tests for HTML element creation
+```
+
+```bash
+fix(release): need to depend on latest rxjs and zone.js
+
+The version in our package.json gets copied to the one we publish, and users need the latest of these.
 ```
 
 ## Pull Request Process
