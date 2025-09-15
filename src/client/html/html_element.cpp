@@ -163,6 +163,12 @@ namespace dom
         dataset_[key] = newValue;
       }
     }
+
+    // Handle onclick attribute for inline event handlers
+    if (name == "onclick")
+    {
+      setOnClickHandler(newValue);
+    }
   }
 
   void HTMLElement::connectedCallback()

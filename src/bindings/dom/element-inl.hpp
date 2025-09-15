@@ -18,6 +18,7 @@ namespace dombinding
         T::InstanceAccessor("lastElementChild", &T::LastElementChildGetter, nullptr),
         T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
         T::InstanceAccessor("outerHTML", &T::OuterHTMLGetter, &T::OuterHTMLSetter),
+        T::InstanceAccessor("onclick", &T::OnClickGetter, &T::OnClickSetter),
         T::InstanceMethod("after", &T::After),
         T::InstanceMethod("animate", &T::Animate),
         T::InstanceMethod("append", &T::Append),
@@ -123,6 +124,49 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     this->node->setOuterHTML(value.As<Napi::String>().Utf8Value());
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::OnClickGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+
+    // Return the onclick handler code if it exists, otherwise null
+    if (this->node->hasOnClickHandler())
+    {
+      std::string handlerCode = this->node->getOnClickHandlerCode();
+      if (!handlerCode.empty())
+      {
+        // Return the handler code as a string for inline handlers
+        return Napi::String::New(env, handlerCode);
+      }
+    }
+
+    return env.Null();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  void ElementBase<ObjectType, ElementType>::OnClickSetter(const Napi::CallbackInfo &info,
+                                                           const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+
+    if (value.IsNull() || value.IsUndefined())
+    {
+      // Clear the onclick handler
+      this->node->setOnClickHandler("");
+    }
+    else if (value.IsString())
+    {
+      // Set inline handler code
+      std::string handlerCode = value.As<Napi::String>().Utf8Value();
+      this->node->setOnClickHandler(handlerCode);
+    }
+    else if (value.IsFunction())
+    {
+      // TODO: Handle function assignment - for now convert to string
+      this->node->setOnClickHandlerFunction(nullptr);
+    }
   }
 
   /// Methods

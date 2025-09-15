@@ -794,6 +794,12 @@ namespace dom
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
+    // Execute onclick handler if it exists
+    if (hasOnClickHandler())
+    {
+      executeOnClickHandler();
+    }
+
     dispatchEventInternal(events::PointerEvent::Click());
   }
 
@@ -912,5 +918,55 @@ namespace dom
         return Node::As<Element>(childNode);
     }
     return nullptr;
+  }
+
+  // Event handler methods
+  void Element::setOnClickHandler(const std::string &handlerCode)
+  {
+    onclick_handler_code_ = handlerCode;
+    has_onclick_function_ = false;
+
+    // TODO: Register click event listener to execute this handler code
+  }
+
+  void Element::setOnClickHandlerFunction(void *functionRef)
+  {
+    // TODO: Store function reference for direct function assignment
+    has_onclick_function_ = true;
+    onclick_handler_code_.clear();
+  }
+
+  std::string Element::getOnClickHandlerCode() const
+  {
+    return onclick_handler_code_;
+  }
+
+  bool Element::hasOnClickHandler() const
+  {
+    return !onclick_handler_code_.empty() || has_onclick_function_;
+  }
+
+  void Element::executeOnClickHandler()
+  {
+    if (onclick_handler_code_.empty())
+      return;
+
+    // Get the document and its browsing context to execute the JavaScript
+    auto ownerDoc = getOwnerDocumentReference();
+    if (ownerDoc == nullptr)
+      return;
+
+    // TODO: Implement proper JavaScript execution for inline onclick handlers
+    // For now, we'll just log that the handler would be executed
+    // The inline handler code should be executed in the JavaScript context
+    // with 'this' bound to the element and 'event' parameter available
+
+    std::cout << "Executing onclick handler: " << onclick_handler_code_ << std::endl;
+
+    // In a complete implementation, this would:
+    // 1. Get the V8 isolate and context from the browsing context
+    // 2. Create an event object
+    // 3. Execute the handler code with proper 'this' binding
+    // 4. Handle any errors that occur during execution
   }
 }

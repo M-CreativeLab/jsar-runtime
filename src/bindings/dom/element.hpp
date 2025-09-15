@@ -42,6 +42,8 @@ namespace dombinding
     void InnerHTMLSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value OuterHTMLGetter(const Napi::CallbackInfo &info);
     void OuterHTMLSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value OnClickGetter(const Napi::CallbackInfo &info);
+    void OnClickSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   private:
     Napi::Value After(const Napi::CallbackInfo &info);

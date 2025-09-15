@@ -256,6 +256,13 @@ namespace dom
     std::string getOuterHTML();
     void setOuterHTML(const std::string &markup);
 
+    // Event handlers
+    void setOnClickHandler(const std::string &handlerCode);
+    void setOnClickHandlerFunction(void *functionRef);
+    std::string getOnClickHandlerCode() const;
+    bool hasOnClickHandler() const;
+    void executeOnClickHandler();
+
   protected: // Node lifecycle callbacks
     void connectedCallback() override;
     void disconnectedCallback() override;
@@ -374,6 +381,10 @@ namespace dom
     bool is_hovered_ = false;
     bool is_focused_ = false;
     bool is_active_ = false;
+
+    // Event handlers
+    std::string onclick_handler_code_;
+    bool has_onclick_function_ = false;
 
     // Scroll performance optimization
     std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();

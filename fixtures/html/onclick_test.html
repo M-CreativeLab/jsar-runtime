@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OnClick Test</title>
+</head>
+<body>
+  <h1>OnClick Handler Test</h1>
+  
+  <!-- Test inline onclick attribute -->
+  <button id="btn1" onclick="console.log('Button 1 clicked via inline handler')">
+    Click me (inline handler)
+  </button>
+  
+  <!-- Test property assignment -->
+  <button id="btn2">
+    Click me (property handler)
+  </button>
+  
+  <!-- Test both attribute and property -->
+  <button id="btn3" onclick="console.log('Inline handler')">
+    Click me (both handlers)
+  </button>
+
+  <script>
+    // Test property assignment
+    const btn2 = document.getElementById('btn2');
+    btn2.onclick = function() {
+      console.log('Button 2 clicked via property assignment');
+    };
+    
+    // Test overriding attribute with property
+    const btn3 = document.getElementById('btn3');
+    btn3.onclick = function() {
+      console.log('Button 3 clicked via property (should override attribute)');
+    };
+    
+    // Test programmatic clicks
+    console.log('Testing programmatic clicks...');
+    
+    // This should trigger the inline handler
+    document.getElementById('btn1').click();
+    
+    // This should trigger the property handler
+    document.getElementById('btn2').click();
+    
+    // This should trigger the property handler (overriding the attribute)
+    document.getElementById('btn3').click();
+    
+    console.log('OnClick test completed');
+  </script>
+</body>
+</html>
