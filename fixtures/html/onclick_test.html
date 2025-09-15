@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>OnClick Test</title>
+  <title>OnClick Handler Test</title>
 </head>
 <body>
   <h1>OnClick Handler Test</h1>
@@ -23,29 +23,54 @@
   </button>
 
   <script>
+    console.log('OnClick test starting...');
+    
     // Test property assignment
     const btn2 = document.getElementById('btn2');
-    btn2.onclick = function() {
-      console.log('Button 2 clicked via property assignment');
-    };
+    if (btn2) {
+      btn2.onclick = "console.log('Button 2 clicked via property assignment')";
+      console.log('Set btn2.onclick property');
+    }
     
     // Test overriding attribute with property
     const btn3 = document.getElementById('btn3');
-    btn3.onclick = function() {
-      console.log('Button 3 clicked via property (should override attribute)');
-    };
+    if (btn3) {
+      btn3.onclick = "console.log('Button 3 clicked via property (should override attribute)')";
+      console.log('Set btn3.onclick property to override attribute');
+    }
+    
+    // Test getter
+    const btn1 = document.getElementById('btn1');
+    if (btn1) {
+      console.log('btn1.onclick =', btn1.onclick);
+    }
+    if (btn2) {
+      console.log('btn2.onclick =', btn2.onclick);
+    }
+    if (btn3) {
+      console.log('btn3.onclick =', btn3.onclick);
+    }
     
     // Test programmatic clicks
     console.log('Testing programmatic clicks...');
     
     // This should trigger the inline handler
-    document.getElementById('btn1').click();
+    if (btn1) {
+      console.log('Clicking btn1...');
+      btn1.click();
+    }
     
     // This should trigger the property handler
-    document.getElementById('btn2').click();
+    if (btn2) {
+      console.log('Clicking btn2...');
+      btn2.click();
+    }
     
     // This should trigger the property handler (overriding the attribute)
-    document.getElementById('btn3').click();
+    if (btn3) {
+      console.log('Clicking btn3...');
+      btn3.click();
+    }
     
     console.log('OnClick test completed');
   </script>

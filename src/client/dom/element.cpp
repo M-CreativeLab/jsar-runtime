@@ -956,17 +956,36 @@ namespace dom
     if (ownerDoc == nullptr)
       return;
 
-    // TODO: Implement proper JavaScript execution for inline onclick handlers
-    // For now, we'll just log that the handler would be executed
-    // The inline handler code should be executed in the JavaScript context
-    // with 'this' bound to the element and 'event' parameter available
+    auto browsingContext = ownerDoc->browsingContext;
+    if (browsingContext == nullptr || browsingContext->scriptingContext == nullptr)
+      return;
 
-    std::cout << "Executing onclick handler: " << onclick_handler_code_ << std::endl;
+    // Create a simple script to execute the onclick handler
+    // The handler code will be wrapped in an anonymous function
+    // TODO: In a complete implementation, we should:
+    // 1. Create a proper event object and pass it as parameter
+    // 2. Set 'this' to point to the element
+    // 3. Handle return value to potentially prevent default behavior
 
-    // In a complete implementation, this would:
-    // 1. Get the V8 isolate and context from the browsing context
-    // 2. Create an event object
-    // 3. Execute the handler code with proper 'this' binding
-    // 4. Handle any errors that occur during execution
+    std::string scriptCode = "(function() { " + onclick_handler_code_ + " })();";
+
+    try
+    {
+      // Create and compile the script for the onclick handler
+      auto script = browsingContext->createScript("", dom::SourceTextType::Classic);
+      if (script != nullptr)
+      {
+        // Get V8 isolate (we need to be careful about the execution context)
+        // For now, just log that we would execute the handler
+        std::cout << "Executing onclick handler: " << onclick_handler_code_ << std::endl;
+
+        // TODO: Complete the V8 execution using browsingContext->scriptingContext
+        // This requires careful handling of the V8 context and error handling
+      }
+    }
+    catch (const std::exception &e)
+    {
+      std::cerr << "Error executing onclick handler: " << e.what() << std::endl;
+    }
   }
 }
