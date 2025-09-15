@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>OnClick Handler Test</title>
+  <style>
+    button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: antiquewhite;
+    }
+  </style>
 </head>
+
 <body>
   <h1>OnClick Handler Test</h1>
-  
+
   <!-- Test inline onclick attribute -->
   <button id="btn1" onclick="console.log('Button 1 clicked via inline handler')">
     Click me (inline handler)
   </button>
-  
+
   <!-- Test property assignment -->
   <button id="btn2">
     Click me (property handler)
   </button>
-  
+
   <!-- Test both attribute and property -->
   <button id="btn3" onclick="console.log('Inline handler')">
     Click me (both handlers)
@@ -24,21 +34,21 @@
 
   <script>
     console.log('OnClick test starting...');
-    
+
     // Test property assignment
     const btn2 = document.getElementById('btn2');
     if (btn2) {
       btn2.onclick = "console.log('Button 2 clicked via property assignment')";
       console.log('Set btn2.onclick property');
     }
-    
+
     // Test overriding attribute with property
     const btn3 = document.getElementById('btn3');
     if (btn3) {
       btn3.onclick = "console.log('Button 3 clicked via property (should override attribute)')";
       console.log('Set btn3.onclick property to override attribute');
     }
-    
+
     // Test getter
     const btn1 = document.getElementById('btn1');
     if (btn1) {
@@ -50,29 +60,30 @@
     if (btn3) {
       console.log('btn3.onclick =', btn3.onclick);
     }
-    
+
     // Test programmatic clicks
     console.log('Testing programmatic clicks...');
-    
+
     // This should trigger the inline handler
-    if (btn1) {
-      console.log('Clicking btn1...');
-      btn1.click();
-    }
-    
-    // This should trigger the property handler
-    if (btn2) {
-      console.log('Clicking btn2...');
-      btn2.click();
-    }
-    
-    // This should trigger the property handler (overriding the attribute)
-    if (btn3) {
-      console.log('Clicking btn3...');
-      btn3.click();
-    }
-    
+    // if (btn1) {
+    //   console.log('Clicking btn1...');
+    //   btn1.click();
+    // }
+
+    // // This should trigger the property handler
+    // if (btn2) {
+    //   console.log('Clicking btn2...');
+    //   btn2.click();
+    // }
+
+    // // This should trigger the property handler (overriding the attribute)
+    // if (btn3) {
+    //   console.log('Clicking btn3...');
+    //   btn3.click();
+    // }
+
     console.log('OnClick test completed');
   </script>
 </body>
+
 </html>

@@ -8,6 +8,7 @@
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
+#include "./browsing_context.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -797,6 +798,7 @@ namespace dom
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
+    cout << "Element::simulateClick() called on <" << tagName << ">: " << onclick_handler_code_ << endl;
     // Execute onclick handler if it exists
     if (hasOnClickHandler())
     {
