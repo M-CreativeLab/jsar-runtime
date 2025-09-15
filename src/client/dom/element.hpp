@@ -385,6 +385,7 @@ namespace dom
     // Event handlers
     std::string onclick_handler_code_;
     bool has_onclick_function_ = false;
+    void *onclick_function_ref_ = nullptr;
 
     // Scroll performance optimization
     std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();

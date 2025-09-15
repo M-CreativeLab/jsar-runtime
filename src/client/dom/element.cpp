@@ -128,6 +128,9 @@ namespace dom
       , prefix(other.prefix)
       , classList_(other.classList_)
       , attributeNodes_(other.attributeNodes_)
+      , onclick_handler_code_(other.onclick_handler_code_)
+      , has_onclick_function_(other.has_onclick_function_)
+      , onclick_function_ref_(other.onclick_function_ref_)
   {
   }
 
@@ -926,12 +929,14 @@ namespace dom
     onclick_handler_code_ = handlerCode;
     has_onclick_function_ = false;
 
-    // TODO: Register click event listener to execute this handler code
+    // Note: onclick handlers are executed via simulateClick() method
+    // which checks hasOnClickHandler() and calls executeOnClickHandler()
   }
 
   void Element::setOnClickHandlerFunction(void *functionRef)
   {
-    // TODO: Store function reference for direct function assignment
+    // Store function reference for direct function assignment
+    onclick_function_ref_ = functionRef;
     has_onclick_function_ = true;
     onclick_handler_code_.clear();
   }
@@ -948,6 +953,16 @@ namespace dom
 
   void Element::executeOnClickHandler()
   {
+    // Handle function reference case (not yet fully implemented)
+    if (has_onclick_function_ && onclick_function_ref_ != nullptr)
+    {
+      // TODO: Implement function execution for onclick_function_ref_
+      // This would require proper V8 function handling
+      std::cout << "Executing onclick function reference (not yet implemented)" << std::endl;
+      return;
+    }
+
+    // Handle inline handler code case
     if (onclick_handler_code_.empty())
       return;
 
@@ -962,7 +977,7 @@ namespace dom
 
     // Create a simple script to execute the onclick handler
     // The handler code will be wrapped in an anonymous function
-    // TODO: In a complete implementation, we should:
+    // In a complete implementation, we should:
     // 1. Create a proper event object and pass it as parameter
     // 2. Set 'this' to point to the element
     // 3. Handle return value to potentially prevent default behavior
@@ -972,15 +987,20 @@ namespace dom
     try
     {
       // Create and compile the script for the onclick handler
-      auto script = browsingContext->createScript("", dom::SourceTextType::Classic);
+      auto script = browsingContext->createScript("inline-onclick-handler", dom::SourceTextType::Classic);
       if (script != nullptr)
       {
-        // Get V8 isolate (we need to be careful about the execution context)
-        // For now, just log that we would execute the handler
-        std::cout << "Executing onclick handler: " << onclick_handler_code_ << std::endl;
-
-        // TODO: Complete the V8 execution using browsingContext->scriptingContext
-        // This requires careful handling of the V8 context and error handling
+        // Compile the script with the onclick handler code
+        bool compiled = browsingContext->scriptingContext->compile(script, scriptCode, false);
+        if (compiled)
+        {
+          // Execute the script using the browsing context's scripting context
+          browsingContext->scriptingContext->evaluate(script);
+        }
+        else
+        {
+          std::cerr << "Failed to compile onclick handler: " << onclick_handler_code_ << std::endl;
+        }
       }
     }
     catch (const std::exception &e)
