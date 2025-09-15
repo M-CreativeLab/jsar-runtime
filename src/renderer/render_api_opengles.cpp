@@ -276,6 +276,13 @@ private:
         DEBUG(logTag, "      Enabled=%s", blendEnabled ? "Yes" : "No");
         DEBUG(logTag, "      Color=(%d, %d, %d, %d)", blendColors[0], blendColors[1], blendColors[2], blendColors[3]);
 
+        GLint blendEquationAlpha;
+        glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &blendEquationAlpha);
+        GLint blendEquationRGB;
+        glGetIntegerv(GL_BLEND_EQUATION_RGB, &blendEquationRGB);
+        DEBUG(logTag, "      EquationAlpha=%s", gles::glEnumToString(blendEquationAlpha).c_str());
+        DEBUG(logTag, "      EquationRGB=%s", gles::glEnumToString(blendEquationRGB).c_str());
+
         GLint blendDstAlpha;
         glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha);
         GLint blendDstRGB;

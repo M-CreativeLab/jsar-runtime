@@ -267,6 +267,11 @@ namespace builtin_scene::materials
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
   {
+    // Unbind the border data texture
+    if (borderDataTexture_ && borderDataTexture_->isInitialized())
+      borderDataTexture_->unbind(client_graphics::WebGLTextureUnit::kTexture1);
+
+    // Unbind the texture atlas.
     textureAtlas_->onAfterDraw();
   }
 
