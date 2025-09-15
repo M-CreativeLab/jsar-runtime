@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+#include <future>
 
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
@@ -331,13 +332,28 @@ namespace builtin_scene::web_renderer
     if (list.size() == 0)
       return;
 
+    vector<future<void>> futures;
+    futures.reserve(list.size());
+
+    // Lambda to render a single WebContent entity
+    auto renderContent = [this](ecs::EntityId entity, WebContent &content)
+    {
+      if (render(entity, content))
+        content.setSurfaceDirty(true);
+    };
+
+    // Schedule rendering tasks for each dirty WebContent entity
     for (auto &item : list)
     {
       ecs::EntityId entity = item.first;
       WebContent &content = *item.second;
-      if (render(entity, content))
-        content.setSurfaceDirty(true);
+      futures.emplace_back(async(launch::async, [&renderContent, entity, &content]()
+                                 { renderContent(entity, content); }));
     }
+
+    // Wait for all rendering tasks to complete
+    for (auto &future : futures)
+      future.wait();
   }
 
   // Create a gradient shader based on the computed image and rounded rectangle.
