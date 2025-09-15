@@ -187,7 +187,7 @@ The footer should contain a closing reference to an issue if any.
   │       └─⫸ Commit Scope: common|runtime|renderer|parser|graphics|input|network|xr|
   │                          client|bindings|web-content|elements|layout|dom|css|html|canvas|
   │                          animations|window|media|scripting|webxr|webgl|
-  │                          changelog|website|tests|examples|
+  │                          changelog|website|tests|examples|docs-infra|
   |                          browser|android|darwin|
   │                          inspector|devtools
   │
