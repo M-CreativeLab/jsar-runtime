@@ -10,6 +10,7 @@
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
 #include <client/cssom/values/computed/filter.hpp>
+#include <client/cssom/values/computed/text.hpp>
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"

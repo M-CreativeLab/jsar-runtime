@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS white-space Edge Cases Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    
+    .test-case {
+      border: 1px solid #ccc;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    
+    .expected {
+      border-left: 4px solid #28a745;
+      background-color: #d4edda;
+      padding: 5px;
+      margin: 5px 0;
+      font-family: monospace;
+    }
+    
+    .actual {
+      border-left: 4px solid #007bff;
+      background-color: #d1ecf1;
+      padding: 5px;
+      margin: 5px 0;
+    }
+    
+    .whitespace-normal { white-space: normal; }
+    .whitespace-pre { white-space: pre; }
+    .whitespace-nowrap { white-space: nowrap; }
+    .whitespace-pre-line { white-space: pre-line; }
+    .whitespace-pre-wrap { white-space: pre-wrap; }
+    .whitespace-break-spaces { white-space: break-spaces; }
+  </style>
+</head>
+<body>
+  <h1>CSS white-space Edge Cases Test</h1>
+  
+  <div class="test-case">
+    <h3>Test 1: Multiple consecutive spaces</h3>
+    <div class="expected">Expected (normal): "hello world"</div>
+    <div class="actual whitespace-normal">hello     world</div>
+    
+    <div class="expected">Expected (pre): "hello     world"</div>
+    <div class="actual whitespace-pre">hello     world</div>
+  </div>
+  
+  <div class="test-case">
+    <h3>Test 2: Newlines and spaces</h3>
+    <div class="expected">Expected (normal): "hello world"</div>
+    <div class="actual whitespace-normal">hello
+    world</div>
+    
+    <div class="expected">Expected (pre-line): "hello\nworld" (preserves newline)</div>
+    <div class="actual whitespace-pre-line">hello
+    world</div>
+  </div>
+  
+  <div class="test-case">
+    <h3>Test 3: Leading/trailing whitespace</h3>
+    <div class="expected">Expected (normal): "content" (trimmed)</div>
+    <div class="actual whitespace-normal">   content   </div>
+    
+    <div class="expected">Expected (pre): "   content   " (preserved)</div>
+    <div class="actual whitespace-pre">   content   </div>
+  </div>
+  
+  <div class="test-case">
+    <h3>Test 4: Empty content with spaces</h3>
+    <div class="expected">Expected (normal): "" (empty)</div>
+    <div class="actual whitespace-normal">     </div>
+    
+    <div class="expected">Expected (pre): "     " (preserved)</div>
+    <div class="actual whitespace-pre">     </div>
+  </div>
+  
+  <div class="test-case">
+    <h3>Test 5: Tabs and spaces mixed</h3>
+    <div class="expected">Expected (normal): "hello world" (collapsed)</div>
+    <div class="actual whitespace-normal">hello	  world</div>
+    
+    <div class="expected">Expected (pre): "hello	  world" (preserved)</div>
+    <div class="actual whitespace-pre">hello	  world</div>
+  </div>
+  
+  <div class="test-case">
+    <h3>Test 6: Complex whitespace patterns</h3>
+    <div class="expected">Expected (normal): "line1 line2 line3"</div>
+    <div class="actual whitespace-normal">line1
+    
+    line2   
+       line3</div>
+    
+    <div class="expected">Expected (pre-line): "line1\n\nline2\nline3" (preserves newlines)</div>
+    <div class="actual whitespace-pre-line">line1
+    
+    line2   
+       line3</div>
+  </div>
+
+  <script>
+    // Test validation script
+    function validateWhitespaceImplementation() {
+      console.log('=== CSS white-space Implementation Validation ===');
+      
+      const tests = [
+        { 
+          input: 'hello     world', 
+          whitespace: 'normal', 
+          expected: 'hello world' 
+        },
+        { 
+          input: 'hello\nworld', 
+          whitespace: 'normal', 
+          expected: 'hello world' 
+        },
+        { 
+          input: '   content   ', 
+          whitespace: 'normal', 
+          expected: 'content' 
+        },
+        { 
+          input: 'hello     world', 
+          whitespace: 'pre', 
+          expected: 'hello     world' 
+        },
+        { 
+          input: 'hello\nworld', 
+          whitespace: 'pre-line', 
+          expected: 'hello\nworld' 
+        }
+      ];
+      
+      tests.forEach((test, index) => {
+        console.log(`Test ${index + 1}: "${test.input}" with white-space: ${test.whitespace}`);
+        console.log(`Expected: "${test.expected}"`);
+        console.log('---');
+      });
+      
+      console.log('Visual inspection required to validate implementation');
+    }
+    
+    document.addEventListener('DOMContentLoaded', validateWhitespaceImplementation);
+  </script>
+</body>
+</html>

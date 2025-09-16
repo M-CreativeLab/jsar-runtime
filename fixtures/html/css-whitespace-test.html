@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS white-space Property Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+
+    .test-box {
+      border: 2px solid #007bff;
+      padding: 15px;
+      margin: 10px 0;
+      background-color: #f8f9fa;
+      width: 300px;
+    }
+
+    .normal { white-space: normal; }
+    .nowrap { white-space: nowrap; }
+    .pre { white-space: pre; }
+    .pre-line { white-space: pre-line; }
+    .pre-wrap { white-space: pre-wrap; }
+    .break-spaces { white-space: break-spaces; }
+
+    .label {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .code {
+      font-family: 'Courier New', monospace;
+      background-color: #e9ecef;
+      padding: 5px;
+      margin-top: 10px;
+      border-radius: 3px;
+    }
+
+    h1 {
+      color: #007bff;
+      text-align: center;
+    }
+
+    h2 {
+      color: #495057;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSS white-space Property Demonstration</h1>
+  
+  <div class="container">
+    <h2>Basic white-space Values</h2>
+    <p>The following examples show how different white-space values handle the same text content:</p>
+    <div class="code">
+      Text content: "Hello    world!\nThis is    a test\n    with multiple spaces."
+    </div>
+
+    <div class="test-box normal">
+      <div class="label">white-space: normal</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+
+    <div class="test-box nowrap">
+      <div class="label">white-space: nowrap</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+
+    <div class="test-box pre">
+      <div class="label">white-space: pre</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+
+    <div class="test-box pre-line">
+      <div class="label">white-space: pre-line</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+
+    <div class="test-box pre-wrap">
+      <div class="label">white-space: pre-wrap</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+
+    <div class="test-box break-spaces">
+      <div class="label">white-space: break-spaces</div>
+      Hello    world!
+This is    a test
+    with multiple spaces.
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Tab Character Handling</h2>
+    <p>How different white-space values handle tab characters:</p>
+    
+    <div class="test-box normal">
+      <div class="label">white-space: normal</div>
+      Text	with	tabs	between	words.
+    </div>
+
+    <div class="test-box pre">
+      <div class="label">white-space: pre</div>
+      Text	with	tabs	between	words.
+    </div>
+
+    <div class="test-box pre-wrap">
+      <div class="label">white-space: pre-wrap</div>
+      Text	with	tabs	between	words.
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Line Breaking Behavior</h2>
+    <p>Long text to demonstrate wrapping behavior:</p>
+    
+    <div class="test-box normal">
+      <div class="label">white-space: normal</div>
+      This is a very long line of text that should wrap naturally when it reaches the edge of the container because normal allows wrapping.
+    </div>
+
+    <div class="test-box nowrap">
+      <div class="label">white-space: nowrap</div>
+      This is a very long line of text that should not wrap and will overflow the container because nowrap prevents wrapping.
+    </div>
+
+    <div class="test-box pre-wrap">
+      <div class="label">white-space: pre-wrap</div>
+      This is a very long line of text that should wrap naturally when it reaches the edge of the container because pre-wrap allows wrapping while preserving spaces.
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Leading and Trailing Spaces</h2>
+    <p>How leading and trailing spaces are handled:</p>
+    
+    <div class="test-box normal">
+      <div class="label">white-space: normal</div>
+      "    Leading and trailing spaces    "
+    </div>
+
+    <div class="test-box pre">
+      <div class="label">white-space: pre</div>
+      "    Leading and trailing spaces    "
+    </div>
+
+    <div class="test-box pre-wrap">
+      <div class="label">white-space: pre-wrap</div>
+      "    Leading and trailing spaces    "
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Mixed Content Example</h2>
+    <p>Real-world example with code formatting:</p>
+    
+    <div class="test-box pre">
+      <div class="label">white-space: pre (for code formatting)</div>
+function example() {
+    if (condition) {
+        console.log("Hello    world!");
+        return true;
+    }
+    return false;
+}
+    </div>
+
+    <div class="test-box normal">
+      <div class="label">white-space: normal (same content)</div>
+function example() {
+    if (condition) {
+        console.log("Hello    world!");
+        return true;
+    }
+    return false;
+}
+    </div>
+  </div>
+
+  <script>
+    // Add some interactive feedback
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('CSS white-space property test page loaded');
+      console.log('This page demonstrates all CSS white-space values:');
+      console.log('- normal: collapse whitespace, wrap lines');
+      console.log('- nowrap: collapse whitespace, no wrapping');
+      console.log('- pre: preserve whitespace, no wrapping');
+      console.log('- pre-line: preserve newlines, collapse spaces, wrap');
+      console.log('- pre-wrap: preserve whitespace, wrap lines');
+      console.log('- break-spaces: preserve whitespace, wrap at spaces');
+    });
+  </script>
+</body>
+</html>
