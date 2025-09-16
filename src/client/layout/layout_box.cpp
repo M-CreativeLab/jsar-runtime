@@ -307,69 +307,25 @@ namespace client_layout
 
   bool LayoutBox::hasHitTestableOverflow() const
   {
-    // We only consider hit-testable overflow when both axes are 'visible'.
-    // `hasNonVisibleOverflow()` is set when either overflow-x or overflow-y is NOT visible (i.e. establishes a clip).
-    // For overflow:visible we must allow descendants that paint (and therefore can be hit) outside the border box
-    // per CSS 2.1 visual overflow / hit-testing semantics.
     if (hasNonVisibleOverflow())
       return false;
-
-    // Fast path: if there are no element children, nothing can extend beyond us.
-    auto selfBBox = physicalBorderBoxRect();
-    const glm::vec3 selfMin = selfBBox.minimumWorld;
-    const glm::vec3 selfMax = selfBBox.maximumWorld;
-
-    for (const auto &childBox : getChildBoxes())
-    {
-      auto childBBox = childBox->physicalBorderBoxRect();
-      const glm::vec3 cMin = childBBox.minimumWorld;
-      const glm::vec3 cMax = childBBox.maximumWorld;
-
-      // If any component lies outside our border box, we have hit-testable overflow.
-      if (cMin.x < selfMin.x || cMin.y < selfMin.y || cMin.z < selfMin.z ||
-          cMax.x > selfMax.x || cMax.y > selfMax.y || cMax.z > selfMax.z)
-        return true;
-    }
-    return false;
+    return true;
   }
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
   {
-    optional<geometry::BoundingBox> overflowBox = nullopt;
+    optional<geometry::BoundingBox> testBox = nullopt;
     if (hasHitTestableOverflow())
-    {
-      // overflow:visible => union of self + children (minimal implementation)
-      auto selfBBox = physicalBorderBoxRect();
-      glm::vec3 unionMin = selfBBox.minimumWorld;
-      glm::vec3 unionMax = selfBBox.maximumWorld;
-
-      for (const auto &childBox : getChildBoxes())
-      {
-        auto childBBox = childBox->physicalBorderBoxRect();
-        unionMin.x = std::min(unionMin.x, childBBox.minimumWorld.x);
-        unionMin.y = std::min(unionMin.y, childBBox.minimumWorld.y);
-        unionMin.z = std::min(unionMin.z, childBBox.minimumWorld.z);
-        unionMax.x = std::max(unionMax.x, childBBox.maximumWorld.x);
-        unionMax.y = std::max(unionMax.y, childBBox.maximumWorld.y);
-        unionMax.z = std::max(unionMax.z, childBBox.maximumWorld.z);
-      }
-
-      // Apply accumulated offset (same semantics as clipped path below)
-      unionMin += accumulatedOffset;
-      unionMax += accumulatedOffset;
-      return ray.intersectsBoxMinMax(unionMin, unionMax);
-    }
+      testBox = getUnionBoundingBox();
     else
-    {
-      overflowBox = physicalBorderBoxRect();
-    }
+      testBox = physicalBorderBoxRect();
 
-    if (overflowBox.has_value())
+    if (testBox.has_value())
     {
-      overflowBox->move(accumulatedOffset);
+      testBox->move(accumulatedOffset);
 
-      auto min = overflowBox->minimumWorld;
-      auto max = overflowBox->maximumWorld;
+      auto min = testBox->minimumWorld;
+      auto max = testBox->maximumWorld;
       return ray.intersectsBoxMinMax(min, max);
     }
     else
@@ -408,6 +364,7 @@ namespace client_layout
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
+    invalidateCachedUnionBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -419,6 +376,7 @@ namespace client_layout
       return;
 
     setHasNonVisibleOverflow(!m_style->overflowX().isVisible() || !m_style->overflowY().isVisible());
+    invalidateCachedUnionBox();
   }
 
   bool LayoutBox::isHorizontalWritingMode() const
@@ -448,6 +406,15 @@ namespace client_layout
     // TODO(yorkie): invalidate the cached geometry of the parent.
   }
 
+  void LayoutBox::invalidateCachedUnionBox()
+  {
+    if (parentBox())
+    {
+      parentBox()->updateUnionBoundingBox();
+      parentBox()->invalidateCachedUnionBox();
+    }
+  }
+
   vector<shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
   {
     auto children = virtualChildren();
@@ -460,5 +427,44 @@ namespace client_layout
         childBoxes.push_back(static_pointer_cast<LayoutBox>(child));
     }
     return childBoxes;
+  }
+
+  geometry::BoundingBox LayoutBox::getUnionBoundingBox() const
+  {
+    if (!cachedUnionBoundingBox_.has_value())
+    {
+      return physicalBorderBoxRect();
+    }
+    return cachedUnionBoundingBox_.value();
+  }
+
+  void LayoutBox::updateUnionBoundingBox()
+  {
+    cachedUnionBoundingBox_ = computeUnionBoundingBox();
+  }
+
+  geometry::BoundingBox LayoutBox::computeUnionBoundingBox() const
+  {
+    auto selfBBox = physicalBorderBoxRect();
+    if (hasNonVisibleOverflow())
+    {
+      return selfBBox;
+    }
+    glm::vec3 unionMin = selfBBox.minimumWorld;
+    glm::vec3 unionMax = selfBBox.maximumWorld;
+    for (const auto &childBox : getChildBoxes())
+    {
+      if (!childBox->visible())
+        continue;
+      auto childBBox = childBox->getUnionBoundingBox();
+      unionMin.x = std::min(unionMin.x, childBBox.minimumWorld.x);
+      unionMin.y = std::min(unionMin.y, childBBox.minimumWorld.y);
+      unionMin.z = std::min(unionMin.z, childBBox.minimumWorld.z);
+      unionMax.x = std::max(unionMax.x, childBBox.maximumWorld.x);
+      unionMax.y = std::max(unionMax.y, childBBox.maximumWorld.y);
+      unionMax.z = std::max(unionMax.z, childBBox.maximumWorld.z);
+    }
+    geometry::BoundingBox unionBox(unionMin, unionMax, glm::mat4(1.0f));
+    return unionBox;
   }
 }
