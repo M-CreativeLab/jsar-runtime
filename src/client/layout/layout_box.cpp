@@ -420,7 +420,7 @@ namespace client_layout
     auto children = virtualChildren();
     if (!children)
       return {};
-    std::vector<std::shared_ptr<LayoutBox>> childBoxes;
+    vector<std::shared_ptr<LayoutBox>> childBoxes;
     for (const auto &child : *children)
     {
       if (child->isBox())
@@ -431,16 +431,16 @@ namespace client_layout
 
   geometry::BoundingBox LayoutBox::getHitTestBoundingBox() const
   {
-    if (!cachedHitTestBoundingBox_.has_value())
+    if (!hit_testable_bounding_box_.has_value())
     {
       return physicalBorderBoxRect();
     }
-    return cachedHitTestBoundingBox_.value();
+    return hit_testable_bounding_box_.value();
   }
 
   void LayoutBox::updateHitTestBoundingBox()
   {
-    cachedHitTestBoundingBox_ = computeHitTestBoundingBox();
+    hit_testable_bounding_box_ = computeHitTestBoundingBox();
   }
 
   geometry::BoundingBox LayoutBox::computeHitTestBoundingBox() const
