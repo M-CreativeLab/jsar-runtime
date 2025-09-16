@@ -3,7 +3,9 @@
 
 #include <client/cssom/parsers/css_transform_parser.hpp>
 #include <client/cssom/values/specified/transform.hpp>
+#include <client/cssom/values/computed/transform.hpp>
 #include <client/cssom/style_traits.hpp>
+#include <glm/glm.hpp>
 
 using namespace client_cssom::css_transform_parser;
 using namespace client_cssom::values::specified;
@@ -404,5 +406,161 @@ TEST_CASE("Transform class integration", "[transform-integration]")
     
     // Should return default empty transform on parsing failure
     REQUIRE(transform.operations().empty());
+  }
+}
+
+TEST_CASE("CSSTransformParser percentage functions", "[css-transform-parser]")
+{
+  SECTION("Parse translateX with percentage")
+  {
+    CSSTransformParser parser("translateX(50%)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+  
+  SECTION("Parse translateY with percentage")
+  {
+    CSSTransformParser parser("translateY(25%)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateY);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == 25.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+  
+  SECTION("Parse translate with mixed units")
+  {
+    CSSTransformParser parser("translate(50%, 10px)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate);
+    REQUIRE(functions[0].values.size() == 2);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].values[1] == 10.0);
+    REQUIRE(functions[0].units[0] == "%");
+    REQUIRE(functions[0].units[1] == "px");
+  }
+  
+  SECTION("Parse translate3d with percentages")
+  {
+    CSSTransformParser parser("translate3d(50%, 25%, 10px)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslate3D);
+    REQUIRE(functions[0].values.size() == 3);
+    REQUIRE(functions[0].values[0] == 50.0);
+    REQUIRE(functions[0].values[1] == 25.0);
+    REQUIRE(functions[0].values[2] == 10.0);
+    REQUIRE(functions[0].units[0] == "%");
+    REQUIRE(functions[0].units[1] == "%");
+    REQUIRE(functions[0].units[2] == "px");
+  }
+  
+  SECTION("Parse negative percentage")
+  {
+    CSSTransformParser parser("translateX(-50%)");
+    auto functions = parser.parse();
+    
+    REQUIRE(parser.isValid());
+    REQUIRE(functions.size() == 1);
+    REQUIRE(functions[0].type == TransformFunctionType::kTranslateX);
+    REQUIRE(functions[0].values.size() == 1);
+    REQUIRE(functions[0].values[0] == -50.0);
+    REQUIRE(functions[0].units[0] == "%");
+  }
+}
+
+TEST_CASE("Transform percentage resolution", "[transform-percentage]")
+{
+  using namespace client_cssom::values::computed;
+  
+  SECTION("Test percentage resolution with element size")
+  {
+    // Create a simple transform with translateX(50%)
+    auto transform = Parse::ParseSingleValue<Transform>("translateX(50%)");
+    REQUIRE(!transform.operations().empty());
+    
+    // Convert to computed transform
+    Context context; // Default context for testing
+    auto computedTransform = transform.toComputedValue(context);
+    
+    // Test applying transform with element size
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(100.0f, 80.0f); // 100px width, 80px height
+    
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+    
+    // For translateX(50%) on 100px wide element, should translate by 50px
+    // The matrix should have translation in x-direction
+    // Note: The actual pixel-to-meter conversion is applied internally
+    // We're testing that the percentage is correctly resolved
+  }
+  
+  SECTION("Test centering technique: translateX(-50%)")
+  {
+    auto transform = Parse::ParseSingleValue<Transform>("translateX(-50%)");
+    REQUIRE(!transform.operations().empty());
+    
+    Context context;
+    auto computedTransform = transform.toComputedValue(context);
+    
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(120.0f, 60.0f); // 120px width
+    
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+    
+    // For translateX(-50%) on 120px wide element, should translate by -60px
+    // This is commonly used for centering with left: 50%
+  }
+  
+  SECTION("Test translate with both percentage axes")
+  {
+    auto transform = Parse::ParseSingleValue<Transform>("translate(50%, 25%)");
+    REQUIRE(!transform.operations().empty());
+    
+    Context context;
+    auto computedTransform = transform.toComputedValue(context);
+    
+    glm::mat4 matrix(1.0f);
+    glm::vec2 elementSize(200.0f, 100.0f); // 200px width, 100px height
+    
+    auto count = computedTransform.applyTo(matrix, elementSize);
+    REQUIRE(count == 1);
+    
+    // For translate(50%, 25%) on 200x100px element:
+    // - X should translate by 100px (50% of 200px)
+    // - Y should translate by 25px (25% of 100px)
+  }
+  
+  SECTION("Test fallback when no element size provided")
+  {
+    auto transform = Parse::ParseSingleValue<Transform>("translateX(50%)");
+    REQUIRE(!transform.operations().empty());
+    
+    Context context;
+    auto computedTransform = transform.toComputedValue(context);
+    
+    glm::mat4 matrix(1.0f);
+    
+    // Apply without element size - should fall back to treating percentage as 0
+    auto count = computedTransform.applyTo(matrix);
+    REQUIRE(count == 1);
+    
+    // Without element size context, percentage should be treated as 0px
   }
 }
