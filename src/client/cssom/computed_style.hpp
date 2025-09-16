@@ -377,6 +377,10 @@ namespace client_cssom
     {
       return text_direction_;
     }
+    inline const values::computed::WhiteSpace &whiteSpace() const
+    {
+      return white_space_;
+    }
 
     inline const values::computed::Color &color() const
     {
@@ -571,6 +575,7 @@ namespace client_cssom
     // Text
     values::computed::TextAlign text_align_;
     values::computed::Direction text_direction_;
+    values::computed::WhiteSpace white_space_;
 
     // Colors
     values::computed::Color color_ = values::computed::Color::Black();

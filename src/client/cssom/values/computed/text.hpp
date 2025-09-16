@@ -46,4 +46,40 @@ namespace client_cssom::values::computed
                : skia::textlayout::TextDirection::kRtl;
     }
   };
+
+  class WhiteSpace : public client_cssom::values::specified::WhiteSpace
+  {
+    using client_cssom::values::specified::WhiteSpace::WhiteSpace;
+
+  public:
+    bool shouldCollapseSpaces() const
+    {
+      return tag_ == Tag::kNormal || tag_ == Tag::kNowrap;
+    }
+
+    bool shouldCollapseNewlines() const
+    {
+      return tag_ == Tag::kNormal || tag_ == Tag::kNowrap;
+    }
+
+    bool shouldWrap() const
+    {
+      return tag_ != Tag::kNowrap && tag_ != Tag::kPre;
+    }
+
+    bool shouldPreserveSpaces() const
+    {
+      return tag_ == Tag::kPre || tag_ == Tag::kPreWrap || tag_ == Tag::kBreakSpaces;
+    }
+
+    bool shouldPreserveNewlines() const
+    {
+      return tag_ == Tag::kPre || tag_ == Tag::kPreLine || tag_ == Tag::kPreWrap || tag_ == Tag::kBreakSpaces;
+    }
+
+    bool shouldBreakSpaces() const
+    {
+      return tag_ == Tag::kBreakSpaces;
+    }
+  };
 }

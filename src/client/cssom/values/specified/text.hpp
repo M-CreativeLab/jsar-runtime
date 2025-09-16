@@ -159,4 +159,101 @@ namespace client_cssom::values::specified
   protected:
     Tag tag_ = Tag::kLTR;
   };
+
+  class WhiteSpace : public Parse,
+                     public ToCss
+  {
+    friend class Parse;
+
+  protected:
+    enum Tag : uint8_t
+    {
+      kNormal,
+      kNowrap,
+      kPre,
+      kPreLine,
+      kPreWrap,
+      kBreakSpaces,
+    };
+
+  public:
+    static WhiteSpace Normal()
+    {
+      return WhiteSpace(Tag::kNormal);
+    }
+    static WhiteSpace Nowrap()
+    {
+      return WhiteSpace(Tag::kNowrap);
+    }
+    static WhiteSpace Pre()
+    {
+      return WhiteSpace(Tag::kPre);
+    }
+    static WhiteSpace PreLine()
+    {
+      return WhiteSpace(Tag::kPreLine);
+    }
+    static WhiteSpace PreWrap()
+    {
+      return WhiteSpace(Tag::kPreWrap);
+    }
+    static WhiteSpace BreakSpaces()
+    {
+      return WhiteSpace(Tag::kBreakSpaces);
+    }
+
+  public:
+    WhiteSpace()
+        : tag_(Tag::kNormal)
+    {
+    }
+
+  private:
+    WhiteSpace(Tag tag)
+        : tag_(tag)
+    {
+    }
+
+  private:
+    bool parse(const std::string &input) override
+    {
+      if (input == "normal")
+        tag_ = Tag::kNormal;
+      else if (input == "nowrap")
+        tag_ = Tag::kNowrap;
+      else if (input == "pre")
+        tag_ = Tag::kPre;
+      else if (input == "pre-line")
+        tag_ = Tag::kPreLine;
+      else if (input == "pre-wrap")
+        tag_ = Tag::kPreWrap;
+      else if (input == "break-spaces")
+        tag_ = Tag::kBreakSpaces;
+      else
+        return false;
+      return true;
+    }
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case Tag::kNormal:
+        return "normal";
+      case Tag::kNowrap:
+        return "nowrap";
+      case Tag::kPre:
+        return "pre";
+      case Tag::kPreLine:
+        return "pre-line";
+      case Tag::kPreWrap:
+        return "pre-wrap";
+      case Tag::kBreakSpaces:
+        return "break-spaces";
+      }
+      assert(false && "Invalid tag.");
+    }
+
+  protected:
+    Tag tag_ = Tag::kNormal;
+  };
 }

@@ -28,27 +28,90 @@ namespace client_layout
     return static_pointer_cast<dom::Text>(node());
   }
 
-  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-  string formatText(const string &text)
+  // Format text according to CSS white-space property.
+  string formatText(const string &text, const client_cssom::values::computed::WhiteSpace &whiteSpace)
   {
     if (text.empty())
-      return ""; // Early exit for empty string
+      return "";
 
-    size_t start = text.find_first_not_of(" \t\n\r");
-    if (start == string::npos)
+    string formatted = text;
+
+    // Handle space and tab collapsing
+    if (whiteSpace.shouldCollapseSpaces())
     {
-      return ""; // Entire string is whitespace
+      // Replace sequences of spaces/tabs with single space
+      string result;
+      bool lastWasSpace = false;
+      for (char c : formatted)
+      {
+        if (c == ' ' || c == '\t')
+        {
+          if (!lastWasSpace)
+          {
+            result += ' ';
+            lastWasSpace = true;
+          }
+        }
+        else
+        {
+          result += c;
+          lastWasSpace = false;
+        }
+      }
+      formatted = result;
     }
 
-    size_t end = text.find_last_not_of(" \t\n\r");
-    // Since we already checked `start`, `end` cannot be npos here
-    return text.substr(start, end - start + 1);
+    // Handle newline collapsing
+    if (whiteSpace.shouldCollapseNewlines())
+    {
+      // Replace newlines with spaces (which may then be collapsed)
+      string result;
+      for (char c : formatted)
+      {
+        if (c == '\n' || c == '\r')
+        {
+          result += ' ';
+        }
+        else
+        {
+          result += c;
+        }
+      }
+      formatted = result;
+    }
+
+    // Handle leading/trailing whitespace for collapsing modes
+    if (whiteSpace.shouldCollapseSpaces())
+    {
+      size_t start = formatted.find_first_not_of(" \t");
+      if (start == string::npos)
+      {
+        return ""; // Entire string is whitespace
+      }
+
+      size_t end = formatted.find_last_not_of(" \t");
+      formatted = formatted.substr(start, end - start + 1);
+    }
+
+    return formatted;
   }
 
   string LayoutText::plainText() const
   {
     if (!plain_text_.has_value())
-      plain_text_ = formatText(textNode()->data());
+    {
+      auto computedStyle = style();
+      if (computedStyle.has_value())
+      {
+        plain_text_ = formatText(textNode()->data(), computedStyle->whiteSpace());
+      }
+      else
+      {
+        // Fallback to normal white-space behavior
+        client_cssom::values::computed::WhiteSpace normalWhiteSpace;
+        plain_text_ = formatText(textNode()->data(), normalWhiteSpace);
+      }
+    }
     return plain_text_.value_or("");
   }
 
@@ -93,7 +156,17 @@ namespace client_layout
 
   void LayoutText::textDidChange()
   {
-    plain_text_ = formatText(textNode()->data());
+    auto computedStyle = style();
+    if (computedStyle.has_value())
+    {
+      plain_text_ = formatText(textNode()->data(), computedStyle->whiteSpace());
+    }
+    else
+    {
+      // Fallback to normal white-space behavior
+      client_cssom::values::computed::WhiteSpace normalWhiteSpace;
+      plain_text_ = formatText(textNode()->data(), normalWhiteSpace);
+    }
     transformed_text_ = transformAndSecureText(plainText());
     is_text_content_dirty_ = true;
 
@@ -124,7 +197,17 @@ namespace client_layout
   {
     LayoutObject::entityDidCreate(entity);
 
-    plain_text_ = formatText(textNode()->data());
+    auto computedStyle = style();
+    if (computedStyle.has_value())
+    {
+      plain_text_ = formatText(textNode()->data(), computedStyle->whiteSpace());
+    }
+    else
+    {
+      // Fallback to normal white-space behavior
+      client_cssom::values::computed::WhiteSpace normalWhiteSpace;
+      plain_text_ = formatText(textNode()->data(), normalWhiteSpace);
+    }
     transformed_text_ = transformAndSecureText(plainText());
     is_text_content_dirty_ = true;
 
@@ -159,8 +242,15 @@ namespace client_layout
 
     // TODO(yorkie): implement StyleDifference to check the changed properties to avoid the repeated update.
     if (new_style.hasProperty("text-transform") ||
-        new_style.hasProperty("-webkit-text-security"))
+        new_style.hasProperty("-webkit-text-security") ||
+        new_style.hasProperty("white-space"))
     {
+      // Re-format the plain text if white-space property changed
+      if (new_style.hasProperty("white-space"))
+      {
+        plain_text_ = formatText(textNode()->data(), new_style.whiteSpace());
+      }
+
       transformed_text_ = transformAndSecureText(plainText());
       is_text_content_dirty_ = true;
 
