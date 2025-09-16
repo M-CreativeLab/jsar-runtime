@@ -230,6 +230,6 @@ namespace client_layout
 
   private:
     std::shared_ptr<BoxOverflowModel> overflow_;
-    mutable optional<geometry::BoundingBox> cachedHitTestBoundingBox_;
+    optional<geometry::BoundingBox> hit_testable_bounding_box_;
   };
 }
