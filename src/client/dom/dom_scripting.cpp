@@ -247,6 +247,7 @@ namespace dom
       : isolate(v8::Isolate::GetCurrent())
       , runtimeContext(runtimeContext)
   {
+    assert(isolate != nullptr && "Failed to get the current V8 isolate.");
   }
 
   void DOMScriptingContext::enableDynamicImport()
@@ -625,8 +626,12 @@ namespace dom
   bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const string &source, bool isTypeScript)
   {
     assert(isContextInitialized);
-    auto context = v8ContextStore.Get(isolate);
+
+    // Create a handle scope to store the context, that is a `Local<Context>`.
     v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
+    v8::Local<v8::Context> context = v8ContextStore.Get(isolate);
     v8::Context::Scope contextScope(context);
 
     if (!script->compile(isolate, source, isTypeScript))
@@ -645,8 +650,10 @@ namespace dom
   bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
   {
     assert(isContextInitialized);
-    auto context = v8ContextStore.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
+    auto context = v8ContextStore.Get(isolate);
     v8::Context::Scope contextScope(context);
 
     if (!module->compileAsSyntheticModule(isolate, type, sourceData, sourceByteLength))
@@ -660,8 +667,10 @@ namespace dom
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
-    auto context = v8ContextStore.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
+    v8::Local<v8::Context> context = v8ContextStore.Get(isolate);
     v8::Context::Scope contextScope(context);
     {
       script->evaluate(isolate);

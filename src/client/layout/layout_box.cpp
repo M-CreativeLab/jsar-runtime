@@ -50,32 +50,6 @@ namespace client_layout
     return frame_size_;
   }
 
-  math3d::TrPlane LayoutBox::physicalBorderBoxFront() const
-  {
-    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
-    auto latestMatrix = transformComponent->lastComputedMatrix();
-
-    glm::vec4 originalNormal(0, 0, 1, 0);
-    glm::vec4 originalPoint(0, 0, 0, 1);
-
-    glm::vec3 normal = glm::normalize(glm::vec3(
-      glm::inverse(glm::transpose(latestMatrix)) * originalNormal));
-
-    glm::vec3 point = glm::vec3(latestMatrix * originalPoint);
-    float distance = -glm::dot(normal, point);
-
-    math3d::TrPlane plane(normal, distance);
-    return plane;
-  }
-
-  geometry::BoundingBox LayoutBox::physicalBorderBoxRect() const
-  {
-    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
-    auto min = glm::vec3(-0.5, -0.5, -0.5);
-    auto max = min * -1.0f;
-    return geometry::BoundingBox(min, max, transformComponent->lastComputedMatrix());
-  }
-
   geometry::Rect<float> LayoutBox::scrollableOverflowRect() const
   {
     return scrollableOverflowIsSet()

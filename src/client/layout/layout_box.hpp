@@ -90,8 +90,6 @@ namespace client_layout
     virtual glm::vec3 size() const;
 
     // Returns the front face plane of the box in world space.
-    math3d::TrPlane physicalBorderBoxFront() const;
-    geometry::BoundingBox physicalBorderBoxRect() const;
     geometry::Rect<float> physicalPaddingBoxRect() const
     {
       return geometry::Rect<float>(clientLeft(),

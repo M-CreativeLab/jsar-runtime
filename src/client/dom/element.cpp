@@ -8,6 +8,7 @@
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
+#include "./browsing_context.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -128,6 +129,9 @@ namespace dom
       , prefix(other.prefix)
       , classList_(other.classList_)
       , attributeNodes_(other.attributeNodes_)
+      , onclick_handler_code_(other.onclick_handler_code_)
+      , has_onclick_function_(other.has_onclick_function_)
+      , onclick_function_ref_(other.onclick_function_ref_)
   {
   }
 
@@ -794,6 +798,10 @@ namespace dom
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
+    // Execute onclick handler if it exists
+    if (hasOnClickHandler())
+      executeOnClickHandler();
+
     dispatchEventInternal(events::PointerEvent::Click());
   }
 
@@ -912,5 +920,92 @@ namespace dom
         return Node::As<Element>(childNode);
     }
     return nullptr;
+  }
+
+  // Event handler methods
+  void Element::setOnClickHandler(const std::string &handlerCode)
+  {
+    onclick_handler_code_ = handlerCode;
+    has_onclick_function_ = false;
+
+    // Note: onclick handlers are executed via simulateClick() method
+    // which checks hasOnClickHandler() and calls executeOnClickHandler()
+  }
+
+  void Element::setOnClickHandlerFunction(void *functionRef)
+  {
+    // Store function reference for direct function assignment
+    onclick_function_ref_ = functionRef;
+    has_onclick_function_ = true;
+    onclick_handler_code_.clear();
+  }
+
+  std::string Element::getOnClickHandlerCode() const
+  {
+    return onclick_handler_code_;
+  }
+
+  bool Element::hasOnClickHandler() const
+  {
+    return !onclick_handler_code_.empty() || has_onclick_function_;
+  }
+
+  void Element::executeOnClickHandler()
+  {
+    // Handle function reference case (not yet fully implemented)
+    if (has_onclick_function_ && onclick_function_ref_ != nullptr)
+    {
+      // TODO: Implement function execution for onclick_function_ref_
+      // This would require proper V8 function handling
+      cerr << "Executing onclick function reference (not yet implemented)" << endl;
+      return;
+    }
+
+    // Handle inline handler code case
+    if (onclick_handler_code_.empty())
+      return;
+
+    // Get the document and its browsing context to execute the JavaScript
+    auto ownerDoc = getOwnerDocumentReference();
+    if (ownerDoc == nullptr)
+      return;
+
+    auto browsingContext = ownerDoc->browsingContext;
+    if (browsingContext == nullptr || browsingContext->scriptingContext == nullptr)
+      return;
+
+    // Create a simple script to execute the onclick handler
+    // The handler code will be wrapped in an anonymous function
+    // In a complete implementation, we should:
+    // 1. Create a proper event object and pass it as parameter
+    // 2. Set 'this' to point to the element
+    // 3. Handle return value to potentially prevent default behavior
+
+    // TODO(yorkie): support event object and 'this' context
+    string scriptCode = "(function(event) { " + onclick_handler_code_ + " })({});";
+
+    try
+    {
+      // Create and compile the script for the onclick handler
+      auto script = browsingContext->createScript("inline-onclick-handler", dom::SourceTextType::Classic);
+      if (script != nullptr)
+      {
+        // Compile the script with the onclick handler code
+        bool compiled = browsingContext->scriptingContext->compile(script, scriptCode, false);
+        if (compiled)
+        {
+          // Execute the script using the browsing context's scripting context
+          browsingContext->scriptingContext->evaluate(script);
+        }
+        else
+        {
+          cerr << "Failed to compile onclick handler: " << onclick_handler_code_ << endl;
+        }
+      }
+    }
+    catch (const exception &e)
+    {
+      std::cerr << "Error executing onclick handler: " << e.what() << std::endl;
+    }
   }
 }
