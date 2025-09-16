@@ -21,21 +21,20 @@ var mouse = {
   }
 }
 
-function fitTo(scene, targetSize = 1) {
+function fitTo(group, targetSize = 1) {
   const box = new THREE.Box3();
-  scene.traverse(object => {
+  group.traverse(object => {
     if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
       box.expandByObject(object);
     }
   });
   const size = box.getSize(new THREE.Vector3());
   const scale = targetSize / Math.max(size.x, size.y, size.z);
-  console.info('Scaling scene by', scale);
-  scene.scale.set(scale, scale, scale);
+  group.scale.set(scale, scale, scale);
+  group.position.set(0, 0, -0.1);
 }
 
 async function init(cb) {
-
   container.width = window.innerWidth;
   container.height = window.innerHeight;
 
@@ -70,52 +69,6 @@ async function init(cb) {
   }
 }
 
-function onWindowResize() {
-  container.width = window.innerWidth;
-  container.height = window.innerHeight;
-  camera.aspect = container.width / container.height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function mousemove(e) {
-  mouse.x.current = e.clientX;
-  mouse.y.current = e.clientY;
-  mouse.x.calc = mouse.x.current - (container.width / 2);
-  mouse.y.calc = mouse.y.current - (container.height / 2);
-}
-
-
-function touchend(e) {
-  if (isUp) {
-    isUp = false;
-  } else {
-    mousedown(e);
-  }
-}
-
-function touchmove(e) {
-  if (e.touches.length === 1) {
-    e.preventDefault();
-    mouse.x.current = e.touches[0].pageX,
-      mouse.y.current = e.touches[0].pageY;
-    mouse.x.calc = mouse.x.current - (container.width / 2);
-    mouse.y.calc = mouse.y.current - (container.height / 2);
-  }
-}
-
-function mouseup(e) {
-  isUp = false;
-  console.log(isUp)
-
-}
-
-function mousedown(e) {
-  isUp = true;
-  console.log(isUp)
-
-}
-
 function addLights() {
   hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
 
@@ -138,11 +91,10 @@ function addLights() {
 function createWalter() {
   walter = new Walter();
   scene.add(walter.threegroup);
+  return walter.threegroup;
 }
 
-
 function Walter() {
-
   this.threegroup = new THREE.Group();
 
   this.informalSmokingMat = "#ffc107";
@@ -285,11 +237,11 @@ function Walter() {
 
   //body
 
-  var body = new THREE.BoxGeometry(300, 250, 600);
+  var body = new THREE.BoxGeometry(300, 250, 200);
   this.body = new THREE.Mesh(body, this.smokingMat);
   this.body.position.x = 0;
-  this.body.position.y = -220;
-  this.body.position.z = 100;
+  this.body.position.y = -160;
+  this.body.position.z = 400;
 
   //arms
 
@@ -297,13 +249,13 @@ function Walter() {
 
   this.armLeft = new THREE.Mesh(arm, this.smokingMat);
   this.armLeft.position.x = -170;
-  this.armLeft.position.y = 0;
-  this.armLeft.position.z = 200;
+  this.armLeft.position.y = -20;
+  this.armLeft.position.z = 0;
 
   this.armRight = new THREE.Mesh(arm, this.smokingMat);
   this.armRight.position.x = 170;
-  this.armRight.position.y = 0;
-  this.armRight.position.z = 200;
+  this.armRight.position.y = -20;
+  this.armRight.position.z = 0;
 
 
   // hands
@@ -313,12 +265,12 @@ function Walter() {
   this.handLeft = new THREE.Mesh(hand, this.skinMat);
   this.handLeft.position.x = -170;
   this.handLeft.position.y = -150;
-  this.handLeft.position.z = 220;
+  this.handLeft.position.z = 20;
 
   this.handRight = new THREE.Mesh(hand, this.skinMat);
   this.handRight.position.x = 170;
   this.handRight.position.y = -150;
-  this.handRight.position.z = 220;
+  this.handRight.position.z = 20;
 
   //zipper
 
@@ -326,15 +278,15 @@ function Walter() {
   this.zipper = new THREE.Mesh(zipper, this.zipperMat);
   this.zipper.position.x = 0;
   this.zipper.position.y = 0;
-  this.zipper.position.z = 300;
+  this.zipper.position.z = 100;
 
   //legs
 
-  var legs = new THREE.BoxGeometry(200, 300, 300);
+  var legs = new THREE.BoxGeometry(200, 300, 50);
   this.legs = new THREE.Mesh(legs, this.smokingMat);
   this.legs.position.x = 0;
   this.legs.position.y = -200;
-  this.legs.position.z = 100;
+  this.legs.position.z = 0;
 
   //legsMiddle
 
@@ -342,15 +294,15 @@ function Walter() {
   this.legsM = new THREE.Mesh(legsM, this.legsMMat);
   this.legsM.position.x = 0;
   this.legsM.position.y = -280;
-  this.legsM.position.z = 248;
+  this.legsM.position.z = 25;
 
   //shoes
 
-  var shoes = new THREE.BoxGeometry(200, 50, 400);
+  var shoes = new THREE.BoxGeometry(200, 50, 50);
   this.shoes = new THREE.Mesh(shoes, this.shoesMat);
   this.shoes.position.x = 0;
   this.shoes.position.y = -400;
-  this.shoes.position.z = 100;
+  this.shoes.position.z = 0;
 
 
   // group elements
@@ -463,7 +415,7 @@ function calc(v, vmin, vmax, tmin, tmax) {
 
 function loop() {
   renderer.render(scene, camera);
-  walter.update();
+  // walter.update();
 }
 
 try {
@@ -471,9 +423,8 @@ try {
     renderer.setAnimationLoop(loop);
   });
   addLights();
-  createWalter();
 
-  fitTo(scene, 0.3);
+  fitTo(createWalter(), 0.3);
 } catch (err) {
   console.error(err);
 }
