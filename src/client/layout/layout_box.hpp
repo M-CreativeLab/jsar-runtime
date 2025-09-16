@@ -218,18 +218,18 @@ namespace client_layout
 
     glm::vec3 computeSize() const;
     vector<std::shared_ptr<LayoutBox>> getChildBoxes() const;
-    geometry::BoundingBox getUnionBoundingBox() const;
-    geometry::BoundingBox computeUnionBoundingBox() const;
+    geometry::BoundingBox getHitTestBoundingBox() const;
+    geometry::BoundingBox computeHitTestBoundingBox() const;
 
-    void updateUnionBoundingBox();
+    void updateHitTestBoundingBox();
     void invalidateCachedGeometry();
-    void invalidateCachedUnionBox();
+    void invalidateCachedHitTestBox();
 
   protected:
     glm::vec3 frame_size_;
 
   private:
     std::shared_ptr<BoxOverflowModel> overflow_;
-    mutable optional<geometry::BoundingBox> cachedUnionBoundingBox_;
+    mutable optional<geometry::BoundingBox> cachedHitTestBoundingBox_;
   };
 }

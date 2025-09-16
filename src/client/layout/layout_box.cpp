@@ -316,7 +316,7 @@ namespace client_layout
   {
     optional<geometry::BoundingBox> testBox = nullopt;
     if (hasHitTestableOverflow())
-      testBox = getUnionBoundingBox();
+      testBox = getHitTestBoundingBox();
     else
       testBox = physicalBorderBoxRect();
 
@@ -364,7 +364,7 @@ namespace client_layout
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
-    invalidateCachedUnionBox();
+    invalidateCachedHitTestBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -376,7 +376,7 @@ namespace client_layout
       return;
 
     setHasNonVisibleOverflow(!m_style->overflowX().isVisible() || !m_style->overflowY().isVisible());
-    invalidateCachedUnionBox();
+    invalidateCachedHitTestBox();
   }
 
   bool LayoutBox::isHorizontalWritingMode() const
@@ -406,12 +406,12 @@ namespace client_layout
     // TODO(yorkie): invalidate the cached geometry of the parent.
   }
 
-  void LayoutBox::invalidateCachedUnionBox()
+  void LayoutBox::invalidateCachedHitTestBox()
   {
+    updateHitTestBoundingBox();
     if (parentBox())
     {
-      parentBox()->updateUnionBoundingBox();
-      parentBox()->invalidateCachedUnionBox();
+      parentBox()->invalidateCachedHitTestBox();
     }
   }
 
@@ -429,21 +429,21 @@ namespace client_layout
     return childBoxes;
   }
 
-  geometry::BoundingBox LayoutBox::getUnionBoundingBox() const
+  geometry::BoundingBox LayoutBox::getHitTestBoundingBox() const
   {
-    if (!cachedUnionBoundingBox_.has_value())
+    if (!cachedHitTestBoundingBox_.has_value())
     {
       return physicalBorderBoxRect();
     }
-    return cachedUnionBoundingBox_.value();
+    return cachedHitTestBoundingBox_.value();
   }
 
-  void LayoutBox::updateUnionBoundingBox()
+  void LayoutBox::updateHitTestBoundingBox()
   {
-    cachedUnionBoundingBox_ = computeUnionBoundingBox();
+    cachedHitTestBoundingBox_ = computeHitTestBoundingBox();
   }
 
-  geometry::BoundingBox LayoutBox::computeUnionBoundingBox() const
+  geometry::BoundingBox LayoutBox::computeHitTestBoundingBox() const
   {
     auto selfBBox = physicalBorderBoxRect();
     if (hasNonVisibleOverflow())
@@ -456,13 +456,13 @@ namespace client_layout
     {
       if (!childBox->visible())
         continue;
-      auto childBBox = childBox->getUnionBoundingBox();
-      unionMin.x = std::min(unionMin.x, childBBox.minimumWorld.x);
-      unionMin.y = std::min(unionMin.y, childBBox.minimumWorld.y);
-      unionMin.z = std::min(unionMin.z, childBBox.minimumWorld.z);
-      unionMax.x = std::max(unionMax.x, childBBox.maximumWorld.x);
-      unionMax.y = std::max(unionMax.y, childBBox.maximumWorld.y);
-      unionMax.z = std::max(unionMax.z, childBBox.maximumWorld.z);
+      auto childBBox = childBox->getHitTestBoundingBox();
+      unionMin.x = min(unionMin.x, childBBox.minimumWorld.x);
+      unionMin.y = min(unionMin.y, childBBox.minimumWorld.y);
+      unionMin.z = min(unionMin.z, childBBox.minimumWorld.z);
+      unionMax.x = max(unionMax.x, childBBox.maximumWorld.x);
+      unionMax.y = max(unionMax.y, childBBox.maximumWorld.y);
+      unionMax.z = max(unionMax.z, childBBox.maximumWorld.z);
     }
     geometry::BoundingBox unionBox(unionMin, unionMax, glm::mat4(1.0f));
     return unionBox;
