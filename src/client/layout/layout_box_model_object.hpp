@@ -6,6 +6,8 @@
 
 #include "./display_type.hpp"
 #include "./layout_object.hpp"
+#include "./geometry/bounding_box.hpp"
+#include "./geometry/rect.hpp"
 
 namespace client_layout
 {
@@ -95,6 +97,10 @@ namespace client_layout
     {
       return borderTop() + borderBottom();
     }
+
+  protected:
+    math3d::TrPlane physicalBorderBoxFront() const;
+    geometry::BoundingBox physicalBorderBoxRect() const;
 
   private:
     bool isBoxModelObject() const override final

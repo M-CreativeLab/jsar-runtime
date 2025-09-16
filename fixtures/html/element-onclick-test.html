@@ -18,7 +18,7 @@
   <h1>OnClick Handler Test</h1>
 
   <!-- Test inline onclick attribute -->
-  <button id="btn1" onclick="console.log('Button 1 clicked via inline handler')">
+  <button id="btn1" onclick="logEvent('btn1')">
     Click me (inline handler)
   </button>
 
@@ -65,24 +65,27 @@
     console.log('Testing programmatic clicks...');
 
     // This should trigger the inline handler
-    // if (btn1) {
-    //   console.log('Clicking btn1...');
-    //   btn1.click();
-    // }
+    if (btn1) {
+      console.log('Clicking btn1...');
+      btn1.click();
+    }
 
-    // // This should trigger the property handler
-    // if (btn2) {
-    //   console.log('Clicking btn2...');
-    //   btn2.click();
-    // }
+    // This should trigger the property handler
+    if (btn2) {
+      console.log('Clicking btn2...');
+      btn2.click();
+    }
 
-    // // This should trigger the property handler (overriding the attribute)
-    // if (btn3) {
-    //   console.log('Clicking btn3...');
-    //   btn3.click();
-    // }
+    // This should trigger the property handler (overriding the attribute)
+    if (btn3) {
+      console.log('Clicking btn3...');
+      btn3.click();
+    }
 
     console.log('OnClick test completed');
+    function logEvent(name, event) {
+      console.log(`${name} clicked`, event);
+    }
   </script>
 </body>
 

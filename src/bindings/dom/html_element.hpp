@@ -60,6 +60,10 @@ namespace dombinding
   public:
     Napi::Value DatasetGetter(const Napi::CallbackInfo &info);
     Napi::Value StyleGetter(const Napi::CallbackInfo &info);
+
+    Napi::Value Blur(const Napi::CallbackInfo &info);
+    Napi::Value Click(const Napi::CallbackInfo &info);
+    Napi::Value Focus(const Napi::CallbackInfo &info);
   };
 
   class HTMLElement : public HTMLElementBase<HTMLElement, dom::HTMLElement>

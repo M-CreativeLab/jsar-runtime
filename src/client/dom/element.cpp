@@ -798,12 +798,9 @@ namespace dom
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
-    cout << "Element::simulateClick() called on <" << tagName << ">: " << onclick_handler_code_ << endl;
     // Execute onclick handler if it exists
     if (hasOnClickHandler())
-    {
       executeOnClickHandler();
-    }
 
     dispatchEventInternal(events::PointerEvent::Click());
   }
@@ -960,7 +957,7 @@ namespace dom
     {
       // TODO: Implement function execution for onclick_function_ref_
       // This would require proper V8 function handling
-      std::cout << "Executing onclick function reference (not yet implemented)" << std::endl;
+      cerr << "Executing onclick function reference (not yet implemented)" << endl;
       return;
     }
 
@@ -984,7 +981,8 @@ namespace dom
     // 2. Set 'this' to point to the element
     // 3. Handle return value to potentially prevent default behavior
 
-    std::string scriptCode = "(function() { " + onclick_handler_code_ + " })();";
+    // TODO(yorkie): support event object and 'this' context
+    string scriptCode = "(function(event) { " + onclick_handler_code_ + " })({});";
 
     try
     {
@@ -1001,11 +999,11 @@ namespace dom
         }
         else
         {
-          std::cerr << "Failed to compile onclick handler: " << onclick_handler_code_ << std::endl;
+          cerr << "Failed to compile onclick handler: " << onclick_handler_code_ << endl;
         }
       }
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
       std::cerr << "Error executing onclick handler: " << e.what() << std::endl;
     }
