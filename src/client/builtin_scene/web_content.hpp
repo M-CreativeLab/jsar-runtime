@@ -2,6 +2,8 @@
 
 #include <atomic>
 #include <memory>
+#include <future>
+#include <mutex>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkRRect.h>
@@ -328,6 +330,40 @@ namespace builtin_scene
     }
 
     /**
+     * Check if there is an async rendering operation in progress.
+     * Thread-safe method.
+     * 
+     * @returns True if async rendering is currently in progress.
+     */
+    inline bool isAsyncRenderingInProgress() const
+    {
+      std::lock_guard<std::mutex> lock(async_state_mutex_);
+      return async_rendering_in_progress_;
+    }
+
+    /**
+     * Set the async rendering progress state in a thread-safe manner.
+     * 
+     * @param inProgress Whether async rendering is in progress.
+     */
+    inline void setAsyncRenderingInProgress(bool inProgress)
+    {
+      std::lock_guard<std::mutex> lock(async_state_mutex_);
+      async_rendering_in_progress_ = inProgress;
+    }
+
+    /**
+     * Mark that async rendering has completed and the surface is ready.
+     * This method is thread-safe and should be called from async worker threads.
+     */
+    inline void markAsyncRenderingCompleted()
+    {
+      std::lock_guard<std::mutex> lock(async_state_mutex_);
+      async_rendering_in_progress_ = false;
+      is_surface_dirty_ = true; // Set surface dirty within the lock for thread safety
+    }
+
+    /**
      * Get the rounded rectangle representing the border geometry.
      * 
      * @returns The SkRRect containing border radius information.
@@ -370,6 +406,10 @@ namespace builtin_scene
     bool is_content_dirty_ = true;
     // The flag to indicate if the surface is dirty and needs to be update to the GPU texture.
     bool is_surface_dirty_ = true;
+
+    // Async rendering state tracking (thread-safe)
+    mutable std::mutex async_state_mutex_;
+    bool async_rendering_in_progress_ = false;
   };
 
   class WebContentContext : public ecs::Resource
@@ -458,6 +498,31 @@ namespace builtin_scene
        * @returns Whether the surface is written successfully.
        */
       virtual bool render(ecs::EntityId entity, WebContent &content) = 0;
+
+      /**
+       * Schedule an async surface update operation for heavy rendering work.
+       * This method allows expensive operations (e.g., text layout, SDF texture generation)
+       * to be executed asynchronously without blocking the main render thread.
+       * 
+       * When the async operation completes, the content's surface dirty state will be
+       * updated in a thread-safe manner, allowing UpdateTextureSystem to process the result.
+       * 
+       * @param entity The entity ID to render.
+       * @param content The WebContent to render asynchronously.
+       * @param asyncRenderFunc The rendering function to execute asynchronously.
+       *                        Should return true if rendering succeeds.
+       * 
+       * Thread Safety: This method is thread-safe and can be called from any thread.
+       * The asyncRenderFunc will be executed on a separate worker thread.
+       */
+      void scheduleAsyncSurfaceUpdate(ecs::EntityId entity,
+                                      WebContent &content,
+                                      std::function<bool(ecs::EntityId, WebContent &)> asyncRenderFunc);
+
+    private:
+      // Container for tracking async rendering operations
+      std::vector<std::future<void>> pendingAsyncOperations_;
+      std::mutex asyncOperationsMutex_;
     };
 
     /**
@@ -600,6 +665,35 @@ namespace builtin_scene
       bool render(ecs::EntityId entity, WebContent &content) override;
 
     private:
+      /**
+       * Determine if async rendering should be used for the given text content.
+       * Uses heuristics based on text length and content area.
+       * 
+       * @param text The text content to render.
+       * @param content The WebContent containing layout information.
+       * @returns True if async rendering should be used.
+       */
+      bool shouldUseAsyncRendering(const std::string &text, const WebContent &content);
+
+      /**
+       * Render text synchronously (for simple/small text).
+       * 
+       * @param entity The entity ID to render.
+       * @param content The WebContent to render.
+       * @returns Whether the surface is written successfully.
+       */
+      bool renderTextSync(ecs::EntityId entity, WebContent &content);
+
+      /**
+       * Render text asynchronously (for complex/large text with SDF generation).
+       * This method is designed to be called from a worker thread.
+       * 
+       * @param entity The entity ID to render.
+       * @param content The WebContent to render.
+       * @returns Whether the surface is written successfully.
+       */
+      bool renderTextAsync(ecs::EntityId entity, WebContent &content);
+
       float getLayoutWidthForText(WebContent &content);
       bool generateSignedDistanceOn(SkCanvas *canvas);
 

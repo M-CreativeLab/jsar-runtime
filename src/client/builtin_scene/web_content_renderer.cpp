@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstring>
 #include <future>
+#include <functional>
+#include <mutex>
 
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkPaint.h>
@@ -354,6 +356,62 @@ namespace builtin_scene::web_renderer
     // Wait for all rendering tasks to complete
     for (auto &future : futures)
       future.wait();
+  }
+
+  void RenderContentBaseSystem::scheduleAsyncSurfaceUpdate(ecs::EntityId entity,
+                                                           WebContent &content,
+                                                           std::function<bool(ecs::EntityId, WebContent &)> asyncRenderFunc)
+  {
+    // Check if async rendering is already in progress for this content
+    if (content.isAsyncRenderingInProgress())
+    {
+      // Skip if already processing asynchronously
+      return;
+    }
+
+    // Mark async rendering as in progress
+    content.setAsyncRenderingInProgress(true);
+
+    // Clean up completed async operations
+    {
+      std::lock_guard<std::mutex> lock(asyncOperationsMutex_);
+      auto it = std::remove_if(pendingAsyncOperations_.begin(), pendingAsyncOperations_.end(), [](const std::future<void> &f)
+                               { return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready; });
+      pendingAsyncOperations_.erase(it, pendingAsyncOperations_.end());
+    }
+
+    // Create async operation
+    auto asyncOperation = std::async(std::launch::async, [asyncRenderFunc, entity, &content]()
+                                     {
+      try
+      {
+        // Execute the async rendering function
+        bool success = asyncRenderFunc(entity, content);
+        
+        if (success)
+        {
+          // Mark async rendering as completed and surface as dirty (thread-safe)
+          content.markAsyncRenderingCompleted();
+        }
+        else
+        {
+          // If rendering failed, just mark as not in progress
+          content.setAsyncRenderingInProgress(false);
+        }
+      }
+      catch (const std::exception &e)
+      {
+        // Handle any exceptions and mark as not in progress
+        content.setAsyncRenderingInProgress(false);
+        // Log error if logging is available
+        // LOG_ERROR("Async rendering failed: " << e.what());
+      } });
+
+    // Store the future to track completion
+    {
+      std::lock_guard<std::mutex> lock(asyncOperationsMutex_);
+      pendingAsyncOperations_.emplace_back(std::move(asyncOperation));
+    }
   }
 
   // Create a gradient shader based on the computed image and rounded rectangle.
@@ -1353,6 +1411,31 @@ namespace builtin_scene::web_renderer
     if (textComponent == nullptr) [[unlikely]]
       return false;
 
+    // Check if async rendering should be used for heavy text processing
+    string &text = textComponent->content;
+    if (shouldUseAsyncRendering(text, content))
+    {
+      // Schedule async rendering for heavy text operations (layout + SDF generation)
+      scheduleAsyncSurfaceUpdate(entity, content, [this](ecs::EntityId asyncEntity, WebContent &asyncContent) -> bool
+                                 { return renderTextAsync(asyncEntity, asyncContent); });
+
+      // Return false to indicate surface is not immediately ready
+      // (it will be marked dirty when async operation completes)
+      return false;
+    }
+    else
+    {
+      // For simple text, render synchronously as before
+      return renderTextSync(entity, content);
+    }
+  }
+
+  bool RenderTextSystem::renderTextSync(ecs::EntityId entity, WebContent &content)
+  {
+    auto textComponent = getComponent<Text2d>(entity);
+    if (textComponent == nullptr) [[unlikely]]
+      return false;
+
     string &text = textComponent->content;
     SkCanvas *canvas = content.canvas();
     if (canvas == nullptr) [[unlikely]]
@@ -1381,6 +1464,75 @@ namespace builtin_scene::web_renderer
     // 3. Mark the content as using texture
     content.setTextureUsing(true);
     return true;
+  }
+
+  bool RenderTextSystem::renderTextAsync(ecs::EntityId entity, WebContent &content)
+  {
+    auto textComponent = getComponent<Text2d>(entity);
+    if (textComponent == nullptr) [[unlikely]]
+      return false;
+
+    string &text = textComponent->content;
+    SkCanvas *canvas = content.canvas();
+    if (canvas == nullptr) [[unlikely]]
+      return false;
+
+    // Perform the heavy text rendering and SDF generation asynchronously
+    try
+    {
+      // 1. Render text normally using the original paragraph rendering
+      {
+        auto paragraphStyle = content.paragraphStyle();
+        auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+        paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+        paragraphBuilder->addText(text.c_str(), text.size());
+        paragraphBuilder->pop();
+
+        auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
+        auto paragraph = paragraphBuilder->Build();
+        paragraph->layout(layoutWidth);
+        paragraph->paint(canvas, 0.0f, 0.0f);
+      }
+
+      // 2. generate SDF texture from the painted canvas for anti-aliasing (expensive operation)
+      {
+        auto usingSdf = generateSignedDistanceOn(canvas);
+        content.setIsSDFTexture(usingSdf);
+      }
+
+      // 3. Mark the content as using texture
+      content.setTextureUsing(true);
+      return true;
+    }
+    catch (const std::exception &e)
+    {
+      // Handle any exceptions during async rendering
+      return false;
+    }
+  }
+
+  bool RenderTextSystem::shouldUseAsyncRendering(const std::string &text, const WebContent &content)
+  {
+    // Use async rendering for:
+    // 1. Large text content (more than 100 characters)
+    // 2. Complex layouts (when content area is large)
+    // 3. When SDF generation is expected to be expensive
+
+    const size_t ASYNC_TEXT_THRESHOLD = 100;
+    const float ASYNC_AREA_THRESHOLD = 10000.0f; // 100x100 pixels
+
+    if (text.length() > ASYNC_TEXT_THRESHOLD)
+      return true;
+
+    if (content.fragment().has_value())
+    {
+      const auto &fragment = content.fragment().value();
+      float area = fragment.contentWidth() * fragment.contentHeight();
+      if (area > ASYNC_AREA_THRESHOLD)
+        return true;
+    }
+
+    return false;
   }
 
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)
@@ -1424,7 +1576,10 @@ namespace builtin_scene::web_renderer
 
     auto selectContents = [](const WebContent &content) -> bool
     {
-      return content.canvas() != nullptr && content.isSurfaceDirty();
+      // Only select content that has a canvas, is surface dirty, and is NOT currently being processed asynchronously
+      return content.canvas() != nullptr &&
+             content.isSurfaceDirty() &&
+             !content.isAsyncRenderingInProgress();
     };
     auto list = queryEntitiesWithComponent<WebContent>(selectContents);
     if (list.size() > 0)
