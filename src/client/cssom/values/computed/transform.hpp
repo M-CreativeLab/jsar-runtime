@@ -27,7 +27,14 @@ namespace client_cssom::values::computed
     using generics::GenericTransform<TransformOperation>::GenericTransform;
 
   public:
+    // Apply transforms without element size context (percentages will be treated as 0)
     size_t applyTo(glm::mat4 &mat) const
+    {
+      return applyTo(mat, glm::vec2(0.0f, 0.0f));
+    }
+
+    // Apply transforms with element size context for percentage resolution
+    size_t applyTo(glm::mat4 &mat, const glm::vec2 &elementSize) const
     {
       size_t count = 0;
       for (const auto &op : operations())
@@ -46,15 +53,15 @@ namespace client_cssom::values::computed
         else if (op.isSkewY())
           applySkewY(op.getSkewY(), mat);
         else if (op.isTranslate())
-          applyTranslate(op.getTranslate(), mat);
+          applyTranslate(op.getTranslate(), mat, elementSize);
         else if (op.isTranslateX())
-          applyTranslateX(op.getTranslateX(), mat);
+          applyTranslateX(op.getTranslateX(), mat, elementSize);
         else if (op.isTranslateY())
-          applyTranslateY(op.getTranslateY(), mat);
+          applyTranslateY(op.getTranslateY(), mat, elementSize);
         else if (op.isTranslateZ())
           applyTranslateZ(op.getTranslateZ(), mat);
         else if (op.isTranslate3D())
-          applyTranslate3D(op.getTranslate3D(), mat);
+          applyTranslate3D(op.getTranslate3D(), mat, elementSize);
         else if (op.isScale())
           applyScale(op.getScale(), mat);
         else if (op.isScaleX())
@@ -84,6 +91,24 @@ namespace client_cssom::values::computed
     }
 
   private:
+    // Helper method to resolve LengthPercentage to pixels with element size context
+    float resolveLengthPercentage(const LengthPercentage &value, float elementDimension) const
+    {
+      if (value.isLength())
+      {
+        return value.getLength().px();
+      }
+      else if (value.isPercentage())
+      {
+        // For transforms, percentage is relative to the element's own size
+        return value.getPercentage().computeWithBase(elementDimension);
+      }
+      else
+      {
+        return 0.0f; // fallback for calc values
+      }
+    }
+
     void applyMatrix(const generics::GenericMatrix<CSSFloat> src_matrix, glm::mat4 &target_mat) const
     {
       auto a = src_matrix.a().value;
@@ -134,22 +159,25 @@ namespace client_cssom::values::computed
       std::cerr << "skewY() transformation is not implemented yet." << std::endl;
     }
     void applyTranslate(const generics::GenericTranslate<LengthPercentage> &src_translate,
-                        glm::mat4 &target_mat) const
+                        glm::mat4 &target_mat,
+                        const glm::vec2 &elementSize) const
     {
-      auto translate_x = pixelToMeter(src_translate.x().getLength().px());
-      auto translate_y = pixelToMeter(src_translate.y().getLength().px());
+      auto translate_x = pixelToMeter(resolveLengthPercentage(src_translate.x(), elementSize.x));
+      auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate.y(), elementSize.y));
       target_mat = glm::translate(target_mat, glm::vec3(translate_x, translate_y, 0.0f));
     }
     void applyTranslateX(const generics::GenericTranslateX<LengthPercentage> &src_translate_x,
-                         glm::mat4 &target_mat) const
+                         glm::mat4 &target_mat,
+                         const glm::vec2 &elementSize) const
     {
-      auto translate_x = pixelToMeter(src_translate_x.x().getLength().px());
+      auto translate_x = pixelToMeter(resolveLengthPercentage(src_translate_x.x(), elementSize.x));
       target_mat = glm::translate(target_mat, glm::vec3(translate_x, 0.0f, 0.0f));
     }
     void applyTranslateY(const generics::GenericTranslateY<LengthPercentage> &src_translate_y,
-                         glm::mat4 &target_mat) const
+                         glm::mat4 &target_mat,
+                         const glm::vec2 &elementSize) const
     {
-      auto translate_y = pixelToMeter(src_translate_y.y().getLength().px());
+      auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate_y.y(), elementSize.y));
       target_mat = glm::translate(target_mat, glm::vec3(0.0f, translate_y, 0.0f));
     }
     void applyTranslateZ(const generics::GenericTranslateZ<Length> &src_translate_z,
@@ -159,10 +187,11 @@ namespace client_cssom::values::computed
       target_mat = glm::translate(target_mat, glm::vec3(0.0f, 0.0f, translate_z));
     }
     void applyTranslate3D(const generics::GenericTranslate3D<LengthPercentage, Length> &src_translate_3d,
-                          glm::mat4 &target_mat) const
+                          glm::mat4 &target_mat,
+                          const glm::vec2 &elementSize) const
     {
-      auto translate_x = pixelToMeter(src_translate_3d.x().getLength().px());
-      auto translate_y = pixelToMeter(src_translate_3d.y().getLength().px());
+      auto translate_x = pixelToMeter(resolveLengthPercentage(src_translate_3d.x(), elementSize.x));
+      auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate_3d.y(), elementSize.y));
       auto translate_z = pixelToMeter(src_translate_3d.z().px());
       target_mat = glm::translate(target_mat, glm::vec3(translate_x, translate_y, translate_z));
     }

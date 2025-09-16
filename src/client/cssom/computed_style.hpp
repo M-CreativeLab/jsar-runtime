@@ -451,6 +451,10 @@ namespace client_cssom
     {
       return transform_.applyTo(matrix);
     }
+    inline const size_t applyTransformTo(glm::mat4 &matrix, const glm::vec2 &elementSize) const
+    {
+      return transform_.applyTo(matrix, elementSize);
+    }
 
     // Visual Effects
     inline const values::computed::Filter &filter() const
