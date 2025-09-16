@@ -314,18 +314,21 @@ namespace client_layout
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
   {
-    optional<geometry::BoundingBox> testBox = nullopt;
+    optional<geometry::BoundingBox> overflowBox = nullopt;
     if (hasHitTestableOverflow())
-      testBox = getHitTestBoundingBox();
-    else
-      testBox = physicalBorderBoxRect();
-
-    if (testBox.has_value())
     {
-      testBox->move(accumulatedOffset);
+      // TODO(yorkie): handle the hit test for the box with overflow.
+      overflowBox = getHitTestBoundingBox();
+    }
+    else
+      overflowBox = physicalBorderBoxRect();
 
-      auto min = testBox->minimumWorld;
-      auto max = testBox->maximumWorld;
+    if (overflowBox.has_value())
+    {
+      overflowBox->move(accumulatedOffset);
+
+      auto min = overflowBox->minimumWorld;
+      auto max = overflowBox->maximumWorld;
       return ray.intersectsBoxMinMax(min, max);
     }
     else
