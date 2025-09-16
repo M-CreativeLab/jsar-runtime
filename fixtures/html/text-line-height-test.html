@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Height Comprehensive Test - 行高综合测试</title>
+  <style>
+    :root {
+      --primary-color: #333;
+      --secondary-color: #666;
+      --background-color: #fff;
+      --border-color: #ddd;
+      --highlight-color: #007acc;
+      --warning-color: #ff6b35;
+      --success-color: #28a745;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--primary-color);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin: 40px 0;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--highlight-color);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--highlight-color);
+      padding-bottom: 5px;
+    }
+
+    .test-item {
+      margin: 20px 0;
+      padding: 15px;
+      border-left: 3px solid var(--highlight-color);
+      background: white;
+      position: relative;
+    }
+
+    .test-label {
+      font-size: 14px;
+      color: var(--secondary-color);
+      margin-bottom: 10px;
+      font-weight: bold;
+      background: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .computed-value {
+      font-family: monospace;
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    /* Line height test containers with visual guides */
+    .line-height-demo {
+      position: relative;
+      border: 2px solid var(--warning-color);
+      background: rgba(255, 255, 255, 0.9);
+      margin: 10px 0;
+      padding: 10px;
+    }
+
+    .line-guides {
+      position: absolute;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .line-guide {
+      border-top: 1px dashed;
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .guide-red { border-color: red; }
+    .guide-blue { border-color: blue; }
+    .guide-green { border-color: green; }
+    .guide-purple { border-color: purple; }
+
+    /* Basic line-height values */
+    .lh-normal { line-height: normal; }
+    .lh-1 { line-height: 1; }
+    .lh-1-2 { line-height: 1.2; }
+    .lh-1-5 { line-height: 1.5; }
+    .lh-2 { line-height: 2; }
+    .lh-2-5 { line-height: 2.5; }
+    .lh-3 { line-height: 3; }
+
+    /* Pixel values */
+    .lh-12px { line-height: 12px; }
+    .lh-16px { line-height: 16px; }
+    .lh-20px { line-height: 20px; }
+    .lh-24px { line-height: 24px; }
+    .lh-30px { line-height: 30px; }
+    .lh-40px { line-height: 40px; }
+    .lh-50px { line-height: 50px; }
+    .lh-60px { line-height: 60px; }
+
+    /* Percentage values */
+    .lh-100percent { line-height: 100%; }
+    .lh-120percent { line-height: 120%; }
+    .lh-150percent { line-height: 150%; }
+    .lh-200percent { line-height: 200%; }
+
+    /* Em values */
+    .lh-1em { line-height: 1em; }
+    .lh-1-5em { line-height: 1.5em; }
+    .lh-2em { line-height: 2em; }
+
+    /* Font sizes for testing */
+    .fs-12 { font-size: 12px; }
+    .fs-14 { font-size: 14px; }
+    .fs-16 { font-size: 16px; }
+    .fs-18 { font-size: 18px; }
+    .fs-20 { font-size: 20px; }
+    .fs-24 { font-size: 24px; }
+    .fs-30 { font-size: 30px; }
+    .fs-36 { font-size: 36px; }
+    .fs-48 { font-size: 48px; }
+
+    /* Comparison grids */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .comparison-item {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .comparison-header {
+      background: var(--highlight-color);
+      color: white;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .comparison-content {
+      padding: 15px;
+      position: relative;
+    }
+
+    /* Text content samples */
+    .single-line {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .multi-line {
+      /* Allow natural line wrapping */
+    }
+
+    .long-text {
+      width: 100%;
+    }
+
+    /* Inheritance tests */
+    .parent-container {
+      border: 2px dashed var(--success-color);
+      padding: 15px;
+      margin: 10px 0;
+    }
+
+    .child-element {
+      border: 1px solid var(--secondary-color);
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(0, 123, 255, 0.05);
+    }
+
+    /* Interactive elements */
+    .interactive-demo {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+
+    .slider-control {
+      margin: 10px 0;
+    }
+
+    .slider-control label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .slider-control input[type="range"] {
+      width: 100%;
+      margin: 5px 0;
+    }
+
+    .slider-control .value-display {
+      font-family: monospace;
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* Stress test patterns */
+    .stress-test {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      background: white;
+    }
+
+    .info-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      color: #856404;
+    }
+
+    .error-indicator {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Debugging helpers */
+    .show-line-boxes {
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 1.4em,
+        rgba(255, 0, 0, 0.1) 1.4em,
+        rgba(255, 0, 0, 0.1) 1.6em
+      );
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 style="text-align: center; color: var(--highlight-color); margin-bottom: 30px;">
+        行高综合测试<br>
+        <small style="font-size: 16px; color: var(--secondary-color);">Line Height Comprehensive Test</small>
+      </h1>
+      <div class="info-box">
+        <strong>测试目的 Test Purpose:</strong> 全面测试line-height的各种设置方式，包括数值、像素、百分比、em等单位的正确渲染<br>
+        <strong>Expected Behavior:</strong> Line height should be calculated correctly for different units and inheritance should work properly
+      </div>
+    </header>
+
+    <!-- Basic Line Height Values -->
+    <section class="section">
+      <h2 class="section-title">基础行高值测试 - Basic Line Height Values</h2>
+      
+      <div class="comparison-grid">
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: normal</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-normal multi-line">
+              这是默认normal行高的文本。<br>
+              This is text with normal line height.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: 1</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-1 multi-line">
+              这是行高为1的文本。<br>
+              This is text with line-height: 1.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: 1.2</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-1-2 multi-line">
+              这是行高为1.2的文本。<br>
+              This is text with line-height: 1.2.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: 1.5</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-1-5 multi-line">
+              这是行高为1.5的文本。<br>
+              This is text with line-height: 1.5.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: 2</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-2 multi-line">
+              这是行高为2的文本。<br>
+              This is text with line-height: 2.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-item">
+          <div class="comparison-header">line-height: 3</div>
+          <div class="comparison-content">
+            <div class="fs-16 lh-3 multi-line">
+              这是行高为3的文本。<br>
+              This is text with line-height: 3.<br>
+              第三行用于观察行间距。<br>
+              Third line to observe spacing.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pixel Values Tests -->
+    <section class="section">
+      <h2 class="section-title">像素值测试 - Pixel Values Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Fixed pixel line heights with 16px font size
+          <span class="computed-value">font-size: 16px</span>
+        </div>
+        
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="comparison-header">line-height: 12px</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-12px multi-line">
+                行高12px<br>Line height 12px<br>压缩的行间距<br>Tight spacing
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">line-height: 16px</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-16px multi-line">
+                行高16px<br>Line height 16px<br>等于字体大小<br>Equal to font size
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">line-height: 24px</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-24px multi-line">
+                行高24px<br>Line height 24px<br>标准间距<br>Standard spacing
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">line-height: 40px</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-40px multi-line">
+                行高40px<br>Line height 40px<br>宽松间距<br>Loose spacing
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Percentage Values Tests -->
+    <section class="section">
+      <h2 class="section-title">百分比值测试 - Percentage Values Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Percentage line heights with different font sizes
+          <span class="computed-value">Computed at inheritance time</span>
+        </div>
+        
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="comparison-header">100% with 16px font</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-100percent multi-line">
+                百分比100%<br>100% line height<br>等于字体大小<br>Equal font size
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">150% with 16px font</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-150percent multi-line">
+                百分比150%<br>150% line height<br>1.5倍字体大小<br>1.5x font size
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">100% with 24px font</div>
+            <div class="comparison-content">
+              <div class="fs-24 lh-100percent multi-line">
+                百分比100%<br>100% line height<br>24px computed<br>24px computed
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">150% with 24px font</div>
+            <div class="comparison-content">
+              <div class="fs-24 lh-150percent multi-line">
+                百分比150%<br>150% line height<br>36px computed<br>36px computed
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Em Values Tests -->
+    <section class="section">
+      <h2 class="section-title">Em值测试 - Em Values Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Em line heights with different font sizes
+          <span class="computed-value">Relative to element's font-size</span>
+        </div>
+        
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="comparison-header">1em with 16px font</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-1em multi-line">
+                Em值1em<br>1em line height<br>等于16px<br>Equals 16px
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">1.5em with 16px font</div>
+            <div class="comparison-content">
+              <div class="fs-16 lh-1-5em multi-line">
+                Em值1.5em<br>1.5em line height<br>等于24px<br>Equals 24px
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">1em with 24px font</div>
+            <div class="comparison-content">
+              <div class="fs-24 lh-1em multi-line">
+                Em值1em<br>1em line height<br>等于24px<br>Equals 24px
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">1.5em with 24px font</div>
+            <div class="comparison-content">
+              <div class="fs-24 lh-1-5em multi-line">
+                Em值1.5em<br>1.5em line height<br>等于36px<br>Equals 36px
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inheritance Tests -->
+    <section class="section">
+      <h2 class="section-title">继承测试 - Inheritance Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Line height inheritance patterns
+          <span class="computed-value">Different inheritance behaviors</span>
+        </div>
+        
+        <div class="parent-container fs-20 lh-1-5">
+          <div style="background: #e3f2fd; padding: 8px; margin-bottom: 10px;">
+            <strong>Parent: font-size: 20px, line-height: 1.5</strong>
+          </div>
+          
+          <div class="child-element fs-16">
+            <strong>Child 1:</strong> font-size: 16px, line-height: inherited<br>
+            继承的行高值应该是1.5倍当前字体大小(16px) = 24px<br>
+            Inherited line-height should be 1.5 × current font-size (16px) = 24px
+          </div>
+          
+          <div class="child-element fs-24">
+            <strong>Child 2:</strong> font-size: 24px, line-height: inherited<br>
+            继承的行高值应该是1.5倍当前字体大小(24px) = 36px<br>
+            Inherited line-height should be 1.5 × current font-size (24px) = 36px
+          </div>
+        </div>
+
+        <div class="parent-container fs-20 lh-30px">
+          <div style="background: #fff3e0; padding: 8px; margin-bottom: 10px;">
+            <strong>Parent: font-size: 20px, line-height: 30px</strong>
+          </div>
+          
+          <div class="child-element fs-16">
+            <strong>Child 1:</strong> font-size: 16px, line-height: inherited<br>
+            继承的行高值应该是固定的30px（不随字体大小改变）<br>
+            Inherited line-height should be fixed 30px (doesn't change with font-size)
+          </div>
+          
+          <div class="child-element fs-24">
+            <strong>Child 2:</strong> font-size: 24px, line-height: inherited<br>
+            继承的行高值应该是固定的30px（不随字体大小改变）<br>
+            Inherited line-height should be fixed 30px (doesn't change with font-size)
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Demonstration -->
+    <section class="section">
+      <h2 class="section-title">交互式演示 - Interactive Demonstration</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Live line-height adjustment
+          <span class="computed-value">Real-time preview</span>
+        </div>
+        
+        <div class="interactive-demo">
+          <div class="slider-control">
+            <label for="lineHeightSlider">Line Height Value:</label>
+            <input type="range" id="lineHeightSlider" min="0.5" max="3" step="0.1" value="1.5">
+            <span class="value-display" id="lineHeightValue">1.5</span>
+          </div>
+          
+          <div class="slider-control">
+            <label for="fontSizeSlider">Font Size (px):</label>
+            <input type="range" id="fontSizeSlider" min="12" max="48" step="2" value="16">
+            <span class="value-display" id="fontSizeValue">16px</span>
+          </div>
+          
+          <div id="interactiveText" class="multi-line" style="border: 2px solid var(--highlight-color); padding: 15px; margin-top: 15px; background: white;">
+            这是可以调整的演示文本。<br>
+            This is adjustable demonstration text.<br>
+            您可以使用上面的滑块来调整行高和字体大小。<br>
+            You can use the sliders above to adjust line-height and font-size.<br>
+            观察文字行间距的变化效果。<br>
+            Observe how the line spacing changes.
+          </div>
+          
+          <div class="info-box" style="margin-top: 10px;">
+            <strong>Computed line-height:</strong> <span id="computedLineHeight">24px</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Edge Cases and Stress Tests -->
+    <section class="section">
+      <h2 class="section-title">边界情况和压力测试 - Edge Cases and Stress Tests</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Extreme values and edge cases
+          <span class="computed-value">Testing robustness</span>
+        </div>
+        
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="comparison-header">Very small line-height: 0.1</div>
+            <div class="comparison-content">
+              <div class="fs-16" style="line-height: 0.1;">
+                极小行高0.1<br>Very small 0.1<br>文字重叠<br>Text overlap
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">Very large line-height: 5</div>
+            <div class="comparison-content">
+              <div class="fs-16" style="line-height: 5;">
+                极大行高5<br>Very large 5<br>宽松间距<br>Wide spacing
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">Mixed font sizes, same line-height</div>
+            <div class="comparison-content" style="line-height: 2;">
+              <span class="fs-12">小字12px</span>
+              <span class="fs-16">中字16px</span>
+              <span class="fs-24">大字24px</span>
+              <span class="fs-12">小字12px</span>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-header">Zero line-height</div>
+            <div class="comparison-content">
+              <div class="fs-16" style="line-height: 0;">
+                零行高<br>Zero height<br>完全重叠<br>Complete overlap
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-item">
+        <div class="test-label">
+          Performance stress test with many lines
+          <span class="computed-value">Scrollable content</span>
+        </div>
+        
+        <div class="stress-test fs-14 lh-1-5" id="stressTestContent">
+          <!-- Generated by JavaScript -->
+        </div>
+        <div class="info-box">
+          Performance test with 100+ lines. Scroll should be smooth with consistent line spacing.
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Debugging Helpers -->
+    <section class="section">
+      <h2 class="section-title">视觉调试助手 - Visual Debugging Helpers</h2>
+      
+      <div class="test-item">
+        <div class="test-label">
+          Line box visualization
+          <span class="computed-value">Background line guides</span>
+        </div>
+        
+        <div class="show-line-boxes fs-16 lh-1-6" style="padding: 20px;">
+          这个容器显示了行盒子的视觉指示。<br>
+          This container shows visual indication of line boxes.<br>
+          每行的背景条纹帮助您看到行高的实际高度。<br>
+          The background stripes help you see the actual height of each line.<br>
+          行高1.6倍字体大小应该与背景条纹对齐。<br>
+          Line height of 1.6× font size should align with background stripes.
+        </div>
+      </div>
+    </section>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 20px; border-top: 2px solid var(--border-color);">
+      <p style="color: var(--secondary-color);">
+        JSAR Runtime 行高综合测试页面 - Line Height Comprehensive Test Page<br>
+        <small>测试完成时间 - Test completed at: <span id="timestamp"></span></small>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Set timestamp
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    
+    // Generate stress test content
+    const stressTestContainer = document.getElementById('stressTestContent');
+    for (let i = 1; i <= 100; i++) {
+      const line = document.createElement('div');
+      line.textContent = `行${i}: 这是第${i}行的测试内容，用于检测大量文本的行高渲染性能。Line ${i}: Performance test content for line height rendering.`;
+      stressTestContainer.appendChild(line);
+    }
+    
+    // Interactive controls
+    const lineHeightSlider = document.getElementById('lineHeightSlider');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const lineHeightValue = document.getElementById('lineHeightValue');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const interactiveText = document.getElementById('interactiveText');
+    const computedLineHeight = document.getElementById('computedLineHeight');
+    
+    function updateInteractiveDemo() {
+      const lineHeight = parseFloat(lineHeightSlider.value);
+      const fontSize = parseInt(fontSizeSlider.value);
+      
+      lineHeightValue.textContent = lineHeight.toString();
+      fontSizeValue.textContent = fontSize + 'px';
+      
+      interactiveText.style.lineHeight = lineHeight.toString();
+      interactiveText.style.fontSize = fontSize + 'px';
+      
+      const computed = Math.round(lineHeight * fontSize);
+      computedLineHeight.textContent = computed + 'px';
+    }
+    
+    lineHeightSlider.addEventListener('input', updateInteractiveDemo);
+    fontSizeSlider.addEventListener('input', updateInteractiveDemo);
+    
+    // Initialize
+    updateInteractiveDemo();
+    
+    // Console log for debugging
+    console.log('Line Height Comprehensive Test Page loaded successfully');
+    console.log('Total test sections:', document.querySelectorAll('.section').length);
+    console.log('Total test items:', document.querySelectorAll('.test-item').length);
+    
+    // Measure computed line heights for debugging
+    function measureLineHeights() {
+      const testElements = document.querySelectorAll('[class*="lh-"]');
+      console.log('Measured line heights:');
+      testElements.forEach((element, index) => {
+        const styles = window.getComputedStyle(element);
+        const lineHeight = styles.lineHeight;
+        const fontSize = styles.fontSize;
+        console.log(`Element ${index + 1}: line-height=${lineHeight}, font-size=${fontSize}`);
+      });
+    }
+    
+    // Add interactive functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Measure line heights after layout
+      setTimeout(measureLineHeights, 100);
+      
+      // Highlight comparison items on hover
+      const comparisonItems = document.querySelectorAll('.comparison-item');
+      comparisonItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+          this.style.transform = 'scale(1.02)';
+          this.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
+          this.style.transition = 'all 0.2s ease';
+        });
+        item.addEventListener('mouseleave', function() {
+          this.style.transform = 'scale(1)';
+          this.style.boxShadow = 'none';
+        });
+      });
+      
+      // Add click to copy functionality for test labels
+      const testLabels = document.querySelectorAll('.test-label');
+      testLabels.forEach(label => {
+        label.style.cursor = 'pointer';
+        label.title = 'Click to copy CSS property';
+        label.addEventListener('click', function() {
+          const text = this.textContent.replace(/\s+/g, ' ').trim();
+          navigator.clipboard.writeText(text).then(() => {
+            this.style.backgroundColor = '#4CAF50';
+            this.style.color = 'white';
+            setTimeout(() => {
+              this.style.backgroundColor = '';
+              this.style.color = '';
+            }, 500);
+          });
+        });
+      });
+    });
+    
+    // Performance monitoring
+    const startTime = performance.now();
+    window.addEventListener('load', function() {
+      const loadTime = performance.now() - startTime;
+      console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
+    });
+  </script>
+</body>
+
+</html>
