@@ -307,9 +307,7 @@ namespace client_layout
 
   bool LayoutBox::hasHitTestableOverflow() const
   {
-    if (hasNonVisibleOverflow())
-      return false;
-    return true;
+    false;
   }
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
@@ -318,10 +316,9 @@ namespace client_layout
     if (hasHitTestableOverflow())
     {
       // TODO(yorkie): handle the hit test for the box with overflow.
-      overflowBox = getHitTestBoundingBox();
     }
     else
-      overflowBox = physicalBorderBoxRect();
+      overflowBox = getHitTestBoundingBox();
 
     if (overflowBox.has_value())
     {
