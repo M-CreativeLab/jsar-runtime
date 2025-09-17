@@ -263,6 +263,13 @@ namespace dom
     bool hasOnClickHandler() const;
     void executeOnClickHandler();
 
+    // Generalized event handler methods
+    void setEventHandler(const std::string &type, const std::string &handlerCode);
+    void setEventHandlerFunction(const std::string &type, void *functionRef);
+    std::string getEventHandlerCode(const std::string &type) const;
+    bool hasEventHandler(const std::string &type) const;
+    void executeEventHandler(const std::string &type, dom::Event *event);
+
   protected: // Node lifecycle callbacks
     void connectedCallback() override;
     void disconnectedCallback() override;
@@ -382,10 +389,14 @@ namespace dom
     bool is_focused_ = false;
     bool is_active_ = false;
 
-    // Event handlers
+    // Event handlers - legacy onclick support
     std::string onclick_handler_code_;
     bool has_onclick_function_ = false;
     void *onclick_function_ref_ = nullptr;
+
+    // Event handlers - generalized storage
+    std::unordered_map<std::string, std::string> event_handler_codes_;
+    std::unordered_map<std::string, void *> event_handler_function_refs_;
 
     // Scroll performance optimization
     std::chrono::steady_clock::time_point last_scroll_event_time_ = std::chrono::steady_clock::time_point::min();
