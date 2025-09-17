@@ -6,77 +6,160 @@ The alpha version of JSAR is the first version of the project.
 
 ### New Features & Improvements
 
-- **Text Alignment Tests**: Added comprehensive test cases for text-align CSS property in fixtures/html (#313)
+#### DOM & Web APIs
+- **Element.onclick Support**: Added support for Element.onclick attribute for inline event handlers (#309)
+- **Text Alignment Tests**: Added comprehensive text-align test cases to fixtures/html (#313)
+
+#### CSS & Styling
+- **Flexbox Properties**: Support parsing flex-grow and flex-shrink at computed style
+- **CSS Selectors**: Implement CSS nth-child() and nth-of-type() selector support (#285)
+- **CSS Variables**: Support CSS variables (#263)
+- **Universal Selector**: Support universal selector (*) in CSSOM selector parser and matching (#261)
+- **Pseudo-class Selectors**: 
+  - Implement CSS `:root` selector matching (#259)
+  - Implement CSS :where() functional pseudo-class selector support (#258)
+  - Replace Rust CSS selectors with C++ implementation and add pseudo-class support (#241)
+- **Attribute Selectors**: Implement CSS attribute selector support in parser and matcher (#271)
+- **Background Properties**: Support using background-position, background-size and background-repeat (#274)
+- **Background Repeat**: Background-repeat should draw from clipped area (#280)
+- **Absolute Positioning**: Fix absolute positioning to reference nearest positioned ancestor (#276)
+- **Align Items**: Correct align-items implementation (#282)
+
+#### Canvas & WebGL
+- **Canvas 2D**: Implement strokeRect() method in Canvas 2D rendering context (#294)
+- **WebGL**: Implement WebGL validateProgram method (#253)
+
+#### Browser & Rendering
+- **Parallel Rendering**: Use std::async to make each web content rendering run in parallel (#310)
+- **Texture Bindings**: Unbind texture bindings correctly (#221)
+- **3D Content**: Add 3D world-space content bar and input box (#269)
+- **Frame Rate Control**: Add frame rate control to vsync and manual modes (#265)
+- **Console Logging**: Implement Console binding to support logging on CDP (#267)
+
+#### Testing & Quality Assurance
+- **Border Tests**: Add comprehensive border regression test page to fixtures/html (#302)
+- **Text Rendering Tests**: Add comprehensive text rendering test page for fixtures (#301)
+- **Flexbox Tests**: Add flex-grow and flex-shrink test case in fixtures/html (#300)
+- **Canvas Tests**: Add comprehensive Canvas API test pages to fixtures/html (#293)
+- **CSS Overflow Tests**: Add comprehensive CSS overflow test file to fixtures/html (#290)
+- **Layout Tests**: Add flexbox and grid layout test pages (#282)
 
 ### Bug Fixes & Performance
 
-- **Documentation**: Improved development workflow and testing coverage
+#### Rendering & Graphics
+- **Render Queue**: Correct RenderQueue sorting for positioned elements (#297)
+- **Depth Writing**: 
+  - Correct depth write only pass for web content
+  - Write web content depth should be written with stencil testing (#272)
+  - Correct the bar component depth writes
+- **Build Fixes**: Fix build errors when enabling TR_RENDERER_ENABLE_VERBOSE
+- **GLSL Processing**: Upgrade glsl-lang to fix the glsl preprocessing issues (#295)
+
+#### DOM & Browser
+- **Scroll Throttling**: Implement scroll throttling in document and fix document dirty state (#289)
+- **Font Manager**: Maintain only one instance for font manager (#286)
+- **Rendering Parameters**: Tweak the web content rendering parameters
+
+#### Documentation & Infrastructure
+- **Commit Guidelines**: Update commit message guidelines (#311)
+- **Three.js Examples**: Update threejs example sample
+
+### Detailed Commit History
+
+| Commit | Description | PR |
+|--------|-------------|-----|
+| af078628 | feat(tests): add comprehensive text-align test cases to fixtures/html | #313 |
+| bdf2771a | fix(tests): update threejs example sample | - |
+| 83a628aa | feat(dom): support Element.onclick attribute for inline event handlers | #309 |
+| f1b92b1c | docs(docs-infra): update commit message guidelines | #311 |
+| 4e013a3b | fix(builtin_scene): use std::async to make each web content rendering run in parallel | #310 |
+| f918ddfc | fix(builtin_scene): unbind texture bindings correctly | #221 |
+| 86de83ef | fix(renderer): fix build errors when enabling TR_RENDERER_ENABLE_VERBOSE | - |
+| 562a4838 | add comprehensive border regression test page to fixtures/html | #302 |
+| 6b930312 | add comprehensive text rendering test page for fixtures | #301 |
+| 366a0589 | fix(builtin_scene): tweak the web content rendering parameters | - |
+| 60f3d278 | add flex-grow and flex-shrink test case in fixtures/html | #300 |
+| 5145c149 | feat(css): support parsing flex-grow and flex-shrink at computed style | - |
+| 070211e1 | fix(dom): correct RenderQueue sorting for positioned elements | #297 |
+| 397aac76 | fix(css): fix absolute positioning to reference nearest positioned ancestor | #276 |
+| c9837bb4 | fix(dep): upgrade glsl-lang to fix the glsl preprocessing issues | #295 |
+| b5a086f4 | feat(canvas): implement strokeRect() method in Canvas 2D rendering context | #294 |
+| da43422b | feat(test): add comprehensive Canvas API test pages to fixtures/html | #293 |
+| 91564530 | feat(test): add comprehensive CSS overflow test file to fixtures/html | #290 |
+| 1668735d | fix(dom): implement scroll throttling in document and fix document dirty state | #289 |
+| 0b3a535e | feat(webgl): implement WebGL validateProgram method | #253 |
+| 8b61cbe1 | fix(browser): maintain only one instance for font manager | #286 |
+| 2f5296a2 | feat(cssom): implement CSS nth-child() and nth-of-type() selector support | #285 |
+| 4b09aab0 | fix(cssom): correct align-items impl and add flexbox and grid layout test pages | #282 |
+| 9b9cba37 | fix(cssom): background-repeat should draw from clipped area | #280 |
+| 8e3b8ae5 | feat(cssom): support using background-position, background-size and background-repeat | #274 |
+| 404457ac | fix(browser): correct the bar component depth writes | - |
+| 8c46b022 | feat(bindings): Implement Console binding to support logging on cdp | #267 |
+| 46a910f9 | fix(builtin_scene): correct depth write only pass for web content | - |
+| d660b572 | fix(builtin_scene): write web content depth should be written with stencil testing | #272 |
+| 69344ad9 | feat(cssom): implement CSS attribute selector support in parser and matcher | #271 |
+| b8bab310 | feat(browser): add 3D world-space content bar and input box | #269 |
+| 88e86cff | feat(browser): add frame rate control to vsync and manual modes | #265 |
+| 204c7618 | feat(cssom): support CSS variables | #263 |
+| 99b7458d | feat(cssom): support universal selector (*) in CSSOM selector parser and matching | #261 |
+| bb2894ba | feat(cssom): implement CSS `:root` selector matching | #259 |
+| 0529c45e | feat(cssom): implement CSS :where() functional pseudo-class selector support | #258 |
+| 19dafc6b | feat(cssom): replace Rust CSS selectors with C++ implementation and add pseudo-class support | #241 |
 
 ### Regression Testing Cases
 
-This release includes the following fixtures/html files as regression testing cases to ensure comprehensive coverage of web standards:
-
-#### Core DOM and Web APIs
-- `fixtures/html/document.html` - Document API testing
-- `fixtures/html/elements.html` - HTML element functionality
-- `fixtures/html/dom/document_fragment_test.html` - DocumentFragment API
-- `fixtures/html/dom/document_fragment_clone_test.html` - DocumentFragment cloning
-- `fixtures/html/dom/document_fragment_web_api_test.html` - DocumentFragment Web API compliance
-- `fixtures/html/dom/nodes.html` - DOM node operations
-- `fixtures/html/events.html` - Event handling
-- `fixtures/html/mutation-observers.html` - MutationObserver API
-
-#### Layout and Styling
-- `fixtures/html/layout-flexbox-alignment.html` - Flexbox alignment testing
-- `fixtures/html/layout-flexbox-column.html` - Flexbox column layouts
-- `fixtures/html/layout-flexbox-example.html` - Flexbox examples
-- `fixtures/html/layout-flexbox-grow-shrink.html` - Flexbox grow/shrink behavior
-- `fixtures/html/layout-flexbox-nested.html` - Nested flexbox layouts
-- `fixtures/html/layout-flexbox-wrap.html` - Flexbox wrapping
-- `fixtures/html/layout-grid-alignment.html` - CSS Grid alignment
-- `fixtures/html/layout-grid-areas.html` - CSS Grid areas
-- `fixtures/html/layout-grid-auto.html` - CSS Grid auto placement
-- `fixtures/html/layout-grid-example.html` - CSS Grid examples
-- `fixtures/html/layout-grid-nested.html` - Nested CSS Grid
-
-#### Text Rendering and Alignment
-- `fixtures/html/text.html` - Basic text rendering
-- `fixtures/html/text-rendering-test.html` - Text rendering quality
-- `fixtures/html/text-antialiasing.html` - Text antialiasing
-- `fixtures/html/text-in-flexbox.html` - Text within flexbox layouts
-- `fixtures/html/wide-text.html` - Wide text handling
-
-#### CSS Features
-- `fixtures/html/css-gradients.html` - CSS gradient support
-- `fixtures/html/css-overflow.html` - CSS overflow handling
-- `fixtures/html/css-overflow-comprehensive.html` - Comprehensive overflow testing
-- `fixtures/html/style-properties.html` - CSS property testing
-- `fixtures/html/load-stylesheet.html` - Stylesheet loading
-
-#### Canvas and WebGL
-- `fixtures/html/canvas.html` - Basic Canvas API
-- `fixtures/html/canvas-api-test-suite.html` - Comprehensive Canvas API testing
-- `fixtures/html/canvas-api-basic-drawing.html` - Canvas drawing operations
-- `fixtures/html/canvas-api-image-data.html` - Canvas ImageData API
-- `fixtures/html/canvas-api-paths.html` - Canvas path operations
-- `fixtures/html/canvas-api-state.html` - Canvas state management
-- `fixtures/html/canvas-api-styles.html` - Canvas styling
-- `fixtures/html/canvas-api-text.html` - Canvas text rendering
-- `fixtures/html/canvas-api-transforms.html` - Canvas transformations
-- `fixtures/html/webgl.html` - WebGL API testing
-- `fixtures/html/webgl-conformance/bufferdata-size-test.html` - WebGL buffer operations
-- `fixtures/html/webgl-conformance/clearbufferfv-test.html` - WebGL buffer clearing
-- `fixtures/html/webgl-conformance/validateprogram-test.html` - WebGL program validation
-
-#### 3D Graphics and Rendering
-- `fixtures/html/three.html` - Three.js integration
-- `fixtures/html/three-example.html` - Three.js examples
-- `fixtures/html/three-loader-gltf.html` - GLTF model loading
-- `fixtures/html/three-loader-draco.html` - Draco compression support
-- `fixtures/html/three-loader-fbx.html` - FBX model loading
-- `fixtures/html/three-loader-usdz.html` - USDZ model loading
-- `fixtures/html/babylon-loader-gltf.html` - Babylon.js GLTF support
-- `fixtures/html/babylon-sample-particles.html` - Particle systems
+| File | Description |
+|------|-------------|
+| `fixtures/html/document.html` | Document API testing |
+| `fixtures/html/elements.html` | HTML element functionality |
+| `fixtures/html/dom/document_fragment_test.html` | DocumentFragment API |
+| `fixtures/html/dom/document_fragment_clone_test.html` | DocumentFragment cloning |
+| `fixtures/html/dom/document_fragment_web_api_test.html` | DocumentFragment Web API compliance |
+| `fixtures/html/dom/nodes.html` | DOM node operations |
+| `fixtures/html/events.html` | Event handling |
+| `fixtures/html/mutation-observers.html` | MutationObserver API |
+| `fixtures/html/layout-flexbox-alignment.html` | Flexbox alignment testing |
+| `fixtures/html/layout-flexbox-column.html` | Flexbox column layouts |
+| `fixtures/html/layout-flexbox-example.html` | Flexbox examples |
+| `fixtures/html/layout-flexbox-grow-shrink.html` | Flexbox grow/shrink behavior |
+| `fixtures/html/layout-flexbox-nested.html` | Nested flexbox layouts |
+| `fixtures/html/layout-flexbox-wrap.html` | Flexbox wrapping |
+| `fixtures/html/layout-grid-alignment.html` | CSS Grid alignment |
+| `fixtures/html/layout-grid-areas.html` | CSS Grid areas |
+| `fixtures/html/layout-grid-auto.html` | CSS Grid auto placement |
+| `fixtures/html/layout-grid-example.html` | CSS Grid examples |
+| `fixtures/html/layout-grid-nested.html` | Nested CSS Grid |
+| `fixtures/html/text.html` | Basic text rendering |
+| `fixtures/html/text-rendering-test.html` | Text rendering quality |
+| `fixtures/html/text-antialiasing.html` | Text antialiasing |
+| `fixtures/html/text-in-flexbox.html` | Text within flexbox layouts |
+| `fixtures/html/wide-text.html` | Wide text handling |
+| `fixtures/html/css-gradients.html` | CSS gradient support |
+| `fixtures/html/css-overflow.html` | CSS overflow handling |
+| `fixtures/html/css-overflow-comprehensive.html` | Comprehensive overflow testing |
+| `fixtures/html/style-properties.html` | CSS property testing |
+| `fixtures/html/load-stylesheet.html` | Stylesheet loading |
+| `fixtures/html/canvas.html` | Basic Canvas API |
+| `fixtures/html/canvas-api-test-suite.html` | Comprehensive Canvas API testing |
+| `fixtures/html/canvas-api-basic-drawing.html` | Canvas drawing operations |
+| `fixtures/html/canvas-api-image-data.html` | Canvas ImageData API |
+| `fixtures/html/canvas-api-paths.html` | Canvas path operations |
+| `fixtures/html/canvas-api-state.html` | Canvas state management |
+| `fixtures/html/canvas-api-styles.html` | Canvas styling |
+| `fixtures/html/canvas-api-text.html` | Canvas text rendering |
+| `fixtures/html/canvas-api-transforms.html` | Canvas transformations |
+| `fixtures/html/webgl.html` | WebGL API testing |
+| `fixtures/html/webgl-conformance/bufferdata-size-test.html` | WebGL buffer operations |
+| `fixtures/html/webgl-conformance/clearbufferfv-test.html` | WebGL buffer clearing |
+| `fixtures/html/webgl-conformance/validateprogram-test.html` | WebGL program validation |
+| `fixtures/html/three.html` | Three.js integration |
+| `fixtures/html/three-example.html` | Three.js examples |
+| `fixtures/html/three-loader-gltf.html` | GLTF model loading |
+| `fixtures/html/three-loader-draco.html` | Draco compression support |
+| `fixtures/html/three-loader-fbx.html` | FBX model loading |
+| `fixtures/html/three-loader-usdz.html` | USDZ model loading |
+| `fixtures/html/babylon-loader-gltf.html` | Babylon.js GLTF support |
+| `fixtures/html/babylon-sample-particles.html` | Particle systems |
 
 ## v0.10.0
 
