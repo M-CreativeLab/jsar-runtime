@@ -12,6 +12,72 @@ The alpha version of JSAR is the first version of the project.
 
 - **Documentation**: Improved development workflow and testing coverage
 
+### Regression Testing Cases
+
+This release includes the following fixtures/html files as regression testing cases to ensure comprehensive coverage of web standards:
+
+#### Core DOM and Web APIs
+- `fixtures/html/document.html` - Document API testing
+- `fixtures/html/elements.html` - HTML element functionality
+- `fixtures/html/dom/document_fragment_test.html` - DocumentFragment API
+- `fixtures/html/dom/document_fragment_clone_test.html` - DocumentFragment cloning
+- `fixtures/html/dom/document_fragment_web_api_test.html` - DocumentFragment Web API compliance
+- `fixtures/html/dom/nodes.html` - DOM node operations
+- `fixtures/html/events.html` - Event handling
+- `fixtures/html/mutation-observers.html` - MutationObserver API
+
+#### Layout and Styling
+- `fixtures/html/layout-flexbox-alignment.html` - Flexbox alignment testing
+- `fixtures/html/layout-flexbox-column.html` - Flexbox column layouts
+- `fixtures/html/layout-flexbox-example.html` - Flexbox examples
+- `fixtures/html/layout-flexbox-grow-shrink.html` - Flexbox grow/shrink behavior
+- `fixtures/html/layout-flexbox-nested.html` - Nested flexbox layouts
+- `fixtures/html/layout-flexbox-wrap.html` - Flexbox wrapping
+- `fixtures/html/layout-grid-alignment.html` - CSS Grid alignment
+- `fixtures/html/layout-grid-areas.html` - CSS Grid areas
+- `fixtures/html/layout-grid-auto.html` - CSS Grid auto placement
+- `fixtures/html/layout-grid-example.html` - CSS Grid examples
+- `fixtures/html/layout-grid-nested.html` - Nested CSS Grid
+
+#### Text Rendering and Alignment
+- `fixtures/html/text.html` - Basic text rendering
+- `fixtures/html/text-rendering-test.html` - Text rendering quality
+- `fixtures/html/text-antialiasing.html` - Text antialiasing
+- `fixtures/html/text-in-flexbox.html` - Text within flexbox layouts
+- `fixtures/html/wide-text.html` - Wide text handling
+
+#### CSS Features
+- `fixtures/html/css-gradients.html` - CSS gradient support
+- `fixtures/html/css-overflow.html` - CSS overflow handling
+- `fixtures/html/css-overflow-comprehensive.html` - Comprehensive overflow testing
+- `fixtures/html/style-properties.html` - CSS property testing
+- `fixtures/html/load-stylesheet.html` - Stylesheet loading
+
+#### Canvas and WebGL
+- `fixtures/html/canvas.html` - Basic Canvas API
+- `fixtures/html/canvas-api-test-suite.html` - Comprehensive Canvas API testing
+- `fixtures/html/canvas-api-basic-drawing.html` - Canvas drawing operations
+- `fixtures/html/canvas-api-image-data.html` - Canvas ImageData API
+- `fixtures/html/canvas-api-paths.html` - Canvas path operations
+- `fixtures/html/canvas-api-state.html` - Canvas state management
+- `fixtures/html/canvas-api-styles.html` - Canvas styling
+- `fixtures/html/canvas-api-text.html` - Canvas text rendering
+- `fixtures/html/canvas-api-transforms.html` - Canvas transformations
+- `fixtures/html/webgl.html` - WebGL API testing
+- `fixtures/html/webgl-conformance/bufferdata-size-test.html` - WebGL buffer operations
+- `fixtures/html/webgl-conformance/clearbufferfv-test.html` - WebGL buffer clearing
+- `fixtures/html/webgl-conformance/validateprogram-test.html` - WebGL program validation
+
+#### 3D Graphics and Rendering
+- `fixtures/html/three.html` - Three.js integration
+- `fixtures/html/three-example.html` - Three.js examples
+- `fixtures/html/three-loader-gltf.html` - GLTF model loading
+- `fixtures/html/three-loader-draco.html` - Draco compression support
+- `fixtures/html/three-loader-fbx.html` - FBX model loading
+- `fixtures/html/three-loader-usdz.html` - USDZ model loading
+- `fixtures/html/babylon-loader-gltf.html` - Babylon.js GLTF support
+- `fixtures/html/babylon-sample-particles.html` - Particle systems
+
 ## v0.10.0
 
 ### New Features & Improvements
