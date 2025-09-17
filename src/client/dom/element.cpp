@@ -13,6 +13,7 @@
 #include "./document.hpp"
 #include "./document_fragment.hpp"
 #include "./attr.hpp"
+#include "../script_bindings/event.hpp"
 
 namespace dom
 {
@@ -1008,44 +1009,29 @@ namespace dom
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::Context::Scope contextScope(context);
 
-      // Create a V8 event object to pass to the handler
+      // Create a V8 event object using the proper Event wrapper
       v8::Local<v8::Object> eventObject;
       if (event != nullptr)
       {
-        // Create a simple event object with basic properties
-        eventObject = v8::Object::New(isolate);
+        // Use the script_bindings::Event wrapper to create a proper V8 event object
+        auto nativeEventPtr = std::shared_ptr<dom::Event>(event, [](dom::Event *)
+                                                          {
+                                                            // Don't delete - the event is managed externally
+                                                          });
 
-        // Set basic event properties
-        eventObject->Set(context,
-                         v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                         v8::String::NewFromUtf8(isolate, event->typeStr().c_str()).ToLocalChecked())
-          .Check();
+        // Initialize the Event class if not already done
+        static bool eventClassInitialized = false;
+        if (!eventClassInitialized)
+        {
+          script_bindings::Event::Initialize(isolate);
+          eventClassInitialized = true;
+        }
 
-        eventObject->Set(context,
-                         v8::String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
-                         v8::Boolean::New(isolate, event->bubbles()))
-          .Check();
-
-        eventObject->Set(context,
-                         v8::String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
-                         v8::Boolean::New(isolate, event->cancelable()))
-          .Check();
-
-        // Add preventDefault method
-        auto preventDefaultFunc = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &args)
-                                                    {
-                                                      // Simple preventDefault implementation - just a placeholder for now
-                                                    })
-                                    .ToLocalChecked();
-
-        eventObject->Set(context,
-                         v8::String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
-                         preventDefaultFunc)
-          .Check();
+        eventObject = script_bindings::Event::NewInstance(isolate, nativeEventPtr);
       }
       else
       {
-        // Create a null event object for backward compatibility
+        // Create a basic event object for backward compatibility
         eventObject = v8::Object::New(isolate);
         eventObject->Set(context,
                          v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
