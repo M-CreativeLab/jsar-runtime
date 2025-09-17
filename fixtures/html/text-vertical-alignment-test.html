@@ -128,26 +128,78 @@
     }
 
     /* Vertical alignment properties */
-    .valign-baseline { vertical-align: baseline; }
-    .valign-top { vertical-align: top; }
-    .valign-middle { vertical-align: middle; }
-    .valign-bottom { vertical-align: bottom; }
-    .valign-text-top { vertical-align: text-top; }
-    .valign-text-bottom { vertical-align: text-bottom; }
-    .valign-super { vertical-align: super; }
-    .valign-sub { vertical-align: sub; }
-    .valign-5px { vertical-align: 5px; }
-    .valign-minus-5px { vertical-align: -5px; }
-    .valign-10percent { vertical-align: 10%; }
-    .valign-minus-10percent { vertical-align: -10%; }
+    .valign-baseline {
+      vertical-align: baseline;
+    }
+
+    .valign-top {
+      vertical-align: top;
+    }
+
+    .valign-middle {
+      vertical-align: middle;
+    }
+
+    .valign-bottom {
+      vertical-align: bottom;
+    }
+
+    .valign-text-top {
+      vertical-align: text-top;
+    }
+
+    .valign-text-bottom {
+      vertical-align: text-bottom;
+    }
+
+    .valign-super {
+      vertical-align: super;
+    }
+
+    .valign-sub {
+      vertical-align: sub;
+    }
+
+    .valign-5px {
+      vertical-align: 5px;
+    }
+
+    .valign-minus-5px {
+      vertical-align: -5px;
+    }
+
+    .valign-10percent {
+      vertical-align: 10%;
+    }
+
+    .valign-minus-10percent {
+      vertical-align: -10%;
+    }
 
     /* Font sizes for comparison */
-    .font-12 { font-size: 12px; }
-    .font-16 { font-size: 16px; }
-    .font-20 { font-size: 20px; }
-    .font-24 { font-size: 24px; }
-    .font-32 { font-size: 32px; }
-    .font-48 { font-size: 48px; }
+    .font-12 {
+      font-size: 12px;
+    }
+
+    .font-16 {
+      font-size: 16px;
+    }
+
+    .font-20 {
+      font-size: 20px;
+    }
+
+    .font-24 {
+      font-size: 24px;
+    }
+
+    .font-32 {
+      font-size: 32px;
+    }
+
+    .font-48 {
+      font-size: 48px;
+    }
 
     /* Display and positioning tests */
     .inline-block-container {
@@ -180,11 +232,25 @@
     }
 
     /* Flexbox alignment */
-    .flex-align-start { align-items: flex-start; }
-    .flex-align-center { align-items: center; }
-    .flex-align-end { align-items: flex-end; }
-    .flex-align-baseline { align-items: baseline; }
-    .flex-align-stretch { align-items: stretch; }
+    .flex-align-start {
+      align-items: flex-start;
+    }
+
+    .flex-align-center {
+      align-items: center;
+    }
+
+    .flex-align-end {
+      align-items: flex-end;
+    }
+
+    .flex-align-baseline {
+      align-items: baseline;
+    }
+
+    .flex-align-stretch {
+      align-items: stretch;
+    }
 
     /* Grid alignment tests */
     .grid-container {
@@ -201,10 +267,21 @@
       padding: 10px;
     }
 
-    .grid-align-start { align-items: start; }
-    .grid-align-center { align-items: center; }
-    .grid-align-end { align-items: end; }
-    .grid-align-stretch { align-items: stretch; }
+    .grid-align-start {
+      align-items: start;
+    }
+
+    .grid-align-center {
+      align-items: center;
+    }
+
+    .grid-align-end {
+      align-items: end;
+    }
+
+    .grid-align-stretch {
+      align-items: stretch;
+    }
 
     /* Table cell alignment */
     .table-test {
@@ -224,9 +301,17 @@
       height: 80px;
     }
 
-    .table-valign-top { vertical-align: top; }
-    .table-valign-middle { vertical-align: middle; }
-    .table-valign-bottom { vertical-align: bottom; }
+    .table-valign-top {
+      vertical-align: top;
+    }
+
+    .table-valign-middle {
+      vertical-align: middle;
+    }
+
+    .table-valign-bottom {
+      vertical-align: bottom;
+    }
 
     /* Comparison grid */
     .comparison-grid {
@@ -289,14 +374,15 @@
       </h1>
       <div class="info-box">
         <strong>测试目的 Test Purpose:</strong> 检测文字渲染时的垂直对齐是否正确，特别是与其他浏览器对比时JSAR中文字是否过度下沉<br>
-        <strong>Expected Behavior:</strong> Text should align properly according to CSS vertical-align properties and baseline calculations
+        <strong>Expected Behavior:</strong> Text should align properly according to CSS vertical-align properties and
+        baseline calculations
       </div>
     </header>
 
     <!-- Basic Vertical Align Tests -->
     <section class="section">
       <h2 class="section-title">基础垂直对齐测试 - Basic Vertical Alignment Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">vertical-align values with inline elements - 内联元素垂直对齐值</div>
         <div class="reference-container valign-container-80">
@@ -304,7 +390,7 @@
           <div class="center-guide" style="top: 50%;"></div>
           <div class="bottom-guide"></div>
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-20">Normal text </span>
           <span class="font-20 valign-baseline text-marker">baseline</span>
           <span class="font-20 valign-top text-marker">top</span>
@@ -314,7 +400,7 @@
           <span class="font-20 valign-text-bottom text-marker">text-bottom</span>
         </div>
         <div class="info-box">
-          Guides: Green=top, Blue=center, Purple=bottom, Red=baseline (approx 60%). 
+          Guides: Green=top, Blue=center, Purple=bottom, Red=baseline (approx 60%).
           Yellow highlights show alignment behavior.
         </div>
       </div>
@@ -323,7 +409,7 @@
         <div class="test-label">Super and subscript alignment - 上标下标对齐</div>
         <div class="reference-container valign-container-80">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-24">Normal text </span>
           <span class="font-16 valign-super text-marker">superscript</span>
           <span class="font-24"> and </span>
@@ -339,7 +425,7 @@
         <div class="test-label">Pixel and percentage offsets - 像素和百分比偏移</div>
         <div class="reference-container valign-container-80">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-20">Baseline </span>
           <span class="font-20 valign-5px text-marker">+5px</span>
           <span class="font-20 valign-minus-5px text-marker">-5px</span>
@@ -355,12 +441,12 @@
     <!-- Mixed Font Size Tests -->
     <section class="section">
       <h2 class="section-title">混合字体大小测试 - Mixed Font Size Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">Different font sizes with baseline alignment - 不同字体大小基线对齐</div>
         <div class="reference-container valign-container-120">
           <div class="baseline-guide" style="top: 75%;"></div>
-          
+
           <span class="font-12 valign-baseline">12px</span>
           <span class="font-16 valign-baseline">16px</span>
           <span class="font-20 valign-baseline">20px</span>
@@ -377,7 +463,7 @@
         <div class="test-label">Mixed font sizes with middle alignment - 混合字体大小居中对齐</div>
         <div class="reference-container valign-container-120">
           <div class="center-guide" style="top: 50%;"></div>
-          
+
           <span class="font-12 valign-middle">12px</span>
           <span class="font-16 valign-middle">16px</span>
           <span class="font-20 valign-middle">20px</span>
@@ -394,12 +480,12 @@
     <!-- CJK vs Latin Character Tests -->
     <section class="section">
       <h2 class="section-title">中西文字符对比测试 - CJK vs Latin Character Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">Chinese characters baseline alignment - 中文字符基线对齐</div>
         <div class="reference-container valign-container-80 cjk-test">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-24 valign-baseline">中文字符 汉字测试 测试基线对齐</span>
         </div>
         <div class="info-box error-indicator">
@@ -411,7 +497,7 @@
         <div class="test-label">Latin characters baseline alignment - 拉丁字符基线对齐</div>
         <div class="reference-container valign-container-80 latin-test">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-24 valign-baseline">Latin characters English text baseline test</span>
         </div>
         <div class="info-box">
@@ -423,7 +509,7 @@
         <div class="test-label">Mixed CJK and Latin alignment - 中西文混合对齐</div>
         <div class="reference-container valign-container-80">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-24 valign-baseline">Mixed 混合 text 文字 alignment 对齐 test 测试</span>
         </div>
         <div class="info-box error-indicator">
@@ -435,7 +521,7 @@
         <div class="test-label">Different fonts baseline comparison - 不同字体基线对比</div>
         <div class="reference-container valign-container-120">
           <div class="baseline-guide" style="top: 75%;"></div>
-          
+
           <div style="margin: 5px 0;">
             <span class="font-24 cjk-test valign-baseline">中文字体: 你好世界 测试基线</span>
           </div>
@@ -455,7 +541,7 @@
     <!-- Inline-block Alignment Tests -->
     <section class="section">
       <h2 class="section-title">内联块对齐测试 - Inline-block Alignment Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">Inline-block elements with different alignments - 不同对齐的内联块元素</div>
         <div class="inline-block-container" style="line-height: 80px; min-height: 80px;">
@@ -474,7 +560,7 @@
     <!-- Flexbox Alignment Tests -->
     <section class="section">
       <h2 class="section-title">弹性盒对齐测试 - Flexbox Alignment Tests</h2>
-      
+
       <div class="comparison-grid">
         <div>
           <div class="test-label">align-items: flex-start</div>
@@ -542,12 +628,12 @@
     <!-- Edge Cases and Stress Tests -->
     <section class="section">
       <h2 class="section-title">边界情况和压力测试 - Edge Cases and Stress Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">Very large and very small text alignment - 超大超小文字对齐</div>
         <div class="reference-container valign-container-120">
           <div class="baseline-guide" style="top: 75%;"></div>
-          
+
           <span style="font-size: 8px;" class="valign-baseline">8px</span>
           <span style="font-size: 72px;" class="valign-baseline">72px大字</span>
           <span style="font-size: 8px;" class="valign-baseline">8px again</span>
@@ -561,16 +647,16 @@
         <div class="test-label">Complex nested alignment - 复杂嵌套对齐</div>
         <div class="reference-container valign-container-100">
           <div class="baseline-guide" style="top: 70%;"></div>
-          
+
           <span class="font-20 valign-baseline">
-            Base 
+            Base
             <span class="font-16 valign-super">
-              Super 
+              Super
               <span class="font-12 valign-baseline">nested</span>
             </span>
-            and 
+            and
             <span class="font-16 valign-sub">
-              Sub 
+              Sub
               <span class="font-12 valign-baseline">nested</span>
             </span>
             text
@@ -585,7 +671,7 @@
         <div class="test-label">Empty elements and whitespace - 空元素和空白符</div>
         <div class="reference-container valign-container-80">
           <div class="baseline-guide" style="top: 60%;"></div>
-          
+
           <span class="font-20 valign-baseline">Text</span>
           <span class="font-20 valign-baseline"> </span>
           <span class="font-20 valign-baseline"></span>
@@ -608,12 +694,12 @@
   <script>
     // Set timestamp
     document.getElementById('timestamp').textContent = new Date().toLocaleString();
-    
+
     // Console log for debugging
     console.log('Text Vertical Alignment Test Page loaded successfully');
     console.log('Total test sections:', document.querySelectorAll('.section').length);
     console.log('Total test items:', document.querySelectorAll('.test-item').length);
-    
+
     // Measure baseline positions for debugging
     function measureBaselines() {
       const containers = document.querySelectorAll('.reference-container');
@@ -624,7 +710,7 @@
           height: rect.height,
           spans: spans.length
         });
-        
+
         spans.forEach((span, spanIndex) => {
           const spanRect = span.getBoundingClientRect();
           const relativeTop = spanRect.top - rect.top;
@@ -632,12 +718,12 @@
         });
       });
     }
-    
+
     // Add interactive functionality
     // document.addEventListener('DOMContentLoaded', function() {
     //   // Measure baselines after layout
     //   setTimeout(measureBaselines, 100);
-      
+
     //   // Highlight test items on hover
     //   const testItems = document.querySelectorAll('.test-item');
     //   testItems.forEach(item => {
@@ -648,7 +734,7 @@
     //       this.style.boxShadow = 'none';
     //     });
     //   });
-      
+
     //   // Add click to highlight baseline functionality
     //   const guides = document.querySelectorAll('.baseline-guide');
     //   guides.forEach(guide => {
@@ -662,10 +748,10 @@
     //     });
     //   });
     // });
-    
+
     // Performance monitoring
     const startTime = performance.now();
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       const loadTime = performance.now() - startTime;
       console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
     });
