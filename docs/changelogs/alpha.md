@@ -2,6 +2,16 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.10.1
+
+### New Features & Improvements
+
+- **Text Alignment Tests**: Added comprehensive test cases for text-align CSS property in fixtures/html (#313)
+
+### Bug Fixes & Performance
+
+- **Documentation**: Improved development workflow and testing coverage
+
 ## v0.10.0
 
 ### New Features & Improvements
