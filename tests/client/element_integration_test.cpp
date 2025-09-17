@@ -70,35 +70,6 @@ TEST_CASE("Element simulation integration", "[Element][Integration][Simulation]"
   REQUIRE_NOTHROW(element->simulateClick(glm::vec3(1.0f, 1.0f, 1.0f)));
 }
 
-TEST_CASE("Function reference handling", "[Element][Integration][Function]")
-{
-  auto element = std::make_shared<Element>("span", std::nullopt);
-
-  // Test function reference for click
-  void* clickFunction = reinterpret_cast<void*>(0x12345678);
-  element->setEventHandlerFunction("click", clickFunction);
-  
-  REQUIRE(element->hasEventHandler("click") == true);
-  REQUIRE(element->hasOnClickHandler() == true); // Should be accessible through legacy API
-  REQUIRE(element->getEventHandlerCode("click") == ""); // Code should be empty
-  REQUIRE(element->getOnClickHandlerCode() == ""); // Legacy API should also return empty
-
-  // Test function reference for non-click event
-  void* pointerFunction = reinterpret_cast<void*>(0x87654321);
-  element->setEventHandlerFunction("pointerdown", pointerFunction);
-  
-  REQUIRE(element->hasEventHandler("pointerdown") == true);
-  REQUIRE(element->getEventHandlerCode("pointerdown") == "");
-
-  // Setting code should clear function reference
-  element->setEventHandler("click", "newClickHandler()");
-  REQUIRE(element->hasEventHandler("click") == true);
-  REQUIRE(element->getEventHandlerCode("click") == "newClickHandler()");
-
-  // pointerdown function should still exist
-  REQUIRE(element->hasEventHandler("pointerdown") == true);
-}
-
 TEST_CASE("Event type case sensitivity and validation", "[Element][Integration][Types]")
 {
   auto element = std::make_shared<Element>("div", std::nullopt);

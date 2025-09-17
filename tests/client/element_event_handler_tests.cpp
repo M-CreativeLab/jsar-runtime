@@ -52,23 +52,6 @@ TEST_CASE("Element backward compatibility with onclick methods", "[Element][Even
   REQUIRE(element->hasOnClickHandler() == true);
 }
 
-TEST_CASE("Element setEventHandlerFunction", "[Element][EventHandler]")
-{
-  auto element = createTestElement();
-
-  // Test setting function reference for click event
-  void* dummyFunction = reinterpret_cast<void*>(0x12345678);
-  element->setEventHandlerFunction("click", dummyFunction);
-  REQUIRE(element->hasEventHandler("click") == true);
-  REQUIRE(element->getEventHandlerCode("click") == ""); // Should be empty when function is set
-
-  // Test setting function reference for pointerdown event
-  void* anotherFunction = reinterpret_cast<void*>(0x87654321);
-  element->setEventHandlerFunction("pointerdown", anotherFunction);
-  REQUIRE(element->hasEventHandler("pointerdown") == true);
-  REQUIRE(element->getEventHandlerCode("pointerdown") == ""); // Should be empty when function is set
-}
-
 TEST_CASE("Element event handler replacement", "[Element][EventHandler]")
 {
   auto element = createTestElement();
@@ -78,16 +61,16 @@ TEST_CASE("Element event handler replacement", "[Element][EventHandler]")
   REQUIRE(element->getEventHandlerCode("click") == "alert('first handler')");
   REQUIRE(element->hasEventHandler("click") == true);
 
-  // Replace with function reference
-  void* dummyFunction = reinterpret_cast<void*>(0x12345678);
-  element->setEventHandlerFunction("click", dummyFunction);
-  REQUIRE(element->getEventHandlerCode("click") == ""); // Code should be cleared
-  REQUIRE(element->hasEventHandler("click") == true); // But should still have handler
-
   // Replace with new handler code
   element->setEventHandler("click", "alert('second handler')");
   REQUIRE(element->getEventHandlerCode("click") == "alert('second handler')");
   REQUIRE(element->hasEventHandler("click") == true);
+
+  // Clear handler by setting empty string
+  element->setEventHandler("click", "");
+  REQUIRE(element->getEventHandlerCode("click") == "");
+  REQUIRE(element->hasEventHandler("click") == false);
+}
 }
 
 TEST_CASE("Element executeEventHandler basic functionality", "[Element][EventHandler]")

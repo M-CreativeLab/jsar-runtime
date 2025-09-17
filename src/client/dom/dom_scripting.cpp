@@ -647,6 +647,57 @@ namespace dom
     return true;
   }
 
+  v8::MaybeLocal<v8::Function> DOMScriptingContext::compileEventHandler(const string &handlerCode)
+  {
+    assert(isContextInitialized);
+
+    // Create a handle scope to store the context, that is a `Local<Context>`.
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
+    v8::Local<v8::Context> context = v8ContextStore.Get(isolate);
+    v8::Context::Scope contextScope(context);
+
+    // Wrap the handler code in a function that accepts an event parameter
+    string functionCode = "(function(event) { " + handlerCode + " })";
+
+    v8::TryCatch tryCatch(isolate);
+    v8::Local<v8::String> source = v8::String::NewFromUtf8(isolate, functionCode.c_str()).ToLocalChecked();
+
+    // Compile the function expression
+    v8::Local<v8::Script> script;
+    if (!v8::Script::Compile(context, source).ToLocal(&script))
+    {
+      if (tryCatch.HasCaught())
+      {
+        v8::String::Utf8Value exception(isolate, tryCatch.Exception());
+        cerr << "Failed to compile event handler: " << *exception << endl;
+      }
+      return v8::MaybeLocal<v8::Function>();
+    }
+
+    // Execute the script to get the function
+    v8::Local<v8::Value> result;
+    if (!script->Run(context).ToLocal(&result))
+    {
+      if (tryCatch.HasCaught())
+      {
+        v8::String::Utf8Value exception(isolate, tryCatch.Exception());
+        cerr << "Failed to execute event handler compilation: " << *exception << endl;
+      }
+      return v8::MaybeLocal<v8::Function>();
+    }
+
+    // Ensure the result is a function
+    if (!result->IsFunction())
+    {
+      cerr << "Event handler compilation did not result in a function" << endl;
+      return v8::MaybeLocal<v8::Function>();
+    }
+
+    return handleScope.Escape(result.As<v8::Function>());
+  }
+
   bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
   {
     assert(isContextInitialized);
