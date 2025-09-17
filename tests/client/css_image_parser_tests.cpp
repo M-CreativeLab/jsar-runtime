@@ -162,6 +162,49 @@ TEST_CASE("CSSValueTokenizer numeric values", "[css-tokenizer]")
   }
 }
 
+TEST_CASE("CSSValueTokenizer hex color values", "[css-tokenizer]")
+{
+  SECTION("6-digit hex color")
+  {
+    CSSValueTokenizer tokenizer("#ff0000");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 1);
+    REQUIRE(tokens[0].type == TokenType::kHash);
+    REQUIRE(tokens[0].value == "ff0000");
+  }
+
+  SECTION("3-digit hex color")
+  {
+    CSSValueTokenizer tokenizer("#f00");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 1);
+    REQUIRE(tokens[0].type == TokenType::kHash);
+    REQUIRE(tokens[0].value == "f00");
+  }
+
+  SECTION("8-digit hex color with alpha")
+  {
+    CSSValueTokenizer tokenizer("#ff000080");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 1);
+    REQUIRE(tokens[0].type == TokenType::kHash);
+    REQUIRE(tokens[0].value == "ff000080");
+  }
+
+  SECTION("4-digit hex color with alpha")
+  {
+    CSSValueTokenizer tokenizer("#f008");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 1);
+    REQUIRE(tokens[0].type == TokenType::kHash);
+    REQUIRE(tokens[0].value == "f008");
+  }
+}
+
 TEST_CASE("CSSValueTokenizer complex expressions", "[css-tokenizer]")
 {
   SECTION("Complex linear gradient with multiple stops")
@@ -188,6 +231,52 @@ TEST_CASE("CSSValueTokenizer complex expressions", "[css-tokenizer]")
     REQUIRE(tokens.size() >= 1);
     REQUIRE(tokens[0].type == TokenType::kUrl);
     REQUIRE(tokens[0].value == "https://example.com/path/to/image.jpg");
+  }
+}
+
+TEST_CASE("CSSValueTokenizer gradient with hex colors", "[css-tokenizer]")
+{
+  SECTION("Linear gradient with hex colors")
+  {
+    CSSValueTokenizer tokenizer("linear-gradient(to right, #ff0000, #0000ff)");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 6);
+    REQUIRE(tokens[0].type == TokenType::kFunction);
+    REQUIRE(tokens[0].value == "linear-gradient");
+
+    // Find the hash tokens
+    bool foundRedHash = false, foundBlueHash = false;
+    for (const auto &token : tokens)
+    {
+      if (token.type == TokenType::kHash)
+      {
+        if (token.value == "ff0000")
+          foundRedHash = true;
+        if (token.value == "0000ff")
+          foundBlueHash = true;
+      }
+    }
+    REQUIRE(foundRedHash);
+    REQUIRE(foundBlueHash);
+  }
+
+  SECTION("Radial gradient with rgba and hex")
+  {
+    CSSValueTokenizer tokenizer("radial-gradient(circle, rgba(255,0,0,0.5), #00ff00)");
+    auto tokens = tokenizer.tokenize();
+
+    REQUIRE(tokens.size() >= 8);
+    bool foundRgbaFunction = false, foundGreenHash = false;
+    for (const auto &token : tokens)
+    {
+      if (token.type == TokenType::kFunction && token.value == "rgba")
+        foundRgbaFunction = true;
+      if (token.type == TokenType::kHash && token.value == "00ff00")
+        foundGreenHash = true;
+    }
+    REQUIRE(foundRgbaFunction);
+    REQUIRE(foundGreenHash);
   }
 }
 
@@ -242,6 +331,27 @@ TEST_CASE("CSSImageParser basic parsing", "[css-image-parser]")
   SECTION("Parse radial gradient")
   {
     auto image = CSSImageParser::parseImage("radial-gradient(circle, red, blue)");
+    // Basic test to ensure parsing doesn't crash
+    REQUIRE(true);
+  }
+
+  SECTION("Parse linear gradient with hex colors")
+  {
+    auto image = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, #0000ff)");
+    // Basic test to ensure parsing doesn't crash
+    REQUIRE(true);
+  }
+
+  SECTION("Parse linear gradient with rgba and hex colors")
+  {
+    auto image = CSSImageParser::parseImage("linear-gradient(to bottom, rgba(255,0,0,0.5), #00ff00, #0000ff80)");
+    // Basic test to ensure parsing doesn't crash
+    REQUIRE(true);
+  }
+
+  SECTION("Parse radial gradient with short hex colors")
+  {
+    auto image = CSSImageParser::parseImage("radial-gradient(circle, #f00, #0f0)");
     // Basic test to ensure parsing doesn't crash
     REQUIRE(true);
   }

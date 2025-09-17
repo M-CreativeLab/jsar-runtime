@@ -478,6 +478,12 @@ namespace client_cssom::css_parser
         advance();
       }
     }
+    else if (token.type == css_value_tokenizer::TokenType::kHash)
+    {
+      // Hex color like #ff0000 or #ff0000aa
+      colorString = "#" + token.value;
+      advance();
+    }
     else
     {
       // Unsupported color format, default to transparent
