@@ -410,38 +410,6 @@
     console.log('Image Edge Truncation Test Page loaded successfully');
     console.log('Total test sections:', document.querySelectorAll('.section').length);
     console.log('Total test items:', document.querySelectorAll('.test-item').length);
-    
-    // Monitor image loading
-    const images = document.querySelectorAll('img');
-    let loadedCount = 0;
-    
-    images.forEach((img, index) => {
-      img.addEventListener('load', () => {
-        loadedCount++;
-        console.log(`Image ${index + 1} loaded successfully (${loadedCount}/${images.length})`);
-        if (loadedCount === images.length) {
-          console.log('All images loaded successfully');
-        }
-      });
-      
-      img.addEventListener('error', (e) => {
-        console.error(`Image ${index + 1} failed to load:`, img.src, e);
-      });
-    });
-    
-    // Add interactive functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      // Highlight containers on hover
-      const containers = document.querySelectorAll('[class*="container-"]');
-      containers.forEach(container => {
-        container.addEventListener('mouseenter', function() {
-          this.style.boxShadow = '0 0 10px rgba(255, 107, 53, 0.5)';
-        });
-        container.addEventListener('mouseleave', function() {
-          this.style.boxShadow = 'none';
-        });
-      });
-    });
   </script>
 </body>
 

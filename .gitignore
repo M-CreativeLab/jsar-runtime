@@ -36,6 +36,7 @@
 
 # NPM
 node_modules
+.npmrc
 
 # JSAR Runtime
 .cache
