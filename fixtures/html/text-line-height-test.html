@@ -100,51 +100,150 @@
       right: 0;
     }
 
-    .guide-red { border-color: red; }
-    .guide-blue { border-color: blue; }
-    .guide-green { border-color: green; }
-    .guide-purple { border-color: purple; }
+    .guide-red {
+      border-color: red;
+    }
+
+    .guide-blue {
+      border-color: blue;
+    }
+
+    .guide-green {
+      border-color: green;
+    }
+
+    .guide-purple {
+      border-color: purple;
+    }
 
     /* Basic line-height values */
-    .lh-normal { line-height: normal; }
-    .lh-1 { line-height: 1; }
-    .lh-1-2 { line-height: 1.2; }
-    .lh-1-5 { line-height: 1.5; }
-    .lh-2 { line-height: 2; }
-    .lh-2-5 { line-height: 2.5; }
-    .lh-3 { line-height: 3; }
+    .lh-normal {
+      line-height: normal;
+    }
+
+    .lh-1 {
+      line-height: 1;
+    }
+
+    .lh-1-2 {
+      line-height: 1.2;
+    }
+
+    .lh-1-5 {
+      line-height: 1.5;
+    }
+
+    .lh-2 {
+      line-height: 2;
+    }
+
+    .lh-2-5 {
+      line-height: 2.5;
+    }
+
+    .lh-3 {
+      line-height: 3;
+    }
 
     /* Pixel values */
-    .lh-12px { line-height: 12px; }
-    .lh-16px { line-height: 16px; }
-    .lh-20px { line-height: 20px; }
-    .lh-24px { line-height: 24px; }
-    .lh-30px { line-height: 30px; }
-    .lh-40px { line-height: 40px; }
-    .lh-50px { line-height: 50px; }
-    .lh-60px { line-height: 60px; }
+    .lh-12px {
+      line-height: 12px;
+    }
+
+    .lh-16px {
+      line-height: 16px;
+    }
+
+    .lh-20px {
+      line-height: 20px;
+    }
+
+    .lh-24px {
+      line-height: 24px;
+    }
+
+    .lh-30px {
+      line-height: 30px;
+    }
+
+    .lh-40px {
+      line-height: 40px;
+    }
+
+    .lh-50px {
+      line-height: 50px;
+    }
+
+    .lh-60px {
+      line-height: 60px;
+    }
 
     /* Percentage values */
-    .lh-100percent { line-height: 100%; }
-    .lh-120percent { line-height: 120%; }
-    .lh-150percent { line-height: 150%; }
-    .lh-200percent { line-height: 200%; }
+    .lh-100percent {
+      line-height: 100%;
+    }
+
+    .lh-120percent {
+      line-height: 120%;
+    }
+
+    .lh-150percent {
+      line-height: 150%;
+    }
+
+    .lh-200percent {
+      line-height: 200%;
+    }
 
     /* Em values */
-    .lh-1em { line-height: 1em; }
-    .lh-1-5em { line-height: 1.5em; }
-    .lh-2em { line-height: 2em; }
+    .lh-1em {
+      line-height: 1em;
+    }
+
+    .lh-1-5em {
+      line-height: 1.5em;
+    }
+
+    .lh-2em {
+      line-height: 2em;
+    }
 
     /* Font sizes for testing */
-    .fs-12 { font-size: 12px; }
-    .fs-14 { font-size: 14px; }
-    .fs-16 { font-size: 16px; }
-    .fs-18 { font-size: 18px; }
-    .fs-20 { font-size: 20px; }
-    .fs-24 { font-size: 24px; }
-    .fs-30 { font-size: 30px; }
-    .fs-36 { font-size: 36px; }
-    .fs-48 { font-size: 48px; }
+    .fs-12 {
+      font-size: 12px;
+    }
+
+    .fs-14 {
+      font-size: 14px;
+    }
+
+    .fs-16 {
+      font-size: 16px;
+    }
+
+    .fs-18 {
+      font-size: 18px;
+    }
+
+    .fs-20 {
+      font-size: 20px;
+    }
+
+    .fs-24 {
+      font-size: 24px;
+    }
+
+    .fs-30 {
+      font-size: 30px;
+    }
+
+    .fs-36 {
+      font-size: 36px;
+    }
+
+    .fs-48 {
+      font-size: 48px;
+    }
 
     /* Comparison grids */
     .comparison-grid {
@@ -260,16 +359,6 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
-
-    /* Debugging helpers */
-    .show-line-boxes {
-      background-image: repeating-linear-gradient(
-        transparent,
-        transparent 1.4em,
-        rgba(255, 0, 0, 0.1) 1.4em,
-        rgba(255, 0, 0, 0.1) 1.6em
-      );
-    }
   </style>
 </head>
 
@@ -282,14 +371,15 @@
       </h1>
       <div class="info-box">
         <strong>测试目的 Test Purpose:</strong> 全面测试line-height的各种设置方式，包括数值、像素、百分比、em等单位的正确渲染<br>
-        <strong>Expected Behavior:</strong> Line height should be calculated correctly for different units and inheritance should work properly
+        <strong>Expected Behavior:</strong> Line height should be calculated correctly for different units and
+        inheritance should work properly
       </div>
     </header>
 
     <!-- Basic Line Height Values -->
     <section class="section">
       <h2 class="section-title">基础行高值测试 - Basic Line Height Values</h2>
-      
+
       <div class="comparison-grid">
         <div class="comparison-item">
           <div class="comparison-header">line-height: normal</div>
@@ -368,13 +458,13 @@
     <!-- Pixel Values Tests -->
     <section class="section">
       <h2 class="section-title">像素值测试 - Pixel Values Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Fixed pixel line heights with 16px font size
           <span class="computed-value">font-size: 16px</span>
         </div>
-        
+
         <div class="comparison-grid">
           <div class="comparison-item">
             <div class="comparison-header">line-height: 12px</div>
@@ -418,13 +508,13 @@
     <!-- Percentage Values Tests -->
     <section class="section">
       <h2 class="section-title">百分比值测试 - Percentage Values Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Percentage line heights with different font sizes
           <span class="computed-value">Computed at inheritance time</span>
         </div>
-        
+
         <div class="comparison-grid">
           <div class="comparison-item">
             <div class="comparison-header">100% with 16px font</div>
@@ -468,13 +558,13 @@
     <!-- Em Values Tests -->
     <section class="section">
       <h2 class="section-title">Em值测试 - Em Values Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Em line heights with different font sizes
           <span class="computed-value">Relative to element's font-size</span>
         </div>
-        
+
         <div class="comparison-grid">
           <div class="comparison-item">
             <div class="comparison-header">1em with 16px font</div>
@@ -518,24 +608,24 @@
     <!-- Inheritance Tests -->
     <section class="section">
       <h2 class="section-title">继承测试 - Inheritance Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Line height inheritance patterns
           <span class="computed-value">Different inheritance behaviors</span>
         </div>
-        
+
         <div class="parent-container fs-20 lh-1-5">
           <div style="background: #e3f2fd; padding: 8px; margin-bottom: 10px;">
             <strong>Parent: font-size: 20px, line-height: 1.5</strong>
           </div>
-          
+
           <div class="child-element fs-16">
             <strong>Child 1:</strong> font-size: 16px, line-height: inherited<br>
             继承的行高值应该是1.5倍当前字体大小(16px) = 24px<br>
             Inherited line-height should be 1.5 × current font-size (16px) = 24px
           </div>
-          
+
           <div class="child-element fs-24">
             <strong>Child 2:</strong> font-size: 24px, line-height: inherited<br>
             继承的行高值应该是1.5倍当前字体大小(24px) = 36px<br>
@@ -547,13 +637,13 @@
           <div style="background: #fff3e0; padding: 8px; margin-bottom: 10px;">
             <strong>Parent: font-size: 20px, line-height: 30px</strong>
           </div>
-          
+
           <div class="child-element fs-16">
             <strong>Child 1:</strong> font-size: 16px, line-height: inherited<br>
             继承的行高值应该是固定的30px（不随字体大小改变）<br>
             Inherited line-height should be fixed 30px (doesn't change with font-size)
           </div>
-          
+
           <div class="child-element fs-24">
             <strong>Child 2:</strong> font-size: 24px, line-height: inherited<br>
             继承的行高值应该是固定的30px（不随字体大小改变）<br>
@@ -566,27 +656,28 @@
     <!-- Interactive Demonstration -->
     <section class="section">
       <h2 class="section-title">交互式演示 - Interactive Demonstration</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Live line-height adjustment
           <span class="computed-value">Real-time preview</span>
         </div>
-        
+
         <div class="interactive-demo">
           <div class="slider-control">
             <label for="lineHeightSlider">Line Height Value:</label>
             <input type="range" id="lineHeightSlider" min="0.5" max="3" step="0.1" value="1.5">
             <span class="value-display" id="lineHeightValue">1.5</span>
           </div>
-          
+
           <div class="slider-control">
             <label for="fontSizeSlider">Font Size (px):</label>
             <input type="range" id="fontSizeSlider" min="12" max="48" step="2" value="16">
             <span class="value-display" id="fontSizeValue">16px</span>
           </div>
-          
-          <div id="interactiveText" class="multi-line" style="border: 2px solid var(--highlight-color); padding: 15px; margin-top: 15px; background: white;">
+
+          <div id="interactiveText" class="multi-line"
+            style="border: 2px solid var(--highlight-color); padding: 15px; margin-top: 15px; background: white;">
             这是可以调整的演示文本。<br>
             This is adjustable demonstration text.<br>
             您可以使用上面的滑块来调整行高和字体大小。<br>
@@ -594,7 +685,7 @@
             观察文字行间距的变化效果。<br>
             Observe how the line spacing changes.
           </div>
-          
+
           <div class="info-box" style="margin-top: 10px;">
             <strong>Computed line-height:</strong> <span id="computedLineHeight">24px</span>
           </div>
@@ -605,13 +696,13 @@
     <!-- Edge Cases and Stress Tests -->
     <section class="section">
       <h2 class="section-title">边界情况和压力测试 - Edge Cases and Stress Tests</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Extreme values and edge cases
           <span class="computed-value">Testing robustness</span>
         </div>
-        
+
         <div class="comparison-grid">
           <div class="comparison-item">
             <div class="comparison-header">Very small line-height: 0.1</div>
@@ -657,7 +748,7 @@
           Performance stress test with many lines
           <span class="computed-value">Scrollable content</span>
         </div>
-        
+
         <div class="stress-test fs-14 lh-1-5" id="stressTestContent">
           <!-- Generated by JavaScript -->
         </div>
@@ -670,13 +761,13 @@
     <!-- Visual Debugging Helpers -->
     <section class="section">
       <h2 class="section-title">视觉调试助手 - Visual Debugging Helpers</h2>
-      
+
       <div class="test-item">
         <div class="test-label">
           Line box visualization
           <span class="computed-value">Background line guides</span>
         </div>
-        
+
         <div class="show-line-boxes fs-16 lh-1-6" style="padding: 20px;">
           这个容器显示了行盒子的视觉指示。<br>
           This container shows visual indication of line boxes.<br>
@@ -699,7 +790,7 @@
   <script>
     // Set timestamp
     document.getElementById('timestamp').textContent = new Date().toLocaleString();
-    
+
     // Generate stress test content
     const stressTestContainer = document.getElementById('stressTestContent');
     for (let i = 1; i <= 100; i++) {
@@ -707,7 +798,7 @@
       line.textContent = `行${i}: 这是第${i}行的测试内容，用于检测大量文本的行高渲染性能。Line ${i}: Performance test content for line height rendering.`;
       stressTestContainer.appendChild(line);
     }
-    
+
     // Interactive controls
     const lineHeightSlider = document.getElementById('lineHeightSlider');
     const fontSizeSlider = document.getElementById('fontSizeSlider');
@@ -715,32 +806,32 @@
     const fontSizeValue = document.getElementById('fontSizeValue');
     const interactiveText = document.getElementById('interactiveText');
     const computedLineHeight = document.getElementById('computedLineHeight');
-    
+
     function updateInteractiveDemo() {
       const lineHeight = parseFloat(lineHeightSlider.value);
       const fontSize = parseInt(fontSizeSlider.value);
-      
+
       lineHeightValue.textContent = lineHeight.toString();
       fontSizeValue.textContent = fontSize + 'px';
-      
+
       interactiveText.style.lineHeight = lineHeight.toString();
       interactiveText.style.fontSize = fontSize + 'px';
-      
+
       const computed = Math.round(lineHeight * fontSize);
       computedLineHeight.textContent = computed + 'px';
     }
-    
+
     lineHeightSlider.addEventListener('input', updateInteractiveDemo);
     fontSizeSlider.addEventListener('input', updateInteractiveDemo);
-    
+
     // Initialize
     updateInteractiveDemo();
-    
+
     // Console log for debugging
     console.log('Line Height Comprehensive Test Page loaded successfully');
     console.log('Total test sections:', document.querySelectorAll('.section').length);
     console.log('Total test items:', document.querySelectorAll('.test-item').length);
-    
+
     // Measure computed line heights for debugging
     function measureLineHeights() {
       const testElements = document.querySelectorAll('[class*="lh-"]');
@@ -752,48 +843,48 @@
         console.log(`Element ${index + 1}: line-height=${lineHeight}, font-size=${fontSize}`);
       });
     }
-    
+
     // Add interactive functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      // Measure line heights after layout
-      setTimeout(measureLineHeights, 100);
-      
-      // Highlight comparison items on hover
-      const comparisonItems = document.querySelectorAll('.comparison-item');
-      comparisonItems.forEach(item => {
-        item.addEventListener('mouseenter', function() {
-          this.style.transform = 'scale(1.02)';
-          this.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
-          this.style.transition = 'all 0.2s ease';
-        });
-        item.addEventListener('mouseleave', function() {
-          this.style.transform = 'scale(1)';
-          this.style.boxShadow = 'none';
-        });
-      });
-      
-      // Add click to copy functionality for test labels
-      const testLabels = document.querySelectorAll('.test-label');
-      testLabels.forEach(label => {
-        label.style.cursor = 'pointer';
-        label.title = 'Click to copy CSS property';
-        label.addEventListener('click', function() {
-          const text = this.textContent.replace(/\s+/g, ' ').trim();
-          navigator.clipboard.writeText(text).then(() => {
-            this.style.backgroundColor = '#4CAF50';
-            this.style.color = 'white';
-            setTimeout(() => {
-              this.style.backgroundColor = '';
-              this.style.color = '';
-            }, 500);
-          });
-        });
-      });
-    });
-    
+    // document.addEventListener('DOMContentLoaded', function() {
+    //   // Measure line heights after layout
+    //   setTimeout(measureLineHeights, 100);
+
+    //   // Highlight comparison items on hover
+    //   const comparisonItems = document.querySelectorAll('.comparison-item');
+    //   comparisonItems.forEach(item => {
+    //     item.addEventListener('mouseenter', function() {
+    //       this.style.transform = 'scale(1.02)';
+    //       this.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
+    //       this.style.transition = 'all 0.2s ease';
+    //     });
+    //     item.addEventListener('mouseleave', function() {
+    //       this.style.transform = 'scale(1)';
+    //       this.style.boxShadow = 'none';
+    //     });
+    //   });
+
+    //   // Add click to copy functionality for test labels
+    //   const testLabels = document.querySelectorAll('.test-label');
+    //   testLabels.forEach(label => {
+    //     label.style.cursor = 'pointer';
+    //     label.title = 'Click to copy CSS property';
+    //     label.addEventListener('click', function() {
+    //       const text = this.textContent.replace(/\s+/g, ' ').trim();
+    //       navigator.clipboard.writeText(text).then(() => {
+    //         this.style.backgroundColor = '#4CAF50';
+    //         this.style.color = 'white';
+    //         setTimeout(() => {
+    //           this.style.backgroundColor = '';
+    //           this.style.color = '';
+    //         }, 500);
+    //       });
+    //     });
+    //   });
+    // });
+
     // Performance monitoring
     const startTime = performance.now();
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       const loadTime = performance.now() - startTime;
       console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
     });

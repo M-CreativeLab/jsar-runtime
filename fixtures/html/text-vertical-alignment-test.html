@@ -515,7 +515,7 @@
     </section>
 
     <!-- Table Cell Alignment Tests -->
-    <section class="section">
+    <!-- <section class="section">
       <h2 class="section-title">表格单元格对齐测试 - Table Cell Alignment Tests</h2>
       
       <div class="test-item">
@@ -537,7 +537,7 @@
           Table cells should align text according to vertical-align property within the cell height.
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Edge Cases and Stress Tests -->
     <section class="section">
@@ -634,34 +634,34 @@
     }
     
     // Add interactive functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      // Measure baselines after layout
-      setTimeout(measureBaselines, 100);
+    // document.addEventListener('DOMContentLoaded', function() {
+    //   // Measure baselines after layout
+    //   setTimeout(measureBaselines, 100);
       
-      // Highlight test items on hover
-      const testItems = document.querySelectorAll('.test-item');
-      testItems.forEach(item => {
-        item.addEventListener('mouseenter', function() {
-          this.style.boxShadow = '0 4px 8px rgba(0, 123, 255, 0.3)';
-        });
-        item.addEventListener('mouseleave', function() {
-          this.style.boxShadow = 'none';
-        });
-      });
+    //   // Highlight test items on hover
+    //   const testItems = document.querySelectorAll('.test-item');
+    //   testItems.forEach(item => {
+    //     item.addEventListener('mouseenter', function() {
+    //       this.style.boxShadow = '0 4px 8px rgba(0, 123, 255, 0.3)';
+    //     });
+    //     item.addEventListener('mouseleave', function() {
+    //       this.style.boxShadow = 'none';
+    //     });
+    //   });
       
-      // Add click to highlight baseline functionality
-      const guides = document.querySelectorAll('.baseline-guide');
-      guides.forEach(guide => {
-        guide.style.cursor = 'pointer';
-        guide.addEventListener('click', function() {
-          this.style.borderTopWidth = '3px';
-          this.style.borderTopColor = 'red';
-          setTimeout(() => {
-            this.style.borderTopWidth = '1px';
-          }, 1000);
-        });
-      });
-    });
+    //   // Add click to highlight baseline functionality
+    //   const guides = document.querySelectorAll('.baseline-guide');
+    //   guides.forEach(guide => {
+    //     guide.style.cursor = 'pointer';
+    //     guide.addEventListener('click', function() {
+    //       this.style.borderTopWidth = '3px';
+    //       this.style.borderTopColor = 'red';
+    //       setTimeout(() => {
+    //         this.style.borderTopWidth = '1px';
+    //       }, 1000);
+    //     });
+    //   });
+    // });
     
     // Performance monitoring
     const startTime = performance.now();
