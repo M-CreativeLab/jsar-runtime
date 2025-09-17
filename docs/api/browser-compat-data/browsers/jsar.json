@@ -54,6 +54,10 @@
         "0.10.0": {
           "release_date": "2025-08-29",
           "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v0100"
+        },
+        "0.10.1": {
+          "release_date": "2025-09-17",
+          "release_notes": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/docs/changelogs/alpha.md#v0101"
         }
       }
     }
