@@ -12,6 +12,7 @@ namespace client_layout
 
   LayoutBox::LayoutBox(shared_ptr<dom::Node> node)
       : LayoutBoxModelObject(node)
+      , hit_testable_bounding_box_{glm::vec3(0.0f), glm::vec3(0.0f), glm::mat4(1.0f)}
   {
   }
 
@@ -307,7 +308,7 @@ namespace client_layout
 
   bool LayoutBox::hasHitTestableOverflow() const
   {
-    false;
+    return false;
   }
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
@@ -364,7 +365,8 @@ namespace client_layout
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
-    invalidateCachedHitTestBox();
+
+    updateSelfAndParentHitTestBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -376,7 +378,6 @@ namespace client_layout
       return;
 
     setHasNonVisibleOverflow(!m_style->overflowX().isVisible() || !m_style->overflowY().isVisible());
-    invalidateCachedHitTestBox();
   }
 
   bool LayoutBox::isHorizontalWritingMode() const
@@ -406,12 +407,12 @@ namespace client_layout
     // TODO(yorkie): invalidate the cached geometry of the parent.
   }
 
-  void LayoutBox::invalidateCachedHitTestBox()
+  void LayoutBox::updateSelfAndParentHitTestBox()
   {
     updateHitTestBoundingBox();
     if (parentBox())
     {
-      parentBox()->invalidateCachedHitTestBox();
+      parentBox()->updateSelfAndParentHitTestBox();
     }
   }
 
@@ -420,6 +421,7 @@ namespace client_layout
     auto children = virtualChildren();
     if (!children)
       return {};
+
     vector<std::shared_ptr<LayoutBox>> childBoxes;
     for (const auto &child : *children)
     {
@@ -429,27 +431,9 @@ namespace client_layout
     return childBoxes;
   }
 
-  geometry::BoundingBox LayoutBox::getHitTestBoundingBox() const
-  {
-    if (!hit_testable_bounding_box_.has_value())
-    {
-      return physicalBorderBoxRect();
-    }
-    return hit_testable_bounding_box_.value();
-  }
-
   void LayoutBox::updateHitTestBoundingBox()
   {
-    hit_testable_bounding_box_ = computeHitTestBoundingBox();
-  }
-
-  geometry::BoundingBox LayoutBox::computeHitTestBoundingBox() const
-  {
     auto selfBBox = physicalBorderBoxRect();
-    if (hasNonVisibleOverflow())
-    {
-      return selfBBox;
-    }
     glm::vec3 unionMin = selfBBox.minimumWorld;
     glm::vec3 unionMax = selfBBox.maximumWorld;
     for (const auto &childBox : getChildBoxes())
@@ -464,7 +448,6 @@ namespace client_layout
       unionMax.y = max(unionMax.y, childBBox.maximumWorld.y);
       unionMax.z = max(unionMax.z, childBBox.maximumWorld.z);
     }
-    geometry::BoundingBox unionBox(unionMin, unionMax, glm::mat4(1.0f));
-    return unionBox;
+    hit_testable_bounding_box_ = geometry::BoundingBox(unionMin, unionMax, glm::mat4(1.0f));
   }
 }

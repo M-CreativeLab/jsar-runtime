@@ -215,21 +215,23 @@ namespace client_layout
     {
       return overflow_ != nullptr && overflow_->visualOverflow;
     }
+    inline geometry::BoundingBox getHitTestBoundingBox() const
+    {
+      return hit_testable_bounding_box_;
+    }
 
     glm::vec3 computeSize() const;
     vector<std::shared_ptr<LayoutBox>> getChildBoxes() const;
-    geometry::BoundingBox getHitTestBoundingBox() const;
-    geometry::BoundingBox computeHitTestBoundingBox() const;
 
-    void updateHitTestBoundingBox();
     void invalidateCachedGeometry();
-    void invalidateCachedHitTestBox();
+    void updateHitTestBoundingBox();
+    void updateSelfAndParentHitTestBox();
 
   protected:
     glm::vec3 frame_size_;
 
   private:
     std::shared_ptr<BoxOverflowModel> overflow_;
-    optional<geometry::BoundingBox> hit_testable_bounding_box_;
+    geometry::BoundingBox hit_testable_bounding_box_;
   };
 }
