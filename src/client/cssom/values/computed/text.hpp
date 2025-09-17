@@ -2,6 +2,7 @@
 
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/values/specified/text.hpp>
+#include <crates/bindings.hpp>
 
 namespace client_cssom::values::computed
 {
@@ -30,6 +31,29 @@ namespace client_cssom::values::computed
         // TODO(yorkie): support match-parent.
         assert(false && "Invalid tag.");
         return skia::textlayout::TextAlign::kStart;
+      }
+    }
+
+    // Convert to layout value for layout system
+    crates::layout2::styles::TextAlign toLayoutValue() const
+    {
+      switch (tag_)
+      {
+      case Tag::kStart:
+        return crates::layout2::styles::TextAlign::Start();
+      case Tag::kEnd:
+        return crates::layout2::styles::TextAlign::End();
+      case Tag::kLeft:
+        return crates::layout2::styles::TextAlign::Left();
+      case Tag::kRight:
+        return crates::layout2::styles::TextAlign::Right();
+      case Tag::kCenter:
+        return crates::layout2::styles::TextAlign::Center();
+      case Tag::kJustify:
+        return crates::layout2::styles::TextAlign::Justify();
+      default:
+        // TODO(yorkie): support match-parent.
+        return crates::layout2::styles::TextAlign::Start();
       }
     }
   };

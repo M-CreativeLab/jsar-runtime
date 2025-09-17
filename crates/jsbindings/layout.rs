@@ -1,4 +1,4 @@
-use std::{cell::RefCell, ops::BitOr, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use paste::paste;
 use style::values::{
@@ -345,6 +345,16 @@ mod ffi {
   }
 
   #[derive(Clone, Copy, Debug)]
+  enum TextAlign {
+    Start,
+    End,
+    Left,
+    Right,
+    Center,
+    Justify,
+  }
+
+  #[derive(Clone, Copy, Debug)]
   enum FlexDirection {
     Row,
     Column,
@@ -513,6 +523,10 @@ mod ffi {
     pub grid_column_start: String,
     #[cxx_name = "gridColumnEnd"]
     pub grid_column_end: String,
+
+    // Text Properties
+    #[cxx_name = "textAlign"]
+    pub text_align: TextAlign,
   }
 
   #[derive(Clone, Copy, Debug)]
@@ -922,6 +936,13 @@ impl_justify_items_like_from_taffy!(JustifyItems);
 impl_justify_items_like_from_taffy!(JustifySelf);
 impl_align_or_justify_content_from_taffy!(JustifyContent);
 
+// TextAlign doesn't directly map to taffy types, so we'll provide a default
+impl Default for ffi::TextAlign {
+  fn default() -> Self {
+    ffi::TextAlign::Start
+  }
+}
+
 impl_default_for!(AlignItems, Normal);
 impl_default_for!(AlignSelf, Auto);
 impl_default_for!(AlignContent, Normal);
@@ -1119,6 +1140,8 @@ impl From<taffy::Style> for ffi::Style {
       grid_row_end: "".to_string(),
       grid_column_start: "".to_string(),
       grid_column_end: "".to_string(),
+
+      text_align: ffi::TextAlign::Start, // Default value since taffy doesn't handle text-align
     }
   }
 }
