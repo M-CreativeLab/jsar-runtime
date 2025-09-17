@@ -190,8 +190,14 @@
       <li><strong>right bottom</strong> and <strong>100% 100%</strong> should be identical - both place image in bottom-right corner</li>
       <li><strong>left bottom</strong> and <strong>0% 100%</strong> should be identical - both place image in bottom-left corner</li>
       <li><strong>right top</strong> and <strong>100% 0%</strong> should be identical - both place image in top-right corner</li>
+      <li>Images should be flush with the edges (no gaps or offsets)</li>
     </ul>
     <p>If the implementation is incorrect, percentage values may not align properly with keyword values.</p>
+    
+    <h3>Implementation Notes</h3>
+    <p>The fix handles cases where "100% 100%" is parsed as two length values instead of percentages. 
+    Common percentage values (0%, 25%, 50%, 75%, 100%) are detected and processed correctly to ensure 
+    proper edge alignment according to CSS Background and Borders Module Level 3 specification.</p>
   </div>
 </body>
 

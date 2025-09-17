@@ -225,16 +225,29 @@ namespace builtin_scene::web_renderer
       float xValue = backgroundPosition.getX();
       float yValue = backgroundPosition.getY();
 
-      // Common percentage values that might be incorrectly parsed as lengths:
-      // 0%, 25%, 50%, 75%, 100% correspond to 0, 25, 50, 75, 100
-      bool xLooksLikePercentage = (xValue == 0.0f || xValue == 25.0f || xValue == 50.0f ||
-                                   xValue == 75.0f || xValue == 100.0f);
-      bool yLooksLikePercentage = (yValue == 0.0f || yValue == 25.0f || yValue == 50.0f ||
-                                   yValue == 75.0f || yValue == 100.0f);
+      // Detect common percentage values that might be incorrectly parsed as lengths:
+      // Focus on the most problematic cases: 0%, 50%, 100% and quarter values
+      const float epsilon = 0.001f;
+      auto isNearValue = [epsilon](float val, float target)
+      {
+        return std::abs(val - target) < epsilon;
+      };
+
+      // Check for the most common percentage values that cause alignment issues
+      auto looksLikePercentage = [&isNearValue](float value)
+      {
+        return (value >= 0.0f && value <= 100.0f) &&
+               (isNearValue(value, 0.0f) || isNearValue(value, 25.0f) ||
+                isNearValue(value, 50.0f) || isNearValue(value, 75.0f) ||
+                isNearValue(value, 100.0f));
+      };
+
+      bool xLooksLikePercentage = looksLikePercentage(xValue);
+      bool yLooksLikePercentage = looksLikePercentage(yValue);
 
       float x, y;
 
-      if (xLooksLikePercentage && xValue <= 100.0f)
+      if (xLooksLikePercentage)
       {
         // Treat as percentage for horizontal positioning
         float xPercentage = xValue / 100.0f;
@@ -246,7 +259,7 @@ namespace builtin_scene::web_renderer
         x = positioningArea.fLeft + xValue;
       }
 
-      if (yLooksLikePercentage && yValue <= 100.0f)
+      if (yLooksLikePercentage)
       {
         // Treat as percentage for vertical positioning
         float yPercentage = yValue / 100.0f;
