@@ -79,22 +79,11 @@ void demonstrateNewEventHandlerSystem()
   button->setEventHandler("click", "alert('New click handler!'); newHandleClick(event);");
   std::cout << "  ✓ Updated click handler: " << button->getEventHandlerCode("click") << std::endl;
 
-  // 6. Show function reference support
-  std::cout << "\n6. Function reference support:" << std::endl;
-  
-  void* dummyFunction = reinterpret_cast<void*>(0x12345678);
-  button->setEventHandlerFunction("focus", dummyFunction);
-  
-  if (button->hasEventHandler("focus"))
-  {
-    std::cout << "  ✓ Function reference set for focus event" << std::endl;
-    std::cout << "  ✓ Handler code is empty (as expected): '" << button->getEventHandlerCode("focus") << "'" << std::endl;
-  }
-
   std::cout << "\n=== Demo Complete ===" << std::endl;
   std::cout << "\nKey improvements:" << std::endl;
   std::cout << "  • Support for any event type (not just onclick)" << std::endl;
-  std::cout << "  • Event objects passed to handlers" << std::endl;
+  std::cout << "  • Event objects passed to handlers with proper properties" << std::endl;
+  std::cout << "  • V8 function compilation for better performance" << std::endl;
   std::cout << "  • Backward compatibility maintained" << std::endl;
   std::cout << "  • Clean, extensible API design" << std::endl;
 }

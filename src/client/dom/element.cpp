@@ -1001,14 +1001,83 @@ namespace dom
         return;
       }
 
-      // TODO: Call the function with proper event object and 'this' context
-      // For now, we have compiled the function but need proper V8 context to call it
-      // This is a significant improvement as we now have a compiled function ready to be called
-      cerr << "Successfully compiled " << type << " handler function (execution pending proper V8 context)" << endl;
+      // Get the V8 context for function execution
+      v8::Isolate *isolate = v8::Isolate::GetCurrent();
+      v8::Isolate::Scope isolateScope(isolate);
+      v8::HandleScope handleScope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Context::Scope contextScope(context);
+
+      // Create a V8 event object to pass to the handler
+      v8::Local<v8::Object> eventObject;
+      if (event != nullptr)
+      {
+        // Create a simple event object with basic properties
+        eventObject = v8::Object::New(isolate);
+
+        // Set basic event properties
+        eventObject->Set(context,
+                         v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
+                         v8::String::NewFromUtf8(isolate, event->typeStr().c_str()).ToLocalChecked())
+          .Check();
+
+        eventObject->Set(context,
+                         v8::String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
+                         v8::Boolean::New(isolate, event->bubbles()))
+          .Check();
+
+        eventObject->Set(context,
+                         v8::String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
+                         v8::Boolean::New(isolate, event->cancelable()))
+          .Check();
+
+        // Add preventDefault method
+        auto preventDefaultFunc = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &args)
+                                                    {
+                                                      // Simple preventDefault implementation - just a placeholder for now
+                                                    })
+                                    .ToLocalChecked();
+
+        eventObject->Set(context,
+                         v8::String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
+                         preventDefaultFunc)
+          .Check();
+      }
+      else
+      {
+        // Create a null event object for backward compatibility
+        eventObject = v8::Object::New(isolate);
+        eventObject->Set(context,
+                         v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
+                         v8::String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked())
+          .Check();
+      }
+
+      // Call the compiled handler function with the event object
+      v8::TryCatch tryCatch(isolate);
+      v8::Local<v8::Value> argv[] = {eventObject};
+      v8::Local<v8::Value> result;
+
+      // Use global as 'this' context for now - ideally should be the element
+      v8::Local<v8::Object> global = context->Global();
+
+      if (!handlerFunction->Call(context, global, 1, argv).ToLocal(&result))
+      {
+        if (tryCatch.HasCaught())
+        {
+          v8::Local<v8::Message> message = tryCatch.Message();
+          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          cerr << "Failed to execute " << type << " handler: " << *messageUtf8 << endl;
+        }
+        else
+        {
+          cerr << "Failed to execute " << type << " handler" << endl;
+        }
+      }
     }
     catch (const exception &e)
     {
-      std::cerr << "Error compiling " << type << " handler: " << e.what() << std::endl;
+      std::cerr << "Error executing " << type << " handler: " << e.what() << std::endl;
     }
   }
 }
