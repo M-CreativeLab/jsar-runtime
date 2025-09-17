@@ -319,7 +319,7 @@ namespace client_layout
       // TODO(yorkie): handle the hit test for the box with overflow.
     }
     else
-      overflowBox = getHitTestBoundingBox();
+      overflowBox = getHitTestableBBox();
 
     if (overflowBox.has_value())
     {
@@ -365,8 +365,7 @@ namespace client_layout
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
-
-    updateSelfAndParentHitTestBox();
+    updateSelfAndParentHitTestableBBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -407,12 +406,12 @@ namespace client_layout
     // TODO(yorkie): invalidate the cached geometry of the parent.
   }
 
-  void LayoutBox::updateSelfAndParentHitTestBox()
+  void LayoutBox::updateSelfAndParentHitTestableBBox()
   {
-    updateHitTestBoundingBox();
+    updateHitTestableBBox();
     if (parentBox())
     {
-      parentBox()->updateSelfAndParentHitTestBox();
+      parentBox()->updateSelfAndParentHitTestableBBox();
     }
   }
 
@@ -431,7 +430,7 @@ namespace client_layout
     return childBoxes;
   }
 
-  void LayoutBox::updateHitTestBoundingBox()
+  void LayoutBox::updateHitTestableBBox()
   {
     auto selfBBox = physicalBorderBoxRect();
     glm::vec3 unionMin = selfBBox.minimumWorld;
@@ -440,7 +439,7 @@ namespace client_layout
     {
       if (!childBox->visible())
         continue;
-      auto childBBox = childBox->getHitTestBoundingBox();
+      auto childBBox = childBox->getHitTestableBBox();
       unionMin.x = min(unionMin.x, childBBox.minimumWorld.x);
       unionMin.y = min(unionMin.y, childBBox.minimumWorld.y);
       unionMin.z = min(unionMin.z, childBBox.minimumWorld.z);
