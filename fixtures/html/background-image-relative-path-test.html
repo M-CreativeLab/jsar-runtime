@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Background Image Relative Path Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+
+    .test-container {
+      margin: 20px 0;
+      padding: 20px;
+      border: 2px solid #ccc;
+      min-height: 100px;
+    }
+
+    /* Test 1: Same directory relative path */
+    .same-dir {
+      background-image: url('./test-image.png');
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+    }
+
+    /* Test 2: Parent directory relative path */
+    .parent-dir {
+      background-image: url('../images/test-image.png');
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+    }
+
+    /* Test 3: Subdirectory relative path */
+    .sub-dir {
+      background-image: url('images/test-image.png');
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+    }
+
+    /* Test 4: Absolute URL (should work unchanged) */
+    .absolute-url {
+      background-image: url('https://example.com/test-image.png');
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+    }
+
+    /* Test 5: Data URL (should work unchanged) */
+    .data-url {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="red"/></svg>');
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+    }
+
+    .description {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-left: 4px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Background Image Relative Path Test</h1>
+
+  <div class="description">
+    <strong>Test Purpose:</strong> Verify that background-image supports relative paths and resolves them correctly based on the document's base URI.
+    <ul>
+      <li>Relative paths like <code>./test-image.png</code> should be resolved relative to the current document</li>
+      <li>Parent directory paths like <code>../images/test-image.png</code> should navigate up one level</li>
+      <li>Subdirectory paths like <code>images/test-image.png</code> should look in subdirectories</li>
+      <li>Absolute URLs and data URLs should remain unchanged</li>
+    </ul>
+  </div>
+
+  <div class="test-container same-dir">
+    <h3>Test 1: Same Directory</h3>
+    <p>CSS: <code>background-image: url('./test-image.png');</code></p>
+    <p>Expected: Image should be resolved relative to the current document location</p>
+  </div>
+
+  <div class="test-container parent-dir">
+    <h3>Test 2: Parent Directory</h3>
+    <p>CSS: <code>background-image: url('../images/test-image.png');</code></p>
+    <p>Expected: Image should be resolved one level up from the current document</p>
+  </div>
+
+  <div class="test-container sub-dir">
+    <h3>Test 3: Subdirectory</h3>
+    <p>CSS: <code>background-image: url('images/test-image.png');</code></p>
+    <p>Expected: Image should be resolved in the images subdirectory</p>
+  </div>
+
+  <div class="test-container absolute-url">
+    <h3>Test 4: Absolute URL</h3>
+    <p>CSS: <code>background-image: url('https://example.com/test-image.png');</code></p>
+    <p>Expected: URL should remain unchanged (absolute URL)</p>
+  </div>
+
+  <div class="test-container data-url">
+    <h3>Test 5: Data URL</h3>
+    <p>CSS: <code>background-image: url('data:image/svg+xml,&lt;svg...&gt;');</code></p>
+    <p>Expected: Red square should appear (data URL)</p>
+  </div>
+</body>
+</html>
