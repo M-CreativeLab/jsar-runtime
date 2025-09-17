@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Flexbox Comment Nodes - Edge Cases</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #c9d4df;
+      margin: 30px 0 15px 0;
+    }
+
+    h3 {
+      font-size: 24px;
+      font-weight: bold;
+      color: #c9d4df;
+      margin: 10px 0;
+    }
+
+    p {
+      font-size: 20px;
+      color: #fff;
+      margin: 8px 0;
+    }
+
+    /* Container for multiple test demos */
+    .demo-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f0f0f05f;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+    }
+
+    /* Flexbox test containers */
+    .flex-container {
+      display: flex;
+      background-color: #c9d4df5f;
+      border: 2px dashed #999;
+      padding: 15px;
+      margin: 15px 0;
+      min-height: 80px;
+    }
+
+    /* Basic flex settings */
+    .flex-row {
+      flex-direction: row;
+    }
+
+    .flex-column {
+      flex-direction: column;
+    }
+
+    .justify-center {
+      justify-content: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .align-center {
+      align-items: center;
+    }
+
+    .align-stretch {
+      align-items: stretch;
+    }
+
+    /* Flex Items */
+    .flex-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      min-width: 80px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .flex-item:hover {
+      background: rgba(255, 0, 0, 0.9);
+      transform: scale(1.05);
+    }
+
+    .flex-item:nth-child(2n) {
+      background: rgba(0, 200, 100, 0.85);
+    }
+
+    .flex-item:nth-child(3n) {
+      background: rgba(255, 150, 0, 0.85);
+    }
+
+    .flex-item:nth-child(4n) {
+      background: rgba(150, 0, 255, 0.85);
+    }
+
+    /* Size variations */
+    .tiny {
+      min-width: 40px;
+      min-height: 20px;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    .small {
+      min-width: 60px;
+      min-height: 30px;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .large {
+      min-width: 120px;
+      min-height: 60px;
+      padding: 20px;
+      font-size: 18px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    /* Test description */
+    .test-description {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #007bff;
+    }
+
+    .comment-indicator {
+      color: #666;
+      font-style: italic;
+      font-size: 14px;
+      margin: 5px 0;
+    }
+
+    /* Special test containers */
+    .empty-demo {
+      border: 3px solid red;
+      background: rgba(255, 255, 0, 0.2);
+    }
+
+    .minimal-height {
+      min-height: 40px;
+    }
+
+    .zero-padding {
+      padding: 0;
+    }
+
+    /* Text styling for mixed content tests */
+    .text-content {
+      color: #333;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 5px;
+      border-radius: 4px;
+      margin: 2px;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Flexbox Comment Nodes - Edge Cases</h1>
+  </header>
+
+  <div class="demo-container">
+    <h2>Test 1: Empty Container Edge Cases</h2>
+    <div class="test-description">
+      <p>Testing containers with only comments, whitespace, or combinations thereof.</p>
+      <div class="comment-indicator">Edge cases for empty or comment-only containers</div>
+    </div>
+
+    <h3>Container with Only Comments</h3>
+    <div class="flex-container flex-row empty-demo minimal-height">
+      <!-- This container has only comments -->
+      <!-- Comment 1 -->
+      <!-- Comment 2 -->
+      <!-- Comment 3 -->
+      <!-- Should render as effectively empty -->
+    </div>
+
+    <h3>Container with Comments and Whitespace</h3>
+    <div class="flex-container flex-row empty-demo minimal-height">
+      <!-- Leading comment -->
+      
+      
+      <!-- Comment with whitespace around it -->
+      
+      
+      <!-- Trailing comment -->
+    </div>
+
+    <h3>Container with Only Whitespace (No Comments)</h3>
+    <div class="flex-container flex-row empty-demo minimal-height">
+      
+      
+      
+    </div>
+
+    <h3>Mixed Empty Content</h3>
+    <div class="flex-container flex-row empty-demo minimal-height">
+      <!-- Comment before whitespace -->
+      
+      <!-- Comment after whitespace -->
+      
+      <!-- More whitespace -->
+      <!-- Final comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 2: Comments at Flex Item Boundaries</h2>
+    <div class="test-description">
+      <p>Testing comment placement at critical flex item boundaries and transitions.</p>
+      <div class="comment-indicator">Comments strategically placed at item boundaries</div>
+    </div>
+
+    <h3>Comments Immediately Adjacent to Items</h3>
+    <div class="flex-container flex-row justify-between align-center"><!--
+      --><div class="flex-item small">Item 1</div><!--
+      --><div class="flex-item small">Item 2</div><!--
+      --><div class="flex-item small">Item 3</div><!--
+    --></div>
+
+    <h3>Comments with No Whitespace</h3>
+    <div class="flex-container flex-row justify-center align-center"><!--comment--><div class="flex-item small">A</div><!--comment--><div class="flex-item small">B</div><!--comment--></div>
+
+    <h3>Nested Comments in Inline Style</h3>
+    <div class="flex-container flex-row"><!-- Outer comment --><div class="flex-item small"><!-- Inner comment inside item -->Item<!-- Another inner comment --></div><!-- Between items --><div class="flex-item small">Another Item</div><!-- Final comment --></div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 3: Long Comments and Special Characters</h2>
+    <div class="test-description">
+      <p>Testing comments with unusual content, length, or special characters.</p>
+      <div class="comment-indicator">Comments with special content should not affect layout</div>
+    </div>
+
+    <h3>Very Long Comments</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- This is a very long comment that contains a lot of text and might potentially cause issues with parsing or layout calculations if the comment processing is not handled correctly by the layout engine. It includes various characters like numbers 123456789, symbols !@#$%^&*(), and even some unicode characters like émojis 🚀🎉🔥 to test comprehensive comment handling. -->
+      <div class="flex-item small">Item 1</div>
+      <!-- Another extremely long comment with repeated text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. -->
+      <div class="flex-item small">Item 2</div>
+      <!-- Final long comment -->
+    </div>
+
+    <h3>Comments with Special Characters</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- Comment with HTML entities: &lt;&gt;&amp;&quot;&#39; -->
+      <div class="flex-item small">Item A</div>
+      <!-- Comment with Unicode: 中文测试 العربية עברית русский -->
+      <div class="flex-item small">Item B</div>
+      <!-- Comment with symbols: ∑∏∆∇∂∫∞± -->
+      <div class="flex-item small">Item C</div>
+    </div>
+
+    <h3>Malformed-like Comments (Still Valid HTML)</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!--- Triple dash comment -->
+      <div class="flex-item small">Item X</div>
+      <!-- Comment with -- inside -- which is fine in HTML5 -->
+      <div class="flex-item small">Item Y</div>
+      <!---->
+      <div class="flex-item small">Item Z</div>
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 4: Dynamic Content Simulation</h2>
+    <div class="test-description">
+      <p>Simulating scenarios where comments might be dynamically inserted or represent conditional content.</p>
+      <div class="comment-indicator">Comments representing dynamic/conditional content areas</div>
+    </div>
+
+    <h3>Conditional Content Blocks</h3>
+    <div class="flex-container flex-row justify-between align-center">
+      <div class="flex-item small">Always Visible</div>
+      <!-- [if condition] This represents content that might be conditionally rendered -->
+      <div class="flex-item small">Also Visible</div>
+      <!-- [endif] End of conditional block -->
+      <div class="flex-item small">Final Item</div>
+    </div>
+
+    <h3>Template Placeholder Comments</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- {{item1}} Template placeholder -->
+      <div class="flex-item small">Rendered Item 1</div>
+      <!-- {{item2}} Another placeholder -->
+      <div class="flex-item small">Rendered Item 2</div>
+      <!-- {{item3}} Final placeholder -->
+    </div>
+
+    <h3>Debug/Development Comments</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- DEBUG: This item should be centered -->
+      <div class="flex-item small">Debug Item</div>
+      <!-- TODO: Add more items here -->
+      <!-- FIXME: Check alignment -->
+      <div class="flex-item small">Another Item</div>
+      <!-- NOTE: Layout looks good here -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 5: Mixed Content Types with Comments</h2>
+    <div class="test-description">
+      <p>Testing flexbox behavior with various content types mixed with comments.</p>
+      <div class="comment-indicator">Elements, text nodes, and comments mixed together</div>
+    </div>
+
+    <h3>Elements, Text, and Comments</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- Leading comment -->
+      <div class="flex-item small">Element 1</div>
+      <!-- Between element and text -->
+      <span class="text-content">Text Node</span>
+      <!-- Between text and element -->
+      <div class="flex-item small">Element 2</div>
+      <!-- Trailing comment -->
+    </div>
+
+    <h3>Inline Elements with Comments</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- Before inline -->
+      <strong class="text-content">Bold Text</strong>
+      <!-- Between inline elements -->
+      <em class="text-content">Italic Text</em>
+      <!-- After inline -->
+      <div class="flex-item small">Block Element</div>
+      <!-- Final comment -->
+    </div>
+
+    <h3>Complex Mixed Content</h3>
+    <div class="flex-container flex-row justify-center align-center">
+      <!-- Start -->
+      Text before element
+      <!-- Comment 1 -->
+      <div class="flex-item tiny">1</div>
+      <!-- Comment 2 -->
+      More text
+      <!-- Comment 3 -->
+      <span class="text-content">Span</span>
+      <!-- Comment 4 -->
+      <div class="flex-item tiny">2</div>
+      Final text
+      <!-- End -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 6: Flexbox Property Edge Cases with Comments</h2>
+    <div class="test-description">
+      <p>Testing edge cases where flexbox properties might interact unexpectedly with comments.</p>
+      <div class="comment-indicator">Property interactions with comment nodes</div>
+    </div>
+
+    <h3>Zero-sized Container with Comments</h3>
+    <div class="flex-container flex-row zero-padding" style="min-height: 0; border: 1px solid red;">
+      <!-- Comment in zero-height container -->
+      <div class="flex-item tiny">Tiny</div>
+      <!-- Another comment -->
+    </div>
+
+    <h3>Overflow Hidden with Comments</h3>
+    <div class="flex-container flex-row" style="overflow: hidden; max-width: 200px;">
+      <!-- Comment before overflow -->
+      <div class="flex-item large">Large Item 1</div>
+      <!-- Comment between items -->
+      <div class="flex-item large">Large Item 2</div>
+      <!-- Comment after overflow -->
+      <div class="flex-item large">Large Item 3</div>
+      <!-- Final comment -->
+    </div>
+
+    <h3>Position Relative/Absolute with Comments</h3>
+    <div class="flex-container flex-row" style="position: relative;">
+      <!-- Comment before positioned item -->
+      <div class="flex-item small" style="position: relative; top: 10px;">Relative</div>
+      <!-- Comment between positioned items -->
+      <div class="flex-item small" style="position: absolute; right: 20px;">Absolute</div>
+      <!-- Comment after positioned item -->
+      <div class="flex-item small">Normal</div>
+      <!-- Final positioning comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 7: Performance Stress Test</h2>
+    <div class="test-description">
+      <p>Heavy comment load to test layout engine performance and stability.</p>
+      <div class="comment-indicator">Many comments to test performance impact</div>
+    </div>
+
+    <h3>High Comment Density</h3>
+    <div class="flex-container flex-row justify-center align-center" style="flex-wrap: wrap; max-width: 400px;">
+      <!--1--><!--2--><!--3--><!--4--><!--5-->
+      <div class="flex-item tiny">A</div>
+      <!--6--><!--7--><!--8--><!--9--><!--10-->
+      <div class="flex-item tiny">B</div>
+      <!--11--><!--12--><!--13--><!--14--><!--15-->
+      <div class="flex-item tiny">C</div>
+      <!--16--><!--17--><!--18--><!--19--><!--20-->
+      <div class="flex-item tiny">D</div>
+      <!--21--><!--22--><!--23--><!--24--><!--25-->
+      <div class="flex-item tiny">E</div>
+      <!--26--><!--27--><!--28--><!--29--><!--30-->
+      <div class="flex-item tiny">F</div>
+      <!--31--><!--32--><!--33--><!--34--><!--35-->
+      <div class="flex-item tiny">G</div>
+      <!--36--><!--37--><!--38--><!--39--><!--40-->
+      <div class="flex-item tiny">H</div>
+      <!--41--><!--42--><!--43--><!--44--><!--45-->
+      <div class="flex-item tiny">I</div>
+      <!--46--><!--47--><!--48--><!--49--><!--50-->
+    </div>
+  </div>
+
+</body>
+
+</html>
