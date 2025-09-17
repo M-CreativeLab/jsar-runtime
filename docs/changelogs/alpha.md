@@ -110,6 +110,28 @@ The alpha version of JSAR is the first version of the project.
 
 | File | Description |
 |------|-------------|
+| `fixtures/html/element-onclick-test.html` | Element.onclick attribute for inline event handlers (#309) |
+| `fixtures/html/text-rendering-test.html` | Comprehensive text rendering test page (#301) |
+| `fixtures/html/border-regression-test.html` | Comprehensive border regression test page (#302) |
+| `fixtures/html/layout-flexbox-grow-shrink.html` | Flex-grow and flex-shrink test case (#300) |
+| `fixtures/html/canvas-api-test-suite.html` | Comprehensive Canvas API test pages (#293) |
+| `fixtures/html/canvas-api-basic-drawing.html` | Canvas drawing operations including strokeRect() (#294) |
+| `fixtures/html/canvas-api-paths.html` | Canvas path operations |
+| `fixtures/html/canvas-api-state.html` | Canvas state management |
+| `fixtures/html/canvas-api-styles.html` | Canvas styling |
+| `fixtures/html/canvas-api-text.html` | Canvas text rendering |
+| `fixtures/html/canvas-api-transforms.html` | Canvas transformations |
+| `fixtures/html/canvas-api-image-data.html` | Canvas ImageData API |
+| `fixtures/html/css-overflow-comprehensive.html` | Comprehensive CSS overflow test file (#290) |
+| `fixtures/html/css-overflow.html` | CSS overflow handling |
+| `fixtures/html/webgl-conformance/validateprogram-test.html` | WebGL validateProgram method (#253) |
+| `fixtures/html/universal-selector-test.html` | Universal selector (*) in CSSOM parser and matching (#261) |
+| `fixtures/html/background-size-position-test.html` | Background-position, background-size and background-repeat (#274) |
+| `fixtures/html/background-position-extended-syntax-test.html` | Extended background-position syntax |
+| `fixtures/html/background-origin-repeat-test.html` | Background-repeat drawing from clipped area (#280) |
+| `fixtures/html/layout-flexbox-alignment.html` | Correct align-items implementation and flexbox layout (#282) |
+| `fixtures/html/layout-grid-alignment.html` | CSS Grid layout testing (#282) |
+| `fixtures/html/position-absolute-test.html` | Absolute positioning to nearest positioned ancestor (#276) |
 | `fixtures/html/document.html` | Document API testing |
 | `fixtures/html/elements.html` | HTML element functionality |
 | `fixtures/html/dom/document_fragment_test.html` | DocumentFragment API |
@@ -118,40 +140,25 @@ The alpha version of JSAR is the first version of the project.
 | `fixtures/html/dom/nodes.html` | DOM node operations |
 | `fixtures/html/events.html` | Event handling |
 | `fixtures/html/mutation-observers.html` | MutationObserver API |
-| `fixtures/html/layout-flexbox-alignment.html` | Flexbox alignment testing |
 | `fixtures/html/layout-flexbox-column.html` | Flexbox column layouts |
 | `fixtures/html/layout-flexbox-example.html` | Flexbox examples |
-| `fixtures/html/layout-flexbox-grow-shrink.html` | Flexbox grow/shrink behavior |
 | `fixtures/html/layout-flexbox-nested.html` | Nested flexbox layouts |
 | `fixtures/html/layout-flexbox-wrap.html` | Flexbox wrapping |
-| `fixtures/html/layout-grid-alignment.html` | CSS Grid alignment |
 | `fixtures/html/layout-grid-areas.html` | CSS Grid areas |
 | `fixtures/html/layout-grid-auto.html` | CSS Grid auto placement |
 | `fixtures/html/layout-grid-example.html` | CSS Grid examples |
 | `fixtures/html/layout-grid-nested.html` | Nested CSS Grid |
 | `fixtures/html/text.html` | Basic text rendering |
-| `fixtures/html/text-rendering-test.html` | Text rendering quality |
 | `fixtures/html/text-antialiasing.html` | Text antialiasing |
 | `fixtures/html/text-in-flexbox.html` | Text within flexbox layouts |
 | `fixtures/html/wide-text.html` | Wide text handling |
 | `fixtures/html/css-gradients.html` | CSS gradient support |
-| `fixtures/html/css-overflow.html` | CSS overflow handling |
-| `fixtures/html/css-overflow-comprehensive.html` | Comprehensive overflow testing |
 | `fixtures/html/style-properties.html` | CSS property testing |
 | `fixtures/html/load-stylesheet.html` | Stylesheet loading |
 | `fixtures/html/canvas.html` | Basic Canvas API |
-| `fixtures/html/canvas-api-test-suite.html` | Comprehensive Canvas API testing |
-| `fixtures/html/canvas-api-basic-drawing.html` | Canvas drawing operations |
-| `fixtures/html/canvas-api-image-data.html` | Canvas ImageData API |
-| `fixtures/html/canvas-api-paths.html` | Canvas path operations |
-| `fixtures/html/canvas-api-state.html` | Canvas state management |
-| `fixtures/html/canvas-api-styles.html` | Canvas styling |
-| `fixtures/html/canvas-api-text.html` | Canvas text rendering |
-| `fixtures/html/canvas-api-transforms.html` | Canvas transformations |
 | `fixtures/html/webgl.html` | WebGL API testing |
 | `fixtures/html/webgl-conformance/bufferdata-size-test.html` | WebGL buffer operations |
 | `fixtures/html/webgl-conformance/clearbufferfv-test.html` | WebGL buffer clearing |
-| `fixtures/html/webgl-conformance/validateprogram-test.html` | WebGL program validation |
 | `fixtures/html/three.html` | Three.js integration |
 | `fixtures/html/three-example.html` | Three.js examples |
 | `fixtures/html/three-loader-gltf.html` | GLTF model loading |
