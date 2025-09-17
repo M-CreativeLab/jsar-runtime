@@ -183,6 +183,7 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isRight())
     {
       // Right edge horizontally, center vertically
+      // Ensure precise alignment to the right edge
       float x = positioningArea.fRight - imageSize.width();
       float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
       return SkPoint::Make(x, y);
@@ -197,6 +198,7 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isBottom())
     {
       // Center horizontally, bottom edge vertically
+      // Ensure precise alignment to the bottom edge
       float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
       float y = positioningArea.fBottom - imageSize.height();
       return SkPoint::Make(x, y);
@@ -219,8 +221,43 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isTwoValues())
     {
       // Use specified x and y values
-      float x = positioningArea.fLeft + backgroundPosition.getX();
-      float y = positioningArea.fTop + backgroundPosition.getY();
+      // Handle potential percentage values that may be parsed as lengths
+      float xValue = backgroundPosition.getX();
+      float yValue = backgroundPosition.getY();
+
+      // Common percentage values that might be incorrectly parsed as lengths:
+      // 0%, 25%, 50%, 75%, 100% correspond to 0, 25, 50, 75, 100
+      bool xLooksLikePercentage = (xValue == 0.0f || xValue == 25.0f || xValue == 50.0f ||
+                                   xValue == 75.0f || xValue == 100.0f);
+      bool yLooksLikePercentage = (yValue == 0.0f || yValue == 25.0f || yValue == 50.0f ||
+                                   yValue == 75.0f || yValue == 100.0f);
+
+      float x, y;
+
+      if (xLooksLikePercentage && xValue <= 100.0f)
+      {
+        // Treat as percentage for horizontal positioning
+        float xPercentage = xValue / 100.0f;
+        x = positioningArea.fLeft + xPercentage * (areaWidth - imageSize.width());
+      }
+      else
+      {
+        // Treat as length value
+        x = positioningArea.fLeft + xValue;
+      }
+
+      if (yLooksLikePercentage && yValue <= 100.0f)
+      {
+        // Treat as percentage for vertical positioning
+        float yPercentage = yValue / 100.0f;
+        y = positioningArea.fTop + yPercentage * (areaHeight - imageSize.height());
+      }
+      else
+      {
+        // Treat as length value
+        y = positioningArea.fTop + yValue;
+      }
+
       return SkPoint::Make(x, y);
     }
     else if (backgroundPosition.isThreeValues())

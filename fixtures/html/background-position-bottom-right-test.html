@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Background Position Bottom/Right Alignment Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+    }
+
+    .test-container {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #666;
+      font-size: 18px;
+      margin: 15px 0 10px 0;
+    }
+
+    .test-box {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+      position: relative;
+    }
+
+    .test-box::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px dashed red;
+      pointer-events: none;
+    }
+
+    /* Test cases that should align to bottom-right */
+    .bg-position-right-bottom-keywords {
+      background-position: right bottom;
+    }
+
+    .bg-position-100-percent {
+      background-position: 100% 100%;
+    }
+
+    .bg-position-right-100-percent {
+      background-position: right 100%;
+    }
+
+    .bg-position-100-bottom {
+      background-position: 100% bottom;
+    }
+
+    /* Test cases that should align to bottom-left */
+    .bg-position-left-bottom {
+      background-position: left bottom;
+    }
+
+    .bg-position-0-100-percent {
+      background-position: 0% 100%;
+    }
+
+    /* Test cases that should align to top-right */
+    .bg-position-right-top {
+      background-position: right top;
+    }
+
+    .bg-position-100-0-percent {
+      background-position: 100% 0%;
+    }
+
+    .test-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .test-description {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 5px;
+      width: 200px;
+    }
+
+    .expected {
+      font-weight: bold;
+      color: #007700;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Background Position Bottom/Right Alignment Test</h1>
+  
+  <div class="test-container">
+    <h2>Bottom-Right Alignment Tests (Image should be in bottom-right corner)</h2>
+    <p>All these tests should position the 50x50px background image in the bottom-right corner of each 200x150px box:</p>
+    <div class="test-row">
+      <div>
+        <div class="test-box bg-position-right-bottom-keywords"></div>
+        <div class="test-description">
+          background-position: right bottom<br>
+          <span class="expected">Expected: bottom-right corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-100-percent"></div>
+        <div class="test-description">
+          background-position: 100% 100%<br>
+          <span class="expected">Expected: bottom-right corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-right-100-percent"></div>
+        <div class="test-description">
+          background-position: right 100%<br>
+          <span class="expected">Expected: bottom-right corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-100-bottom"></div>
+        <div class="test-description">
+          background-position: 100% bottom<br>
+          <span class="expected">Expected: bottom-right corner</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Other Corner Alignment Tests</h2>
+    <p>These tests verify other corner positions work correctly:</p>
+    <div class="test-row">
+      <div>
+        <div class="test-box bg-position-left-bottom"></div>
+        <div class="test-description">
+          background-position: left bottom<br>
+          <span class="expected">Expected: bottom-left corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-0-100-percent"></div>
+        <div class="test-description">
+          background-position: 0% 100%<br>
+          <span class="expected">Expected: bottom-left corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-right-top"></div>
+        <div class="test-description">
+          background-position: right top<br>
+          <span class="expected">Expected: top-right corner</span>
+        </div>
+      </div>
+      <div>
+        <div class="test-box bg-position-100-0-percent"></div>
+        <div class="test-description">
+          background-position: 100% 0%<br>
+          <span class="expected">Expected: top-right corner</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Expected Results</h2>
+    <p>According to CSS specification:</p>
+    <ul>
+      <li><strong>right bottom</strong> and <strong>100% 100%</strong> should be identical - both place image in bottom-right corner</li>
+      <li><strong>left bottom</strong> and <strong>0% 100%</strong> should be identical - both place image in bottom-left corner</li>
+      <li><strong>right top</strong> and <strong>100% 0%</strong> should be identical - both place image in top-right corner</li>
+    </ul>
+    <p>If the implementation is incorrect, percentage values may not align properly with keyword values.</p>
+  </div>
+</body>
+
+</html>
