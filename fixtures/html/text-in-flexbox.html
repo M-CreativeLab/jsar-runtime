@@ -4,13 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text in Flexbox</title>
+  <title>Text in Flexbox with Comment Nodes</title>
   <style>
     main {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      margin-bottom: 20px;
     }
 
     p {
@@ -18,14 +19,93 @@
       font-weight: bold;
       background-color: rgba(255,0,0,0.2);
     }
+
+    h2 {
+      font-size: 32px;
+      color: #333;
+      margin: 20px 0 10px 0;
+    }
+
+    .test-description {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(240, 240, 240, 0.8);
+      border-radius: 4px;
+    }
+
+    .comment-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px dashed #ccc;
+    }
+
+    .small-text {
+      font-size: 40px;
+      font-weight: bold;
+      background-color: rgba(0,255,0,0.2);
+      padding: 10px;
+    }
   </style>
 </head>
 
 <body style="background-color: #fff;">
+  <h2>Original Test: Basic Text in Flexbox</h2>
   <main>
     <p>Foo</p>
     <p>Bar</p>
   </main>
+
+  <h2>Enhanced Test: Text in Flexbox with Comment Nodes</h2>
+  <div class="test-description">
+    Testing flexbox layout with comment nodes between text elements. Comments should be ignored in layout calculations.
+  </div>
+  
+  <main>
+    <!-- Leading comment -->
+    <p>Foo</p>
+    <!-- Comment between text elements -->
+    <p>Bar</p>
+    <!-- Trailing comment -->
+  </main>
+
+  <h2>Test: Comments with Different Justify Content</h2>
+  <div class="test-description">
+    Testing justify-content: space-around with comment nodes interspersed.
+  </div>
+  
+  <div class="comment-flex">
+    <!-- Start comment -->
+    <div class="small-text">Left</div>
+    <!-- Middle comment that should not affect spacing -->
+    <div class="small-text">Center</div>
+    <!-- Another comment -->
+    <div class="small-text">Right</div>
+    <!-- End comment -->
+  </div>
+
+  <h2>Test: Complex Mixed Content with Comments</h2>
+  <div class="test-description">
+    Testing flexbox with mixed text content and comment nodes.
+  </div>
+  
+  <div class="comment-flex">
+    <!-- Complex test start -->
+    Some text content
+    <!-- Comment between text and element -->
+    <div class="small-text">Element</div>
+    <!-- Comment between elements -->
+    More text here
+    <!-- Comment before final element -->
+    <div class="small-text">Final</div>
+    <!-- Complex test end -->
+  </div>
+
 </body>
 
 </html>
