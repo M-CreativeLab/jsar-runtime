@@ -215,17 +215,16 @@ namespace client_layout
     {
       return overflow_ != nullptr && overflow_->visualOverflow;
     }
-    inline geometry::BoundingBox getHitTestableBBox() const
+    inline geometry::BoundingBox getHitTestableBoundingBox() const
     {
       return hit_testable_bounding_box_;
     }
+    void updateHitTestableBoundingBox();
 
     glm::vec3 computeSize() const;
     vector<std::shared_ptr<LayoutBox>> getChildBoxes() const;
 
     void invalidateCachedGeometry();
-    void updateHitTestableBBox();
-    void updateSelfAndParentHitTestableBBox();
 
   protected:
     glm::vec3 frame_size_;
