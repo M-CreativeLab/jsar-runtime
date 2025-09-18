@@ -6,6 +6,7 @@
 
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
+#include "../script_bindings/event.hpp"
 
 namespace dom
 {
@@ -248,6 +249,9 @@ namespace dom
       , runtimeContext(runtimeContext)
   {
     assert(isolate != nullptr && "Failed to get the current V8 isolate.");
+
+    // Initialize script bindings
+    script_bindings::Event::Initialize(isolate);
   }
 
   void DOMScriptingContext::enableDynamicImport()

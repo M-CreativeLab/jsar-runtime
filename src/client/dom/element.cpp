@@ -1019,15 +1019,7 @@ namespace dom
                                                             // Don't delete - the event is managed externally
                                                           });
 
-        // Initialize the Event class if not already done
-        static bool eventClassInitialized = false;
-        if (!eventClassInitialized)
-        {
-          script_bindings::Event::Initialize(isolate);
-          eventClassInitialized = true;
-        }
-
-        eventObject = script_bindings::Event::NewInstance(isolate, nativeEventPtr);
+        eventObject = script_bindings::Event::NewInstanceV8(isolate, nativeEventPtr);
       }
       else
       {

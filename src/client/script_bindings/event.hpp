@@ -35,6 +35,11 @@ namespace script_bindings
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent);
 
     /**
+     * Create a new V8 Event instance from a native dom::Event (alternative without napi_env).
+     */
+    static v8::Local<v8::Object> NewInstanceV8(v8::Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent);
+
+    /**
      * Initialize the Event class and register it with V8.
      */
     static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
