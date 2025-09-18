@@ -12,6 +12,7 @@ namespace client_layout
 
   LayoutBox::LayoutBox(shared_ptr<dom::Node> node)
       : LayoutBoxModelObject(node)
+      , hit_testable_bounding_box_{glm::vec3(0.0f), glm::vec3(0.0f), glm::mat4(1.0f)}
   {
   }
 
@@ -292,9 +293,7 @@ namespace client_layout
       // TODO(yorkie): handle the hit test for the box with overflow.
     }
     else
-    {
-      overflowBox = physicalBorderBoxRect();
-    }
+      overflowBox = getHitTestableBoundingBox();
 
     if (overflowBox.has_value())
     {
@@ -334,12 +333,16 @@ namespace client_layout
   {
     LayoutBoxModelObject::didComputeLayoutOnce(availableSpace);
 
+    // Update the scrollable overflow from the layout results.
     setScrollableOverflowFromLayoutResults();
     if (isScrollContainer())
     {
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
+
+    // Update the hit-testable bounding box.
+    updateHitTestableBoundingBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -378,5 +381,48 @@ namespace client_layout
   {
     setHasValidCachedGeometry(false);
     // TODO(yorkie): invalidate the cached geometry of the parent.
+  }
+
+  vector<shared_ptr<LayoutBox>> LayoutBox::getChildBoxes() const
+  {
+    auto children = virtualChildren();
+    if (!children)
+      return {};
+
+    vector<std::shared_ptr<LayoutBox>> childBoxes;
+    for (const auto &child : *children)
+    {
+      if (child->isBox())
+        childBoxes.push_back(static_pointer_cast<LayoutBox>(child));
+    }
+    return childBoxes;
+  }
+
+  void LayoutBox::updateHitTestableBoundingBox()
+  {
+    auto selfBoundingBox = physicalBorderBoxRect();
+    glm::vec3 unionMin = selfBoundingBox.minimumWorld;
+    glm::vec3 unionMax = selfBoundingBox.maximumWorld;
+
+    for (const auto &childBox : getChildBoxes())
+    {
+      if (!childBox->visible())
+        continue;
+
+      const geometry::BoundingBox &childBoundingBox = childBox->getHitTestableBoundingBox();
+      unionMin.x = min(unionMin.x, childBoundingBox.minimumWorld.x);
+      unionMin.y = min(unionMin.y, childBoundingBox.minimumWorld.y);
+      unionMin.z = min(unionMin.z, childBoundingBox.minimumWorld.z);
+      unionMax.x = max(unionMax.x, childBoundingBox.maximumWorld.x);
+      unionMax.y = max(unionMax.y, childBoundingBox.maximumWorld.y);
+      unionMax.z = max(unionMax.z, childBoundingBox.maximumWorld.z);
+    }
+    hit_testable_bounding_box_ = geometry::BoundingBox(unionMin, unionMax, glm::mat4(1.0f));
+
+    // Notify the parent box to update its hit-testable bounding box.
+    if (parent() && parent()->isBox())
+    {
+      parentBox()->updateHitTestableBoundingBox();
+    }
   }
 }
