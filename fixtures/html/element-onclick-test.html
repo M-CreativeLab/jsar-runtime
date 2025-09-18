@@ -70,12 +70,6 @@
       background-color: #90EE90 !important;
       animation: flash 0.5s;
     }
-    
-    @keyframes flash {
-      0% { background-color: #90EE90; }
-      50% { background-color: #FFFF99; }
-      100% { background-color: #90EE90; }
-    }
   </style>
 </head>
 
@@ -87,7 +81,7 @@
     <p>Click the buttons below to test onclick handlers:</p>
 
     <!-- Test inline onclick attribute -->
-    <button id="btn1" onclick="logEvent('btn1', 'Inline onclick attribute handler executed')">
+    <button id="btn1" onclick="logEvent('btn1', 'Inline onclick attribute handler executed', event)">
       Click me (inline handler)
     </button>
 
@@ -135,7 +129,8 @@
       statusDiv.textContent = `Tests: ${testCount} | Passed: ${passedTests} | Failed: ${failedTests}`;
     }
 
-    function logEvent(name, message) {
+    function logEvent(name, message, event) {
+      console.info('event=', JSON.stringify(event), event.constructor, event.constructor.name, event.type);
       addLog(`✅ SUCCESS: ${name} - ${message}`, 'success');
       
       // Visual feedback

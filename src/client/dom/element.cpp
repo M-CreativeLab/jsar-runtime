@@ -130,9 +130,6 @@ namespace dom
       , prefix(other.prefix)
       , classList_(other.classList_)
       , attributeNodes_(other.attributeNodes_)
-      , onclick_handler_code_(other.onclick_handler_code_)
-      , has_onclick_function_(other.has_onclick_function_)
-      , onclick_function_ref_(other.onclick_function_ref_)
   {
   }
 
@@ -990,6 +987,10 @@ namespace dom
     if (browsingContext == nullptr || browsingContext->scriptingContext == nullptr)
       return;
 
+    v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
+
     try
     {
       // Use the new compileEventHandler method to compile the handler as a function
@@ -1006,6 +1007,7 @@ namespace dom
       v8::Isolate *isolate = v8::Isolate::GetCurrent();
       v8::Isolate::Scope isolateScope(isolate);
       v8::HandleScope handleScope(isolate);
+
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::Context::Scope contextScope(context);
 
@@ -1014,12 +1016,7 @@ namespace dom
       if (event != nullptr)
       {
         // Use the script_bindings::Event wrapper to create a proper V8 event object
-        auto nativeEventPtr = std::shared_ptr<dom::Event>(event, [](dom::Event *)
-                                                          {
-                                                            // Don't delete - the event is managed externally
-                                                          });
-
-        eventObject = script_bindings::Event::NewInstanceV8(isolate, nativeEventPtr);
+        eventObject = script_bindings::Event::NewInstance(isolate, make_shared<dom::Event>(*event));
       }
       else
       {

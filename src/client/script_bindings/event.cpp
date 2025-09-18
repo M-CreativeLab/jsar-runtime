@@ -67,39 +67,6 @@ namespace script_bindings
   }
 
   // static
-  v8::Local<v8::Object> Event::NewInstanceV8(v8::Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent)
-  {
-    v8::EscapableHandleScope scope(isolate);
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-
-    // Get the constructor function
-    v8::Local<v8::Function> constructor = scripting_base::ObjectWrap<Event, dom::Event>::ConstructorFunction(isolate);
-    if (constructor.IsEmpty())
-    {
-      return v8::Local<v8::Object>();
-    }
-
-    // Create arguments for the constructor
-    std::vector<v8::Local<v8::Value>> args;
-    if (nativeEvent != nullptr)
-    {
-      SharedReference<dom::Event> eventSharedRef(nativeEvent);
-      v8::Local<v8::External> eventExternal = v8::External::New(isolate, &eventSharedRef);
-      args.push_back(eventExternal);
-    }
-
-    // Create the instance
-    v8::Local<v8::Object> jsThis = constructor->NewInstance(context, args.size(), args.data()).ToLocalChecked();
-    if (jsThis.IsEmpty())
-    {
-      return v8::Local<v8::Object>();
-    }
-
-    // Note: We skip setNapiEnv since we don't have napi_env in this context
-    return scope.Escape(jsThis);
-  }
-
-  // static
   v8::Local<v8::Function> Event::Initialize(v8::Isolate *isolate)
   {
     return scripting_base::ObjectWrap<Event, dom::Event>::Initialize(isolate);

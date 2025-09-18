@@ -74,7 +74,10 @@ namespace scripting_base
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
       if (TR_UNLIKELY(constructor.IsEmpty()))
+      {
+        std::cerr << "Constructor is not initialized for " << T::Name() << "()" << std::endl;
         return scope.Escape(v8::Local<v8::Value>());
+      }
 
       std::vector<v8::Local<v8::Value>> args;
       if (inner != nullptr)
@@ -86,7 +89,10 @@ namespace scripting_base
 
       v8::Local<v8::Object> jsThis = constructor->NewInstance(context, args.size(), args.data()).ToLocalChecked();
       if (TR_UNLIKELY(jsThis.IsEmpty()))
+      {
+        std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
         return scope.Escape(v8::Local<v8::Value>());
+      }
 
       T *instance = Unwrap(jsThis);
       instance->setNapiEnv(napiEnv);

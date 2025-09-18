@@ -71,7 +71,6 @@ TEST_CASE("Element event handler replacement", "[Element][EventHandler]")
   REQUIRE(element->getEventHandlerCode("click") == "");
   REQUIRE(element->hasEventHandler("click") == false);
 }
-}
 
 TEST_CASE("Element executeEventHandler basic functionality", "[Element][EventHandler]")
 {
