@@ -12,7 +12,6 @@ namespace client_layout
 
   LayoutBox::LayoutBox(shared_ptr<dom::Node> node)
       : LayoutBoxModelObject(node)
-      , hit_testable_bounding_box_{glm::vec3(0.0f), glm::vec3(0.0f), glm::mat4(1.0f)}
   {
   }
 
@@ -287,21 +286,30 @@ namespace client_layout
 
   bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset) const
   {
-    optional<geometry::BoundingBox> overflowBox = nullopt;
+    vector<geometry::BoundingBox> overflowBoxes;
     if (hasHitTestableOverflow())
     {
       // TODO(yorkie): handle the hit test for the box with overflow.
     }
     else
-      overflowBox = getHitTestableBoundingBox();
+      overflowBoxes = getHitTestableBoundingBoxes();
 
-    if (overflowBox.has_value())
+    if (overflowBoxes.size() > 0)
     {
-      overflowBox->move(accumulatedOffset);
+      bool intersects = false;
+      for (auto box : overflowBoxes)
+      {
+        box.move(accumulatedOffset);
 
-      auto min = overflowBox->minimumWorld;
-      auto max = overflowBox->maximumWorld;
-      return ray.intersectsBoxMinMax(min, max);
+        auto min = box.minimumWorld;
+        auto max = box.maximumWorld;
+        if (ray.intersectsBoxMinMax(min, max))
+        {
+          intersects = true;
+          break;
+        }
+      }
+      return intersects;
     }
     else
     {
@@ -329,6 +337,14 @@ namespace client_layout
     return false;
   }
 
+  void LayoutBox::didComputeLayout(const ConstraintSpace &availableSpace)
+  {
+    LayoutBoxModelObject::didComputeLayout(availableSpace);
+
+    // Update the hit-testable bounding box.
+    updateHitTestableBoundingBoxes();
+  }
+
   void LayoutBox::didComputeLayoutOnce(const ConstraintSpace &availableSpace)
   {
     LayoutBoxModelObject::didComputeLayoutOnce(availableSpace);
@@ -340,9 +356,6 @@ namespace client_layout
       getScrollableArea()
         ->updateAfterLayout(formattingContext().liveFragment());
     }
-
-    // Update the hit-testable bounding box.
-    updateHitTestableBoundingBox();
   }
 
   void LayoutBox::updateFromStyle()
@@ -398,31 +411,43 @@ namespace client_layout
     return childBoxes;
   }
 
-  void LayoutBox::updateHitTestableBoundingBox()
+  void LayoutBox::updateHitTestableBoundingBoxes()
   {
-    auto selfBoundingBox = physicalBorderBoxRect();
-    glm::vec3 unionMin = selfBoundingBox.minimumWorld;
-    glm::vec3 unionMax = selfBoundingBox.maximumWorld;
+    hit_testable_bounding_boxes_.clear();
+
+    geometry::BoundingBox mainBoundingBox = physicalBorderBoxRect();
+    hit_testable_bounding_boxes_.push_back(mainBoundingBox);
+
+    glm::vec3 mainMin = mainBoundingBox.minimumWorld;
+    glm::vec3 mainMax = mainBoundingBox.maximumWorld;
 
     for (const auto &childBox : getChildBoxes())
     {
       if (!childBox->visible())
         continue;
 
-      const geometry::BoundingBox &childBoundingBox = childBox->getHitTestableBoundingBox();
-      unionMin.x = min(unionMin.x, childBoundingBox.minimumWorld.x);
-      unionMin.y = min(unionMin.y, childBoundingBox.minimumWorld.y);
-      unionMin.z = min(unionMin.z, childBoundingBox.minimumWorld.z);
-      unionMax.x = max(unionMax.x, childBoundingBox.maximumWorld.x);
-      unionMax.y = max(unionMax.y, childBoundingBox.maximumWorld.y);
-      unionMax.z = max(unionMax.z, childBoundingBox.maximumWorld.z);
-    }
-    hit_testable_bounding_box_ = geometry::BoundingBox(unionMin, unionMax, glm::mat4(1.0f));
+      for (const auto &childBoundingBox : childBox->getHitTestableBoundingBoxes())
+      {
+        // Skip extending if the child box has no size.
+        if (glm::all(glm::epsilonEqual(childBoundingBox.extendSizeWorld,
+                                       glm::vec3(0.0f),
+                                       glm::epsilon<float>())))
+        {
+          continue;
+        }
 
-    // Notify the parent box to update its hit-testable bounding box.
-    if (parent() && parent()->isBox())
-    {
-      parentBox()->updateHitTestableBoundingBox();
+        // Check if the child box is fully contained in the main bounding box.
+        glm::vec3 childMin = childBoundingBox.minimumWorld;
+        glm::vec3 childMax = childBoundingBox.maximumWorld;
+        if (childMin.x >= mainMin.x && childMin.y >= mainMin.y && childMin.z >= mainMin.z &&
+            childMax.x <= mainMax.x && childMax.y <= mainMax.y && childMax.z <= mainMax.z)
+        {
+          continue; // Child box is fully contained, skip adding it.
+        }
+        hit_testable_bounding_boxes_.push_back(childBoundingBox);
+      }
     }
+
+    assert(hit_testable_bounding_boxes_.size() > 0);
   }
 }
