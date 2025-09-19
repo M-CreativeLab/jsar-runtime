@@ -55,7 +55,9 @@ namespace client_layout
     {
       if (object.isNone())
         return;
-      object.didComputeLayoutOnce(parent.fragment());
+
+      const auto &space = parent.fragment();
+      object.didComputeLayoutOnce(space);
 
       // traverse the children of the block or inline object.
       if (object.isLayoutBlock())
@@ -70,6 +72,9 @@ namespace client_layout
         for (shared_ptr<LayoutObject> child : inlineObject->childrenRef())
           traverseChildNode(*child, *inlineObject); // Just traverse the inline's children but don't compute layout.
       }
+
+      // Finally, call `didComputeLayout` for the object itself.
+      object.didComputeLayout(space);
     };
 
     // TODO(yorkie): support the lifecycle `willComputeLayout`?
@@ -84,6 +89,8 @@ namespace client_layout
     for (shared_ptr<LayoutObject> child : childrenRef())
       traverseChildNode(*child, *this);
 
+    // Finally, call `didComputeLayout` for the view itself.
+    didComputeLayout(avilableSpace);
     return r;
   }
 

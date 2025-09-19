@@ -198,6 +198,7 @@ namespace client_layout
 
   protected:
     virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset, HitTestPhase);
+    virtual void didComputeLayout(const ConstraintSpace &) override;
     virtual void didComputeLayoutOnce(const ConstraintSpace &) override;
 
     void updateFromStyle() override;
@@ -213,11 +214,11 @@ namespace client_layout
     {
       return overflow_ != nullptr && overflow_->visualOverflow;
     }
-    inline geometry::BoundingBox getHitTestableBoundingBox() const
+    inline const std::vector<geometry::BoundingBox>& getHitTestableBoundingBoxes() const
     {
-      return hit_testable_bounding_box_;
+      return hit_testable_bounding_boxes_;
     }
-    void updateHitTestableBoundingBox();
+    void updateHitTestableBoundingBoxes();
 
     glm::vec3 computeSize() const;
     vector<std::shared_ptr<LayoutBox>> getChildBoxes() const;
@@ -229,6 +230,6 @@ namespace client_layout
 
   private:
     std::shared_ptr<BoxOverflowModel> overflow_;
-    geometry::BoundingBox hit_testable_bounding_box_;
+    std::vector<geometry::BoundingBox> hit_testable_bounding_boxes_;
   };
 }

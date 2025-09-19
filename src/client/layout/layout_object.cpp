@@ -953,6 +953,10 @@ namespace client_layout
   {
   }
 
+  void LayoutObject::didComputeLayout(const ConstraintSpace &avilableSpace)
+  {
+  }
+
   void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
     if (hasSceneComponent<WebContent>())
