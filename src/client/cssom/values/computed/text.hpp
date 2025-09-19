@@ -6,11 +6,16 @@
 
 namespace client_cssom::values::computed
 {
-  class TextAlign : public client_cssom::values::specified::TextAlign
+  class TextAlign : public specified::TextAlign
   {
-    using client_cssom::values::specified::TextAlign::TextAlign;
+    using specified::TextAlign::TextAlign;
 
   public:
+    TextAlign(const specified::TextAlign &other)
+        : specified::TextAlign(other)
+    {
+    }
+
     operator skia::textlayout::TextAlign() const
     {
       switch (tag_)

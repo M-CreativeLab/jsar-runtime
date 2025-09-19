@@ -8,23 +8,6 @@ using namespace client_cssom::values::computed;
 
 TEST_CASE("Layout Text Align Tests", "[layout-text-align]")
 {
-  SECTION("ComputedStyle text_align propagates to LayoutStyle")
-  {
-    ComputedStyle style;
-    
-    // Set text-align: center
-    style.setProperty("text-align", "center");
-    
-    // Convert to LayoutStyle
-    auto layoutStyle = static_cast<crates::layout2::LayoutStyle>(style);
-    
-    // Verify text-align is propagated correctly
-    auto textAlign = layoutStyle.textAlign();
-    
-    // This test verifies that the text-align value flows through the pipeline
-    REQUIRE(true); // Placeholder for now since we can't easily instantiate ComputedStyle
-  }
-
   SECTION("TextAlign enum values match between C++ and Rust")
   {
     // Test that all TextAlign enum values are properly defined
@@ -92,7 +75,7 @@ TEST_CASE("Layout Text Align Tests", "[layout-text-align]")
     TextAlign computedCenter = TextAlign::Center();
     TextAlign computedLeft = TextAlign::Left();
     TextAlign computedRight = TextAlign::Right();
-    
+
     // Convert to layout values
     auto layoutCenter = computedCenter.toLayoutValue();
     auto layoutLeft = computedLeft.toLayoutValue(); 

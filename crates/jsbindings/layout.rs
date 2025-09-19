@@ -1098,6 +1098,31 @@ impl From<ffi::LengthPercentageXY> for taffy::Point<taffy::LengthPercentage> {
   }
 }
 
+impl From<taffy::TextAlign> for ffi::TextAlign {
+  fn from(value: taffy::TextAlign) -> Self {
+    match value {
+      taffy::TextAlign::LegacyLeft => ffi::TextAlign::Left,
+      taffy::TextAlign::LegacyRight => ffi::TextAlign::Right,
+      taffy::TextAlign::LegacyCenter => ffi::TextAlign::Center,
+      _ => ffi::TextAlign::Start, // Default value since taffy doesn't handle text-align
+    }
+  }
+}
+
+impl From<ffi::TextAlign> for taffy::TextAlign {
+  fn from(value: ffi::TextAlign) -> Self {
+    match value {
+      ffi::TextAlign::Start => taffy::TextAlign::LegacyLeft,
+      ffi::TextAlign::End => taffy::TextAlign::LegacyRight,
+      ffi::TextAlign::Left => taffy::TextAlign::LegacyLeft,
+      ffi::TextAlign::Right => taffy::TextAlign::LegacyRight,
+      ffi::TextAlign::Center => taffy::TextAlign::LegacyCenter,
+      ffi::TextAlign::Justify => taffy::TextAlign::Auto,
+      _ => taffy::TextAlign::Auto,
+    }
+  }
+}
+
 impl_type_casting_simple!(FlexDirection, { Row, Column, RowReverse, ColumnReverse }, Row);
 impl_type_casting_simple!(FlexWrap, { NoWrap, Wrap, WrapReverse}, NoWrap);
 
@@ -1117,6 +1142,8 @@ impl From<taffy::Style> for ffi::Style {
       margin: style.margin.into(),
       padding: style.padding.into(),
       border: style.border.into(),
+      text_align: style.text_align.into(),
+
       align_items: style.align_items.into(),
       align_self: style.align_self.into(),
       align_content: style.align_content.into(),
@@ -1140,8 +1167,6 @@ impl From<taffy::Style> for ffi::Style {
       grid_row_end: "".to_string(),
       grid_column_start: "".to_string(),
       grid_column_end: "".to_string(),
-
-      text_align: ffi::TextAlign::Start, // Default value since taffy doesn't handle text-align
     }
   }
 }
@@ -1343,6 +1368,8 @@ impl From<ffi::Style> for taffy::Style {
       margin: value.margin.into(),
       padding: value.padding.into(),
       border: value.border.into(),
+      text_align: value.text_align.into(),
+
       align_items: value.align_items.into(),
       align_self: value.align_self.into(),
       align_content: value.align_content.into(),
