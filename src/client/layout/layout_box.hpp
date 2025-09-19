@@ -214,7 +214,7 @@ namespace client_layout
     {
       return overflow_ != nullptr && overflow_->visualOverflow;
     }
-    inline const std::vector<geometry::BoundingBox>& getHitTestableBoundingBoxes() const
+    inline const std::vector<geometry::BoundingBox> &getHitTestableBoundingBoxes() const
     {
       return hit_testable_bounding_boxes_;
     }
