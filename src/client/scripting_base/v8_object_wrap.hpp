@@ -62,7 +62,7 @@ namespace scripting_base
      * @param inner The optional inner instance of the class D
      * @returns The wrapped v8::Object
      */
-    static v8::Local<v8::Value> NewInstance(napi_env napiEnv, std::shared_ptr<D> inner = nullptr)
+    static v8::Local<v8::Object> NewInstance(napi_env napiEnv, std::shared_ptr<D> inner = nullptr)
     {
       if constexpr (!std::is_same_v<D, void>)
       {
@@ -71,31 +71,11 @@ namespace scripting_base
 
       v8::Isolate *isolate = v8::Isolate::GetCurrent();
       v8::EscapableHandleScope scope(isolate);
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
-      if (TR_UNLIKELY(constructor.IsEmpty()))
-      {
-        std::cerr << "Constructor is not initialized for " << T::Name() << "()" << std::endl;
-        return scope.Escape(v8::Local<v8::Value>());
-      }
 
-      std::vector<v8::Local<v8::Value>> args;
-      if (inner != nullptr)
-      {
-        SharedReference<D> innerSharedRef(inner);
-        v8::Local<v8::External> innerExternal = v8::External::New(isolate, &innerSharedRef);
-        args.push_back(innerExternal);
-      }
-
-      v8::Local<v8::Object> jsThis = constructor->NewInstance(context, args.size(), args.data()).ToLocalChecked();
-      if (TR_UNLIKELY(jsThis.IsEmpty()))
-      {
-        std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
-        return scope.Escape(v8::Local<v8::Value>());
-      }
-
+      v8::Local<v8::Object> jsThis = NewInstance(isolate, inner);
       T *instance = Unwrap(jsThis);
       instance->setNapiEnv(napiEnv);
+
       return scope.Escape(jsThis);
     }
 
@@ -106,7 +86,7 @@ namespace scripting_base
      * @param inner The optional inner instance of the class D
      * @returns The wrapped v8::Object
      */
-    static v8::Local<v8::Value> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
     {
       if constexpr (!std::is_same_v<D, void>)
       {
@@ -119,7 +99,7 @@ namespace scripting_base
       if (constructor.IsEmpty()) [[unlikely]]
       {
         std::cerr << "Constructor is not initialized for " << T::Name() << "()" << std::endl;
-        return scope.Escape(v8::Local<v8::Value>());
+        return scope.Escape(v8::Local<v8::Object>());
       }
 
       std::vector<v8::Local<v8::Value>> args;
@@ -127,7 +107,7 @@ namespace scripting_base
       if (jsThis.IsEmpty()) [[unlikely]]
       {
         std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
-        return scope.Escape(v8::Local<v8::Value>());
+        return scope.Escape(v8::Local<v8::Object>());
       }
 
       // Update the inner reference
@@ -187,9 +167,8 @@ namespace scripting_base
     }
 
   public:
-    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args, std::shared_ptr<D> inner = nullptr)
+    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
         : current_isolate_(isolate)
-        , inner_handle_(inner)
     {
     }
 
@@ -205,6 +184,7 @@ namespace scripting_base
     void setInner(std::shared_ptr<D> data)
     {
       inner_handle_ = data;
+      onDataSet(data);
     }
 
     v8::Local<v8::Value> value() const
@@ -214,6 +194,11 @@ namespace scripting_base
     std::shared_ptr<D> inner() const
     {
       return inner_handle_;
+    }
+
+  protected:
+    virtual void onDataSet(std::shared_ptr<D> data)
+    {
     }
 
   private:
@@ -228,25 +213,8 @@ namespace scripting_base
         return;
       }
 
-      T *instance = nullptr;
-      if (args.Length() >= 1 && args[0]->IsExternal())
-      {
-        if constexpr (!std::is_same_v<D, void>)
-        {
-          v8::Local<v8::External> innerExternal = v8::Local<v8::External>::Cast(args[0]);
-          SharedReference<D> *innerSharedRef = static_cast<SharedReference<D> *>(innerExternal->Value());
-          assert(innerSharedRef != nullptr && "innerSharedRef must not be null");
-          instance = new T(isolate, args, innerSharedRef->value);
-        }
-        else
-        {
-          assert(false && "D must not be void when passing inner instance");
-        }
-      }
-      else
-      {
-        instance = new T(isolate, args);
-      }
+      T *instance = new T(isolate, args);
+      assert(instance != nullptr && "Failed to create instance");
 
       auto jsObject = args.This();
       Wrap(isolate, jsObject, instance);

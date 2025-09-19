@@ -256,16 +256,10 @@ namespace dom
     std::string getOuterHTML();
     void setOuterHTML(const std::string &markup);
 
-    // Event handlers
-    void setOnClickHandler(const std::string &handlerCode);
-    std::string getOnClickHandlerCode() const;
-    bool hasOnClickHandler() const;
-    void executeOnClickHandler();
-
     // Generalized event handler methods
     void setEventHandler(const std::string &type, const std::string &handlerCode);
-    std::string getEventHandlerCode(const std::string &type) const;
     bool hasEventHandler(const std::string &type) const;
+    std::string getEventHandlerCode(const std::string &type) const;
     void executeEventHandler(const std::string &type, dom::Event *event);
 
   protected: // Node lifecycle callbacks

@@ -652,7 +652,7 @@ namespace dom
     return true;
   }
 
-  v8::MaybeLocal<v8::Function> DOMScriptingContext::compileEventHandler(const string &handlerCode)
+  v8::MaybeLocal<v8::Function> DOMScriptingContext::compileFunction(const string &funcSource)
   {
     assert(isContextInitialized);
 
@@ -663,7 +663,7 @@ namespace dom
     v8::Context::Scope contextScope(context);
 
     // Wrap the handler code in a function that accepts an event parameter
-    string functionCode = "(function(event) { " + handlerCode + " })";
+    string functionCode = "(function(event) { " + funcSource + " })";
 
     v8::TryCatch tryCatch(isolate_);
     v8::Local<v8::String> source = v8::String::NewFromUtf8(isolate_, functionCode.c_str()).ToLocalChecked();

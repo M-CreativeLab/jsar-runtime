@@ -42,13 +42,9 @@ namespace dombinding
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
   public:
-    NodeList(v8::Isolate *isolate,
-             const v8::FunctionCallbackInfo<v8::Value> &info,
-             std::shared_ptr<dom::NodeListApi> list = nullptr)
-        : scripting_base::ObjectWrap<NodeList, dom::NodeListApi>(isolate, info, list)
+    NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
+        : scripting_base::ObjectWrap<NodeList, dom::NodeListApi>(isolate, info)
     {
-      if (!list->isLive())
-        static_list_ = list; // add the reference to the static list to keep it alive
     }
 
   private:
@@ -64,10 +60,16 @@ namespace dombinding
     v8::Local<v8::Value> get(unsigned int index) const;
 
   private:
+    inline void onDataSet(std::shared_ptr<dom::NodeListApi> list) override
+    {
+      if (!list->isLive())
+        static_list_ = list; // add the reference to the static list to keep it alive
+    }
+
     // Returns the values of the NodeList that follows the iterator protocol.
     inline v8::Local<v8::Value> values() const
     {
-      return NodeListIterator::NewInstance(napi_env_, *this->inner());
+      return NodeListIterator::NewInstance(nullptr, *this->inner());
     }
 
     inline bool hasList() const

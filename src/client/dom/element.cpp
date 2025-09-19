@@ -923,39 +923,21 @@ namespace dom
     return nullptr;
   }
 
-  // Event handler methods
-  void Element::setOnClickHandler(const std::string &handlerCode)
-  {
-    // Use the new generalized method for consistency
-    setEventHandler("click", handlerCode);
-  }
-
-  std::string Element::getOnClickHandlerCode() const
-  {
-    // Use the new generalized method for consistency
-    return getEventHandlerCode("click");
-  }
-
-  bool Element::hasOnClickHandler() const
-  {
-    // Use the new generalized method for consistency
-    return hasEventHandler("click");
-  }
-
-  void Element::executeOnClickHandler()
-  {
-    // Use the new generalized method, but don't pass an event object for backward compatibility
-    executeEventHandler("click", nullptr);
-  }
-
   // Generalized event handler methods
 
-  void Element::setEventHandler(const std::string &type, const std::string &handlerCode)
+  void Element::setEventHandler(const string &type, const string &handlerCode)
   {
     event_handler_codes_[type] = handlerCode;
   }
 
-  std::string Element::getEventHandlerCode(const std::string &type) const
+  bool Element::hasEventHandler(const string &type) const
+  {
+    // Check if we have handler code for this type
+    auto it = event_handler_codes_.find(type);
+    return it != event_handler_codes_.end() && !it->second.empty();
+  }
+
+  string Element::getEventHandlerCode(const string &type) const
   {
     auto it = event_handler_codes_.find(type);
     if (it != event_handler_codes_.end())
@@ -964,17 +946,14 @@ namespace dom
     return "";
   }
 
-  bool Element::hasEventHandler(const std::string &type) const
+  void Element::executeEventHandler(const string &type, Event *event)
   {
-    // Check if we have handler code for this type
-    auto it = event_handler_codes_.find(type);
-    return it != event_handler_codes_.end() && !it->second.empty();
-  }
+    // Skip if no event is provided and no handler code exists
+    if (event == nullptr) [[unlikely]]
+      return;
 
-  void Element::executeEventHandler(const std::string &type, dom::Event *event)
-  {
     // Check for handler code
-    std::string handlerCode = getEventHandlerCode(type);
+    string handlerCode = getEventHandlerCode(type);
     if (handlerCode.empty())
       return;
 
@@ -994,7 +973,7 @@ namespace dom
     try
     {
       // Use the new compileEventHandler method to compile the handler as a function
-      auto maybeFunction = browsingContext->scriptingContext->compileEventHandler(handlerCode);
+      auto maybeFunction = browsingContext->scriptingContext->compileFunction(handlerCode);
 
       v8::Local<v8::Function> handlerFunction;
       if (!maybeFunction.ToLocal(&handlerFunction))
@@ -1012,21 +991,7 @@ namespace dom
       v8::Context::Scope contextScope(context);
 
       // Create a V8 event object using the proper Event wrapper
-      v8::Local<v8::Object> eventObject;
-      if (event != nullptr)
-      {
-        // Use the script_bindings::Event wrapper to create a proper V8 event object
-        eventObject = script_bindings::Event::NewInstance(isolate, make_shared<dom::Event>(*event));
-      }
-      else
-      {
-        // Create a basic event object for backward compatibility
-        eventObject = v8::Object::New(isolate);
-        eventObject->Set(context,
-                         v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                         v8::String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked())
-          .Check();
-      }
+      v8::Local<v8::Object> eventObject = script_bindings::Event::NewInstance(isolate, make_shared<dom::Event>(*event));
 
       // Call the compiled handler function with the event object
       v8::TryCatch tryCatch(isolate);
@@ -1052,7 +1017,7 @@ namespace dom
     }
     catch (const exception &e)
     {
-      std::cerr << "Error executing " << type << " handler: " << e.what() << std::endl;
+      cerr << "Error executing " << type << " handler: " << e.what() << endl;
     }
   }
 }

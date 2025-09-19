@@ -204,10 +204,10 @@ namespace dom
     /**
      * Compile handler code as a function that can be called with event parameters.
      *
-     * @param handlerCode The handler code to compile as a function body.
+     * @param funcSource The function source code.
      * @returns A V8 function that can be called with event arguments, or empty if compilation failed.
      */
-    v8::MaybeLocal<v8::Function> compileEventHandler(const std::string &handlerCode);
+    v8::MaybeLocal<v8::Function> compileFunction(const std::string &funcSource);
 
     /**
      * Compile the given script as a synthetic module.

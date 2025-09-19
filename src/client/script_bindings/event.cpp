@@ -66,8 +66,8 @@ namespace script_bindings
     return scripting_base::ObjectWrap<Event, dom::Event>::Initialize(isolate);
   }
 
-  Event::Event(Isolate *isolate, const FunctionCallbackInfo<Value> &args, std::shared_ptr<dom::Event> nativeEvent)
-      : scripting_base::ObjectWrap<Event, dom::Event>(isolate, args, nativeEvent)
+  Event::Event(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+      : scripting_base::ObjectWrap<Event, dom::Event>(isolate, args)
   {
   }
 
@@ -79,11 +79,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    cout << "Event::TypeGetter called" << endl;
     Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
-    cout << "Unwrapped event: " << (event != nullptr ? "not null" : "null") << "(" << event << ")" << endl
-         << "Inner event: " << (event != nullptr && event->inner() != nullptr ? "not null" : "null") << endl;
-
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
