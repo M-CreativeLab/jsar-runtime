@@ -1,6 +1,7 @@
 #include "./image.hpp"
 #include <client/cssom/values/computed/image.hpp>
 #include <client/cssom/parsers/css_image_parser.hpp>
+#include <crates/bindings.hpp>
 
 namespace client_cssom::values::specified
 {
@@ -36,7 +37,35 @@ namespace client_cssom::values::specified
     else if (isUrl())
     {
       const auto &url_or_none = std::get<UrlOrNone>(*this);
-      computed_img.emplace<UrlOrNone>(url_or_none);
+
+      // Resolve relative URLs if the URL is not absolute
+      if (url_or_none.url.has_value())
+      {
+        std::string original_url = url_or_none.url.value();
+        std::string resolved_url = original_url;
+
+        // Check if URL is relative (doesn't start with protocol or is a data URL)
+        if (!original_url.empty() &&
+            original_url.find("://") == std::string::npos &&
+            original_url.find("data:") != 0)
+        {
+          // Get base URI from context
+          std::string base_uri = context.getBaseURI();
+          if (!base_uri.empty())
+          {
+            // Use UrlHelper to resolve relative URL
+            resolved_url = crates::UrlHelper::CreateUrlStringWithPath(base_uri, original_url);
+          }
+        }
+
+        // Create new UrlOrNone with resolved URL
+        UrlOrNone resolved_url_or_none = UrlOrNone::Url(resolved_url);
+        computed_img.emplace<UrlOrNone>(resolved_url_or_none);
+      }
+      else
+      {
+        computed_img.emplace<UrlOrNone>(url_or_none);
+      }
     }
     else if (isGradient())
     {

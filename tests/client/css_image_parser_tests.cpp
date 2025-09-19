@@ -246,3 +246,46 @@ TEST_CASE("CSSImageParser basic parsing", "[css-image-parser]")
     REQUIRE(true);
   }
 }
+
+TEST_CASE("CSSImageParser URL parsing", "[css-image-parser-url]")
+{
+  SECTION("Parse relative URL with dot notation")
+  {
+    auto image = CSSImageParser::parseImage("url('./image.png')");
+    REQUIRE(!image.isNone());
+    REQUIRE(image.isUrl());
+    // Note: URL resolution happens in toComputedValue with proper context
+  }
+
+  SECTION("Parse relative URL with parent directory")
+  {
+    auto image = CSSImageParser::parseImage("url('../assets/image.png')");
+    REQUIRE(!image.isNone());
+    REQUIRE(image.isUrl());
+    // Note: URL resolution happens in toComputedValue with proper context
+  }
+
+  SECTION("Parse relative URL without prefix")
+  {
+    auto image = CSSImageParser::parseImage("url('images/test.png')");
+    REQUIRE(!image.isNone());
+    REQUIRE(image.isUrl());
+    // Note: URL resolution happens in toComputedValue with proper context
+  }
+
+  SECTION("Parse absolute URL - should remain unchanged")
+  {
+    auto image = CSSImageParser::parseImage("url('https://example.com/image.png')");
+    REQUIRE(!image.isNone());
+    REQUIRE(image.isUrl());
+    // Note: Absolute URLs are not modified during resolution
+  }
+
+  SECTION("Parse data URL - should remain unchanged")
+  {
+    auto image = CSSImageParser::parseImage("url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==')");
+    REQUIRE(!image.isNone());
+    REQUIRE(image.isUrl());
+    // Note: Data URLs are not modified during resolution
+  }
+}
