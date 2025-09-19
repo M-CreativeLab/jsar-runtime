@@ -130,7 +130,7 @@
     }
 
     function logEvent(name, message, event) {
-      console.info('event=', JSON.stringify(event), event.constructor, event.constructor.name, event.type);
+      console.info('event=', event, String(event.constructor), event.type);
       addLog(`✅ SUCCESS: ${name} - ${message}`, 'success');
       
       // Visual feedback

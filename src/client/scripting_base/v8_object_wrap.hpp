@@ -99,6 +99,45 @@ namespace scripting_base
       return scope.Escape(jsThis);
     }
 
+    /**
+     * Create the instance of the class T and wrap it in a v8::Object
+     *
+     * @param isolate The v8::Isolate instance
+     * @param inner The optional inner instance of the class D
+     * @returns The wrapped v8::Object
+     */
+    static v8::Local<v8::Value> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    {
+      if constexpr (!std::is_same_v<D, void>)
+      {
+        assert(inner != nullptr && "inner must not be null when D is not void");
+      }
+
+      v8::EscapableHandleScope scope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
+      if (constructor.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Constructor is not initialized for " << T::Name() << "()" << std::endl;
+        return scope.Escape(v8::Local<v8::Value>());
+      }
+
+      std::vector<v8::Local<v8::Value>> args;
+      v8::Local<v8::Object> jsThis = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
+      if (jsThis.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
+        return scope.Escape(v8::Local<v8::Value>());
+      }
+
+      // Update the inner reference
+      T *instance = Unwrap(jsThis);
+      instance->setInner(inner);
+
+      // Return the created instance
+      return scope.Escape(jsThis);
+    }
+
     static void Wrap(v8::Isolate *isolate, v8::Local<v8::Object> object, T *instance)
     {
       assert(isolate != nullptr && "isolate must not be null");
@@ -137,10 +176,8 @@ namespace scripting_base
       v8::HandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate);
+      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, ObjectWrap<T, D>::Constructor);
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
-      tpl->SetCallHandler(ObjectWrap<T, D>::CallHandler);
-      tpl->InstanceTemplate()->Set(isolate, "constructor", tpl, v8::PropertyAttribute::ReadOnly);
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
       T::ConfigureFunctionTemplate(isolate, tpl);
 
@@ -165,6 +202,10 @@ namespace scripting_base
     {
       napi_env_ = env;
     }
+    void setInner(std::shared_ptr<D> data)
+    {
+      inner_handle_ = data;
+    }
 
     v8::Local<v8::Value> value() const
     {
@@ -172,11 +213,11 @@ namespace scripting_base
     }
     std::shared_ptr<D> inner() const
     {
-      return inner_handle_.lock();
+      return inner_handle_;
     }
 
   private:
-    static void CallHandler(const v8::FunctionCallbackInfo<v8::Value> &args)
+    static void Constructor(const v8::FunctionCallbackInfo<v8::Value> &args)
     {
       v8::Isolate *isolate = args.GetIsolate();
 
@@ -188,19 +229,19 @@ namespace scripting_base
       }
 
       T *instance = nullptr;
-      if constexpr (!std::is_same_v<D, void>)
+      if (args.Length() >= 1 && args[0]->IsExternal())
       {
-        if (args.Length() < 1 || !args[0]->IsExternal())
+        if constexpr (!std::is_same_v<D, void>)
         {
-          isolate->ThrowException(v8::Exception::TypeError(
-            v8::String::NewFromUtf8(isolate, "Illegal constructor").ToLocalChecked()));
-          return;
+          v8::Local<v8::External> innerExternal = v8::Local<v8::External>::Cast(args[0]);
+          SharedReference<D> *innerSharedRef = static_cast<SharedReference<D> *>(innerExternal->Value());
+          assert(innerSharedRef != nullptr && "innerSharedRef must not be null");
+          instance = new T(isolate, args, innerSharedRef->value);
         }
-
-        v8::Local<v8::External> innerExternal = v8::Local<v8::External>::Cast(args[0]);
-        SharedReference<D> *innerSharedRef = static_cast<SharedReference<D> *>(innerExternal->Value());
-        assert(innerSharedRef != nullptr && "innerSharedRef must not be null");
-        instance = new T(isolate, args, innerSharedRef->value);
+        else
+        {
+          assert(false && "D must not be void when passing inner instance");
+        }
       }
       else
       {
@@ -237,7 +278,7 @@ namespace scripting_base
     v8::Persistent<v8::Object> object_handle_;
 
     // Inner is a weak pointer to the optional inner instance of the class D.
-    std::weak_ptr<D> inner_handle_;
+    std::shared_ptr<D> inner_handle_;
 
   private:
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;

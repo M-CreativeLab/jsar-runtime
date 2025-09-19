@@ -42,7 +42,9 @@ namespace dombinding
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
   public:
-    NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info, std::shared_ptr<dom::NodeListApi> list)
+    NodeList(v8::Isolate *isolate,
+             const v8::FunctionCallbackInfo<v8::Value> &info,
+             std::shared_ptr<dom::NodeListApi> list = nullptr)
         : scripting_base::ObjectWrap<NodeList, dom::NodeListApi>(isolate, info, list)
     {
       if (!list->isLive())
@@ -70,13 +72,12 @@ namespace dombinding
 
     inline bool hasList() const
     {
-      auto list = this->inner_handle_.lock();
-      return list != nullptr;
+      return this->inner() != nullptr;
     }
 
     inline dom::NodeListApi &listRef() const
     {
-      auto list = this->inner_handle_.lock();
+      auto list = this->inner();
       assert(list != nullptr && "list must not be null.");
       return *list;
     }
