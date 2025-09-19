@@ -991,7 +991,8 @@ namespace dom
       v8::Context::Scope contextScope(context);
 
       // Create a V8 event object using the proper Event wrapper
-      v8::Local<v8::Object> eventObject = script_bindings::Event::NewInstance(isolate, make_shared<dom::Event>(*event));
+      v8::Local<v8::Object> eventObject = script_bindings::Event::NewInstance(isolate,
+                                                                              make_shared<dom::Event>(*event));
 
       // Call the compiled handler function with the event object
       v8::TryCatch tryCatch(isolate);

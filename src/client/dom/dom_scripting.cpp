@@ -4,9 +4,11 @@
 #include <crates/bindings.hpp>
 #include <bindings/dom/console.hpp>
 
+#include <client/script_bindings/event.hpp>
+#include <client/script_bindings/events/ui_event.hpp>
+
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
-#include "../script_bindings/event.hpp"
 
 namespace dom
 {
@@ -252,6 +254,7 @@ namespace dom
 
     // Initialize script bindings
     script_bindings::Event::Initialize(isolate_);
+    script_bindings::UIEvent::Initialize(isolate_);
   }
 
   void DOMScriptingContext::enableDynamicImport()

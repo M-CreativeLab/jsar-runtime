@@ -19,11 +19,12 @@ namespace scripting_base
    *
    * @tparam T The class to wrap.
    * @tparam D The type of the optional inner instance.
+   * @tparam B The base class of T, if T is derived from another ObjectWrap class.
    */
-  template <typename T, typename D = void>
+  template <typename T, typename D = void, typename B = void>
   class ObjectWrap
   {
-    friend class ObjectWrap<T, D>;
+    friend class ObjectWrap<T, D, B>;
 
   public:
     /**
@@ -33,10 +34,15 @@ namespace scripting_base
      */
     static std::string Name()
     {
-      return "ObjectWrap";
+      return "Object";
     }
 
-    static v8::Local<v8::Function> ConstructorFunction(v8::Isolate *isolate)
+    static v8::Local<v8::FunctionTemplate> GetFunctionTemplate(v8::Isolate *isolate)
+    {
+      return function_template_.Get(isolate);
+    }
+
+    static v8::Local<v8::Function> GetConstructorFunction(v8::Isolate *isolate)
     {
       return constructor_handle_.Get(isolate);
     }
@@ -153,16 +159,38 @@ namespace scripting_base
     {
       assert(isolate != nullptr);
 
+      // Return the existing constructor if already initialized
+      if (ObjectWrap<T, D, B>::initialized_ == true)
+      {
+        return ObjectWrap<T, D, B>::GetConstructorFunction(isolate);
+      }
+
       v8::HandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, ObjectWrap<T, D>::Constructor);
+      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, ObjectWrap<T, D, B>::Constructor);
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+      // Set up inheritance if `B` is specified
+      if constexpr (!std::is_same_v<B, void>)
+      {
+        // Ensure base class is initialized first
+        B::Initialize(isolate);
+        v8::Local<v8::FunctionTemplate> base = B::GetFunctionTemplate(isolate);
+        if (!base.IsEmpty())
+        {
+          tpl->Inherit(base);
+        }
+      }
+
       T::ConfigureFunctionTemplate(isolate, tpl);
 
+      // Update the persistent handles
       v8::Local<v8::Function> constructor = tpl->GetFunction(context).ToLocalChecked();
-      ObjectWrap<T, D>::constructor_handle_.Reset(isolate, constructor);
+      ObjectWrap<T, D, B>::constructor_handle_.Reset(isolate, constructor);
+      ObjectWrap<T, D, B>::function_template_.Reset(isolate, tpl);
+      ObjectWrap<T, D, B>::initialized_ = true;
       return constructor;
     }
 
@@ -249,6 +277,8 @@ namespace scripting_base
     std::shared_ptr<D> inner_handle_;
 
   private:
+    static thread_local inline bool initialized_ = false;
+    static thread_local inline v8::Persistent<v8::FunctionTemplate> function_template_;
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;
   };
 }
