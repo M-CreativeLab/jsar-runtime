@@ -355,12 +355,15 @@ namespace builtin_scene
     /**
      * Mark that async rendering has completed and the surface is ready.
      * This method is thread-safe and should be called from async worker threads.
+     * 
+     * After calling this method, the surface will be marked as dirty, triggering
+     * UpdateTextureSystem to upload the rendered content to GPU texture.
      */
     inline void markAsyncRenderingCompleted()
     {
       std::lock_guard<std::mutex> lock(async_state_mutex_);
       async_rendering_in_progress_ = false;
-      is_surface_dirty_ = true; // Set surface dirty within the lock for thread safety
+      is_surface_dirty_ = true; // Mark surface dirty to trigger texture update
     }
 
     /**
@@ -516,8 +519,8 @@ namespace builtin_scene
        * The asyncRenderFunc will be executed on a separate worker thread.
        */
       void scheduleAsyncSurfaceUpdate(ecs::EntityId entity,
-                                      WebContent &content,
-                                      std::function<bool(ecs::EntityId, WebContent &)> asyncRenderFunc);
+                                      std::shared_ptr<WebContent> content,
+                                      std::function<bool(ecs::EntityId, std::shared_ptr<WebContent>)> asyncRenderFunc);
 
     private:
       // Container for tracking async rendering operations
@@ -666,26 +669,7 @@ namespace builtin_scene
 
     private:
       /**
-       * Determine if async rendering should be used for the given text content.
-       * Uses heuristics based on text length and content area.
-       * 
-       * @param text The text content to render.
-       * @param content The WebContent containing layout information.
-       * @returns True if async rendering should be used.
-       */
-      bool shouldUseAsyncRendering(const std::string &text, const WebContent &content);
-
-      /**
-       * Render text synchronously (for simple/small text).
-       * 
-       * @param entity The entity ID to render.
-       * @param content The WebContent to render.
-       * @returns Whether the surface is written successfully.
-       */
-      bool renderTextSync(ecs::EntityId entity, WebContent &content);
-
-      /**
-       * Render text asynchronously (for complex/large text with SDF generation).
+       * Render text asynchronously with SDF generation.
        * This method is designed to be called from a worker thread.
        * 
        * @param entity The entity ID to render.

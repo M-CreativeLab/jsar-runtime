@@ -138,43 +138,6 @@ TEST_CASE("scheduleAsyncSurfaceUpdate functionality", "[async_rendering][schedul
   }
 }
 
-// Test the heuristics for determining when to use async rendering
-class MockRenderTextSystem : public RenderTextSystem
-{
-public:
-  using RenderTextSystem::shouldUseAsyncRendering; // Make it accessible for testing
-};
-
-TEST_CASE("shouldUseAsyncRendering heuristics", "[async_rendering][text_rendering]")
-{
-  MockRenderTextSystem textSystem;
-  auto content = std::make_shared<WebContent>("test_text", 100.0f, 100.0f, 0);
-  
-  SECTION("Small text should use synchronous rendering")
-  {
-    std::string smallText = "Hello World";
-    REQUIRE_FALSE(textSystem.shouldUseAsyncRendering(smallText, *content));
-  }
-
-  SECTION("Large text should use async rendering")
-  {
-    std::string largeText(150, 'A'); // 150 characters
-    REQUIRE(textSystem.shouldUseAsyncRendering(largeText, *content));
-  }
-
-  SECTION("Large content area should use async rendering")
-  {
-    // Set up a large content area
-    client_layout::Fragment fragment;
-    // Note: Fragment setup would need proper initialization in real scenario
-    // This demonstrates the concept
-    std::string mediumText = "Medium text content";
-    
-    // For this test, we assume medium text with small area uses sync
-    REQUIRE_FALSE(textSystem.shouldUseAsyncRendering(mediumText, *content));
-  }
-}
-
 TEST_CASE("UpdateTextureSystem async handling", "[async_rendering][texture_update]")
 {
   SECTION("Content with async rendering in progress should be skipped")
