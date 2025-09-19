@@ -6,7 +6,9 @@
     body {
       margin: 0;
       padding: 20px;
+      box-sizing: border-box;
       font-family: Arial, sans-serif;
+      background-color: #fff;
     }
 
     .test-container {
@@ -14,41 +16,38 @@
       padding: 20px;
       border: 2px solid #ccc;
       min-height: 100px;
+      background-size: contain;
+      background-position-x: right;
     }
 
     /* Test 1: Same directory relative path */
     .same-dir {
-      background-image: url('./test-image.png');
+      background-image: url('./images/jsar-logo-00.png');
       background-repeat: no-repeat;
-      background-size: 50px 50px;
     }
 
     /* Test 2: Parent directory relative path */
     .parent-dir {
-      background-image: url('../images/test-image.png');
+      background-image: url('../textures/cubemap/01/nx.jpg');
       background-repeat: no-repeat;
-      background-size: 50px 50px;
     }
 
     /* Test 3: Subdirectory relative path */
     .sub-dir {
-      background-image: url('images/test-image.png');
+      background-image: url('images/jsar-logo-00.png');
       background-repeat: no-repeat;
-      background-size: 50px 50px;
     }
 
     /* Test 4: Absolute URL (should work unchanged) */
     .absolute-url {
-      background-image: url('https://example.com/test-image.png');
+      background-image: url('https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg');
       background-repeat: no-repeat;
-      background-size: 50px 50px;
     }
 
     /* Test 5: Data URL (should work unchanged) */
     .data-url {
       background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect width="50" height="50" fill="red"/></svg>');
       background-repeat: no-repeat;
-      background-size: 50px 50px;
     }
 
     .description {
