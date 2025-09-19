@@ -137,6 +137,9 @@ namespace client_cssom
     LAYOUT_USE_PROPERTY_STRING("grid-column-end", GridColumnEnd)
 #undef LAYOUT_USE_PROPERTY_STRING
 
+    // Text properties
+    layoutStyle.setTextAlign(text_align_.toLayoutValue());
+
     return layoutStyle;
   }
 
