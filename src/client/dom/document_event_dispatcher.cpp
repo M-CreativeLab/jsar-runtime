@@ -106,8 +106,6 @@ namespace dom
         auto hitPoint = result.hitPoint();
         target->simulateMouseUp(hitPoint);
 
-        cout << "Debug: Mouse up on element: " << target->nodeName << endl;
-
         if (is_click_in_progress_ &&
             // Criteria 1: same target
             current_mousedown_target_.lock() == target &&
