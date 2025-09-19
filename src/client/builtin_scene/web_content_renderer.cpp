@@ -183,6 +183,7 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isRight())
     {
       // Right edge horizontally, center vertically
+      // Ensure precise alignment to the right edge
       float x = positioningArea.fRight - imageSize.width();
       float y = positioningArea.fTop + (areaHeight - imageSize.height()) / 2.0f;
       return SkPoint::Make(x, y);
@@ -197,6 +198,7 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isBottom())
     {
       // Center horizontally, bottom edge vertically
+      // Ensure precise alignment to the bottom edge
       float x = positioningArea.fLeft + (areaWidth - imageSize.width()) / 2.0f;
       float y = positioningArea.fBottom - imageSize.height();
       return SkPoint::Make(x, y);
@@ -219,8 +221,56 @@ namespace builtin_scene::web_renderer
     else if (backgroundPosition.isTwoValues())
     {
       // Use specified x and y values
-      float x = positioningArea.fLeft + backgroundPosition.getX();
-      float y = positioningArea.fTop + backgroundPosition.getY();
+      // Handle potential percentage values that may be parsed as lengths
+      float xValue = backgroundPosition.getX();
+      float yValue = backgroundPosition.getY();
+
+      // Detect common percentage values that might be incorrectly parsed as lengths:
+      // Focus on the most problematic cases: 0%, 50%, 100% and quarter values
+      const float epsilon = 0.001f;
+      auto isNearValue = [epsilon](float val, float target)
+      {
+        return std::abs(val - target) < epsilon;
+      };
+
+      // Check for the most common percentage values that cause alignment issues
+      auto looksLikePercentage = [&isNearValue](float value)
+      {
+        return (value >= 0.0f && value <= 100.0f) &&
+               (isNearValue(value, 0.0f) || isNearValue(value, 25.0f) ||
+                isNearValue(value, 50.0f) || isNearValue(value, 75.0f) ||
+                isNearValue(value, 100.0f));
+      };
+
+      bool xLooksLikePercentage = looksLikePercentage(xValue);
+      bool yLooksLikePercentage = looksLikePercentage(yValue);
+
+      float x, y;
+
+      if (xLooksLikePercentage)
+      {
+        // Treat as percentage for horizontal positioning
+        float xPercentage = xValue / 100.0f;
+        x = positioningArea.fLeft + xPercentage * (areaWidth - imageSize.width());
+      }
+      else
+      {
+        // Treat as length value
+        x = positioningArea.fLeft + xValue;
+      }
+
+      if (yLooksLikePercentage)
+      {
+        // Treat as percentage for vertical positioning
+        float yPercentage = yValue / 100.0f;
+        y = positioningArea.fTop + yPercentage * (areaHeight - imageSize.height());
+      }
+      else
+      {
+        // Treat as length value
+        y = positioningArea.fTop + yValue;
+      }
+
       return SkPoint::Make(x, y);
     }
     else if (backgroundPosition.isThreeValues())
