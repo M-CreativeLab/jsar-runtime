@@ -48,7 +48,7 @@ namespace client_layout
   {
   }
 
-  bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
+  bool LayoutView::computeLayout(const ConstraintSpace &availableSpace)
   {
     function<void(LayoutObject &, const LayoutObject &)> traverseChildNode =
       [&traverseChildNode](LayoutObject &object, const LayoutObject &parent)
@@ -80,8 +80,8 @@ namespace client_layout
     // TODO(yorkie): support the lifecycle `willComputeLayout`?
 
     // Use taffy to compute the layout.
-    bool r = LayoutBlockFlow::computeLayout(avilableSpace);
-    didComputeLayoutOnce(avilableSpace);
+    bool r = LayoutBlockFlow::computeLayout(availableSpace);
+    didComputeLayoutOnce(availableSpace);
 
     // Traverse the children of the view and call `didComputeLayout` for each child.
     // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content
@@ -90,7 +90,7 @@ namespace client_layout
       traverseChildNode(*child, *this);
 
     // Finally, call `didComputeLayout` for the view itself.
-    didComputeLayout(avilableSpace);
+    didComputeLayout(availableSpace);
     return r;
   }
 

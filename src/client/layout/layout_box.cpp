@@ -426,7 +426,6 @@ namespace client_layout
       if (!childBox->visible())
         continue;
 
-      const vector<geometry::BoundingBox> childBoundingBoxes = childBox->getHitTestableBoundingBoxes();
       for (const auto &childBoundingBox : childBox->getHitTestableBoundingBoxes())
       {
         // Skip extending if the child box has no size.

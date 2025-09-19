@@ -949,15 +949,15 @@ namespace client_layout
     }
   }
 
-  void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)
+  void LayoutObject::willComputeLayout(const ConstraintSpace &availableSpace)
   {
   }
 
-  void LayoutObject::didComputeLayout(const ConstraintSpace &avilableSpace)
+  void LayoutObject::didComputeLayout(const ConstraintSpace &availableSpace)
   {
   }
 
-  void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &availableSpace)
   {
     if (hasSceneComponent<WebContent>())
     {
