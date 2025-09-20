@@ -18,13 +18,13 @@ namespace script_bindings
 
       // Add EventTarget methods
       instanceTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, AddEventListener));
+                            FunctionTemplate::New(isolate, AddEventListener));
 
       instanceTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, RemoveEventListener));
+                            FunctionTemplate::New(isolate, RemoveEventListener));
 
       instanceTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, DispatchEvent));
+                            FunctionTemplate::New(isolate, DispatchEvent));
 
       // Add property accessors
       instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeName").ToLocalChecked(),
@@ -636,21 +636,21 @@ namespace script_bindings
       if (info.Length() < 2)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "addEventListener requires at least 2 arguments").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "addEventListener requires at least 2 arguments").ToLocalChecked()));
         return;
       }
 
       if (!info[0]->IsString())
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "First argument must be a string").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "First argument must be a string").ToLocalChecked()));
         return;
       }
 
       if (!info[1]->IsFunction())
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "Second argument must be a function").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "Second argument must be a function").ToLocalChecked()));
         return;
       }
 
@@ -678,7 +678,7 @@ namespace script_bindings
       if (info.Length() < 2)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "removeEventListener requires at least 2 arguments").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "removeEventListener requires at least 2 arguments").ToLocalChecked()));
         return;
       }
 
@@ -702,14 +702,14 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "dispatchEvent requires 1 argument").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "dispatchEvent requires 1 argument").ToLocalChecked()));
         return;
       }
 
       if (!info[0]->IsObject())
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "First argument must be an Event object").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "First argument must be an Event object").ToLocalChecked()));
         return;
       }
 

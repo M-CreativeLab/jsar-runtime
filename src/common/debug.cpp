@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <cstring>
 #include <cxxabi.h>
 #include <ctime>
 #include <chrono>

@@ -188,7 +188,7 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "createElement requires 1 argument").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "createElement requires 1 argument").ToLocalChecked()));
         return;
       }
 
@@ -201,7 +201,7 @@ namespace script_bindings
 
       String::Utf8Value tagName(isolate, info[0]);
       auto element = document->inner()->createElement(string(*tagName));
-      
+
       if (element != nullptr)
       {
         Local<Object> elementWrapper = Element::NewInstance(isolate, element);
@@ -222,7 +222,7 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "createTextNode requires 1 argument").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "createTextNode requires 1 argument").ToLocalChecked()));
         return;
       }
 
@@ -235,7 +235,7 @@ namespace script_bindings
 
       String::Utf8Value data(isolate, info[0]);
       auto textNode = document->inner()->createTextNode(string(*data));
-      
+
       if (textNode != nullptr)
       {
         // TODO: Create Text node wrapper instead of generic Node
@@ -257,7 +257,7 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-            String::NewFromUtf8(isolate, "createComment requires 1 argument").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "createComment requires 1 argument").ToLocalChecked()));
         return;
       }
 
@@ -270,7 +270,7 @@ namespace script_bindings
 
       String::Utf8Value data(isolate, info[0]);
       auto commentNode = document->inner()->createComment(string(*data));
-      
+
       if (commentNode != nullptr)
       {
         // TODO: Create Comment node wrapper instead of generic Node
@@ -304,7 +304,7 @@ namespace script_bindings
 
       String::Utf8Value id(isolate, info[0]);
       auto element = document->inner()->getElementById(string(*id));
-      
+
       if (element != nullptr)
       {
         Local<Object> elementWrapper = Element::NewInstance(isolate, element);
