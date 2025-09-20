@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <napi.h>
+#include <client/dom/dom_event.hpp>
 #include <client/dom/dom_event_target.hpp>
 #include <common/utility.hpp>
 

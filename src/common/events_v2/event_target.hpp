@@ -4,6 +4,7 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <functional>
 
 #include "./event_listener.hpp"
 #include "./event.hpp"

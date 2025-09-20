@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/dom/dom_event.hpp>
 #include <client/dom/dom_event_target.hpp>
 
 namespace script_bindings
