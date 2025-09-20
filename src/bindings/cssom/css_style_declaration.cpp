@@ -280,7 +280,7 @@ namespace cssombinding
     // .constructor
     if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "constructor").ToLocalChecked()))
     {
-      info.GetReturnValue().Set(Base::ConstructorFunction(isolate));
+      info.GetReturnValue().Set(Base::GetConstructorFunction(isolate));
       return;
     }
 

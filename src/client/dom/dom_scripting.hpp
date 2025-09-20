@@ -149,6 +149,15 @@ namespace dom
 
   public:
     /**
+     * This returns the isolate used by this scripting context.
+     */
+    inline v8::Isolate *isolate() const
+    {
+      assert(isolate_ != nullptr && "The isolate is not initialized.");
+      return isolate_;
+    }
+
+    /**
      * Enable the dynamic import for the script.
      *
      * Internally it will call `v8::Isolate`'s `SetHostImportModuleDynamicallyCallback` to set the dynamic import callback, it causes the
@@ -191,6 +200,14 @@ namespace dom
      * @returns Whether the script is compiled successfully.
      */
     bool compile(std::shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript = false);
+
+    /**
+     * Compile handler code as a function that can be called with event parameters.
+     *
+     * @param funcSource The function source code.
+     * @returns A V8 function that can be called with event arguments, or empty if compilation failed.
+     */
+    v8::MaybeLocal<v8::Function> compileFunction(const std::string &funcSource);
 
     /**
      * Compile the given script as a synthetic module.
@@ -290,7 +307,7 @@ namespace dom
     v8::Local<v8::Value> createWorkerSelfProxy(v8::Local<v8::Context> context);
 
   private:
-    v8::Isolate *isolate;
+    v8::Isolate *isolate_;
     v8::Global<v8::Context> v8ContextStore;
     std::shared_ptr<RuntimeContext> runtimeContext;
     std::unordered_map<int, std::shared_ptr<DOMModule>> hashToModuleMap;

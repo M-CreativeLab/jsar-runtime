@@ -19,11 +19,12 @@ namespace scripting_base
    *
    * @tparam T The class to wrap.
    * @tparam D The type of the optional inner instance.
+   * @tparam B The base class of T, if T is derived from another ObjectWrap class.
    */
-  template <typename T, typename D = void>
+  template <typename T, typename D = void, typename B = void>
   class ObjectWrap
   {
-    friend class ObjectWrap<T, D>;
+    friend class ObjectWrap<T, D, B>;
 
   public:
     /**
@@ -33,10 +34,15 @@ namespace scripting_base
      */
     static std::string Name()
     {
-      return "ObjectWrap";
+      return "Object";
     }
 
-    static v8::Local<v8::Function> ConstructorFunction(v8::Isolate *isolate)
+    static v8::Local<v8::FunctionTemplate> GetFunctionTemplate(v8::Isolate *isolate)
+    {
+      return function_template_.Get(isolate);
+    }
+
+    static v8::Local<v8::Function> GetConstructorFunction(v8::Isolate *isolate)
     {
       return constructor_handle_.Get(isolate);
     }
@@ -62,7 +68,7 @@ namespace scripting_base
      * @param inner The optional inner instance of the class D
      * @returns The wrapped v8::Object
      */
-    static v8::Local<v8::Value> NewInstance(napi_env napiEnv, std::shared_ptr<D> inner = nullptr)
+    static v8::Local<v8::Object> NewInstance(napi_env napiEnv, std::shared_ptr<D> inner = nullptr)
     {
       if constexpr (!std::is_same_v<D, void>)
       {
@@ -71,25 +77,50 @@ namespace scripting_base
 
       v8::Isolate *isolate = v8::Isolate::GetCurrent();
       v8::EscapableHandleScope scope(isolate);
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-      v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
-      if (TR_UNLIKELY(constructor.IsEmpty()))
-        return scope.Escape(v8::Local<v8::Value>());
 
-      std::vector<v8::Local<v8::Value>> args;
-      if (inner != nullptr)
-      {
-        SharedReference<D> innerSharedRef(inner);
-        v8::Local<v8::External> innerExternal = v8::External::New(isolate, &innerSharedRef);
-        args.push_back(innerExternal);
-      }
-
-      v8::Local<v8::Object> jsThis = constructor->NewInstance(context, args.size(), args.data()).ToLocalChecked();
-      if (TR_UNLIKELY(jsThis.IsEmpty()))
-        return scope.Escape(v8::Local<v8::Value>());
-
+      v8::Local<v8::Object> jsThis = NewInstance(isolate, inner);
       T *instance = Unwrap(jsThis);
       instance->setNapiEnv(napiEnv);
+
+      return scope.Escape(jsThis);
+    }
+
+    /**
+     * Create the instance of the class T and wrap it in a v8::Object
+     *
+     * @param isolate The v8::Isolate instance
+     * @param inner The optional inner instance of the class D
+     * @returns The wrapped v8::Object
+     */
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    {
+      if constexpr (!std::is_same_v<D, void>)
+      {
+        assert(inner != nullptr && "inner must not be null when D is not void");
+      }
+
+      v8::EscapableHandleScope scope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
+      if (constructor.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Constructor is not initialized for " << T::Name() << "()" << std::endl;
+        return scope.Escape(v8::Local<v8::Object>());
+      }
+
+      std::vector<v8::Local<v8::Value>> args;
+      v8::Local<v8::Object> jsThis = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
+      if (jsThis.IsEmpty()) [[unlikely]]
+      {
+        std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
+        return scope.Escape(v8::Local<v8::Object>());
+      }
+
+      // Update the inner reference
+      T *instance = Unwrap(jsThis);
+      instance->setInner(inner);
+
+      // Return the created instance
       return scope.Escape(jsThis);
     }
 
@@ -128,25 +159,44 @@ namespace scripting_base
     {
       assert(isolate != nullptr);
 
+      // Return the existing constructor if already initialized
+      if (ObjectWrap<T, D, B>::initialized_ == true)
+      {
+        return ObjectWrap<T, D, B>::GetConstructorFunction(isolate);
+      }
+
       v8::HandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate);
+      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, ObjectWrap<T, D, B>::Constructor);
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
-      tpl->SetCallHandler(ObjectWrap<T, D>::CallHandler);
-      tpl->InstanceTemplate()->Set(isolate, "constructor", tpl, v8::PropertyAttribute::ReadOnly);
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+      // Set up inheritance if `B` is specified
+      if constexpr (!std::is_same_v<B, void>)
+      {
+        // Ensure base class is initialized first
+        B::Initialize(isolate);
+        v8::Local<v8::FunctionTemplate> base = B::GetFunctionTemplate(isolate);
+        if (!base.IsEmpty())
+        {
+          tpl->Inherit(base);
+        }
+      }
+
       T::ConfigureFunctionTemplate(isolate, tpl);
 
+      // Update the persistent handles
       v8::Local<v8::Function> constructor = tpl->GetFunction(context).ToLocalChecked();
-      ObjectWrap<T, D>::constructor_handle_.Reset(isolate, constructor);
+      ObjectWrap<T, D, B>::constructor_handle_.Reset(isolate, constructor);
+      ObjectWrap<T, D, B>::function_template_.Reset(isolate, tpl);
+      ObjectWrap<T, D, B>::initialized_ = true;
       return constructor;
     }
 
   public:
-    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args, std::shared_ptr<D> inner = nullptr)
+    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
         : current_isolate_(isolate)
-        , inner_handle_(inner)
     {
     }
 
@@ -159,6 +209,11 @@ namespace scripting_base
     {
       napi_env_ = env;
     }
+    void setInner(std::shared_ptr<D> data)
+    {
+      inner_handle_ = data;
+      onDataSet(data);
+    }
 
     v8::Local<v8::Value> value() const
     {
@@ -166,11 +221,16 @@ namespace scripting_base
     }
     std::shared_ptr<D> inner() const
     {
-      return inner_handle_.lock();
+      return inner_handle_;
+    }
+
+  protected:
+    virtual void onDataSet(std::shared_ptr<D> data)
+    {
     }
 
   private:
-    static void CallHandler(const v8::FunctionCallbackInfo<v8::Value> &args)
+    static void Constructor(const v8::FunctionCallbackInfo<v8::Value> &args)
     {
       v8::Isolate *isolate = args.GetIsolate();
 
@@ -181,25 +241,8 @@ namespace scripting_base
         return;
       }
 
-      T *instance = nullptr;
-      if constexpr (!std::is_same_v<D, void>)
-      {
-        if (args.Length() < 1 || !args[0]->IsExternal())
-        {
-          isolate->ThrowException(v8::Exception::TypeError(
-            v8::String::NewFromUtf8(isolate, "Illegal constructor").ToLocalChecked()));
-          return;
-        }
-
-        v8::Local<v8::External> innerExternal = v8::Local<v8::External>::Cast(args[0]);
-        SharedReference<D> *innerSharedRef = static_cast<SharedReference<D> *>(innerExternal->Value());
-        assert(innerSharedRef != nullptr && "innerSharedRef must not be null");
-        instance = new T(isolate, args, innerSharedRef->value);
-      }
-      else
-      {
-        instance = new T(isolate, args);
-      }
+      T *instance = new T(isolate, args);
+      assert(instance != nullptr && "Failed to create instance");
 
       auto jsObject = args.This();
       Wrap(isolate, jsObject, instance);
@@ -231,9 +274,11 @@ namespace scripting_base
     v8::Persistent<v8::Object> object_handle_;
 
     // Inner is a weak pointer to the optional inner instance of the class D.
-    std::weak_ptr<D> inner_handle_;
+    std::shared_ptr<D> inner_handle_;
 
   private:
+    static thread_local inline bool initialized_ = false;
+    static thread_local inline v8::Persistent<v8::FunctionTemplate> function_template_;
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;
   };
 }

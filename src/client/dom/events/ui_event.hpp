@@ -8,6 +8,12 @@ namespace dom::events
   {
     using dom::Event::Event;
 
+  public:
+    bool isUIEvent() const override final
+    {
+      return true;
+    }
+
   protected:
     long detail_ = 0;
   };
