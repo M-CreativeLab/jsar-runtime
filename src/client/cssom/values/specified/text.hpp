@@ -58,7 +58,7 @@ namespace client_cssom::values::specified
     {
     }
 
-  private:
+  protected:
     TextAlign(Tag tag)
         : tag_(tag)
     {

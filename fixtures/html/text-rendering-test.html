@@ -49,7 +49,7 @@
       margin: 15px 0;
       padding: 10px;
       border-left: 3px solid var(--highlight-color);
-      background: white;
+      background: rgb(251, 255, 14);
     }
 
     .test-label {
@@ -714,32 +714,7 @@ are preserved.</p>
     // Add interactive functionality
     document.addEventListener('DOMContentLoaded', function() {
       // Highlight sections on hover
-      const sections = document.querySelectorAll('.section');
-      sections.forEach(section => {
-        section.addEventListener('mouseenter', function() {
-          this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-        });
-        section.addEventListener('mouseleave', function() {
-          this.style.boxShadow = 'none';
-        });
-      });
       
-      // Add click-to-copy functionality for test labels
-      const testLabels = document.querySelectorAll('.test-label');
-      testLabels.forEach(label => {
-        label.style.cursor = 'pointer';
-        label.title = 'Click to copy CSS property';
-        label.addEventListener('click', function() {
-          navigator.clipboard.writeText(this.textContent).then(() => {
-            this.style.backgroundColor = '#4CAF50';
-            this.style.color = 'white';
-            setTimeout(() => {
-              this.style.backgroundColor = '';
-              this.style.color = '';
-            }, 500);
-          });
-        });
-      });
     });
   </script>
 </body>

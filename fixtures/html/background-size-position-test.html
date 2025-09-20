@@ -160,6 +160,51 @@
       margin: 10px;
     }
 
+    /* New test cases for bottom/right alignment fix */
+    .bg-position-right-bottom {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: right bottom;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-100-percent-both {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 100% 100%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-100-0-percent {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 100% 0%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
+    .bg-position-0-100-percent {
+      width: 200px;
+      height: 150px;
+      border: 2px solid #333;
+      background-image: url(https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg);
+      background-position: 0% 100%;
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      margin: 10px;
+    }
+
     .test-row {
       display: flex;
       flex-wrap: wrap;
@@ -238,6 +283,30 @@
       <div>
         <div class="bg-position-percentage"></div>
         <div class="test-description">background-position: 25%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-container">
+    <h2>Bottom/Right Alignment Tests (Fixed)</h2>
+    <p>These tests verify that background images align correctly to bottom and right edges.<br>
+    <strong>Fix applied:</strong> Enhanced percentage detection in two-value background-position parsing.</p>
+    <div class="test-row">
+      <div>
+        <div class="bg-position-right-bottom"></div>
+        <div class="test-description">background-position: right bottom<br><strong>Should be in bottom-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-100-percent-both"></div>
+        <div class="test-description">background-position: 100% 100%<br><strong>Should be in bottom-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-100-0-percent"></div>
+        <div class="test-description">background-position: 100% 0%<br><strong>Should be in top-right corner</strong></div>
+      </div>
+      <div>
+        <div class="bg-position-0-100-percent"></div>
+        <div class="test-description">background-position: 0% 100%<br><strong>Should be in bottom-left corner</strong></div>
       </div>
     </div>
   </div>

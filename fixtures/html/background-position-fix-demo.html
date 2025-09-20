@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Background Position Fix Demo</title>
+  <style>
+    body {
+      margin: 20px;
+      font-family: Arial, sans-serif;
+    }
+    
+    .demo-container {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .test-box {
+      width: 150px;
+      height: 100px;
+      border: 2px solid #333;
+      background: linear-gradient(45deg, #ff6b6b 0%, #4ecdc4 50%, #ffe66d 100%);
+      background-size: 30px 30px;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+    
+    .test-box::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px dashed red;
+      pointer-events: none;
+    }
+    
+    .bottom-right-keywords {
+      background-position: right bottom;
+    }
+    
+    .bottom-right-percent {
+      background-position: 100% 100%;
+    }
+    
+    .top-right-percent {
+      background-position: 100% 0%;
+    }
+    
+    .bottom-left-percent {
+      background-position: 0% 100%;
+    }
+    
+    .description {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 5px;
+      color: #666;
+    }
+    
+    .success {
+      color: #007700;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Background Position Bottom/Right Alignment Fix</h1>
+  
+  <p>This demonstrates the fix for background-position alignment. Each box shows a 30x30px gradient positioned in different corners of a 150x100px container.</p>
+  
+  <div class="demo-container">
+    <div>
+      <div class="test-box bottom-right-keywords"></div>
+      <div class="description">
+        <code>background-position: right bottom;</code><br>
+        <span class="success">✓ Bottom-right corner</span>
+      </div>
+    </div>
+    
+    <div>
+      <div class="test-box bottom-right-percent"></div>
+      <div class="description">
+        <code>background-position: 100% 100%;</code><br>
+        <span class="success">✓ Should match right bottom</span>
+      </div>
+    </div>
+    
+    <div>
+      <div class="test-box top-right-percent"></div>
+      <div class="description">
+        <code>background-position: 100% 0%;</code><br>
+        <span class="success">✓ Top-right corner</span>
+      </div>
+    </div>
+    
+    <div>
+      <div class="test-box bottom-left-percent"></div>
+      <div class="description">
+        <code>background-position: 0% 100%;</code><br>
+        <span class="success">✓ Bottom-left corner</span>
+      </div>
+    </div>
+  </div>
+  
+  <h2>Fix Summary</h2>
+  <p><strong>Issue:</strong> Background images with percentage positions (like <code>100% 100%</code>) were not aligning flush with element edges.</p>
+  <p><strong>Solution:</strong> Enhanced the <code>calculateBackgroundPosition</code> function to properly detect and handle percentage values in two-value background-position syntax.</p>
+  <p><strong>Result:</strong> Perfect edge alignment matching CSS specification behavior.</p>
+</body>
+</html>

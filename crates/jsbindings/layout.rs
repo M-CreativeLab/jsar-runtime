@@ -1,4 +1,4 @@
-use std::{cell::RefCell, ops::BitOr, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use paste::paste;
 use style::values::{
@@ -345,6 +345,16 @@ mod ffi {
   }
 
   #[derive(Clone, Copy, Debug)]
+  enum TextAlign {
+    Start,
+    End,
+    Left,
+    Right,
+    Center,
+    Justify,
+  }
+
+  #[derive(Clone, Copy, Debug)]
   enum FlexDirection {
     Row,
     Column,
@@ -513,6 +523,10 @@ mod ffi {
     pub grid_column_start: String,
     #[cxx_name = "gridColumnEnd"]
     pub grid_column_end: String,
+
+    // Text Properties
+    #[cxx_name = "textAlign"]
+    pub text_align: TextAlign,
   }
 
   #[derive(Clone, Copy, Debug)]
@@ -922,6 +936,13 @@ impl_justify_items_like_from_taffy!(JustifyItems);
 impl_justify_items_like_from_taffy!(JustifySelf);
 impl_align_or_justify_content_from_taffy!(JustifyContent);
 
+// TextAlign doesn't directly map to taffy types, so we'll provide a default
+impl Default for ffi::TextAlign {
+  fn default() -> Self {
+    ffi::TextAlign::Start
+  }
+}
+
 impl_default_for!(AlignItems, Normal);
 impl_default_for!(AlignSelf, Auto);
 impl_default_for!(AlignContent, Normal);
@@ -1077,6 +1098,31 @@ impl From<ffi::LengthPercentageXY> for taffy::Point<taffy::LengthPercentage> {
   }
 }
 
+impl From<taffy::TextAlign> for ffi::TextAlign {
+  fn from(value: taffy::TextAlign) -> Self {
+    match value {
+      taffy::TextAlign::LegacyLeft => ffi::TextAlign::Left,
+      taffy::TextAlign::LegacyRight => ffi::TextAlign::Right,
+      taffy::TextAlign::LegacyCenter => ffi::TextAlign::Center,
+      _ => ffi::TextAlign::Start, // Default value since taffy doesn't handle text-align
+    }
+  }
+}
+
+impl From<ffi::TextAlign> for taffy::TextAlign {
+  fn from(value: ffi::TextAlign) -> Self {
+    match value {
+      ffi::TextAlign::Start => taffy::TextAlign::LegacyLeft,
+      ffi::TextAlign::End => taffy::TextAlign::LegacyRight,
+      ffi::TextAlign::Left => taffy::TextAlign::LegacyLeft,
+      ffi::TextAlign::Right => taffy::TextAlign::LegacyRight,
+      ffi::TextAlign::Center => taffy::TextAlign::LegacyCenter,
+      ffi::TextAlign::Justify => taffy::TextAlign::Auto,
+      _ => taffy::TextAlign::Auto,
+    }
+  }
+}
+
 impl_type_casting_simple!(FlexDirection, { Row, Column, RowReverse, ColumnReverse }, Row);
 impl_type_casting_simple!(FlexWrap, { NoWrap, Wrap, WrapReverse}, NoWrap);
 
@@ -1096,6 +1142,8 @@ impl From<taffy::Style> for ffi::Style {
       margin: style.margin.into(),
       padding: style.padding.into(),
       border: style.border.into(),
+      text_align: style.text_align.into(),
+
       align_items: style.align_items.into(),
       align_self: style.align_self.into(),
       align_content: style.align_content.into(),
@@ -1320,6 +1368,8 @@ impl From<ffi::Style> for taffy::Style {
       margin: value.margin.into(),
       padding: value.padding.into(),
       border: value.border.into(),
+      text_align: value.text_align.into(),
+
       align_items: value.align_items.into(),
       align_self: value.align_self.into(),
       align_content: value.align_content.into(),
