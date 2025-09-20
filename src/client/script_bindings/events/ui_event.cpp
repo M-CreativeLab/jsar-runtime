@@ -2,5 +2,5 @@
 
 namespace script_bindings
 {
-  
+
 }
