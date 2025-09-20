@@ -9,6 +9,9 @@
 
 namespace script_bindings
 {
+  class PointerEvent;
+  using PointerEventBase = scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, MouseEvent>;
+
   /**
    * Event wrapper for V8 objects using scripting_base::ObjectWrap.
    * 
@@ -16,9 +19,9 @@ namespace script_bindings
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class PointerEvent : public scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, UIEvent>
+  class PointerEvent : public PointerEventBase
   {
-    using scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, UIEvent>::ObjectWrap;
+    using PointerEventBase::ObjectWrap;
 
   public:
     static std::string Name()

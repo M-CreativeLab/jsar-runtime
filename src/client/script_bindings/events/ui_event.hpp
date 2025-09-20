@@ -8,6 +8,9 @@
 
 namespace script_bindings
 {
+  class UIEvent;
+  using UIEventBase = scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>;
+
   /**
    * Event wrapper for V8 objects using scripting_base::ObjectWrap.
    * 
@@ -15,9 +18,9 @@ namespace script_bindings
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class UIEvent : public scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>
+  class UIEvent : public UIEventBase
   {
-    using scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>::ObjectWrap;
+    using UIEventBase::ObjectWrap;
 
   public:
     /**

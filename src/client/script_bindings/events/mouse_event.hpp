@@ -9,6 +9,9 @@
 
 namespace script_bindings
 {
+  class MouseEvent;
+  using MouseEventBase = scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>;
+
   /**
    * Event wrapper for V8 objects using scripting_base::ObjectWrap.
    * 
@@ -16,9 +19,9 @@ namespace script_bindings
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class MouseEvent : public scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>
+  class MouseEvent : public MouseEventBase
   {
-    using scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>::ObjectWrap;
+    using MouseEventBase::ObjectWrap;
 
   public:
     static std::string Name()
