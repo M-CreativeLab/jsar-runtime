@@ -337,7 +337,7 @@ namespace dom
     {
       return false;
     }
-    virtual bool isIputEvent() const
+    virtual bool isInputEvent() const
     {
       return false;
     }

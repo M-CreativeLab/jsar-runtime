@@ -927,6 +927,8 @@ namespace dom
 
   void Element::setEventHandler(const string &type, const string &handlerCode)
   {
+    if (type.empty() || handlerCode.empty())
+      return;
     event_handler_codes_[type] = handlerCode;
   }
 
@@ -983,7 +985,7 @@ namespace dom
       }
 
       // Get the V8 context for function execution
-      v8::Isolate *isolate = v8::Isolate::GetCurrent();
+      v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
       v8::Isolate::Scope isolateScope(isolate);
       v8::HandleScope handleScope(isolate);
 
