@@ -5,8 +5,8 @@
 #include <optional>
 #include <chrono>
 
-#include "common/utility.hpp"
-#include "common/events_v2/event_target.hpp"
+#include <common/utility.hpp>
+#include <common/events_v2/event_target.hpp>
 
 namespace dom
 {

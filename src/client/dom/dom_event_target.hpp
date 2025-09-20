@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "common/events_v2/event_target.hpp"
+#include <common/events_v2/event_target.hpp>
 #include "./dom_event.hpp"
 
 namespace dom
@@ -11,7 +11,6 @@ namespace dom
 
   class EventListener : public events_comm::TrEventListener<DOMEventType, Event>
   {
-  public:
     using events_comm::TrEventListener<DOMEventType, Event>::TrEventListener;
   };
 
