@@ -3,9 +3,7 @@
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
 #include <bindings/dom/console.hpp>
-
-#include <client/script_bindings/event.hpp>
-#include <client/script_bindings/events/ui_event.hpp>
+#include <client/script_bindings/events/all_events.hpp>
 
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
@@ -253,8 +251,7 @@ namespace dom
     assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
 
     // Initialize script bindings
-    script_bindings::Event::Initialize(isolate_);
-    script_bindings::UIEvent::Initialize(isolate_);
+    script_bindings::events::Initialize(isolate_);
   }
 
   void DOMScriptingContext::enableDynamicImport()

@@ -329,6 +329,28 @@ namespace dom
     }
 
   public:
+    virtual bool isUIEvent() const
+    {
+      return false;
+    }
+    virtual bool isMouseEvent() const
+    {
+      return false;
+    }
+    virtual bool isIputEvent() const
+    {
+      return false;
+    }
+    virtual bool isKeyboardEvent() const
+    {
+      return false;
+    }
+    virtual bool isPointerEvent() const
+    {
+      return false;
+    }
+
+  public:
     /**
      * The constructor type of the event.
      */

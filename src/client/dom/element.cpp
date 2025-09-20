@@ -5,6 +5,7 @@
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 #include <client/html/all_html_elements.hpp>
+#include <client/script_bindings/events/all_events.hpp>
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
@@ -13,7 +14,6 @@
 #include "./document.hpp"
 #include "./document_fragment.hpp"
 #include "./attr.hpp"
-#include "../script_bindings/event.hpp"
 
 namespace dom
 {
@@ -991,8 +991,7 @@ namespace dom
       v8::Context::Scope contextScope(context);
 
       // Create a V8 event object using the proper Event wrapper
-      v8::Local<v8::Object> eventObject = script_bindings::Event::NewInstance(isolate,
-                                                                              make_shared<dom::Event>(*event));
+      auto eventObject = script_bindings::events::MakeEvent(isolate, event);
 
       // Call the compiled handler function with the event object
       v8::TryCatch tryCatch(isolate);

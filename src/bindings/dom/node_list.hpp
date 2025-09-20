@@ -69,7 +69,7 @@ namespace dombinding
     // Returns the values of the NodeList that follows the iterator protocol.
     inline v8::Local<v8::Value> values() const
     {
-      return NodeListIterator::NewInstance(nullptr, *this->inner());
+      return NodeListIterator::NewInstance(this->napi_env_, *this->inner());
     }
 
     inline bool hasList() const

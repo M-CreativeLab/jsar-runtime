@@ -3,8 +3,9 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/dom/dom_event_target.hpp>
-#include <client/dom/events/ui_event.hpp>
+#include <client/dom/events/pointer_event.hpp>
 #include <client/script_bindings/event.hpp>
+#include "./mouse_event.hpp"
 
 namespace script_bindings
 {
@@ -15,17 +16,14 @@ namespace script_bindings
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class UIEvent : public scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>
+  class PointerEvent : public scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, UIEvent>
   {
-    using scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>::ObjectWrap;
+    using scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, UIEvent>::ObjectWrap;
 
   public:
-    /**
-     * The name of the Event class for V8.
-     */
     static std::string Name()
     {
-      return "UIEvent";
+      return "PointerEvent";
     }
   };
 }
