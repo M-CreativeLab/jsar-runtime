@@ -3,7 +3,7 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/dom/text.hpp>
-#include "./node.hpp"
+#include "./character_data.hpp"
 
 namespace script_bindings
 {
@@ -16,7 +16,7 @@ namespace script_bindings
      * It provides the standard DOM Text interface including properties like data,
      * length and methods like substringData, appendData, etc.
      */
-    class Text : public scripting_base::ObjectWrap<Text, ::dom::Text, Node>
+    class Text : public scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>
     {
     public:
       /**
@@ -47,17 +47,9 @@ namespace script_bindings
 
     private:
       // Property getters and setters
-      static void DataGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DataSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void LengthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
       static void WholeTextGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Methods
-      static void SubstringData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void AppendData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void InsertData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void DeleteData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ReplaceData(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void SplitText(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }

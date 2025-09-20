@@ -16,16 +16,6 @@ namespace script_bindings
       // Set up the instance template
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
-      // Add EventTarget methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, AddEventListener));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RemoveEventListener));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, DispatchEvent));
-
       // Add property accessors
       instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeName").ToLocalChecked(),
                                     NodeNameGetter,
@@ -126,17 +116,17 @@ namespace script_bindings
 
       // TODO: Create appropriate subclass instances based on node type
       // For now, just create a basic Node wrapper
-      return scope.Escape(scripting_base::ObjectWrap<Node, ::dom::Node>::NewInstance(isolate, nativeNode).As<Object>());
+      return scope.Escape(scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::NewInstance(isolate, nativeNode).As<Object>());
     }
 
     // static
     Local<Function> Node::Initialize(Isolate *isolate)
     {
-      return scripting_base::ObjectWrap<Node, ::dom::Node>::Initialize(isolate);
+      return scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Initialize(isolate);
     }
 
     Node::Node(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<Node, ::dom::Node>(isolate, args)
+        : scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>(isolate, args)
     {
     }
 
@@ -148,7 +138,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetUndefined();
@@ -165,7 +155,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetUndefined();
@@ -182,7 +172,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -206,7 +196,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -229,7 +219,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -254,7 +244,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -279,7 +269,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -304,7 +294,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -329,7 +319,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -354,7 +344,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -380,7 +370,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -397,7 +387,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -422,7 +412,7 @@ namespace script_bindings
         return;
       }
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -435,7 +425,7 @@ namespace script_bindings
         return;
       }
 
-      Node *childNode = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(Local<Object>::Cast(info[0]));
+      Node *childNode = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(Local<Object>::Cast(info[0]));
       if (childNode == nullptr || childNode->inner() == nullptr)
       {
         isolate->ThrowException(Exception::TypeError(
@@ -468,7 +458,7 @@ namespace script_bindings
         return;
       }
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -481,7 +471,7 @@ namespace script_bindings
         return;
       }
 
-      Node *childNode = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(Local<Object>::Cast(info[0]));
+      Node *childNode = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(Local<Object>::Cast(info[0]));
       if (childNode == nullptr || childNode->inner() == nullptr)
       {
         isolate->ThrowException(Exception::TypeError(
@@ -514,7 +504,7 @@ namespace script_bindings
         return;
       }
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -538,7 +528,7 @@ namespace script_bindings
         return;
       }
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -555,7 +545,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         return;
@@ -578,7 +568,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -601,7 +591,7 @@ namespace script_bindings
         return;
       }
 
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
+      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
       if (node == nullptr || node->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -614,7 +604,7 @@ namespace script_bindings
         return;
       }
 
-      Node *otherNode = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(Local<Object>::Cast(info[0]));
+      Node *otherNode = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(Local<Object>::Cast(info[0]));
       if (otherNode == nullptr || otherNode->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -624,104 +614,104 @@ namespace script_bindings
       bool contains = node->inner()->contains(otherNode->inner());
       info.GetReturnValue().Set(Boolean::New(isolate, contains));
     }
-
-    // EventTarget methods
-
-    // static
-    void Node::AddEventListener(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      if (info.Length() < 2)
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "addEventListener requires at least 2 arguments").ToLocalChecked()));
-        return;
-      }
-
-      if (!info[0]->IsString())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "First argument must be a string").ToLocalChecked()));
-        return;
-      }
-
-      if (!info[1]->IsFunction())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "Second argument must be a function").ToLocalChecked()));
-        return;
-      }
-
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
-      if (node == nullptr || node->inner() == nullptr)
-      {
-        return;
-      }
-
-      String::Utf8Value eventType(isolate, info[0]);
-      Local<Function> listener = Local<Function>::Cast(info[1]);
-
-      // For now, store the listener. In a full implementation, this would register
-      // with the DOM event system
-      // TODO: Implement actual event listener registration with the DOM backend
-      cout << "addEventListener called for event: " << *eventType << endl;
-    }
-
-    // static
-    void Node::RemoveEventListener(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      if (info.Length() < 2)
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "removeEventListener requires at least 2 arguments").ToLocalChecked()));
-        return;
-      }
-
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
-      if (node == nullptr || node->inner() == nullptr)
-      {
-        return;
-      }
-
-      String::Utf8Value eventType(isolate, info[0]);
-      // TODO: Implement actual event listener removal
-      cout << "removeEventListener called for event: " << *eventType << endl;
-    }
-
-    // static
-    void Node::DispatchEvent(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HandleScope scope(isolate);
-
-      if (info.Length() < 1)
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "dispatchEvent requires 1 argument").ToLocalChecked()));
-        return;
-      }
-
-      if (!info[0]->IsObject())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "First argument must be an Event object").ToLocalChecked()));
-        return;
-      }
-
-      Node *node = scripting_base::ObjectWrap<Node, ::dom::Node>::Unwrap(info.This());
-      if (node == nullptr || node->inner() == nullptr)
-      {
-        return;
-      }
-
-      // TODO: Implement actual event dispatching
-      cout << "dispatchEvent called" << endl;
-      info.GetReturnValue().Set(Boolean::New(isolate, true));
-    }
   }
+}
+
+// static
+void Node::AddEventListener(const FunctionCallbackInfo<Value> &info)
+{
+  Isolate *isolate = info.GetIsolate();
+  HandleScope scope(isolate);
+
+  if (info.Length() < 2)
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "addEventListener requires at least 2 arguments").ToLocalChecked()));
+    return;
+  }
+
+  if (!info[0]->IsString())
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "First argument must be a string").ToLocalChecked()));
+    return;
+  }
+
+  if (!info[1]->IsFunction())
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "Second argument must be a function").ToLocalChecked()));
+    return;
+  }
+
+  Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
+  if (node == nullptr || node->inner() == nullptr)
+  {
+    return;
+  }
+
+  String::Utf8Value eventType(isolate, info[0]);
+  Local<Function> listener = Local<Function>::Cast(info[1]);
+
+  // For now, store the listener. In a full implementation, this would register
+  // with the DOM event system
+  // TODO: Implement actual event listener registration with the DOM backend
+  cout << "addEventListener called for event: " << *eventType << endl;
+}
+
+// static
+void Node::RemoveEventListener(const FunctionCallbackInfo<Value> &info)
+{
+  Isolate *isolate = info.GetIsolate();
+  HandleScope scope(isolate);
+
+  if (info.Length() < 2)
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "removeEventListener requires at least 2 arguments").ToLocalChecked()));
+    return;
+  }
+
+  Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
+  if (node == nullptr || node->inner() == nullptr)
+  {
+    return;
+  }
+
+  String::Utf8Value eventType(isolate, info[0]);
+  // TODO: Implement actual event listener removal
+  cout << "removeEventListener called for event: " << *eventType << endl;
+}
+
+// static
+void Node::DispatchEvent(const FunctionCallbackInfo<Value> &info)
+{
+  Isolate *isolate = info.GetIsolate();
+  HandleScope scope(isolate);
+
+  if (info.Length() < 1)
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "dispatchEvent requires 1 argument").ToLocalChecked()));
+    return;
+  }
+
+  if (!info[0]->IsObject())
+  {
+    isolate->ThrowException(Exception::TypeError(
+      String::NewFromUtf8(isolate, "First argument must be an Event object").ToLocalChecked()));
+    return;
+  }
+
+  Node *node = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>::Unwrap(info.This());
+  if (node == nullptr || node->inner() == nullptr)
+  {
+    return;
+  }
+
+  // TODO: Implement actual event dispatching
+  cout << "dispatchEvent called" << endl;
+  info.GetReturnValue().Set(Boolean::New(isolate, true));
+}
+}
 }

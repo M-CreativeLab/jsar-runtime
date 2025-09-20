@@ -16,7 +16,7 @@ namespace script_bindings
      * It provides the standard DOM Node interface including properties like nodeType,
      * nodeName, parentNode and methods like appendChild, removeChild, etc.
      */
-    class Node : public scripting_base::ObjectWrap<Node, ::dom::Node>
+    class Node : public scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>
     {
 
     public:
@@ -70,11 +70,6 @@ namespace script_bindings
       static void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void Contains(const v8::FunctionCallbackInfo<v8::Value> &info);
-
-      // EventTarget methods
-      static void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void RemoveEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }
