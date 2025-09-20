@@ -746,32 +746,57 @@ namespace dom
 
   void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseDown());
-    dispatchEventInternal(events::PointerEvent::PointerDown());
+    auto mouseEvent = events::MouseEvent::MouseDown();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerDown();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseUp());
-    dispatchEventInternal(events::PointerEvent::PointerUp());
+    auto mouseEvent = events::MouseEvent::MouseUp();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerUp();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseMove(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseMove());
-    dispatchEventInternal(events::PointerEvent::PointerMove());
+    auto mouseEvent = events::MouseEvent::MouseMove();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerMove();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOut(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOut());
-    dispatchEventInternal(events::PointerEvent::PointerOut());
+    auto mouseEvent = events::MouseEvent::MouseOut();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOut();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOver());
-    dispatchEventInternal(events::PointerEvent::PointerOver());
+    auto mouseEvent = events::MouseEvent::MouseOver();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOver();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
@@ -780,8 +805,13 @@ namespace dom
       return;
     setActionState(is_hovered_, true);
 
-    dispatchEventInternal(events::MouseEvent::MouseEnter());
-    dispatchEventInternal(events::PointerEvent::PointerEnter());
+    auto mouseEvent = events::MouseEvent::MouseEnter();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerEnter();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
@@ -790,14 +820,20 @@ namespace dom
       return;
     setActionState(is_hovered_, false);
 
-    dispatchEventInternal(events::MouseEvent::MouseLeave());
-    dispatchEventInternal(events::PointerEvent::PointerLeave());
+    auto mouseEvent = events::MouseEvent::MouseLeave();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerLeave();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
     // Create a click event object to pass to the handler
     auto clickEvent = events::PointerEvent::Click();
+    clickEvent->setTarget(shared_from_this());
 
     // Execute click handler if it exists, passing the event object
     if (hasEventHandler("click"))
@@ -833,7 +869,9 @@ namespace dom
       if (!shouldThrottleScrollEvent())
       {
         last_scroll_event_time_ = chrono::steady_clock::now();
-        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+        auto scrollEvent = make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll);
+        scrollEvent->setTarget(shared_from_this());
+        dispatchEvent(scrollEvent);
       }
     }
     return scrolled;

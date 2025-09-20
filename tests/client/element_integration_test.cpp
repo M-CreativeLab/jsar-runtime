@@ -97,3 +97,42 @@ TEST_CASE("Event type case sensitivity and validation", "[Element][Integration][
     REQUIRE(element->getEventHandlerCode(eventType) == expectedCode);
   }
 }
+
+TEST_CASE("Element simulate methods set event target correctly", "[Element][Integration][Target]")
+{
+  auto element = std::make_shared<Element>("div", std::nullopt);
+  
+  // Test 1: Verify simulateClick sets target correctly
+  bool targetSetCorrectly = false;
+  
+  // Add an event listener that checks the event target
+  element->addEventListener(DOMEventType::Click, [&](std::shared_ptr<Event> event) {
+    targetSetCorrectly = (event->target() == element);
+  });
+  
+  // Simulate the click
+  REQUIRE_NOTHROW(element->simulateClick(glm::vec3(0.0f, 0.0f, 0.0f)));
+  
+  // Verify the target was set correctly
+  REQUIRE(targetSetCorrectly == true);
+  
+  // Test 2: Verify mouse events also set target correctly
+  bool mouseEventTargetCorrect = false;
+  
+  element->addEventListener(DOMEventType::MouseDown, [&](std::shared_ptr<Event> event) {
+    mouseEventTargetCorrect = (event->target() == element);
+  });
+  
+  REQUIRE_NOTHROW(element->simulateMouseDown(glm::vec3(1.0f, 1.0f, 1.0f)));
+  REQUIRE(mouseEventTargetCorrect == true);
+  
+  // Test 3: Verify pointer events also set target correctly
+  bool pointerEventTargetCorrect = false;
+  
+  element->addEventListener(DOMEventType::PointerMove, [&](std::shared_ptr<Event> event) {
+    pointerEventTargetCorrect = (event->target() == element);
+  });
+  
+  REQUIRE_NOTHROW(element->simulateMouseMove(glm::vec3(2.0f, 2.0f, 2.0f)));
+  REQUIRE(pointerEventTargetCorrect == true);
+}
