@@ -85,7 +85,6 @@ namespace client_xr
   };
 
   class XRSession : public dom::DOMEventTarget,
-                    public JSObjectHolder<bindings::XRSession>,
                     public std::enable_shared_from_this<XRSession>
   {
     friend class XRDeviceClient;

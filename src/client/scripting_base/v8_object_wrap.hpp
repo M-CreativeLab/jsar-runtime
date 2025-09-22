@@ -9,6 +9,9 @@
 #include <node/node_api.h>
 #include <common/utility.hpp>
 
+#include "./v8_object_holder.hpp"
+#include "./v8_object_wrap_base.hpp"
+
 namespace scripting_base
 {
   /**
@@ -22,7 +25,7 @@ namespace scripting_base
    * @tparam B The base class of T, if T is derived from another ObjectWrap class.
    */
   template <typename T, typename D = void, typename B = void>
-  class ObjectWrap
+  class ObjectWrap : public ObjectWrapBase
   {
     friend class ObjectWrap<T, D, B>;
 
@@ -124,6 +127,32 @@ namespace scripting_base
       return scope.Escape(jsThis);
     }
 
+    /**
+     * Get the instance object.
+     */
+    static v8::Local<v8::Object> GetOrNewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    {
+      if constexpr (!std::is_base_of_v<JSObjectHolder, D>)
+      {
+        assert(false && "inner type must inherit from `JSObjectHolder`");
+      }
+
+      if (inner == nullptr) [[unlikely]]
+      {
+        return v8::Local<v8::Object>();
+      }
+
+      if (inner->hasJSObject())
+      {
+        v8::EscapableHandleScope scope(isolate);
+        return scope.Escape(inner->getJSObject(isolate));
+      }
+      else
+      {
+        return NewInstance(isolate, inner);
+      }
+    }
+
     static void Wrap(v8::Isolate *isolate, v8::Local<v8::Object> object, T *instance)
     {
       assert(isolate != nullptr && "isolate must not be null");
@@ -196,7 +225,7 @@ namespace scripting_base
 
   public:
     ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-        : current_isolate_(isolate)
+        : ObjectWrapBase(isolate)
     {
     }
 
@@ -205,14 +234,17 @@ namespace scripting_base
     }
 
   public:
-    void setNapiEnv(napi_env env)
-    {
-      napi_env_ = env;
-    }
     void setInner(std::shared_ptr<D> data)
     {
       inner_handle_ = data;
       onDataSet(data);
+
+      // Set the weak reference back to this object if D is derived from `JSObjectHolder`.
+      if constexpr (std::is_base_of_v<JSObjectHolder, D>)
+      {
+        if (inner_handle_ != nullptr)
+          inner_handle_->setReference(this);
+      }
     }
 
     v8::Local<v8::Value> value() const
@@ -269,10 +301,6 @@ namespace scripting_base
     }
 
   protected:
-    napi_env napi_env_;
-    v8::Isolate *current_isolate_;
-    v8::Persistent<v8::Object> object_handle_;
-
     // Inner is a weak pointer to the optional inner instance of the class D.
     std::shared_ptr<D> inner_handle_;
 

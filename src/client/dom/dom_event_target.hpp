@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <common/events_v2/event_target.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./dom_event.hpp"
 
 namespace dom
@@ -14,7 +15,8 @@ namespace dom
     using events_comm::TrEventListener<DOMEventType, Event>::TrEventListener;
   };
 
-  class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType, Event>
+  class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType, Event>,
+                         public scripting_base::JSObjectHolder
   {
   public:
     DOMEventTarget() = default;
