@@ -50,10 +50,24 @@ A technical journey documenting the implementation of native stereo image render
 
 ---
 
+### [Community Update - v0.10.1](./blogs/community-update-v0-10-1.md)
+*January 2025 • Community Update*
+
+Our latest community update highlighting v0.10.1 developments, featuring parallel rendering, advanced CSS selector support, and enhanced Canvas 2D API.
+
+**What's new:**
+- Parallel web content rendering for improved performance
+- Advanced CSS selectors (nth-child, CSS variables, pseudo-classes)
+- Enhanced Canvas 2D API with strokeRect() support
+- Improved rendering pipeline and developer experience
+- Comprehensive test coverage expansion
+
+---
+
 ### [Community Update - July 2025](./blogs/community-update-july-2025.md)
 *July 2025 • Community Update*
 
-Our latest community update highlighting recent v0.8.x developments, featuring CSS gradient implementation, performance optimizations, and developer experience improvements.
+Our community update highlighting recent v0.8.x developments, featuring CSS gradient implementation, performance optimizations, and developer experience improvements.
 
 **What's new:**
 - CSS gradient support (v0.8.2)
