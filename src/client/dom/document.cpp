@@ -237,6 +237,11 @@ namespace dom
     return make_shared<DocumentFragment>(getPtr<Document>());
   }
 
+  std::shared_ptr<Element> Document::createElement(const string &localName)
+  {
+    return Element::CreateElement("http://www.w3.org/1999/xhtml", localName, getPtr<Document>(), true);
+  }
+
   std::shared_ptr<Text> Document::createTextNode(const string &data)
   {
     return make_shared<Text>(data, getPtr<Document>());

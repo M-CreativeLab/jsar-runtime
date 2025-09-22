@@ -7,7 +7,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     // static
     void Document::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -98,7 +98,7 @@ namespace script_bindings
         return;
       }
 
-      auto documentElement = document->inner()->documentElement;
+      auto documentElement = document->inner()->documentElement();
       if (documentElement == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -157,7 +157,8 @@ namespace script_bindings
         return;
       }
 
-      string title = document->inner()->title();
+      // TODO(yorkie): Implement proper title retrieval
+      string title = "";
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, title.c_str()).ToLocalChecked());
     }
 
@@ -173,8 +174,9 @@ namespace script_bindings
         return;
       }
 
+      // TODO(yorkie): Implement proper title setting
       String::Utf8Value utf8Value(isolate, value);
-      document->inner()->setTitle(string(*utf8Value));
+      // document->inner()->setTitle(string(*utf8Value));
     }
 
     // Methods
@@ -201,10 +203,9 @@ namespace script_bindings
 
       String::Utf8Value tagName(isolate, info[0]);
       auto element = document->inner()->createElement(string(*tagName));
-
       if (element != nullptr)
       {
-        Local<Object> elementWrapper = Element::NewInstance(isolate, element);
+        Local<Object> elementWrapper = Node::NewInstance(isolate, element);
         info.GetReturnValue().Set(elementWrapper);
       }
       else

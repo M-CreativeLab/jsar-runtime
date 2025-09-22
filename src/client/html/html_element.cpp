@@ -104,6 +104,17 @@ namespace dom
     removeAttribute("data-" + CamelCaseToDashStyle(key));
   }
 
+  void HTMLElement::setInnerText(const string &text)
+  {
+    innerText = text;
+  }
+
+  void HTMLElement::setHidden(bool value)
+  {
+    hidden = value;
+    setAttribute("hidden", hidden ? "hidden" : "", false);
+  }
+
   void HTMLElement::fetchArrayBufferLikeResource(const std::string &url,
                                                  std::function<void(const void *data, size_t length)> callback)
   {

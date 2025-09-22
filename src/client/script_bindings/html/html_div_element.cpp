@@ -6,7 +6,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     // static
     void HTMLDivElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -25,18 +25,20 @@ namespace script_bindings
       {
         return scope.Escape(Local<Object>());
       }
-
-      return scope.Escape(scripting_base::ObjectWrap<HTMLDivElement, ::dom::HTMLDivElement, script_bindings::dom::HTMLElement>::NewInstance(isolate, nativeElement).As<Object>());
+      else
+      {
+        return scope.Escape(HTMLDivElementBase::NewInstance(isolate, nativeElement).As<Object>());
+      }
     }
 
     // static
     Local<Function> HTMLDivElement::Initialize(Isolate *isolate)
     {
-      return scripting_base::ObjectWrap<HTMLDivElement, ::dom::HTMLDivElement, script_bindings::dom::HTMLElement>::Initialize(isolate);
+      return HTMLDivElementBase::Initialize(isolate);
     }
 
     HTMLDivElement::HTMLDivElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<HTMLDivElement, ::dom::HTMLDivElement, script_bindings::dom::HTMLElement>(isolate, args)
+        : HTMLDivElementBase(isolate, args)
     {
     }
   }

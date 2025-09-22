@@ -6,7 +6,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     // static
     void CharacterData::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -100,8 +100,13 @@ namespace script_bindings
         return;
       }
 
-      String::Utf8Value utf8Value(isolate, value);
-      characterData->inner()->setData(string(*utf8Value));
+      string newData = "";
+      if (value->IsString())
+      {
+        String::Utf8Value utf8Value(isolate, value);
+        newData = string(*utf8Value);
+      }
+      characterData->inner()->data() = newData;
     }
 
     // static
@@ -166,6 +171,16 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Failed to call 'appendData' method: 1 argument required, but only 0 present.")
+            .ToLocalChecked()));
+        return;
+      }
+
+      if (!info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Failed to call 'appendData' method: invalid argument").ToLocalChecked()));
         return;
       }
 
@@ -175,9 +190,10 @@ namespace script_bindings
         return;
       }
 
-      String::Utf8Value utf8Value(isolate, info[0]);
-      string currentData = characterData->inner()->data();
-      characterData->inner()->setData(currentData + string(*utf8Value));
+      Local<String> dataString = info[0].As<String>();
+      String::Utf8Value utf8Value(isolate, dataString);
+      characterData->inner()->appendData(string(*utf8Value));
+      return info.GetReturnValue().SetUndefined();
     }
 
     // static
@@ -189,7 +205,15 @@ namespace script_bindings
       if (info.Length() < 2)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "insertData requires 2 arguments").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "Failed to call 'insertData' method: 2 arguments required, but only 0 present.")
+            .ToLocalChecked()));
+        return;
+      }
+
+      if (!info[0]->IsNumber() || !info[1]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Failed to call 'insertData' method: invalid arguments").ToLocalChecked()));
         return;
       }
 
@@ -201,13 +225,8 @@ namespace script_bindings
 
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       String::Utf8Value utf8Value(isolate, info[1]);
-
-      string data = characterData->inner()->data();
-      if (offset >= 0 && offset <= static_cast<int>(data.length()))
-      {
-        data.insert(offset, string(*utf8Value));
-        characterData->inner()->setData(data);
-      }
+      characterData->inner()->insertData(offset, string(*utf8Value));
+      return info.GetReturnValue().SetUndefined();
     }
 
     // static
@@ -219,7 +238,15 @@ namespace script_bindings
       if (info.Length() < 2)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "deleteData requires 2 arguments").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "Failed to call 'deleteData' method: 2 arguments required, but only 0 present.")
+            .ToLocalChecked()));
+        return;
+      }
+
+      if (!info[0]->IsNumber() || !info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Failed to call 'insertData' method: invalid arguments").ToLocalChecked()));
         return;
       }
 
@@ -231,14 +258,8 @@ namespace script_bindings
 
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-
-      string data = characterData->inner()->data();
-      if (offset >= 0 && offset < static_cast<int>(data.length()))
-      {
-        int endPos = min(offset + count, static_cast<int>(data.length()));
-        data.erase(offset, endPos - offset);
-        characterData->inner()->setData(data);
-      }
+      characterData->inner()->deleteData(offset, count);
+      return info.GetReturnValue().SetUndefined();
     }
 
     // static
@@ -250,7 +271,15 @@ namespace script_bindings
       if (info.Length() < 3)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "replaceData requires 3 arguments").ToLocalChecked()));
+          String::NewFromUtf8(isolate, "Failed to call 'replaceData' method: 3 arguments required, but only 0 present.")
+            .ToLocalChecked()));
+        return;
+      }
+
+      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "Failed to call 'replaceData' method: invalid arguments").ToLocalChecked()));
         return;
       }
 
@@ -263,14 +292,8 @@ namespace script_bindings
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       String::Utf8Value utf8Value(isolate, info[2]);
-
-      string data = characterData->inner()->data();
-      if (offset >= 0 && offset < static_cast<int>(data.length()))
-      {
-        int endPos = min(offset + count, static_cast<int>(data.length()));
-        data.replace(offset, endPos - offset, string(*utf8Value));
-        characterData->inner()->setData(data);
-      }
+      characterData->inner()->replaceData(offset, count, string(*utf8Value));
+      return info.GetReturnValue().SetUndefined();
     }
   }
 }

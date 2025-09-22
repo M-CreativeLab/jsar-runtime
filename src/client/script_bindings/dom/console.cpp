@@ -7,7 +7,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     // static
     void Console::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)

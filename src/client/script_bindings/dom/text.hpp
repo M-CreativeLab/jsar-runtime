@@ -7,7 +7,7 @@
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     /**
      * Text wrapper for V8 objects using scripting_base::ObjectWrap.

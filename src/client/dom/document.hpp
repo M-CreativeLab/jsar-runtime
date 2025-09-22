@@ -86,6 +86,7 @@ namespace dom
     std::shared_ptr<DocumentFragment> createDocumentFragment();
     std::shared_ptr<Text> createTextNode(const std::string &data);
     std::shared_ptr<Comment> createComment(const std::string &data);
+    std::shared_ptr<Element> createElement(const std::string &localName);
     std::shared_ptr<Node> importNode(const std::shared_ptr<Node> node, bool deep);
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);

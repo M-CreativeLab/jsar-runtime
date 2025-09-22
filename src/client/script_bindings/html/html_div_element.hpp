@@ -3,19 +3,18 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/html/html_div_element.hpp>
-#include "../dom/html_element.hpp"
+#include "./html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
-    /**
-     * HTMLDivElement wrapper for V8 objects using scripting_base::ObjectWrap.
-     *
-     * This class wraps dom::HTMLDivElement objects for use in V8 JavaScript execution contexts.
-     * It provides the standard DOM HTMLDivElement interface.
-     */
-    class HTMLDivElement : public scripting_base::ObjectWrap<HTMLDivElement, ::dom::HTMLDivElement, script_bindings::dom::HTMLElement>
+    class HTMLDivElement;
+    using HTMLDivElementBase = scripting_base::ObjectWrap<HTMLDivElement,
+                                                          dom::HTMLDivElement,
+                                                          html_bindings::HTMLElement>;
+
+    class HTMLDivElement : public HTMLDivElementBase
     {
     public:
       /**

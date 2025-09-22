@@ -6,7 +6,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     // static
     void Element::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -190,7 +190,7 @@ namespace script_bindings
         return;
       }
 
-      string innerHTML = element->inner()->innerHTML();
+      string innerHTML = element->inner()->getInnerHTML();
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, innerHTML.c_str()).ToLocalChecked());
     }
 
@@ -223,7 +223,7 @@ namespace script_bindings
         return;
       }
 
-      string outerHTML = element->inner()->outerHTML();
+      string outerHTML = element->inner()->getOuterHTML();
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, outerHTML.c_str()).ToLocalChecked());
     }
 

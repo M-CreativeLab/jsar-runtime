@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     /**
      * Console wrapper for V8 objects using scripting_base::ObjectWrap.

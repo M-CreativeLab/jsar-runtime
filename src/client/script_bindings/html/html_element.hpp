@@ -2,21 +2,19 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/dom/html_element.hpp>
-#include "./element.hpp"
+#include <client/html/html_element.hpp>
+#include <client/script_bindings/dom/element.hpp>
 
 namespace script_bindings
 {
-  namespace dom
+  namespace html_bindings
   {
-    /**
-     * HTMLElement wrapper for V8 objects using scripting_base::ObjectWrap.
-     *
-     * This class wraps dom::HTMLElement objects for use in V8 JavaScript execution contexts.
-     * It provides the standard DOM HTMLElement interface including properties and methods
-     * common to all HTML elements.
-     */
-    class HTMLElement : public scripting_base::ObjectWrap<HTMLElement, ::dom::HTMLElement, Element>
+    class HTMLElement;
+    using HTMLElementBase = scripting_base::ObjectWrap<HTMLElement,
+                                                       dom::HTMLElement,
+                                                       dom_bindings::Element>;
+
+    class HTMLElement : public HTMLElementBase
     {
     public:
       /**

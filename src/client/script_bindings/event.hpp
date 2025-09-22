@@ -13,7 +13,7 @@ namespace script_bindings
    * It provides the standard DOM Event interface including properties like type, bubbles,
    * cancelable and methods like preventDefault().
    */
-  class Event : public scripting_base::ObjectWrap<Event, dom::Event>
+  class Event : public scripting_base::ObjectWrap<Event, ::dom::Event>
   {
   public:
     /**
@@ -32,7 +32,7 @@ namespace script_bindings
     /**
      * Create a new V8 Event instance from a native dom::Event.
      */
-    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::Event> nativeEvent);
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Event> nativeEvent);
 
     /**
      * Initialize the Event class and register it with V8.

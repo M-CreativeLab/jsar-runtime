@@ -3,11 +3,11 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/dom/node.hpp>
-#include "./event_target.hpp"
+#include <client/script_bindings/event_target.hpp>
 
 namespace script_bindings
 {
-  namespace dom
+  namespace dom_bindings
   {
     /**
      * Node wrapper for V8 objects using scripting_base::ObjectWrap.

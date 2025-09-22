@@ -136,7 +136,7 @@ namespace dom
      * @param aChild The child node to remove.
      * @returns The removed child node.
      */
-    void removeChild(std::shared_ptr<Node> aChild);
+    std::shared_ptr<Node> removeChild(std::shared_ptr<Node> aChild);
     /**
      * Replace a child node with a new child node.
      *
