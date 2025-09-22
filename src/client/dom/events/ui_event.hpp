@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../dom_event.hpp"
 #include "../dom_event_target.hpp"
 
 namespace dom::events
