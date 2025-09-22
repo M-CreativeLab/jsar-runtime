@@ -31,7 +31,7 @@ The ray renderer module has been successfully implemented in `src/renderer/ray_r
 - **Enable/disable**: Global and per-component visualization control
 
 ### ✅ Integration
-- **Render pipeline**: Integrated into transparents render pass
+- **Render pipeline**: Integrated into onAfterRendering() method
 - **Input system**: Connects to XR device input sources
 - **Memory management**: Proper OpenGL resource cleanup
 - **Thread safety**: Compatible with existing renderer architecture
@@ -85,7 +85,7 @@ rayRenderer->setCursorConfig(inputSourceId, customCursorConfig);
 
 ## Render Pipeline Integration
 
-The ray renderer is automatically called during the transparents render pass:
+The ray renderer is automatically called during the onAfterRendering() phase:
 
 1. **Update Phase**: `updateRays()` fetches current input source data
 2. **Render Phase**: `render()` visualizes rays and cursors

@@ -110,7 +110,7 @@ rayRenderer->setCursorVisualizationEnabled(false);
 The ray renderer is automatically called during the rendering pipeline:
 
 ```cpp
-// In TrRenderer::onTransparentsRenderPass()
+// In TrRenderer::onAfterRendering()
 if (rayRenderer != nullptr) {
     // Update ray visualizations from input sources
     rayRenderer->updateRays(constellation->xrDevice);
@@ -121,4 +121,4 @@ if (rayRenderer != nullptr) {
 }
 ```
 
-This ensures rays are rendered after all opaque and transparent geometry, providing accurate depth-based cursor placement.
+This ensures rays are rendered after all scene content (opaque, transparent, and offscreen passes), providing the most accurate depth-based cursor placement.

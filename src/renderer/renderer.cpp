@@ -154,33 +154,6 @@ namespace renderer
       return; // Skip if api is not ready.
 
     // TODO(yorkie): support the transparents render pass.
-
-    // Render rays and cursors after transparent objects
-    if (rayRenderer != nullptr && constellation != nullptr && constellation->xrDevice != nullptr)
-    {
-      // Update ray visualizations from input sources
-      rayRenderer->updateRays(constellation->xrDevice);
-
-      // Get current view matrices for rendering
-      auto xrDevice = constellation->xrDevice;
-      int activeEyeId = xrDevice->getActiveEyeId();
-
-      // Get view and projection matrices
-      float *viewMatrixPtr = xrDevice->getViewMatrixForEye(activeEyeId);
-      float *projMatrixPtr = xrDevice->getProjectionMatrixForEye(activeEyeId);
-
-      if (viewMatrixPtr != nullptr && projMatrixPtr != nullptr)
-      {
-        glm::mat4 viewMatrix = glm::make_mat4(viewMatrixPtr);
-        glm::mat4 projMatrix = glm::make_mat4(projMatrixPtr);
-
-        // Get viewport
-        auto viewport = xrDevice->getViewport(activeEyeId);
-
-        // Render rays and cursors
-        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), viewport.width, viewport.height);
-      }
-    }
   }
 
   void TrRenderer::onBeforeRendering()
@@ -206,6 +179,34 @@ namespace renderer
         contentRenderer->onOffscreenRenderPass();
       }
     }
+
+    // Render rays and cursors after all other rendering is complete
+    if (rayRenderer != nullptr && constellation != nullptr && constellation->xrDevice != nullptr)
+    {
+      // Update ray visualizations from input sources
+      rayRenderer->updateRays(constellation->xrDevice);
+
+      // Get current view matrices for rendering
+      auto xrDevice = constellation->xrDevice;
+      int activeEyeId = xrDevice->getActiveEyeId();
+
+      // Get view and projection matrices
+      float *viewMatrixPtr = xrDevice->getViewMatrixForEye(activeEyeId);
+      float *projMatrixPtr = xrDevice->getProjectionMatrixForEye(activeEyeId);
+
+      if (viewMatrixPtr != nullptr && projMatrixPtr != nullptr)
+      {
+        glm::mat4 viewMatrix = glm::make_mat4(viewMatrixPtr);
+        glm::mat4 projMatrix = glm::make_mat4(projMatrixPtr);
+
+        // Get viewport
+        auto viewport = xrDevice->getViewport(activeEyeId);
+
+        // Render rays and cursors
+        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), viewport.width, viewport.height);
+      }
+    }
+
     glHostContext->restore();
   }
 
