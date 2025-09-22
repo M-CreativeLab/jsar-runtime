@@ -21,6 +21,7 @@
 #include "./gles/context_storage.hpp"
 #include "./content_renderer.hpp"
 #include "./render_api.hpp"
+#include "./ray_renderer.hpp"
 
 using namespace std;
 using namespace commandbuffers;
@@ -189,6 +190,28 @@ namespace renderer
     void onBeforeRendering();
     void onAfterRendering();
 
+  public: // Ray renderer API
+    /**
+     * Get the ray renderer instance.
+     * 
+     * @returns The ray renderer instance, or nullptr if not initialized.
+     */
+    TrRayRenderer *getRayRenderer();
+
+    /**
+     * Enable or disable ray visualization.
+     * 
+     * @param enabled Whether to enable ray visualization.
+     */
+    void setRayVisualizationEnabled(bool enabled);
+
+    /**
+     * Enable or disable cursor visualization.
+     * 
+     * @param enabled Whether to enable cursor visualization.
+     */
+    void setCursorVisualizationEnabled(bool enabled);
+
   public: // API for content renderer
     /**
      * Create a new content renderer and add it to the renderer.
@@ -302,5 +325,8 @@ namespace renderer
     std::unordered_map<int, CommandBufferExecutionCallback> onExecutedCallbacks_;
     int nextCallbackId_ = 1;
     mutable std::shared_mutex callbacksMutex_;
+
+  private: // ray renderer
+    std::unique_ptr<TrRayRenderer> rayRenderer = nullptr;
   };
 }

@@ -17,6 +17,7 @@ namespace renderer
       : constellation(constellation)
       , rhi(nullptr)
       , commandBufferChanServer(make_unique<CommandBufferChanServer>("commandBufferChan"))
+      , rayRenderer(std::make_unique<TrRayRenderer>())
   {
   }
 
@@ -44,6 +45,12 @@ namespace renderer
       return;
     glHostContext = new ContextGLHost();
 
+    // Initialize ray renderer
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->initialize();
+    }
+
     assert(watcherRunning == false);
     startWatchers();
   }
@@ -51,6 +58,12 @@ namespace renderer
   void TrRenderer::shutdown()
   {
     stopWatchers();
+
+    // Shutdown ray renderer
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->shutdown();
+    }
   }
 
   void TrRenderer::setLogFilter(string filterExpr)
@@ -141,6 +154,33 @@ namespace renderer
       return; // Skip if api is not ready.
 
     // TODO(yorkie): support the transparents render pass.
+
+    // Render rays and cursors after transparent objects
+    if (rayRenderer != nullptr && constellation != nullptr && constellation->xrDevice != nullptr)
+    {
+      // Update ray visualizations from input sources
+      rayRenderer->updateRays(constellation->xrDevice);
+
+      // Get current view matrices for rendering
+      auto xrDevice = constellation->xrDevice;
+      int activeEyeId = xrDevice->getActiveEyeId();
+
+      // Get view and projection matrices
+      float *viewMatrixPtr = xrDevice->getViewMatrixForEye(activeEyeId);
+      float *projMatrixPtr = xrDevice->getProjectionMatrixForEye(activeEyeId);
+
+      if (viewMatrixPtr != nullptr && projMatrixPtr != nullptr)
+      {
+        glm::mat4 viewMatrix = glm::make_mat4(viewMatrixPtr);
+        glm::mat4 projMatrix = glm::make_mat4(projMatrixPtr);
+
+        // Get viewport
+        auto viewport = xrDevice->getViewport(activeEyeId);
+
+        // Render rays and cursors
+        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), viewport.width, viewport.height);
+      }
+    }
   }
 
   void TrRenderer::onBeforeRendering()
@@ -414,6 +454,27 @@ namespace renderer
       frameCount = 0;
       lastFrameTimepoint = tickingTimepoint;
       constellation->perfFs->setFps(fps);
+    }
+  }
+
+  TrRayRenderer *TrRenderer::getRayRenderer()
+  {
+    return rayRenderer.get();
+  }
+
+  void TrRenderer::setRayVisualizationEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setRayVisualizationEnabled(enabled);
+    }
+  }
+
+  void TrRenderer::setCursorVisualizationEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setCursorVisualizationEnabled(enabled);
     }
   }
 }
