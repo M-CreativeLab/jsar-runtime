@@ -566,4 +566,38 @@ TEST_CASE("Transform percentage resolution", "[transform-percentage]")
 
     // Without element size context, percentage should be treated as 0px
   }
+
+  SECTION("Test comprehensive negative percentage parsing")
+  {
+    // Test various negative percentage formats
+    std::vector<std::pair<std::string, double>> testCases = {
+      {"translateX(-50%)", -50.0},
+      {"translateY(-25%)", -25.0},
+      {"translateX(-100%)", -100.0},
+      {"translate(-50%, -25%)", -50.0}, // First value
+      {"translate3d(-50%, -25%, 10px)", -50.0}, // First value
+    };
+
+    for (const auto& testCase : testCases) {
+      CSSTransformParser parser(testCase.first);
+      auto functions = parser.parse();
+      
+      REQUIRE(parser.isValid());
+      REQUIRE(functions.size() == 1);
+      REQUIRE(functions[0].values[0] == testCase.second);
+      
+      // Also test that it resolves correctly with element size
+      auto transform = Parse::ParseSingleValue<specified::Transform>(testCase.first);
+      REQUIRE(!transform.operations().empty());
+      
+      computed::Context context = tests::CreateComputedContext();
+      auto computedTransform = transform.toComputedValue(context);
+      
+      glm::mat4 matrix(1.0f);
+      glm::vec2 elementSize(100.0f, 80.0f);
+      
+      auto count = computedTransform.applyTo(matrix, elementSize);
+      REQUIRE(count == 1);
+    }
+  }
 }
