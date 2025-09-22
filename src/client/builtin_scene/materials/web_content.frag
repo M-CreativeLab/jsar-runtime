@@ -160,10 +160,23 @@ void main()
       float sdfWidth = max(fwidth(texDist), 0.01);
       float sdfAlpha = smoothstep(-sdfWidth * 0.5, sdfWidth * 0.5, texDist);
 
-      // Use black color with SDF-computed alpha for crisp text edges
-      textureColor.a *= sdfAlpha;
+      textureColor *= sdfAlpha;
+      textureColor = mix(outColor, textureColor, textureColor.a);
     }
-    outColor = mix(outColor, textureColor, textureColor.a);
+
+    // Final color blending with alpha compositing
+    vec4 baseColor = outColor;
+    if (baseColor.a < 0.1)
+    {
+      // If base color is mostly transparent, use texture color directly
+      outColor = textureColor;
+    }
+    else
+    {
+      // Alpha blend texture over base color
+      outColor.rgb = textureColor.rgb * textureColor.a + baseColor.rgb * (1.0 - textureColor.a);
+      outColor.a   = textureColor.a + baseColor.a * (1.0 - textureColor.a);
+    }
   }
 #endif
 

@@ -78,6 +78,11 @@ namespace dom::events
     }
 
   public:
+    bool isPointerEvent() const override final
+    {
+      return true;
+    }
+
     int pointerId() const
     {
       return pointer_id_;

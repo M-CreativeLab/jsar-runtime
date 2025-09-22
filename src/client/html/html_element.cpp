@@ -167,7 +167,7 @@ namespace dom
     // Handle onclick attribute for inline event handlers
     if (name == "onclick")
     {
-      setOnClickHandler(newValue);
+      setEventHandler("click", newValue);
     }
   }
 

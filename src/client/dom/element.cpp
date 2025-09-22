@@ -5,6 +5,7 @@
 #include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 #include <client/html/all_html_elements.hpp>
+#include <client/script_bindings/events/all_events.hpp>
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
@@ -129,9 +130,6 @@ namespace dom
       , prefix(other.prefix)
       , classList_(other.classList_)
       , attributeNodes_(other.attributeNodes_)
-      , onclick_handler_code_(other.onclick_handler_code_)
-      , has_onclick_function_(other.has_onclick_function_)
-      , onclick_function_ref_(other.onclick_function_ref_)
   {
   }
 
@@ -748,32 +746,57 @@ namespace dom
 
   void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseDown());
-    dispatchEventInternal(events::PointerEvent::PointerDown());
+    auto mouseEvent = events::MouseEvent::MouseDown();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerDown();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseUp());
-    dispatchEventInternal(events::PointerEvent::PointerUp());
+    auto mouseEvent = events::MouseEvent::MouseUp();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerUp();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseMove(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseMove());
-    dispatchEventInternal(events::PointerEvent::PointerMove());
+    auto mouseEvent = events::MouseEvent::MouseMove();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerMove();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOut(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOut());
-    dispatchEventInternal(events::PointerEvent::PointerOut());
+    auto mouseEvent = events::MouseEvent::MouseOut();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOut();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
-    dispatchEventInternal(events::MouseEvent::MouseOver());
-    dispatchEventInternal(events::PointerEvent::PointerOver());
+    auto mouseEvent = events::MouseEvent::MouseOver();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerOver();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
@@ -782,8 +805,13 @@ namespace dom
       return;
     setActionState(is_hovered_, true);
 
-    dispatchEventInternal(events::MouseEvent::MouseEnter());
-    dispatchEventInternal(events::PointerEvent::PointerEnter());
+    auto mouseEvent = events::MouseEvent::MouseEnter();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerEnter();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
@@ -792,17 +820,26 @@ namespace dom
       return;
     setActionState(is_hovered_, false);
 
-    dispatchEventInternal(events::MouseEvent::MouseLeave());
-    dispatchEventInternal(events::PointerEvent::PointerLeave());
+    auto mouseEvent = events::MouseEvent::MouseLeave();
+    mouseEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(mouseEvent));
+
+    auto pointerEvent = events::PointerEvent::PointerLeave();
+    pointerEvent->setTarget(shared_from_this());
+    dispatchEventInternal(std::move(pointerEvent));
   }
 
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
-    // Execute onclick handler if it exists
-    if (hasOnClickHandler())
-      executeOnClickHandler();
+    // Create a click event object to pass to the handler
+    auto clickEvent = events::PointerEvent::Click();
+    clickEvent->setTarget(shared_from_this());
 
-    dispatchEventInternal(events::PointerEvent::Click());
+    // Execute click handler if it exists, passing the event object
+    if (hasEventHandler("click"))
+      executeEventHandler("click", clickEvent.get());
+
+    dispatchEventInternal(std::move(clickEvent));
   }
 
   bool Element::simulateScrollWithOffset(float offsetX, float offsetY)
@@ -832,7 +869,9 @@ namespace dom
       if (!shouldThrottleScrollEvent())
       {
         last_scroll_event_time_ = chrono::steady_clock::now();
-        dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+        auto scrollEvent = make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll);
+        scrollEvent->setTarget(shared_from_this());
+        dispatchEvent(scrollEvent);
       }
     }
     return scrolled;
@@ -922,47 +961,40 @@ namespace dom
     return nullptr;
   }
 
-  // Event handler methods
-  void Element::setOnClickHandler(const std::string &handlerCode)
-  {
-    onclick_handler_code_ = handlerCode;
-    has_onclick_function_ = false;
+  // Generalized event handler methods
 
-    // Note: onclick handlers are executed via simulateClick() method
-    // which checks hasOnClickHandler() and calls executeOnClickHandler()
-  }
-
-  void Element::setOnClickHandlerFunction(void *functionRef)
+  void Element::setEventHandler(const string &type, const string &handlerCode)
   {
-    // Store function reference for direct function assignment
-    onclick_function_ref_ = functionRef;
-    has_onclick_function_ = true;
-    onclick_handler_code_.clear();
-  }
-
-  std::string Element::getOnClickHandlerCode() const
-  {
-    return onclick_handler_code_;
-  }
-
-  bool Element::hasOnClickHandler() const
-  {
-    return !onclick_handler_code_.empty() || has_onclick_function_;
-  }
-
-  void Element::executeOnClickHandler()
-  {
-    // Handle function reference case (not yet fully implemented)
-    if (has_onclick_function_ && onclick_function_ref_ != nullptr)
-    {
-      // TODO: Implement function execution for onclick_function_ref_
-      // This would require proper V8 function handling
-      cerr << "Executing onclick function reference (not yet implemented)" << endl;
+    if (type.empty() || handlerCode.empty())
       return;
-    }
+    event_handler_codes_[type] = handlerCode;
+  }
 
-    // Handle inline handler code case
-    if (onclick_handler_code_.empty())
+  bool Element::hasEventHandler(const string &type) const
+  {
+    // Check if we have handler code for this type
+    auto it = event_handler_codes_.find(type);
+    return it != event_handler_codes_.end() && !it->second.empty();
+  }
+
+  string Element::getEventHandlerCode(const string &type) const
+  {
+    auto it = event_handler_codes_.find(type);
+    if (it != event_handler_codes_.end())
+      return it->second;
+
+    return "";
+  }
+
+  void Element::executeEventHandler(const string &type, Event *event)
+  {
+    // Skip if no event is provided and no handler code exists
+    if (event == nullptr) [[unlikely]]
+      return;
+
+    // Check for handler code
+    string handlerCode = getEventHandlerCode(type);
+    if (handlerCode.empty())
       return;
 
     // Get the document and its browsing context to execute the JavaScript
@@ -974,38 +1006,58 @@ namespace dom
     if (browsingContext == nullptr || browsingContext->scriptingContext == nullptr)
       return;
 
-    // Create a simple script to execute the onclick handler
-    // The handler code will be wrapped in an anonymous function
-    // In a complete implementation, we should:
-    // 1. Create a proper event object and pass it as parameter
-    // 2. Set 'this' to point to the element
-    // 3. Handle return value to potentially prevent default behavior
-
-    // TODO(yorkie): support event object and 'this' context
-    string scriptCode = "(function(event) { " + onclick_handler_code_ + " })({});";
+    v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::HandleScope handleScope(isolate);
 
     try
     {
-      // Create and compile the script for the onclick handler
-      auto script = browsingContext->createScript("inline-onclick-handler", dom::SourceTextType::Classic);
-      if (script != nullptr)
+      // Use the new compileEventHandler method to compile the handler as a function
+      auto maybeFunction = browsingContext->scriptingContext->compileFunction(handlerCode);
+
+      v8::Local<v8::Function> handlerFunction;
+      if (!maybeFunction.ToLocal(&handlerFunction))
       {
-        // Compile the script with the onclick handler code
-        bool compiled = browsingContext->scriptingContext->compile(script, scriptCode, false);
-        if (compiled)
+        cerr << "Failed to compile " << type << " handler: " << handlerCode << endl;
+        return;
+      }
+
+      // Get the V8 context for function execution
+      v8::Isolate *isolate = browsingContext->scriptingContext->isolate();
+      v8::Isolate::Scope isolateScope(isolate);
+      v8::HandleScope handleScope(isolate);
+
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Context::Scope contextScope(context);
+
+      // Create a V8 event object using the proper Event wrapper
+      auto eventObject = script_bindings::events::MakeEvent(isolate, event);
+
+      // Call the compiled handler function with the event object
+      v8::TryCatch tryCatch(isolate);
+      v8::Local<v8::Value> argv[] = {eventObject};
+      v8::Local<v8::Value> result;
+
+      // Use global as 'this' context for now - ideally should be the element
+      v8::Local<v8::Object> global = context->Global();
+
+      if (!handlerFunction->Call(context, global, 1, argv).ToLocal(&result))
+      {
+        if (tryCatch.HasCaught())
         {
-          // Execute the script using the browsing context's scripting context
-          browsingContext->scriptingContext->evaluate(script);
+          v8::Local<v8::Message> message = tryCatch.Message();
+          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          cerr << "Failed to execute " << type << " handler: " << *messageUtf8 << endl;
         }
         else
         {
-          cerr << "Failed to compile onclick handler: " << onclick_handler_code_ << endl;
+          cerr << "Failed to execute " << type << " handler" << endl;
         }
       }
     }
     catch (const exception &e)
     {
-      std::cerr << "Error executing onclick handler: " << e.what() << std::endl;
+      cerr << "Error executing " << type << " handler: " << e.what() << endl;
     }
   }
 }

@@ -456,6 +456,7 @@ namespace client_layout
     virtual void sizeDidChange(const Fragment &);
 
     virtual void willComputeLayout(const ConstraintSpace &);
+    virtual void didComputeLayout(const ConstraintSpace &);
     virtual void didComputeLayoutOnce(const ConstraintSpace &);
 
   private:

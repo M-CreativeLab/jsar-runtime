@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Flexbox with Comment Nodes Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 36px;
+      font-weight: bold;
+      color: #c9d4df;
+      margin: 30px 0 15px 0;
+    }
+
+    h3 {
+      font-size: 28px;
+      font-weight: bold;
+      color: #c9d4df;
+      margin: 10px 0;
+    }
+
+    p {
+      font-size: 24px;
+      color: #fff;
+      margin: 8px 0;
+    }
+
+    /* Container for multiple test demos */
+    .demo-container {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f0f0f05f;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+    }
+
+    /* Flexbox test containers */
+    .flex-container {
+      display: flex;
+      background-color: #c9d4df5f;
+      border: 2px dashed #999;
+      padding: 15px;
+      margin: 15px 0;
+      min-height: 120px;
+    }
+
+    .flex-row {
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .flex-column {
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      gap: 10px;
+      min-height: 300px;
+    }
+
+    .flex-wrap {
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      align-content: flex-start;
+    }
+
+    .flex-justify-between {
+      justify-content: space-between;
+    }
+
+    .flex-justify-center {
+      justify-content: center;
+    }
+
+    .flex-align-start {
+      align-items: flex-start;
+    }
+
+    .flex-align-end {
+      align-items: flex-end;
+    }
+
+    /* Flex Items */
+    .flex-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      min-width: 120px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flex-item:hover {
+      background: rgba(255, 0, 0, 0.9);
+      transform: scale(1.05);
+    }
+
+    .flex-item:nth-child(2n) {
+      background: rgba(0, 200, 100, 0.85);
+    }
+
+    .flex-item:nth-child(3n) {
+      background: rgba(255, 150, 0, 0.85);
+    }
+
+    .flex-item:nth-child(4n) {
+      background: rgba(150, 0, 255, 0.85);
+    }
+
+    .flex-item:nth-child(5n) {
+      background: rgba(255, 100, 150, 0.85);
+    }
+
+    /* Different sized items for testing */
+    .flex-item.small {
+      min-width: 80px;
+      min-height: 40px;
+      padding: 15px;
+    }
+
+    .flex-item.large {
+      min-width: 180px;
+      min-height: 100px;
+      padding: 30px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    /* Test description */
+    .test-description {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #007bff;
+    }
+
+    .comment-indicator {
+      color: #666;
+      font-style: italic;
+      font-size: 14px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Flexbox Layout with Comment Nodes Test</h1>
+  </header>
+
+  <div class="demo-container">
+    <h2>Test 1: Row Layout with Comments Between Items</h2>
+    <div class="test-description">
+      <p>This test verifies that HTML comment nodes between flex items are properly ignored in layout calculations. The layout should appear as if the comments don't exist.</p>
+      <div class="comment-indicator">Comments are placed between each flex item</div>
+    </div>
+    <div class="flex-container flex-row">
+      <div class="flex-item small">
+        <h3>Item 1</h3>
+      </div>
+      <!-- This is a comment between flex items -->
+      <div class="flex-item">
+        <h3>Item 2</h3>
+      </div>
+      <!-- Another comment node -->
+      <div class="flex-item large">
+        <h3>Item 3</h3>
+      </div>
+      <!-- Final comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 2: Column Layout with Leading and Trailing Comments</h2>
+    <div class="test-description">
+      <p>Testing comment nodes at the beginning and end of flex containers in column layout.</p>
+      <div class="comment-indicator">Comments before first item and after last item</div>
+    </div>
+    <div class="flex-container flex-column">
+      <!-- Leading comment -->
+      <!-- Multiple comments at start -->
+      <div class="flex-item">
+        <h3>First Item</h3>
+        <p>Column layout</p>
+      </div>
+      <div class="flex-item">
+        <h3>Second Item</h3>
+        <p>Middle item</p>
+      </div>
+      <div class="flex-item">
+        <h3>Third Item</h3>
+        <p>Last visible</p>
+      </div>
+      <!-- Trailing comment -->
+      <!-- Multiple comments at end -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 3: Space-Between with Interspersed Comments</h2>
+    <div class="test-description">
+      <p>Testing justify-content: space-between with comment nodes scattered throughout.</p>
+      <div class="comment-indicator">Comments mixed throughout the flex container</div>
+    </div>
+    <div class="flex-container flex-row flex-justify-between">
+      <!-- Start comment -->
+      <div class="flex-item">
+        <h3>Left</h3>
+      </div>
+      <!-- Middle comment 1 -->
+      <!-- Middle comment 2 -->
+      <div class="flex-item">
+        <h3>Center</h3>
+      </div>
+      <!-- Between center and right -->
+      <div class="flex-item">
+        <h3>Right</h3>
+      </div>
+      <!-- End comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 4: Flex Wrap with Comments</h2>
+    <div class="test-description">
+      <p>Testing flex-wrap behavior when comment nodes are present between wrapping items.</p>
+      <div class="comment-indicator">Comments between items that may wrap to new lines</div>
+    </div>
+    <div class="flex-container flex-row flex-wrap" style="width: 500px;">
+      <div class="flex-item">
+        <h3>Item 1</h3>
+      </div>
+      <!-- Comment before wrap -->
+      <div class="flex-item">
+        <h3>Item 2</h3>
+      </div>
+      <!-- This comment should not affect wrapping -->
+      <div class="flex-item">
+        <h3>Item 3</h3>
+      </div>
+      <!-- Comment before potential wrap -->
+      <div class="flex-item">
+        <h3>Item 4</h3>
+      </div>
+      <!-- Final comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 5: Alignment Properties with Comments</h2>
+    <div class="test-description">
+      <p>Testing various alignment properties (align-items) with comment nodes present.</p>
+      <div class="comment-indicator">Comments should not affect item alignment</div>
+    </div>
+    
+    <h3>Align Items: Flex Start</h3>
+    <div class="flex-container flex-row flex-align-start" style="height: 150px;">
+      <!-- Top comment -->
+      <div class="flex-item small">
+        <h3>Small</h3>
+      </div>
+      <!-- Between small and medium -->
+      <div class="flex-item">
+        <h3>Medium</h3>
+      </div>
+      <!-- Between medium and large -->
+      <div class="flex-item large">
+        <h3>Large</h3>
+      </div>
+      <!-- Bottom comment -->
+    </div>
+
+    <h3>Align Items: Flex End</h3>
+    <div class="flex-container flex-row flex-align-end" style="height: 150px;">
+      <!-- Top comment -->
+      <div class="flex-item small">
+        <h3>Small</h3>
+      </div>
+      <!-- Between items -->
+      <div class="flex-item">
+        <h3>Medium</h3>
+      </div>
+      <!-- Between items -->
+      <div class="flex-item large">
+        <h3>Large</h3>
+      </div>
+      <!-- Bottom comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 6: Nested Flexbox with Comments</h2>
+    <div class="test-description">
+      <p>Testing nested flexbox layouts where both parent and child containers have comment nodes.</p>
+      <div class="comment-indicator">Comments in both outer and inner flex containers</div>
+    </div>
+    <div class="flex-container flex-column">
+      <!-- Outer container leading comment -->
+      <div class="flex-container flex-row" style="background: rgba(255, 0, 0, 0.2);">
+        <!-- Inner container comment -->
+        <div class="flex-item small">
+          <h3>Row 1-1</h3>
+        </div>
+        <!-- Inner comment -->
+        <div class="flex-item small">
+          <h3>Row 1-2</h3>
+        </div>
+        <!-- Inner trailing comment -->
+      </div>
+      <!-- Between nested containers -->
+      <div class="flex-container flex-row" style="background: rgba(0, 255, 0, 0.2);">
+        <!-- Inner leading comment -->
+        <div class="flex-item small">
+          <h3>Row 2-1</h3>
+        </div>
+        <!-- Inner comment -->
+        <div class="flex-item small">
+          <h3>Row 2-2</h3>
+        </div>
+        <!-- Inner comment -->
+        <div class="flex-item small">
+          <h3>Row 2-3</h3>
+        </div>
+        <!-- Inner trailing comment -->
+      </div>
+      <!-- Outer container trailing comment -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 7: Only Comments in Container</h2>
+    <div class="test-description">
+      <p>Edge case: Flex container containing only comment nodes (should render as empty).</p>
+      <div class="comment-indicator">Container with only comments - should appear empty</div>
+    </div>
+    <div class="flex-container flex-row" style="min-height: 80px; border: 3px solid red;">
+      <!-- Only comment 1 -->
+      <!-- Only comment 2 -->
+      <!-- Only comment 3 -->
+      <!-- This container should appear empty except for the border -->
+    </div>
+  </div>
+
+  <div class="demo-container">
+    <h2>Test 8: Mixed Content Types with Comments</h2>
+    <div class="test-description">
+      <p>Testing flex layout with mixed content: elements, text nodes, and comment nodes.</p>
+      <div class="comment-indicator">Mix of elements, text content, and comments</div>
+    </div>
+    <div class="flex-container flex-row">
+      <!-- Leading comment -->
+      <div class="flex-item">
+        <h3>Element</h3>
+      </div>
+      <!-- Comment between element and text -->
+      Some text content
+      <!-- Comment between text and element -->
+      <div class="flex-item">
+        <h3>Another Element</h3>
+      </div>
+      <!-- Trailing comment -->
+    </div>
+  </div>
+
+</body>
+
+</html>

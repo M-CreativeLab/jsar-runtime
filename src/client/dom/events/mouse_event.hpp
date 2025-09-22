@@ -75,6 +75,11 @@ namespace dom::events
     }
 
   public:
+    bool isMouseEvent() const override final
+    {
+      return true;
+    }
+
     EventTarget relatedTarget() const
     {
       return related_target_;

@@ -11,6 +11,7 @@ file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
     "src/client/layout/*.cpp"
     "src/client/media/*.cpp"
     "src/client/networking/*.cpp"
+    "src/client/script_bindings/*.cpp"
     "src/client/scripting_base/*.cpp"
     "src/client/scroll/*.cpp"
     "src/client/xr/*.cpp"

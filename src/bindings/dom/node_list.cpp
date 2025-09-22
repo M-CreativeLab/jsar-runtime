@@ -8,6 +8,9 @@ namespace dombinding
   v8::Local<v8::Value> NodeList::NodeListIterator::createNextValue(v8::Isolate *isolate,
                                                                    const std::shared_ptr<dom::Node> value)
   {
+    assert(this->current_isolate_ != nullptr && "The current isolate is not set.");
+    assert(this->napi_env_ != nullptr && "The N-API environment is not set.");
+
     v8::EscapableHandleScope scope(this->current_isolate_);
     Napi::Object valueObject = Node::NewInstance(this->napi_env_, value);
     return scope.Escape(scripting_base::ToV8Local<v8::Value>(valueObject));
@@ -133,12 +136,19 @@ namespace dombinding
 
   v8::Local<v8::Value> NodeList::get(unsigned int index) const
   {
+    assert(this->current_isolate_ != nullptr && "The current isolate is not set.");
+    assert(this->napi_env_ != nullptr && "The N-API environment is not set.");
+
     v8::EscapableHandleScope scope(current_isolate_);
     std::shared_ptr<dom::Node> value = listRef().item(index);
     if (value == nullptr)
-      return scope.Escape(v8::Undefined(current_isolate_));
-
-    Napi::Object valueObject = Node::NewInstance(napi_env_, value);
-    return scope.Escape(scripting_base::ToV8Local<v8::Value>(valueObject));
+    {
+      return scope.Escape(v8::Undefined(this->current_isolate_));
+    }
+    else
+    {
+      Napi::Object valueObject = Node::NewInstance(this->napi_env_, value);
+      return scope.Escape(scripting_base::ToV8Local<v8::Value>(valueObject));
+    }
   }
 }

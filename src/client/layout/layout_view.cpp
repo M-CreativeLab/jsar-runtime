@@ -48,14 +48,16 @@ namespace client_layout
   {
   }
 
-  bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
+  bool LayoutView::computeLayout(const ConstraintSpace &availableSpace)
   {
     function<void(LayoutObject &, const LayoutObject &)> traverseChildNode =
       [&traverseChildNode](LayoutObject &object, const LayoutObject &parent)
     {
       if (object.isNone())
         return;
-      object.didComputeLayoutOnce(parent.fragment());
+
+      const auto &space = parent.fragment();
+      object.didComputeLayoutOnce(space);
 
       // traverse the children of the block or inline object.
       if (object.isLayoutBlock())
@@ -70,13 +72,16 @@ namespace client_layout
         for (shared_ptr<LayoutObject> child : inlineObject->childrenRef())
           traverseChildNode(*child, *inlineObject); // Just traverse the inline's children but don't compute layout.
       }
+
+      // Finally, call `didComputeLayout` for the object itself.
+      object.didComputeLayout(space);
     };
 
     // TODO(yorkie): support the lifecycle `willComputeLayout`?
 
     // Use taffy to compute the layout.
-    bool r = LayoutBlockFlow::computeLayout(avilableSpace);
-    didComputeLayoutOnce(avilableSpace);
+    bool r = LayoutBlockFlow::computeLayout(availableSpace);
+    didComputeLayoutOnce(availableSpace);
 
     // Traverse the children of the view and call `didComputeLayout` for each child.
     // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content
@@ -84,6 +89,8 @@ namespace client_layout
     for (shared_ptr<LayoutObject> child : childrenRef())
       traverseChildNode(*child, *this);
 
+    // Finally, call `didComputeLayout` for the view itself.
+    didComputeLayout(availableSpace);
     return r;
   }
 
