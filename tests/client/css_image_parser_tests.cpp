@@ -233,6 +233,34 @@ TEST_CASE("CSSValueTokenizer hex color values", "[css-tokenizer]")
     // If the hash tokens are processed correctly, the image should be a gradient
     REQUIRE(image.isGradient());
   }
+
+  SECTION("Test 8-digit and 4-digit hex colors in gradients")
+  {
+    // Test 8-digit hex color with alpha
+    CSSValueTokenizer tokenizer1("#ff000080");
+    auto tokens1 = tokenizer1.tokenize();
+    REQUIRE(tokens1.size() >= 1);
+    REQUIRE(tokens1[0].type == TokenType::kHash);
+    REQUIRE(tokens1[0].value == "ff000080");
+    
+    // Test 4-digit hex color with alpha
+    CSSValueTokenizer tokenizer2("#f008");
+    auto tokens2 = tokenizer2.tokenize();
+    REQUIRE(tokens2.size() >= 1);
+    REQUIRE(tokens2[0].type == TokenType::kHash);
+    REQUIRE(tokens2[0].value == "f008");
+    
+    // Test complete gradient with 8-digit and 4-digit hex colors
+    auto image1 = CSSImageParser::parseImage("linear-gradient(45deg, #ff000080, #0000ff80)");
+    REQUIRE(image1.isGradient());
+    
+    auto image2 = CSSImageParser::parseImage("linear-gradient(135deg, #f008, #00f8)");
+    REQUIRE(image2.isGradient());
+    
+    // Test mixed format gradient including 8-digit hex
+    auto image3 = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, rgba(0, 255, 0, 0.7), #0000ff80)");
+    REQUIRE(image3.isGradient());
+  }
 }
 
 TEST_CASE("CSSValueTokenizer complex expressions", "[css-tokenizer]")
