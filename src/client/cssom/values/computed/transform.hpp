@@ -164,7 +164,7 @@ namespace client_cssom::values::computed
     {
       auto translate_x = pixelToMeter(resolveLengthPercentage(src_translate.x(), elementSize.x));
       auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate.y(), elementSize.y));
-      target_mat = glm::translate(target_mat, glm::vec3(translate_x, translate_y, 0.0f));
+      target_mat = glm::translate(target_mat, glm::vec3(translate_x, -translate_y, 0.0f));
     }
     void applyTranslateX(const generics::GenericTranslateX<LengthPercentage> &src_translate_x,
                          glm::mat4 &target_mat,
@@ -178,7 +178,7 @@ namespace client_cssom::values::computed
                          const glm::vec2 &elementSize) const
     {
       auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate_y.y(), elementSize.y));
-      target_mat = glm::translate(target_mat, glm::vec3(0.0f, translate_y, 0.0f));
+      target_mat = glm::translate(target_mat, glm::vec3(0.0f, -translate_y, 0.0f));
     }
     void applyTranslateZ(const generics::GenericTranslateZ<Length> &src_translate_z,
                          glm::mat4 &target_mat) const
@@ -193,7 +193,7 @@ namespace client_cssom::values::computed
       auto translate_x = pixelToMeter(resolveLengthPercentage(src_translate_3d.x(), elementSize.x));
       auto translate_y = pixelToMeter(resolveLengthPercentage(src_translate_3d.y(), elementSize.y));
       auto translate_z = pixelToMeter(src_translate_3d.z().px());
-      target_mat = glm::translate(target_mat, glm::vec3(translate_x, translate_y, translate_z));
+      target_mat = glm::translate(target_mat, glm::vec3(translate_x, -translate_y, translate_z));
     }
     void applyScale(const generics::GenericScale<CSSFloat> &src_scale, glm::mat4 &target_mat) const
     {
