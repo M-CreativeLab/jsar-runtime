@@ -6,7 +6,7 @@
 #include <client/dom/events/ui_event.hpp>
 #include <client/script_bindings/event.hpp>
 
-namespace script_bindings
+namespace script_bindings::event_bindings
 {
   class UIEvent;
   using UIEventBase = scripting_base::ObjectWrap<UIEvent, dom::events::UIEvent, Event>;

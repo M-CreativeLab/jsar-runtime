@@ -1,17 +1,9 @@
 #include "./all_events.hpp"
 
-namespace script_bindings::events
+namespace script_bindings::event_bindings
 {
   using namespace std;
   using namespace v8;
-
-  void Initialize(Isolate *isolate)
-  {
-    Event::Initialize(isolate);
-    UIEvent::Initialize(isolate);
-    MouseEvent::Initialize(isolate);
-    PointerEvent::Initialize(isolate);
-  }
 
   Local<Object> MakeEvent(Isolate *isolate, dom::Event *nativeEvent)
   {

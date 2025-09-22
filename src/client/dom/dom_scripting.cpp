@@ -3,7 +3,7 @@
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
 #include <bindings/dom/console.hpp>
-#include <client/script_bindings/events/all_events.hpp>
+#include <client/script_bindings/binding.hpp>
 
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
@@ -249,9 +249,6 @@ namespace dom
       , runtimeContext(runtimeContext)
   {
     assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
-
-    // Initialize script bindings
-    script_bindings::events::Initialize(isolate_);
   }
 
   void DOMScriptingContext::enableDynamicImport()
@@ -316,6 +313,9 @@ namespace dom
         /**
          * Configure the global objects and functions for the DOM scripting.
          */
+
+        // Update context globals from script bindings
+        script_bindings::Initialize(isolate_, mainContext, script_bindings::ContextType::kScripting);
 
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(navigator);
@@ -556,6 +556,9 @@ namespace dom
          *
          * See https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope
          */
+
+        // Update context globals from script bindings
+        script_bindings::Initialize(isolate_, mainContext, script_bindings::ContextType::kWorker);
 
         // Baisc objects
         // Create custom console object with CDP integration using the Console binding

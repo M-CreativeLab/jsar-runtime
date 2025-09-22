@@ -7,13 +7,8 @@
 
 namespace script_bindings
 {
-  namespace events
+  namespace event_bindings
   {
-    /**
-     * Initialize all event bindings in the V8 isolate.
-     */
-    void Initialize(v8::Isolate *isolate);
-
     /**
      * Create a new Event object in V8 from a native dom::Event.
      * 

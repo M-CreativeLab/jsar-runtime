@@ -5,9 +5,10 @@
 #include <client/dom/dom_event_target.hpp>
 #include <client/dom/events/mouse_event.hpp>
 #include <client/script_bindings/event.hpp>
+
 #include "./ui_event.hpp"
 
-namespace script_bindings
+namespace script_bindings::event_bindings
 {
   class MouseEvent;
   using MouseEventBase = scripting_base::ObjectWrap<MouseEvent, dom::events::MouseEvent, UIEvent>;

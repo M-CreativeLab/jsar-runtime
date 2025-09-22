@@ -7,7 +7,7 @@
 #include <client/script_bindings/event.hpp>
 #include "./mouse_event.hpp"
 
-namespace script_bindings
+namespace script_bindings::event_bindings
 {
   class PointerEvent;
   using PointerEventBase = scripting_base::ObjectWrap<PointerEvent, dom::events::PointerEvent, MouseEvent>;
