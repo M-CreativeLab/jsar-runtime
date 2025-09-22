@@ -4,6 +4,13 @@
 #include "./xr_frame.hpp"
 #include "./xr_rigid_transform.hpp"
 #include "./xr_pose.hpp"
+#include "./xr_viewport.hpp"
+#include "./xr_view.hpp"
+#include "./xr_system.hpp"
+#include "./xr_render_state.hpp"
+#include "./xr_layer.hpp"
+#include "./xr_input_source.hpp"
+#include "./xr_hand.hpp"
 #include <iostream>
 
 using namespace std;
@@ -28,6 +35,14 @@ namespace script_bindings
       auto xrRigidTransformConstructor = XRRigidTransform::Initialize(isolate);
       auto xrPoseConstructor = XRPose::Initialize(isolate);
       auto xrViewerPoseConstructor = XRViewerPose::Initialize(isolate);
+      auto xrViewportConstructor = XRViewport::Initialize(isolate);
+      auto xrViewConstructor = XRView::Initialize(isolate);
+      auto xrSystemConstructor = XRSystem::Initialize(isolate);
+      auto xrRenderStateConstructor = XRRenderState::Initialize(isolate);
+      auto xrLayerConstructor = XRLayer::Initialize(isolate);
+      auto xrWebGLLayerConstructor = XRWebGLLayer::Initialize(isolate);
+      auto xrInputSourceConstructor = XRInputSource::Initialize(isolate);
+      auto xrHandConstructor = XRHand::Initialize(isolate);
 
       // Set up global constructors
       global->Set(context, String::NewFromUtf8(isolate, "XRSpace").ToLocalChecked(), xrSpaceConstructor).Check();
@@ -37,6 +52,14 @@ namespace script_bindings
       global->Set(context, String::NewFromUtf8(isolate, "XRRigidTransform").ToLocalChecked(), xrRigidTransformConstructor).Check();
       global->Set(context, String::NewFromUtf8(isolate, "XRPose").ToLocalChecked(), xrPoseConstructor).Check();
       global->Set(context, String::NewFromUtf8(isolate, "XRViewerPose").ToLocalChecked(), xrViewerPoseConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRViewport").ToLocalChecked(), xrViewportConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRView").ToLocalChecked(), xrViewConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRSystem").ToLocalChecked(), xrSystemConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRRenderState").ToLocalChecked(), xrRenderStateConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRLayer").ToLocalChecked(), xrLayerConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRWebGLLayer").ToLocalChecked(), xrWebGLLayerConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRInputSource").ToLocalChecked(), xrInputSourceConstructor).Check();
+      global->Set(context, String::NewFromUtf8(isolate, "XRHand").ToLocalChecked(), xrHandConstructor).Check();
 
       cout << "V8 WebXR bindings initialized successfully" << endl;
     }

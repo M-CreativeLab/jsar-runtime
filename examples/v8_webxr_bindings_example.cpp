@@ -63,6 +63,14 @@ private:
       console.log('XRRigidTransform constructor:', typeof XRRigidTransform);
       console.log('XRPose constructor:', typeof XRPose);
       console.log('XRViewerPose constructor:', typeof XRViewerPose);
+      console.log('XRViewport constructor:', typeof XRViewport);
+      console.log('XRView constructor:', typeof XRView);
+      console.log('XRSystem constructor:', typeof XRSystem);
+      console.log('XRRenderState constructor:', typeof XRRenderState);
+      console.log('XRLayer constructor:', typeof XRLayer);
+      console.log('XRWebGLLayer constructor:', typeof XRWebGLLayer);
+      console.log('XRInputSource constructor:', typeof XRInputSource);
+      console.log('XRHand constructor:', typeof XRHand);
     )");
 
     // Test 2: Constructor names
@@ -72,6 +80,12 @@ private:
       console.log('XRSession.name:', XRSession.name);
       console.log('XRFrame.name:', XRFrame.name);
       console.log('XRRigidTransform.name:', XRRigidTransform.name);
+      console.log('XRViewport.name:', XRViewport.name);
+      console.log('XRView.name:', XRView.name);
+      console.log('XRSystem.name:', XRSystem.name);
+      console.log('XRWebGLLayer.name:', XRWebGLLayer.name);
+      console.log('XRInputSource.name:', XRInputSource.name);
+      console.log('XRHand.name:', XRHand.name);
     )");
 
     // Test 3: Inheritance verification
@@ -81,6 +95,7 @@ private:
         // Check prototype chain
         console.log('XRReferenceSpace prototype:', Object.getPrototypeOf(XRReferenceSpace.prototype).constructor.name);
         console.log('XRViewerPose prototype:', Object.getPrototypeOf(XRViewerPose.prototype).constructor.name);
+        console.log('XRWebGLLayer prototype:', Object.getPrototypeOf(XRWebGLLayer.prototype).constructor.name);
         
         // Verify method existence
         console.log('XRSession.prototype methods:');
@@ -94,6 +109,21 @@ private:
         
         console.log('XRReferenceSpace.prototype methods:');
         console.log('  getOffsetReferenceSpace:', typeof XRReferenceSpace.prototype.getOffsetReferenceSpace);
+
+        console.log('XRView.prototype methods:');
+        console.log('  requestViewportScale:', typeof XRView.prototype.requestViewportScale);
+
+        console.log('XRSystem.prototype methods:');
+        console.log('  isSessionSupported:', typeof XRSystem.prototype.isSessionSupported);
+        console.log('  requestSession:', typeof XRSystem.prototype.requestSession);
+
+        console.log('XRWebGLLayer.prototype methods:');
+        console.log('  getViewport:', typeof XRWebGLLayer.prototype.getViewport);
+
+        console.log('XRHand.prototype methods:');
+        console.log('  get:', typeof XRHand.prototype.get);
+        console.log('  entries:', typeof XRHand.prototype.entries);
+        console.log('  forEach:', typeof XRHand.prototype.forEach);
         
         console.log('V8 WebXR binding layer is working correctly!');
       } catch (e) {
@@ -116,6 +146,40 @@ private:
         console.log('  position:', transformDescriptors.position ? 'getter defined' : 'missing');
         console.log('  orientation:', transformDescriptors.orientation ? 'getter defined' : 'missing');
         console.log('  matrix:', transformDescriptors.matrix ? 'getter defined' : 'missing');
+
+        const viewDescriptors = Object.getOwnPropertyDescriptors(XRView.prototype);
+        console.log('XRView properties:');
+        console.log('  eye:', viewDescriptors.eye ? 'getter defined' : 'missing');
+        console.log('  projectionMatrix:', viewDescriptors.projectionMatrix ? 'getter defined' : 'missing');
+
+        const viewportDescriptors = Object.getOwnPropertyDescriptors(XRViewport.prototype);
+        console.log('XRViewport properties:');
+        console.log('  x:', viewportDescriptors.x ? 'getter defined' : 'missing');
+        console.log('  y:', viewportDescriptors.y ? 'getter defined' : 'missing');
+        console.log('  width:', viewportDescriptors.width ? 'getter defined' : 'missing');
+        console.log('  height:', viewportDescriptors.height ? 'getter defined' : 'missing');
+
+        const renderStateDescriptors = Object.getOwnPropertyDescriptors(XRRenderState.prototype);
+        console.log('XRRenderState properties:');
+        console.log('  baseLayer:', renderStateDescriptors.baseLayer ? 'getter defined' : 'missing');
+        console.log('  depthNear:', renderStateDescriptors.depthNear ? 'getter defined' : 'missing');
+        console.log('  depthFar:', renderStateDescriptors.depthFar ? 'getter defined' : 'missing');
+
+        const webglLayerDescriptors = Object.getOwnPropertyDescriptors(XRWebGLLayer.prototype);
+        console.log('XRWebGLLayer properties:');
+        console.log('  framebuffer:', webglLayerDescriptors.framebuffer ? 'getter defined' : 'missing');
+        console.log('  framebufferWidth:', webglLayerDescriptors.framebufferWidth ? 'getter defined' : 'missing');
+        console.log('  framebufferHeight:', webglLayerDescriptors.framebufferHeight ? 'getter defined' : 'missing');
+
+        const inputSourceDescriptors = Object.getOwnPropertyDescriptors(XRInputSource.prototype);
+        console.log('XRInputSource properties:');
+        console.log('  handedness:', inputSourceDescriptors.handedness ? 'getter defined' : 'missing');
+        console.log('  targetRayMode:', inputSourceDescriptors.targetRayMode ? 'getter defined' : 'missing');
+        console.log('  gripSpace:', inputSourceDescriptors.gripSpace ? 'getter defined' : 'missing');
+
+        const handDescriptors = Object.getOwnPropertyDescriptors(XRHand.prototype);
+        console.log('XRHand properties:');
+        console.log('  size:', handDescriptors.size ? 'getter defined' : 'missing');
         
       } catch (e) {
         console.error('Error testing property descriptors:', e.message);

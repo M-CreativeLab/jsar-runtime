@@ -18,6 +18,17 @@ The WebXR bindings have been refactored from N-API (in `src/bindings/webxr/`) to
 - **XRPose**: Base pose class with transform and emulatedPosition properties
 - **XRViewerPose**: Extends XRPose, provides viewer-specific pose with views array
 
+### Additional WebXR Classes
+
+- **XRViewport**: Viewport configuration for rendering regions
+- **XRView**: Individual view representation with projection matrix and transform
+- **XRSystem**: WebXR system interface for session support and requests
+- **XRRenderState**: Render state management with layers and depth settings
+- **XRLayer**: Base layer interface for rendering
+- **XRWebGLLayer**: WebGL-specific layer with framebuffer management
+- **XRInputSource**: Input device representation (controllers, hands)
+- **XRHand**: Hand tracking interface with joint data access
+
 ## Architecture Patterns
 
 ### Inheritance Hierarchy
@@ -31,8 +42,17 @@ XRSpace (base spatial reference)
 XRPose (base pose representation) 
 ├── XRViewerPose (extends with views)
 
+XRLayer (base layer interface)
+├── XRWebGLLayer (WebGL-specific layer)
+
 XRRigidTransform (standalone transform utility)
 XRFrame (animation frame context)
+XRViewport (viewport configuration)
+XRView (individual view with projection)
+XRSystem (system interface)
+XRRenderState (render state management)
+XRInputSource (input device representation)
+XRHand (hand tracking interface)
 ```
 
 ### V8 Integration Patterns
@@ -86,11 +106,14 @@ instanceTemplate->Set(
 ## Implementation Status
 
 ### ✅ Completed
-- Basic class structure and inheritance
-- Core WebXR object hierarchy
-- Property accessors and method stubs
-- V8 registration and initialization
+- Complete class structure and inheritance
+- Full WebXR object hierarchy with all missing classes
+- Property accessors and method stubs for all classes
+- V8 registration and initialization for all classes
 - Zero N-API dependencies verified
+- Proper inheritance patterns (XRLayer ← XRWebGLLayer)
+- Map-like interface for XRHand
+- Input source array support
 
 ### 🚧 TODO (Full Implementation)
 - Complete method implementations with proper backend integration
@@ -144,13 +167,20 @@ console.log('Matrix:', transform.matrix);
 
 ```
 src/client/script_bindings/webxr/
-├── binding.hpp                 # Main initialization header
-├── binding.cpp                 # WebXR binding initialization
-├── xr_space.hpp/.cpp          # XRSpace and XRReferenceSpace
-├── xr_session.hpp/.cpp        # XRSession with EventTarget
-├── xr_frame.hpp/.cpp          # XRFrame animation context
-├── xr_rigid_transform.hpp/.cpp # Position/orientation transforms
-└── xr_pose.hpp/.cpp           # XRPose and XRViewerPose
+├── binding.hpp                    # Main initialization header
+├── binding.cpp                    # WebXR binding initialization
+├── xr_space.hpp/.cpp             # XRSpace and XRReferenceSpace
+├── xr_session.hpp/.cpp           # XRSession with EventTarget
+├── xr_frame.hpp/.cpp             # XRFrame animation context
+├── xr_rigid_transform.hpp/.cpp   # Position/orientation transforms
+├── xr_pose.hpp/.cpp              # XRPose and XRViewerPose
+├── xr_viewport.hpp/.cpp          # XRViewport configuration
+├── xr_view.hpp/.cpp              # XRView with projection matrix
+├── xr_system.hpp/.cpp            # XRSystem interface
+├── xr_render_state.hpp/.cpp      # XRRenderState management
+├── xr_layer.hpp/.cpp             # XRLayer and XRWebGLLayer
+├── xr_input_source.hpp/.cpp      # XRInputSource and array
+└── xr_hand.hpp/.cpp              # XRHand tracking interface
 ```
 
 This migration establishes the foundation for completing the full WebXR API transition from N-API to V8 while maintaining API compatibility and improving performance.
