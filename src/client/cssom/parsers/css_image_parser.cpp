@@ -490,6 +490,7 @@ namespace client_cssom::css_parser
     else
     {
       // Unsupported color format, default to transparent
+      // TODO: This should be reached rarely if hex parsing works correctly
       colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
 
       specified::Color color = Parse::ParseSingleValue<specified::Color>("transparent");

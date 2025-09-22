@@ -203,6 +203,36 @@ TEST_CASE("CSSValueTokenizer hex color values", "[css-tokenizer]")
     REQUIRE(tokens[0].type == TokenType::kHash);
     REQUIRE(tokens[0].value == "f008");
   }
+
+  SECTION("Comprehensive gradient parsing test")
+  {
+    // Test both tokenization and parsing together
+    CSSValueTokenizer tokenizer("linear-gradient(to right, #ff0000, #0000ff)");
+    auto tokens = tokenizer.tokenize();
+    
+    // First verify tokenization worked
+    int hashTokens = 0;
+    bool hasFunction = false;
+    for (const auto &token : tokens) {
+      if (token.type == TokenType::kFunction && token.value == "linear-gradient")
+        hasFunction = true;
+      if (token.type == TokenType::kHash) {
+        hashTokens++;
+        // Verify the hash values are correct
+        REQUIRE((token.value == "ff0000" || token.value == "0000ff"));
+      }
+    }
+    
+    REQUIRE(hasFunction);
+    REQUIRE(hashTokens == 2);
+    
+    // Now test that the image parser can handle these tokens
+    auto image = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, #0000ff)");
+    REQUIRE(!image.isNone()); // Should not be none if parsing succeeded
+    
+    // If the hash tokens are processed correctly, the image should be a gradient
+    REQUIRE(image.isGradient());
+  }
 }
 
 TEST_CASE("CSSValueTokenizer complex expressions", "[css-tokenizer]")
@@ -340,6 +370,9 @@ TEST_CASE("CSSImageParser basic parsing", "[css-image-parser]")
     auto image = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, #0000ff)");
     // Basic test to ensure parsing doesn't crash
     REQUIRE(true);
+    
+    // TODO: Add validation that hex colors are actually parsed
+    // The image should be a gradient with proper color stops
   }
 
   SECTION("Parse linear gradient with rgba and hex colors")
