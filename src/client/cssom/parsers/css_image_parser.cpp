@@ -461,7 +461,6 @@ namespace client_cssom::css_parser
 
         if (parenDepth > 0)
         {
-          colorString += funcToken.value;
           if (funcToken.type == css_value_tokenizer::TokenType::kComma)
           {
             colorString += ", ";
@@ -469,6 +468,10 @@ namespace client_cssom::css_parser
           else if (funcToken.type == css_value_tokenizer::TokenType::kWhitespace)
           {
             colorString += " ";
+          }
+          else
+          {
+            colorString += funcToken.value;
           }
         }
         else
