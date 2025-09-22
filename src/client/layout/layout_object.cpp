@@ -957,7 +957,7 @@ namespace client_layout
   {
     // Re-apply transforms with correct percentage resolution now that size is available
     auto currentStyle = style();
-    if (currentStyle != nullptr && currentStyle->hasTransform())
+    if (currentStyle.has_value() && currentStyle->hasTransform())
     {
       glm::vec2 elementSize(newSize.contentWidth(), newSize.contentHeight());
       applyTransforms(*currentStyle, &elementSize);

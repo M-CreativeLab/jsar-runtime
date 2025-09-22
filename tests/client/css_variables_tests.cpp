@@ -9,16 +9,9 @@
 #include <client/dom/browsing_context.hpp>
 #include <client/html/html_element.hpp>
 
-using namespace client_cssom;
+#include "./css_test_helpers.hpp"
 
-// Helper function to create a minimal context for testing
-values::computed::Context createTestContext()
-{
-  static auto browsingContext = std::make_shared<dom::BrowsingContext>();
-  static auto document = dom::Document::Make("text/html", dom::DocumentType::kHTML, browsingContext);
-  static auto element = std::make_shared<dom::HTMLElement>("div", document);
-  return values::computed::Context::From(element);
-}
+using namespace client_cssom;
 
 TEST_CASE("CSS Variables (Custom Properties) Basic Support", "[css-variables]")
 {
@@ -85,7 +78,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Custom property storage in ComputedStyle")
   {
     CSSStyleDeclaration style("--theme-color: #ff0000; --spacing: 10px;");
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
     ComputedStyle computedStyle = ComputedStyle(style, context);
 
     REQUIRE(computedStyle.hasCustomProperty("--theme-color"));
@@ -99,7 +92,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   {
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--main-color", "red");
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     std::string resolved = computedStyle.resolveVariables("var(--main-color)", context);
     REQUIRE(resolved == "red");
@@ -111,7 +104,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Variable resolution with fallback")
   {
     ComputedStyle computedStyle;
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     std::string resolved = computedStyle.resolveVariables("var(--undefined, blue)", context);
     REQUIRE(resolved == "blue");
@@ -131,7 +124,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
     REQUIRE(childStyle.hasCustomProperty("--inherited-color"));
     REQUIRE(childStyle.getCustomProperty("--inherited-color") == "green");
 
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
     std::string resolved = childStyle.resolveVariables("var(--inherited-color)", context);
     REQUIRE(resolved == "green");
   }
@@ -139,7 +132,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
   SECTION("Variable resolution preserves unresolvable var() calls")
   {
     ComputedStyle computedStyle;
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     std::string unresolved = computedStyle.resolveVariables("var(--undefined)", context);
     REQUIRE(unresolved == "var(--undefined)");
@@ -150,7 +143,7 @@ TEST_CASE("CSS Variables Resolution in ComputedStyle", "[css-variables-resolutio
     ComputedStyle computedStyle;
     computedStyle.setCustomProperty("--primary", "red");
     computedStyle.setCustomProperty("--secondary", "blue");
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     std::string resolved = computedStyle.resolveVariables("linear-gradient(var(--primary), var(--secondary))", context);
     REQUIRE(resolved == "linear-gradient(red, blue)");
@@ -180,7 +173,7 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     REQUIRE(grandchildStyle.getCustomProperty("--font-size") == "14px");    // From child override
 
     // Verify resolution with inheritance
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
     std::string colorResolved = grandchildStyle.resolveVariables("var(--theme-color)", context);
     std::string sizeResolved = grandchildStyle.resolveVariables("var(--font-size)", context);
 
@@ -190,7 +183,7 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
 
   SECTION("ComputedStyle::Make with parent inheritance")
   {
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     // Create parent style with variables
     CSSStyleDeclaration parentDecl("--main-color: purple; --spacing: 8px;");
@@ -215,7 +208,7 @@ TEST_CASE("CSS Variables Runtime Updates and DOM Integration", "[css-variables-d
     ComputedStyle style;
     style.setCustomProperty("--primary", "red");
     style.setCustomProperty("--fallback", "blue");
-    auto context = createTestContext();
+    auto context = tests::CreateComputedContext();
 
     // Test nested fallback - should fully resolve the fallback
     std::string resolved = style.resolveVariables("var(--undefined, var(--fallback))", context);
