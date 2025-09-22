@@ -41,6 +41,7 @@ namespace client_cssom::css_parser
     bool consumeToken(css_value_tokenizer::TokenType expected_type);
     bool consumeIdentifier(const std::string &expected_value);
     bool consumeFunction(const std::string &expected_name);
+    std::string convertHexToRgb(const std::string &hexValue);
     bool hasNext() const;
     const css_value_tokenizer::Token &currentToken() const;
     const css_value_tokenizer::Token &peekToken(size_t offset = 1) const;

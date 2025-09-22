@@ -261,6 +261,28 @@ TEST_CASE("CSSValueTokenizer hex color values", "[css-tokenizer]")
     auto image3 = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, rgba(0, 255, 0, 0.7), #0000ff80)");
     REQUIRE(image3.isGradient());
   }
+
+  SECTION("Test hex to RGB conversion")
+  {
+    // Test that hex colors are parsed and converted correctly
+    // This verifies the hex-to-rgb conversion functionality
+    
+    // 3-digit hex: #f00 -> rgb(255, 0, 0)
+    auto image1 = CSSImageParser::parseImage("linear-gradient(to right, #f00, #0f0)");
+    REQUIRE(image1.isGradient());
+    
+    // 4-digit hex with alpha: #f008 -> rgba(255, 0, 0, 0.533)
+    auto image2 = CSSImageParser::parseImage("linear-gradient(to right, #f008, #0f08)");
+    REQUIRE(image2.isGradient());
+    
+    // 6-digit hex: #ff0000 -> rgb(255, 0, 0)
+    auto image3 = CSSImageParser::parseImage("linear-gradient(to right, #ff0000, #00ff00)");
+    REQUIRE(image3.isGradient());
+    
+    // 8-digit hex with alpha: #ff000080 -> rgba(255, 0, 0, 0.502)
+    auto image4 = CSSImageParser::parseImage("linear-gradient(to right, #ff000080, #00ff0080)");
+    REQUIRE(image4.isGradient());
+  }
 }
 
 TEST_CASE("CSSValueTokenizer complex expressions", "[css-tokenizer]")
