@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <string>
 #include "./css_image_parser.hpp"
 
 namespace client_cssom::css_parser
@@ -461,7 +462,6 @@ namespace client_cssom::css_parser
 
         if (parenDepth > 0)
         {
-          colorString += funcToken.value;
           if (funcToken.type == css_value_tokenizer::TokenType::kComma)
           {
             colorString += ", ";
@@ -469,6 +469,10 @@ namespace client_cssom::css_parser
           else if (funcToken.type == css_value_tokenizer::TokenType::kWhitespace)
           {
             colorString += " ";
+          }
+          else
+          {
+            colorString += funcToken.value;
           }
         }
         else
@@ -478,9 +482,16 @@ namespace client_cssom::css_parser
         advance();
       }
     }
+    else if (token.type == css_value_tokenizer::TokenType::kHash)
+    {
+      // Hex color like #ff0000 or #ff0000aa - convert to rgb/rgba format
+      colorString = convertHexToRgb(token.value);
+      advance();
+    }
     else
     {
       // Unsupported color format, default to transparent
+      // TODO: This should be reached rarely if hex parsing works correctly
       colorStop.type = generics::GenericGradientItemBase::kSimpleColorStop;
 
       specified::Color color = Parse::ParseSingleValue<specified::Color>("transparent");
@@ -589,5 +600,48 @@ namespace client_cssom::css_parser
     {
       advance();
     }
+  }
+
+  std::string CSSImageParser::convertHexToRgb(const std::string &hexValue)
+  {
+    // Convert hex color values to rgb/rgba format
+    // Supports: 3-digit (#f00), 4-digit (#f008), 6-digit (#ff0000), 8-digit (#ff000080)
+
+    std::string hex = hexValue;
+
+    // Expand 3-digit to 6-digit (f00 -> ff0000)
+    if (hex.length() == 3)
+    {
+      hex = std::string(2, hex[0]) + std::string(2, hex[1]) + std::string(2, hex[2]);
+    }
+    // Expand 4-digit to 8-digit (f008 -> ff000088)
+    else if (hex.length() == 4)
+    {
+      hex = std::string(2, hex[0]) + std::string(2, hex[1]) + std::string(2, hex[2]) + std::string(2, hex[3]);
+    }
+
+    // Parse RGB values
+    if (hex.length() >= 6)
+    {
+      int r = std::stoi(hex.substr(0, 2), nullptr, 16);
+      int g = std::stoi(hex.substr(2, 2), nullptr, 16);
+      int b = std::stoi(hex.substr(4, 2), nullptr, 16);
+
+      // Check if alpha channel is present
+      if (hex.length() == 8)
+      {
+        int a = std::stoi(hex.substr(6, 2), nullptr, 16);
+        double alpha = a / 255.0;
+        return "rgba(" + std::to_string(r) + ", " + std::to_string(g) + ", " +
+               std::to_string(b) + ", " + std::to_string(alpha) + ")";
+      }
+      else
+      {
+        return "rgb(" + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ")";
+      }
+    }
+
+    // Fallback for invalid hex values
+    return "rgb(0, 0, 0)";
   }
 }

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CSS Gradients with Different Color Formats</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+    }
+
+    .gradient-group {
+      display: grid;
+      border: none;
+      box-sizing: border-box;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      width: 100%;
+    }
+
+    /* Grid Items */
+    .gradient-item {
+      padding: 50px;
+      transform: translateZ(10px);
+    }
+
+    .gradient-container {
+      width: 200px;
+      height: 150px;
+      margin: 10px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .gradient-label {
+      text-align: center;
+      font-size: 25px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    /* Hex Color Gradients */
+    .hex-6-digit {
+      background: linear-gradient(to right, #ff0000, #0000ff);
+    }
+
+    .hex-3-digit {
+      background: linear-gradient(to bottom, #f00, #00f);
+    }
+
+    .hex-8-digit-alpha {
+      background: linear-gradient(45deg, #ff000080, #0000ff80);
+    }
+
+    .hex-4-digit-alpha {
+      background: linear-gradient(135deg, #f008, #00f8);
+    }
+
+    /* RGBA Function Gradients */
+    .rgba-gradient {
+      background: linear-gradient(to right, rgba(255, 0, 0, 0.5), rgba(0, 255, 0, 0.8));
+    }
+
+    .rgb-gradient {
+      background: linear-gradient(to bottom, rgb(255, 128, 0), rgb(128, 0, 255));
+    }
+
+    /* Mixed Color Format Gradients */
+    .mixed-hex-rgba {
+      background: linear-gradient(to right, #ff0000, rgba(0, 255, 0, 0.7), #0000ff80);
+    }
+
+    .mixed-named-hex {
+      background: linear-gradient(to bottom, red, #ffff00, blue, #00ff0080);
+    }
+
+    /* Radial Gradients with Different Formats */
+    .radial-hex {
+      background: radial-gradient(circle, #ff6b6b, #4ecdc4);
+    }
+
+    .radial-rgba {
+      background: radial-gradient(ellipse, rgba(255, 99, 132, 0.8), rgba(54, 162, 235, 0.6));
+    }
+
+    .radial-mixed {
+      background: radial-gradient(circle, #ff9999, rgba(99, 255, 132, 0.5), #9999ff);
+    }
+
+    /* Complex Multi-stop Gradients */
+    .multi-hex {
+      background: linear-gradient(to right, #ff0000 0%, #ffff00 25%, #00ff00 50%, #00ffff 75%, #0000ff 100%);
+    }
+
+    .multi-rgba {
+      background: linear-gradient(to bottom, rgba(255,0,0,1) 0%, rgba(255,255,0,0.8) 33%, rgba(0,255,0,0.6) 66%, rgba(0,0,255,0.4) 100%);
+    }
+
+    .multi-mixed {
+      background: linear-gradient(45deg, #ff0000 0%, rgba(255,255,0,0.8) 20%, #00ff00 40%, rgba(0,255,255,0.6) 60%, #0000ff80 80%, purple 100%);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Gradients with Different Color Formats Test</h1>
+
+  <h2>Hex Color Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container hex-6-digit"></div>
+      <div class="gradient-label">#ff0000 to #0000ff</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container hex-3-digit"></div>
+      <div class="gradient-label">#f00 to #00f</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container hex-8-digit-alpha"></div>
+      <div class="gradient-label">#ff000080 to #0000ff80</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container hex-4-digit-alpha"></div>
+      <div class="gradient-label">#f008 to #00f8</div>
+    </div>
+  </div>
+
+  <h2>RGBA/RGB Function Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container rgba-gradient"></div>
+      <div class="gradient-label">rgba(255,0,0,0.5) to rgba(0,255,0,0.8)</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container rgb-gradient"></div>
+      <div class="gradient-label">rgb(255,128,0) to rgb(128,0,255)</div>
+    </div>
+  </div>
+
+  <h2>Mixed Color Format Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container mixed-hex-rgba"></div>
+      <div class="gradient-label">hex + rgba + hex with alpha</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container mixed-named-hex"></div>
+      <div class="gradient-label">named + hex + named + hex with alpha</div>
+    </div>
+  </div>
+
+  <h2>Radial Gradients with Different Formats</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container radial-hex"></div>
+      <div class="gradient-label">radial with hex colors</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container radial-rgba"></div>
+      <div class="gradient-label">radial with rgba colors</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container radial-mixed"></div>
+      <div class="gradient-label">radial mixed formats</div>
+    </div>
+  </div>
+
+  <h2>Complex Multi-stop Gradients</h2>
+  <div class="gradient-group">
+    <div class="gradient-item">
+      <div class="gradient-container multi-hex"></div>
+      <div class="gradient-label">5-stop hex gradient</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container multi-rgba"></div>
+      <div class="gradient-label">4-stop rgba gradient</div>
+    </div>
+
+    <div class="gradient-item">
+      <div class="gradient-container multi-mixed"></div>
+      <div class="gradient-label">6-stop mixed formats</div>
+    </div>
+  </div>
+
+</body>
+
+</html>

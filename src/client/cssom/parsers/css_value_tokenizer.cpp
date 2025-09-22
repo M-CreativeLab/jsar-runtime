@@ -100,6 +100,13 @@ namespace client_cssom::css_value_tokenizer
     case ',':
       advance();
       return Token(TokenType::kComma, ",");
+    case '#':
+    {
+      auto token = consume_hash();
+      token.start_position = token_start;
+      token.end_position = position_;
+      return token;
+    }
     default:
       advance();
       return Token(TokenType::kDelimiter, string(1, c));
@@ -310,6 +317,33 @@ namespace client_cssom::css_value_tokenizer
   {
     advance(); // Skip '('
     return Token(TokenType::kFunction, name);
+  }
+
+  Token CSSValueTokenizer::consume_hash()
+  {
+    advance(); // Skip '#'
+    string hash_value;
+
+    // Consume hex digits for hex color format
+    while (position_ < length_ && is_hex_digit(current_char()))
+    {
+      hash_value += current_char();
+      advance();
+    }
+
+    // If no hex digits found or invalid length, treat as identifier
+    if (hash_value.empty() || (hash_value.length() != 3 && hash_value.length() != 4 &&
+                               hash_value.length() != 6 && hash_value.length() != 8))
+    {
+      // Continue consuming as identifier characters
+      while (position_ < length_ && is_identifier_char(current_char()))
+      {
+        hash_value += current_char();
+        advance();
+      }
+    }
+
+    return Token(TokenType::kHash, hash_value);
   }
 
   string CSSValueTokenizer::consume_identifier_sequence()
