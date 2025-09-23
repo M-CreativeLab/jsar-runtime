@@ -54,9 +54,9 @@ namespace client_cssom::css_transform_parser
 
   optional<TransformFunction> CSSTransformParser::parseTransformFunction()
   {
-    if (isAtEnd() || currentToken().type != TokenType::kFunction)
+    if (isAtEnd() || currentToken().type != TokenType::kIdentifier)
     {
-      setError("Expected transform function");
+      setError("Expected transform function name");
       return nullopt;
     }
 
@@ -64,6 +64,15 @@ namespace client_cssom::css_transform_parser
     TransformFunctionType type = getFunctionType(function_name);
 
     advance(); // Skip function name
+
+    // Expect left parenthesis
+    if (isAtEnd() || currentToken().type != TokenType::kLeftParen)
+    {
+      setError("Expected '(' after function name");
+      return nullopt;
+    }
+
+    advance(); // Skip left parenthesis
 
     switch (type)
     {
