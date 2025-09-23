@@ -4,6 +4,8 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <functional>
+#include <unordered_map>
 
 #include <common/command_buffers/gpu/gpu_adapter.hpp>
 #include <common/command_buffers/gpu/gpu_device.hpp>
