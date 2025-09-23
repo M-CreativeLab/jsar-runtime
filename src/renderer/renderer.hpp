@@ -212,6 +212,13 @@ namespace renderer
      */
     void setCursorVisualizationEnabled(bool enabled);
 
+    /**
+     * Enable or disable GPU-based ray marching.
+     * 
+     * @param enabled Whether to use GPU ray marching for better performance.
+     */
+    void setGPURayMarchingEnabled(bool enabled);
+
   public: // API for content renderer
     /**
      * Create a new content renderer and add it to the renderer.

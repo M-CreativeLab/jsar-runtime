@@ -478,4 +478,12 @@ namespace renderer
       rayRenderer->setCursorVisualizationEnabled(enabled);
     }
   }
+
+  void TrRenderer::setGPURayMarchingEnabled(bool enabled)
+  {
+    if (rayRenderer != nullptr)
+    {
+      rayRenderer->setGPURayMarchingEnabled(enabled);
+    }
+  }
 }

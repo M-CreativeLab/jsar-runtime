@@ -65,9 +65,30 @@ rayRenderer->setCursorConfig(gazeInputSourceId, gazeCursorConfig);
 renderer.setRayVisualizationEnabled(true);
 renderer.setCursorVisualizationEnabled(true);
 
+// Enable GPU-based ray marching for better performance
+renderer.setGPURayMarchingEnabled(true);
+
 // Or through the ray renderer directly
 rayRenderer->setRayVisualizationEnabled(false);
 rayRenderer->setCursorVisualizationEnabled(false);
+rayRenderer->setGPURayMarchingEnabled(false);
+```
+
+## GPU Ray Marching
+
+The ray renderer supports GPU-based ray marching for improved performance:
+
+- **GPU Method**: Uses OpenGL ES shaders to perform ray marching on the GPU
+- **CPU Fallback**: Automatically falls back to CPU-based depth buffer sampling
+- **Automatic Selection**: GPU method is preferred when available and enabled
+
+```cpp
+// Enable GPU ray marching (default: enabled)
+renderer.setGPURayMarchingEnabled(true);
+
+// The ray renderer will automatically choose the best method:
+// 1. Try GPU ray marching if enabled and shaders are compiled
+// 2. Fall back to CPU sampling if GPU method is unavailable
 ```
 
 ## How It Works
@@ -101,7 +122,8 @@ rayRenderer->setCursorVisualizationEnabled(false);
 - Positioned at depth buffer intersection points
 
 ### Performance Considerations
-- Ray-depth intersection uses sampling (20 samples per ray by default)
+- GPU-based ray marching provides better performance than CPU sampling
+- Automatic fallback to CPU sampling when GPU method is unavailable
 - Minimal OpenGL state changes
 - Efficient vertex buffer updates for dynamic rays
 

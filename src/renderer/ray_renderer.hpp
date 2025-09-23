@@ -151,6 +151,13 @@ namespace renderer
      */
     void setCursorVisualizationEnabled(bool enabled);
 
+    /**
+     * Enable or disable GPU-based ray marching.
+     * 
+     * @param enabled Whether to use GPU ray marching (falls back to CPU if disabled or unavailable)
+     */
+    void setGPURayMarchingEnabled(bool enabled);
+
   private:
     /**
      * Create OpenGL shader program for ray rendering.
@@ -197,7 +204,26 @@ namespace renderer
                       const glm::mat4 &projectionMatrix);
 
     /**
-     * Calculate ray intersection with depth buffer.
+     * Calculate ray intersection with depth buffer using GPU ray marching.
+     * 
+     * @param ray The ray to test
+     * @param viewMatrix The view matrix
+     * @param projectionMatrix The projection matrix
+     * @param depthTexture The depth texture to sample from
+     * @param viewportWidth The viewport width
+     * @param viewportHeight The viewport height
+     * @return The intersection point in world space, or nullopt if no intersection
+     */
+    std::optional<glm::vec3> calculateRayIntersectionGPU(
+      const collision::TrRay &ray,
+      const glm::mat4 &viewMatrix,
+      const glm::mat4 &projectionMatrix,
+      unsigned int depthTexture,
+      int viewportWidth,
+      int viewportHeight);
+
+    /**
+     * Calculate ray intersection with depth buffer using CPU sampling (fallback).
      * 
      * @param ray The ray to test
      * @param viewMatrix The view matrix
@@ -225,6 +251,16 @@ namespace renderer
      */
     void removeInactiveRays();
 
+    /**
+     * Create OpenGL shader program for GPU ray marching.
+     */
+    void createRayMarchShaderProgram();
+
+    /**
+     * Create OpenGL resources for ray marching (fullscreen quad).
+     */
+    void createRayMarchGeometry();
+
   private:
     // Whether the renderer is initialized
     bool m_Initialized = false;
@@ -234,6 +270,7 @@ namespace renderer
     CursorConfig m_GlobalCursorConfig;
     bool m_RayVisualizationEnabled = true;
     bool m_CursorVisualizationEnabled = true;
+    bool m_UseGPURayMarching = true; // Prefer GPU ray marching when available
 
     // Ray visualizations
     std::vector<RayVisualization> m_RayVisualizations;
@@ -249,6 +286,13 @@ namespace renderer
     unsigned int m_CursorVBO = 0;
     unsigned int m_CursorEBO = 0;
 
+    // OpenGL resources for GPU ray marching
+    unsigned int m_RayMarchShaderProgram = 0;
+    unsigned int m_RayMarchVAO = 0;
+    unsigned int m_RayMarchVBO = 0;
+    unsigned int m_RayMarchFBO = 0;
+    unsigned int m_RayMarchTexture = 0;
+
     // Shader uniform locations for rays
     int m_RayMVPUniform = -1;
     int m_RayColorUniform = -1;
@@ -257,6 +301,15 @@ namespace renderer
     int m_CursorMVPUniform = -1;
     int m_CursorColorUniform = -1;
     int m_CursorTextureUniform = -1;
+
+    // Shader uniform locations for ray marching
+    int m_RayMarchInverseVPUniform = -1;
+    int m_RayMarchOriginUniform = -1;
+    int m_RayMarchDirectionUniform = -1;
+    int m_RayMarchDepthTextureUniform = -1;
+    int m_RayMarchViewportSizeUniform = -1;
+    int m_RayMarchMaxDistanceUniform = -1;
+    int m_RayMarchMaxStepsUniform = -1;
 
     // Cursor texture (if using custom image)
     unsigned int m_CursorTexture = 0;

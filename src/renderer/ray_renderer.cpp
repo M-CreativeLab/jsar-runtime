@@ -75,6 +75,75 @@ void main()
 }
 )";
 
+  // Vertex shader for ray marching (renders fullscreen quad)
+  static const char *RAY_MARCH_VERTEX_SHADER_SOURCE = R"(
+#version 330 core
+layout (location = 0) in vec2 aPosition;
+
+out vec2 screenPos;
+
+void main()
+{
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+    screenPos = aPosition * 0.5 + 0.5;
+}
+)";
+
+  // Fragment shader for GPU-based ray marching
+  static const char *RAY_MARCH_FRAGMENT_SHADER_SOURCE = R"(
+#version 330 core
+in vec2 screenPos;
+out vec4 fragColor;
+
+uniform mat4 uInverseViewProjection;
+uniform mat4 uViewProjection;
+uniform vec3 uRayOrigin;
+uniform vec3 uRayDirection;
+uniform sampler2D uDepthTexture;
+uniform vec2 uViewportSize;
+uniform float uMaxDistance;
+uniform int uMaxSteps;
+
+vec3 screenToWorld(vec2 screenPos, float depth) {
+    vec4 clipPos = vec4(screenPos * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 worldPos = uInverseViewProjection * clipPos;
+    return worldPos.xyz / worldPos.w;
+}
+
+void main()
+{
+    fragColor = vec4(0.0);
+    
+    float stepSize = uMaxDistance / float(uMaxSteps);
+    vec3 currentPos = uRayOrigin;
+    
+    for (int i = 0; i < uMaxSteps; i++) {
+        currentPos += uRayDirection * stepSize;
+        
+        // Transform to screen space
+        vec4 clipPos = uViewProjection * vec4(currentPos, 1.0);
+        if (clipPos.w <= 0.0) continue;
+        
+        vec3 ndcPos = clipPos.xyz / clipPos.w;
+        vec2 screenUV = ndcPos.xy * 0.5 + 0.5;
+        
+        // Check bounds
+        if (screenUV.x < 0.0 || screenUV.x > 1.0 || screenUV.y < 0.0 || screenUV.y > 1.0)
+            continue;
+            
+        // Sample depth buffer
+        float sceneDepth = texture(uDepthTexture, screenUV).r;
+        
+        // Check intersection
+        if (ndcPos.z >= 0.0 && ndcPos.z <= sceneDepth) {
+            // Found intersection - output the world position
+            fragColor = vec4(currentPos, 1.0);
+            break;
+        }
+    }
+}
+)";
+
   TrRayRenderer::TrRayRenderer()
   {
     DEBUG(LOG_TAG, "Ray renderer created");
@@ -102,8 +171,10 @@ void main()
     {
       createRayShaderProgram();
       createCursorShaderProgram();
+      createRayMarchShaderProgram();
       createRayGeometry();
       createCursorGeometry();
+      createRayMarchGeometry();
 
       m_Initialized = true;
       DEBUG(LOG_TAG, "Ray renderer initialized successfully");
@@ -161,6 +232,33 @@ void main()
     {
       glDeleteTextures(1, &m_CursorTexture);
       m_CursorTexture = 0;
+    }
+
+    // Clean up ray marching resources
+    if (m_RayMarchVAO != 0)
+    {
+      glDeleteVertexArrays(1, &m_RayMarchVAO);
+      m_RayMarchVAO = 0;
+    }
+    if (m_RayMarchVBO != 0)
+    {
+      glDeleteBuffers(1, &m_RayMarchVBO);
+      m_RayMarchVBO = 0;
+    }
+    if (m_RayMarchFBO != 0)
+    {
+      glDeleteFramebuffers(1, &m_RayMarchFBO);
+      m_RayMarchFBO = 0;
+    }
+    if (m_RayMarchTexture != 0)
+    {
+      glDeleteTextures(1, &m_RayMarchTexture);
+      m_RayMarchTexture = 0;
+    }
+    if (m_RayMarchShaderProgram != 0)
+    {
+      glDeleteProgram(m_RayMarchShaderProgram);
+      m_RayMarchShaderProgram = 0;
     }
 
     m_Initialized = false;
@@ -238,8 +336,28 @@ void main()
       // Calculate intersection and render cursor
       if (m_CursorVisualizationEnabled && rayViz.cursorConfig.showCursor)
       {
-        auto intersectionPoint = calculateRayIntersection(
-          rayViz.ray, viewMatrix, projectionMatrix, viewportWidth, viewportHeight);
+        std::optional<glm::vec3> intersectionPoint;
+
+        // Try GPU ray marching first if enabled
+        if (m_UseGPURayMarching && m_RayMarchShaderProgram != 0)
+        {
+          // For now, we'll need to extract the depth texture from the framebuffer
+          // This is a simplified approach - in a real implementation, we might want
+          // to pass the depth texture explicitly or get it from the framebuffer
+          unsigned int depthTexture = 0; // TODO: Extract from framebuffer
+          if (depthTexture != 0)
+          {
+            intersectionPoint = calculateRayIntersectionGPU(
+              rayViz.ray, viewMatrix, projectionMatrix, depthTexture, viewportWidth, viewportHeight);
+          }
+        }
+
+        // Fallback to CPU method if GPU method didn't work
+        if (!intersectionPoint.has_value())
+        {
+          intersectionPoint = calculateRayIntersection(
+            rayViz.ray, viewMatrix, projectionMatrix, viewportWidth, viewportHeight);
+        }
 
         if (intersectionPoint.has_value())
         {
@@ -293,6 +411,11 @@ void main()
   void TrRayRenderer::setCursorVisualizationEnabled(bool enabled)
   {
     m_CursorVisualizationEnabled = enabled;
+  }
+
+  void TrRayRenderer::setGPURayMarchingEnabled(bool enabled)
+  {
+    m_UseGPURayMarching = enabled;
   }
 
   void TrRayRenderer::createRayShaderProgram()
@@ -490,6 +613,119 @@ void main()
     DEBUG(LOG_TAG, "Cursor geometry created successfully");
   }
 
+  void TrRayRenderer::createRayMarchShaderProgram()
+  {
+    // Compile vertex shader
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &RAY_MARCH_VERTEX_SHADER_SOURCE, nullptr);
+    glCompileShader(vertexShader);
+
+    // Check vertex shader compilation
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+      glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
+      ERROR(LOG_TAG, "Ray march vertex shader compilation failed: %s", infoLog);
+      throw std::runtime_error("Ray march vertex shader compilation failed");
+    }
+
+    // Compile fragment shader
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &RAY_MARCH_FRAGMENT_SHADER_SOURCE, nullptr);
+    glCompileShader(fragmentShader);
+
+    // Check fragment shader compilation
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+      glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
+      ERROR(LOG_TAG, "Ray march fragment shader compilation failed: %s", infoLog);
+      glDeleteShader(vertexShader);
+      throw std::runtime_error("Ray march fragment shader compilation failed");
+    }
+
+    // Create shader program
+    m_RayMarchShaderProgram = glCreateProgram();
+    glAttachShader(m_RayMarchShaderProgram, vertexShader);
+    glAttachShader(m_RayMarchShaderProgram, fragmentShader);
+    glLinkProgram(m_RayMarchShaderProgram);
+
+    // Check program linking
+    glGetProgramiv(m_RayMarchShaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+      glGetProgramInfoLog(m_RayMarchShaderProgram, 512, nullptr, infoLog);
+      ERROR(LOG_TAG, "Ray march shader program linking failed: %s", infoLog);
+      glDeleteShader(vertexShader);
+      glDeleteShader(fragmentShader);
+      throw std::runtime_error("Ray march shader program linking failed");
+    }
+
+    // Get uniform locations
+    m_RayMarchInverseVPUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uInverseViewProjection");
+    m_RayMarchOriginUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uRayOrigin");
+    m_RayMarchDirectionUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uRayDirection");
+    m_RayMarchDepthTextureUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uDepthTexture");
+    m_RayMarchViewportSizeUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uViewportSize");
+    m_RayMarchMaxDistanceUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uMaxDistance");
+    m_RayMarchMaxStepsUniform = glGetUniformLocation(m_RayMarchShaderProgram, "uMaxSteps");
+
+    // Clean up shaders
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    DEBUG(LOG_TAG, "Ray march shader program created successfully");
+  }
+
+  void TrRayRenderer::createRayMarchGeometry()
+  {
+    // Create a fullscreen quad for ray marching
+    float vertices[] = {
+      -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
+
+    unsigned int indices[] = {
+      0, 1, 2, 2, 3, 0};
+
+    glGenVertexArrays(1, &m_RayMarchVAO);
+    glGenBuffers(1, &m_RayMarchVBO);
+
+    glBindVertexArray(m_RayMarchVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_RayMarchVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Position attribute (2D screen space)
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    // Create framebuffer and texture for ray marching results
+    glGenFramebuffers(1, &m_RayMarchFBO);
+    glGenTextures(1, &m_RayMarchTexture);
+
+    glBindTexture(GL_TEXTURE_2D, m_RayMarchTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1, 1, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_RayMarchFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_RayMarchTexture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+      ERROR(LOG_TAG, "Ray march framebuffer not complete");
+      throw std::runtime_error("Ray march framebuffer not complete");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    DEBUG(LOG_TAG, "Ray march geometry and framebuffer created successfully");
+  }
+
   void TrRayRenderer::renderRay(const RayVisualization &rayViz,
                                 const glm::mat4 &viewMatrix,
                                 const glm::mat4 &projectionMatrix)
@@ -564,6 +800,85 @@ void main()
     glBindVertexArray(0);
 
     glUseProgram(0);
+  }
+
+  std::optional<glm::vec3> TrRayRenderer::calculateRayIntersectionGPU(
+    const collision::TrRay &ray,
+    const glm::mat4 &viewMatrix,
+    const glm::mat4 &projectionMatrix,
+    unsigned int depthTexture,
+    int viewportWidth,
+    int viewportHeight)
+  {
+    if (m_RayMarchShaderProgram == 0 || m_RayMarchFBO == 0)
+    {
+      // Fallback to CPU method if GPU ray marching is not available
+      return calculateRayIntersection(ray, viewMatrix, projectionMatrix, viewportWidth, viewportHeight);
+    }
+
+    // Resize the ray march texture if needed
+    glBindTexture(GL_TEXTURE_2D, m_RayMarchTexture);
+    GLint currentWidth, currentHeight;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &currentWidth);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &currentHeight);
+
+    if (currentWidth != 1 || currentHeight != 1)
+    {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1, 1, 0, GL_RGBA, GL_FLOAT, nullptr);
+    }
+
+    // Save current state
+    GLint prevFBO, prevViewport[4];
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+    glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+    // Set up for ray marching
+    glBindFramebuffer(GL_FRAMEBUFFER, m_RayMarchFBO);
+    glViewport(0, 0, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(m_RayMarchShaderProgram);
+
+    // Set uniforms
+    glm::mat4 inverseVP = glm::inverse(projectionMatrix * viewMatrix);
+    glm::mat4 vp = projectionMatrix * viewMatrix;
+
+    glUniformMatrix4fv(m_RayMarchInverseVPUniform, 1, GL_FALSE, glm::value_ptr(inverseVP));
+    glUniform1i(glGetUniformLocation(m_RayMarchShaderProgram, "uViewProjection"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(m_RayMarchShaderProgram, "uViewProjection"), 1, GL_FALSE, glm::value_ptr(vp));
+
+    glUniform3fv(m_RayMarchOriginUniform, 1, glm::value_ptr(ray.origin));
+    glUniform3fv(m_RayMarchDirectionUniform, 1, glm::value_ptr(ray.direction));
+    glUniform2f(m_RayMarchViewportSizeUniform, static_cast<float>(viewportWidth), static_cast<float>(viewportHeight));
+    glUniform1f(m_RayMarchMaxDistanceUniform, 10.0f); // Default max distance
+    glUniform1i(m_RayMarchMaxStepsUniform, 64);       // More steps for better accuracy
+
+    // Bind depth texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glUniform1i(m_RayMarchDepthTextureUniform, 0);
+
+    // Render fullscreen quad
+    glBindVertexArray(m_RayMarchVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    // Read back the result
+    glm::vec4 result;
+    glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, &result[0]);
+
+    // Restore state
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+    glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+    glUseProgram(0);
+
+    // Check if we found an intersection
+    if (result.w > 0.0f)
+    {
+      return glm::vec3(result.x, result.y, result.z);
+    }
+
+    return std::nullopt;
   }
 
   std::optional<glm::vec3> TrRayRenderer::calculateRayIntersection(
