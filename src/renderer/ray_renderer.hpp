@@ -98,12 +98,14 @@ namespace renderer
      * @param viewMatrix The current view matrix
      * @param projectionMatrix The current projection matrix
      * @param framebufferId The current framebuffer ID for depth buffer access
+     * @param depthTexture The resolved depth texture (0 if unavailable)
      * @param viewportWidth The viewport width
      * @param viewportHeight The viewport height
      */
     void render(const glm::mat4 &viewMatrix,
                 const glm::mat4 &projectionMatrix,
                 unsigned int framebufferId,
+                unsigned int depthTexture,
                 int viewportWidth,
                 int viewportHeight);
 

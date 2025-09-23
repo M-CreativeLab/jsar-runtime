@@ -307,6 +307,7 @@ void main()
   void TrRayRenderer::render(const glm::mat4 &viewMatrix,
                              const glm::mat4 &projectionMatrix,
                              unsigned int framebufferId,
+                             unsigned int depthTexture,
                              int viewportWidth,
                              int viewportHeight)
   {

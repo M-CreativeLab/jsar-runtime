@@ -219,6 +219,17 @@ namespace renderer
      */
     void setGPURayMarchingEnabled(bool enabled);
 
+  private:
+    /**
+     * Resolve depth texture from current framebuffer for ray marching.
+     * This handles MSAA resolve if needed.
+     * 
+     * @param viewportWidth Current viewport width
+     * @param viewportHeight Current viewport height
+     * @returns The resolved depth texture ID (0 if failed)
+     */
+    unsigned int resolveDepthTexture(int viewportWidth, int viewportHeight);
+
   public: // API for content renderer
     /**
      * Create a new content renderer and add it to the renderer.
@@ -335,5 +346,11 @@ namespace renderer
 
   private: // ray renderer
     std::unique_ptr<TrRayRenderer> rayRenderer = nullptr;
+    
+    // Depth texture for ray marching
+    unsigned int m_ResolvedDepthTexture = 0;
+    unsigned int m_ResolvedDepthFBO = 0;
+    int m_ResolvedDepthWidth = 0;
+    int m_ResolvedDepthHeight = 0;
   };
 }
