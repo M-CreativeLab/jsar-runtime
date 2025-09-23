@@ -79,8 +79,10 @@ namespace client_cssom::css_value_tokenizer
         }
         else
         {
-          // For regular functions, return identifier token and let next token be the left paren
-          return Token(TokenType::kIdentifier, identifier);
+          auto token = consume_function(identifier);
+          token.start_position = token_start;
+          token.end_position = position_;
+          return token;
         }
       }
 
