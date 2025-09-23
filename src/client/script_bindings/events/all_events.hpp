@@ -4,11 +4,21 @@
 #include "./ui_event.hpp"
 #include "./mouse_event.hpp"
 #include "./pointer_event.hpp"
+#include "./xr_session_event.hpp"
+#include "./xr_input_source_event.hpp"
+#include "./xr_input_sources_change_event.hpp"
 
 namespace script_bindings
 {
   namespace event_bindings
   {
+    /**
+     * Initialize all event bindings with V8.
+     * 
+     * @param isolate The V8 isolate.
+     */
+    void Initialize(v8::Isolate *isolate);
+
     /**
      * Create a new Event object in V8 from a native dom::Event.
      * 
@@ -17,5 +27,14 @@ namespace script_bindings
      * @returns A V8 Object representing the event.
      */
     v8::Local<v8::Object> MakeEvent(v8::Isolate *isolate, dom::Event *nativeEvent);
+
+    /**
+     * Create a new XR Event object in V8 from a native XR event.
+     * 
+     * @param isolate The V8 isolate.
+     * @param nativeEvent The native XR event to wrap.
+     * @returns A V8 Object representing the XR event.
+     */
+    v8::Local<v8::Object> MakeXREvent(v8::Isolate *isolate, void *nativeEvent, const std::string &eventType);
   }
 }
