@@ -1022,61 +1022,6 @@ namespace builtin_scene::web_renderer
     float offsetX = borderBox.left() + paddingBox.left();
     float offsetY = borderBox.top() + paddingBox.top();
 
-    // Apply vertical alignment
-    const ComputedStyle &style = content.style();
-    if (style.hasProperty("vertical-align"))
-    {
-      const auto &verticalAlign = style.verticalAlign();
-      const float contentHeight = content.fragment()->contentHeight();
-      const float textHeight = paragraph->getHeight();
-      const float lineHeight = content.paragraphStyle().getHeight();
-
-      switch (verticalAlign.tag())
-      {
-      case client_cssom::values::computed::VerticalAlign::Tag::kBaseline:
-        // Baseline is the default - no adjustment needed
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kTop:
-        // Align to top of content area
-        offsetY = borderBox.top() + paddingBox.top();
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kMiddle:
-        // Align to middle of content area
-        offsetY = borderBox.top() + paddingBox.top() + (contentHeight - textHeight) / 2.0f;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kBottom:
-        // Align to bottom of content area
-        offsetY = borderBox.top() + paddingBox.top() + contentHeight - textHeight;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kSuper:
-        // Move up by approximately 0.5em (half the font size)
-        offsetY -= content.paragraphStyle().getTextStyle().getFontSize() * 0.5f;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kSub:
-        // Move down by approximately 0.25em (quarter the font size)
-        offsetY += content.paragraphStyle().getTextStyle().getFontSize() * 0.25f;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kTextTop:
-        // Align with the top of the font (ascent)
-        // This is approximated by moving up from baseline
-        offsetY -= content.paragraphStyle().getTextStyle().getFontSize() * 0.8f;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kTextBottom:
-        // Align with the bottom of the font (descent)
-        // This is approximated by moving down from baseline
-        offsetY += content.paragraphStyle().getTextStyle().getFontSize() * 0.2f;
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kLength:
-        // Apply custom length offset
-        offsetY -= verticalAlign.value(); // Negative because positive values move up
-        break;
-      case client_cssom::values::computed::VerticalAlign::Tag::kPercentage:
-        // Apply percentage offset relative to line height
-        offsetY -= verticalAlign.getOffset(lineHeight);
-        break;
-      }
-    }
-
     // Use the paragraph visitor to extract glyph paths with proper font handling
     // This approach correctly handles mixed CJK/English text by using the fonts
     // that the paragraph system has already resolved for each glyph

@@ -96,9 +96,6 @@ namespace builtin_scene
     bool strutEnabled;
     bool forceStrutHeight;
     bool applyRoundingHack;
-
-    // Vertical alignment properties
-    client_cssom::values::computed::VerticalAlign verticalAlign;
   };
 
   class WebContent : public ecs::Component
