@@ -9,10 +9,19 @@
 #include "./dom/character_data.hpp"
 #include "./dom/text.hpp"
 #include "./dom/console.hpp"
+#include "./dom/comment.hpp"
+#include "./dom/document_fragment.hpp"
+#include "./dom/dom_parser.hpp"
+#include "./dom/dom_string_map.hpp"
+#include "./dom/mutation_observer.hpp"
+#include "./dom/mutation_record.hpp"
+#include "./dom/node_list.hpp"
 
 // HTML element bindings
 #include "./html/html_element.hpp"
 #include "./html/html_div_element.hpp"
+#include "./html/html_audio_element.hpp"
+#include "./html/html_canvas_element.hpp"
 
 // WebXR bindings
 #include "./webxr/xr_space.hpp"
@@ -69,20 +78,42 @@ namespace script_bindings
       auto Document = dom_bindings::Document::Initialize(isolate);
       auto CharacterData = dom_bindings::CharacterData::Initialize(isolate);
       auto Text = dom_bindings::Text::Initialize(isolate);
+      auto Comment = dom_bindings::Comment::Initialize(isolate);
+      auto DocumentFragment = dom_bindings::DocumentFragment::Initialize(isolate);
+      auto DOMParser = dom_bindings::DOMParser::Initialize(isolate);
+      auto DOMStringMap = dom_bindings::DOMStringMap::Initialize(isolate);
+      auto MutationObserver = dom_bindings::MutationObserver::Initialize(isolate);
+      auto MutationRecord = dom_bindings::MutationRecord::Initialize(isolate);
+      auto NodeList = dom_bindings::NodeList::Initialize(isolate);
       {
         global->Set(context, STRING_FROM_UTF8("Node"), Node).Check();
         global->Set(context, STRING_FROM_UTF8("Element"), Element).Check();
         global->Set(context, STRING_FROM_UTF8("Document"), Document).Check();
         global->Set(context, STRING_FROM_UTF8("CharacterData"), CharacterData).Check();
         global->Set(context, STRING_FROM_UTF8("Text"), Text).Check();
+        global->Set(context, STRING_FROM_UTF8("Comment"), Comment).Check();
+        global->Set(context, STRING_FROM_UTF8("DocumentFragment"), DocumentFragment).Check();
+        global->Set(context, STRING_FROM_UTF8("DOMParser"), DOMParser).Check();
+        global->Set(context, STRING_FROM_UTF8("DOMStringMap"), DOMStringMap).Check();
+        global->Set(context, STRING_FROM_UTF8("MutationObserver"), MutationObserver).Check();
+        global->Set(context, STRING_FROM_UTF8("MutationRecord"), MutationRecord).Check();
+        global->Set(context, STRING_FROM_UTF8("NodeList"), NodeList).Check();
       }
 
       // HTML elements
       auto HTMLElement = html_bindings::HTMLElement::Initialize(isolate);
       auto HTMLDivElement = html_bindings::HTMLDivElement::Initialize(isolate);
+      auto HTMLAudioElement = html_bindings::HTMLAudioElement::Initialize(isolate);
+      auto HTMLCanvasElement = html_bindings::HTMLCanvasElement::Initialize(isolate);
       {
         global->Set(context, STRING_FROM_UTF8("HTMLElement"), HTMLElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLDivElement"), HTMLDivElement).Check();
+        global->Set(context, STRING_FROM_UTF8("HTMLAudioElement"), HTMLAudioElement).Check();
+        global->Set(context, STRING_FROM_UTF8("HTMLCanvasElement"), HTMLCanvasElement).Check();
+        
+        // Set up Audio constructor as a global function
+        global->Set(context, STRING_FROM_UTF8("Audio"), 
+          FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)->GetFunction(context).ToLocalChecked()).Check();
       }
 
       // WebXR classes

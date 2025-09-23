@@ -87,8 +87,22 @@ namespace script_bindings
         return;
       }
 
-      // TODO: Return the associated XRSession object
-      cout << "frame.session getter called" << endl;
+      // Get the associated XRSession object
+      auto frameWrapper = Unwrap(info.Holder());
+      if (frameWrapper && frameWrapper->GetNativeInstance())
+      {
+        auto session = frameWrapper->GetNativeInstance()->session();
+        if (session)
+        {
+          // TODO: Create XRSession wrapper and return it
+          // For now, return a placeholder object
+          Local<Object> sessionObj = Object::New(isolate);
+          info.GetReturnValue().Set(sessionObj);
+          return;
+        }
+      }
+      
+      cout << "frame.session getter called - no session available" << endl;
       info.GetReturnValue().SetNull();
     }
 
@@ -139,7 +153,8 @@ namespace script_bindings
         return;
       }
 
-      // TODO: Implement getViewerPose with proper reference space handling
+      // TODO: Validate the reference space argument
+      // TODO: Get the viewer pose from the frame's session and reference space
       cout << "getViewerPose called" << endl;
       info.GetReturnValue().SetNull();
     }
