@@ -909,15 +909,37 @@ namespace client_layout
 
   void LayoutObject::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
-    // Update the transform's post-transform matrix if the "transform" property is provided.
+    // Apply transforms without percentage resolution (size not available yet)
     if (new_style.hasTransform())
+    {
+      applyTransforms(new_style);
+    }
+  }
+
+  void LayoutObject::applyTransforms(client_cssom::ComputedStyle &style, const glm::vec2 *elementSize)
+  {
+    // Update the transform's post-transform matrix if the "transform" property is provided.
+    if (style.hasTransform())
     {
       auto transformComponent = getSceneComponent<Transform>();
       if (transformComponent != nullptr)
       {
         auto &postTransform = transformComponent->getOrInitPostTransform();
         glm::mat4 mat(1.0f);
-        if (new_style.applyTransformTo(mat) > 0)
+
+        size_t transformCount = 0;
+        if (elementSize != nullptr)
+        {
+          // Apply transforms with percentage resolution using element size
+          transformCount = style.applyTransformTo(mat, *elementSize);
+        }
+        else
+        {
+          // Apply transforms without percentage resolution (percentages treated as 0)
+          transformCount = style.applyTransformTo(mat);
+        }
+
+        if (transformCount > 0)
           postTransform.setMatrix(mat);
       }
     }
@@ -933,6 +955,14 @@ namespace client_layout
 
   void LayoutObject::sizeDidChange(const Fragment &newSize)
   {
+    // Re-apply transforms with correct percentage resolution now that size is available
+    auto currentStyle = style();
+    if (currentStyle.has_value() && currentStyle->hasTransform())
+    {
+      glm::vec2 elementSize(newSize.contentWidth(), newSize.contentHeight());
+      applyTransforms(*currentStyle, &elementSize);
+    }
+
     auto this_node = node();
     if (this_node != nullptr) [[unlikely]]
     {

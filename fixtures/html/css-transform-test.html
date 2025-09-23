@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Simple Transform Percentage Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      position: relative;
+      width: 600px;
+      height: 400px;
+      background-color: white;
+      border: 2px solid #333;
+      margin: 20px auto;
+    }
+
+    .test-element {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-color: #ff6b6b;
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* Test 1: translateX(50%) should move element right by 50px (50% of 100px width) */
+    .test-translatex {
+      top: 50px;
+      left: 50px;
+      transform: translateX(50%);
+    }
+
+    /* Test 2: translateY(50%) should move element down by 50px (50% of 100px height) */
+    .test-translatey {
+      top: 50px;
+      left: 200px;
+      transform: translateY(50%);
+    }
+
+    /* Test 3: translate(50%, 50%) should move element right and down by 50px each */
+    .test-translate-both {
+      top: 50px;
+      left: 350px;
+      transform: translate(50%, 50%);
+    }
+
+    /* Test 4: Centering - left: 50% + translateX(-50%) */
+    .test-center {
+      top: 200px;
+      left: 50%;
+      width: 120px; /* Different width to test */
+      background-color: #4ecdc4;
+      transform: translateX(-50%);
+    }
+
+    /* Reference elements (without transforms) */
+    .reference {
+      opacity: 0.3;
+      background-color: #ccc !important;
+      border-style: dashed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Transform Percentage Test</h1>
+  <p>Testing percentage-based CSS transforms. Each colored box should be offset from its gray reference box.</p>
+  
+  <div class="container">
+    <!-- Reference positions -->
+    <div class="test-element reference" style="top: 50px; left: 50px;">REF</div>
+    <div class="test-element reference" style="top: 50px; left: 200px;">REF</div>
+    <div class="test-element reference" style="top: 50px; left: 350px;">REF</div>
+    <div class="test-element reference" style="top: 200px; left: 50%; margin-left: -60px; width: 120px;">REF</div>
+
+    <!-- Test elements with transforms -->
+    <div class="test-element test-translatex">X+50px</div>
+    <div class="test-element test-translatey">Y+50px</div>
+    <div class="test-element test-translate-both">XY+50px</div>
+    <div class="test-element test-center">CENTERED</div>
+  </div>
+
+  <div style="margin: 20px;">
+    <h2>Expected Results:</h2>
+    <ul>
+      <li><strong>X+50px:</strong> Should be 50px to the right of its reference (translateX(50%) = 50% of 100px width)</li>
+      <li><strong>Y+50px:</strong> Should be 50px below its reference (translateY(50%) = 50% of 100px height)</li>
+      <li><strong>XY+50px:</strong> Should be 50px right and 50px down from its reference</li>
+      <li><strong>CENTERED:</strong> Should be horizontally centered (translateX(-50%) = -50% of 120px width = -60px)</li>
+    </ul>
+  </div>
+</body>
+</html>

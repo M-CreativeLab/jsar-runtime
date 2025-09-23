@@ -478,6 +478,9 @@ namespace client_layout
       return isText() || isSVGChild();
     }
 
+    // Apply transforms from computed style, with optional element size for percentage resolution
+    void applyTransforms(client_cssom::ComputedStyle &style, const glm::vec2 *elementSize = nullptr);
+
     // Resize the layout object with the given size.
     bool resize(const Fragment &newSize);
     // Returns if the accumulated fragment is changed

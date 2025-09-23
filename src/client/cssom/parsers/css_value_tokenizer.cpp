@@ -52,8 +52,9 @@ namespace client_cssom::css_value_tokenizer
       return token;
     }
 
-    // Numbers
-    if (is_digit(c) || (c == '.' && is_digit(peek_char())))
+    // Numbers (including negative numbers)
+    if (is_digit(c) || (c == '.' && is_digit(peek_char())) ||
+        (c == '-' && (is_digit(peek_char()) || (peek_char() == '.' && position_ + 2 < length_ && is_digit(peek_char(2))))))
     {
       auto token = consume_number();
       token.start_position = token_start;
@@ -220,6 +221,13 @@ namespace client_cssom::css_value_tokenizer
   Token CSSValueTokenizer::consume_number()
   {
     string number_str;
+
+    // Handle negative sign
+    if (position_ < length_ && current_char() == '-')
+    {
+      number_str += current_char();
+      advance();
+    }
 
     // Consume integer part
     while (position_ < length_ && is_digit(current_char()))
