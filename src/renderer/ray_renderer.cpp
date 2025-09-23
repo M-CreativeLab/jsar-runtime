@@ -181,7 +181,7 @@ void main()
     }
     catch (const std::exception &e)
     {
-      ERROR(LOG_TAG, "Failed to initialize ray renderer: %s", e.what());
+      DEBUG(LOG_TAG, "Failed to initialize ray renderer: %s", e.what());
       shutdown();
     }
   }
@@ -357,6 +357,15 @@ void main()
         {
           intersectionPoint = calculateRayIntersection(
             rayViz.ray, viewMatrix, projectionMatrix, viewportWidth, viewportHeight);
+          cout << "CPU intersection: ";
+          if (intersectionPoint.has_value())
+          {
+            cout << "Point(" << intersectionPoint->x << ", " << intersectionPoint->y << ", " << intersectionPoint->z << ")" << endl;
+          }
+          else
+          {
+            cout << "No intersection" << endl;
+          }
         }
 
         if (intersectionPoint.has_value())
@@ -432,7 +441,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray vertex shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray vertex shader compilation failed: %s", infoLog);
       throw std::runtime_error("Ray vertex shader compilation failed");
     }
 
@@ -446,7 +455,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray fragment shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray fragment shader compilation failed: %s", infoLog);
       glDeleteShader(vertexShader);
       throw std::runtime_error("Ray fragment shader compilation failed");
     }
@@ -462,7 +471,7 @@ void main()
     if (!success)
     {
       glGetProgramInfoLog(m_RayShaderProgram, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray shader program linking failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray shader program linking failed: %s", infoLog);
       glDeleteShader(vertexShader);
       glDeleteShader(fragmentShader);
       throw std::runtime_error("Ray shader program linking failed");
@@ -493,7 +502,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Cursor vertex shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Cursor vertex shader compilation failed: %s", infoLog);
       throw std::runtime_error("Cursor vertex shader compilation failed");
     }
 
@@ -507,7 +516,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Cursor fragment shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Cursor fragment shader compilation failed: %s", infoLog);
       glDeleteShader(vertexShader);
       throw std::runtime_error("Cursor fragment shader compilation failed");
     }
@@ -523,7 +532,7 @@ void main()
     if (!success)
     {
       glGetProgramInfoLog(m_CursorShaderProgram, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Cursor shader program linking failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Cursor shader program linking failed: %s", infoLog);
       glDeleteShader(vertexShader);
       glDeleteShader(fragmentShader);
       throw std::runtime_error("Cursor shader program linking failed");
@@ -627,7 +636,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray march vertex shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray march vertex shader compilation failed: %s", infoLog);
       throw std::runtime_error("Ray march vertex shader compilation failed");
     }
 
@@ -641,7 +650,7 @@ void main()
     if (!success)
     {
       glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray march fragment shader compilation failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray march fragment shader compilation failed: %s", infoLog);
       glDeleteShader(vertexShader);
       throw std::runtime_error("Ray march fragment shader compilation failed");
     }
@@ -657,7 +666,7 @@ void main()
     if (!success)
     {
       glGetProgramInfoLog(m_RayMarchShaderProgram, 512, nullptr, infoLog);
-      ERROR(LOG_TAG, "Ray march shader program linking failed: %s", infoLog);
+      DEBUG(LOG_TAG, "Ray march shader program linking failed: %s", infoLog);
       glDeleteShader(vertexShader);
       glDeleteShader(fragmentShader);
       throw std::runtime_error("Ray march shader program linking failed");
@@ -716,7 +725,7 @@ void main()
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-      ERROR(LOG_TAG, "Ray march framebuffer not complete");
+      DEBUG(LOG_TAG, "Ray march framebuffer not complete");
       throw std::runtime_error("Ray march framebuffer not complete");
     }
 
@@ -890,7 +899,7 @@ void main()
   {
     // Sample points along the ray to find depth buffer intersection
     const int numSamples = 20;
-    const float maxDistance = 10.0f;
+    const float maxDistance = 2.0f;
     const float stepSize = maxDistance / numSamples;
 
     for (int i = 1; i <= numSamples; ++i)
@@ -908,6 +917,8 @@ void main()
       // Convert to screen coordinates
       int screenX = static_cast<int>((ndcPos.x * 0.5f + 0.5f) * viewportWidth);
       int screenY = static_cast<int>((1.0f - (ndcPos.y * 0.5f + 0.5f)) * viewportHeight);
+      cout << "Sample " << i << ": Screen(" << screenX << ", " << screenY << "), NDC(" << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << ")" << endl
+           << "  Viewport: " << viewportWidth << "x" << viewportHeight << endl;
 
       // Check bounds
       if (screenX < 0 || screenX >= viewportWidth || screenY < 0 || screenY >= viewportHeight)
@@ -916,6 +927,7 @@ void main()
       // Read depth buffer
       float depthValue;
       glReadPixels(screenX, screenY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depthValue);
+      cout << "Depth at (" << screenX << ", " << screenY << "): " << depthValue << endl;
 
       // Check if ray sample is at or beyond the depth buffer
       if (ndcPos.z <= depthValue)

@@ -170,21 +170,12 @@ namespace renderer
       return; // Skip if api is not ready.
 
     glHostContext->recordFromHost();
-    {
-      for (auto contentRenderer : contentRenderers)
-      {
-        auto content = contentRenderer->getContent();
-        if (content == nullptr || content->disableRendering) [[unlikely]]
-          continue;
-        contentRenderer->onOffscreenRenderPass();
-      }
-    }
 
     // Render rays and cursors after all other rendering is complete
     if (rayRenderer != nullptr && constellation != nullptr && constellation->xrDevice != nullptr)
     {
       // Update ray visualizations from input sources
-      rayRenderer->updateRays(constellation->xrDevice);
+      rayRenderer->updateRays(constellation->xrDevice.get());
 
       // Get current view matrices for rendering
       auto xrDevice = constellation->xrDevice;
@@ -203,7 +194,17 @@ namespace renderer
         auto viewport = xrDevice->getViewport(activeEyeId);
 
         // Render rays and cursors
-        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), viewport.width, viewport.height);
+        rayRenderer->render(viewMatrix, projMatrix, glHostContext->framebuffer(), 1600, 900);
+      }
+    }
+
+    {
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering) [[unlikely]]
+          continue;
+        contentRenderer->onOffscreenRenderPass();
       }
     }
 

@@ -13,6 +13,8 @@
 #include <unistd.h>
 #endif
 
+#include "./debug.hpp"
+
 using namespace std;
 
 enum class TrZoneType

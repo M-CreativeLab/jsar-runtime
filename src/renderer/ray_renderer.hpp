@@ -36,7 +36,7 @@ namespace renderer
     // Ray color (RGBA)
     glm::vec4 color = glm::vec4(0.0f, 1.0f, 0.0f, 0.8f);
     // Ray width in pixels
-    float width = 2.0f;
+    float width = 4.0f;
     // Maximum ray length for visualization
     float maxLength = 10.0f;
     // Whether to show rays
