@@ -66,7 +66,8 @@ namespace script_bindings
         return;
       }
 
-      // TODO: Check actual session support from native system
+      // TODO: Check actual session support from native system implementation
+      // Should query native XR runtime for the requested session mode support
       cout << "system.isSessionSupported called" << endl;
 
       // Return a resolved promise for now
@@ -82,7 +83,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRSystem *system = scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::Unwrap(info.This());
-      if (system == nullptr || system->inner() == nullptr)
+      if (system == nullptr || system->GetNativeInstance() == nullptr)
       {
         // Return a rejected promise
         Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
@@ -91,7 +92,8 @@ namespace script_bindings
         return;
       }
 
-      // TODO: Create actual XRSession from native system
+      // TODO: Validate session mode and options, create actual XRSession from native system
+      // Should handle 'inline', 'immersive-vr', 'immersive-ar' modes
       cout << "system.requestSession called" << endl;
 
       // Return a rejected promise for now (no session implementation yet)

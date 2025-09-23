@@ -122,13 +122,15 @@ namespace script_bindings
       }
 
       XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->GetNativeInstance() == nullptr)
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));
         return;
       }
 
-      // TODO: Implement getPose with proper space and baseSpace handling
+      // TODO: Validate space and baseSpace arguments are XRSpace objects
+      // TODO: Get pose relative to baseSpace from frame and return XRPose
       cout << "getPose called" << endl;
       info.GetReturnValue().SetNull();
     }
@@ -173,13 +175,15 @@ namespace script_bindings
       }
 
       XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->GetNativeInstance() == nullptr)
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));
         return;
       }
 
-      // TODO: Implement createAnchor with proper pose and space handling
+      // TODO: Validate pose and space arguments
+      // TODO: Create and return XRAnchor from pose and reference space
       cout << "createAnchor called" << endl;
       info.GetReturnValue().SetNull();
     }

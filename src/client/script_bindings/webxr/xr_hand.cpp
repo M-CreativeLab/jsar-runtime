@@ -78,14 +78,15 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->GetNativeInstance() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
         return;
       }
 
-      // TODO: Get actual hand joint count from native hand
-      // Standard hand has 25 joints
+      // TODO: Get actual hand joint count from native hand implementation
+      // Standard WebXR hand tracking has 25 joints (including wrist)
+      // This should query the native hand for actual joint count
       info.GetReturnValue().Set(Number::New(isolate, 25));
     }
 
@@ -144,7 +145,8 @@ namespace script_bindings
         return;
       }
 
-      // TODO: Get joint space for the specified joint name
+      // TODO: Validate joint name and return corresponding XRJointSpace
+      // Joint names: wrist, thumb-metacarpal, thumb-phalanx-proximal, etc.
       cout << "hand.get called" << endl;
       info.GetReturnValue().SetNull();
     }
