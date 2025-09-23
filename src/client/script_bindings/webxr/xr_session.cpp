@@ -7,7 +7,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // static
     void XRSession::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -72,18 +72,20 @@ namespace script_bindings
       {
         return scope.Escape(Local<Object>());
       }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::NewInstance(isolate, nativeSession).As<Object>());
+      else
+      {
+        return scope.Escape(XRSessionBase::NewInstance(isolate, nativeSession).As<Object>());
+      }
     }
 
     // static
     Local<Function> XRSession::Initialize(Isolate *isolate)
     {
-      return scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Initialize(isolate);
+      return XRSessionBase::Initialize(isolate);
     }
 
     XRSession::XRSession(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>(isolate, args)
+        : XRSessionBase(isolate, args)
     {
     }
 
@@ -95,7 +97,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -113,7 +115,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -131,7 +133,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -148,7 +150,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -175,7 +177,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().Set(Integer::New(isolate, 0));
@@ -198,7 +200,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;
@@ -214,7 +216,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;
@@ -237,7 +239,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -259,7 +261,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>::Unwrap(info.This());
+      XRSession *session = XRSessionBase::Unwrap(info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;

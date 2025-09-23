@@ -33,10 +33,19 @@ namespace scripting_base
       return value_ != nullptr;
     }
     /**
+     * @returns The JavaScript object wrap.
+     */
+    inline ObjectWrapBase *getJSObjectWrap()
+    {
+      assert(hasJSObject());
+      return value_;
+    }
+    /**
      * @returns The JavaScript object value.
      */
     inline ObjectWrapBase &getJSObject()
     {
+      // TODO(yorkie): returns the v8::Object instance instead of ObjectWrapBase.
       assert(hasJSObject());
       return *value_;
     }

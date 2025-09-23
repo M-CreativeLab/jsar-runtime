@@ -9,14 +9,10 @@
 namespace script_bindings::event_bindings
 {
   class XRSessionEvent;
-  using XRSessionEventBase = scripting_base::ObjectWrap<XRSessionEvent, client_xr::XRSessionEvent, Event>;
+  using XRSessionEventBase = scripting_base::ObjectWrap<XRSessionEvent,
+                                                        client_xr::XRSessionEvent,
+                                                        Event>;
 
-  /**
-   * XRSessionEvent wrapper for V8 objects using scripting_base::ObjectWrap.
-   * 
-   * This class wraps client_xr::XRSessionEvent objects for use in V8 JavaScript execution contexts.
-   * It provides the standard XRSessionEvent interface including the session property.
-   */
   class XRSessionEvent : public XRSessionEventBase
   {
     using XRSessionEventBase::ObjectWrap;

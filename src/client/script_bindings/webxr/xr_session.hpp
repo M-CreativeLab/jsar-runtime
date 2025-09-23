@@ -3,25 +3,23 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/xr/webxr_session.hpp>
-#include "../dom/event_target.hpp"
+#include <client/script_bindings/event_target.hpp>
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // Forward declarations
     class XRFrame;
     class XRRenderState;
     class XRInputSourceArray;
 
-    /**
-     * XRSession wrapper for V8 objects using scripting_base::ObjectWrap.
-     *
-     * This class wraps client_xr::XRSession objects for use in V8 JavaScript execution contexts.
-     * It provides the standard WebXR XRSession interface including frame rendering,
-     * input handling, and session management.
-     */
-    class XRSession : public scripting_base::ObjectWrap<XRSession, client_xr::XRSession, script_bindings::dom::EventTarget>
+    class XRSession;
+    using XRSessionBase = scripting_base::ObjectWrap<XRSession,
+                                                     client_xr::XRSession,
+                                                     script_bindings::EventTarget>;
+
+    class XRSession : public XRSessionBase
     {
     public:
       /**

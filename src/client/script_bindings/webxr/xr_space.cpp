@@ -6,7 +6,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // XRSpace implementation
 
@@ -32,17 +32,17 @@ namespace script_bindings
         return scope.Escape(Local<Object>());
       }
 
-      return scope.Escape(scripting_base::ObjectWrap<XRSpace, client_xr::XRSpace>::NewInstance(isolate, nativeSpace).As<Object>());
+      return scope.Escape(XRSpaceBase::NewInstance(isolate, nativeSpace).As<Object>());
     }
 
     // static
     Local<Function> XRSpace::Initialize(Isolate *isolate)
     {
-      return scripting_base::ObjectWrap<XRSpace, client_xr::XRSpace>::Initialize(isolate);
+      return XRSpaceBase::Initialize(isolate);
     }
 
     XRSpace::XRSpace(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRSpace, client_xr::XRSpace>(isolate, args)
+        : XRSpaceBase(isolate, args)
     {
     }
 

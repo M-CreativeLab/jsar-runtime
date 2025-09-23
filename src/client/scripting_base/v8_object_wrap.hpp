@@ -145,7 +145,8 @@ namespace scripting_base
       if (inner->hasJSObject())
       {
         v8::EscapableHandleScope scope(isolate);
-        return scope.Escape(inner->getJSObject(isolate));
+        ObjectWrapBase *objectWrap = inner->getJSObjectWrap();
+        return scope.Escape(objectWrap->getJSObject(isolate));
       }
       else
       {

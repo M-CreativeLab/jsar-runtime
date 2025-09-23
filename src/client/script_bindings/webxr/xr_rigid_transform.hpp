@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     /**
      * XRRigidTransform wrapper for V8 objects using scripting_base::ObjectWrap.

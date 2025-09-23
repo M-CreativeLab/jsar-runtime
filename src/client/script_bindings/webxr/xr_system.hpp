@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     /**
      * XRSystem wrapper for V8 objects using scripting_base::ObjectWrap.

@@ -1,20 +1,18 @@
 #pragma once
 
 #include <memory>
-#include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/xr/webxr_spaces.hpp>
+#include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/event_target.hpp>
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
-    /**
-     * XRSpace wrapper for V8 objects using scripting_base::ObjectWrap.
-     *
-     * This class wraps client_xr::XRSpace objects for use in V8 JavaScript execution contexts.
-     * It provides the standard WebXR XRSpace interface.
-     */
-    class XRSpace : public scripting_base::ObjectWrap<XRSpace, client_xr::XRSpace>
+    class XRSpace;
+    using XRSpaceBase = scripting_base::ObjectWrap<XRSpace, client_xr::XRSpace, EventTarget>;
+
+    class XRSpace : public XRSpaceBase
     {
     public:
       /**
@@ -50,7 +48,9 @@ namespace script_bindings
      * This class wraps client_xr::XRReferenceSpace objects for use in V8 JavaScript execution contexts.
      * It provides the standard WebXR XRReferenceSpace interface.
      */
-    class XRReferenceSpace : public scripting_base::ObjectWrap<XRReferenceSpace, client_xr::XRReferenceSpace, XRSpace>
+    class XRReferenceSpace : public scripting_base::ObjectWrap<XRReferenceSpace,
+                                                               client_xr::XRReferenceSpace,
+                                                               XRSpace>
     {
     public:
       /**

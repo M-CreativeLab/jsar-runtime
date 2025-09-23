@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // Forward declarations
     class XRSpace;

@@ -2,7 +2,8 @@
 
 #include <memory>
 #include <common/utility.hpp>
-#include <bindings/webxr/common.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+
 #include "./common.hpp"
 #include "../graphics/webgl_context.hpp"
 
@@ -26,7 +27,7 @@ namespace client_xr
 
   class XRWebGLLayer : public XRLayer,
                        public xr::WebGLLayer,
-                       public JSObjectHolder<bindings::XRWebGLLayer>
+                       public scripting_base::JSObjectHolder
   {
   public:
     /**

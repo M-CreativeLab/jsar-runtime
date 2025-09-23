@@ -5,7 +5,6 @@
 #include <idgen.hpp>
 #include <common/utility.hpp>
 #include <client/graphics/webgl_context.hpp>
-#include <bindings/webxr/common.hpp>
 
 #include "./common.hpp"
 #include "./webxr_session_events.hpp"

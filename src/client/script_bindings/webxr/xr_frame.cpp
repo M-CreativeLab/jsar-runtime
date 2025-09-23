@@ -7,7 +7,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // static
     void XRFrame::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)

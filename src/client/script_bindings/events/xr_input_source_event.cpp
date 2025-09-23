@@ -67,12 +67,12 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourceEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto frame = self->handle_->frame();
+      auto frame = self->inner()->frame();
       if (frame)
       {
-        Local<Object> frameObj = script_bindings::XRFrame::NewInstance(isolate, frame);
+        Local<Object> frameObj = webxr_bindings::XRFrame::GetOrNewInstance(isolate, frame);
         info.GetReturnValue().Set(frameObj);
         return;
       }
@@ -88,12 +88,12 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourceEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto inputSource = self->handle_->inputSource();
+      auto inputSource = self->inner()->inputSource();
       if (inputSource)
       {
-        Local<Object> inputSourceObj = script_bindings::XRInputSource::NewInstance(isolate, inputSource);
+        Local<Object> inputSourceObj = webxr_bindings::XRInputSource::GetOrNewInstance(isolate, inputSource);
         info.GetReturnValue().Set(inputSourceObj);
         return;
       }

@@ -9,8 +9,24 @@
 #include "./dom/character_data.hpp"
 #include "./dom/text.hpp"
 #include "./dom/console.hpp"
+
+// HTML element bindings
 #include "./html/html_element.hpp"
 #include "./html/html_div_element.hpp"
+
+// WebXR bindings
+#include "./webxr/xr_space.hpp"
+#include "./webxr/xr_session.hpp"
+#include "./webxr/xr_frame.hpp"
+#include "./webxr/xr_rigid_transform.hpp"
+#include "./webxr/xr_pose.hpp"
+#include "./webxr/xr_viewport.hpp"
+#include "./webxr/xr_view.hpp"
+#include "./webxr/xr_system.hpp"
+#include "./webxr/xr_render_state.hpp"
+#include "./webxr/xr_layer.hpp"
+#include "./webxr/xr_input_source.hpp"
+#include "./webxr/xr_hand.hpp"
 
 using namespace std;
 using namespace v8;
@@ -67,6 +83,41 @@ namespace script_bindings
       {
         global->Set(context, STRING_FROM_UTF8("HTMLElement"), HTMLElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLDivElement"), HTMLDivElement).Check();
+      }
+
+      // WebXR classes
+      // Initialize WebXR classes
+      auto XRSpace = webxr_bindings::XRSpace::Initialize(isolate);
+      auto XRReferenceSpace = webxr_bindings::XRReferenceSpace::Initialize(isolate);
+      auto XRSession = webxr_bindings::XRSession::Initialize(isolate);
+      auto XRFrame = webxr_bindings::XRFrame::Initialize(isolate);
+      auto XRRigidTransform = webxr_bindings::XRRigidTransform::Initialize(isolate);
+      auto XRPose = webxr_bindings::XRPose::Initialize(isolate);
+      auto XRViewerPose = webxr_bindings::XRViewerPose::Initialize(isolate);
+      auto XRViewport = webxr_bindings::XRViewport::Initialize(isolate);
+      auto XRView = webxr_bindings::XRView::Initialize(isolate);
+      auto XRSystem = webxr_bindings::XRSystem::Initialize(isolate);
+      auto XRRenderState = webxr_bindings::XRRenderState::Initialize(isolate);
+      auto XRLayer = webxr_bindings::XRLayer::Initialize(isolate);
+      auto XRWebGLLayer = webxr_bindings::XRWebGLLayer::Initialize(isolate);
+      auto XRInputSource = webxr_bindings::XRInputSource::Initialize(isolate);
+      auto XRHand = webxr_bindings::XRHand::Initialize(isolate);
+      {
+        global->Set(context, STRING_FROM_UTF8("XRSpace"), XRSpace).Check();
+        global->Set(context, STRING_FROM_UTF8("XRReferenceSpace"), XRReferenceSpace).Check();
+        global->Set(context, STRING_FROM_UTF8("XRSession"), XRSession).Check();
+        global->Set(context, STRING_FROM_UTF8("XRFrame"), XRFrame).Check();
+        global->Set(context, STRING_FROM_UTF8("XRRigidTransform"), XRRigidTransform).Check();
+        global->Set(context, STRING_FROM_UTF8("XRPose"), XRPose).Check();
+        global->Set(context, STRING_FROM_UTF8("XRViewerPose"), XRViewerPose).Check();
+        global->Set(context, STRING_FROM_UTF8("XRViewport"), XRViewport).Check();
+        global->Set(context, STRING_FROM_UTF8("XRView"), XRView).Check();
+        global->Set(context, STRING_FROM_UTF8("XRSystem"), XRSystem).Check();
+        global->Set(context, STRING_FROM_UTF8("XRRenderState"), XRRenderState).Check();
+        global->Set(context, STRING_FROM_UTF8("XRLayer"), XRLayer).Check();
+        global->Set(context, STRING_FROM_UTF8("XRWebGLLayer"), XRWebGLLayer).Check();
+        global->Set(context, STRING_FROM_UTF8("XRInputSource"), XRInputSource).Check();
+        global->Set(context, STRING_FROM_UTF8("XRHand"), XRHand).Check();
       }
     }
 

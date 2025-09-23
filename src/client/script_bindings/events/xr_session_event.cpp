@@ -57,12 +57,12 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRSessionEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto session = self->handle_->session();
+      auto session = self->inner()->session();
       if (session)
       {
-        Local<Object> sessionObj = script_bindings::XRSession::NewInstance(isolate, session);
+        Local<Object> sessionObj = webxr_bindings::XRSession::GetOrNewInstance(isolate, session);
         info.GetReturnValue().Set(sessionObj);
         return;
       }

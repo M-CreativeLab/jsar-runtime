@@ -75,12 +75,12 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto session = self->handle_->session();
+      auto session = self->inner()->session();
       if (session)
       {
-        Local<Object> sessionObj = script_bindings::XRSession::NewInstance(isolate, session);
+        Local<Object> sessionObj = webxr_bindings::XRSession::GetOrNewInstance(isolate, session);
         info.GetReturnValue().Set(sessionObj);
         return;
       }
@@ -96,14 +96,14 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto addedSources = self->handle_->added();
+      auto addedSources = self->inner()->added();
       Local<Array> array = Array::New(isolate, addedSources.size());
 
       for (size_t i = 0; i < addedSources.size(); ++i)
       {
-        Local<Object> inputSourceObj = script_bindings::XRInputSource::NewInstance(isolate, addedSources[i]);
+        Local<Object> inputSourceObj = webxr_bindings::XRInputSource::GetOrNewInstance(isolate, addedSources[i]);
         array->Set(isolate->GetCurrentContext(), i, inputSourceObj).Check();
       }
 
@@ -121,14 +121,14 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
-    if (self && self->handle_)
+    if (self && self->inner())
     {
-      auto removedSources = self->handle_->removed();
+      auto removedSources = self->inner()->removed();
       Local<Array> array = Array::New(isolate, removedSources.size());
 
       for (size_t i = 0; i < removedSources.size(); ++i)
       {
-        Local<Object> inputSourceObj = script_bindings::XRInputSource::NewInstance(isolate, removedSources[i]);
+        Local<Object> inputSourceObj = webxr_bindings::XRInputSource::GetOrNewInstance(isolate, removedSources[i]);
         array->Set(isolate->GetCurrentContext(), i, inputSourceObj).Check();
       }
 

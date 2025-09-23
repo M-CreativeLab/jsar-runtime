@@ -9,7 +9,9 @@
 namespace script_bindings::event_bindings
 {
   class XRInputSourceEvent;
-  using XRInputSourceEventBase = scripting_base::ObjectWrap<XRInputSourceEvent, client_xr::XRInputSourceEvent, Event>;
+  using XRInputSourceEventBase = scripting_base::ObjectWrap<XRInputSourceEvent,
+                                                            client_xr::XRInputSourceEvent,
+                                                            Event>;
 
   /**
    * XRInputSourceEvent wrapper for V8 objects using scripting_base::ObjectWrap.

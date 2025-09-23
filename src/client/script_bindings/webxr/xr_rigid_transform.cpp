@@ -6,7 +6,7 @@ using namespace v8;
 
 namespace script_bindings
 {
-  namespace webxr
+  namespace webxr_bindings
   {
     // static
     void XRRigidTransform::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
