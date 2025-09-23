@@ -78,7 +78,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
-      if (hand == nullptr || hand->GetNativeInstance() == nullptr)
+      if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
         return;

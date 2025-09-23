@@ -20,7 +20,6 @@ namespace script_bindings
     Local<Object> HTMLDivElement::NewInstance(Isolate *isolate, std::shared_ptr<::dom::HTMLDivElement> nativeElement)
     {
       EscapableHandleScope scope(isolate);
-
       if (nativeElement == nullptr)
       {
         return scope.Escape(Local<Object>());

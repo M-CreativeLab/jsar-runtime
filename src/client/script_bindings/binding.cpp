@@ -110,10 +110,9 @@ namespace script_bindings
         global->Set(context, STRING_FROM_UTF8("HTMLDivElement"), HTMLDivElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLAudioElement"), HTMLAudioElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLCanvasElement"), HTMLCanvasElement).Check();
-        
+
         // Set up Audio constructor as a global function
-        global->Set(context, STRING_FROM_UTF8("Audio"), 
-          FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)->GetFunction(context).ToLocalChecked()).Check();
+        global->Set(context, STRING_FROM_UTF8("Audio"), FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)->GetFunction(context).ToLocalChecked()).Check();
       }
 
       // WebXR classes

@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void DOMStringMap::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -27,19 +27,10 @@ namespace script_bindings
       IndexedPropertyEnumerator));
   }
 
-  Local<Object> DOMStringMap::NewInstance(Isolate *isolate, shared_ptr<dom::DOMStringMap> nativeStringMap)
+  Local<Object> DOMStringMap::NewInstance(Isolate *isolate)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Function> constructor = DOMStringMap::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    DOMStringMap *wrapper = new DOMStringMap(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeStringMap);
-    DOMStringMap::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    EscapableHandleScope scope(isolate);
+    return scope.Escape(DOMStringMapBase::NewInstance(isolate, nullptr).As<Object>());
   }
 
   Local<Function> DOMStringMap::Initialize(Isolate *isolate)
@@ -48,7 +39,7 @@ namespace script_bindings
   }
 
   DOMStringMap::DOMStringMap(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : DOMStringMapBase(isolate, args)
+      : DOMStringMapBase(isolate, args)
   {
     // DOMStringMap constructor
   }
@@ -90,42 +81,42 @@ namespace script_bindings
   }
 
   // Named property handlers
-  void DOMStringMap::NamedPropertyGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void DOMStringMap::NamedPropertyGetter(Local<v8::Name> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     String::Utf8Value propertyName(isolate, property);
     cout << "DOMStringMap named getter[" << *propertyName << "] called" << endl;
-    
+
     // TODO: Get dataset attribute value by name
     info.GetReturnValue().SetUndefined();
   }
 
-  void DOMStringMap::NamedPropertySetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value> &info)
+  void DOMStringMap::NamedPropertySetter(Local<v8::Name> property, Local<Value> value, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     String::Utf8Value propertyName(isolate, property);
     cout << "DOMStringMap named setter[" << *propertyName << "] called" << endl;
-    
+
     // TODO: Set dataset attribute value by name
     info.GetReturnValue().Set(value);
   }
 
-  void DOMStringMap::NamedPropertyQuery(Local<String> property, const PropertyCallbackInfo<Integer> &info)
+  void DOMStringMap::NamedPropertyQuery(Local<v8::Name> property, const PropertyCallbackInfo<Integer> &info)
   {
     Isolate *isolate = info.GetIsolate();
     String::Utf8Value propertyName(isolate, property);
     cout << "DOMStringMap named query[" << *propertyName << "] called" << endl;
-    
+
     // TODO: Check if named property exists
     info.GetReturnValue().Set(Integer::New(isolate, None));
   }
 
-  void DOMStringMap::NamedPropertyDeleter(Local<String> property, const PropertyCallbackInfo<Boolean> &info)
+  void DOMStringMap::NamedPropertyDeleter(Local<v8::Name> property, const PropertyCallbackInfo<Boolean> &info)
   {
     Isolate *isolate = info.GetIsolate();
     String::Utf8Value propertyName(isolate, property);
     cout << "DOMStringMap named deleter[" << *propertyName << "] called" << endl;
-    
+
     // TODO: Delete dataset attribute by name
     info.GetReturnValue().Set(false);
   }

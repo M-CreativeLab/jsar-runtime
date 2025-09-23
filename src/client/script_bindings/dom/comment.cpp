@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void Comment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -14,17 +14,15 @@ namespace script_bindings
 
   Local<Object> Comment::NewInstance(Isolate *isolate, shared_ptr<dom::Comment> nativeComment)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Function> constructor = Comment::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    Comment *wrapper = new Comment(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeComment);
-    Comment::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    EscapableHandleScope scope(isolate);
+    if (nativeComment == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(CommentBase::NewInstance(isolate, nativeComment).As<Object>());
+    }
   }
 
   Local<Function> Comment::Initialize(Isolate *isolate)
@@ -33,7 +31,7 @@ namespace script_bindings
   }
 
   Comment::Comment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : CommentBase(isolate, args)
+      : CommentBase(isolate, args)
   {
     // Comment constructor - creates a new comment node
     // TODO: Handle constructor arguments (initial data)

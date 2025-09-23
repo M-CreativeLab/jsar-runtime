@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/html/html_element.hpp>
 #include <client/html/html_div_element.hpp>
-#include "./html_element.hpp"
 
 namespace script_bindings
 {

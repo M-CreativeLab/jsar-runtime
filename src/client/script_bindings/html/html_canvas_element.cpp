@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::html
+namespace script_bindings::html_bindings
 {
   void HTMLCanvasElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -18,24 +18,24 @@ namespace script_bindings::html
 
     // Canvas properties
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                  WidthGetter, WidthSetter);
+                                  WidthGetter,
+                                  WidthSetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                  HeightGetter, HeightSetter);
+                                  HeightGetter,
+                                  HeightSetter);
   }
 
   Local<Object> HTMLCanvasElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLCanvasElement> nativeElement)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Function> constructor = HTMLCanvasElement::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    HTMLCanvasElement *wrapper = new HTMLCanvasElement(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeElement);
-    HTMLCanvasElement::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    EscapableHandleScope scope(isolate);
+    if (nativeElement == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(HTMLCanvasElementBase::NewInstance(isolate, nativeElement).As<Object>());
+    }
   }
 
   Local<Function> HTMLCanvasElement::Initialize(Isolate *isolate)
@@ -44,7 +44,7 @@ namespace script_bindings::html
   }
 
   HTMLCanvasElement::HTMLCanvasElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : HTMLCanvasElementBase(isolate, args)
+      : HTMLCanvasElementBase(isolate, args)
   {
     // HTMLCanvasElement constructor
     cout << "HTMLCanvasElement V8 wrapper created" << endl;
@@ -63,22 +63,22 @@ namespace script_bindings::html
     }
 
     cout << "HTMLCanvasElement.getContext() called" << endl;
-    
+
     // TODO: Implement context creation
     // Context types: "2d", "webgl", "webgl2", "webgpu"
     // Should return the appropriate rendering context object
-    
+
     info.GetReturnValue().SetNull();
   }
 
   void HTMLCanvasElement::ToDataURL(const FunctionCallbackInfo<Value> &info)
   {
     cout << "HTMLCanvasElement.toDataURL() called" << endl;
-    
+
     // TODO: Implement canvas to data URL conversion
     // Optional arguments: type (string), quality (number)
     // Should return a data: URL containing the canvas content
-    
+
     info.GetReturnValue().Set(String::NewFromUtf8(info.GetIsolate(), "data:,").ToLocalChecked());
   }
 
@@ -94,11 +94,11 @@ namespace script_bindings::html
     }
 
     cout << "HTMLCanvasElement.toBlob() called" << endl;
-    
+
     // TODO: Implement canvas to blob conversion
     // Arguments: callback (function), type (string optional), quality (number optional)
     // Should call the callback with a Blob containing the canvas content
-    
+
     info.GetReturnValue().SetUndefined();
   }
 

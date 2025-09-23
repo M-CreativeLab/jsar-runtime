@@ -89,9 +89,9 @@ namespace script_bindings
 
       // Get the associated XRSession object
       auto frameWrapper = Unwrap(info.Holder());
-      if (frameWrapper && frameWrapper->GetNativeInstance())
+      if (frameWrapper && frameWrapper->inner())
       {
-        auto session = frameWrapper->GetNativeInstance()->session();
+        auto session = frameWrapper->inner()->session();
         if (session)
         {
           // TODO: Create XRSession wrapper and return it
@@ -101,7 +101,7 @@ namespace script_bindings
           return;
         }
       }
-      
+
       cout << "frame.session getter called - no session available" << endl;
       info.GetReturnValue().SetNull();
     }
@@ -122,7 +122,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
-      if (frame == nullptr || frame->GetNativeInstance() == nullptr)
+      if (frame == nullptr || frame->inner() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
           String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));
@@ -175,7 +175,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
-      if (frame == nullptr || frame->GetNativeInstance() == nullptr)
+      if (frame == nullptr || frame->inner() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
           String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));

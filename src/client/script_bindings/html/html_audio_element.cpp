@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings::html
+namespace script_bindings::html_bindings
 {
   void HTMLAudioElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -18,32 +18,34 @@ namespace script_bindings::html
 
     // Media properties
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "src").ToLocalChecked(),
-                                  SrcGetter, SrcSetter);
+                                  SrcGetter,
+                                  SrcSetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "volume").ToLocalChecked(),
-                                  VolumeGetter, VolumeSetter);
+                                  VolumeGetter,
+                                  VolumeSetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "muted").ToLocalChecked(),
-                                  MutedGetter, MutedSetter);
+                                  MutedGetter,
+                                  MutedSetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "paused").ToLocalChecked(),
                                   PausedGetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "currentTime").ToLocalChecked(),
-                                  CurrentTimeGetter, CurrentTimeSetter);
+                                  CurrentTimeGetter,
+                                  CurrentTimeSetter);
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "duration").ToLocalChecked(),
                                   DurationGetter);
   }
 
   Local<Object> HTMLAudioElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLAudioElement> nativeElement)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
-
-    Local<Function> constructor = HTMLAudioElement::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    HTMLAudioElement *wrapper = new HTMLAudioElement(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeElement);
-    HTMLAudioElement::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    EscapableHandleScope scope(isolate);
+    if (nativeElement == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(HTMLAudioElementBase::NewInstance(isolate, nativeElement).As<Object>());
+    }
   }
 
   Local<Function> HTMLAudioElement::Initialize(Isolate *isolate)
@@ -57,19 +59,22 @@ namespace script_bindings::html
     HandleScope scope(isolate);
 
     cout << "new Audio() constructor called" << endl;
-    
+
     // TODO: Create new HTMLAudioElement instance
     // Optional argument: src (string)
-    
+
     Local<Function> constructor = HTMLAudioElement::GetConstructorFunction(isolate);
     Local<Context> context = isolate->GetCurrentContext();
-    Local<Object> instance = constructor->NewInstance(context, info.Length(), info.Data()).ToLocalChecked();
-    
+
+    Local<Value> argv[info.Length()];
+    for (int i = 0; i < info.Length(); i++)
+      argv[i] = info[i];
+    Local<Object> instance = constructor->NewInstance(context, info.Length(), argv).ToLocalChecked();
     info.GetReturnValue().Set(instance);
   }
 
   HTMLAudioElement::HTMLAudioElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : HTMLAudioElementBase(isolate, args)
+      : HTMLAudioElementBase(isolate, args)
   {
     // HTMLAudioElement constructor
     cout << "HTMLAudioElement V8 wrapper created" << endl;

@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void MutationRecord::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -33,17 +33,16 @@ namespace script_bindings
 
   Local<Object> MutationRecord::NewInstance(Isolate *isolate, shared_ptr<dom::MutationRecord> nativeRecord)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
+    EscapableHandleScope scope(isolate);
 
-    Local<Function> constructor = MutationRecord::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    MutationRecord *wrapper = new MutationRecord(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeRecord);
-    MutationRecord::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    if (nativeRecord == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(MutationRecordBase::NewInstance(isolate, nativeRecord).As<Object>());
+    }
   }
 
   Local<Function> MutationRecord::Initialize(Isolate *isolate)
@@ -52,7 +51,7 @@ namespace script_bindings
   }
 
   MutationRecord::MutationRecord(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : MutationRecordBase(isolate, args)
+      : MutationRecordBase(isolate, args)
   {
     // MutationRecord constructor
   }

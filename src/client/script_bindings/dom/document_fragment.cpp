@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void DocumentFragment::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -20,31 +20,25 @@ namespace script_bindings
                                   LastElementChildGetter);
 
     // Add methods
-    prototypeTemplate->Set(isolate, "querySelector",
-                          FunctionTemplate::New(isolate, QuerySelector));
-    prototypeTemplate->Set(isolate, "querySelectorAll",
-                          FunctionTemplate::New(isolate, QuerySelectorAll));
-    prototypeTemplate->Set(isolate, "getElementById",
-                          FunctionTemplate::New(isolate, GetElementById));
-    prototypeTemplate->Set(isolate, "getElementsByTagName",
-                          FunctionTemplate::New(isolate, GetElementsByTagName));
-    prototypeTemplate->Set(isolate, "getElementsByClassName",
-                          FunctionTemplate::New(isolate, GetElementsByClassName));
+    prototypeTemplate->Set(isolate, "querySelector", FunctionTemplate::New(isolate, QuerySelector));
+    prototypeTemplate->Set(isolate, "querySelectorAll", FunctionTemplate::New(isolate, QuerySelectorAll));
+    prototypeTemplate->Set(isolate, "getElementById", FunctionTemplate::New(isolate, GetElementById));
+    prototypeTemplate->Set(isolate, "getElementsByTagName", FunctionTemplate::New(isolate, GetElementsByTagName));
+    prototypeTemplate->Set(isolate, "getElementsByClassName", FunctionTemplate::New(isolate, GetElementsByClassName));
   }
 
-  Local<Object> DocumentFragment::NewInstance(Isolate *isolate, shared_ptr<dom::DocumentFragment> nativeFragment)
+  Local<Object> DocumentFragment::NewInstance(Isolate *isolate, shared_ptr<dom::DocumentFragment> native)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
+    EscapableHandleScope scope(isolate);
 
-    Local<Function> constructor = DocumentFragment::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    DocumentFragment *wrapper = new DocumentFragment(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeFragment);
-    DocumentFragment::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    if (native == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(DocumentFragmentBase::NewInstance(isolate, native).As<Object>());
+    }
   }
 
   Local<Function> DocumentFragment::Initialize(Isolate *isolate)
@@ -53,7 +47,7 @@ namespace script_bindings
   }
 
   DocumentFragment::DocumentFragment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : DocumentFragmentBase(isolate, args)
+      : DocumentFragmentBase(isolate, args)
   {
     // DocumentFragment constructor
   }

@@ -83,7 +83,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRSystem *system = scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::Unwrap(info.This());
-      if (system == nullptr || system->GetNativeInstance() == nullptr)
+      if (system == nullptr || system->inner() == nullptr)
       {
         // Return a rejected promise
         Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();

@@ -2,15 +2,17 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/html/html_element.hpp>
 #include <client/html/html_audio_element.hpp>
-#include "../dom/html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     class HTMLAudioElement;
-    using HTMLAudioElementBase = scripting_base::ObjectWrap<HTMLAudioElement, dom::HTMLAudioElement, HTMLElement>;
+    using HTMLAudioElementBase = scripting_base::ObjectWrap<HTMLAudioElement,
+                                                            dom::HTMLAudioElement,
+                                                            HTMLElement>;
 
     /**
      * HTMLAudioElement wrapper for V8 objects using scripting_base::ObjectWrap.

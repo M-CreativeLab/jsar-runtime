@@ -4,7 +4,7 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void NodeList::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -16,16 +16,11 @@ namespace script_bindings
                                   LengthGetter);
 
     // Add methods
-    prototypeTemplate->Set(isolate, "item",
-                          FunctionTemplate::New(isolate, Item));
-    prototypeTemplate->Set(isolate, "entries",
-                          FunctionTemplate::New(isolate, Entries));
-    prototypeTemplate->Set(isolate, "forEach",
-                          FunctionTemplate::New(isolate, ForEach));
-    prototypeTemplate->Set(isolate, "keys",
-                          FunctionTemplate::New(isolate, Keys));
-    prototypeTemplate->Set(isolate, "values",
-                          FunctionTemplate::New(isolate, Values));
+    prototypeTemplate->Set(isolate, "item", FunctionTemplate::New(isolate, Item));
+    prototypeTemplate->Set(isolate, "entries", FunctionTemplate::New(isolate, Entries));
+    prototypeTemplate->Set(isolate, "forEach", FunctionTemplate::New(isolate, ForEach));
+    prototypeTemplate->Set(isolate, "keys", FunctionTemplate::New(isolate, Keys));
+    prototypeTemplate->Set(isolate, "values", FunctionTemplate::New(isolate, Values));
 
     // Set up indexed property handlers for array-like access
     instanceTemplate->SetHandler(IndexedPropertyHandlerConfiguration(
@@ -36,19 +31,18 @@ namespace script_bindings
       IndexedPropertyEnumerator));
   }
 
-  Local<Object> NodeList::NewInstance(Isolate *isolate, shared_ptr<dom::NodeList> nativeNodeList)
+  Local<Object> NodeList::NewInstance(Isolate *isolate, shared_ptr<dom::NodeListApi> nativeList)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
+    EscapableHandleScope scope(isolate);
 
-    Local<Function> constructor = NodeList::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    NodeList *wrapper = new NodeList(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeNodeList);
-    NodeList::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    if (nativeList == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(NodeListBase::NewInstance(isolate, nativeList).As<Object>());
+    }
   }
 
   Local<Function> NodeList::Initialize(Isolate *isolate)
@@ -57,7 +51,7 @@ namespace script_bindings
   }
 
   NodeList::NodeList(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : NodeListBase(isolate, args)
+      : NodeListBase(isolate, args)
   {
     // NodeList constructor
   }
@@ -76,7 +70,7 @@ namespace script_bindings
 
     uint32_t index = info[0]->Uint32Value(isolate->GetCurrentContext()).FromMaybe(0);
     cout << "NodeList.item(" << index << ") called" << endl;
-    
+
     // TODO: Return the node at the specified index
     info.GetReturnValue().SetNull();
   }
@@ -100,7 +94,7 @@ namespace script_bindings
     }
 
     cout << "NodeList.forEach called" << endl;
-    
+
     // TODO: Call the callback for each node in the list
     info.GetReturnValue().SetUndefined();
   }

@@ -4,30 +4,28 @@
 using namespace std;
 using namespace v8;
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
   void DOMParser::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add methods
-    prototypeTemplate->Set(isolate, "parseFromString",
-                          FunctionTemplate::New(isolate, ParseFromString));
+    prototypeTemplate->Set(isolate, "parseFromString", FunctionTemplate::New(isolate, ParseFromString));
   }
 
   Local<Object> DOMParser::NewInstance(Isolate *isolate, shared_ptr<dom::DOMParser> nativeParser)
   {
-    HandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
+    EscapableHandleScope scope(isolate);
 
-    Local<Function> constructor = DOMParser::GetConstructorFunction(isolate);
-    Local<Object> instance = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
-
-    DOMParser *wrapper = new DOMParser(isolate, *reinterpret_cast<const FunctionCallbackInfo<Value> *>(&instance));
-    wrapper->SetNativeInstance(nativeParser);
-    DOMParser::Wrap(isolate, instance, wrapper);
-
-    return instance;
+    if (nativeParser == nullptr)
+    {
+      return scope.Escape(Local<Object>());
+    }
+    else
+    {
+      return scope.Escape(DOMParserBase::NewInstance(isolate, nativeParser).As<Object>());
+    }
   }
 
   Local<Function> DOMParser::Initialize(Isolate *isolate)
@@ -36,7 +34,7 @@ namespace script_bindings
   }
 
   DOMParser::DOMParser(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-    : DOMParserBase(isolate, args)
+      : DOMParserBase(isolate, args)
   {
     // DOMParser constructor
   }
@@ -54,11 +52,11 @@ namespace script_bindings
     }
 
     cout << "DOMParser.parseFromString called" << endl;
-    
+
     // TODO: Implement actual parsing logic
     // Arguments: str (string to parse), type (MIME type)
     // Should return a Document object
-    
+
     info.GetReturnValue().SetNull();
   }
 }
