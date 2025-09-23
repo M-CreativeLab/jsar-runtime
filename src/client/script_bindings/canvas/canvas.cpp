@@ -1,0 +1,365 @@
+#include "canvas.hpp"
+#include <client/canvas/canvas.hpp>
+
+namespace script_bindings
+{
+  namespace canvas
+  {
+    using namespace v8;
+
+    void Canvas::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    {
+      tpl->SetClassName(String::NewFromUtf8(isolate, "Canvas").ToLocalChecked());
+
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      instanceTemplate->SetInternalFieldCount(1);
+
+      // Properties
+      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
+                                    WidthGetter,
+                                    WidthSetter);
+      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
+                                    HeightGetter,
+                                    HeightSetter);
+
+      // Methods
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, GetContext));
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "toDataURL").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, ToDataURL));
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "toBlob").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, ToBlob));
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, TransferToImageBitmap));
+    }
+
+    Local<Object> Canvas::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
+    {
+      Local<Function> constructor = GetConstructorFunction(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
+
+      Canvas *canvasWrapper = ObjectWrap::Unwrap<Canvas>(instance);
+      canvasWrapper->SetNativeInstance(nativeCanvas);
+
+      return instance;
+    }
+
+    Local<Function> Canvas::Initialize(Isolate *isolate)
+    {
+      return ObjectWrap::Initialize(isolate);
+    }
+
+    Canvas::Canvas(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : CanvasBase(isolate, args)
+    {
+      // Constructor implementation
+      if (args.Length() >= 2 && args[0]->IsNumber() && args[1]->IsNumber())
+      {
+        int width = args[0]->Int32Value(isolate->GetCurrentContext()).FromJust();
+        int height = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
+
+        auto nativeCanvas = std::make_shared<::canvas::OffscreenCanvas>(width, height);
+        SetNativeInstance(nativeCanvas);
+      }
+    }
+
+    void Canvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance())
+      {
+        int width = canvas->GetNativeInstance()->width();
+        info.GetReturnValue().Set(Number::New(isolate, width));
+      }
+      else
+      {
+        info.GetReturnValue().Set(Number::New(isolate, 0));
+      }
+    }
+
+    void Canvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance())
+      {
+        int height = canvas->GetNativeInstance()->height();
+        info.GetReturnValue().Set(Number::New(isolate, height));
+      }
+      else
+      {
+        info.GetReturnValue().Set(Number::New(isolate, 0));
+      }
+    }
+
+    void Canvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance() && value->IsNumber())
+      {
+        int width = value->Int32Value(isolate->GetCurrentContext()).FromJust();
+        canvas->GetNativeInstance()->setWidth(width);
+      }
+    }
+
+    void Canvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance() && value->IsNumber())
+      {
+        int height = value->Int32Value(isolate->GetCurrentContext()).FromJust();
+        canvas->GetNativeInstance()->setHeight(height);
+      }
+    }
+
+    void Canvas::GetContext(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
+        return;
+      }
+
+      if (info.Length() < 1 || !info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Context type must be a string").ToLocalChecked()));
+        return;
+      }
+
+      String::Utf8Value contextType(isolate, info[0]);
+      std::string type(*contextType);
+
+      // TODO: Implement context creation based on type ("2d", "webgl", etc.)
+      // This should create and return the appropriate context wrapper
+      info.GetReturnValue().SetNull();
+    }
+
+    void Canvas::ToDataURL(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
+        return;
+      }
+
+      // TODO: Implement toDataURL method
+      // This should convert the canvas content to a data URL
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "data:image/png;base64,").ToLocalChecked());
+    }
+
+    void Canvas::ToBlob(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
+        return;
+      }
+
+      // TODO: Implement toBlob method
+      // This should convert the canvas content to a Blob
+      info.GetReturnValue().SetUndefined();
+    }
+
+    void Canvas::TransferToImageBitmap(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      Canvas *canvas = ObjectWrap::Unwrap<Canvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
+        return;
+      }
+
+      // TODO: Implement transferToImageBitmap method
+      // This should transfer the canvas content to an ImageBitmap
+      info.GetReturnValue().SetUndefined();
+    }
+
+    // OffscreenCanvas implementation
+    void OffscreenCanvas::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
+    {
+      tpl->SetClassName(String::NewFromUtf8(isolate, "OffscreenCanvas").ToLocalChecked());
+
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      instanceTemplate->SetInternalFieldCount(1);
+
+      // Properties
+      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
+                                    WidthGetter,
+                                    WidthSetter);
+      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
+                                    HeightGetter,
+                                    HeightSetter);
+
+      // Methods
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, GetContext));
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "convertToBlob").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, ConvertToBlob));
+      instanceTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
+                            FunctionTemplate::New(isolate, TransferToImageBitmap));
+    }
+
+    Local<Object> OffscreenCanvas::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
+    {
+      Local<Function> constructor = GetConstructorFunction(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
+
+      OffscreenCanvas *canvasWrapper = ObjectWrap::Unwrap<OffscreenCanvas>(instance);
+      canvasWrapper->SetNativeInstance(nativeCanvas);
+
+      return instance;
+    }
+
+    Local<Function> OffscreenCanvas::Initialize(Isolate *isolate)
+    {
+      return ObjectWrap::Initialize(isolate);
+    }
+
+    OffscreenCanvas::OffscreenCanvas(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : OffscreenCanvasBase(isolate, args)
+    {
+      // Constructor implementation
+      if (args.Length() >= 2 && args[0]->IsNumber() && args[1]->IsNumber())
+      {
+        int width = args[0]->Int32Value(isolate->GetCurrentContext()).FromJust();
+        int height = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
+
+        auto nativeCanvas = std::make_shared<::canvas::OffscreenCanvas>(width, height);
+        SetNativeInstance(nativeCanvas);
+      }
+    }
+
+    void OffscreenCanvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance())
+      {
+        int width = canvas->GetNativeInstance()->width();
+        info.GetReturnValue().Set(Number::New(isolate, width));
+      }
+      else
+      {
+        info.GetReturnValue().Set(Number::New(isolate, 0));
+      }
+    }
+
+    void OffscreenCanvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance())
+      {
+        int height = canvas->GetNativeInstance()->height();
+        info.GetReturnValue().Set(Number::New(isolate, height));
+      }
+      else
+      {
+        info.GetReturnValue().Set(Number::New(isolate, 0));
+      }
+    }
+
+    void OffscreenCanvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance() && value->IsNumber())
+      {
+        int width = value->Int32Value(isolate->GetCurrentContext()).FromJust();
+        canvas->GetNativeCanvas()->setWidth(width);
+      }
+    }
+
+    void OffscreenCanvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (canvas && canvas->GetNativeInstance() && value->IsNumber())
+      {
+        int height = value->Int32Value(isolate->GetCurrentContext()).FromJust();
+        canvas->GetNativeInstance()->setHeight(height);
+      }
+    }
+
+    void OffscreenCanvas::GetContext(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
+        return;
+      }
+
+      if (info.Length() < 1 || !info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Context type must be a string").ToLocalChecked()));
+        return;
+      }
+
+      String::Utf8Value contextType(isolate, info[0]);
+      std::string type(*contextType);
+
+      // TODO: Implement context creation based on type ("2d", "webgl", etc.)
+      // This should create and return the appropriate context wrapper
+      info.GetReturnValue().SetNull();
+    }
+
+    void OffscreenCanvas::ConvertToBlob(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
+        return;
+      }
+
+      // TODO: Implement convertToBlob method
+      // This should convert the canvas content to a Blob
+      info.GetReturnValue().SetUndefined();
+    }
+
+    void OffscreenCanvas::TransferToImageBitmap(const FunctionCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      OffscreenCanvas *canvas = ObjectWrap::Unwrap<OffscreenCanvas>(info.Holder());
+
+      if (!canvas || !canvas->GetNativeInstance())
+      {
+        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
+        return;
+      }
+
+      // TODO: Implement transferToImageBitmap method
+      // This should transfer the canvas content to an ImageBitmap
+      info.GetReturnValue().SetUndefined();
+    }
+  }
+}

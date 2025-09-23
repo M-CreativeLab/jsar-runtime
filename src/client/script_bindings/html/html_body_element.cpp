@@ -5,7 +5,7 @@ namespace script_bindings
   namespace html_bindings
   {
     HTMLBodyElement::HTMLBodyElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-      : HTMLBodyElementBase(isolate, args)
+        : HTMLBodyElementBase(isolate, args)
     {
     }
 
@@ -15,30 +15,34 @@ namespace script_bindings
       auto instance_template = tpl->InstanceTemplate();
 
       // Event handler properties
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onload").ToLocalChecked(), 
-                                    OnLoadGetter, OnLoadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onunload").ToLocalChecked(), 
-                                    OnUnloadGetter, OnUnloadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onbeforeunload").ToLocalChecked(), 
-                                    OnBeforeUnloadGetter, OnBeforeUnloadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onresize").ToLocalChecked(), 
-                                    OnResizeGetter, OnResizeSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onload").ToLocalChecked(),
+                                     OnLoadGetter,
+                                     OnLoadSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onunload").ToLocalChecked(),
+                                     OnUnloadGetter,
+                                     OnUnloadSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onbeforeunload").ToLocalChecked(),
+                                     OnBeforeUnloadGetter,
+                                     OnBeforeUnloadSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onresize").ToLocalChecked(),
+                                     OnResizeGetter,
+                                     OnResizeSetter);
     }
 
     v8::Local<v8::Object> HTMLBodyElement::NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLBodyElement> nativeElement)
     {
       v8::EscapableHandleScope handle_scope(isolate);
       auto context = isolate->GetCurrentContext();
-      
+
       auto constructor = HTMLBodyElement::GetConstructorFunction(isolate);
       v8::Local<v8::Object> instance;
-      
+
       if (constructor->NewInstance(context).ToLocal(&instance))
       {
         HTMLBodyElement::Wrap(isolate, instance, new HTMLBodyElement(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
         // TODO: Set native element instance
       }
-      
+
       return handle_scope.Escape(instance);
     }
 

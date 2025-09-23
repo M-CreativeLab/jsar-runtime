@@ -11,8 +11,8 @@ namespace script_bindings
   {
     class HTMLInputElement;
     using HTMLInputElementBase = scripting_base::ObjectWrap<HTMLInputElement,
-                                                           dom::HTMLInputElement,
-                                                           HTMLElement>;
+                                                            dom::HTMLInputElement,
+                                                            HTMLElement>;
 
     /**
      * HTMLInputElement wrapper for V8 objects using scripting_base::ObjectWrap.

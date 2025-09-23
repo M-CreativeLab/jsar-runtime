@@ -3,7 +3,7 @@
 namespace script_bindings
 {
   Navigator::Navigator(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-    : NavigatorBase(isolate, args)
+      : NavigatorBase(isolate, args)
   {
     // Navigator constructor - typically not called directly
   }
@@ -50,23 +50,23 @@ namespace script_bindings
 
     // Methods
     prototype_template->Set(v8::String::NewFromUtf8(isolate, "javaEnabled").ToLocalChecked(),
-                           v8::FunctionTemplate::New(isolate, JavaEnabled));
+                            v8::FunctionTemplate::New(isolate, JavaEnabled));
   }
 
   v8::Local<v8::Object> Navigator::NewInstance(v8::Isolate *isolate, std::shared_ptr<browser::Navigator> nativeNavigator)
   {
     v8::EscapableHandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
-    
+
     auto constructor = Navigator::GetConstructorFunction(isolate);
     v8::Local<v8::Object> instance;
-    
+
     if (constructor->NewInstance(context).ToLocal(&instance))
     {
       Navigator::Wrap(isolate, instance, new Navigator(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
       // TODO: Set native navigator instance
     }
-    
+
     return handle_scope.Escape(instance);
   }
 
@@ -209,13 +209,12 @@ namespace script_bindings
     {
       auto languages = navigator->GetLanguages();
       auto array = v8::Array::New(isolate, static_cast<int>(languages.size()));
-      
+
       for (size_t i = 0; i < languages.size(); ++i)
       {
-        array->Set(context, static_cast<uint32_t>(i), 
-                  v8::String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked());
+        array->Set(context, static_cast<uint32_t>(i), v8::String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked());
       }
-      
+
       info.GetReturnValue().Set(array);
     }
   }

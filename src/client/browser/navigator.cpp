@@ -4,14 +4,14 @@
 namespace browser
 {
   Navigator::Navigator()
-    : userAgent_("Mozilla/5.0 (JSAR-Runtime) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-    , platform_("JSAR")
-    , vendor_("M-CreativeLab")
-    , language_("en-US")
-    , hardwareConcurrency_(static_cast<int>(std::thread::hardware_concurrency()))
-    , onLine_(true)
-    , cookieEnabled_(true)
-    , doNotTrack_(false)
+      : userAgent_("Mozilla/5.0 (JSAR-Runtime) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+      , platform_("JSAR")
+      , vendor_("M-CreativeLab")
+      , language_("en-US")
+      , hardwareConcurrency_(static_cast<int>(std::thread::hardware_concurrency()))
+      , onLine_(true)
+      , cookieEnabled_(true)
+      , doNotTrack_(false)
   {
     // Initialize languages array
     languages_.push_back("en-US");

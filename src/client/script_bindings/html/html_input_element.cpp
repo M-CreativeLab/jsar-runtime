@@ -5,7 +5,7 @@ namespace script_bindings
   namespace html_bindings
   {
     HTMLInputElement::HTMLInputElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-      : HTMLInputElementBase(isolate, args)
+        : HTMLInputElementBase(isolate, args)
     {
     }
 
@@ -16,52 +16,59 @@ namespace script_bindings
       auto prototype_template = tpl->PrototypeTemplate();
 
       // Input properties
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(), 
-                                    TypeGetter, TypeSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "value").ToLocalChecked(), 
-                                    ValueGetter, ValueSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "placeholder").ToLocalChecked(), 
-                                    PlaceholderGetter, PlaceholderSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "disabled").ToLocalChecked(), 
-                                    DisabledGetter, DisabledSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "required").ToLocalChecked(), 
-                                    RequiredGetter, RequiredSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "checked").ToLocalChecked(), 
-                                    CheckedGetter, CheckedSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "name").ToLocalChecked(), 
-                                    NameGetter, NameSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
+                                     TypeGetter,
+                                     TypeSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "value").ToLocalChecked(),
+                                     ValueGetter,
+                                     ValueSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "placeholder").ToLocalChecked(),
+                                     PlaceholderGetter,
+                                     PlaceholderSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "disabled").ToLocalChecked(),
+                                     DisabledGetter,
+                                     DisabledSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "required").ToLocalChecked(),
+                                     RequiredGetter,
+                                     RequiredSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "checked").ToLocalChecked(),
+                                     CheckedGetter,
+                                     CheckedSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "name").ToLocalChecked(),
+                                     NameGetter,
+                                     NameSetter);
 
       // Validation methods
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "checkValidity").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, CheckValidity));
+                              v8::FunctionTemplate::New(isolate, CheckValidity));
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "reportValidity").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, ReportValidity));
+                              v8::FunctionTemplate::New(isolate, ReportValidity));
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "setCustomValidity").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, SetCustomValidity));
+                              v8::FunctionTemplate::New(isolate, SetCustomValidity));
 
       // Focus methods
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "focus").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, Focus));
+                              v8::FunctionTemplate::New(isolate, Focus));
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "blur").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, Blur));
+                              v8::FunctionTemplate::New(isolate, Blur));
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "select").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, Select));
+                              v8::FunctionTemplate::New(isolate, Select));
     }
 
     v8::Local<v8::Object> HTMLInputElement::NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLInputElement> nativeElement)
     {
       v8::EscapableHandleScope handle_scope(isolate);
       auto context = isolate->GetCurrentContext();
-      
+
       auto constructor = HTMLInputElement::GetConstructorFunction(isolate);
       v8::Local<v8::Object> instance;
-      
+
       if (constructor->NewInstance(context).ToLocal(&instance))
       {
         HTMLInputElement::Wrap(isolate, instance, new HTMLInputElement(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
         // TODO: Set native element instance
       }
-      
+
       return handle_scope.Escape(instance);
     }
 

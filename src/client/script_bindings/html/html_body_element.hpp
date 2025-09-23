@@ -11,8 +11,8 @@ namespace script_bindings
   {
     class HTMLBodyElement;
     using HTMLBodyElementBase = scripting_base::ObjectWrap<HTMLBodyElement,
-                                                          dom::HTMLBodyElement,
-                                                          HTMLElement>;
+                                                           dom::HTMLBodyElement,
+                                                           HTMLElement>;
 
     /**
      * HTMLBodyElement wrapper for V8 objects using scripting_base::ObjectWrap.

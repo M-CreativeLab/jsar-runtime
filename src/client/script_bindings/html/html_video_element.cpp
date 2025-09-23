@@ -5,7 +5,7 @@ namespace script_bindings
   namespace html_bindings
   {
     HTMLVideoElement::HTMLVideoElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-      : HTMLVideoElementBase(isolate, args)
+        : HTMLVideoElementBase(isolate, args)
     {
     }
 
@@ -16,40 +16,44 @@ namespace script_bindings
       auto prototype_template = tpl->PrototypeTemplate();
 
       // Video-specific properties
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "width").ToLocalChecked(), 
-                                    WidthGetter, WidthSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "height").ToLocalChecked(), 
-                                    HeightGetter, HeightSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "videoWidth").ToLocalChecked(), 
-                                    VideoWidthGetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "videoHeight").ToLocalChecked(), 
-                                    VideoHeightGetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "poster").ToLocalChecked(), 
-                                    PosterGetter, PosterSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "playsInline").ToLocalChecked(), 
-                                    PlaysinlineGetter, PlaysinlineSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "width").ToLocalChecked(),
+                                     WidthGetter,
+                                     WidthSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "height").ToLocalChecked(),
+                                     HeightGetter,
+                                     HeightSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "videoWidth").ToLocalChecked(),
+                                     VideoWidthGetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "videoHeight").ToLocalChecked(),
+                                     VideoHeightGetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "poster").ToLocalChecked(),
+                                     PosterGetter,
+                                     PosterSetter);
+      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "playsInline").ToLocalChecked(),
+                                     PlaysinlineGetter,
+                                     PlaysinlineSetter);
 
       // Video-specific methods
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "getVideoPlaybackQuality").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, GetVideoPlaybackQuality));
+                              v8::FunctionTemplate::New(isolate, GetVideoPlaybackQuality));
       prototype_template->Set(v8::String::NewFromUtf8(isolate, "requestPictureInPicture").ToLocalChecked(),
-                             v8::FunctionTemplate::New(isolate, RequestPictureInPicture));
+                              v8::FunctionTemplate::New(isolate, RequestPictureInPicture));
     }
 
     v8::Local<v8::Object> HTMLVideoElement::NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLVideoElement> nativeElement)
     {
       v8::EscapableHandleScope handle_scope(isolate);
       auto context = isolate->GetCurrentContext();
-      
+
       auto constructor = HTMLVideoElement::GetConstructorFunction(isolate);
       v8::Local<v8::Object> instance;
-      
+
       if (constructor->NewInstance(context).ToLocal(&instance))
       {
         HTMLVideoElement::Wrap(isolate, instance, new HTMLVideoElement(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
         // TODO: Set native element instance
       }
-      
+
       return handle_scope.Escape(instance);
     }
 

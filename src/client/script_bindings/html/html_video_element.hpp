@@ -11,8 +11,8 @@ namespace script_bindings
   {
     class HTMLVideoElement;
     using HTMLVideoElementBase = scripting_base::ObjectWrap<HTMLVideoElement,
-                                                           dom::HTMLVideoElement,
-                                                           HTMLMediaElement>;
+                                                            dom::HTMLVideoElement,
+                                                            HTMLMediaElement>;
 
     /**
      * HTMLVideoElement wrapper for V8 objects using scripting_base::ObjectWrap.
