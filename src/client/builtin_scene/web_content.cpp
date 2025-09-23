@@ -41,7 +41,7 @@ namespace builtin_scene
       , textDirection(skia::textlayout::TextDirection::kLtr)
       , textHeightBehavior(skia::textlayout::TextHeightBehavior::kAll)
       , textStyle()
-      , lineHeight(1.5f)
+      , lineHeight(1.2f)
       , useFixedLineHeight(false)
       , halfLeading(true)
       , leading(0.0f)
@@ -58,6 +58,7 @@ namespace builtin_scene
       , content_style_()
       , background_color_(1.0f, 1.0f, 1.0f, 0.0f)
       , device_pixel_ratio_(client_cssom::DevicePixelRatio)
+      , texture_pad_(2)
   {
     resetSkSurface(initialWidth, initialHeight);
   }
@@ -225,6 +226,25 @@ namespace builtin_scene
       assert(false && "Failed to resize or initialize the texture.");
     }
     return texture_;
+  }
+
+  glm::vec2 WebContent::measureText(const std::string &text, float max_width) const
+  {
+    auto paragraph_style = paragraphStyle();
+    auto paragraph_builder = skia::textlayout::ParagraphBuilder::make(
+      paragraph_style, TrClientContextPerProcess::Get()->getFontCacheManager());
+    paragraph_builder->pushStyle(paragraph_style.getTextStyle());
+    paragraph_builder->addText(text.c_str(), text.size());
+    paragraph_builder->pop();
+
+    auto paragraph = paragraph_builder->Build();
+    paragraph->layout(max_width > 0
+                        ? max_width + 1.0f // Add a small margin to avoid rounding issues
+                        : numeric_limits<float>::infinity());
+
+    // Use longest line width and height as the constraint space.
+    return glm::vec2(paragraph->getLongestLine() / device_pixel_ratio_,
+                     paragraph->getHeight() / device_pixel_ratio_);
   }
 
   skia::textlayout::TextStyle WebContent::textStyle() const

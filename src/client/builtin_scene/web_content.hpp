@@ -261,6 +261,15 @@ namespace builtin_scene
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
 
+    /**
+     * Measure the size of the given text with current text style.
+     * 
+     * @param text The text to measure.
+     * @param max_width The maximum width of the text, if the text exceeds the width, it will be wrapped.
+     * @returns The size of the text in logical pixels.
+     */
+    glm::vec2 measureText(const std::string &text, float max_width) const;
+
     inline void setEnabled(bool enabled)
     {
       enabled_ = enabled;

@@ -75,4 +75,42 @@ namespace client_cssom::values::computed
                : skia::textlayout::TextDirection::kRtl;
     }
   };
+
+  class VerticalAlign : public specified::VerticalAlign
+  {
+    using specified::VerticalAlign::VerticalAlign;
+
+  public:
+    VerticalAlign(const specified::VerticalAlign &other)
+        : specified::VerticalAlign(other)
+    {
+    }
+
+    // Check if this is a baseline alignment
+    bool isBaseline() const
+    {
+      return tag() == Tag::kBaseline;
+    }
+
+    // Check if this is a keyword alignment (not length/percentage)
+    bool isKeyword() const
+    {
+      return tag() != Tag::kLength && tag() != Tag::kPercentage;
+    }
+
+    // Get the offset in pixels for length/percentage values
+    // For percentage, lineHeight should be provided
+    float getOffset(float lineHeight = 0.0f) const
+    {
+      switch (tag())
+      {
+      case Tag::kLength:
+        return value();
+      case Tag::kPercentage:
+        return (value() / 100.0f) * lineHeight;
+      default:
+        return 0.0f; // Keywords don't have numeric offsets
+      }
+    }
+  };
 }
