@@ -10,6 +10,7 @@
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/computed_style.hpp>
+#include <client/cssom/values/computed/text.hpp>
 #include <client/layout/fragment.hpp>
 #include <client/per_process.hpp>
 
@@ -95,6 +96,9 @@ namespace builtin_scene
     bool strutEnabled;
     bool forceStrutHeight;
     bool applyRoundingHack;
+
+    // Vertical alignment properties
+    client_cssom::values::computed::VerticalAlign verticalAlign;
   };
 
   class WebContent : public ecs::Component

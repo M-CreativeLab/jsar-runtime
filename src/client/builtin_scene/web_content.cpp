@@ -158,6 +158,8 @@ namespace builtin_scene
         content_style_.textAlign = style_.textAlign();
       if (style_.hasProperty("direction"))
         content_style_.textDirection = style_.textDirection();
+      if (style_.hasProperty("vertical-align"))
+        content_style_.verticalAlign = style_.verticalAlign();
 
       // Line height
       if (style_.hasProperty("line-height"))

@@ -555,6 +555,8 @@ namespace client_cssom
       text_align_ = Parse::ParseSingleValue<values::computed::TextAlign>(resolvedValue);
     else if (name == "direction")
       text_direction_ = Parse::ParseSingleValue<values::computed::Direction>(resolvedValue);
+    else if (name == "vertical-align")
+      vertical_align_ = Parse::ParseSingleValue<values::computed::VerticalAlign>(resolvedValue);
 
     // Color properties
     else if (name == "color")
