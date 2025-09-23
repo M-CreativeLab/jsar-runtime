@@ -38,12 +38,28 @@ namespace builtin_scene
 /**
  * @namespace client_graphics
  * The `client_graphics` namespace contains classes related to graphics rendering,
- * such as `WebGLContext` and `WebGL2Context`.
+ * such as `WebGLContext`, `WebGL2Context`, and `WebGPUContext`.
  */
 namespace client_graphics
 {
   class WebGLContext;  // Represents a WebGL 1.0 rendering context
   class WebGL2Context; // Represents a WebGL 2.0 rendering context
+
+  // WebGPU classes
+  class WebGPUContext;           // Represents a WebGPU context
+  class WebGPUAdapter;           // Represents a WebGPU adapter
+  class WebGPUDevice;            // Represents a WebGPU device
+  class WebGPUQueue;             // Represents a WebGPU queue
+  class WebGPUCommandEncoder;    // Represents a WebGPU command encoder
+  class WebGPUCommandBuffer;     // Represents a WebGPU command buffer
+  class WebGPURenderPassEncoder; // Represents a WebGPU render pass encoder
+
+  // WebGPU resource classes (placeholders)
+  class WebGPUBuffer;          // Represents a WebGPU buffer
+  class WebGPUTexture;         // Represents a WebGPU texture
+  class WebGPUBindGroup;       // Represents a WebGPU bind group
+  class WebGPURenderPipeline;  // Represents a WebGPU render pipeline
+  class WebGPUComputePipeline; // Represents a WebGPU compute pipeline
 }
 
 /**
