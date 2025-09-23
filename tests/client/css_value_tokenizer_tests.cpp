@@ -105,22 +105,19 @@ TEST_CASE("CSSValueTokenizer negative number support", "[css-tokenizer]")
     CSSValueTokenizer tokenizer("translateX(-50%)");
     auto tokens = tokenizer.tokenize();
     
-    REQUIRE(tokens.size() == 4); // function, left-paren, percentage, right-paren
+    REQUIRE(tokens.size() == 3); // function, percentage, right-paren
     
-    // Function token
+    // Function token (includes opening parenthesis)
     REQUIRE(tokens[0].type == TokenType::kFunction);
     REQUIRE(tokens[0].value == "translateX");
     
-    // Left parenthesis
-    REQUIRE(tokens[1].type == TokenType::kLeftParen);
-    
     // Negative percentage
-    REQUIRE(tokens[2].type == TokenType::kPercentage);
-    REQUIRE(tokens[2].value == "-50%");
-    REQUIRE(tokens[2].numeric_value == -50.0);
+    REQUIRE(tokens[1].type == TokenType::kPercentage);
+    REQUIRE(tokens[1].value == "-50%");
+    REQUIRE(tokens[1].numeric_value == -50.0);
     
     // Right parenthesis
-    REQUIRE(tokens[3].type == TokenType::kRightParen);
+    REQUIRE(tokens[2].type == TokenType::kRightParen);
   }
   
   SECTION("Ensure regular identifiers still work")
