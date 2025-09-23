@@ -168,7 +168,7 @@ namespace client_cssom::values::specified
   {
     friend class Parse;
 
-  protected:
+  public:
     enum Tag : uint8_t
     {
       kBaseline,
@@ -248,6 +248,33 @@ namespace client_cssom::values::specified
     {
       return value_;
     }
+    std::string toCss() const override
+    {
+      switch (tag_)
+      {
+      case Tag::kBaseline:
+        return "baseline";
+      case Tag::kSub:
+        return "sub";
+      case Tag::kSuper:
+        return "super";
+      case Tag::kTop:
+        return "top";
+      case Tag::kTextTop:
+        return "text-top";
+      case Tag::kMiddle:
+        return "middle";
+      case Tag::kBottom:
+        return "bottom";
+      case Tag::kTextBottom:
+        return "text-bottom";
+      case Tag::kLength:
+        return std::to_string(value_) + "px";
+      case Tag::kPercentage:
+        return std::to_string(value_) + "%";
+      }
+      assert(false && "Invalid tag.");
+    }
 
   private:
     bool parse(const std::string &input) override
@@ -303,34 +330,6 @@ namespace client_cssom::values::specified
         }
       }
       return true;
-    }
-
-    std::string toCss() const override
-    {
-      switch (tag_)
-      {
-      case Tag::kBaseline:
-        return "baseline";
-      case Tag::kSub:
-        return "sub";
-      case Tag::kSuper:
-        return "super";
-      case Tag::kTop:
-        return "top";
-      case Tag::kTextTop:
-        return "text-top";
-      case Tag::kMiddle:
-        return "middle";
-      case Tag::kBottom:
-        return "bottom";
-      case Tag::kTextBottom:
-        return "text-bottom";
-      case Tag::kLength:
-        return std::to_string(value_) + "px";
-      case Tag::kPercentage:
-        return std::to_string(value_) + "%";
-      }
-      assert(false && "Invalid tag.");
     }
 
   protected:

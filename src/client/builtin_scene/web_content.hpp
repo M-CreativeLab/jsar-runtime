@@ -10,7 +10,6 @@
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/computed_style.hpp>
-#include <client/cssom/values/computed/text.hpp>
 #include <client/layout/fragment.hpp>
 #include <client/per_process.hpp>
 
@@ -261,6 +260,15 @@ namespace builtin_scene
      * @returns The texture or `nullptr` if the texture is not used.
      */
     std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
+
+    /**
+     * Measure the size of the given text with current text style.
+     * 
+     * @param text The text to measure.
+     * @param max_width The maximum width of the text, if the text exceeds the width, it will be wrapped.
+     * @returns The size of the text in logical pixels.
+     */
+    glm::vec2 measureText(const std::string &text, float max_width) const;
 
     inline void setEnabled(bool enabled)
     {

@@ -74,21 +74,8 @@ namespace client_layout
     if (textContent.size() == 0)
       return ConstraintSpace::Zero();
 
-    auto paragraphStyle = webContentComponent->paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
-                                                   TrClientContextPerProcess::Get()->getFontCacheManager());
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(textContent.c_str(), textContent.size());
-    paragraphBuilder->pop();
-
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(maxWidth > 0
-                        ? maxWidth + 1.0f // Add a small margin to avoid rounding issues
-                        : numeric_limits<float>::infinity());
-
-    // Use longest line width and height as the constraint space.
-    return ConstraintSpace(paragraph->getLongestLine(),
-                           paragraph->getHeight());
+    auto size = webContentComponent->measureText(textContent, maxWidth);
+    return ConstraintSpace(size.x, size.y);
   }
 
   void LayoutText::textDidChange()
