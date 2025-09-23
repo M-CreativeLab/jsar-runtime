@@ -3,7 +3,10 @@
 
 #include <client/graphics/webgpu_context.hpp>
 #include <client/graphics/webgpu_command_encoder.hpp>
-#include <client/graphics/webgpu_resources.hpp>
+#include <client/graphics/webgpu_buffer.hpp>
+#include <client/graphics/webgpu_texture.hpp>
+#include <client/graphics/webgpu_bind_group.hpp>
+#include <client/graphics/webgpu_render_pipeline.hpp>
 
 using namespace client_graphics;
 

@@ -45,14 +45,15 @@ namespace client_graphics
   class WebGLContext;  // Represents a WebGL 1.0 rendering context
   class WebGL2Context; // Represents a WebGL 2.0 rendering context
 
-  // WebGPU classes
-  class WebGPUContext;           // Represents a WebGPU context
+  // WebGPU classes (split into individual files)
+  class WebGPUContextAttributes; // Context configuration attributes
   class WebGPUAdapter;           // Represents a WebGPU adapter
   class WebGPUDevice;            // Represents a WebGPU device
   class WebGPUQueue;             // Represents a WebGPU queue
-  class WebGPUCommandEncoder;    // Represents a WebGPU command encoder
-  class WebGPUCommandBuffer;     // Represents a WebGPU command buffer
-  class WebGPURenderPassEncoder; // Represents a WebGPU render pass encoder
+  class WebGPUContext;           // Main WebGPU context interface
+  class WebGPUCommandEncoder;    // Records GPU commands
+  class WebGPUCommandBuffer;     // Container for recorded commands
+  class WebGPURenderPassEncoder; // Records render pass commands
 
   // WebGPU resource classes (placeholders)
   class WebGPUBuffer;          // Represents a WebGPU buffer
