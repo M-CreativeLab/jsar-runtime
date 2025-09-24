@@ -1,5 +1,8 @@
 #include "html_input_element.hpp"
 
+using namespace std;
+using namespace v8;
+
 namespace script_bindings
 {
   namespace html_bindings
@@ -55,21 +58,12 @@ namespace script_bindings
                               v8::FunctionTemplate::New(isolate, Select));
     }
 
-    v8::Local<v8::Object> HTMLInputElement::NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLInputElement> nativeElement)
+    Local<Object> HTMLInputElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLInputElement> nativeElement)
     {
-      v8::EscapableHandleScope handle_scope(isolate);
-      auto context = isolate->GetCurrentContext();
-
-      auto constructor = HTMLInputElement::GetConstructorFunction(isolate);
-      v8::Local<v8::Object> instance;
-
-      if (constructor->NewInstance(context).ToLocal(&instance))
-      {
-        HTMLInputElement::Wrap(isolate, instance, new HTMLInputElement(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
-        // TODO: Set native element instance
-      }
-
-      return handle_scope.Escape(instance);
+      EscapableHandleScope scope(isolate);
+      return nativeElement != nullptr
+               ? scope.Escape(HTMLInputElementBase::NewInstance(isolate, nativeElement).As<Object>())
+               : scope.Escape(Local<Object>());
     }
 
     v8::Local<v8::Function> HTMLInputElement::Initialize(v8::Isolate *isolate)
@@ -81,7 +75,7 @@ namespace script_bindings
     void HTMLInputElement::TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       v8::Isolate *isolate = info.GetIsolate();
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get input type from native element
@@ -91,7 +85,7 @@ namespace script_bindings
 
     void HTMLInputElement::TypeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element && value->IsString())
       {
         // TODO: Set input type on native element
@@ -101,7 +95,7 @@ namespace script_bindings
     void HTMLInputElement::ValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       v8::Isolate *isolate = info.GetIsolate();
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get value from native element
@@ -111,7 +105,7 @@ namespace script_bindings
 
     void HTMLInputElement::ValueSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element && value->IsString())
       {
         // TODO: Set value on native element
@@ -121,7 +115,7 @@ namespace script_bindings
     void HTMLInputElement::PlaceholderGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       v8::Isolate *isolate = info.GetIsolate();
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get placeholder from native element
@@ -131,7 +125,7 @@ namespace script_bindings
 
     void HTMLInputElement::PlaceholderSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element && value->IsString())
       {
         // TODO: Set placeholder on native element
@@ -140,7 +134,7 @@ namespace script_bindings
 
     void HTMLInputElement::DisabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get disabled state from native element
@@ -150,7 +144,7 @@ namespace script_bindings
 
     void HTMLInputElement::DisabledSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set disabled state on native element
@@ -159,7 +153,7 @@ namespace script_bindings
 
     void HTMLInputElement::RequiredGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get required state from native element
@@ -169,7 +163,7 @@ namespace script_bindings
 
     void HTMLInputElement::RequiredSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set required state on native element
@@ -178,7 +172,7 @@ namespace script_bindings
 
     void HTMLInputElement::CheckedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get checked state from native element
@@ -188,7 +182,7 @@ namespace script_bindings
 
     void HTMLInputElement::CheckedSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set checked state on native element
@@ -198,7 +192,7 @@ namespace script_bindings
     void HTMLInputElement::NameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       v8::Isolate *isolate = info.GetIsolate();
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get name from native element
@@ -208,7 +202,7 @@ namespace script_bindings
 
     void HTMLInputElement::NameSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element && value->IsString())
       {
         // TODO: Set name on native element
@@ -218,7 +212,7 @@ namespace script_bindings
     // Validation methods
     void HTMLInputElement::CheckValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Perform validation check
@@ -228,7 +222,7 @@ namespace script_bindings
 
     void HTMLInputElement::ReportValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Report validation status
@@ -238,7 +232,7 @@ namespace script_bindings
 
     void HTMLInputElement::SetCustomValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element && info.Length() > 0 && info[0]->IsString())
       {
         // TODO: Set custom validity message
@@ -248,7 +242,7 @@ namespace script_bindings
     // Focus methods
     void HTMLInputElement::Focus(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Focus the input element
@@ -257,7 +251,7 @@ namespace script_bindings
 
     void HTMLInputElement::Blur(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Blur the input element
@@ -266,7 +260,7 @@ namespace script_bindings
 
     void HTMLInputElement::Select(const v8::FunctionCallbackInfo<v8::Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Select text in the input element

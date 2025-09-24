@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     class ImageBitmap;
     using ImageBitmapBase = scripting_base::ObjectWrap<ImageBitmap, ::canvas::ImageBitmap>;

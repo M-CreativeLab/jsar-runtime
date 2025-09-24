@@ -2,14 +2,18 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/canvas/canvas.hpp>
 #include <client/canvas/rendering_context2d.hpp>
 
 namespace script_bindings
 {
   namespace canvas_bindings
   {
+    using NativeCanvasRenderingContext2D = ::canvas::CanvasRenderingContext2D<::canvas::Canvas>;
+
     class CanvasRenderingContext2D;
-    using CanvasRenderingContext2DBase = scripting_base::ObjectWrap<CanvasRenderingContext2D, canvas::RenderingContext2D>;
+    using CanvasRenderingContext2DBase = scripting_base::ObjectWrap<CanvasRenderingContext2D,
+                                                                    NativeCanvasRenderingContext2D>;
 
     /**
      * CanvasRenderingContext2D wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -38,7 +42,8 @@ namespace script_bindings
       /**
        * Create a new V8 CanvasRenderingContext2D instance from a native canvas::RenderingContext2D.
        */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<canvas::RenderingContext2D> nativeContext);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<NativeCanvasRenderingContext2D> nativeContext);
 
       /**
        * Initialize the CanvasRenderingContext2D class and register it with V8.
@@ -121,7 +126,34 @@ namespace script_bindings
       static void Restore(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Canvas element property
-      static void CanvasGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void CanvasGetter(
+        v8::Local<v8::String> property,
+        const v8::PropertyCallbackInfo<v8::Value> &info);
+      
+      static void LineWidthGetter(
+        v8::Local<v8::String> property,
+        const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void LineWidthSetter(
+        v8::Local<v8::String> property,
+        v8::Local<v8::Value> value,
+        const v8::PropertyCallbackInfo<void> &info);
+      static void LineCapGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void LineCapSetter(
+        v8::Local<v8::String> property,
+        v8::Local<v8::Value> value,
+        const v8::PropertyCallbackInfo<void> &info);
+      static void GlobalAlphaGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void GlobalAlphaSetter(
+        v8::Local<v8::String> property,
+        v8::Local<v8::Value> value,
+        const v8::PropertyCallbackInfo<void> &info);
+      static void GlobalCompositeOperationGetter(
+        v8::Local<v8::String> property,
+        const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void GlobalCompositeOperationSetter(
+        v8::Local<v8::String> property,
+        v8::Local<v8::Value> value,
+        const v8::PropertyCallbackInfo<void> &info);
     };
   }
 }

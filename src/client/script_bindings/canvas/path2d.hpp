@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     class Path2D;
     using Path2DBase = scripting_base::ObjectWrap<Path2D, ::canvas::Path2D>;

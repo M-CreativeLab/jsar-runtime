@@ -6,17 +6,11 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     class ImageSource;
     using ImageSourceBase = scripting_base::ObjectWrap<ImageSource, ::canvas::ImageSource>;
 
-    /**
-     * ImageSource wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps canvas::ImageSource objects for use in V8 JavaScript execution contexts.
-     * It provides the standard ImageSource interface for image loading and manipulation.
-     */
     class ImageSource : public ImageSourceBase
     {
       using ImageSourceBase::ObjectWrap;

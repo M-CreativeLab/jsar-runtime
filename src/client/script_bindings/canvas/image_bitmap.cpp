@@ -3,7 +3,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     using namespace v8;
 
@@ -35,14 +35,15 @@ namespace script_bindings
 
     Local<Object> ImageBitmap::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageBitmap> nativeImageBitmap)
     {
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
-
-      ImageBitmap *imageBitmapWrapper = ObjectWrap::Unwrap<ImageBitmap>(instance);
-      imageBitmapWrapper->SetNativeInstance(nativeImageBitmap);
-
-      return instance;
+      EscapableHandleScope scope(isolate);
+      if (nativeImageBitmap == nullptr)
+      {
+        return scope.Escape(Local<Object>());
+      }
+      else
+      {
+        return scope.Escape(ImageBitmapBase::NewInstance(isolate, nativeImageBitmap).As<Object>());
+      }
     }
 
     Local<Function> ImageBitmap::Initialize(Isolate *isolate)
@@ -53,20 +54,16 @@ namespace script_bindings
     ImageBitmap::ImageBitmap(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : ImageBitmapBase(isolate, args)
     {
-      // ImageBitmap is typically created through factory methods, not constructor
-      // But we can create an empty instance here
-      auto nativeImageBitmap = std::make_shared<::canvas::ImageBitmap>();
-      SetNativeInstance(nativeImageBitmap);
     }
 
     void ImageBitmap::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = ObjectWrap::Unwrap<ImageBitmap>(info.Holder());
+      ImageBitmap *imageBitmap = Unwrap(info.This());
 
-      if (imageBitmap && imageBitmap->GetNativeInstance())
+      if (imageBitmap && imageBitmap->inner())
       {
-        int width = imageBitmap->GetNativeInstance()->width();
+        int width = imageBitmap->inner()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -78,11 +75,11 @@ namespace script_bindings
     void ImageBitmap::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = ObjectWrap::Unwrap<ImageBitmap>(info.Holder());
+      ImageBitmap *imageBitmap = Unwrap(info.This());
 
-      if (imageBitmap && imageBitmap->GetNativeInstance())
+      if (imageBitmap && imageBitmap->inner())
       {
-        int height = imageBitmap->GetNativeInstance()->height();
+        int height = imageBitmap->inner()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -94,17 +91,15 @@ namespace script_bindings
     void ImageBitmap::Close(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = ObjectWrap::Unwrap<ImageBitmap>(info.Holder());
+      ImageBitmap *imageBitmap = Unwrap(info.This());
 
-      if (!imageBitmap || !imageBitmap->GetNativeInstance())
+      if (!imageBitmap || !imageBitmap->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid ImageBitmap instance").ToLocalChecked()));
         return;
       }
 
-      // TODO: Implement close method
-      // This should release the image bitmap resources
-      imageBitmap->GetNativeInstance()->close();
+      imageBitmap->inner()->close();
       info.GetReturnValue().SetUndefined();
     }
   }

@@ -3,7 +3,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     using namespace v8;
 
@@ -47,14 +47,10 @@ namespace script_bindings
 
     Local<Object> ImageSource::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageSource> nativeImageSource)
     {
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
-
-      ImageSource *imageSourceWrapper = ObjectWrap::Unwrap<ImageSource>(instance);
-      imageSourceWrapper->SetNativeInstance(nativeImageSource);
-
-      return instance;
+      EscapableHandleScope scope(isolate);
+      return nativeImageSource != nullptr
+               ? scope.Escape(ImageSourceBase::NewInstance(isolate, nativeImageSource).As<Object>())
+               : scope.Escape(Local<Object>());
     }
 
     Local<Function> ImageSource::Initialize(Isolate *isolate)
@@ -65,19 +61,16 @@ namespace script_bindings
     ImageSource::ImageSource(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : ImageSourceBase(isolate, args)
     {
-      // Constructor implementation
-      auto nativeImageSource = std::make_shared<::canvas::ImageSource>();
-      SetNativeInstance(nativeImageSource);
     }
 
     void ImageSource::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = ObjectWrap::Unwrap<ImageSource>(info.Holder());
+      ImageSource *imageSource = Unwrap(info.This());
 
-      if (imageSource && imageSource->GetNativeInstance())
+      if (imageSource && imageSource->inner())
       {
-        int width = imageSource->GetNativeInstance()->width();
+        int width = imageSource->inner()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -89,11 +82,11 @@ namespace script_bindings
     void ImageSource::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = ObjectWrap::Unwrap<ImageSource>(info.Holder());
+      ImageSource *imageSource = Unwrap(info.This());
 
-      if (imageSource && imageSource->GetNativeInstance())
+      if (imageSource && imageSource->inner())
       {
-        int height = imageSource->GetNativeInstance()->height();
+        int height = imageSource->inner()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -105,11 +98,12 @@ namespace script_bindings
     void ImageSource::NaturalWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = ObjectWrap::Unwrap<ImageSource>(info.Holder());
+      ImageSource *imageSource = Unwrap(info.This());
 
-      if (imageSource && imageSource->GetNativeInstance())
+      if (imageSource && imageSource->inner())
       {
-        int naturalWidth = imageSource->GetNativeInstance()->naturalWidth();
+        // TODO(yorkie): Consider using actual natural width if different from width
+        int naturalWidth = imageSource->inner()->width();
         info.GetReturnValue().Set(Number::New(isolate, naturalWidth));
       }
       else
@@ -121,11 +115,12 @@ namespace script_bindings
     void ImageSource::NaturalHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = ObjectWrap::Unwrap<ImageSource>(info.Holder());
+      ImageSource *imageSource = Unwrap(info.This());
 
-      if (imageSource && imageSource->GetNativeInstance())
+      if (imageSource && imageSource->inner())
       {
-        int naturalHeight = imageSource->GetNativeInstance()->naturalHeight();
+        // TODO(yorkie): Consider using actual natural height if different from height
+        int naturalHeight = imageSource->inner()->height();
         info.GetReturnValue().Set(Number::New(isolate, naturalHeight));
       }
       else
@@ -137,9 +132,9 @@ namespace script_bindings
     void ImageSource::GetImageData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = ObjectWrap::Unwrap<ImageSource>(info.Holder());
+      ImageSource *imageSource = Unwrap(info.This());
 
-      if (!imageSource || !imageSource->GetNativeInstance())
+      if (!imageSource || !imageSource->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid ImageSource instance").ToLocalChecked()));
         return;

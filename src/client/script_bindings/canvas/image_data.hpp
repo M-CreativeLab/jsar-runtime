@@ -6,7 +6,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     class ImageData;
     using ImageDataBase = scripting_base::ObjectWrap<ImageData, ::canvas::ImageData>;

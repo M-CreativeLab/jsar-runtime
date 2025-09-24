@@ -1,14 +1,9 @@
-#include "canvas_rendering_context_2d.hpp"
-#include <client/dom/canvas/canvas_rendering_context_2d.hpp>
+#include "./canvas_rendering_context_2d.hpp"
 
-namespace script_bindings::canvas
+namespace script_bindings::canvas_bindings
 {
+  using namespace std;
   using namespace v8;
-
-  std::string CanvasRenderingContext2D::Name()
-  {
-    return "CanvasRenderingContext2D";
-  }
 
   void CanvasRenderingContext2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
@@ -84,17 +79,23 @@ namespace script_bindings::canvas
 
     // Properties
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
-                                         CanvasGetter, CanvasSetter);
+                                         CanvasGetter,
+                                         nullptr);
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "fillStyle").ToLocalChecked(),
-                                         FillStyleGetter, FillStyleSetter);
+                                         FillStyleGetter,
+                                         FillStyleSetter);
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "strokeStyle").ToLocalChecked(),
-                                         StrokeStyleGetter, StrokeStyleSetter);
+                                         StrokeStyleGetter,
+                                         StrokeStyleSetter);
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "lineWidth").ToLocalChecked(),
-                                         LineWidthGetter, LineWidthSetter);
+                                         LineWidthGetter,
+                                         LineWidthSetter);
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "globalAlpha").ToLocalChecked(),
-                                         GlobalAlphaGetter, GlobalAlphaSetter);
+                                         GlobalAlphaGetter,
+                                         GlobalAlphaSetter);
     tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "globalCompositeOperation").ToLocalChecked(),
-                                         GlobalCompositeOperationGetter, GlobalCompositeOperationSetter);
+                                         GlobalCompositeOperationGetter,
+                                         GlobalCompositeOperationSetter);
   }
 
   CanvasRenderingContext2D::CanvasRenderingContext2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -249,11 +250,6 @@ namespace script_bindings::canvas
     // TODO: Implement canvas getter
   }
 
-  void CanvasRenderingContext2D::CanvasSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
-  {
-    // TODO: Implement canvas setter
-  }
-
   void CanvasRenderingContext2D::FillStyleGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     // TODO: Implement fillStyle getter
@@ -304,16 +300,13 @@ namespace script_bindings::canvas
     // TODO: Implement globalCompositeOperation setter
   }
 
-  Local<Object> CanvasRenderingContext2D::NewInstance(Isolate *isolate, std::shared_ptr<dom::canvas::CanvasRenderingContext2D> nativeContext)
+  Local<Object> CanvasRenderingContext2D::NewInstance(Isolate *isolate,
+                                                      shared_ptr<NativeCanvasRenderingContext2D> nativeContext)
   {
     EscapableHandleScope scope(isolate);
     if (nativeContext == nullptr)
-    {
       return scope.Escape(Local<Object>());
-    }
     else
-    {
       return scope.Escape(CanvasRenderingContext2DBase::NewInstance(isolate, nativeContext).As<Object>());
-    }
   }
 }

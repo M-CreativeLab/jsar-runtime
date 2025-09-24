@@ -3,7 +3,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     using namespace v8;
 
@@ -43,14 +43,15 @@ namespace script_bindings
 
     Local<Object> ImageData::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageData> nativeImageData)
     {
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
-
-      ImageData *imageDataWrapper = ObjectWrap::Unwrap<ImageData>(instance);
-      imageDataWrapper->SetNativeInstance(nativeImageData);
-
-      return instance;
+      EscapableHandleScope scope(isolate);
+      if (nativeImageData == nullptr)
+      {
+        return scope.Escape(Local<Object>());
+      }
+      else
+      {
+        return scope.Escape(ImageDataBase::NewInstance(isolate, nativeImageData).As<Object>());
+      }
     }
 
     Local<Object> ImageData::NewInstance(Isolate *isolate, int width, int height, const std::string &colorSpace)
@@ -79,9 +80,8 @@ namespace script_bindings
           String::Utf8Value colorSpaceValue(isolate, args[2]);
           colorSpace = *colorSpaceValue;
         }
-
-        auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
-        SetNativeInstance(nativeImageData);
+        // auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
+        // SetNativeInstance(nativeImageData);
       }
       else if (args.Length() >= 3 && args[0]->IsUint8Array() && args[1]->IsNumber() && args[2]->IsNumber())
       {
@@ -98,20 +98,20 @@ namespace script_bindings
         }
 
         // Create ImageData with provided data
-        auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
+        // auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
         // TODO: Copy data from Uint8Array to native ImageData
-        SetNativeInstance(nativeImageData);
+        // SetNativeInstance(nativeImageData);
       }
     }
 
     void ImageData::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = ObjectWrap::Unwrap<ImageData>(info.Holder());
+      ImageData *imageData = Unwrap(info.This());
 
-      if (imageData && imageData->GetNativeInstance())
+      if (imageData && imageData->inner())
       {
-        int width = imageData->GetNativeInstance()->width();
+        int width = imageData->inner()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -123,11 +123,11 @@ namespace script_bindings
     void ImageData::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = ObjectWrap::Unwrap<ImageData>(info.Holder());
+      ImageData *imageData = Unwrap(info.This());
 
-      if (imageData && imageData->GetNativeInstance())
+      if (imageData && imageData->inner())
       {
-        int height = imageData->GetNativeInstance()->height();
+        int height = imageData->inner()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -139,13 +139,13 @@ namespace script_bindings
     void ImageData::DataGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = ObjectWrap::Unwrap<ImageData>(info.Holder());
+      ImageData *imageData = Unwrap(info.This());
 
-      if (imageData && imageData->GetNativeInstance())
+      if (imageData && imageData->inner())
       {
         // TODO: Return Uint8ClampedArray with image data
         // For now, return an empty Uint8ClampedArray
-        size_t dataLength = imageData->GetNativeInstance()->width() * imageData->GetNativeInstance()->height() * 4;
+        size_t dataLength = imageData->inner()->width() * imageData->inner()->height() * 4;
         Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, dataLength);
         Local<Uint8ClampedArray> dataArray = Uint8ClampedArray::New(buffer, 0, dataLength);
         info.GetReturnValue().Set(dataArray);
@@ -161,17 +161,23 @@ namespace script_bindings
     void ImageData::ColorSpaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = ObjectWrap::Unwrap<ImageData>(info.Holder());
+      ImageData *imageData = Unwrap(info.This());
 
-      if (imageData && imageData->GetNativeInstance())
+      std::string colorSpaceStr = "srgb"; // Default to "srgb"
+      if (imageData && imageData->inner())
       {
-        std::string colorSpace = imageData->GetNativeInstance()->colorSpace();
-        info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorSpace.c_str()).ToLocalChecked());
+        SkColorSpace *colorSpace = imageData->inner()->colorSpace();
+        if (colorSpace)
+        {
+          if (colorSpace->isSRGB())
+            colorSpaceStr = "srgb";
+          else if (colorSpace->gammaIsLinear())
+            colorSpaceStr = "linear";
+          else
+            colorSpaceStr = "custom"; // Fallback for unsupported color spaces
+        }
       }
-      else
-      {
-        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "srgb").ToLocalChecked());
-      }
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorSpaceStr.c_str()).ToLocalChecked());
     }
   }
 }

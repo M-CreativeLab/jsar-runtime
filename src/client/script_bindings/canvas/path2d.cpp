@@ -3,7 +3,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     using namespace v8;
 
@@ -41,14 +41,10 @@ namespace script_bindings
 
     Local<Object> Path2D::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::Path2D> nativePath2D)
     {
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
-
-      Path2D *path2DWrapper = ObjectWrap::Unwrap<Path2D>(instance);
-      path2DWrapper->SetNativeInstance(nativePath2D);
-
-      return instance;
+      EscapableHandleScope scope(isolate);
+      return nativePath2D != nullptr
+               ? scope.Escape(Path2DBase::NewInstance(isolate, nativePath2D).As<Object>())
+               : scope.Escape(Local<Object>());
     }
 
     Local<Function> Path2D::Initialize(Isolate *isolate)
@@ -68,7 +64,7 @@ namespace script_bindings
         {
           // Constructor with SVG path string
           String::Utf8Value pathString(isolate, args[0]);
-          nativePath2D->addPath(*pathString);
+          // nativePath2D->addPath(*pathString);
         }
         else if (args[0]->IsObject())
         {
@@ -76,16 +72,14 @@ namespace script_bindings
           // TODO: Copy path from another Path2D
         }
       }
-
-      SetNativeInstance(nativePath2D);
     }
 
     void Path2D::AddPath(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -104,24 +98,24 @@ namespace script_bindings
     void Path2D::ClosePath(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
       }
 
-      path2D->GetNativeInstance()->closePath();
+      path2D->inner()->closePath();
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::MoveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -136,16 +130,16 @@ namespace script_bindings
       double x = info[0]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double y = info[1]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->moveTo(x, y);
+      // path2D->inner()->moveTo(x, y);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::LineTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -160,16 +154,16 @@ namespace script_bindings
       double x = info[0]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double y = info[1]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->lineTo(x, y);
+      // path2D->inner()->lineTo(x, y);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::BezierCurveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -188,16 +182,16 @@ namespace script_bindings
       double x = info[4]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double y = info[5]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+      // path2D->inner()->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::QuadraticCurveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -214,16 +208,16 @@ namespace script_bindings
       double x = info[2]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double y = info[3]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->quadraticCurveTo(cpx, cpy, x, y);
+      // path2D->inner()->quadraticCurveTo(cpx, cpy, x, y);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::Arc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -242,16 +236,16 @@ namespace script_bindings
       double endAngle = info[4]->NumberValue(isolate->GetCurrentContext()).FromJust();
       bool counterclockwise = info.Length() > 5 ? info[5]->BooleanValue(isolate) : false;
 
-      path2D->GetNativeInstance()->arc(x, y, radius, startAngle, endAngle, counterclockwise);
+      // path2D->inner()->arc(x, y, radius, startAngle, endAngle, counterclockwise);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::ArcTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -269,16 +263,16 @@ namespace script_bindings
       double y2 = info[3]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double radius = info[4]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->arcTo(x1, y1, x2, y2, radius);
+      // path2D->inner()->arcTo(x1, y1, x2, y2, radius);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::Ellipse(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -299,16 +293,16 @@ namespace script_bindings
       double endAngle = info[6]->NumberValue(isolate->GetCurrentContext()).FromJust();
       bool counterclockwise = info.Length() > 7 ? info[7]->BooleanValue(isolate) : false;
 
-      path2D->GetNativeInstance()->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, counterclockwise);
+      // path2D->inner()->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, counterclockwise);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::Rect(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -325,16 +319,16 @@ namespace script_bindings
       double width = info[2]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double height = info[3]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->rect(x, y, width, height);
+      // path2D->inner()->rect(x, y, width, height);
       info.GetReturnValue().SetUndefined();
     }
 
     void Path2D::RoundRect(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = ObjectWrap::Unwrap<Path2D>(info.Holder());
+      Path2D *path2D = Unwrap(info.This());
 
-      if (!path2D || !path2D->GetNativeInstance())
+      if (!path2D || !path2D->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid Path2D instance").ToLocalChecked()));
         return;
@@ -352,7 +346,7 @@ namespace script_bindings
       double height = info[3]->NumberValue(isolate->GetCurrentContext()).FromJust();
       double radius = info[4]->NumberValue(isolate->GetCurrentContext()).FromJust();
 
-      path2D->GetNativeInstance()->roundRect(x, y, width, height, radius);
+      // path2D->inner()->roundRect(x, y, width, height, radius);
       info.GetReturnValue().SetUndefined();
     }
   }

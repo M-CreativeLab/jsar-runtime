@@ -1,127 +1,121 @@
 #include "html_body_element.hpp"
 
+using namespace std;
+using namespace v8;
+
 namespace script_bindings
 {
   namespace html_bindings
   {
-    HTMLBodyElement::HTMLBodyElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+    HTMLBodyElement::HTMLBodyElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLBodyElementBase(isolate, args)
     {
     }
 
-    void HTMLBodyElement::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+    void HTMLBodyElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      v8::HandleScope handle_scope(isolate);
+      HandleScope handle_scope(isolate);
       auto instance_template = tpl->InstanceTemplate();
 
       // Event handler properties
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onload").ToLocalChecked(),
+      instance_template->SetAccessor(String::NewFromUtf8(isolate, "onload").ToLocalChecked(),
                                      OnLoadGetter,
                                      OnLoadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onunload").ToLocalChecked(),
+      instance_template->SetAccessor(String::NewFromUtf8(isolate, "onunload").ToLocalChecked(),
                                      OnUnloadGetter,
                                      OnUnloadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onbeforeunload").ToLocalChecked(),
+      instance_template->SetAccessor(String::NewFromUtf8(isolate, "onbeforeunload").ToLocalChecked(),
                                      OnBeforeUnloadGetter,
                                      OnBeforeUnloadSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "onresize").ToLocalChecked(),
+      instance_template->SetAccessor(String::NewFromUtf8(isolate, "onresize").ToLocalChecked(),
                                      OnResizeGetter,
                                      OnResizeSetter);
     }
 
-    v8::Local<v8::Object> HTMLBodyElement::NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLBodyElement> nativeElement)
+    Local<Object> HTMLBodyElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLBodyElement> nativeElement)
     {
-      v8::EscapableHandleScope handle_scope(isolate);
-      auto context = isolate->GetCurrentContext();
-
-      auto constructor = HTMLBodyElement::GetConstructorFunction(isolate);
-      v8::Local<v8::Object> instance;
-
-      if (constructor->NewInstance(context).ToLocal(&instance))
-      {
-        HTMLBodyElement::Wrap(isolate, instance, new HTMLBodyElement(isolate, v8::FunctionCallbackInfo<v8::Value>(nullptr, 0, nullptr)));
-        // TODO: Set native element instance
-      }
-
-      return handle_scope.Escape(instance);
+      EscapableHandleScope scope(isolate);
+      return nativeElement != nullptr
+               ? scope.Escape(HTMLBodyElementBase::NewInstance(isolate, nativeElement).As<Object>())
+               : scope.Escape(Local<Object>());
     }
 
-    v8::Local<v8::Function> HTMLBodyElement::Initialize(v8::Isolate *isolate)
+    Local<Function> HTMLBodyElement::Initialize(Isolate *isolate)
     {
       return HTMLBodyElementBase::Initialize(isolate);
     }
 
     // Event handler property getters/setters
-    void HTMLBodyElement::OnLoadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLBodyElement::OnLoadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get onload event handler
-        info.GetReturnValue().Set(v8::Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(info.GetIsolate()));
       }
     }
 
-    void HTMLBodyElement::OnLoadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLBodyElement::OnLoadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set onload event handler
       }
     }
 
-    void HTMLBodyElement::OnUnloadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLBodyElement::OnUnloadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get onunload event handler
-        info.GetReturnValue().Set(v8::Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(info.GetIsolate()));
       }
     }
 
-    void HTMLBodyElement::OnUnloadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLBodyElement::OnUnloadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set onunload event handler
       }
     }
 
-    void HTMLBodyElement::OnBeforeUnloadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLBodyElement::OnBeforeUnloadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get onbeforeunload event handler
-        info.GetReturnValue().Set(v8::Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(info.GetIsolate()));
       }
     }
 
-    void HTMLBodyElement::OnBeforeUnloadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLBodyElement::OnBeforeUnloadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set onbeforeunload event handler
       }
     }
 
-    void HTMLBodyElement::OnResizeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLBodyElement::OnResizeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Get onresize event handler
-        info.GetReturnValue().Set(v8::Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(info.GetIsolate()));
       }
     }
 
-    void HTMLBodyElement::OnResizeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLBodyElement::OnResizeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = GetNativeInstance(info.Holder());
+      auto element = Unwrap(info.This());
       if (element)
       {
         // TODO: Set onresize event handler

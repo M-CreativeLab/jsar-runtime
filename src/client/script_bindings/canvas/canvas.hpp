@@ -7,7 +7,7 @@
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     class Canvas;
     using CanvasBase = scripting_base::ObjectWrap<Canvas, ::canvas::OffscreenCanvas>;

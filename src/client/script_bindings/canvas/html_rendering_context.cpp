@@ -1,9 +1,8 @@
 #include "html_rendering_context.hpp"
-#include <client/canvas/html_rendering_context.hpp>
 
 namespace script_bindings
 {
-  namespace canvas
+  namespace canvas_bindings
   {
     using namespace v8;
 
@@ -25,19 +24,12 @@ namespace script_bindings
       // Methods
       instanceTemplate->Set(String::NewFromUtf8(isolate, "getContextAttributes").ToLocalChecked(),
                             FunctionTemplate::New(isolate, GetContextAttributes));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "isContextLost").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, IsContextLost));
     }
 
     Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
     {
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance = constructor->NewInstance(context).ToLocalChecked();
-
-      HTMLRenderingContext *contextWrapper = ObjectWrap::Unwrap<HTMLRenderingContext>(instance);
-      contextWrapper->SetNativeInstance(nativeContext);
-      return instance;
+      EscapableHandleScope scope(isolate);
+      return scope.Escape(HTMLRenderingContextBase::NewInstance(isolate, nullptr).As<Object>());
     }
 
     Local<Function> HTMLRenderingContext::Initialize(Isolate *isolate)
@@ -48,17 +40,14 @@ namespace script_bindings
     HTMLRenderingContext::HTMLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLRenderingContextBase(isolate, args)
     {
-      // Constructor implementation
-      auto nativeContext = std::make_shared<::canvas::HTMLRenderingContext>();
-      SetNativeInstance(nativeContext);
     }
 
     void HTMLRenderingContext::CanvasGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = ObjectWrap::Unwrap<HTMLRenderingContext>(info.Holder());
+      HTMLRenderingContext *context = Unwrap(info.Holder());
 
-      if (context && context->GetNativeInstance())
+      if (context && context->inner())
       {
         // TODO: Return the associated canvas element
         // This should return the Canvas or HTMLCanvasElement that this context belongs to
@@ -73,9 +62,9 @@ namespace script_bindings
     void HTMLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = ObjectWrap::Unwrap<HTMLRenderingContext>(info.Holder());
+      HTMLRenderingContext *context = Unwrap(info.Holder());
 
-      if (!context || !context->GetNativeInstance())
+      if (!context || !context->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid HTMLRenderingContext instance").ToLocalChecked()));
         return;
@@ -85,21 +74,6 @@ namespace script_bindings
       // This should return an object with context attributes
       Local<Object> attributes = Object::New(isolate);
       info.GetReturnValue().Set(attributes);
-    }
-
-    void HTMLRenderingContext::IsContextLost(const FunctionCallbackInfo<Value> &info)
-    {
-      Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = ObjectWrap::Unwrap<HTMLRenderingContext>(info.Holder());
-
-      if (!context || !context->GetNativeInstance())
-      {
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid HTMLRenderingContext instance").ToLocalChecked()));
-        return;
-      }
-
-      bool isLost = context->GetNativeInstance()->isContextLost();
-      info.GetReturnValue().Set(Boolean::New(isolate, isLost));
     }
   }
 }
