@@ -2,14 +2,13 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/canvas/html_rendering_context.hpp>
 
 namespace script_bindings
 {
   namespace canvas
   {
     class HTMLRenderingContext;
-    using HTMLRenderingContextBase = scripting_base::ObjectWrap<HTMLRenderingContext, ::canvas::HTMLRenderingContext>;
+    using HTMLRenderingContextBase = scripting_base::ObjectWrap<HTMLRenderingContext>;
 
     /**
      * HTMLRenderingContext wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -38,7 +37,7 @@ namespace script_bindings
       /**
        * Create a new V8 HTMLRenderingContext instance from a native canvas::HTMLRenderingContext.
        */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::canvas::HTMLRenderingContext> nativeContext);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
 
       /**
        * Initialize the HTMLRenderingContext class and register it with V8.

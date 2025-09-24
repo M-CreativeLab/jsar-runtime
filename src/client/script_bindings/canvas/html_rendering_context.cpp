@@ -29,7 +29,7 @@ namespace script_bindings
                             FunctionTemplate::New(isolate, IsContextLost));
     }
 
-    Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::HTMLRenderingContext> nativeContext)
+    Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
     {
       Local<Function> constructor = GetConstructorFunction(isolate);
       Local<Context> context = isolate->GetCurrentContext();
@@ -37,7 +37,6 @@ namespace script_bindings
 
       HTMLRenderingContext *contextWrapper = ObjectWrap::Unwrap<HTMLRenderingContext>(instance);
       contextWrapper->SetNativeInstance(nativeContext);
-
       return instance;
     }
 
