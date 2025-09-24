@@ -81,7 +81,7 @@
         </div>
 
         <div class="card-actions">
-          <a :href="fixture.rawUrl" target="_blank" class="action-btn primary">
+          <a @click="openExample(fixture.rawUrl)" target="_blank" class="action-btn primary">
             Open
           </a>
           <a :href="fixture.githubUrl" target="_blank" class="action-btn secondary">
@@ -134,7 +134,7 @@ export default {
       try {
         this.loading = true;
         // Load the fixtures data JSON from public directory with correct base path
-        const response = await fetch('/jsar-runtime/fixtures-data.json');
+        const response = await fetch('/jsar-runtime/fixtures-summary.json');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -177,6 +177,15 @@ export default {
       this.filterFixtures();
       // Scroll to top
       this.$el.scrollIntoView({ behavior: 'smooth' });
+    },
+    openExample(url) {
+      // If running inside hyperweb browser
+      if (window['webview'] && window['webview'].raiseEvent) {
+        window.webview.raiseEvent("requestSpatialPresentation", url);
+      } else {
+        // Open in new tab
+        window.open(url, '_blank');
+      }
     }
   }
 }

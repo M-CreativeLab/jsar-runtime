@@ -2,7 +2,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mergeCompatibilityData } from './merge-compat-data.mjs';
-import { copyChangelogs, copyBrowserCompatData, copyInspector, copyStaticAssets, copyFixturesData } from './copy-changelogs.mjs';
+import { copyChangelogs, copyBrowserCompatData, copyInspector, copyStaticAssets } from './copy-changelogs.mjs';
 import { generateFixturesData } from './generate-fixtures-data.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,9 +27,6 @@ export const buildStart = () => {
 
     // Copy static assets (images and README.md)
     copyStaticAssets();
-
-    // Copy fixtures data
-    copyFixturesData();
 
     // Copy inspector HTML files
     copyInspector();

@@ -82,7 +82,7 @@ export function generateFixturesData() {
   
   try {
     const fixturesDir = path.join(__dirname, '../../fixtures/html');
-    const outputPath = path.join(__dirname, '../fixtures-summary.json');
+    const outputPath = path.join(__dirname, 'dist', './fixtures-summary.json');
     
     if (!fs.existsSync(fixturesDir)) {
       console.error('❌ Fixtures directory not found:', fixturesDir);
