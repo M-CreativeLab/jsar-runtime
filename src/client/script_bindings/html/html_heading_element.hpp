@@ -2,23 +2,16 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/dom/html_heading_element.hpp>
+#include <client/html/html_heading_element.hpp>
 #include "./html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     class HTMLHeadingElement;
     using HTMLHeadingElementBase = scripting_base::ObjectWrap<HTMLHeadingElement, dom::HTMLHeadingElement, HTMLElement>;
 
-    /**
-     * HTMLHeadingElement wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps dom::HTMLHeadingElement objects for use in V8 JavaScript execution contexts.
-     * It provides the standard HTML heading element interface (h1-h6) including properties like 
-     * level for semantic heading level (1-6) for accessibility and document structure.
-     */
     class HTMLHeadingElement : public HTMLHeadingElementBase
     {
       using HTMLHeadingElementBase::ObjectWrap;
@@ -49,14 +42,6 @@ namespace script_bindings
 
     public:
       HTMLHeadingElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
-    private:
-      // Property getters
-      static void LevelGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void AlignGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-
-      // Property setters
-      static void AlignSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
     };
   }
 }

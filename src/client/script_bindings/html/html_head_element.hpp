@@ -2,12 +2,12 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/dom/html_head_element.hpp>
+#include <client/html/html_head_element.hpp>
 #include "./html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     class HTMLHeadElement;
     using HTMLHeadElementBase = scripting_base::ObjectWrap<HTMLHeadElement, dom::HTMLHeadElement, HTMLElement>;
@@ -49,13 +49,6 @@ namespace script_bindings
 
     public:
       HTMLHeadElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
-    private:
-      // Property getters
-      static void ProfileGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-
-      // Property setters
-      static void ProfileSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
     };
   }
 }

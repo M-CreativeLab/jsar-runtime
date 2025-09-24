@@ -3,7 +3,7 @@
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     using namespace v8;
 

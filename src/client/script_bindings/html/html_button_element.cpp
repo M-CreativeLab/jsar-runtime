@@ -1,9 +1,9 @@
 #include "./html_button_element.hpp"
-#include <client/dom/html_button_element.hpp>
+#include <client/html/html_button_element.hpp>
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     using namespace v8;
 
@@ -52,11 +52,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        bool disabled = wrapper->GetNativeInstance()->getDisabled();
+        bool disabled = wrapper->inner()->disabled;
         info.GetReturnValue().Set(Boolean::New(isolate, disabled));
       }
       else
@@ -69,11 +69,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        std::string type = wrapper->GetNativeInstance()->getType();
+        std::string type = wrapper->inner()->type;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked());
       }
       else
@@ -86,11 +86,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        std::string value = wrapper->GetNativeInstance()->getValue();
+        std::string value = wrapper->inner()->value;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
       }
       else
@@ -103,12 +103,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        auto form = wrapper->GetNativeInstance()->getForm();
-        if (form)
+        auto form = wrapper->inner()->form;
+        if (form.empty())
         {
           // TODO: Return wrapped HTMLFormElement
           info.GetReturnValue().Set(Null(isolate));
@@ -128,11 +128,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        std::string name = wrapper->GetNativeInstance()->getName();
+        std::string name = wrapper->inner()->name;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked());
       }
       else
@@ -146,12 +146,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
         bool disabled = value->BooleanValue(isolate);
-        wrapper->GetNativeInstance()->setDisabled(disabled);
+        wrapper->inner()->disabled = disabled;
       }
     }
 
@@ -159,12 +159,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsString())
+      if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value type(isolate, value);
-        wrapper->GetNativeInstance()->setType(*type);
+        wrapper->inner()->type = *type;
       }
     }
 
@@ -172,12 +172,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsString())
+      if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value val(isolate, value);
-        wrapper->GetNativeInstance()->setValue(*val);
+        wrapper->inner()->setNodeValue(*val);
       }
     }
 
@@ -185,12 +185,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsString())
+      if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value name(isolate, value);
-        wrapper->GetNativeInstance()->setName(*name);
+        wrapper->inner()->name = *name;
       }
     }
 
@@ -199,11 +199,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = ObjectWrap::Unwrap<HTMLButtonElement>(self);
+      HTMLButtonElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        wrapper->GetNativeInstance()->click();
+        wrapper->inner()->click();
         info.GetReturnValue().SetUndefined();
       }
       else

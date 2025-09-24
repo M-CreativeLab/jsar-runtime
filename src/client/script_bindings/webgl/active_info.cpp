@@ -3,8 +3,9 @@
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
+    using namespace std;
     using namespace v8;
 
     void WebGLActiveInfo::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -38,26 +39,13 @@ namespace script_bindings
         v8::PropertyAttribute::ReadOnly);
     }
 
-    Local<Object> WebGLActiveInfo::NewInstance(Isolate *isolate, std::shared_ptr<webgl::WebGLActiveInfo> nativeInfo)
+    Local<Object> WebGLActiveInfo::NewInstance(Isolate *isolate,
+                                               shared_ptr<client_graphics::WebGLActiveInfo> nativeInfo)
     {
       EscapableHandleScope scope(isolate);
-      Local<Function> constructor = GetConstructorFunction(isolate);
-      if (constructor.IsEmpty())
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      Local<Context> context = isolate->GetCurrentContext();
-      Local<Object> instance;
-      if (!constructor->NewInstance(context, 0, nullptr).ToLocal(&instance))
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      WebGLActiveInfo *wrapper = new WebGLActiveInfo(isolate, nativeInfo);
-      wrapper->Wrap(isolate, instance, wrapper);
-
-      return scope.Escape(instance);
+      return nativeInfo != nullptr
+               ? scope.Escape(WebGLActiveInfoBase::NewInstance(isolate, nativeInfo).As<Object>())
+               : scope.Escape(Local<Object>());
     }
 
     Local<Function> WebGLActiveInfo::Initialize(Isolate *isolate)
@@ -74,46 +62,44 @@ namespace script_bindings
     void WebGLActiveInfo::NameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = ObjectWrap::Unwrap<WebGLActiveInfo>(info.Holder());
-      if (!wrapper || !wrapper->GetNativeInstance())
+      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->GetNativeInstance();
-      std::string name = nativeInfo->getName();
+      auto nativeInfo = wrapper->inner();
+      string name = nativeInfo->name;
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked());
     }
 
     void WebGLActiveInfo::TypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = ObjectWrap::Unwrap<WebGLActiveInfo>(info.Holder());
-      if (!wrapper || !wrapper->GetNativeInstance())
+      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->GetNativeInstance();
-      uint32_t type = nativeInfo->getType();
-      info.GetReturnValue().Set(Integer::NewFromUnsigned(isolate, type));
+      auto nativeInfo = wrapper->inner();
+      info.GetReturnValue().Set(Integer::NewFromUnsigned(isolate, nativeInfo->type));
     }
 
     void WebGLActiveInfo::SizeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = ObjectWrap::Unwrap<WebGLActiveInfo>(info.Holder());
-      if (!wrapper || !wrapper->GetNativeInstance())
+      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->GetNativeInstance();
-      int32_t size = nativeInfo->getSize();
-      info.GetReturnValue().Set(Integer::New(isolate, size));
+      auto nativeInfo = wrapper->inner();
+      info.GetReturnValue().Set(Integer::New(isolate, nativeInfo->size));
     }
 
   } // namespace webgl

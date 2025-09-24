@@ -2,12 +2,12 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/dom/html_button_element.hpp>
+#include <client/html/html_button_element.hpp>
 #include "./html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     class HTMLButtonElement;
     using HTMLButtonElementBase = scripting_base::ObjectWrap<HTMLButtonElement, dom::HTMLButtonElement, HTMLElement>;

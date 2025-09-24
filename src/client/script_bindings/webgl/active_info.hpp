@@ -3,21 +3,18 @@
 #include <memory>
 #include <string>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/webgl/webgl_active_info.hpp>
+#include <client/graphics/webgl_active_info.hpp>
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
-    /**
-     * WebGLActiveInfo V8 binding for shader active attribute and uniform information.
-     * 
-     * This class wraps webgl::WebGLActiveInfo objects for use in V8 JavaScript execution contexts.
-     * It provides information about active attributes and uniforms in shader programs.
-     */
-    class WebGLActiveInfo : public scripting_base::ObjectWrap<WebGLActiveInfo, webgl::WebGLActiveInfo>
+    class WebGLActiveInfo;
+    using WebGLActiveInfoBase = scripting_base::ObjectWrap<WebGLActiveInfo, client_graphics::WebGLActiveInfo>;
+
+    class WebGLActiveInfo : public WebGLActiveInfoBase
     {
-      using ObjectWrap::ObjectWrap;
+      using WebGLActiveInfoBase::ObjectWrap;
 
     public:
       /**
@@ -36,7 +33,8 @@ namespace script_bindings
       /**
        * Create a new V8 WebGLActiveInfo instance from a native webgl::WebGLActiveInfo.
        */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<webgl::WebGLActiveInfo> nativeInfo);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<client_graphics::WebGLActiveInfo> nativeInfo);
 
       /**
        * Initialize the WebGLActiveInfo class and register it with V8.

@@ -206,9 +206,11 @@ namespace script_bindings
 
       for (size_t i = 0; i < languages.size(); ++i)
       {
-        array->Set(context, static_cast<uint32_t>(i), String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked());
+        auto languageStr = String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked();
+        array->Set(context,
+                   static_cast<uint32_t>(i),
+                   languageStr).ToChecked();
       }
-
       info.GetReturnValue().Set(array);
     }
   }

@@ -2,23 +2,18 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/dom/html_media_element.hpp>
+#include <client/html/html_media_element.hpp>
 #include "./html_element.hpp"
 
 namespace script_bindings
 {
-  namespace html
+  namespace html_bindings
   {
     class HTMLMediaElement;
-    using HTMLMediaElementBase = scripting_base::ObjectWrap<HTMLMediaElement, dom::HTMLMediaElement, HTMLElement>;
+    using HTMLMediaElementBase = scripting_base::ObjectWrap<HTMLMediaElement,
+                                                            dom::HTMLMediaElement,
+                                                            HTMLElement>;
 
-    /**
-     * HTMLMediaElement wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps dom::HTMLMediaElement objects for use in V8 JavaScript execution contexts.
-     * It provides the standard HTML media element interface including properties like src, duration,
-     * currentTime, paused, muted, volume and methods like play(), pause(), load().
-     */
     class HTMLMediaElement : public HTMLMediaElementBase
     {
       using HTMLMediaElementBase::ObjectWrap;
