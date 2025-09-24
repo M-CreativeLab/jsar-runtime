@@ -2,7 +2,7 @@
   <div class="gallery-container">
     <header class="gallery-header">
       <h1>JSAR Examples Gallery</h1>
-      <p class="description">Browse and discover {{ fixturesData?.total || 0 }} HTML examples and test pages in the JSAR Runtime fixtures collection.</p>
+      <p class="description">Browse and discover {{ fixturesData?.total || 0 }} HTML examples and test pages.</p>
     </header>
 
     <div class="gallery-controls">
@@ -67,12 +67,12 @@
         class="example-card"
       >
         <div class="card-header">
-          <h3 class="example-title">{{ fixture.title }}</h3>
+          <h3 class="example-title" :title="fixture.title">{{ fixture.title }}</h3>
           <span class="example-category">{{ fixture.category }}</span>
         </div>
         
         <div class="card-body">
-          <div class="example-filename">
+          <div class="example-filename" :title="fixture.filename">
             <code>{{ fixture.filename }}</code>
           </div>
           <p v-if="fixture.description" class="example-description">
@@ -82,11 +82,9 @@
 
         <div class="card-actions">
           <a :href="fixture.rawUrl" target="_blank" class="action-btn primary">
-            <span class="btn-icon">▶</span>
-            Open Example
+            Open
           </a>
           <a :href="fixture.githubUrl" target="_blank" class="action-btn secondary">
-            <span class="btn-icon">👁</span>
             View Source
           </a>
         </div>
@@ -385,6 +383,9 @@ export default {
   margin: 0;
   line-height: 1.3;
   flex: 1;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 
 .example-category {
@@ -399,10 +400,16 @@ export default {
 
 .card-body {
   margin-bottom: 1.5rem;
+  height: 6rem;
 }
 
 .example-filename {
+  padding: 0.5rem 0;
   margin-bottom: 0.75rem;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .example-filename code {
@@ -418,6 +425,8 @@ export default {
   color: var(--vp-c-text-2);
   font-size: 0.9rem;
   line-height: 1.4;
+  height: 2.5rem;
+  overflow-y: auto;
   margin: 0;
 }
 
@@ -433,7 +442,8 @@ export default {
   padding: 0.6rem 1rem;
   border-radius: 6px;
   text-decoration: none;
-  font-size: 0.9rem;
+  white-space: nowrap;
+  font-size: 1rem;
   font-weight: 500;
   transition: all 0.2s;
   flex: 1;
@@ -446,7 +456,6 @@ export default {
 }
 
 .action-btn.primary:hover {
-  background: var(--vp-c-brand-darker);
   transform: translateY(-1px);
 }
 
