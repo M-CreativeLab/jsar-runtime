@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "common/command_buffers/details/properties.hpp"
+#include <common/command_buffers/details/program.hpp>
 
 namespace client_graphics
 {

@@ -3,21 +3,24 @@
 #include <memory>
 #include <string>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/webgl/webgl_object.hpp>
+#include <client/graphics/webgl_object.hpp>
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
+    class WebGLObject;
+    using WebGLObjectBase = scripting_base::ObjectWrap<WebGLObject, client_graphics::WebGLObject>;
+
     /**
      * WebGLObject V8 binding for base WebGL object functionality.
      * 
      * This class wraps webgl::WebGLObject objects for use in V8 JavaScript execution contexts.
      * It provides the base class for all WebGL objects.
      */
-    class WebGLObject : public scripting_base::ObjectWrap<WebGLObject, webgl::WebGLObject>
+    class WebGLObject : public WebGLObjectBase
     {
-      using ObjectWrap::ObjectWrap;
+      using WebGLObjectBase::ObjectWrap;
 
     public:
       /**
@@ -36,7 +39,8 @@ namespace script_bindings
       /**
        * Create a new V8 WebGLObject instance from a native webgl::WebGLObject.
        */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<webgl::WebGLObject> nativeObject);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<client_graphics::WebGLObject> nativeObject);
 
       /**
        * Initialize the WebGLObject class and register it with V8.

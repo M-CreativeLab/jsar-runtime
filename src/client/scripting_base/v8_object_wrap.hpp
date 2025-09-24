@@ -63,6 +63,29 @@ namespace scripting_base
     }
 
     /**
+     * @brief Checks if a given V8 value is an instance of the class associated with this wrapper.
+     *
+     * This function verifies whether the provided V8 value is an object and whether it is an
+     * instance of the constructor function associated with this class. It uses the V8 API to
+     * perform the type check.
+     *
+     * @param isolate A pointer to the V8 isolate in which the check is performed.
+     * @param value The V8 value to be checked.
+     * @return true if the value is an object and an instance of the associated class, false otherwise.
+     */
+    static bool IsInstanceOf(v8::Isolate *isolate, v8::Local<v8::Value> value)
+    {
+      if (!value->IsObject())
+        return false;
+
+      v8::Local<v8::Object> obj = value.As<v8::Object>();
+      v8::Local<v8::Function> constructor = GetConstructorFunction(isolate);
+      if (constructor.IsEmpty())
+        return false;
+      return obj->InstanceOf(isolate->GetCurrentContext(), constructor).FromMaybe(false);
+    }
+
+    /**
      * Create the instance of the class T and wrap it in a v8::Object
      *
      * @tparam Args The types of the arguments to pass to the constructor of T

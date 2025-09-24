@@ -2,22 +2,22 @@
 
 #include <memory>
 #include <string>
+#include <client/graphics/webgl_framebuffer.hpp>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/webgl/webgl_framebuffer.hpp>
+#include <client/script_bindings/webgl/object.hpp>
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
-    /**
-     * WebGLFramebuffer V8 binding for framebuffer objects.
-     * 
-     * This class wraps webgl::WebGLFramebuffer objects for use in V8 JavaScript execution contexts.
-     * It provides framebuffer functionality for off-screen rendering.
-     */
-    class WebGLFramebuffer : public scripting_base::ObjectWrap<WebGLFramebuffer, webgl::WebGLFramebuffer>
+    class WebGLFramebuffer;
+    using WebGLFramebufferBase = scripting_base::ObjectWrap<WebGLFramebuffer,
+                                                            client_graphics::WebGLFramebuffer,
+                                                            WebGLObject>;
+
+    class WebGLFramebuffer : public WebGLFramebufferBase
     {
-      using ObjectWrap::ObjectWrap;
+      using WebGLFramebufferBase::ObjectWrap;
 
     public:
       /**
@@ -36,7 +36,8 @@ namespace script_bindings
       /**
        * Create a new V8 WebGLFramebuffer instance from a native webgl::WebGLFramebuffer.
        */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<webgl::WebGLFramebuffer> nativeFramebuffer);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<client_graphics::WebGLFramebuffer> nativeFramebuffer);
 
       /**
        * Initialize the WebGLFramebuffer class and register it with V8.

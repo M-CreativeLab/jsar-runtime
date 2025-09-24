@@ -9,7 +9,8 @@ namespace script_bindings
   namespace webgl_bindings
   {
     class WebGLRenderingContext;
-    using WebGLRenderingContextBase = scripting_base::ObjectWrap<WebGLRenderingContext, webgl::WebGLRenderingContext>;
+    using WebGLRenderingContextBase = scripting_base::ObjectWrap<WebGLRenderingContext,
+                                                                 client_graphics::WebGLRenderingContext>;
 
     /**
      * WebGLRenderingContext wrapper for V8 objects using scripting_base::ObjectWrap.

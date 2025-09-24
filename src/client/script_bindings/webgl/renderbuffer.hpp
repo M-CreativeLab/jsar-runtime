@@ -2,22 +2,22 @@
 
 #include <memory>
 #include <string>
+#include <client/graphics/webgl_renderbuffer.hpp>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/webgl/webgl_renderbuffer.hpp>
+#include <client/script_bindings/webgl/object.hpp>
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
-    /**
-     * WebGLRenderbuffer V8 binding for renderbuffer objects.
-     * 
-     * This class wraps webgl::WebGLRenderbuffer objects for use in V8 JavaScript execution contexts.
-     * It provides renderbuffer functionality for depth and stencil buffers.
-     */
-    class WebGLRenderbuffer : public scripting_base::ObjectWrap<WebGLRenderbuffer, webgl::WebGLRenderbuffer>
+    class WebGLRenderbuffer;
+    using WebGLRenderbufferBase = scripting_base::ObjectWrap<WebGLRenderbuffer,
+                                                             client_graphics::WebGLRenderbuffer,
+                                                             WebGLObject>;
+
+    class WebGLRenderbuffer : public WebGLRenderbufferBase
     {
-      using ObjectWrap::ObjectWrap;
+      using WebGLRenderbufferBase::ObjectWrap;
 
     public:
       /**
@@ -28,19 +28,9 @@ namespace script_bindings
         return "WebGLRenderbuffer";
       }
 
-      /**
-       * Configure the V8 function template with WebGLRenderbuffer properties.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 WebGLRenderbuffer instance from a native webgl::WebGLRenderbuffer.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<webgl::WebGLRenderbuffer> nativeRenderbuffer);
-
-      /**
-       * Initialize the WebGLRenderbuffer class and register it with V8.
-       */
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<client_graphics::WebGLRenderbuffer> nativeRenderbuffer);
       static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:

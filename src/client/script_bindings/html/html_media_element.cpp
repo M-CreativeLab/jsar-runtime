@@ -1,5 +1,4 @@
 #include "./html_media_element.hpp"
-#include <client/dom/html_media_element.hpp>
 
 namespace script_bindings
 {
@@ -58,11 +57,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        std::string src = wrapper->GetNativeInstance()->getSrc();
+        std::string src = wrapper->inner()->getSrc();
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, src.c_str()).ToLocalChecked());
       }
       else
@@ -75,11 +74,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        double currentTime = wrapper->GetNativeInstance()->getCurrentTime();
+        double currentTime = wrapper->inner()->currentTime;
         info.GetReturnValue().Set(Number::New(isolate, currentTime));
       }
       else
@@ -92,11 +91,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        double duration = wrapper->GetNativeInstance()->getDuration();
+        double duration = wrapper->inner()->duration();
         info.GetReturnValue().Set(Number::New(isolate, duration));
       }
       else
@@ -109,11 +108,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        bool paused = wrapper->GetNativeInstance()->isPaused();
+        bool paused = wrapper->inner()->paused();
         info.GetReturnValue().Set(Boolean::New(isolate, paused));
       }
       else
@@ -126,11 +125,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        bool muted = wrapper->GetNativeInstance()->isMuted();
+        bool muted = wrapper->inner()->muted();
         info.GetReturnValue().Set(Boolean::New(isolate, muted));
       }
       else
@@ -143,11 +142,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        double volume = wrapper->GetNativeInstance()->getVolume();
+        double volume = wrapper->inner()->getVolume();
         info.GetReturnValue().Set(Number::New(isolate, volume));
       }
       else
@@ -160,11 +159,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        int readyState = wrapper->GetNativeInstance()->getReadyState();
+        int readyState = static_cast<int>(wrapper->inner()->readyState);
         info.GetReturnValue().Set(Integer::New(isolate, readyState));
       }
       else
@@ -178,12 +177,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsString())
+      if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value src(isolate, value);
-        wrapper->GetNativeInstance()->setSrc(*src);
+        wrapper->inner()->setSrc(*src);
       }
     }
 
@@ -191,12 +190,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsNumber())
+      if (wrapper && wrapper->inner() && value->IsNumber())
       {
         double currentTime = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0);
-        wrapper->GetNativeInstance()->setCurrentTime(currentTime);
+        wrapper->inner()->currentTime = currentTime;
       }
     }
 
@@ -204,12 +203,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        bool muted = value->BooleanValue(isolate);
-        wrapper->GetNativeInstance()->setMuted(muted);
+        wrapper->inner()->setMuted(value->BooleanValue(isolate));
       }
     }
 
@@ -217,14 +215,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance() && value->IsNumber())
+      if (wrapper && wrapper->inner() && value->IsNumber())
       {
         double volume = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(1.0);
         // Clamp volume between 0.0 and 1.0
         volume = std::max(0.0, std::min(1.0, volume));
-        wrapper->GetNativeInstance()->setVolume(volume);
+        wrapper->inner()->setVolume(volume);
       }
     }
 
@@ -233,11 +231,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        wrapper->GetNativeInstance()->play();
+        wrapper->inner()->play();
         // Return a Promise (for now, just return undefined)
         info.GetReturnValue().SetUndefined();
       }
@@ -251,11 +249,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        wrapper->GetNativeInstance()->pause();
+        wrapper->inner()->pause();
         info.GetReturnValue().SetUndefined();
       }
       else
@@ -268,11 +266,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = ObjectWrap::Unwrap<HTMLMediaElement>(self);
+      HTMLMediaElement *wrapper = Unwrap(info.This());
       
-      if (wrapper && wrapper->GetNativeInstance())
+      if (wrapper && wrapper->inner())
       {
-        wrapper->GetNativeInstance()->load();
+        wrapper->inner()->load();
         info.GetReturnValue().SetUndefined();
       }
       else

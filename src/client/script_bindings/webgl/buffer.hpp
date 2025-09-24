@@ -1,15 +1,18 @@
 #pragma once
 
 #include <memory>
-#include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/graphics/webgl_buffer.hpp>
+#include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/webgl/object.hpp>
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
     class WebGLBuffer;
-    using WebGLBufferBase = scripting_base::ObjectWrap<WebGLBuffer, client_graphics::WebGLBuffer>;
+    using WebGLBufferBase = scripting_base::ObjectWrap<WebGLBuffer,
+                                                       client_graphics::WebGLBuffer,
+                                                       WebGLObject>;
 
     /**
      * WebGLBuffer wrapper for V8 objects using scripting_base::ObjectWrap.

@@ -122,11 +122,27 @@ namespace dom
     }
 
     /**
+     * Returns a boolean that indicates whether the media element is paused.
+     */
+    bool paused()
+    {
+      return paused_;
+    }
+
+    /**
      * Returns a boolean that indicates whether the media element has finished playing.
      */
     bool ended()
     {
       return ended_;
+    }
+
+    /**
+     * Returns a boolean that indicates whether the media element is muted.
+     */
+    bool muted()
+    {
+      return muted_;
     }
 
   public: // Methods
@@ -178,6 +194,15 @@ namespace dom
         player_->play();
       else
         playScheduled_ = true;
+    }
+
+    /**
+     * Sets whether the media element's audio output should be muted.
+     */
+    inline void setMuted(bool muted)
+    {
+      muted_ = muted;
+      // TODO(yorkie): Update the player muted state.
     }
 
     /**
@@ -253,6 +278,8 @@ namespace dom
     std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> eventCallback_;
     float duration_ = 0;
     bool playScheduled_ = false;
+    bool paused_ = true;
     bool ended_ = false;
+    bool muted_ = false;
   };
 }

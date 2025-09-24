@@ -10,9 +10,6 @@ namespace script_bindings
 
     void WebGLActiveInfo::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "WebGLActiveInfo").ToLocalChecked());
-      tpl->InstanceTemplate()->SetInternalFieldCount(1);
-
       // Set up property accessors
       tpl->InstanceTemplate()->SetAccessor(
         String::NewFromUtf8(isolate, "name").ToLocalChecked(),
