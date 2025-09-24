@@ -71,6 +71,7 @@ export default defineConfig({
         text: 'API Reference',
         link: '/api/browser-compat-data',
       },
+      { text: 'Gallery', link: '/gallery' },
       { text: 'Download', link: '/download' },
       { text: 'Changelog', link: '/changelogs/alpha' },
       { text: 'Blog', link: '/blog' },
