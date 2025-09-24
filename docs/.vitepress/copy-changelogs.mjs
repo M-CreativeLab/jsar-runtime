@@ -149,15 +149,15 @@ export const copyStaticAssets = () => {
 };
 
 /**
- * Copy fixtures-data.json to public directory for dev server and dist for build
+ * Copy fixtures-summary.json to public directory for dev server and dist for build
  */
 export const copyFixturesData = () => {
   try {
-    const sourceFile = path.resolve(__dirname, './fixtures-data.json');
+    const sourceFile = path.resolve(__dirname, '../fixtures-summary.json');
     
     // Check if source file exists
     if (!fs.existsSync(sourceFile)) {
-      console.log('⚠️ fixtures-data.json file not found, skipping copy');
+      console.log('⚠️ fixtures-summary.json file not found, skipping copy');
       return;
     }
 
@@ -168,7 +168,7 @@ export const copyFixturesData = () => {
     }
     const publicDestFile = path.join(publicDir, 'fixtures-data.json');
     fs.copyFileSync(sourceFile, publicDestFile);
-    console.log('✅ Copied fixtures-data.json to public/');
+    console.log('✅ Copied fixtures-summary.json to public/fixtures-data.json');
 
     // Also copy to dist directory for production
     const distDir = path.resolve(__dirname, './dist');
@@ -177,9 +177,9 @@ export const copyFixturesData = () => {
     }
     const distDestFile = path.join(distDir, 'fixtures-data.json');
     fs.copyFileSync(sourceFile, distDestFile);
-    console.log('✅ Copied fixtures-data.json to dist/');
+    console.log('✅ Copied fixtures-summary.json to dist/fixtures-data.json');
 
   } catch (error) {
-    console.error('❌ Failed to copy fixtures-data.json:', error);
+    console.error('❌ Failed to copy fixtures-summary.json:', error);
   }
 };

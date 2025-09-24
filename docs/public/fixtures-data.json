@@ -13,7 +13,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/attrib-dataset.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/attrib-dataset.html",
           "size": 466,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "bug-19506.html",
@@ -23,7 +23,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19506.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19506.html",
           "size": 1821,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "element-set-class.html",
@@ -33,7 +33,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-set-class.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-set-class.html",
           "size": 655,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "elements.html",
@@ -43,7 +43,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/elements.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/elements.html",
           "size": 712,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         }
       ]
     },
@@ -59,7 +59,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-bounding-box.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-bounding-box.html",
           "size": 3058,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "babylon-loader-gltf.html",
@@ -69,7 +69,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-loader-gltf.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-loader-gltf.html",
           "size": 2581,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "babylon-lod.html",
@@ -79,7 +79,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-lod.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-lod.html",
           "size": 376,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "babylon-sample-particles.html",
@@ -89,7 +89,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-sample-particles.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-sample-particles.html",
           "size": 375,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "babylon-sun-particles.html",
@@ -99,7 +99,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-sun-particles.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-sun-particles.html",
           "size": 9490,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.769Z"
         },
         {
           "filename": "canvas-api-basic-drawing.html",
@@ -109,7 +109,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-basic-drawing.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-basic-drawing.html",
           "size": 6014,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "canvas-api-image-data.html",
@@ -119,7 +119,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-image-data.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-image-data.html",
           "size": 15537,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "canvas-api-paths.html",
@@ -129,7 +129,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-paths.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-paths.html",
           "size": 8334,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "canvas-api-state.html",
@@ -139,7 +139,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-state.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-state.html",
           "size": 14279,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "canvas-api-styles.html",
@@ -149,7 +149,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-styles.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-styles.html",
           "size": 11713,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "canvas-api-test-suite.html",
@@ -159,7 +159,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-test-suite.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-test-suite.html",
           "size": 6525,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "canvas-api-text.html",
@@ -169,7 +169,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-text.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-text.html",
           "size": 10061,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "canvas-api-transforms.html",
@@ -179,7 +179,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-transforms.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-transforms.html",
           "size": 10519,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "canvas-chartjs.html",
@@ -189,7 +189,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-chartjs.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-chartjs.html",
           "size": 1061,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "canvas-leaferjs.html",
@@ -199,7 +199,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-leaferjs.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-leaferjs.html",
           "size": 399,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "canvas.html",
@@ -209,7 +209,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas.html",
           "size": 1229,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "gh-0048.html",
@@ -219,7 +219,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0048.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0048.html",
           "size": 2077,
-          "lastModified": "2025-09-24T09:22:53.810Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "gh-0052.html",
@@ -229,7 +229,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0052.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0052.html",
           "size": 1921,
-          "lastModified": "2025-09-24T09:22:53.810Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "layout-assertion-test.html",
@@ -239,7 +239,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-assertion-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-assertion-test.html",
           "size": 4107,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "offscreen-canvas.html",
@@ -249,7 +249,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/offscreen-canvas.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/offscreen-canvas.html",
           "size": 327,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "three-cubemap-mipmap.html",
@@ -259,7 +259,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-cubemap-mipmap.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-cubemap-mipmap.html",
           "size": 458,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-envmap.html",
@@ -269,7 +269,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-envmap.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-envmap.html",
           "size": 3056,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-example.html",
@@ -279,7 +279,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-example.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-example.html",
           "size": 346,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-examples-loader.html",
@@ -289,7 +289,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-examples-loader.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-examples-loader.html",
           "size": 460,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-lightprobe.html",
@@ -299,7 +299,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-lightprobe.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-lightprobe.html",
           "size": 447,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-lines-dashed.html",
@@ -309,7 +309,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-lines-dashed.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-lines-dashed.html",
           "size": 4069,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-draco.html",
@@ -319,7 +319,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-draco.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-draco.html",
           "size": 2457,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-fbx.html",
@@ -329,7 +329,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-fbx.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-fbx.html",
           "size": 4180,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-gltf-webp.html",
@@ -339,7 +339,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-gltf-webp.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-gltf-webp.html",
           "size": 2186,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-gltf.html",
@@ -349,7 +349,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-gltf.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-gltf.html",
           "size": 2120,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-pdb.html",
@@ -359,7 +359,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-pdb.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-pdb.html",
           "size": 1210,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-loader-usdz.html",
@@ -369,7 +369,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-usdz.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-usdz.html",
           "size": 2335,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-math-obb.html",
@@ -379,7 +379,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-math-obb.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-math-obb.html",
           "size": 448,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-morphtargets-face.html",
@@ -389,7 +389,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-morphtargets-face.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-morphtargets-face.html",
           "size": 466,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-particles.html",
@@ -399,7 +399,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-particles.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-particles.html",
           "size": 450,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "three-portal.html",
@@ -409,7 +409,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-portal.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-portal.html",
           "size": 444,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "three-shaders-ocean.html",
@@ -419,7 +419,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-shaders-ocean.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-shaders-ocean.html",
           "size": 4232,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "three.html",
@@ -429,7 +429,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three.html",
           "size": 4192,
-          "lastModified": "2025-09-24T09:22:53.826Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "webgl.html",
@@ -439,7 +439,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webgl.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/webgl.html",
           "size": 647,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         },
         {
           "filename": "webxr-apis.html",
@@ -449,7 +449,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webxr-apis.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/webxr-apis.html",
           "size": 1400,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         }
       ]
     },
@@ -465,7 +465,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-clip-text-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-clip-text-test.html",
           "size": 6687,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-image-relative-path-test.html",
@@ -475,7 +475,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-image-relative-path-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-image-relative-path-test.html",
           "size": 3455,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-origin-repeat-test.html",
@@ -485,7 +485,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-origin-repeat-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-origin-repeat-test.html",
           "size": 5427,
-          "lastModified": "2025-09-24T09:22:53.806Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-position-bottom-right-test.html",
@@ -495,7 +495,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-bottom-right-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-bottom-right-test.html",
           "size": 5872,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-position-extended-syntax-test.html",
@@ -505,7 +505,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-extended-syntax-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-extended-syntax-test.html",
           "size": 5712,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-position-fix-demo.html",
@@ -515,7 +515,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-fix-demo.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-fix-demo.html",
           "size": 2990,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "background-size-position-test.html",
@@ -525,7 +525,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-size-position-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-size-position-test.html",
           "size": 9296,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "bug-19209.html",
@@ -535,7 +535,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19209.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19209.html",
           "size": 1423,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "css-overflow.html",
@@ -545,7 +545,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-overflow.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-overflow.html",
           "size": 1878,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "css-transform-percentage-test.html",
@@ -555,7 +555,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-transform-percentage-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-transform-percentage-test.html",
           "size": 5882,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "css-transform-test.html",
@@ -565,7 +565,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-transform-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-transform-test.html",
           "size": 3136,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "element-set-style.html",
@@ -575,7 +575,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-set-style.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-set-style.html",
           "size": 668,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "load-stylesheet.html",
@@ -585,7 +585,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/load-stylesheet.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/load-stylesheet.html",
           "size": 408,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "style-properties.html",
@@ -595,7 +595,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/style-properties.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/style-properties.html",
           "size": 739,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         }
       ]
     },
@@ -611,7 +611,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/blank.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/blank.html",
           "size": 148,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "errors.html",
@@ -621,7 +621,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/errors.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/errors.html",
           "size": 328,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "events.html",
@@ -631,7 +631,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/events.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/events.html",
           "size": 545,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "gh-0038.html",
@@ -641,7 +641,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0038.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0038.html",
           "size": 590,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "gh-0047.html",
@@ -651,7 +651,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0047.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0047.html",
           "size": 319,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "gh-0057.html",
@@ -661,7 +661,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0057.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0057.html",
           "size": 385,
-          "lastModified": "2025-09-24T09:22:53.810Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "parsing-void-tags.html",
@@ -671,7 +671,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/parsing-void-tags.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/parsing-void-tags.html",
           "size": 328,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "timers.html",
@@ -681,7 +681,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/timers.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/timers.html",
           "size": 286,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "window-close.html",
@@ -691,7 +691,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/window-close.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/window-close.html",
           "size": 227,
-          "lastModified": "2025-09-24T09:22:53.828Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         },
         {
           "filename": "window.html",
@@ -701,7 +701,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/window.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/window.html",
           "size": 500,
-          "lastModified": "2025-09-24T09:22:53.828Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         }
       ]
     },
@@ -717,7 +717,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/border-regression-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/border-regression-test.html",
           "size": 15915,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "css-gradients-color-formats.html",
@@ -727,7 +727,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-gradients-color-formats.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-gradients-color-formats.html",
           "size": 5472,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "css-gradients.html",
@@ -737,7 +737,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-gradients.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-gradients.html",
           "size": 4187,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "css-overflow-comprehensive.html",
@@ -747,7 +747,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-overflow-comprehensive.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-overflow-comprehensive.html",
           "size": 7994,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "layout-flexbox-alignment.html",
@@ -757,7 +757,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-alignment.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-alignment.html",
           "size": 3281,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-column.html",
@@ -767,7 +767,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-column.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-column.html",
           "size": 1944,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-comment-nodes-advanced.html",
@@ -777,7 +777,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes-advanced.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes-advanced.html",
           "size": 16325,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-comment-nodes-edge-cases.html",
@@ -787,7 +787,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes-edge-cases.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes-edge-cases.html",
           "size": 14471,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-comment-nodes.html",
@@ -797,7 +797,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes.html",
           "size": 10611,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-example.html",
@@ -807,7 +807,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-example.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-example.html",
           "size": 1608,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-grow-shrink.html",
@@ -817,7 +817,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-grow-shrink.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-grow-shrink.html",
           "size": 6438,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-nested.html",
@@ -827,7 +827,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-nested.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-nested.html",
           "size": 4050,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-flexbox-wrap.html",
@@ -837,7 +837,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-wrap.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-wrap.html",
           "size": 2311,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-grid-alignment.html",
@@ -847,7 +847,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-alignment.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-alignment.html",
           "size": 4727,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "layout-grid-areas.html",
@@ -857,7 +857,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-areas.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-areas.html",
           "size": 3671,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "layout-grid-auto.html",
@@ -867,7 +867,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-auto.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-auto.html",
           "size": 5256,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "layout-grid-example.html",
@@ -877,7 +877,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-example.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-example.html",
           "size": 2954,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "layout-grid-nested.html",
@@ -887,7 +887,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-nested.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-nested.html",
           "size": 6038,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "text-in-flexbox.html",
@@ -897,7 +897,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-in-flexbox.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-in-flexbox.html",
           "size": 2605,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         }
       ]
     },
@@ -913,7 +913,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19210.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19210.html",
           "size": 4130,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "button-test.html",
@@ -923,7 +923,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/button-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/button-test.html",
           "size": 3150,
-          "lastModified": "2025-09-24T09:22:53.807Z"
+          "lastModified": "2025-09-24T10:07:25.770Z"
         },
         {
           "filename": "document.html",
@@ -933,7 +933,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/document.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/document.html",
           "size": 1054,
-          "lastModified": "2025-09-24T09:22:53.808Z"
+          "lastModified": "2025-09-24T10:07:25.771Z"
         },
         {
           "filename": "element-onclick-test.html",
@@ -943,7 +943,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-onclick-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-onclick-test.html",
           "size": 7596,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "fonts.html",
@@ -953,7 +953,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/fonts.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/fonts.html",
           "size": 3359,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "htmlinputelement-test.html",
@@ -963,7 +963,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/htmlinputelement-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/htmlinputelement-test.html",
           "size": 2838,
-          "lastModified": "2025-09-24T09:22:53.810Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "htmlmodelelement-test.html",
@@ -973,7 +973,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/htmlmodelelement-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/htmlmodelelement-test.html",
           "size": 574,
-          "lastModified": "2025-09-24T09:22:53.810Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "img-basics.html",
@@ -983,7 +983,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/img-basics.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/img-basics.html",
           "size": 2764,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "img-edge-truncation-test.html",
@@ -993,7 +993,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/img-edge-truncation-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/img-edge-truncation-test.html",
           "size": 13409,
-          "lastModified": "2025-09-24T09:22:53.823Z"
+          "lastModified": "2025-09-24T10:07:25.784Z"
         },
         {
           "filename": "mutation-observers.html",
@@ -1003,7 +1003,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/mutation-observers.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/mutation-observers.html",
           "size": 1008,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "position-absolute-test.html",
@@ -1013,7 +1013,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/position-absolute-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/position-absolute-test.html",
           "size": 3166,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "simple.html",
@@ -1023,7 +1023,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/simple.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/simple.html",
           "size": 4912,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "template.html",
@@ -1033,7 +1033,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/template.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/template.html",
           "size": 722,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "text-antialiasing.html",
@@ -1043,7 +1043,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-antialiasing.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-antialiasing.html",
           "size": 4259,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         },
         {
           "filename": "text-line-height-test.html",
@@ -1053,7 +1053,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-line-height-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-line-height-test.html",
           "size": 27168,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "text-rendering-test.html",
@@ -1063,7 +1063,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-rendering-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-rendering-test.html",
           "size": 29223,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "text-vertical-alignment-test.html",
@@ -1073,7 +1073,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-vertical-alignment-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-vertical-alignment-test.html",
           "size": 23674,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "text.html",
@@ -1083,7 +1083,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text.html",
           "size": 627,
-          "lastModified": "2025-09-24T09:22:53.825Z"
+          "lastModified": "2025-09-24T10:07:25.786Z"
         },
         {
           "filename": "universal-selector-test.html",
@@ -1093,7 +1093,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/universal-selector-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/universal-selector-test.html",
           "size": 9414,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "unquoted-attributes-demo.html",
@@ -1103,7 +1103,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/unquoted-attributes-demo.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/unquoted-attributes-demo.html",
           "size": 1629,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "viewport-meta-test.html",
@@ -1113,7 +1113,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/viewport-meta-test.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/viewport-meta-test.html",
           "size": 4194,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "whatgw-fetch.html",
@@ -1123,7 +1123,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/whatgw-fetch.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/whatgw-fetch.html",
           "size": 290,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         },
         {
           "filename": "wide-text.html",
@@ -1133,7 +1133,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/wide-text.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/wide-text.html",
           "size": 1313,
-          "lastModified": "2025-09-24T09:22:53.828Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         },
         {
           "filename": "worker.html",
@@ -1143,7 +1143,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/worker.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/worker.html",
           "size": 318,
-          "lastModified": "2025-09-24T09:22:53.828Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         }
       ]
     },
@@ -1159,7 +1159,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-dynamic-imports.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-dynamic-imports.html",
           "size": 261,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "esm-import-formats.html",
@@ -1169,7 +1169,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-import-formats.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-import-formats.html",
           "size": 409,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "esm-import-typescript.html",
@@ -1179,7 +1179,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-import-typescript.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-import-typescript.html",
           "size": 212,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "esm-imports.html",
@@ -1189,7 +1189,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-imports.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-imports.html",
           "size": 212,
-          "lastModified": "2025-09-24T09:22:53.809Z"
+          "lastModified": "2025-09-24T10:07:25.772Z"
         },
         {
           "filename": "spline-design-example.html",
@@ -1199,7 +1199,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spline-design-example.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/spline-design-example.html",
           "size": 2851,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         }
       ]
     },
@@ -1215,7 +1215,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spatial-images.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/spatial-images.html",
           "size": 2569,
-          "lastModified": "2025-09-24T09:22:53.824Z"
+          "lastModified": "2025-09-24T10:07:25.785Z"
         }
       ]
     },
@@ -1231,7 +1231,7 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/wasm-exports.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/wasm-exports.html",
           "size": 166,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.787Z"
         },
         {
           "filename": "websocket.html",
@@ -1241,10 +1241,10 @@
           "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/websocket.html",
           "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/websocket.html",
           "size": 460,
-          "lastModified": "2025-09-24T09:22:53.827Z"
+          "lastModified": "2025-09-24T10:07:25.788Z"
         }
       ]
     }
   ],
-  "generatedAt": "2025-09-24T09:48:02.150Z"
+  "generatedAt": "2025-09-24T10:10:47.006Z"
 }
