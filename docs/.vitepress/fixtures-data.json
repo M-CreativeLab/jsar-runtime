@@ -1,0 +1,1250 @@
+{
+  "total": 119,
+  "categories": [
+    {
+      "name": "HTML Elements",
+      "count": 4,
+      "fixtures": [
+        {
+          "filename": "attrib-dataset.html",
+          "title": "Attributes Dataset",
+          "description": "",
+          "category": "HTML Elements",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/attrib-dataset.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/attrib-dataset.html",
+          "size": 466,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "bug-19506.html",
+          "title": "固定颜色事件日志",
+          "description": "事件日志：",
+          "category": "HTML Elements",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19506.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19506.html",
+          "size": 1821,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "element-set-class.html",
+          "title": "Element: Set classes",
+          "description": "",
+          "category": "HTML Elements",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-set-class.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-set-class.html",
+          "size": 655,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "elements.html",
+          "title": "Elements",
+          "description": "",
+          "category": "HTML Elements",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/elements.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/elements.html",
+          "size": 712,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        }
+      ]
+    },
+    {
+      "name": "Canvas/WebGL",
+      "count": 40,
+      "fixtures": [
+        {
+          "filename": "babylon-bounding-box.html",
+          "title": "Babylon.js Sample Particles",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-bounding-box.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-bounding-box.html",
+          "size": 3058,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "babylon-loader-gltf.html",
+          "title": "Babylon.js Sample Particles",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-loader-gltf.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-loader-gltf.html",
+          "size": 2581,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "babylon-lod.html",
+          "title": "Babylon.js Sample Particles",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-lod.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-lod.html",
+          "size": 376,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "babylon-sample-particles.html",
+          "title": "Babylon.js Sample Particles",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-sample-particles.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-sample-particles.html",
+          "size": 375,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "babylon-sun-particles.html",
+          "title": "Babylon.js Sample",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/babylon-sun-particles.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/babylon-sun-particles.html",
+          "size": 9490,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "canvas-api-basic-drawing.html",
+          "title": "Canvas API: Basic Drawing",
+          "description": "Tests basic Canvas 2D drawing operations: fillRect, strokeRect, clearRect",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-basic-drawing.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-basic-drawing.html",
+          "size": 6014,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-image-data.html",
+          "title": "Canvas API: Image Data Operations",
+          "description": "Tests Canvas 2D image data operations: createImageData, getImageData, putImageData",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-image-data.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-image-data.html",
+          "size": 15537,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-paths.html",
+          "title": "Canvas API: Path Operations",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-paths.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-paths.html",
+          "size": 8334,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-state.html",
+          "title": "Canvas API: State Management",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-state.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-state.html",
+          "size": 14279,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-styles.html",
+          "title": "Canvas API: Style Properties",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-styles.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-styles.html",
+          "size": 11713,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-test-suite.html",
+          "title": "Canvas API Test Suite",
+          "description": "Comprehensive test coverage for Canvas 2D API operations in JSAR Runtime",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-test-suite.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-test-suite.html",
+          "size": 6525,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-text.html",
+          "title": "Canvas API: Text Operations",
+          "description": "Tests Canvas 2D text operations: fillText, strokeText, measureText, font properties, textAlign, textBaseline",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-text.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-text.html",
+          "size": 10061,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-api-transforms.html",
+          "title": "Canvas API: Transform Operations",
+          "description": "Tests Canvas 2D transform operations: translate, rotate, scale, transform, setTransform",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-api-transforms.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-api-transforms.html",
+          "size": 10519,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-chartjs.html",
+          "title": "Canvas: Chart.js Example",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-chartjs.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-chartjs.html",
+          "size": 1061,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "canvas-leaferjs.html",
+          "title": "Canvas",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas-leaferjs.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas-leaferjs.html",
+          "size": 399,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "canvas.html",
+          "title": "Canvas",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/canvas.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/canvas.html",
+          "size": 1229,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "gh-0048.html",
+          "title": "session addEventListener",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0048.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0048.html",
+          "size": 2077,
+          "lastModified": "2025-09-24T09:22:53.810Z"
+        },
+        {
+          "filename": "gh-0052.html",
+          "title": "when use xrcontroller and trigger the select event, session null error will be thrown",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0052.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0052.html",
+          "size": 1921,
+          "lastModified": "2025-09-24T09:22:53.810Z"
+        },
+        {
+          "filename": "layout-assertion-test.html",
+          "title": "Layout Assertion Test - Replaced Elements with Text",
+          "description": "Canvas with fallback text content",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-assertion-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-assertion-test.html",
+          "size": 4107,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "offscreen-canvas.html",
+          "title": "Offscreen Canvas",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/offscreen-canvas.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/offscreen-canvas.html",
+          "size": 327,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "three-cubemap-mipmap.html",
+          "title": "Three.js: Cubemap-mipmap",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-cubemap-mipmap.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-cubemap-mipmap.html",
+          "size": 458,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "three-envmap.html",
+          "title": "Three.js: Cubemap-mipmap",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-envmap.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-envmap.html",
+          "size": 3056,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "three-example.html",
+          "title": "Three.js: Example",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-example.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-example.html",
+          "size": 346,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "three-examples-loader.html",
+          "title": "Three.js: Examples Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-examples-loader.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-examples-loader.html",
+          "size": 460,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "three-lightprobe.html",
+          "title": "Three.js: Example",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-lightprobe.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-lightprobe.html",
+          "size": 447,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "three-lines-dashed.html",
+          "title": "Three.js: Dashed Lines",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-lines-dashed.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-lines-dashed.html",
+          "size": 4069,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-draco.html",
+          "title": "Three.js: Draco Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-draco.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-draco.html",
+          "size": 2457,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-fbx.html",
+          "title": "Three.js: Fbx Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-fbx.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-fbx.html",
+          "size": 4180,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-gltf-webp.html",
+          "title": "Three.js: GLTF Loader Webp format",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-gltf-webp.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-gltf-webp.html",
+          "size": 2186,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-gltf.html",
+          "title": "Three.js: GLTF Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-gltf.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-gltf.html",
+          "size": 2120,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-pdb.html",
+          "title": "Three.js: PDB Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-pdb.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-pdb.html",
+          "size": 1210,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-loader-usdz.html",
+          "title": "Three.js: USDZ Loader",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-loader-usdz.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-loader-usdz.html",
+          "size": 2335,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-math-obb.html",
+          "title": "Three.js: Math OBB",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-math-obb.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-math-obb.html",
+          "size": 448,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-morphtargets-face.html",
+          "title": "Three.js: MorphTargets Face",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-morphtargets-face.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-morphtargets-face.html",
+          "size": 466,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-particles.html",
+          "title": "Three.js: Particles",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-particles.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-particles.html",
+          "size": 450,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-portal.html",
+          "title": "Three.js: Portal",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-portal.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-portal.html",
+          "size": 444,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three-shaders-ocean.html",
+          "title": "Three.js: Shaders(Ocean)",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three-shaders-ocean.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three-shaders-ocean.html",
+          "size": 4232,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "three.html",
+          "title": "Simple HTML",
+          "description": "Some text",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/three.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/three.html",
+          "size": 4192,
+          "lastModified": "2025-09-24T09:22:53.826Z"
+        },
+        {
+          "filename": "webgl.html",
+          "title": "WebGL",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webgl.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/webgl.html",
+          "size": 647,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "webxr-apis.html",
+          "title": "WebXR APIs",
+          "description": "",
+          "category": "Canvas/WebGL",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/webxr-apis.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/webxr-apis.html",
+          "size": 1400,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        }
+      ]
+    },
+    {
+      "name": "CSS",
+      "count": 14,
+      "fixtures": [
+        {
+          "filename": "background-clip-text-test.html",
+          "title": "Background Clip Text Test",
+          "description": "This page tests the implementation of background-clip: text property with various scenarios.",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-clip-text-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-clip-text-test.html",
+          "size": 6687,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "background-image-relative-path-test.html",
+          "title": "Background Image Relative Path Test",
+          "description": "CSS: background-image: url('./test-image.png');",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-image-relative-path-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-image-relative-path-test.html",
+          "size": 3455,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "background-origin-repeat-test.html",
+          "title": "Background Origin and Repeat Test",
+          "description": "These tests demonstrate how background-origin affects where the background image is positioned:",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-origin-repeat-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-origin-repeat-test.html",
+          "size": 5427,
+          "lastModified": "2025-09-24T09:22:53.806Z"
+        },
+        {
+          "filename": "background-position-bottom-right-test.html",
+          "title": "Background Position Bottom/Right Alignment Test",
+          "description": "All these tests should position the 50x50px background image in the bottom-right corner of each 200x150px box:",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-bottom-right-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-bottom-right-test.html",
+          "size": 5872,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "background-position-extended-syntax-test.html",
+          "title": "Background Position Extended Syntax Test",
+          "description": "1-Value Syntax",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-extended-syntax-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-extended-syntax-test.html",
+          "size": 5712,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "background-position-fix-demo.html",
+          "title": "Background Position Fix Demo",
+          "description": "This demonstrates the fix for background-position alignment. Each box shows a 30x30px gradient positioned in different corners of a 150x100px containe",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-position-fix-demo.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-position-fix-demo.html",
+          "size": 2990,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "background-size-position-test.html",
+          "title": "Background Size and Position Test",
+          "description": "These tests demonstrate how background-size affects the size of background images:",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/background-size-position-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/background-size-position-test.html",
+          "size": 9296,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "bug-19209.html",
+          "title": "JSAR HTML & CSS Transform Test",
+          "description": "",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19209.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19209.html",
+          "size": 1423,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "css-overflow.html",
+          "title": "CSS Overflow",
+          "description": "",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-overflow.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-overflow.html",
+          "size": 1878,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "css-transform-percentage-test.html",
+          "title": "Transform Percentage Test",
+          "description": "This page tests percentage-based transforms. According to CSS specs, percentages should be relative to the element's own size.",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-transform-percentage-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-transform-percentage-test.html",
+          "size": 5882,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "css-transform-test.html",
+          "title": "Simple Transform Percentage Test",
+          "description": "Testing percentage-based CSS transforms. Each colored box should be offset from its gray reference box.",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-transform-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-transform-test.html",
+          "size": 3136,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "element-set-style.html",
+          "title": "Element: Set style",
+          "description": "",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-set-style.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-set-style.html",
+          "size": 668,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "load-stylesheet.html",
+          "title": "Load Stylesheet",
+          "description": "bar",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/load-stylesheet.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/load-stylesheet.html",
+          "size": 408,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "style-properties.html",
+          "title": "Style properties",
+          "description": "",
+          "category": "CSS",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/style-properties.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/style-properties.html",
+          "size": 739,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        }
+      ]
+    },
+    {
+      "name": "Other",
+      "count": 10,
+      "fixtures": [
+        {
+          "filename": "blank.html",
+          "title": "Blank Page",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/blank.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/blank.html",
+          "size": 148,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "errors.html",
+          "title": "Script Errors",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/errors.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/errors.html",
+          "size": 328,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "events.html",
+          "title": "Events",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/events.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/events.html",
+          "size": 545,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "gh-0038.html",
+          "title": "DOMContentLoaded not working",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0038.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0038.html",
+          "size": 590,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "gh-0047.html",
+          "title": "HTML parsing exceptions",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0047.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0047.html",
+          "size": 319,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "gh-0057.html",
+          "title": "loading webp format image exception.image size:0,0",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/gh-0057.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/gh-0057.html",
+          "size": 385,
+          "lastModified": "2025-09-24T09:22:53.810Z"
+        },
+        {
+          "filename": "parsing-void-tags.html",
+          "title": "Parsing Void Tags",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/parsing-void-tags.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/parsing-void-tags.html",
+          "size": 328,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "timers.html",
+          "title": "Timers",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/timers.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/timers.html",
+          "size": 286,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "window-close.html",
+          "title": "Window Close",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/window-close.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/window-close.html",
+          "size": 227,
+          "lastModified": "2025-09-24T09:22:53.828Z"
+        },
+        {
+          "filename": "window.html",
+          "title": "Window",
+          "description": "",
+          "category": "Other",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/window.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/window.html",
+          "size": 500,
+          "lastModified": "2025-09-24T09:22:53.828Z"
+        }
+      ]
+    },
+    {
+      "name": "Layout",
+      "count": 19,
+      "fixtures": [
+        {
+          "filename": "border-regression-test.html",
+          "title": "Border Regression Test - JSAR Runtime",
+          "description": "This page tests comprehensive border functionality in JSAR Runtime including styles, widths, radius, colors, and complex combinations.",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/border-regression-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/border-regression-test.html",
+          "size": 15915,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "css-gradients-color-formats.html",
+          "title": "CSS Gradients with Different Color Formats",
+          "description": "Hex Color Gradients",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-gradients-color-formats.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-gradients-color-formats.html",
+          "size": 5472,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "css-gradients.html",
+          "title": "CSS Gradients Example",
+          "description": "Linear Gradients",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-gradients.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-gradients.html",
+          "size": 4187,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "css-overflow-comprehensive.html",
+          "title": "CSS Overflow Comprehensive Test",
+          "description": "This page tests various CSS overflow properties and scenarios.",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/css-overflow-comprehensive.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/css-overflow-comprehensive.html",
+          "size": 7994,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "layout-flexbox-alignment.html",
+          "title": "CSS Flexbox Alignment Test",
+          "description": "Stretched height",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-alignment.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-alignment.html",
+          "size": 3281,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-column.html",
+          "title": "CSS Flexbox Column Layout",
+          "description": "First item in column layout",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-column.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-column.html",
+          "size": 1944,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-comment-nodes-advanced.html",
+          "title": "CSS Flexbox Comment Nodes - Advanced Test Cases",
+          "description": "Testing all flex-direction values with comment nodes to ensure proper layout calculation.",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes-advanced.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes-advanced.html",
+          "size": 16325,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-comment-nodes-edge-cases.html",
+          "title": "CSS Flexbox Comment Nodes - Edge Cases",
+          "description": "Testing containers with only comments, whitespace, or combinations thereof.",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes-edge-cases.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes-edge-cases.html",
+          "size": 14471,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-comment-nodes.html",
+          "title": "CSS Flexbox with Comment Nodes Test",
+          "description": "This test verifies that HTML comment nodes between flex items are properly ignored in layout calculations. The layout should appear as if the comments",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-comment-nodes.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-comment-nodes.html",
+          "size": 10611,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-example.html",
+          "title": "CSS Flexbox Layout Example",
+          "description": "Flex Item 1",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-example.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-example.html",
+          "size": 1608,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-grow-shrink.html",
+          "title": "CSS Flexbox Grow and Shrink Test",
+          "description": "Items expand to fill available space based on their flex-grow values",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-grow-shrink.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-grow-shrink.html",
+          "size": 6438,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "layout-flexbox-nested.html",
+          "title": "CSS Flexbox Nested Layout",
+          "description": "Regular flex item",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-nested.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-nested.html",
+          "size": 4050,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-flexbox-wrap.html",
+          "title": "CSS Flexbox Wrap Layout",
+          "description": "Wrapping test",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-flexbox-wrap.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-flexbox-wrap.html",
+          "size": 2311,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-grid-alignment.html",
+          "title": "CSS Grid Alignment Test",
+          "description": "Center Alignment",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-alignment.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-alignment.html",
+          "size": 4727,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-grid-areas.html",
+          "title": "CSS Grid Areas Layout",
+          "description": "This spans across all columns",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-areas.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-areas.html",
+          "size": 3671,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-grid-auto.html",
+          "title": "CSS Grid Auto Layout",
+          "description": "Resizes to fit",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-auto.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-auto.html",
+          "size": 5256,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-grid-example.html",
+          "title": "CSS Grid Layout Example",
+          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-example.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-example.html",
+          "size": 2954,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "layout-grid-nested.html",
+          "title": "CSS Grid Nested Layout",
+          "description": "Contains nested grid layouts below",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/layout-grid-nested.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/layout-grid-nested.html",
+          "size": 6038,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "text-in-flexbox.html",
+          "title": "Text in Flexbox with Comment Nodes",
+          "description": "Foo",
+          "category": "Layout",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-in-flexbox.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-in-flexbox.html",
+          "size": 2605,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        }
+      ]
+    },
+    {
+      "name": "Typography",
+      "count": 24,
+      "fixtures": [
+        {
+          "filename": "bug-19210.html",
+          "title": "梦游天姥吟留别",
+          "description": "海客谈瀛洲，烟涛微茫信难求。",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/bug-19210.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/bug-19210.html",
+          "size": 4130,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "button-test.html",
+          "title": "HTMLButtonElement Test",
+          "description": "Test Results:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/button-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/button-test.html",
+          "size": 3150,
+          "lastModified": "2025-09-24T09:22:53.807Z"
+        },
+        {
+          "filename": "document.html",
+          "title": "Document",
+          "description": "Document content:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/document.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/document.html",
+          "size": 1054,
+          "lastModified": "2025-09-24T09:22:53.808Z"
+        },
+        {
+          "filename": "element-onclick-test.html",
+          "title": "OnClick Handler Test",
+          "description": "Click the buttons below to test onclick handlers:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/element-onclick-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/element-onclick-test.html",
+          "size": 7596,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "fonts.html",
+          "title": "梦游天姥吟留别",
+          "description": "海客谈瀛洲，烟涛微茫信难求。",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/fonts.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/fonts.html",
+          "size": 3359,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "htmlinputelement-test.html",
+          "title": "HTMLInputElement Test",
+          "description": "This page tests basic HTMLInputElement functionality in JSAR runtime:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/htmlinputelement-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/htmlinputelement-test.html",
+          "size": 2838,
+          "lastModified": "2025-09-24T09:22:53.810Z"
+        },
+        {
+          "filename": "htmlmodelelement-test.html",
+          "title": "HTMLModelElement Test",
+          "description": "https://sparkjs.dev/assets/splats/cat.spz",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/htmlmodelelement-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/htmlmodelelement-test.html",
+          "size": 574,
+          "lastModified": "2025-09-24T09:22:53.810Z"
+        },
+        {
+          "filename": "img-basics.html",
+          "title": "Images",
+          "description": "Images:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/img-basics.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/img-basics.html",
+          "size": 2764,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "img-edge-truncation-test.html",
+          "title": "Image Edge Truncation Test - 图片边缘截断测试",
+          "description": "基础溢出测试 - Basic Overflow Tests",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/img-edge-truncation-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/img-edge-truncation-test.html",
+          "size": 13409,
+          "lastModified": "2025-09-24T09:22:53.823Z"
+        },
+        {
+          "filename": "mutation-observers.html",
+          "title": "Mutation Observers",
+          "description": "bar",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/mutation-observers.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/mutation-observers.html",
+          "size": 1008,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "position-absolute-test.html",
+          "title": "Position Absolute Test - Nested Positioning Context",
+          "description": "Container with position: relative",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/position-absolute-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/position-absolute-test.html",
+          "size": 3166,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "simple.html",
+          "title": "Simple HTML",
+          "description": "This is an absolutely positioned div 1",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/simple.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/simple.html",
+          "size": 4912,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        },
+        {
+          "filename": "template.html",
+          "title": "Template",
+          "description": "",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/template.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/template.html",
+          "size": 722,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "text-antialiasing.html",
+          "title": "Text Anti-aliasing - Integrated SDF Approach",
+          "description": "Integrated SDF approach for crisp text rendering",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-antialiasing.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-antialiasing.html",
+          "size": 4259,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "text-line-height-test.html",
+          "title": "Line Height Comprehensive Test - 行高综合测试",
+          "description": "基础行高值测试 - Basic Line Height Values",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-line-height-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-line-height-test.html",
+          "size": 27168,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "text-rendering-test.html",
+          "title": "Text Rendering Test",
+          "description": "这是左对齐的文本。This is left-aligned text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-rendering-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-rendering-test.html",
+          "size": 29223,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "text-vertical-alignment-test.html",
+          "title": "Text Vertical Alignment Test - 文字垂直对齐测试",
+          "description": "基础垂直对齐测试 - Basic Vertical Alignment Tests",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text-vertical-alignment-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text-vertical-alignment-test.html",
+          "size": 23674,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "text.html",
+          "title": "Text",
+          "description": "(?)",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/text.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/text.html",
+          "size": 627,
+          "lastModified": "2025-09-24T09:22:53.825Z"
+        },
+        {
+          "filename": "universal-selector-test.html",
+          "title": "Universal Selector (*) Test",
+          "description": "This page tests the universal selector (*) implementation in various contexts and combinations.",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/universal-selector-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/universal-selector-test.html",
+          "size": 9414,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "unquoted-attributes-demo.html",
+          "title": "Unquoted Attributes Demo",
+          "description": "This page demonstrates various HTML elements with unquoted attributes that are now supported:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/unquoted-attributes-demo.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/unquoted-attributes-demo.html",
+          "size": 1629,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "viewport-meta-test.html",
+          "title": "Viewport Meta Test",
+          "description": "This page tests the viewport meta tag implementation:",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/viewport-meta-test.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/viewport-meta-test.html",
+          "size": 4194,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "whatgw-fetch.html",
+          "title": "WHATGW Fetch API",
+          "description": "",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/whatgw-fetch.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/whatgw-fetch.html",
+          "size": 290,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "wide-text.html",
+          "title": "Wide Text",
+          "description": "",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/wide-text.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/wide-text.html",
+          "size": 1313,
+          "lastModified": "2025-09-24T09:22:53.828Z"
+        },
+        {
+          "filename": "worker.html",
+          "title": "Web Workers",
+          "description": "",
+          "category": "Typography",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/worker.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/worker.html",
+          "size": 318,
+          "lastModified": "2025-09-24T09:22:53.828Z"
+        }
+      ]
+    },
+    {
+      "name": "JavaScript/ESM",
+      "count": 5,
+      "fixtures": [
+        {
+          "filename": "esm-dynamic-imports.html",
+          "title": "ESM: Dynamic Imports",
+          "description": "",
+          "category": "JavaScript/ESM",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-dynamic-imports.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-dynamic-imports.html",
+          "size": 261,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "esm-import-formats.html",
+          "title": "ESM Import Formats",
+          "description": "",
+          "category": "JavaScript/ESM",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-import-formats.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-import-formats.html",
+          "size": 409,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "esm-import-typescript.html",
+          "title": "ESM Import TypeScript",
+          "description": "",
+          "category": "JavaScript/ESM",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-import-typescript.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-import-typescript.html",
+          "size": 212,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "esm-imports.html",
+          "title": "ESM Basics",
+          "description": "",
+          "category": "JavaScript/ESM",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/esm-imports.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/esm-imports.html",
+          "size": 212,
+          "lastModified": "2025-09-24T09:22:53.809Z"
+        },
+        {
+          "filename": "spline-design-example.html",
+          "title": "Simple HTML",
+          "description": "",
+          "category": "JavaScript/ESM",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spline-design-example.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/spline-design-example.html",
+          "size": 2851,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        }
+      ]
+    },
+    {
+      "name": "Spatial/WebXR",
+      "count": 1,
+      "fixtures": [
+        {
+          "filename": "spatial-images.html",
+          "title": "Spatial Image Test",
+          "description": "Testing spatial images via JavaScript...",
+          "category": "Spatial/WebXR",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/spatial-images.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/spatial-images.html",
+          "size": 2569,
+          "lastModified": "2025-09-24T09:22:53.824Z"
+        }
+      ]
+    },
+    {
+      "name": "Web APIs",
+      "count": 2,
+      "fixtures": [
+        {
+          "filename": "wasm-exports.html",
+          "title": "WebAssembly Exports",
+          "description": "",
+          "category": "Web APIs",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/wasm-exports.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/wasm-exports.html",
+          "size": 166,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        },
+        {
+          "filename": "websocket.html",
+          "title": "WebSocket: Echo",
+          "description": "",
+          "category": "Web APIs",
+          "githubUrl": "https://github.com/M-CreativeLab/jsar-runtime/blob/main/fixtures/html/websocket.html",
+          "rawUrl": "https://raw.githubusercontent.com/M-CreativeLab/jsar-runtime/main/fixtures/html/websocket.html",
+          "size": 460,
+          "lastModified": "2025-09-24T09:22:53.827Z"
+        }
+      ]
+    }
+  ],
+  "generatedAt": "2025-09-24T09:48:02.150Z"
+}
