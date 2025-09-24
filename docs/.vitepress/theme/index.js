@@ -7,6 +7,7 @@ import Hero3DEffect from './components/Hero3DEffect.vue'
 import DownloadPage from './components/DownloadPage.vue'
 import SpatialWebFeatures from './components/SpatialWebFeatures.vue'
 import CallToAction from './components/CallToAction.vue'
+import GalleryPage from './components/GalleryPage.vue'
 
 export default {
   extends: DefaultTheme,
@@ -17,5 +18,6 @@ export default {
     app.component('DownloadPage', DownloadPage)
     app.component('SpatialWebFeatures', SpatialWebFeatures)
     app.component('CallToAction', CallToAction)
+    app.component('GalleryPage', GalleryPage)
   }
 }
