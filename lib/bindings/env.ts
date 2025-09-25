@@ -1,16 +1,12 @@
 import { isMainThread } from 'node:worker_threads';
-import { getHostWebGLContext } from '../webgl';
 
 let nativeContext: Transmute.TrClientContext = null;
 try {
   // Preload the followings because this module "transmute:env" depends on them.
   process._linkedBinding('transmute:browser');
-  process._linkedBinding('transmute:canvas');
   process._linkedBinding('transmute:dom');
   process._linkedBinding('transmute:messaging');
   process._linkedBinding('transmute:renderer');
-  process._linkedBinding('transmute:webgl');
-  process._linkedBinding('transmute:webxr');
 
   // Load the native module "transmute:env" and create the `ClientContext` instance after dependencies are loaded.
   const binding = process._linkedBinding('transmute:env');
@@ -27,25 +23,6 @@ export function getClientContext(): Transmute.TrClientContext {
 
 export function getPerformanceNow(): number {
   return nativeContext.fastPerformanceNow();
-}
-
-/**
- * It returns the host created WebGL or WebGL2 rendering context, this rendering context is used to draw stuffs on the host scene. And
- * at the client-side, there is no right to control the context attributes, thus there is no `contextAttributes` parameter in this method.
- * 
- * @returns an instance of WebGLRenderingContext or WebGL2RenderingContext depends on the host created.
- */
-export function getHostWebGLRenderingContext(): WebGLRenderingContext | WebGL2RenderingContext {
-  return getHostWebGLContext(nativeContext.webglVersion === 2, nativeContext.gl);
-}
-
-/**
- * Check if WebXR is supported in the current environment.
- * 
- * @returns true if WebXR is supported in the current environment.
- */
-export function isWebXRSupported(): boolean {
-  return nativeContext.xrDevice?.enabled === true;
 }
 
 /**

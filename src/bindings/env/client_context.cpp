@@ -51,16 +51,6 @@ namespace bindings
     thisObject.Set("httpsProxyServer", Napi::String::New(env, clientContext->httpsProxyServer));
     thisObject.Set("webglVersion", Napi::Number::New(env, clientContext->webglVersion));
 
-    // Disable the host webgl context for worker threads
-    if (!isWorker)
-    {
-      thisObject.Set(
-        "gl",
-        clientContext->webglVersion == 2
-          ? ::webgl::WebGL2RenderingContext::MakeFromHost(env)
-          : ::webgl::WebGLRenderingContext::MakeFromHost(env));
-    }
-
     if (clientContext->xrDeviceInit.enabled == true)
     {
       auto xrDeviceObject = Napi::Object::New(env);

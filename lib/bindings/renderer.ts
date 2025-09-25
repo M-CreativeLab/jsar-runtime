@@ -3,18 +3,17 @@ const {
 } = process._linkedBinding('transmute:renderer');
 
 let globalAnimationFrameListener: Transmute.AnimationFrameListener = null;
-let hostGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
-const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
+const onreadyCallbacks: Array<() => void> = [];
 const onframeCallbacks: Array<{
   callback: Transmute.FrameRequestCallback,
   handle: number,
 }> = [];
 
-export function requestRendererReady(callback: (gl: WebGLRenderingContext) => void) {
+export function requestRendererReady(callback: () => void) {
   if (isReady) {
-    callback(hostGlContext);
+    callback();
     return;
   } else {
     onreadyCallbacks.push(callback);
@@ -74,7 +73,7 @@ function onAnimationFrame(time: number) {
  * @param clientContext the context object, this method use this object to initialize the renderer.
  * @returns a boolean value indicates whether the renderer is connected successfully.
  */
-export function connectRenderer(clientContext: Transmute.TrClientContext): boolean {
+export function connectRenderer(): boolean {
   if (isReady) {
     throw new TypeError('renderer is already connected.');
   }
@@ -85,24 +84,8 @@ export function connectRenderer(clientContext: Transmute.TrClientContext): boole
   globalAnimationFrameListener = new AnimationFrameListener();
   globalAnimationFrameListener.connect(onAnimationFrame);
 
-  /**
-   * Initialize the global WebGL context.
-   */
-  hostGlContext = clientContext.gl;
-  if (hostGlContext == null || !hostGlContext) {
-    throw new Error('failed to get host webgl context.');
-  }
-
-  const gl = hostGlContext;
-  onreadyCallbacks.forEach(cb => cb(gl));
+  onreadyCallbacks.forEach(cb => cb());
   onreadyCallbacks.length = 0;
   isReady = true;
   return isReady;
-}
-
-export function getHostWebGLRenderingContext(): WebGLRenderingContext | WebGL2RenderingContext {
-  if (!isReady) {
-    throw new Error('renderer is not ready, call connectRenderer() first.');
-  }
-  return hostGlContext;
 }

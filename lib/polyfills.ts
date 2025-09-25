@@ -2,7 +2,6 @@
  * Browser Pollyfills for Node.js
  */
 import * as undici from 'undici';
-import { navigator } from './navigator';
 import { createWindow } from './window';
 import { XMLHttpRequestImpl } from './xhr';
 import { ErrorEventImpl } from './events/error-event';
@@ -97,12 +96,6 @@ export function loadPolyfills() {
    * Global functions
    */
   Object.defineProperties(globalThis, {
-    'navigator': {
-      value: navigator,
-      writable: false,
-      enumerable: true,
-      configurable: false,
-    },
     'createImageBitmap': {
       value: createImageBitmap,
       writable: false,

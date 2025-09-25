@@ -14,18 +14,8 @@ export class TransmuteRuntime2 extends EventTarget {
   #browsingContext: Transmute.BrowsingContext;
   #threepio: Threepio;
 
-  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
+  constructor(private id: number) {
     super();
-    {
-      /**
-       * Print the supported WebGL extensions and versions.
-       */
-      const exts = gl.getSupportedExtensions();
-      console.info(`[WebGL] supported extensions(${exts.length}):`);
-      for (const extName of exts) {
-        console.info(`  - ${extName}`);
-      }
-    }
     {
       /**
        * Initialize the `BrowsingContext` instance.
@@ -59,10 +49,6 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   private async load(codeOrUrl: string, urlBase?: string) {
-    if (!this.gl) {
-      throw new TypeError('The webgl is not ready or lost context state');
-    }
-
     // Override the `codeOrUrl` with the example url if the debug mode is enabled.
     if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_URL) {
       codeOrUrl = process.env.JSAR_EXAMPLE_URL;

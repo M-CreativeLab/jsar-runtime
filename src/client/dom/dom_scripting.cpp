@@ -49,6 +49,23 @@ namespace dom
     }
   }
 
+  void DOMScriptingContext::PropertySetterCallback(v8::Local<v8::Name> property,
+                                                   v8::Local<v8::Value> value,
+                                                   const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
+    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<v8::Object>();
+
+    cout << "Setting property: " << *v8::String::Utf8Value(isolate, property) << endl;
+    if (sandbox->Set(context, property, value).IsNothing())
+    {
+      // Handle error case - property couldn't be set
+      return;
+    }
+    info.GetReturnValue().Set(value);
+  }
+
   void DOMScriptingContext::WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     auto isolate = info.GetIsolate();
@@ -274,7 +291,7 @@ namespace dom
 
       v8::NamedPropertyHandlerConfiguration namedConfig(
         PropertyGetterCallback,
-        nullptr,
+        PropertySetterCallback,
         nullptr,
         nullptr,
         nullptr,
@@ -315,10 +332,10 @@ namespace dom
          */
 
         // Update context globals from script bindings
-        script_bindings::Initialize(isolate_, mainContext, script_bindings::ContextType::kScripting);
+        script_bindings::Initialize(isolate_, newContext, script_bindings::ContextType::kScripting);
 
         // Baisc objects
-        V8_SET_GLOBAL_FROM_MAIN(navigator);
+        // V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(performance);
         V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate_, mainContext));
@@ -336,8 +353,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // DOM nodes
-        // V8_SET_GLOBAL_FROM_MAIN(Node);
-        // V8_SET_GLOBAL_FROM_MAIN(Element);
         V8_SET_GLOBAL_FROM_MAIN(DocumentFragment);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
@@ -558,7 +573,7 @@ namespace dom
          */
 
         // Update context globals from script bindings
-        script_bindings::Initialize(isolate_, mainContext, script_bindings::ContextType::kWorker);
+        script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
 
         // Baisc objects
         // Create custom console object with CDP integration using the Console binding

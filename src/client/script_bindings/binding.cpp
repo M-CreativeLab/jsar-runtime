@@ -2,6 +2,7 @@
 #include "./binding.hpp"
 #include "./event.hpp"
 #include "./event_target.hpp"
+#include "./navigator.hpp"
 #include "./events/all_events.hpp"
 #include "./dom/node.hpp"
 #include "./dom/element.hpp"
@@ -44,6 +45,7 @@ namespace script_bindings
 {
   void Initialize(Isolate *isolate, Local<Context> context, ContextType type)
   {
+    Context::Scope contextScope(context);
     HandleScope scope(isolate);
     Local<Object> global = context->Global();
 
@@ -63,6 +65,16 @@ namespace script_bindings
     global->Set(context, STRING_FROM_UTF8("MouseEvent"), MouseEvent).Check();
     global->Set(context, STRING_FROM_UTF8("PointerEvent"), PointerEvent).Check();
 
+    {
+      // WebXR event classes
+      auto XRSessionEvent = event_bindings::XRSessionEvent::Initialize(isolate);
+      auto XRInputSourceEvent = event_bindings::XRInputSourceEvent::Initialize(isolate);
+      auto XRInputSourcesChangeEvent = event_bindings::XRInputSourcesChangeEvent::Initialize(isolate);
+      global->Set(context, STRING_FROM_UTF8("XRSessionEvent"), XRSessionEvent).Check();
+      global->Set(context, STRING_FROM_UTF8("XRInputSourceEvent"), XRInputSourceEvent).Check();
+      global->Set(context, STRING_FROM_UTF8("XRInputSourcesChangeEvent"), XRInputSourcesChangeEvent).Check();
+    }
+
     // Create and set global console object
     auto Console = dom_bindings::Console::Initialize(isolate);
     auto console = dom_bindings::Console::CreateConsoleObject(isolate);
@@ -72,6 +84,15 @@ namespace script_bindings
     // Initialize classes and objects for scripting context only
     if (type == ContextType::kScripting)
     {
+      // Browser/Navigator object
+      auto Navigator = Navigator::Initialize(isolate);
+      global->Set(context, STRING_FROM_UTF8("Navigator"), Navigator).Check();
+      global->Set(context,
+                  STRING_FROM_UTF8("navigator"),
+                  Navigator::NewInstance(isolate, make_shared<browser::Navigator>()))
+        .Check();
+      cout << "Navigator object initialized." << endl;
+
       // Base DOM classes
       auto Node = dom_bindings::Node::Initialize(isolate);
       auto Element = dom_bindings::Element::Initialize(isolate);
@@ -112,7 +133,10 @@ namespace script_bindings
         global->Set(context, STRING_FROM_UTF8("HTMLCanvasElement"), HTMLCanvasElement).Check();
 
         // Set up Audio constructor as a global function
-        global->Set(context, STRING_FROM_UTF8("Audio"), FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)->GetFunction(context).ToLocalChecked()).Check();
+        global->Set(context,
+                    STRING_FROM_UTF8("Audio"),
+                    FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)->GetFunction(context).ToLocalChecked())
+          .Check();
       }
 
       // WebXR classes

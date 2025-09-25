@@ -134,6 +134,10 @@ namespace dom
 
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void PropertySetterCallback(v8::Local<v8::Name> property,
+                                       v8::Local<v8::Value> value,
+                                       const v8::PropertyCallbackInfo<v8::Value> &info);
+
     static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertySetterCallback(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info);

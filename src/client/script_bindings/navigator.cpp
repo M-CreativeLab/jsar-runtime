@@ -64,11 +64,6 @@ namespace script_bindings
              : scope.Escape(Local<Object>());
   }
 
-  Local<Function> Navigator::Initialize(Isolate *isolate)
-  {
-    return NavigatorBase::Initialize(isolate);
-  }
-
   // Browser identification property getters
   void Navigator::UserAgentGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
