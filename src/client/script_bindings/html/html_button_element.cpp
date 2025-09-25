@@ -21,7 +21,7 @@ namespace script_bindings
       // Button methods
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "click").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, Click));
+                             FunctionTemplate::New(isolate, Click));
     }
 
     Local<Object> HTMLButtonElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLButtonElement> nativeButtonElement)
@@ -53,7 +53,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         bool disabled = wrapper->inner()->disabled;
@@ -70,7 +70,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         std::string type = wrapper->inner()->type;
@@ -87,7 +87,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         std::string value = wrapper->inner()->value;
@@ -104,7 +104,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         auto form = wrapper->inner()->form;
@@ -129,7 +129,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         std::string name = wrapper->inner()->name;
@@ -147,7 +147,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         bool disabled = value->BooleanValue(isolate);
@@ -160,7 +160,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value type(isolate, value);
@@ -173,7 +173,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value val(isolate, value);
@@ -186,7 +186,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value name(isolate, value);
@@ -200,7 +200,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         wrapper->inner()->click();

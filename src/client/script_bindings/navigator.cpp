@@ -209,7 +209,8 @@ namespace script_bindings
         auto languageStr = String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked();
         array->Set(context,
                    static_cast<uint32_t>(i),
-                   languageStr).ToChecked();
+                   languageStr)
+          .ToChecked();
       }
       info.GetReturnValue().Set(array);
     }

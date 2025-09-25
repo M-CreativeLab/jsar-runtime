@@ -22,11 +22,11 @@ namespace script_bindings
       // Media control methods
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "play").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, Play));
+                             FunctionTemplate::New(isolate, Play));
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "pause").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, Pause));
+                             FunctionTemplate::New(isolate, Pause));
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "load").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, Load));
+                             FunctionTemplate::New(isolate, Load));
     }
 
     Local<Object> HTMLMediaElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLMediaElement> nativeMediaElement)
@@ -58,7 +58,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         std::string src = wrapper->inner()->getSrc();
@@ -75,7 +75,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         double currentTime = wrapper->inner()->currentTime;
@@ -92,7 +92,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         double duration = wrapper->inner()->duration();
@@ -109,7 +109,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         bool paused = wrapper->inner()->paused();
@@ -126,7 +126,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         bool muted = wrapper->inner()->muted();
@@ -143,7 +143,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         double volume = wrapper->inner()->getVolume();
@@ -160,7 +160,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         int readyState = static_cast<int>(wrapper->inner()->readyState);
@@ -178,7 +178,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsString())
       {
         String::Utf8Value src(isolate, value);
@@ -191,7 +191,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsNumber())
       {
         double currentTime = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0);
@@ -204,7 +204,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         wrapper->inner()->setMuted(value->BooleanValue(isolate));
@@ -216,7 +216,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner() && value->IsNumber())
       {
         double volume = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(1.0);
@@ -232,7 +232,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         wrapper->inner()->play();
@@ -250,7 +250,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         wrapper->inner()->pause();
@@ -267,7 +267,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(info.This());
-      
+
       if (wrapper && wrapper->inner())
       {
         wrapper->inner()->load();

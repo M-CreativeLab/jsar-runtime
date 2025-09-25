@@ -129,7 +129,7 @@ namespace script_bindings
       static void CanvasGetter(
         v8::Local<v8::String> property,
         const v8::PropertyCallbackInfo<v8::Value> &info);
-      
+
       static void LineWidthGetter(
         v8::Local<v8::String> property,
         const v8::PropertyCallbackInfo<v8::Value> &info);
