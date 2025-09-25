@@ -24,6 +24,7 @@ namespace script_bindings
         return "WebGL2RenderingContext";
       }
 
+      static void SetupConstants(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<client_graphics::WebGL2Context> nativeContext);

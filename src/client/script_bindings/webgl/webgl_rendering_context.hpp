@@ -39,9 +39,22 @@ namespace script_bindings
       static void DrawingBufferWidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
       static void DrawingBufferHeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
 
+      // Basic methods
+      static void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void IsContextLost(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void MakeXRCompatible(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void SetDefaultCoordHandedness(const v8::FunctionCallbackInfo<v8::Value> &info);
+
       // State management
+      static void Hint(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void LineWidth(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void PixelStorei(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void PolygonOffset(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void CullFace(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void FrontFace(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void ActiveTexture(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void AttachShader(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void DetachShader(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void BindAttribLocation(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void BindBuffer(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void BindFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -53,12 +66,31 @@ namespace script_bindings
       static void BufferSubData(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Framebuffer operations
+      static void FramebufferRenderbuffer(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void FramebufferTexture2D(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void CheckFramebufferStatus(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void Clear(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void ClearColor(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void ClearDepth(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void ClearStencil(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void ColorMask(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void DepthMask(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void DepthFunc(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void DepthRange(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilFunc(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilFuncSeparate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilMask(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilMaskSeparate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilOp(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void StencilOpSeparate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void BlendColor(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void BlendEquation(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void BlendEquationSeparate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void BlendFunc(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void BlendFuncSeparate(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+      // Renderbuffer operations
+      static void RenderbufferStorage(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Shader operations
       static void CompileShader(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -92,18 +124,26 @@ namespace script_bindings
       static void DisableVertexAttribArray(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Program operations
+      static void GetActiveAttrib(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void GetActiveUniform(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void GetAttribLocation(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void GetUniformLocation(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void LinkProgram(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void UseProgram(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void ValidateProgram(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Shader source
       static void ShaderSource(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void GetShaderSource(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Texture operations
       static void TexImage2D(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void TexSubImage2D(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void TexParameterf(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void TexParameteri(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void CopyTexImage2D(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void CopyTexSubImage2D(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void GenerateMipmap(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Uniform operations
       static void Uniform1f(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -114,6 +154,14 @@ namespace script_bindings
       static void Uniform3i(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void Uniform4f(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void Uniform4i(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform1fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform1iv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform2fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform2iv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform3fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform3iv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform4fv(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Uniform4iv(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void UniformMatrix2fv(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void UniformMatrix3fv(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void UniformMatrix4fv(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -125,8 +173,9 @@ namespace script_bindings
       static void VertexAttrib4f(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void VertexAttribPointer(const v8::FunctionCallbackInfo<v8::Value> &info);
 
-      // Viewport
+      // Viewport & scissor
       static void Viewport(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void Scissor(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Error checking
       static void GetError(const v8::FunctionCallbackInfo<v8::Value> &info);
@@ -135,6 +184,7 @@ namespace script_bindings
       static void GetParameter(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void GetProgramParameter(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void GetShaderParameter(const v8::FunctionCallbackInfo<v8::Value> &info);
+      static void GetShaderPrecisionFormat(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Info logs
       static void GetProgramInfoLog(const v8::FunctionCallbackInfo<v8::Value> &info);
