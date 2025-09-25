@@ -1,23 +1,56 @@
-#include "webgl_rendering_context.hpp"
-#include <v8.h>
-
-using namespace v8;
+#include "./webgl_rendering_context.hpp"
 
 namespace script_bindings
 {
-  namespace webgl
+  namespace webgl_bindings
   {
     using namespace std;
+    using namespace v8;
 
-    std::string WebGLRenderingContext::Name()
+    void WebGLRenderingContext::SetupConstants(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      return "WebGLRenderingContext";
+      // WebGL 1.0 constants as per MDN spec
+      auto prototype = tpl->PrototypeTemplate();
+
+      // Buffer types
+      prototype->Set(String::NewFromUtf8(isolate, "ARRAY_BUFFER").ToLocalChecked(),
+                     Integer::New(isolate, 0x8892));
+      prototype->Set(String::NewFromUtf8(isolate, "ELEMENT_ARRAY_BUFFER").ToLocalChecked(),
+                     Integer::New(isolate, 0x8893));
+
+      // Shader types
+      prototype->Set(String::NewFromUtf8(isolate, "VERTEX_SHADER").ToLocalChecked(),
+                     Integer::New(isolate, 0x8B31));
+      prototype->Set(String::NewFromUtf8(isolate, "FRAGMENT_SHADER").ToLocalChecked(),
+                     Integer::New(isolate, 0x8B30));
+
+      // Texture types
+      prototype->Set(String::NewFromUtf8(isolate, "TEXTURE_2D").ToLocalChecked(),
+                     Integer::New(isolate, 0x0DE1));
+
+      // Data types
+      prototype->Set(String::NewFromUtf8(isolate, "FLOAT").ToLocalChecked(),
+                     Integer::New(isolate, 0x1406));
+      prototype->Set(String::NewFromUtf8(isolate, "UNSIGNED_BYTE").ToLocalChecked(),
+                     Integer::New(isolate, 0x1401));
+
+      // Clear bits
+      prototype->Set(String::NewFromUtf8(isolate, "COLOR_BUFFER_BIT").ToLocalChecked(),
+                     Integer::New(isolate, 0x00004000));
+      prototype->Set(String::NewFromUtf8(isolate, "DEPTH_BUFFER_BIT").ToLocalChecked(),
+                     Integer::New(isolate, 0x00000100));
+
+      // Drawing modes
+      prototype->Set(String::NewFromUtf8(isolate, "TRIANGLES").ToLocalChecked(),
+                     Integer::New(isolate, 0x0004));
+      prototype->Set(String::NewFromUtf8(isolate, "TRIANGLE_STRIP").ToLocalChecked(),
+                     Integer::New(isolate, 0x0005));
     }
 
     void WebGLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       // Set up the WebGL 1.0 API methods and properties
-      
+
       // Buffer operations
       tpl->InstanceTemplate()->Set(String::NewFromUtf8(isolate, "createBuffer").ToLocalChecked(),
                                    FunctionTemplate::New(isolate, CreateBuffer));
@@ -92,13 +125,14 @@ namespace script_bindings
 
       // Canvas property
       tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
-                                            CanvasGetter);
+                                           CanvasGetter);
 
       // WebGL constants
       SetupConstants(isolate, tpl);
     }
 
-    Local<Object> WebGLRenderingContext::NewInstance(Isolate *isolate, std::shared_ptr<webgl::WebGLRenderingContext> nativeContext)
+    Local<Object> WebGLRenderingContext::NewInstance(Isolate *isolate,
+                                                     shared_ptr<client_graphics::WebGLContext> nativeContext)
     {
       EscapableHandleScope scope(isolate);
       if (nativeContext == nullptr)
@@ -112,7 +146,7 @@ namespace script_bindings
     }
 
     WebGLRenderingContext::WebGLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : WebGLRenderingContextBase(isolate, args)
+        : WebGLRenderingContextBase(isolate, args)
     {
     }
 
@@ -170,68 +204,72 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    void WebGLRenderingContext::SetupConstants(Isolate *isolate, Local<FunctionTemplate> tpl)
-    {
-      // WebGL 1.0 constants as per MDN spec
-      auto prototype = tpl->PrototypeTemplate();
-      
-      // Buffer types
-      prototype->Set(String::NewFromUtf8(isolate, "ARRAY_BUFFER").ToLocalChecked(),
-                     Integer::New(isolate, 0x8892));
-      prototype->Set(String::NewFromUtf8(isolate, "ELEMENT_ARRAY_BUFFER").ToLocalChecked(),
-                     Integer::New(isolate, 0x8893));
-      
-      // Shader types
-      prototype->Set(String::NewFromUtf8(isolate, "VERTEX_SHADER").ToLocalChecked(),
-                     Integer::New(isolate, 0x8B31));
-      prototype->Set(String::NewFromUtf8(isolate, "FRAGMENT_SHADER").ToLocalChecked(),
-                     Integer::New(isolate, 0x8B30));
-      
-      // Texture types
-      prototype->Set(String::NewFromUtf8(isolate, "TEXTURE_2D").ToLocalChecked(),
-                     Integer::New(isolate, 0x0DE1));
-      
-      // Data types
-      prototype->Set(String::NewFromUtf8(isolate, "FLOAT").ToLocalChecked(),
-                     Integer::New(isolate, 0x1406));
-      prototype->Set(String::NewFromUtf8(isolate, "UNSIGNED_BYTE").ToLocalChecked(),
-                     Integer::New(isolate, 0x1401));
-      
-      // Clear bits
-      prototype->Set(String::NewFromUtf8(isolate, "COLOR_BUFFER_BIT").ToLocalChecked(),
-                     Integer::New(isolate, 0x00004000));
-      prototype->Set(String::NewFromUtf8(isolate, "DEPTH_BUFFER_BIT").ToLocalChecked(),
-                     Integer::New(isolate, 0x00000100));
-      
-      // Drawing modes
-      prototype->Set(String::NewFromUtf8(isolate, "TRIANGLES").ToLocalChecked(),
-                     Integer::New(isolate, 0x0004));
-      prototype->Set(String::NewFromUtf8(isolate, "TRIANGLE_STRIP").ToLocalChecked(),
-                     Integer::New(isolate, 0x0005));
-    }
-
     // Stub implementations for other methods
-    void WebGLRenderingContext::DeleteBuffer(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::BindBuffer(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::BufferData(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::DeleteShader(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::ShaderSource(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::CompileShader(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::DeleteProgram(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::AttachShader(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::LinkProgram(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::UseProgram(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::DeleteTexture(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::BindTexture(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::TexImage2D(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::ClearColor(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::DrawElements(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::GetUniformLocation(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::Uniform1f(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::Uniform1i(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::UniformMatrix4fv(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::GetError(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::Enable(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
-    void WebGLRenderingContext::Disable(const FunctionCallbackInfo<Value> &args) { /* TODO */ }
+    void WebGLRenderingContext::DeleteBuffer(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::BindBuffer(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::BufferData(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::DeleteShader(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::ShaderSource(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::CompileShader(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::DeleteProgram(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::AttachShader(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::LinkProgram(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::UseProgram(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::DeleteTexture(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::BindTexture(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::TexImage2D(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::ClearColor(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::DrawElements(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::GetUniformLocation(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::Uniform1f(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::Uniform1i(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::UniformMatrix4fv(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::GetError(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::Enable(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
+    void WebGLRenderingContext::Disable(const FunctionCallbackInfo<Value> &args)
+    { /* TODO */
+    }
   }
 }

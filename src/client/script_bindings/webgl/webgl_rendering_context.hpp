@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/graphics/webgl_context.hpp>
+#include <client/scripting_base/v8_object_wrap.hpp>
 
 namespace script_bindings
 {
@@ -10,14 +10,8 @@ namespace script_bindings
   {
     class WebGLRenderingContext;
     using WebGLRenderingContextBase = scripting_base::ObjectWrap<WebGLRenderingContext,
-                                                                 client_graphics::WebGLRenderingContext>;
+                                                                 client_graphics::WebGLContext>;
 
-    /**
-     * WebGLRenderingContext wrapper for V8 objects using scripting_base::ObjectWrap.
-     * 
-     * This class wraps webgl::WebGLRenderingContext objects for use in V8 JavaScript execution contexts.
-     * It provides the standard WebGL API for 3D graphics operations.
-     */
     class WebGLRenderingContext : public WebGLRenderingContextBase
     {
       using WebGLRenderingContextBase::ObjectWrap;
@@ -31,20 +25,10 @@ namespace script_bindings
         return "WebGLRenderingContext";
       }
 
-      /**
-       * Configure the V8 function template with WebGLRenderingContext properties and methods.
-       */
+      static void SetupConstants(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 WebGLRenderingContext instance from a native webgl::WebGLRenderingContext.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<webgl::WebGLRenderingContext> nativeContext);
-
-      /**
-       * Initialize the WebGLRenderingContext class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<client_graphics::WebGLContext> nativeContext);
 
     public:
       WebGLRenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
