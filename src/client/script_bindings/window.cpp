@@ -1,3 +1,4 @@
+#include <memory>
 #include "./window.hpp"
 
 using namespace std;
@@ -7,8 +8,25 @@ namespace script_bindings
 {
   void Window::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    auto objectTemplate = tpl->InstanceTemplate();
-    // TODO: Add properties and methods to the Window object here.
+    HandleScope handle_scope(isolate);
+    auto context = isolate->GetCurrentContext();
+    auto prototype_template = tpl->PrototypeTemplate();
+    auto instance_template = tpl->InstanceTemplate();
+
+    instance_template->Set(String::NewFromUtf8(isolate, "alert").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Alert));
+    instance_template->Set(String::NewFromUtf8(isolate, "blur").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Blur));
+    instance_template->Set(String::NewFromUtf8(isolate, "close").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Close));
+    instance_template->Set(String::NewFromUtf8(isolate, "confirm").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Confirm));
+    instance_template->Set(String::NewFromUtf8(isolate, "focus").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Focus));
+    instance_template->Set(String::NewFromUtf8(isolate, "open").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Open));
+    instance_template->Set(String::NewFromUtf8(isolate, "prompt").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Prompt));
   }
 
   Local<ObjectTemplate> Window::GetInstanceTemplate(Isolate *isolate)
@@ -16,20 +34,38 @@ namespace script_bindings
     return GetFunctionTemplate(isolate)->InstanceTemplate();
   }
 
-  Local<Object> Window::NewInstance(Isolate *isolate)
+  void Window::Alert(const v8::FunctionCallbackInfo<v8::Value> &info)
   {
-    EscapableHandleScope scope(isolate);
-    Local<Context> context = isolate->GetCurrentContext();
+    info.GetReturnValue().SetNull();
+  }
 
-    auto window = WindowBase::NewInstance(isolate, nullptr);
-    window->Set(context,
-                String::NewFromUtf8(isolate, "window").ToLocalChecked(),
-                window)
-      .Check();
-    window->Set(context,
-                String::NewFromUtf8(isolate, "self").ToLocalChecked(),
-                window)
-      .Check();
-    return scope.Escape(window);
+  void Window::Blur(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
+  }
+
+  void Window::Close(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
+  }
+
+  void Window::Confirm(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
+  }
+
+  void Window::Focus(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
+  }
+
+  void Window::Open(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
+  }
+
+  void Window::Prompt(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    info.GetReturnValue().SetNull();
   }
 }

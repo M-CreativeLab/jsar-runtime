@@ -32,6 +32,7 @@ namespace dombinding
     }
     auto source = info[0].As<Napi::String>();
     dom::DOMParsingType parsingType = dom::DOMParsingType::HTML;
+
     if (info.Length() >= 2 && info[1].IsString())
     {
       auto jsMimeTypeString = info[1].As<Napi::String>();
@@ -71,16 +72,10 @@ namespace dombinding
         auto doc = contextImpl->create<dom::HTMLDocument>(source.Utf8Value(), parsingType, inputType, baseURI);
         contextImpl->setBaseURI(doc->baseURI);
 
-        auto jsInstance = Document::NewInstance(env, doc);
-        {
-          auto window = browserbinding::Window::NewInstance(env, doc->baseURI);
-          auto scriptingContext = contextImpl->scriptingContext;
-          scriptingContext->makeMainContext(convertNapiValueToV8Local(window),
-                                            convertNapiValueToV8Local(jsInstance));
-        }
+        // Make sure the scripting context is created.
+        contextImpl->scriptingContext->makeMainContext(doc);
         contextImpl->open(doc);
-        env.Global().Set("document", jsInstance);
-        return jsInstance;
+        return env.Undefined();
       }
       catch (const std::exception &e)
       {

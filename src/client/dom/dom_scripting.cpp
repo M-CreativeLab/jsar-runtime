@@ -4,6 +4,7 @@
 #include <crates/bindings.hpp>
 #include <bindings/dom/console.hpp>
 #include <client/script_bindings/window.hpp>
+#include <client/script_bindings/dom/document.hpp>
 #include <client/script_bindings/binding.hpp>
 
 #include "./dom_scripting.hpp"
@@ -65,102 +66,6 @@ namespace dom
       // Handle error case - property couldn't be set
       return;
     }
-    info.GetReturnValue().Set(value);
-  }
-
-  void DOMScriptingContext::WindowProxyPropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
-  {
-    auto isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto globalObject = context->Global();
-    auto internalValue = context->GetEmbedderData(ContextEmbedderIndex::kInternalObject);
-
-    /**
-     * 1. Check if the property is in the window object.
-     */
-    if (!internalValue.IsEmpty() && internalValue->IsObject())
-    {
-      auto internalObject = internalValue.As<Object>();
-      auto windowKey = String::NewFromUtf8(isolate, "window").ToLocalChecked();
-      auto windowValue = internalObject->GetRealNamedProperty(context, windowKey).ToLocalChecked();
-      auto windowObject = windowValue.As<Object>();
-      if (windowObject->Has(context, property).ToChecked())
-      {
-        MaybeLocal<Value> maybeValue = windowObject->Get(context, property);
-        Local<Value> resultValue;
-        if (maybeValue.ToLocal(&resultValue))
-        {
-          /**
-           * If the property is a function, we need to return a bound function with the window object to avoid the scope issue.
-           */
-          if (resultValue->IsFunction())
-          {
-            auto func = resultValue.As<Function>();
-            auto bind = func->Get(context, String::NewFromUtf8(isolate, "bind").ToLocalChecked()).ToLocalChecked().As<Function>();
-            resultValue = bind->Call(context, func, 1, &windowValue).ToLocalChecked();
-          }
-          return info.GetReturnValue().Set(resultValue);
-        }
-      }
-    }
-
-    /**
-     * 2. Check if the property is in the global object.
-     */
-    if (globalObject->Has(context, property).ToChecked())
-    {
-      MaybeLocal<Value> maybeValue = globalObject->Get(context, property);
-      Local<Value> resultValue;
-      if (maybeValue.ToLocal(&resultValue))
-        return info.GetReturnValue().Set(resultValue);
-    }
-
-    /**
-     * 3. Otherwise, namely the property is not found from the window and global objects, returns undefined.
-     */
-    info.GetReturnValue().SetUndefined();
-  }
-
-  void DOMScriptingContext::WindowProxyPropertyEnumeratorCallback(const PropertyCallbackInfo<Array> &info)
-  {
-    auto isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto globalObject = context->Global();
-    HandleScope handleScope(isolate);
-
-    uint32_t propertyIndex = 0;
-    Local<Array> resultArray = Array::New(isolate);
-    {
-      auto globalPropertyNames = globalObject->GetPropertyNames(context).ToLocalChecked();
-      auto globalLength = globalPropertyNames->Length();
-      for (uint32_t propertyIndex = 0; propertyIndex < globalLength; propertyIndex++)
-      {
-        auto propertyName = globalPropertyNames->Get(context, propertyIndex).ToLocalChecked();
-        resultArray->Set(context, propertyIndex, propertyName).ToChecked();
-      }
-    }
-    info.GetReturnValue().Set(resultArray);
-  }
-
-  void DOMScriptingContext::WindowProxyPropertySetterCallback(
-    Local<Name> property,
-    Local<Value> value,
-    const PropertyCallbackInfo<Value> &info)
-  {
-    Isolate *isolate = info.GetIsolate();
-    Local<Context> context = isolate->GetCurrentContext();
-
-    // Get the global object (window object)
-    Local<Object> global = context->Global();
-
-    // Set the property on the global object
-    if (global->Set(context, property, value).IsNothing())
-    {
-      // Handle error case - property couldn't be set
-      return;
-    }
-
-    // Return the value that was set
     info.GetReturnValue().Set(value);
   }
 
@@ -278,10 +183,13 @@ namespace dom
     isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
   }
 
-  void DOMScriptingContext::makeMainContext(Local<Value> windowValue, Local<Value> documentValue)
+  void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument)
   {
     assert(!isContextInitialized);
     assert(v8ContextStore.IsEmpty());
+    assert(nativeDocument != nullptr && nativeDocument->isHTMLDocument() &&
+           "The document must be an HTML document.");
+
     auto mainContext = isolate_->GetCurrentContext();
     {
       Isolate::Scope isolateScope(isolate_);
@@ -289,7 +197,7 @@ namespace dom
       HandleScope handleScope(isolate_);
 
       // Initialize the Window firstly
-      script_bindings::Window::Initialize(isolate_);
+      auto Window = script_bindings::Window::Initialize(isolate_);
       Local<Context> scriptingContext = Context::New(isolate_,
                                                      nullptr,
                                                      script_bindings::Window::GetInstanceTemplate(isolate_));
@@ -303,12 +211,24 @@ namespace dom
         // Set the `window` and `self` properties to refer to the global object itself
         auto global = scriptingContext->Global();
         global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
+                    Window)
+          .Check();
+        global->Set(scriptingContext,
                     String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
                     global)
           .Check();
         global->Set(scriptingContext,
                     String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
                     global)
+          .Check();
+
+        // Set the `document` property to refer to the document object
+        auto document = script_bindings::dom_bindings::Document::NewInstance(
+          isolate_, static_pointer_cast<dom::Document>(nativeDocument));
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "document").ToLocalChecked(),
+                    document)
           .Check();
 
 #define V8_SET_GLOBAL_FROM_VALUE(name, value)                             \
@@ -816,30 +736,6 @@ namespace dom
     }
     // TODO: call dispatchEvent?
     return true;
-  }
-
-  Local<Value> DOMScriptingContext::createWindowProxy(Local<Context> context)
-  {
-    Context::Scope contextScope(context);
-    EscapableHandleScope handleScope(isolate_);
-
-    Local<FunctionTemplate> windowProxyFunctionTemplate = FunctionTemplate::New(isolate_);
-    Local<ObjectTemplate> windowProxyTemplate = windowProxyFunctionTemplate->InstanceTemplate();
-
-    NamedPropertyHandlerConfiguration namedConfig(
-      WindowProxyPropertyGetterCallback,
-      WindowProxyPropertySetterCallback, // Add the setter callback
-      nullptr,
-      nullptr,
-      WindowProxyPropertyEnumeratorCallback,
-      nullptr,
-      nullptr,
-      {},
-      PropertyHandlerFlags::kHasNoSideEffect);
-    windowProxyTemplate->SetHandler(namedConfig);
-
-    auto windowProxy = windowProxyTemplate->NewInstance(context).ToLocalChecked();
-    return handleScope.Escape(windowProxy);
   }
 
   Local<Value> DOMScriptingContext::createWorkerSelfProxy(Local<Context> context)

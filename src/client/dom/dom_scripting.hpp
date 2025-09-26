@@ -7,7 +7,8 @@
 #include <unordered_map>
 #include <node/v8.h>
 #include <node/node.h>
-#include "common/utility.hpp"
+#include <common/utility.hpp>
+#include <client/dom/node.hpp>
 
 template <typename T>
 inline void USE(T &&)
@@ -138,9 +139,6 @@ namespace dom
                                        v8::Local<v8::Value> value,
                                        const v8::PropertyCallbackInfo<v8::Value> &info);
 
-    static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertySetterCallback(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info);
     static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
@@ -175,10 +173,9 @@ namespace dom
     /**
      * Make a v8::Context for the main script.
      *
-     * @param windowValue The window object to be used in the main script.
-     * @param documentValue The document object to be used in the main script.
+     * @param document The document object to be used in scripting.
      */
-    void makeMainContext(v8::Local<v8::Value> windowValue, v8::Local<v8::Value> documentValue);
+    void makeMainContext(std::shared_ptr<dom::Node> document);
 
     /**
      * Make a v8::Context for the worker script.
@@ -294,14 +291,6 @@ namespace dom
     bool dispatchEvent(v8::Local<v8::Object> event);
 
   private:
-    /**
-     * Create the `Window` or `WindowProxy` object for the main script.
-     *
-     * @param context The v8 context to create this object.
-     * @returns The `Window` or `WindowProxy` object.
-     */
-    v8::Local<v8::Value> createWindowProxy(v8::Local<v8::Context> context);
-
     /**
      * Create the `WorkerGlobalScope.self` proxy object.
      *

@@ -1,19 +1,13 @@
 #pragma once
 
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/event_target.hpp>
+#include <client/browser/window.hpp>
 
 namespace script_bindings
 {
-  enum ContextEmbedderIndex : int
-  {
-    kSandboxObject = 50,
-    kInternalObject,
-    kScriptingContextExternal,
-    kContextTag,
-  };
-
   class Window;
-  using WindowBase = scripting_base::ObjectWrap<Window>;
+  using WindowBase = scripting_base::ObjectWrap<Window, ::browser::Window, EventTarget>;
 
   class Window : public WindowBase
   {
@@ -27,6 +21,14 @@ namespace script_bindings
 
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
     static v8::Local<v8::ObjectTemplate> GetInstanceTemplate(v8::Isolate *isolate);
-    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
+
+  private:
+    static void Alert(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Confirm(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Open(const v8::FunctionCallbackInfo<v8::Value> &info);
+    static void Prompt(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }
