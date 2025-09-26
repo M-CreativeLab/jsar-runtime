@@ -183,6 +183,7 @@ namespace script_bindings
     string Console::FormatValue(Isolate *isolate, Local<Value> value)
     {
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
       if (value->IsString())
       {
@@ -191,7 +192,7 @@ namespace script_bindings
       }
       else if (value->IsNumber())
       {
-        double num = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0);
+        double num = value->NumberValue(context).FromMaybe(0.0);
         return to_string(num);
       }
       else if (value->IsBoolean())
@@ -210,7 +211,7 @@ namespace script_bindings
       else if (value->IsObject())
       {
         // For objects, try to convert to string or return [object Object]
-        Local<String> str = value->ToString(isolate->GetCurrentContext()).FromMaybe(Local<String>());
+        Local<String> str = value->ToString(context).FromMaybe(Local<String>());
         if (!str.IsEmpty())
         {
           String::Utf8Value utf8(isolate, str);
@@ -221,7 +222,7 @@ namespace script_bindings
       else
       {
         // Fallback for other types
-        Local<String> str = value->ToString(isolate->GetCurrentContext()).FromMaybe(Local<String>());
+        Local<String> str = value->ToString(context).FromMaybe(Local<String>());
         if (!str.IsEmpty())
         {
           String::Utf8Value utf8(isolate, str);

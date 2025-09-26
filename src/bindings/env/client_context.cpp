@@ -1,6 +1,5 @@
 #include "client_context.hpp"
 #include "common/xr/types.hpp"
-#include "../webgl/rendering_context-inl.hpp"
 
 namespace bindings
 {

@@ -6,10 +6,8 @@
 #include <bindings/cssom/binding.hpp>
 #include <bindings/dom/binding.hpp>
 #include <bindings/env/binding.hpp>
-#include <bindings/math3d/binding.hpp>
 #include <bindings/messaging/binding.hpp>
 #include <bindings/renderer/binding.hpp>
-#include <bindings/webgl/binding.hpp>
 
 /**
  * @def TR_NAPI_MODULE_MAP
@@ -23,6 +21,4 @@
   MODULE(dom)                      \
   MODULE(env)                      \
   MODULE(messaging)                \
-  MODULE(math3d)                   \
-  MODULE(renderer)                 \
-  MODULE(webgl)
+  MODULE(renderer)

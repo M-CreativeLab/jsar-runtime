@@ -267,6 +267,7 @@ namespace dom
         // V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(performance);
+        V8_SET_GLOBAL_FROM_MAIN(console);
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
@@ -279,16 +280,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Audio);
         V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
-
-        // CSSOM APIs
-        V8_SET_GLOBAL_FROM_MAIN(CSS);
-        V8_SET_GLOBAL_FROM_MAIN(CSSRule);
-        V8_SET_GLOBAL_FROM_MAIN(CSSRuleList);
-        V8_SET_GLOBAL_FROM_MAIN(CSSStyleDeclaration);
-        V8_SET_GLOBAL_FROM_MAIN(CSSStyleSheet);
-        V8_SET_GLOBAL_FROM_MAIN(CSSStyleRule);
-        V8_SET_GLOBAL_FROM_MAIN(StyleSheet);
-        V8_SET_GLOBAL_FROM_MAIN(StyleSheetList);
 
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);
@@ -306,16 +297,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Headers);
         V8_SET_GLOBAL_FROM_MAIN(Request);
         V8_SET_GLOBAL_FROM_MAIN(Response);
-
-        // Canvas API
-        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
-        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvasRenderingContext2D);
-        V8_SET_GLOBAL_FROM_MAIN(CanvasRenderingContext2D);
-        V8_SET_GLOBAL_FROM_MAIN(Path2D);
-
-        // WebGL objects
-        V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
-        V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
