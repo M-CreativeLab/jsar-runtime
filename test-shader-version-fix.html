@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLSL Version Directive Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 8px; border-radius: 4px; }
+        .pass { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .fail { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .test-section { margin: 20px 0; border: 1px solid #ddd; padding: 15px; border-radius: 4px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>GLSL Version Directive Fix Test</h1>
+    <p>This test validates that shaders without #version directives are properly handled by the JSAR Runtime GLSL patcher.</p>
+
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function addResult(message, isPass, section = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+            div.innerHTML = `${isPass ? '✅' : '❌'} ${message}`;
+
+            if (section) {
+                section.appendChild(div);
+            } else {
+                results.appendChild(div);
+            }
+        }
+
+        function addSection(title) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            const header = document.createElement('h2');
+            header.textContent = title;
+            section.appendChild(header);
+            results.appendChild(section);
+            return section;
+        }
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                return null;
+            }
+            return shader;
+        }
+
+        function testShaderCompilation(gl, shaderType, source, testName, section) {
+            try {
+                const shader = createShader(gl, shaderType, source);
+                if (shader) {
+                    addResult(`${testName}: Shader compiled successfully`, true, section);
+                    gl.deleteShader(shader);
+                    return true;
+                } else {
+                    const error = gl.getShaderInfoLog(createShader(gl, shaderType, source));
+                    addResult(`${testName}: Compilation failed - ${error}`, false, section);
+                    return false;
+                }
+            } catch (e) {
+                addResult(`${testName}: Exception - ${e.message}`, false, section);
+                return false;
+            }
+        }
+
+        function runTests() {
+            const gl = navigator.gl;
+            if (!gl) {
+                addResult('WebGL not supported - test cannot run', false);
+                return;
+            }
+
+            addResult(`WebGL context available: ${gl.constructor.name}`, true);
+            addResult(`WebGL version: ${gl.getParameter(gl.VERSION)}`, true);
+
+            // Test 1: WebGL 1.0 shaders without version directive
+            const webgl1Section = addSection('WebGL 1.0 Shaders (should get #version 100)');
+
+            // The exact failing case from the issue
+            const fragmentShaderNoVersion = `
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}`;
+
+            const vertexShaderNoVersion = `
+attribute vec4 position;
+void main() {
+    gl_Position = position;
+}`;
+
+            testShaderCompilation(gl, gl.VERTEX_SHADER, vertexShaderNoVersion, 
+                'Vertex shader without #version (using attribute)', webgl1Section);
+            testShaderCompilation(gl, gl.FRAGMENT_SHADER, fragmentShaderNoVersion, 
+                'Fragment shader without #version (using gl_FragColor)', webgl1Section);
+
+            // Test 2: WebGL 2.0 style shaders without version directive
+            if (gl.constructor.name.includes('WebGL2')) {
+                const webgl2Section = addSection('WebGL 2.0 Shaders (should get #version 300 es)');
+                
+                const vertexShaderWebGL2 = `
+in vec4 position;
+void main() {
+    gl_Position = position;
+}`;
+
+                const fragmentShaderWebGL2 = `
+precision mediump float;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(0., 1., 0., 1.);
+}`;
+
+                testShaderCompilation(gl, gl.VERTEX_SHADER, vertexShaderWebGL2, 
+                    'Vertex shader without #version (using in)', webgl2Section);
+                testShaderCompilation(gl, gl.FRAGMENT_SHADER, fragmentShaderWebGL2, 
+                    'Fragment shader without #version (using out)', webgl2Section);
+            }
+
+            // Test 3: Existing shaders with version directives (should work as before)
+            const existingSection = addSection('Existing Shaders (should remain unchanged)');
+
+            const vertexWithVersion = `
+#version 100
+attribute vec4 position;
+void main() {
+    gl_Position = position;
+}`;
+
+            const fragmentWithVersion = `
+#version 100
+void main() {
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`;
+
+            testShaderCompilation(gl, gl.VERTEX_SHADER, vertexWithVersion, 
+                'Vertex shader with existing #version 100', existingSection);
+            testShaderCompilation(gl, gl.FRAGMENT_SHADER, fragmentWithVersion, 
+                'Fragment shader with existing #version 100', existingSection);
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

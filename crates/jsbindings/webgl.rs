@@ -67,16 +67,28 @@ fn patch_glsl_source_from_str(s: &str) -> String {
     ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
+  // Check if version directive is missing and inject appropriate version
+  let source_to_parse = if !s.contains("#version") {
+    let version_directive = if detect_webgl2_syntax(s) {
+      "#version 300 es\n"
+    } else {
+      "#version 100\n"
+    };
+    format!("{}{}", version_directive, s)
+  } else {
+    s.to_string()
+  };
+
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
   let mut tu: TranslationUnit = processor
-    .open_source(s, Path::new("."))
+    .open_source(&source_to_parse, Path::new("."))
     .builder()
     .parse()
     .map(|(mut tu, _, iter)| {
       iter.into_directives().inject(&mut tu);
       tu
     })
-    .expect(format!("Failed to parse GLSL source: \n{}\n", s).as_str());
+    .expect(format!("Failed to parse GLSL source: \n{}\n", &source_to_parse).as_str());
 
   let mut my_glsl_patcher = MyGLSLPatcher {};
   tu.visit_mut(&mut my_glsl_patcher);
@@ -108,14 +120,37 @@ fn patch_glsl_source_from_str(s: &str) -> String {
     tu.0.splice(0..0, versions_list);
   }
 
-  let mut s = String::new();
+  let mut result = String::new();
   glsl_transpiler::glsl::show_translation_unit(
-    &mut s,
+    &mut result,
     &tu,
     glsl_transpiler::glsl::FormattingState::default(),
   )
   .expect("Failed to show GLSL");
-  s
+  result
+}
+
+/// Detect if shader source uses WebGL 2.0 syntax
+fn detect_webgl2_syntax(source: &str) -> bool {
+  // WebGL 2.0 indicators
+  if source.contains("out vec4") ||
+     source.contains("in ") ||
+     source.contains("layout(") ||
+     source.contains("uniform") && source.contains("buffer") ||
+     source.contains("texture(") {
+    return true;
+  }
+  
+  // WebGL 1.0 indicators
+  if source.contains("gl_FragColor") ||
+     source.contains("attribute ") ||
+     source.contains("varying ") ||
+     source.contains("texture2D(") {
+    return false;
+  }
+  
+  // Default to WebGL 1.0 if uncertain
+  false
 }
 
 #[cxx::bridge(namespace = "holocron::webgl")]
@@ -202,6 +237,44 @@ void main() {
 }
 "#
     )
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl1() {
+    // Test case for the issue: shader without #version directive should get #version 100
+    let source_str = r#"void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 100
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}
+"#
+    );
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl2() {
+    // Test case for WebGL 2.0 shader without #version directive
+    let source_str = r#"precision mediump float;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(0., 1., 0., 1.);
+}"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+precision mediump float;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(0., 1., 0., 1.);
+}
+"#
+    );
   }
 
   #[test]
