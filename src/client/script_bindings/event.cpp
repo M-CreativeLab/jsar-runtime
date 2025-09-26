@@ -57,17 +57,11 @@ namespace script_bindings
     EscapableHandleScope scope(isolate);
 
     // Use the ObjectWrap NewInstance method to create the wrapper
-    return scope.Escape(scripting_base::ObjectWrap<Event, dom::Event>::NewInstance(isolate, nativeEvent).As<Object>());
-  }
-
-  // static
-  Local<Function> Event::Initialize(Isolate *isolate)
-  {
-    return scripting_base::ObjectWrap<Event, dom::Event>::Initialize(isolate);
+    return scope.Escape(EventBase::NewInstance(isolate, nativeEvent).As<Object>());
   }
 
   Event::Event(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : scripting_base::ObjectWrap<Event, dom::Event>(isolate, args)
+      : EventBase(isolate, args)
   {
   }
 
@@ -79,7 +73,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -96,7 +90,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -113,7 +107,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -130,7 +124,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -149,7 +143,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       return;
@@ -164,7 +158,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = scripting_base::ObjectWrap<Event, dom::Event>::Unwrap(info.This());
+    Event *event = Unwrap(info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       return;

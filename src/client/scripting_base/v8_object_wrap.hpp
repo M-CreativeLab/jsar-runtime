@@ -42,12 +42,14 @@ namespace scripting_base
 
     static v8::Local<v8::FunctionTemplate> GetFunctionTemplate(v8::Isolate *isolate)
     {
-      return function_template_.Get(isolate);
+      v8::EscapableHandleScope scope(isolate);
+      return scope.Escape(function_template_.Get(isolate));
     }
 
     static v8::Local<v8::Function> GetConstructorFunction(v8::Isolate *isolate)
     {
-      return constructor_handle_.Get(isolate);
+      v8::EscapableHandleScope scope(isolate);
+      return scope.Escape(constructor_handle_.Get(isolate));
     }
 
     /**
@@ -213,15 +215,13 @@ namespace scripting_base
       assert(isolate != nullptr);
 
       // Return the existing constructor if already initialized
-      if (ObjectWrap<T, D, B>::initialized_ == true)
-      {
-        return ObjectWrap<T, D, B>::GetConstructorFunction(isolate);
-      }
+      if (T::initialized_ == true)
+        return T::GetConstructorFunction(isolate);
 
-      v8::HandleScope scope(isolate);
+      v8::EscapableHandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, ObjectWrap<T, D, B>::Constructor);
+      v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(isolate, T::Constructor);
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -241,10 +241,10 @@ namespace scripting_base
 
       // Update the persistent handles
       v8::Local<v8::Function> constructor = tpl->GetFunction(context).ToLocalChecked();
-      ObjectWrap<T, D, B>::constructor_handle_.Reset(isolate, constructor);
-      ObjectWrap<T, D, B>::function_template_.Reset(isolate, tpl);
-      ObjectWrap<T, D, B>::initialized_ = true;
-      return constructor;
+      T::constructor_handle_.Reset(isolate, constructor);
+      T::function_template_.Reset(isolate, tpl);
+      T::initialized_ = true;
+      return scope.Escape(constructor);
     }
 
   public:

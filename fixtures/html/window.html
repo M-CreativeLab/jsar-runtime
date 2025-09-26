@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <title>Window</title>
   <script>
-    console.info('Navigator:', String(Navigator));
+    console.info('Navigator:', Navigator);
     console.info('navigator=', navigator);
-    console.info(Element);
+    console.info(Node, Element);
+    console.info(UIEvent, MouseEvent);
 
     console.info('window.URL', window.URL);
     console.info('window.fetch', window.fetch);
@@ -15,7 +16,7 @@
     console.info('self.fetch', self.fetch);
 
     console.info(window.location, window.origin);
-    window.open('http://www.example.com', '_blankClassic');
+    // window.open('http://www.example.com', '_blankClassic');
 
     window['foo'] = 1;
   </script>

@@ -20,61 +20,20 @@ namespace script_bindings
       // Add console methods
       instanceTemplate->Set(String::NewFromUtf8(isolate, "log").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Log));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "info").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Info));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "warn").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Warn));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "error").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Error));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "debug").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Debug));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "trace").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Trace));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "assert").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Assert));
-
       instanceTemplate->Set(String::NewFromUtf8(isolate, "clear").ToLocalChecked(),
                             FunctionTemplate::New(isolate, Clear));
-    }
-
-    // static
-    Local<Object> Console::CreateConsoleObject(Isolate *isolate)
-    {
-      EscapableHandleScope scope(isolate);
-      Local<Context> context = isolate->GetCurrentContext();
-
-      // Create a plain object with console methods
-      Local<Object> console = Object::New(isolate);
-
-      console->Set(context, String::NewFromUtf8(isolate, "log").ToLocalChecked(), Function::New(context, Log).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "info").ToLocalChecked(), Function::New(context, Info).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "warn").ToLocalChecked(), Function::New(context, Warn).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "error").ToLocalChecked(), Function::New(context, Error).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "debug").ToLocalChecked(), Function::New(context, Debug).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "trace").ToLocalChecked(), Function::New(context, Trace).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "assert").ToLocalChecked(), Function::New(context, Assert).ToLocalChecked()).Check();
-
-      console->Set(context, String::NewFromUtf8(isolate, "clear").ToLocalChecked(), Function::New(context, Clear).ToLocalChecked()).Check();
-
-      return scope.Escape(console);
-    }
-
-    // static
-    Local<Function> Console::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<Console, void>::Initialize(isolate);
     }
 
     Console::Console(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

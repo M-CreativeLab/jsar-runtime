@@ -9,23 +9,11 @@ namespace script_bindings
   class EventTarget : public scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>
   {
   public:
-    /**
-       * The name of the EventTarget class for V8.
-       */
     static std::string Name()
     {
       return "EventTarget";
     }
-
-    /**
-       * Configure the V8 function template with EventTarget properties and methods.
-       */
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    /**
-       * Initialize the EventTarget class and register it with V8.
-       */
-    static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
   public:
     EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

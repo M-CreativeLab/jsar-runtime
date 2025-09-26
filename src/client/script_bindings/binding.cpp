@@ -45,8 +45,8 @@ namespace script_bindings
 {
   void Initialize(Isolate *isolate, Local<Context> context, ContextType type)
   {
-    Context::Scope contextScope(context);
     HandleScope scope(isolate);
+    Context::Scope contextScope(context);
     Local<Object> global = context->Global();
 
 #define STRING_FROM_UTF8(str) String::NewFromUtf8(isolate, str).ToLocalChecked()
@@ -77,7 +77,7 @@ namespace script_bindings
 
     // Create and set global console object
     auto Console = dom_bindings::Console::Initialize(isolate);
-    auto console = dom_bindings::Console::CreateConsoleObject(isolate);
+    auto console = dom_bindings::Console::NewInstance(isolate, nullptr);
     global->Set(context, STRING_FROM_UTF8("Console"), Console).Check();
     global->Set(context, STRING_FROM_UTF8("console"), console).Check();
 
@@ -91,7 +91,6 @@ namespace script_bindings
                   STRING_FROM_UTF8("navigator"),
                   Navigator::NewInstance(isolate, make_shared<browser::Navigator>()))
         .Check();
-      cout << "Navigator object initialized." << endl;
 
       // Base DOM classes
       auto Node = dom_bindings::Node::Initialize(isolate);

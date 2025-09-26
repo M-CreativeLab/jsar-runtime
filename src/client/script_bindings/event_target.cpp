@@ -17,18 +17,10 @@ namespace script_bindings
     // Add methods
     instanceTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
                           FunctionTemplate::New(isolate, AddEventListener));
-
     instanceTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
                           FunctionTemplate::New(isolate, RemoveEventListener));
-
     instanceTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
                           FunctionTemplate::New(isolate, DispatchEvent));
-  }
-
-  // static
-  Local<Function> EventTarget::Initialize(Isolate *isolate)
-  {
-    return scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>::Initialize(isolate);
   }
 
   EventTarget::EventTarget(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

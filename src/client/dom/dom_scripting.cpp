@@ -3,6 +3,7 @@
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
 #include <bindings/dom/console.hpp>
+#include <client/script_bindings/window.hpp>
 #include <client/script_bindings/binding.hpp>
 
 #include "./dom_scripting.hpp"
@@ -11,31 +12,32 @@
 namespace dom
 {
   using namespace std;
+  using namespace v8;
 
   int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
   void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
     static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
 
-  DOMScriptingContext *DOMScriptingContext::GetCurrent(v8::Local<v8::Context> context)
+  DOMScriptingContext *DOMScriptingContext::GetCurrent(Local<Context> context)
   {
-    auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal).As<v8::External>();
+    auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal).As<External>();
     if (!externalObject.IsEmpty())
       return static_cast<DOMScriptingContext *>(externalObject->Value());
     else
       return nullptr;
   }
 
-  void DOMScriptingContext::PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  void DOMScriptingContext::PropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
-    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<v8::Object>();
+    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<Object>();
 
-    v8::MaybeLocal<v8::Value> maybeValue = sandbox->GetRealNamedProperty(context, property);
+    MaybeLocal<Value> maybeValue = sandbox->GetRealNamedProperty(context, property);
     if (maybeValue.IsEmpty())
       maybeValue = context->Global()->GetRealNamedProperty(context, property);
 
-    v8::Local<v8::Value> resultValue;
+    Local<Value> resultValue;
     if (maybeValue.ToLocal(&resultValue))
     {
       if (resultValue == sandbox)
@@ -49,15 +51,15 @@ namespace dom
     }
   }
 
-  void DOMScriptingContext::PropertySetterCallback(v8::Local<v8::Name> property,
-                                                   v8::Local<v8::Value> value,
-                                                   const v8::PropertyCallbackInfo<v8::Value> &info)
+  void DOMScriptingContext::PropertySetterCallback(Local<Name> property,
+                                                   Local<Value> value,
+                                                   const PropertyCallbackInfo<Value> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
-    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<v8::Object>();
+    auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<Object>();
 
-    cout << "Setting property: " << *v8::String::Utf8Value(isolate, property) << endl;
+    cout << "Setting property: " << *String::Utf8Value(isolate, property) << endl;
     if (sandbox->Set(context, property, value).IsNothing())
     {
       // Handle error case - property couldn't be set
@@ -66,7 +68,7 @@ namespace dom
     info.GetReturnValue().Set(value);
   }
 
-  void DOMScriptingContext::WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  void DOMScriptingContext::WindowProxyPropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
@@ -78,14 +80,14 @@ namespace dom
      */
     if (!internalValue.IsEmpty() && internalValue->IsObject())
     {
-      auto internalObject = internalValue.As<v8::Object>();
-      auto windowKey = v8::String::NewFromUtf8(isolate, "window").ToLocalChecked();
+      auto internalObject = internalValue.As<Object>();
+      auto windowKey = String::NewFromUtf8(isolate, "window").ToLocalChecked();
       auto windowValue = internalObject->GetRealNamedProperty(context, windowKey).ToLocalChecked();
-      auto windowObject = windowValue.As<v8::Object>();
+      auto windowObject = windowValue.As<Object>();
       if (windowObject->Has(context, property).ToChecked())
       {
-        v8::MaybeLocal<v8::Value> maybeValue = windowObject->Get(context, property);
-        v8::Local<v8::Value> resultValue;
+        MaybeLocal<Value> maybeValue = windowObject->Get(context, property);
+        Local<Value> resultValue;
         if (maybeValue.ToLocal(&resultValue))
         {
           /**
@@ -93,8 +95,8 @@ namespace dom
            */
           if (resultValue->IsFunction())
           {
-            auto func = resultValue.As<v8::Function>();
-            auto bind = func->Get(context, v8::String::NewFromUtf8(isolate, "bind").ToLocalChecked()).ToLocalChecked().As<v8::Function>();
+            auto func = resultValue.As<Function>();
+            auto bind = func->Get(context, String::NewFromUtf8(isolate, "bind").ToLocalChecked()).ToLocalChecked().As<Function>();
             resultValue = bind->Call(context, func, 1, &windowValue).ToLocalChecked();
           }
           return info.GetReturnValue().Set(resultValue);
@@ -107,8 +109,8 @@ namespace dom
      */
     if (globalObject->Has(context, property).ToChecked())
     {
-      v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
-      v8::Local<v8::Value> resultValue;
+      MaybeLocal<Value> maybeValue = globalObject->Get(context, property);
+      Local<Value> resultValue;
       if (maybeValue.ToLocal(&resultValue))
         return info.GetReturnValue().Set(resultValue);
     }
@@ -119,15 +121,15 @@ namespace dom
     info.GetReturnValue().SetUndefined();
   }
 
-  void DOMScriptingContext::WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info)
+  void DOMScriptingContext::WindowProxyPropertyEnumeratorCallback(const PropertyCallbackInfo<Array> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
     auto globalObject = context->Global();
-    v8::HandleScope handleScope(isolate);
+    HandleScope handleScope(isolate);
 
     uint32_t propertyIndex = 0;
-    v8::Local<v8::Array> resultArray = v8::Array::New(isolate);
+    Local<Array> resultArray = Array::New(isolate);
     {
       auto globalPropertyNames = globalObject->GetPropertyNames(context).ToLocalChecked();
       auto globalLength = globalPropertyNames->Length();
@@ -141,15 +143,15 @@ namespace dom
   }
 
   void DOMScriptingContext::WindowProxyPropertySetterCallback(
-    v8::Local<v8::Name> property,
-    v8::Local<v8::Value> value,
-    const v8::PropertyCallbackInfo<v8::Value> &info)
+    Local<Name> property,
+    Local<Value> value,
+    const PropertyCallbackInfo<Value> &info)
   {
-    v8::Isolate *isolate = info.GetIsolate();
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    Isolate *isolate = info.GetIsolate();
+    Local<Context> context = isolate->GetCurrentContext();
 
     // Get the global object (window object)
-    v8::Local<v8::Object> global = context->Global();
+    Local<Object> global = context->Global();
 
     // Set the property on the global object
     if (global->Set(context, property, value).IsNothing())
@@ -162,54 +164,54 @@ namespace dom
     info.GetReturnValue().Set(value);
   }
 
-  void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(Local<Name> property, const PropertyCallbackInfo<Value> &info)
   {
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
     auto globalObject = context->Global();
 
-    v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
+    MaybeLocal<Value> maybeValue = globalObject->Get(context, property);
     /**
      * TODO: add new an embedder data for the window-only properties.
      */
 
-    v8::Local<v8::Value> resultValue;
+    Local<Value> resultValue;
     if (maybeValue.ToLocal(&resultValue))
       info.GetReturnValue().Set(resultValue);
     else
       info.GetReturnValue().SetUndefined();
   }
 
-  v8::MaybeLocal<v8::Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
-                                                                                   v8::Local<v8::Data> hostDefinedOptions,
-                                                                                   v8::Local<v8::Value> resourceName,
-                                                                                   v8::Local<v8::String> specifier,
-                                                                                   v8::Local<v8::FixedArray> importAssertions)
+  MaybeLocal<Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(Local<Context> context,
+                                                                           Local<Data> hostDefinedOptions,
+                                                                           Local<Value> resourceName,
+                                                                           Local<String> specifier,
+                                                                           Local<FixedArray> importAssertions)
   {
     auto isolate = context->GetIsolate();
-    v8::EscapableHandleScope handleScope(isolate);
+    EscapableHandleScope handleScope(isolate);
 
-    v8::Local<v8::FixedArray> options = hostDefinedOptions.As<v8::FixedArray>();
+    Local<FixedArray> options = hostDefinedOptions.As<FixedArray>();
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
       cerr << "Failed to get the scripting context object" << endl;
-      return v8::MaybeLocal<v8::Promise>();
+      return MaybeLocal<Promise>();
     }
 
-    v8::String::Utf8Value specifier_utf8(isolate, specifier);
+    String::Utf8Value specifier_utf8(isolate, specifier);
     string specifierStr(*specifier_utf8, specifier_utf8.length());
 
-    auto type = options->Get(context, HostDefinedOptions::kType).As<v8::Number>()->Int32Value(context).ToChecked();
-    auto id = options->Get(context, HostDefinedOptions::kID).As<v8::Number>()->Int32Value(context).ToChecked();
+    auto type = options->Get(context, HostDefinedOptions::kType).As<Number>()->Int32Value(context).ToChecked();
+    auto id = options->Get(context, HostDefinedOptions::kID).As<Number>()->Int32Value(context).ToChecked();
 
     if (type != (int)SourceTextType::ESM)
     {
-      v8::Local<v8::Promise::Resolver> resolver;
-      if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
-        return v8::MaybeLocal<v8::Promise>();
+      Local<Promise::Resolver> resolver;
+      if (!Promise::Resolver::New(context).ToLocal(&resolver))
+        return MaybeLocal<Promise>();
 
-      auto typeError = v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "dynamic import() is only supported in ECMAScript module.").ToLocalChecked());
+      auto typeError = Exception::TypeError(String::NewFromUtf8(isolate, "dynamic import() is only supported in ECMAScript module.").ToLocalChecked());
       resolver->Reject(context, typeError).ToChecked();
       return handleScope.Escape(resolver->GetPromise());
     }
@@ -228,27 +230,27 @@ namespace dom
       if (dependent == nullptr)
       {
         cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
-        return v8::MaybeLocal<v8::Promise>();
+        return MaybeLocal<Promise>();
       }
 
       auto moduleUrl = dependent->getUrlBySpecifier(specifierStr);
       if (moduleUrl == "")
       {
         cerr << "Failed to create URL for '" << specifierStr << "'" << endl;
-        return v8::MaybeLocal<v8::Promise>();
+        return MaybeLocal<Promise>();
       }
 
-      v8::Local<v8::Promise::Resolver> resolver;
-      if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
-        return v8::MaybeLocal<v8::Promise>();
+      Local<Promise::Resolver> resolver;
+      if (!Promise::Resolver::New(context).ToLocal(&resolver))
+        return MaybeLocal<Promise>();
 
       auto scriptingContext = dependent->runtimeContext.lock()->scriptingContext;
-      auto persistentResolver = make_shared<v8::Persistent<v8::Promise::Resolver>>(isolate, resolver);
+      auto persistentResolver = make_shared<Persistent<Promise::Resolver>>(isolate, resolver);
       auto specifierRef = make_shared<string>(specifierStr);
       auto onModuleLoaded = [isolate, persistentResolver, dependent, scriptingContext, specifierRef](shared_ptr<DOMModule> module)
       {
-        v8::Isolate::Scope isolateScope(isolate);
-        v8::HandleScope handleScope(isolate);
+        Isolate::Scope isolateScope(isolate);
+        HandleScope handleScope(isolate);
 
         auto resolver = persistentResolver->Get(isolate);
         dependent->resolveCache.insert({*specifierRef, module});
@@ -262,7 +264,7 @@ namespace dom
   }
 
   DOMScriptingContext::DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext)
-      : isolate_(v8::Isolate::GetCurrent())
+      : isolate_(Isolate::GetCurrent())
       , runtimeContext(runtimeContext)
   {
     assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
@@ -271,42 +273,51 @@ namespace dom
   void DOMScriptingContext::enableDynamicImport()
   {
     auto mainContext = isolate_->GetCurrentContext();
-    v8::Isolate::Scope isolateScope(isolate_);
-    v8::Context::Scope contextScope(mainContext);
+    Isolate::Scope isolateScope(isolate_);
+    Context::Scope contextScope(mainContext);
     isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
   }
 
-  void DOMScriptingContext::makeMainContext(v8::Local<v8::Value> windowValue, v8::Local<v8::Value> documentValue)
+  void DOMScriptingContext::makeMainContext(Local<Value> windowValue, Local<Value> documentValue)
   {
     assert(!isContextInitialized);
     assert(v8ContextStore.IsEmpty());
     auto mainContext = isolate_->GetCurrentContext();
     {
-      v8::Isolate::Scope isolateScope(isolate_);
-      v8::Context::Scope contextScope(mainContext);
-      v8::HandleScope handleScope(isolate_);
+      Isolate::Scope isolateScope(isolate_);
+      Context::Scope contextScope(mainContext);
+      HandleScope handleScope(isolate_);
 
-      v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate_);
-      v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
-
-      v8::NamedPropertyHandlerConfiguration namedConfig(
-        PropertyGetterCallback,
-        PropertySetterCallback,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        {},
-        v8::PropertyHandlerFlags::kHasNoSideEffect);
-      globalObjectTemplate->SetHandler(namedConfig);
-
-      auto newContext = v8::Context::New(isolate_, nullptr, globalObjectTemplate);
-      auto global = mainContext->Global();
-      auto sandbox = v8::Object::New(isolate_);
+      // Initialize the Window firstly
+      script_bindings::Window::Initialize(isolate_);
+      Local<Context> scriptingContext = Context::New(isolate_,
+                                                     nullptr,
+                                                     script_bindings::Window::GetInstanceTemplate(isolate_));
       {
-#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
-  sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate_, #name).ToLocalChecked(), value).FromJust()
+        Context::Scope contextScope(scriptingContext);
+        HandleScope handleScope(isolate_);
+
+        // Initialize the scripting context from script bindings
+        script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
+
+        // Set the `window` and `self` properties to refer to the global object itself
+        auto global = scriptingContext->Global();
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "window").ToLocalChecked(),
+                    global)
+          .Check();
+        global->Set(scriptingContext,
+                    String::NewFromUtf8(isolate_, "self").ToLocalChecked(),
+                    global)
+          .Check();
+
+#define V8_SET_GLOBAL_FROM_VALUE(name, value)                             \
+  if (!global->Set(scriptingContext,                                      \
+                   String::NewFromUtf8(isolate_, #name).ToLocalChecked(), \
+                   value)                                                 \
+         .FromMaybe(false))                                               \
+    cerr << "Failed to set the global object(" << #name << ") for scripting v8::Context." << endl;
+
 #define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                        \
   try                                                                                                          \
   {                                                                                                            \
@@ -316,29 +327,26 @@ namespace dom
   {                                                                                                            \
     cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << endl; \
   }
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                      \
-  do                                                                                                       \
-  {                                                                                                        \
-    v8::Local<v8::Value> valueToSet;                                                                       \
-    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
-    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                          \
-    {                                                                                                      \
-      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                          \
-    }                                                                                                      \
+
+#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                                 \
+  do                                                                                                                  \
+  {                                                                                                                   \
+    Local<Value> valueToSet;                                                                                          \
+    auto maybeValue = mainContext->Global()->Get(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                     \
+    {                                                                                                                 \
+      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                                     \
+    }                                                                                                                 \
   } while (0)
 
         /**
          * Configure the global objects and functions for the DOM scripting.
          */
 
-        // Update context globals from script bindings
-        script_bindings::Initialize(isolate_, newContext, script_bindings::ContextType::kScripting);
-
         // Baisc objects
         // V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(performance);
-        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate_, mainContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
@@ -352,42 +360,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
-        // DOM nodes
-        V8_SET_GLOBAL_FROM_MAIN(DocumentFragment);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLAudioElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLBaseElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLBodyElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLBRElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLButtonElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLCanvasElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDataElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDataListElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDetailsElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDialogElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDivElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLDListElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLEmbedElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLFieldSetElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLFormElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLHeadElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLHeadingElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLHRElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLHtmlElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLIFrameElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLImageElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLInputElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLStyleElement);
-        V8_SET_GLOBAL_FROM_MAIN(HTMLTemplateElement);
-        V8_SET_GLOBAL_FROM_MAIN(CharacterData);
-        V8_SET_GLOBAL_FROM_MAIN(Comment);
-        V8_SET_GLOBAL_FROM_MAIN(Text);
-
-        // DOM APIs
-        V8_SET_GLOBAL_FROM_MAIN(MutationRecord);
-        V8_SET_GLOBAL_FROM_MAIN(MutationObserver);
-
         // CSSOM APIs
         V8_SET_GLOBAL_FROM_MAIN(CSS);
         V8_SET_GLOBAL_FROM_MAIN(CSSRule);
@@ -398,33 +370,10 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(StyleSheet);
         V8_SET_GLOBAL_FROM_MAIN(StyleSheetList);
 
-        // Events
-        V8_SET_GLOBAL_FROM_MAIN(Event);
-        V8_SET_GLOBAL_FROM_MAIN(EventTarget);
-        V8_SET_GLOBAL_FROM_MAIN(AnimationEvent);
-        V8_SET_GLOBAL_FROM_MAIN(BlobEvent);
-        V8_SET_GLOBAL_FROM_MAIN(CloseEvent);
-        V8_SET_GLOBAL_FROM_MAIN(CompositionEvent);
-        V8_SET_GLOBAL_FROM_MAIN(CustomEvent);
-        V8_SET_GLOBAL_FROM_MAIN(ErrorEvent);
-        V8_SET_GLOBAL_FROM_MAIN(FocusEvent);
-        V8_SET_GLOBAL_FROM_MAIN(FormDataEvent);
-        V8_SET_GLOBAL_FROM_MAIN(HashChangeEvent);
-        V8_SET_GLOBAL_FROM_MAIN(InputEvent);
-        V8_SET_GLOBAL_FROM_MAIN(KeyboardEvent);
-        V8_SET_GLOBAL_FROM_MAIN(MessageEvent);
-        V8_SET_GLOBAL_FROM_MAIN(MouseEvent);
-        V8_SET_GLOBAL_FROM_MAIN(PointerEvent);
-        V8_SET_GLOBAL_FROM_MAIN(ProgressEvent);
-        V8_SET_GLOBAL_FROM_MAIN(TouchEvent);
-        V8_SET_GLOBAL_FROM_MAIN(UIEvent);
-        V8_SET_GLOBAL_FROM_MAIN(WebGLContextEvent);
-        V8_SET_GLOBAL_FROM_MAIN(WheelEvent);
-
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);
         V8_SET_GLOBAL_FROM_MAIN(btoa);
-        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(newContext));
+        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(scriptingContext));
         V8_SET_GLOBAL_FROM_MAIN(setTimeout);
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
         V8_SET_GLOBAL_FROM_MAIN(setInterval);
@@ -448,69 +397,15 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
         V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
-        // WebXR Device API
-        V8_SET_GLOBAL_FROM_MAIN(XRSystem);
-        V8_SET_GLOBAL_FROM_MAIN(XRSession);
-        V8_SET_GLOBAL_FROM_MAIN(XRFrame);
-        V8_SET_GLOBAL_FROM_MAIN(XRReferenceSpace);
-        V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
-        V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
-
-        /**
-         * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
-         */
-        // Typed arrays
-        V8_SET_GLOBAL_FROM_MAIN(Array);
-        V8_SET_GLOBAL_FROM_MAIN(ArrayBuffer);
-        V8_SET_GLOBAL_FROM_MAIN(SharedArrayBuffer);
-        V8_SET_GLOBAL_FROM_MAIN(Int8Array);
-        V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
-        V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
-        V8_SET_GLOBAL_FROM_MAIN(Int16Array);
-        V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
-        V8_SET_GLOBAL_FROM_MAIN(Int32Array);
-        V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
-        V8_SET_GLOBAL_FROM_MAIN(Float32Array);
-        V8_SET_GLOBAL_FROM_MAIN(Float64Array);
-        V8_SET_GLOBAL_FROM_MAIN(DataView);
-
-        // Specific objects, such as: `document`, `window`, etc.
-        if (!documentValue.IsEmpty())
-          V8_SET_GLOBAL_FROM_VALUE(document, documentValue);
-
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
       }
 
-      auto internal = v8::Object::New(isolate_);
-      {
-        // Internal object is used to store internally.
-#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
-  internal->Set(mainContext, v8::String::NewFromUtf8(isolate_, #name).ToLocalChecked(), value).FromJust()
-
-        V8_SET_GLOBAL_FROM_VALUE(window, windowValue);
-#undef V8_SET_GLOBAL_FROM_VALUE
-      }
-
-      ContextEmbedderTag::TagMyContext(newContext);
-      newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-      newContext->SetEmbedderData(ContextEmbedderIndex::kInternalObject, internal);
-      newContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, v8::External::New(isolate_, this));
-      newContext->SetSecurityToken(mainContext->GetSecurityToken());
-      v8ContextStore.Reset(isolate_, newContext);
-    }
-
-    {
-      // Initialize the new context globals.
-      auto newContext = v8ContextStore.Get(isolate_);
-      v8::Context::Scope contextScope(newContext);
-      v8::HandleScope handleScope(isolate_);
-
-      v8::Local<v8::Value> windowProxy = createWindowProxy(newContext);
-      auto global = newContext->Global();
-      global->Set(newContext, v8::String::NewFromUtf8(isolate_, "window").ToLocalChecked(), windowProxy).FromJust();
-      global->Set(newContext, v8::String::NewFromUtf8(isolate_, "self").ToLocalChecked(), windowProxy).FromJust();
+      ContextEmbedderTag::TagMyContext(scriptingContext);
+      scriptingContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, External::New(isolate_, this));
+      scriptingContext->SetSecurityToken(mainContext->GetSecurityToken());
+      v8ContextStore.Reset(isolate_, scriptingContext);
     }
     isContextInitialized = true;
   }
@@ -521,14 +416,14 @@ namespace dom
     assert(v8ContextStore.IsEmpty());
     auto mainContext = isolate_->GetCurrentContext();
     {
-      v8::Isolate::Scope isolateScope(isolate_);
-      v8::Context::Scope contextScope(mainContext);
-      v8::HandleScope handleScope(isolate_);
+      Isolate::Scope isolateScope(isolate_);
+      Context::Scope contextScope(mainContext);
+      HandleScope handleScope(isolate_);
 
-      v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate_);
-      v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
+      Local<FunctionTemplate> globalFuncTemplate = FunctionTemplate::New(isolate_);
+      Local<ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
 
-      v8::NamedPropertyHandlerConfiguration namedConfig(
+      NamedPropertyHandlerConfiguration namedConfig(
         PropertyGetterCallback,
         nullptr,
         nullptr,
@@ -537,15 +432,15 @@ namespace dom
         nullptr,
         nullptr,
         {},
-        v8::PropertyHandlerFlags::kHasNoSideEffect);
+        PropertyHandlerFlags::kHasNoSideEffect);
       globalObjectTemplate->SetHandler(namedConfig);
 
-      auto workerContext = v8::Context::New(isolate_, nullptr, globalObjectTemplate);
+      auto workerContext = Context::New(isolate_, nullptr, globalObjectTemplate);
       auto global = mainContext->Global();
-      auto sandbox = v8::Object::New(isolate_);
+      auto sandbox = Object::New(isolate_);
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
-  sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate_, #name).ToLocalChecked(), value).FromJust()
+  sandbox->Set(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked(), value).FromJust()
 #define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                          \
   try                                                                                                            \
   {                                                                                                              \
@@ -555,15 +450,15 @@ namespace dom
   {                                                                                                              \
     cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << endl; \
   }
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                      \
-  do                                                                                                       \
-  {                                                                                                        \
-    v8::Local<v8::Value> valueToSet;                                                                       \
-    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
-    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                          \
-    {                                                                                                      \
-      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                          \
-    }                                                                                                      \
+#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                  \
+  do                                                                                                   \
+  {                                                                                                    \
+    Local<Value> valueToSet;                                                                           \
+    auto maybeValue = global->Get(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                      \
+    {                                                                                                  \
+      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                      \
+    }                                                                                                  \
   } while (0)
 
         /**
@@ -573,7 +468,7 @@ namespace dom
          */
 
         // Update context globals from script bindings
-        script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
+        // script_bindings::Initialize(isolate_, workerContext, script_bindings::ContextType::kWorker);
 
         // Baisc objects
         // Create custom console object with CDP integration using the Console binding
@@ -608,23 +503,25 @@ namespace dom
       ContextEmbedderTag::TagMyContext(workerContext);
       workerContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
       workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal,
-                                     v8::External::New(isolate_, this));
+                                     External::New(isolate_, this));
       workerContext->SetSecurityToken(mainContext->GetSecurityToken());
       v8ContextStore.Reset(isolate_, workerContext);
     }
 
     {
       auto newContext = v8ContextStore.Get(isolate_);
-      v8::Context::Scope contextScope(newContext);
-      v8::HandleScope handleScope(isolate_);
-      v8::Local<v8::Value> selfProxy = createWorkerSelfProxy(newContext);
+      Context::Scope contextScope(newContext);
+      HandleScope handleScope(isolate_);
+      Local<Value> selfProxy = createWorkerSelfProxy(newContext);
       auto global = newContext->Global();
-      global->Set(newContext, v8::String::NewFromUtf8(isolate_, "self").ToLocalChecked(), selfProxy).FromJust();
+      global->Set(newContext, String::NewFromUtf8(isolate_, "self").ToLocalChecked(), selfProxy).FromJust();
     }
     isContextInitialized = true;
   }
 
-  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<RuntimeContext> runtimeContext, const string &url, SourceTextType type)
+  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<RuntimeContext> runtimeContext,
+                                                    const string &url,
+                                                    SourceTextType type)
   {
     assert(isContextInitialized);
     shared_ptr<DOMScript> script;
@@ -651,11 +548,11 @@ namespace dom
     assert(isContextInitialized);
 
     // Create a handle scope to store the context, that is a `Local<Context>`.
-    v8::Isolate::Scope isolateScope(isolate_);
-    v8::HandleScope handleScope(isolate_);
+    Isolate::Scope isolateScope(isolate_);
+    HandleScope handleScope(isolate_);
 
-    v8::Local<v8::Context> context = v8ContextStore.Get(isolate_);
-    v8::Context::Scope contextScope(context);
+    Local<Context> context = v8ContextStore.Get(isolate_);
+    Context::Scope contextScope(context);
 
     if (!script->compile(isolate_, source, isTypeScript))
       return false;
@@ -670,64 +567,64 @@ namespace dom
     return true;
   }
 
-  v8::MaybeLocal<v8::Function> DOMScriptingContext::compileFunction(const string &funcSource)
+  MaybeLocal<Function> DOMScriptingContext::compileFunction(const string &funcSource)
   {
     assert(isContextInitialized);
 
     // Create a handle scope to store the context, that is a `Local<Context>`.
-    v8::EscapableHandleScope handleScope(isolate_);
+    EscapableHandleScope handleScope(isolate_);
 
-    v8::Local<v8::Context> context = v8ContextStore.Get(isolate_);
-    v8::Context::Scope contextScope(context);
+    Local<Context> context = v8ContextStore.Get(isolate_);
+    Context::Scope contextScope(context);
 
     // Wrap the handler code in a function that accepts an event parameter
     string functionCode = "(function(event) { " + funcSource + " })";
 
-    v8::TryCatch tryCatch(isolate_);
-    v8::Local<v8::String> source = v8::String::NewFromUtf8(isolate_, functionCode.c_str()).ToLocalChecked();
+    TryCatch tryCatch(isolate_);
+    Local<String> source = String::NewFromUtf8(isolate_, functionCode.c_str()).ToLocalChecked();
 
     // Compile the function expression
-    v8::Local<v8::Script> script;
-    if (!v8::Script::Compile(context, source).ToLocal(&script))
+    Local<Script> script;
+    if (!Script::Compile(context, source).ToLocal(&script))
     {
       if (tryCatch.HasCaught())
       {
-        v8::String::Utf8Value exception(isolate_, tryCatch.Exception());
+        String::Utf8Value exception(isolate_, tryCatch.Exception());
         cerr << "Failed to compile event handler: " << *exception << endl;
       }
-      return v8::MaybeLocal<v8::Function>();
+      return MaybeLocal<Function>();
     }
 
     // Execute the script to get the function
-    v8::Local<v8::Value> result;
+    Local<Value> result;
     if (!script->Run(context).ToLocal(&result))
     {
       if (tryCatch.HasCaught())
       {
-        v8::String::Utf8Value exception(isolate_, tryCatch.Exception());
+        String::Utf8Value exception(isolate_, tryCatch.Exception());
         cerr << "Failed to execute event handler compilation: " << *exception << endl;
       }
-      return v8::MaybeLocal<v8::Function>();
+      return MaybeLocal<Function>();
     }
 
     // Ensure the result is a function
     if (!result->IsFunction())
     {
       cerr << "Event handler compilation did not result in a function" << endl;
-      return v8::MaybeLocal<v8::Function>();
+      return MaybeLocal<Function>();
     }
 
-    return handleScope.Escape(result.As<v8::Function>());
+    return handleScope.Escape(result.As<Function>());
   }
 
   bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
   {
     assert(isContextInitialized);
-    v8::Isolate::Scope isolateScope(isolate_);
-    v8::HandleScope handleScope(isolate_);
+    Isolate::Scope isolateScope(isolate_);
+    HandleScope handleScope(isolate_);
 
     auto context = v8ContextStore.Get(isolate_);
-    v8::Context::Scope contextScope(context);
+    Context::Scope contextScope(context);
 
     if (!module->compileAsSyntheticModule(isolate_, type, sourceData, sourceByteLength))
       return false;
@@ -740,17 +637,17 @@ namespace dom
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
-    v8::Isolate::Scope isolateScope(isolate_);
-    v8::HandleScope handleScope(isolate_);
+    Isolate::Scope isolateScope(isolate_);
+    HandleScope handleScope(isolate_);
 
-    v8::Local<v8::Context> context = v8ContextStore.Get(isolate_);
-    v8::Context::Scope contextScope(context);
+    Local<Context> context = v8ContextStore.Get(isolate_);
+    Context::Scope contextScope(context);
     {
       script->evaluate(isolate_);
     }
   }
 
-  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(v8::Local<v8::Module> module)
+  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(Local<Module> module)
   {
     auto range = hashToModuleMap.equal_range(module->GetIdentityHash());
     for (auto it = range.first; it != range.second; ++it)
@@ -880,34 +777,34 @@ namespace dom
     runtimeContext->fetchArrayBufferLikeResource(url, onModuleSourceLoaded);
   }
 
-  bool DOMScriptingContext::dispatchEvent(v8::Local<v8::Object> event)
+  bool DOMScriptingContext::dispatchEvent(Local<Object> event)
   {
     assert(isContextInitialized);
     assert(!v8ContextStore.IsEmpty());
 
     auto context = v8ContextStore.Get(isolate_);
-    v8::Isolate::Scope isolateScope(isolate_);
-    v8::Context::Scope contextScope(context);
+    Isolate::Scope isolateScope(isolate_);
+    Context::Scope contextScope(context);
 
-    auto eventType = event->Get(context, v8::String::NewFromUtf8(isolate_, "type").ToLocalChecked()).ToLocalChecked();
-    auto eventType_utf8 = v8::String::Utf8Value(isolate_, eventType);
+    auto eventType = event->Get(context, String::NewFromUtf8(isolate_, "type").ToLocalChecked()).ToLocalChecked();
+    auto eventType_utf8 = String::Utf8Value(isolate_, eventType);
 
     auto global = context->Global();
     auto listenerName = "on" + string(*eventType_utf8, eventType_utf8.length());
 
-    auto eventListener = global->Get(context, v8::String::NewFromUtf8(isolate_, listenerName.c_str()).ToLocalChecked());
+    auto eventListener = global->Get(context, String::NewFromUtf8(isolate_, listenerName.c_str()).ToLocalChecked());
     if (!eventListener.IsEmpty() && eventListener.ToLocalChecked()->IsFunction())
     {
-      v8::TryCatch tryCatch(isolate_);
-      auto function = eventListener.ToLocalChecked().As<v8::Function>();
-      v8::Local<v8::Value> argv[] = {event};
-      v8::Local<v8::Value> result;
+      TryCatch tryCatch(isolate_);
+      auto function = eventListener.ToLocalChecked().As<Function>();
+      Local<Value> argv[] = {event};
+      Local<Value> result;
       if (!function->Call(context, global, 1, argv).ToLocal(&result))
       {
         if (tryCatch.HasCaught())
         {
-          v8::Local<v8::Message> message = tryCatch.Message();
-          v8::String::Utf8Value messageUtf8(isolate_, message->Get());
+          Local<Message> message = tryCatch.Message();
+          String::Utf8Value messageUtf8(isolate_, message->Get());
           cerr << "Failed to call the event listener: " << listenerName << ", ";
           cerr << "occurred an error: " << *messageUtf8 << endl;
         }
@@ -921,15 +818,15 @@ namespace dom
     return true;
   }
 
-  v8::Local<v8::Value> DOMScriptingContext::createWindowProxy(v8::Local<v8::Context> context)
+  Local<Value> DOMScriptingContext::createWindowProxy(Local<Context> context)
   {
-    v8::Context::Scope contextScope(context);
-    v8::EscapableHandleScope handleScope(isolate_);
+    Context::Scope contextScope(context);
+    EscapableHandleScope handleScope(isolate_);
 
-    v8::Local<v8::FunctionTemplate> windowProxyFunctionTemplate = v8::FunctionTemplate::New(isolate_);
-    v8::Local<v8::ObjectTemplate> windowProxyTemplate = windowProxyFunctionTemplate->InstanceTemplate();
+    Local<FunctionTemplate> windowProxyFunctionTemplate = FunctionTemplate::New(isolate_);
+    Local<ObjectTemplate> windowProxyTemplate = windowProxyFunctionTemplate->InstanceTemplate();
 
-    v8::NamedPropertyHandlerConfiguration namedConfig(
+    NamedPropertyHandlerConfiguration namedConfig(
       WindowProxyPropertyGetterCallback,
       WindowProxyPropertySetterCallback, // Add the setter callback
       nullptr,
@@ -938,22 +835,22 @@ namespace dom
       nullptr,
       nullptr,
       {},
-      v8::PropertyHandlerFlags::kHasNoSideEffect);
+      PropertyHandlerFlags::kHasNoSideEffect);
     windowProxyTemplate->SetHandler(namedConfig);
 
     auto windowProxy = windowProxyTemplate->NewInstance(context).ToLocalChecked();
     return handleScope.Escape(windowProxy);
   }
 
-  v8::Local<v8::Value> DOMScriptingContext::createWorkerSelfProxy(v8::Local<v8::Context> context)
+  Local<Value> DOMScriptingContext::createWorkerSelfProxy(Local<Context> context)
   {
-    v8::Context::Scope contextScope(context);
-    v8::EscapableHandleScope handleScope(isolate_);
+    Context::Scope contextScope(context);
+    EscapableHandleScope handleScope(isolate_);
 
-    v8::Local<v8::FunctionTemplate> selfProxyFunctionTemplate = v8::FunctionTemplate::New(isolate_);
-    v8::Local<v8::ObjectTemplate> selfProxyTemplate = selfProxyFunctionTemplate->InstanceTemplate();
+    Local<FunctionTemplate> selfProxyFunctionTemplate = FunctionTemplate::New(isolate_);
+    Local<ObjectTemplate> selfProxyTemplate = selfProxyFunctionTemplate->InstanceTemplate();
 
-    v8::NamedPropertyHandlerConfiguration namedConfig(
+    NamedPropertyHandlerConfiguration namedConfig(
       WorkerSelfProxyPropertyGetterCallback,
       nullptr,
       nullptr,
@@ -962,7 +859,7 @@ namespace dom
       nullptr,
       nullptr,
       {},
-      v8::PropertyHandlerFlags::kHasNoSideEffect);
+      PropertyHandlerFlags::kHasNoSideEffect);
     selfProxyTemplate->SetHandler(namedConfig);
 
     auto selfProxy = selfProxyTemplate->NewInstance(context).ToLocalChecked();
@@ -987,30 +884,30 @@ namespace dom
     scriptStore.Reset();
   }
 
-  bool DOMClassicScript::compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript)
+  bool DOMClassicScript::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
   {
-    v8::HandleScope scope(isolate);
+    HandleScope scope(isolate);
 
     // create the script origin
-    auto urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+    auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
     int lineOffset = 0;
     int columnOffset = 0;
 
-    v8::Local<v8::PrimitiveArray> hostDefinedOptions = v8::PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, v8::Number::New(isolate, (int)SourceTextType::Classic));
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, v8::Number::New(isolate, id));
+    Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::Classic));
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
 
-    v8::ScriptOrigin origin(isolate,
-                            urlString,
-                            lineOffset,
-                            columnOffset,
-                            crossOrigin,
-                            id,
-                            v8::Local<v8::Value>(),
-                            false,
-                            false,
-                            false,
-                            hostDefinedOptions);
+    ScriptOrigin origin(isolate,
+                        urlString,
+                        lineOffset,
+                        columnOffset,
+                        crossOrigin,
+                        id,
+                        Local<Value>(),
+                        false,
+                        false,
+                        false,
+                        hostDefinedOptions);
 
     // Transpile the TypeScript source code if necessary.
     string scriptSourceString;
@@ -1032,14 +929,14 @@ namespace dom
     }
 
     // create the script
-    auto sourceString = v8::String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
-    v8::ScriptCompiler::Source source(sourceString, origin);
+    auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
+    ScriptCompiler::Source source(sourceString, origin);
 
     // compile the script
     auto context = isolate->GetCurrentContext();
-    auto maybeScript = v8::ScriptCompiler::Compile(context, &source, v8::ScriptCompiler::kNoCompileOptions);
+    auto maybeScript = ScriptCompiler::Compile(context, &source, ScriptCompiler::kNoCompileOptions);
 
-    v8::Local<v8::Script> script;
+    Local<Script> script;
     if (maybeScript.ToLocal(&script))
     {
       scriptStore.Reset(isolate, script);
@@ -1055,15 +952,15 @@ namespace dom
     }
   }
 
-  void DOMClassicScript::evaluate(v8::Isolate *isolate)
+  void DOMClassicScript::evaluate(Isolate *isolate)
   {
-    v8::HandleScope scope(isolate);
+    HandleScope scope(isolate);
 
     auto script = scriptStore.Get(isolate);
     auto context = isolate->GetCurrentContext();
 
-    v8::TryCatch tryCatch(isolate);
-    v8::MaybeLocal<v8::Value> result = script->Run(context);
+    TryCatch tryCatch(isolate);
+    MaybeLocal<Value> result = script->Run(context);
     if (result.IsEmpty())
     {
       cerr << "#" << endl;
@@ -1076,14 +973,14 @@ namespace dom
         auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
         if (!stackTrace.IsEmpty())
         {
-          v8::String::Utf8Value stackTraceUtf8(isolate, stackTrace);
+          String::Utf8Value stackTraceUtf8(isolate, stackTrace);
           string stackTraceStr(*stackTraceUtf8, stackTraceUtf8.length());
           cerr << "# " << stackTraceStr << endl;
         }
         else
         {
-          v8::Local<v8::Message> message = tryCatch.Message();
-          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          Local<Message> message = tryCatch.Message();
+          String::Utf8Value messageUtf8(isolate, message->Get());
           string messageStr(*messageUtf8, messageUtf8.length());
           cerr << "# Error: " << messageStr << endl;
         }
@@ -1091,33 +988,33 @@ namespace dom
     }
   }
 
-  v8::MaybeLocal<v8::Module> DOMModule::ResolveModuleCallback(v8::Local<v8::Context> context,
-                                                              v8::Local<v8::String> specifier,
-                                                              v8::Local<v8::FixedArray> importAssertions,
-                                                              v8::Local<v8::Module> referrer)
+  MaybeLocal<Module> DOMModule::ResolveModuleCallback(Local<Context> context,
+                                                      Local<String> specifier,
+                                                      Local<FixedArray> importAssertions,
+                                                      Local<Module> referrer)
   {
-    v8::Isolate *isolate = context->GetIsolate();
+    Isolate *isolate = context->GetIsolate();
 
-    auto specifier_utf8 = v8::String::Utf8Value(isolate, specifier);
+    auto specifier_utf8 = String::Utf8Value(isolate, specifier);
     string specifierStr(*specifier_utf8, specifier_utf8.length());
 
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
       cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << endl;
-      return v8::MaybeLocal<v8::Module>();
+      return MaybeLocal<Module>();
     }
 
     auto dependent = scriptingContext->getModuleFromV8(referrer);
     if (dependent == nullptr)
     {
       cerr << "request for '" << specifierStr << "' is from invalid module" << endl;
-      return v8::MaybeLocal<v8::Module>();
+      return MaybeLocal<Module>();
     }
     if (dependent->resolveCache.count(specifierStr) != 1)
     {
       cerr << "request for '" << specifierStr << "' is not in cache" << endl;
-      return v8::MaybeLocal<v8::Module>();
+      return MaybeLocal<Module>();
     }
 
     auto module = dependent->resolveCache[specifierStr];
@@ -1125,28 +1022,28 @@ namespace dom
     return res;
   }
 
-  v8::MaybeLocal<v8::Value> DOMModule::SyntheticModuleEvaluationStepsCallback(v8::Local<v8::Context> context,
-                                                                              v8::Local<v8::Module> v8module)
+  MaybeLocal<Value> DOMModule::SyntheticModuleEvaluationStepsCallback(Local<Context> context,
+                                                                      Local<Module> v8module)
   {
-    v8::Isolate *isolate = context->GetIsolate();
-    v8::HandleScope handleScope(isolate);
+    Isolate *isolate = context->GetIsolate();
+    HandleScope handleScope(isolate);
 
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
-      return v8::MaybeLocal<v8::Value>();
+      return MaybeLocal<Value>();
 
     shared_ptr<DOMModule> module = scriptingContext->getModuleFromV8(v8module);
     if (module == nullptr)
-      return v8::MaybeLocal<v8::Value>();
+      return MaybeLocal<Value>();
 
-    v8::Local<v8::Promise::Resolver> resolver;
-    if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
-      return v8::MaybeLocal<v8::Value>();
+    Local<Promise::Resolver> resolver;
+    if (!Promise::Resolver::New(context).ToLocal(&resolver))
+      return MaybeLocal<Value>();
 
-    auto defaultExportName = v8::String::NewFromUtf8(isolate, "default").ToLocalChecked();
+    auto defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
     USE(v8module->SetSyntheticModuleExport(isolate, defaultExportName, module->getExports(isolate)));
 
-    resolver->Resolve(context, v8::Undefined(isolate)).ToChecked();
+    resolver->Resolve(context, Undefined(isolate)).ToChecked();
     return resolver->GetPromise();
   }
 
@@ -1160,30 +1057,30 @@ namespace dom
     moduleStore.Reset();
   }
 
-  bool DOMModule::compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript)
+  bool DOMModule::compile(Isolate *isolate, const string &sourceStr, bool isTypeScript)
   {
-    v8::HandleScope scope(isolate);
+    HandleScope scope(isolate);
 
     // create the script origin
-    auto urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+    auto urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
     int lineOffset = 0;
     int columnOffset = 0;
 
-    v8::Local<v8::PrimitiveArray> hostDefinedOptions = v8::PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, v8::Number::New(isolate, (int)SourceTextType::ESM));
-    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, v8::Number::New(isolate, id));
+    Local<PrimitiveArray> hostDefinedOptions = PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, Number::New(isolate, (int)SourceTextType::ESM));
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, Number::New(isolate, id));
 
-    v8::ScriptOrigin origin(isolate,
-                            urlString,
-                            lineOffset,
-                            columnOffset,
-                            crossOrigin,
-                            id,
-                            v8::Local<v8::Value>(),
-                            false,
-                            false,
-                            true,
-                            hostDefinedOptions);
+    ScriptOrigin origin(isolate,
+                        urlString,
+                        lineOffset,
+                        columnOffset,
+                        crossOrigin,
+                        id,
+                        Local<Value>(),
+                        false,
+                        false,
+                        true,
+                        hostDefinedOptions);
 
     // Transpile the TypeScript source code if necessary.
     string scriptSourceString;
@@ -1205,15 +1102,15 @@ namespace dom
     }
 
     // create the script
-    auto sourceString = v8::String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
-    v8::ScriptCompiler::Source source(sourceString, origin);
-    v8::ScriptCompiler::CompileOptions options = v8::ScriptCompiler::kNoCompileOptions;
+    auto sourceString = String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
+    ScriptCompiler::Source source(sourceString, origin);
+    ScriptCompiler::CompileOptions options = ScriptCompiler::kNoCompileOptions;
 
     // compile the script
-    v8::Local<v8::Module> module;
+    Local<Module> module;
     auto context = isolate->GetCurrentContext();
 
-    if (!v8::ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
+    if (!ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
     {
       cerr << "#" << endl;
       cerr << "# Occurred module compilation error" << endl;
@@ -1229,30 +1126,30 @@ namespace dom
     }
   }
 
-  bool DOMModule::compileAsSyntheticModule(v8::Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
+  bool DOMModule::compileAsSyntheticModule(Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
   {
-    v8::HandleScope scope(isolate);
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
-    v8::TryCatch tryCatch(isolate);
-    v8::Local<v8::String> urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
-    v8::Local<v8::String> defaultExportName = v8::String::NewFromUtf8(isolate, "default").ToLocalChecked();
+    TryCatch tryCatch(isolate);
+    Local<String> urlString = String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+    Local<String> defaultExportName = String::NewFromUtf8(isolate, "default").ToLocalChecked();
 
     switch (type)
     {
     case SyntheticModuleType::JSON:
     {
-      v8::Local<v8::Value> sourceJsonObject;
-      v8::Local<v8::String> sourceString = v8::String::NewFromUtf8(isolate, static_cast<const char *>(sourceData), v8::NewStringType::kNormal, sourceByteLength).ToLocalChecked();
-      if (v8::JSON::Parse(context, sourceString).ToLocal(&sourceJsonObject))
+      Local<Value> sourceJsonObject;
+      Local<String> sourceString = String::NewFromUtf8(isolate, static_cast<const char *>(sourceData), NewStringType::kNormal, sourceByteLength).ToLocalChecked();
+      if (JSON::Parse(context, sourceString).ToLocal(&sourceJsonObject))
         syntheticModuleNamespaceStore.Reset(isolate, sourceJsonObject);
       break;
     }
     case SyntheticModuleType::ArrayBuffer:
     {
-      v8::Local<v8::ArrayBuffer> sourceArrayBuffer = v8::ArrayBuffer::New(isolate, sourceByteLength);
+      Local<ArrayBuffer> sourceArrayBuffer = ArrayBuffer::New(isolate, sourceByteLength);
       memcpy(sourceArrayBuffer->GetBackingStore()->Data(), sourceData, sourceByteLength);
-      syntheticModuleNamespaceStore.Reset(isolate, sourceArrayBuffer.As<v8::Value>());
+      syntheticModuleNamespaceStore.Reset(isolate, sourceArrayBuffer.As<Value>());
       break;
     }
     default:
@@ -1266,8 +1163,8 @@ namespace dom
       cerr << "# URL: " << url << endl;
       {
         // Print the exception message
-        v8::Local<v8::Message> message = tryCatch.Message();
-        v8::String::Utf8Value messageUtf8(isolate, message->Get());
+        Local<Message> message = tryCatch.Message();
+        String::Utf8Value messageUtf8(isolate, message->Get());
         string messageStr(*messageUtf8, messageUtf8.length());
         cerr << "# Error: " << messageStr << endl;
       }
@@ -1275,15 +1172,15 @@ namespace dom
       return false;
     }
 
-    v8::Local<v8::Module> module = v8::Module::CreateSyntheticModule(isolate,
-                                                                     urlString,
-                                                                     {defaultExportName},
-                                                                     SyntheticModuleEvaluationStepsCallback);
+    Local<Module> module = Module::CreateSyntheticModule(isolate,
+                                                         urlString,
+                                                         {defaultExportName},
+                                                         SyntheticModuleEvaluationStepsCallback);
     moduleStore.Reset(isolate, module);
     return true;
   }
 
-  void DOMModule::evaluate(v8::Isolate *isolate)
+  void DOMModule::evaluate(Isolate *isolate)
   {
     if (linked)
     {
@@ -1298,7 +1195,7 @@ namespace dom
   int DOMModule::getModuleHash()
   {
     assert(!moduleStore.IsEmpty());
-    auto module = moduleStore.Get(v8::Isolate::GetCurrent());
+    auto module = moduleStore.Get(Isolate::GetCurrent());
     return module->GetIdentityHash();
   }
 
@@ -1342,17 +1239,17 @@ namespace dom
       linkedCallbacks.push_back(callback);
   }
 
-  v8::Local<v8::Value> DOMModule::getExports(v8::Isolate *isolate)
+  Local<Value> DOMModule::getExports(Isolate *isolate)
   {
-    v8::EscapableHandleScope handleScope(isolate);
-    v8::Local<v8::Module> module = moduleStore.Get(isolate);
+    EscapableHandleScope handleScope(isolate);
+    Local<Module> module = moduleStore.Get(isolate);
     if (module.IsEmpty())
-      return handleScope.Escape(v8::Undefined(isolate));
+      return handleScope.Escape(Undefined(isolate));
 
     if (module->IsSyntheticModule())
     {
       if (syntheticModuleNamespaceStore.IsEmpty())
-        return handleScope.Escape(v8::Undefined(isolate));
+        return handleScope.Escape(Undefined(isolate));
       else
         return handleScope.Escape(syntheticModuleNamespaceStore.Get(isolate));
     }
@@ -1360,15 +1257,15 @@ namespace dom
     {
       auto modNamespace = module->GetModuleNamespace();
       if (modNamespace.IsEmpty())
-        return handleScope.Escape(v8::Undefined(isolate));
+        return handleScope.Escape(Undefined(isolate));
       else
         return handleScope.Escape(modNamespace);
     }
   }
 
-  void DOMModule::link(v8::Isolate *isolate)
+  void DOMModule::link(Isolate *isolate)
   {
-    v8::HandleScope scope(isolate);
+    HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
 
     if (module->IsSyntheticModule()) // Synthetic module should not be linked
@@ -1385,9 +1282,9 @@ namespace dom
     auto moduleRequests = module->GetModuleRequests();
     for (int i = 0; i < moduleRequests->Length(); i++)
     {
-      auto moduleRequest = moduleRequests->Get(v8Context, i).As<v8::ModuleRequest>();
+      auto moduleRequest = moduleRequests->Get(v8Context, i).As<ModuleRequest>();
       auto specifier = moduleRequest->GetSpecifier();
-      string specifier_utf8(*v8::String::Utf8Value(isolate, specifier));
+      string specifier_utf8(*String::Utf8Value(isolate, specifier));
 
       auto moduleUrl = getUrlBySpecifier(specifier_utf8);
       if (moduleUrl != "")
@@ -1410,12 +1307,12 @@ namespace dom
     }
   }
 
-  bool DOMModule::instantiate(v8::Isolate *isolate)
+  bool DOMModule::instantiate(Isolate *isolate)
   {
-    v8::HandleScope scope(isolate);
-    v8::Local<v8::Module> module = moduleStore.Get(isolate);
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    v8::TryCatch tryCatch(isolate);
+    HandleScope scope(isolate);
+    Local<Module> module = moduleStore.Get(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+    TryCatch tryCatch(isolate);
 
     USE(module->InstantiateModule(context, ResolveModuleCallback));
     resolveCache.clear(); // clear the resolve cache after instantiation, which is used in module initialization.
@@ -1428,7 +1325,7 @@ namespace dom
       if (!stackTrace.IsEmpty())
       {
         auto stackTraceString = stackTrace->ToString(context).ToLocalChecked();
-        v8::String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
+        String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
         cerr << "#" << endl;
         cerr << "# Occurred module instantiation error" << endl;
         cerr << "# URL: " << url << endl;
@@ -1462,7 +1359,7 @@ namespace dom
     if (TR_UNLIKELY(linked))
       return;
 
-    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    Isolate *isolate = Isolate::GetCurrent();
     instantiate(isolate);
 
     linked = true;
@@ -1478,27 +1375,27 @@ namespace dom
       doEvaluate(isolate);
   }
 
-  void DOMModule::doEvaluate(v8::Isolate *isolate)
+  void DOMModule::doEvaluate(Isolate *isolate)
   {
     if (evaluatedOnce)
       return;
     evaluatedOnce = true;
 
-    v8::HandleScope scope(isolate);
+    HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
     auto context = isolate->GetCurrentContext();
 
     if (module->IsSyntheticModule()) // Synthetic module should not be evaluated
       return;
-    if (module->GetStatus() != v8::Module::Status::kInstantiated)
+    if (module->GetStatus() != Module::Status::kInstantiated)
     {
       cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << endl;
       return;
     }
 
-    v8::Local<v8::Value> resultValue;
+    Local<Value> resultValue;
     {
-      v8::TryCatch tryCatch(isolate);
+      TryCatch tryCatch(isolate);
       if (!module->Evaluate(context).ToLocal(&resultValue))
       {
         if (tryCatch.HasCaught())
@@ -1516,27 +1413,27 @@ namespace dom
         }
         else
         {
-          auto promise = v8::Local<v8::Promise>::Cast(resultValue);
-          auto resolveCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          auto promise = Local<Promise>::Cast(resultValue);
+          auto resolveCallback = [](const FunctionCallbackInfo<Value> &info)
           {
-            v8::Isolate *isolate = info.GetIsolate();
-            v8::Local<v8::Context> context = isolate->GetCurrentContext();
-            v8::Context::Scope contextScope(context);
-            v8::HandleScope handleScope(isolate);
+            Isolate *isolate = info.GetIsolate();
+            Local<Context> context = isolate->GetCurrentContext();
+            Context::Scope contextScope(context);
+            HandleScope handleScope(isolate);
             assert(info.Length() > 0);
             info.GetReturnValue().Set(info[0]);
           };
-          auto rejectCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          auto rejectCallback = [](const FunctionCallbackInfo<Value> &info)
           {
-            v8::Isolate *isolate = info.GetIsolate();
-            v8::Local<v8::Context> context = isolate->GetCurrentContext();
-            v8::Context::Scope contextScope(context);
-            v8::HandleScope handleScope(isolate);
-            v8::String::Utf8Value message(info.GetIsolate(), info[0]);
+            Isolate *isolate = info.GetIsolate();
+            Local<Context> context = isolate->GetCurrentContext();
+            Context::Scope contextScope(context);
+            HandleScope handleScope(isolate);
+            String::Utf8Value message(info.GetIsolate(), info[0]);
             cerr << "Failed to execute script: " << *message << endl;
           };
-          v8::Local<v8::Function> resolveFunc = v8::Function::New(context, resolveCallback).ToLocalChecked();
-          v8::Local<v8::Function> rejectFunc = v8::Function::New(context, rejectCallback).ToLocalChecked();
+          Local<Function> resolveFunc = Function::New(context, resolveCallback).ToLocalChecked();
+          Local<Function> rejectFunc = Function::New(context, rejectCallback).ToLocalChecked();
         }
       }
     }
