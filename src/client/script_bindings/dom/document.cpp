@@ -1,5 +1,6 @@
 #include <iostream>
 #include <client/script_bindings/html/html_body_element.hpp>
+#include <client/script_bindings/html/html_head_element.hpp>
 
 #include "./document.hpp"
 #include "./element.hpp"
@@ -19,46 +20,38 @@ namespace script_bindings
       // Set up the instance template
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
+#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
+#define METHOD(X) FunctionTemplate::New(isolate, X)
+
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "documentElement").ToLocalChecked(),
+      instanceTemplate->SetAccessor(NAME("documentElement"),
                                     DocumentElementGetter,
                                     nullptr,
                                     Local<Value>(),
                                     AccessControl::DEFAULT,
                                     PropertyAttribute::ReadOnly);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "body").ToLocalChecked(),
-                                    BodyGetter,
-                                    BodySetter);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "title").ToLocalChecked(),
-                                    TitleGetter,
-                                    TitleSetter);
+      instanceTemplate->SetAccessor(NAME("body"), BodyGetter, BodySetter);
+      instanceTemplate->SetAccessor(NAME("head"),
+                                    HeadGetter,
+                                    nullptr,
+                                    Local<Value>(),
+                                    AccessControl::DEFAULT,
+                                    PropertyAttribute::ReadOnly);
+      instanceTemplate->SetAccessor(NAME("title"), TitleGetter, TitleSetter);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "createElement").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, CreateElement));
+      instanceTemplate->Set(NAME("createElement"), METHOD(CreateElement));
+      instanceTemplate->Set(NAME("createTextNode"), METHOD(CreateTextNode));
+      instanceTemplate->Set(NAME("createComment"), METHOD(CreateComment));
+      instanceTemplate->Set(NAME("getElementById"), METHOD(GetElementById));
+      instanceTemplate->Set(NAME("getElementsByTagName"), METHOD(GetElementsByTagName));
+      instanceTemplate->Set(NAME("getElementsByClassName"), METHOD(GetElementsByClassName));
+      instanceTemplate->Set(NAME("querySelector"), METHOD(QuerySelector));
+      instanceTemplate->Set(NAME("querySelectorAll"), METHOD(QuerySelectorAll));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "createTextNode").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, CreateTextNode));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "createComment").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, CreateComment));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getElementById").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetElementById));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getElementsByTagName").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetElementsByTagName));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getElementsByClassName").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetElementsByClassName));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "querySelector").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, QuerySelector));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "querySelectorAll").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, QuerySelectorAll));
+#undef NAME
+#undef METHOD
     }
 
     // static
@@ -139,6 +132,25 @@ namespace script_bindings
     }
 
     // static
+    void Document::HeadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      Document *document = Unwrap(info.This());
+      if (document == nullptr || document->inner() == nullptr)
+      {
+        info.GetReturnValue().SetNull();
+        return;
+      }
+
+      auto headElement = document->inner()->head();
+      return headElement == nullptr
+               ? info.GetReturnValue().SetNull()
+               : info.GetReturnValue().Set(html_bindings::HTMLHeadElement::GetOrNewInstance(isolate, headElement));
+    }
+
+    // static
     void Document::TitleGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -183,8 +195,10 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
-        isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "createElement requires 1 argument").ToLocalChecked()));
+        isolate->ThrowException(
+          Exception::TypeError(ErrorMessage(isolate,
+                                            "createElement",
+                                            "1 argument required, but only 0 present")));
         return;
       }
 

@@ -39,11 +39,17 @@ namespace script_bindings
 
     private:
       // Property getters
-      static void DocumentElementGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      static void DocumentElementGetter(v8::Local<v8::String> property,
+                                        const v8::PropertyCallbackInfo<v8::Value> &info);
       static void BodyGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void BodySetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      static void BodySetter(v8::Local<v8::String> property,
+                             v8::Local<v8::Value> value,
+                             const v8::PropertyCallbackInfo<void> &info);
+      static void HeadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
       static void TitleGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TitleSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      static void TitleSetter(v8::Local<v8::String> property,
+                              v8::Local<v8::Value> value,
+                              const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
       static void CreateElement(const v8::FunctionCallbackInfo<v8::Value> &info);

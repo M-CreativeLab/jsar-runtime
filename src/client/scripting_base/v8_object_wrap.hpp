@@ -247,6 +247,22 @@ namespace scripting_base
       return scope.Escape(constructor);
     }
 
+  protected:
+    /**
+     * Create a standardized error message for method failures.
+     *
+     * @param isolate The v8::Isolate instance.
+     * @param method The name of the method where the error occurred.
+     * @param message The error message describing the failure.
+     * @returns A formatted error message string.
+     */
+    static v8::Local<v8::String> ErrorMessage(v8::Isolate *isolate, const char *method, const char *message)
+    {
+      std::string str = "Failed to execute '" + std::string(method) + "' on '" + T::Name() + "': " +
+                        std::string(message);
+      return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
+    }
+
   public:
     ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
         : ObjectWrapBase(isolate)

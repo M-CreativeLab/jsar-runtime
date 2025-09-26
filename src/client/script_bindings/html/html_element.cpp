@@ -12,7 +12,7 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
 
     // Add property accessors
     instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerText").ToLocalChecked(),

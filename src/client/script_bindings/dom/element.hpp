@@ -2,13 +2,16 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/dom/node.hpp>
 #include <client/dom/element.hpp>
-#include "./node.hpp"
 
 namespace script_bindings
 {
   namespace dom_bindings
   {
+    class Element;
+    using ElementBase = scripting_base::ObjectWrap<Element, ::dom::Element, Node>;
+
     /**
      * Element wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -16,9 +19,8 @@ namespace script_bindings
      * It provides the standard DOM Element interface including properties like tagName,
      * className, id and methods like getAttribute, setAttribute, etc.
      */
-    class Element : public scripting_base::ObjectWrap<Element, ::dom::Element>
+    class Element : public ElementBase
     {
-
     public:
       /**
        * The name of the Element class for V8.
@@ -28,21 +30,8 @@ namespace script_bindings
         return "Element";
       }
 
-      /**
-       * Configure the V8 function template with Element properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 Element instance from a native dom::Element.
-       * This will automatically create the appropriate subclass based on the element type.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement);
-
-      /**
-       * Initialize the Element class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       Element(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

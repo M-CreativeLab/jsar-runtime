@@ -12,14 +12,14 @@ namespace script_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add methods
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
                           FunctionTemplate::New(isolate, AddEventListener));
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
                           FunctionTemplate::New(isolate, RemoveEventListener));
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
                           FunctionTemplate::New(isolate, DispatchEvent));
   }
 
