@@ -2,13 +2,16 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/script_bindings/dom/node.hpp>
 #include <client/dom/document.hpp>
-#include "./node.hpp"
 
 namespace script_bindings
 {
   namespace dom_bindings
   {
+    class Document;
+    using DocumentBase = scripting_base::ObjectWrap<Document, ::dom::Document, Node>;
+
     /**
      * Document wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -16,7 +19,7 @@ namespace script_bindings
      * It provides the standard DOM Document interface including methods like createElement,
      * getElementById, querySelector, etc.
      */
-    class Document : public scripting_base::ObjectWrap<Document, ::dom::Document>
+    class Document : public DocumentBase
     {
 
     public:
@@ -28,20 +31,8 @@ namespace script_bindings
         return "Document";
       }
 
-      /**
-       * Configure the V8 function template with Document properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 Document instance from a native dom::Document.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Document> nativeDocument);
-
-      /**
-       * Initialize the Document class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       Document(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

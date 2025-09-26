@@ -831,35 +831,39 @@ namespace dom
 
   void DOMClassicScript::evaluate(Isolate *isolate)
   {
-    HandleScope scope(isolate);
+    HandleScope handleScope(isolate);
 
-    auto script = scriptStore.Get(isolate);
-    auto context = isolate->GetCurrentContext();
+    Local<Script> script = scriptStore.Get(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     TryCatch tryCatch(isolate);
-    MaybeLocal<Value> result = script->Run(context);
-    if (result.IsEmpty())
+    if (script->Run(context).IsEmpty())
     {
       cerr << "#" << endl;
       cerr << "# Failed to execute script" << endl;
       cerr << "# URL: " << url << endl;
       cerr << "#" << endl;
 
-      if (tryCatch.HasCaught())
+      Local<Message> message = tryCatch.Message();
+      if (!message.IsEmpty())
       {
-        auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
-        if (!stackTrace.IsEmpty())
+        String::Utf8Value messageUtf8(isolate, message->Get());
+        string messageStr(*messageUtf8, messageUtf8.length());
+        cerr << "# Error: " << messageStr << endl;
+
+        Local<StackTrace> stacktrace = message->GetStackTrace();
+        if (!stacktrace.IsEmpty())
         {
-          String::Utf8Value stackTraceUtf8(isolate, stackTrace);
-          string stackTraceStr(*stackTraceUtf8, stackTraceUtf8.length());
-          cerr << "# " << stackTraceStr << endl;
-        }
-        else
-        {
-          Local<Message> message = tryCatch.Message();
-          String::Utf8Value messageUtf8(isolate, message->Get());
-          string messageStr(*messageUtf8, messageUtf8.length());
-          cerr << "# Error: " << messageStr << endl;
+          for (int i = 0; i < stacktrace->GetFrameCount(); i++)
+          {
+            Local<StackFrame> frame = stacktrace->GetFrame(isolate, i);
+            String::Utf8Value scriptName(isolate, frame->GetScriptName());
+            String::Utf8Value functionName(isolate, frame->GetFunctionName());
+            int lineNumber = frame->GetLineNumber();
+            int column = frame->GetColumn();
+            cerr << "#   at "
+                 << *functionName << " (" << *scriptName << ":" << lineNumber << ":" << column << ")" << endl;
+          }
         }
       }
     }

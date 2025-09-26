@@ -1,6 +1,8 @@
+#include <iostream>
+#include <client/script_bindings/html/html_body_element.hpp>
+
 #include "./document.hpp"
 #include "./element.hpp"
-#include <iostream>
 
 using namespace std;
 using namespace v8;
@@ -64,22 +66,12 @@ namespace script_bindings
     {
       EscapableHandleScope scope(isolate);
 
-      if (nativeDocument == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<Document, ::dom::Document>::NewInstance(isolate, nativeDocument).As<Object>());
-    }
-
-    // static
-    Local<Function> Document::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<Document, ::dom::Document>::Initialize(isolate);
+      assert(nativeDocument != nullptr && "Document::NewInstance: nativeDocument is null");
+      return scope.Escape(DocumentBase::NewInstance(isolate, nativeDocument));
     }
 
     Document::Document(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<Document, ::dom::Document>(isolate, args)
+        : DocumentBase(isolate, args)
     {
     }
 
@@ -91,7 +83,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -105,7 +97,7 @@ namespace script_bindings
       }
       else
       {
-        Local<Object> elementWrapper = Element::NewInstance(isolate, documentElement);
+        Local<Object> elementWrapper = Element::GetOrNewInstance(isolate, documentElement);
         info.GetReturnValue().Set(elementWrapper);
       }
     }
@@ -116,16 +108,17 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
       }
 
-      // TODO: Implement proper body element lookup
-      cout << "body getter called" << endl;
-      info.GetReturnValue().SetNull();
+      auto bodyElement = document->inner()->body();
+      return bodyElement == nullptr
+               ? info.GetReturnValue().SetNull()
+               : info.GetReturnValue().Set(html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement));
     }
 
     // static
@@ -134,14 +127,15 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         return;
       }
 
-      // TODO: Implement proper body element setting
-      cout << "body setter called" << endl;
+      isolate->ThrowException(Exception::TypeError(
+        String::NewFromUtf8(isolate, "Setting document.body is not supported").ToLocalChecked()));
+      return;
     }
 
     // static
@@ -150,7 +144,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -168,7 +162,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         return;
@@ -194,7 +188,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -227,7 +221,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -262,7 +256,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -296,7 +290,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -323,7 +317,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -341,7 +335,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -359,7 +353,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -377,7 +371,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = scripting_base::ObjectWrap<Document, ::dom::Document>::Unwrap(info.This());
+      Document *document = Unwrap(info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));

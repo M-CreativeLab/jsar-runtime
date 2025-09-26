@@ -9,6 +9,9 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
+    class Node;
+    using NodeBase = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>;
+
     /**
      * Node wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -16,7 +19,7 @@ namespace script_bindings
      * It provides the standard DOM Node interface including properties like nodeType,
      * nodeName, parentNode and methods like appendChild, removeChild, etc.
      */
-    class Node : public scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>
+    class Node : public NodeBase
     {
 
     public:
@@ -28,21 +31,8 @@ namespace script_bindings
         return "Node";
       }
 
-      /**
-       * Configure the V8 function template with Node properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 Node instance from a native dom::Node.
-       * This will automatically create the appropriate subclass based on the node type.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode);
-
-      /**
-       * Initialize the Node class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       Node(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

@@ -34,11 +34,17 @@ namespace script_bindings
 
       instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerHTML").ToLocalChecked(),
                                     InnerHTMLGetter,
-                                    InnerHTMLSetter);
+                                    InnerHTMLSetter,
+                                    Local<Value>(),
+                                    AccessControl::DEFAULT,
+                                    PropertyAttribute::DontEnum);
 
       instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "outerHTML").ToLocalChecked(),
                                     OuterHTMLGetter,
-                                    OuterHTMLSetter);
+                                    OuterHTMLSetter,
+                                    Local<Value>(),
+                                    AccessControl::DEFAULT,
+                                    PropertyAttribute::DontEnum);
 
       // Add methods
       instanceTemplate->Set(String::NewFromUtf8(isolate, "getAttribute").ToLocalChecked(),

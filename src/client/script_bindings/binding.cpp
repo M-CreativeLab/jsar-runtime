@@ -20,8 +20,9 @@
 
 // HTML element bindings
 #include "./html/html_element.hpp"
-#include "./html/html_div_element.hpp"
 #include "./html/html_audio_element.hpp"
+#include "./html/html_body_element.hpp"
+#include "./html/html_div_element.hpp"
 #include "./html/html_canvas_element.hpp"
 
 // WebXR bindings
@@ -122,14 +123,16 @@ namespace script_bindings
 
       // HTML elements
       auto HTMLElement = html_bindings::HTMLElement::Initialize(isolate);
-      auto HTMLDivElement = html_bindings::HTMLDivElement::Initialize(isolate);
       auto HTMLAudioElement = html_bindings::HTMLAudioElement::Initialize(isolate);
+      auto HTMLBodyElement = html_bindings::HTMLBodyElement::Initialize(isolate);
       auto HTMLCanvasElement = html_bindings::HTMLCanvasElement::Initialize(isolate);
+      auto HTMLDivElement = html_bindings::HTMLDivElement::Initialize(isolate);
       {
         global->Set(context, STRING_FROM_UTF8("HTMLElement"), HTMLElement).Check();
-        global->Set(context, STRING_FROM_UTF8("HTMLDivElement"), HTMLDivElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLAudioElement"), HTMLAudioElement).Check();
+        global->Set(context, STRING_FROM_UTF8("HTMLBodyElement"), HTMLBodyElement).Check();
         global->Set(context, STRING_FROM_UTF8("HTMLCanvasElement"), HTMLCanvasElement).Check();
+        global->Set(context, STRING_FROM_UTF8("HTMLDivElement"), HTMLDivElement).Check();
 
         // Set up Audio constructor as a global function
         global->Set(context,

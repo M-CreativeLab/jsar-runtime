@@ -32,17 +32,12 @@ namespace script_bindings
                                      OnResizeSetter);
     }
 
-    Local<Object> HTMLBodyElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLBodyElement> nativeElement)
+    Local<Object> HTMLBodyElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLBodyElement> nativeElement)
     {
       EscapableHandleScope scope(isolate);
       return nativeElement != nullptr
                ? scope.Escape(HTMLBodyElementBase::NewInstance(isolate, nativeElement).As<Object>())
                : scope.Escape(Local<Object>());
-    }
-
-    Local<Function> HTMLBodyElement::Initialize(Isolate *isolate)
-    {
-      return HTMLBodyElementBase::Initialize(isolate);
     }
 
     // Event handler property getters/setters
