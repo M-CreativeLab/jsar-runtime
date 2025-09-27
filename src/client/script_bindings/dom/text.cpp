@@ -12,19 +12,19 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add property accessors (data and length inherited from CharacterData)
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "wholeText").ToLocalChecked(),
-                                  WholeTextGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "wholeText").ToLocalChecked(),
+                                   WholeTextGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
     // Add methods (inherited methods from CharacterData)
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "splitText").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, SplitText));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "splitText").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, SplitText));
   }
 
   // static

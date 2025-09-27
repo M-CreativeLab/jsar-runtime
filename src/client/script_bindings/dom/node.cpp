@@ -14,94 +14,94 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
+    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add property accessors
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeName").ToLocalChecked(),
-                                  NodeNameGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeName").ToLocalChecked(),
+                                   NodeNameGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeType").ToLocalChecked(),
-                                  NodeTypeGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeType").ToLocalChecked(),
+                                   NodeTypeGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeValue").ToLocalChecked(),
-                                  NodeValueGetter,
-                                  NodeValueSetter);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeValue").ToLocalChecked(),
+                                   NodeValueGetter,
+                                   NodeValueSetter);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "parentNode").ToLocalChecked(),
-                                  ParentNodeGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "parentNode").ToLocalChecked(),
+                                   ParentNodeGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "firstChild").ToLocalChecked(),
-                                  FirstChildGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "firstChild").ToLocalChecked(),
+                                   FirstChildGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "lastChild").ToLocalChecked(),
-                                  LastChildGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "lastChild").ToLocalChecked(),
+                                   LastChildGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "nextSibling").ToLocalChecked(),
-                                  NextSiblingGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nextSibling").ToLocalChecked(),
+                                   NextSiblingGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "previousSibling").ToLocalChecked(),
-                                  PreviousSiblingGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "previousSibling").ToLocalChecked(),
+                                   PreviousSiblingGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "ownerDocument").ToLocalChecked(),
-                                  OwnerDocumentGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "ownerDocument").ToLocalChecked(),
+                                   OwnerDocumentGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "textContent").ToLocalChecked(),
-                                  TextContentGetter,
-                                  TextContentSetter);
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "textContent").ToLocalChecked(),
+                                   TextContentGetter,
+                                   TextContentSetter);
 
     // Add methods
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "appendChild").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, AppendChild));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "appendChild").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, AppendChild));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "removeChild").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, RemoveChild));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeChild").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, RemoveChild));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "insertBefore").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, InsertBefore));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "insertBefore").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, InsertBefore));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "replaceChild").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, ReplaceChild));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "replaceChild").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, ReplaceChild));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "cloneNode").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, CloneNode));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "cloneNode").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, CloneNode));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "hasChildNodes").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, HasChildNodes));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "hasChildNodes").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, HasChildNodes));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "contains").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, Contains));
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "contains").ToLocalChecked(),
+                           FunctionTemplate::New(isolate, Contains));
   }
 
   // static

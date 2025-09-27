@@ -14,35 +14,35 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "data").ToLocalChecked(),
-                                    DataGetter,
-                                    DataSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "data").ToLocalChecked(),
+                                     DataGetter,
+                                     DataSetter);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "length").ToLocalChecked(),
-                                    LengthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "length").ToLocalChecked(),
+                                     LengthGetter,
+                                     nullptr,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::ReadOnly);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "substringData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, SubstringData));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "substringData").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, SubstringData));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "appendData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, AppendData));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "appendData").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, AppendData));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "insertData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, InsertData));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "insertData").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, InsertData));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "deleteData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, DeleteData));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "deleteData").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, DeleteData));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "replaceData").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ReplaceData));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "replaceData").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, ReplaceData));
     }
 
     // static

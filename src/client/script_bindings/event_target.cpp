@@ -16,11 +16,11 @@ namespace script_bindings
 
     // Add methods
     prototypeTemplate->Set(String::NewFromUtf8(isolate, "addEventListener").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, AddEventListener));
+                           FunctionTemplate::New(isolate, AddEventListener));
     prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeEventListener").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, RemoveEventListener));
+                           FunctionTemplate::New(isolate, RemoveEventListener));
     prototypeTemplate->Set(String::NewFromUtf8(isolate, "dispatchEvent").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, DispatchEvent));
+                           FunctionTemplate::New(isolate, DispatchEvent));
   }
 
   EventTarget::EventTarget(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

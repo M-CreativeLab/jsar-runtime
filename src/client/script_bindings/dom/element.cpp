@@ -14,62 +14,62 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "tagName").ToLocalChecked(),
-                                    TagNameGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "tagName").ToLocalChecked(),
+                                     TagNameGetter,
+                                     nullptr,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::ReadOnly);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "id").ToLocalChecked(),
-                                    IdGetter,
-                                    IdSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "id").ToLocalChecked(),
+                                     IdGetter,
+                                     IdSetter);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "className").ToLocalChecked(),
-                                    ClassNameGetter,
-                                    ClassNameSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "className").ToLocalChecked(),
+                                     ClassNameGetter,
+                                     ClassNameSetter);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerHTML").ToLocalChecked(),
-                                    InnerHTMLGetter,
-                                    InnerHTMLSetter,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::DontEnum);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerHTML").ToLocalChecked(),
+                                     InnerHTMLGetter,
+                                     InnerHTMLSetter,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::DontEnum);
 
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "outerHTML").ToLocalChecked(),
-                                    OuterHTMLGetter,
-                                    OuterHTMLSetter,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::DontEnum);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "outerHTML").ToLocalChecked(),
+                                     OuterHTMLGetter,
+                                     OuterHTMLSetter,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::DontEnum);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getAttribute").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetAttribute));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getAttribute").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, GetAttribute));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "setAttribute").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, SetAttribute));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "setAttribute").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, SetAttribute));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "removeAttribute").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RemoveAttribute));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeAttribute").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, RemoveAttribute));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "hasAttribute").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, HasAttribute));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "hasAttribute").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, HasAttribute));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getElementsByTagName").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetElementsByTagName));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getElementsByTagName").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, GetElementsByTagName));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getElementsByClassName").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetElementsByClassName));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getElementsByClassName").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, GetElementsByClassName));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "querySelector").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, QuerySelector));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "querySelector").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, QuerySelector));
 
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "querySelectorAll").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, QuerySelectorAll));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "querySelectorAll").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, QuerySelectorAll));
     }
 
     // static
