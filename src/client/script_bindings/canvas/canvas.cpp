@@ -9,27 +9,24 @@ namespace script_bindings
 
     void Canvas::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "Canvas").ToLocalChecked());
-
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Properties
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
                                     WidthGetter,
                                     WidthSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
                                     HeightGetter,
                                     HeightSetter);
 
       // Methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
                             FunctionTemplate::New(isolate, GetContext));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "toDataURL").ToLocalChecked(),
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "toDataURL").ToLocalChecked(),
                             FunctionTemplate::New(isolate, ToDataURL));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "toBlob").ToLocalChecked(),
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "toBlob").ToLocalChecked(),
                             FunctionTemplate::New(isolate, ToBlob));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
                             FunctionTemplate::New(isolate, TransferToImageBitmap));
     }
 

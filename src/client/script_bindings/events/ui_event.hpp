@@ -30,5 +30,13 @@ namespace script_bindings::event_bindings
     {
       return "UIEvent";
     }
+
+    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                             std::shared_ptr<::dom::events::UIEvent> nativeEvent);
+
+  private:
+    // Property getters
+    static void DetailGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
   };
 }

@@ -9,10 +9,7 @@ namespace script_bindings
 
     void ImageBitmap::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "ImageBitmap").ToLocalChecked());
-
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
 
       // Properties (read-only)
       instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),

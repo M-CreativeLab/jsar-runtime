@@ -28,5 +28,9 @@ namespace script_bindings::event_bindings
     {
       return "PointerEvent";
     }
+
+    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                             std::shared_ptr<::dom::events::PointerEvent> nativeEvent);
   };
 }

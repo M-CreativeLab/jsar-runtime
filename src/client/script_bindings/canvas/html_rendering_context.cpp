@@ -8,8 +8,6 @@ namespace script_bindings
 
     void HTMLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "HTMLRenderingContext").ToLocalChecked());
-
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
       instanceTemplate->SetInternalFieldCount(1);
 

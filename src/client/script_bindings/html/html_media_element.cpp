@@ -8,19 +8,18 @@ namespace script_bindings
 
     void HTMLMediaElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Media-specific properties
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "src").ToLocalChecked(), SrcGetter, SrcSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "currentTime").ToLocalChecked(), CurrentTimeGetter, CurrentTimeSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "duration").ToLocalChecked(), DurationGetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "paused").ToLocalChecked(), PausedGetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "muted").ToLocalChecked(), MutedGetter, MutedSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "volume").ToLocalChecked(), VolumeGetter, VolumeSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "readyState").ToLocalChecked(), ReadyStateGetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "src").ToLocalChecked(), SrcGetter, SrcSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "currentTime").ToLocalChecked(), CurrentTimeGetter, CurrentTimeSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "duration").ToLocalChecked(), DurationGetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "paused").ToLocalChecked(), PausedGetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "muted").ToLocalChecked(), MutedGetter, MutedSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "volume").ToLocalChecked(), VolumeGetter, VolumeSetter);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "readyState").ToLocalChecked(), ReadyStateGetter);
 
       // Media control methods
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "play").ToLocalChecked(),
                              FunctionTemplate::New(isolate, Play));
       prototypeTemplate->Set(String::NewFromUtf8(isolate, "pause").ToLocalChecked(),
