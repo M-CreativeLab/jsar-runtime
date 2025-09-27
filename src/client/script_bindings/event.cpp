@@ -12,31 +12,31 @@ namespace script_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add property accessors
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(),
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(),
                                   TypeGetter,
                                   nullptr,
                                   Local<Value>(),
                                   AccessControl::DEFAULT,
                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
                                   BubblesGetter,
                                   nullptr,
                                   Local<Value>(),
                                   AccessControl::DEFAULT,
                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
                                   CancelableGetter,
                                   nullptr,
                                   Local<Value>(),
                                   AccessControl::DEFAULT,
                                   PropertyAttribute::ReadOnly);
 
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "composed").ToLocalChecked(),
+    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "composed").ToLocalChecked(),
                                   ComposedGetter,
                                   nullptr,
                                   Local<Value>(),
@@ -44,10 +44,10 @@ namespace script_bindings
                                   PropertyAttribute::ReadOnly);
 
     // Add methods
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
                           FunctionTemplate::New(isolate, PreventDefault));
 
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "stopPropagation").ToLocalChecked(),
+    prototypeTemplate->Set(String::NewFromUtf8(isolate, "stopPropagation").ToLocalChecked(),
                           FunctionTemplate::New(isolate, StopPropagation));
   }
 
