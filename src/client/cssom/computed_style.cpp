@@ -76,10 +76,17 @@ namespace client_cssom
 
     // Position
     layoutStyle.setPosition(position_type_.toLayoutValue());
-    layoutStyle.setTop(inset_.top().toLayoutValue());
-    layoutStyle.setRight(inset_.right().toLayoutValue());
-    layoutStyle.setBottom(inset_.bottom().toLayoutValue());
-    layoutStyle.setLeft(inset_.left().toLayoutValue());
+
+    // According to CSS specification, inset properties (top, right, bottom, left)
+    // should be ignored when position is static
+    if (!position_type_.isStatic())
+    {
+      layoutStyle.setTop(inset_.top().toLayoutValue());
+      layoutStyle.setRight(inset_.right().toLayoutValue());
+      layoutStyle.setBottom(inset_.bottom().toLayoutValue());
+      layoutStyle.setLeft(inset_.left().toLayoutValue());
+    }
+    // For static positioning, inset properties remain as their default Auto() values
 
     // Sizes
     layoutStyle.setWidth(width_.toLayoutValue());
