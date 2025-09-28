@@ -58,6 +58,8 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
  * - attribute -> in (vertex shaders)
  * - varying -> out (vertex shaders) / in (fragment shaders)
  * - gl_FragColor -> custom out vec4 fragColor
+ * - gl_FragData[index] -> fragColor (single output, no MRT support yet)
+ * - fragColor[index] -> fragColor (fix array access patterns)
  * - removes precision qualifiers (not valid in desktop GL)
  * - adds appropriate #version directive
  */
@@ -123,11 +125,53 @@ string PatchWebGLShaderForDesktopGL(const string &source, GLuint shaderHandle)
       processedLine.replace(pos, 12, "fragColor");
     }
 
-    // gl_FragData -> fragColor (fragment shaders only)
-    if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("gl_FragData")) != string::npos)
+    // gl_FragData[0] -> fragColor (fragment shaders only)
+    // Handle the common case of gl_FragData[0] which should become fragColor (single output)
+    if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("gl_FragData[0]")) != string::npos)
     {
-      // This is more complex as it involves array access, but for now replace with fragColor
-      processedLine.replace(pos, 11, "fragColor");
+      hasFragColor = true;
+      processedLine.replace(pos, 14, "fragColor");
+    }
+    // Handle general gl_FragData array access (convert to fragColor for single output)
+    else if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("gl_FragData")) != string::npos)
+    {
+      hasFragColor = true;
+      // Look for array access pattern like gl_FragData[index]
+      size_t arrayStart = processedLine.find("[", pos);
+      if (arrayStart != string::npos)
+      {
+        size_t arrayEnd = processedLine.find("]", arrayStart);
+        if (arrayEnd != string::npos)
+        {
+          // Replace gl_FragData[index] with fragColor (assume single output for now)
+          processedLine.replace(pos, arrayEnd - pos + 1, "fragColor");
+        }
+      }
+      else
+      {
+        // No array access, just replace gl_FragData with fragColor
+        processedLine.replace(pos, 11, "fragColor");
+      }
+    }
+
+    // Handle any remaining fragColor[0] patterns that might have been missed
+    // This covers cases where gl_FragData[0] might have been partially processed
+    if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("fragColor[0]")) != string::npos)
+    {
+      hasFragColor = true;
+      processedLine.replace(pos, 12, "fragColor");
+    }
+    // Handle other fragColor array access patterns (for single output case)
+    else if (shaderType == GL_FRAGMENT_SHADER && processedLine.find("fragColor[") != string::npos)
+    {
+      hasFragColor = true;
+      size_t fragPos = processedLine.find("fragColor[");
+      size_t arrayEnd = processedLine.find("]", fragPos);
+      if (arrayEnd != string::npos)
+      {
+        // Replace fragColor[index] with fragColor (assume single output)
+        processedLine.replace(fragPos, arrayEnd - fragPos + 1, "fragColor");
+      }
     }
 
     patched += processedLine + "\n";
