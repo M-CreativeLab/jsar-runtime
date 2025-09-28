@@ -740,6 +740,15 @@ private:
     {
       string line;
       size_t pos = 0;
+      bool hasVersionDirective = source.find("#version") != string::npos;
+
+#ifdef __APPLE__
+      // On macOS, we need to ensure all shaders have a version directive for compatibility
+      if (!hasVersionDirective)
+      {
+        fixedSource += "#version 410 core\n";
+      }
+#endif
 
       while (pos < source.size())
       {

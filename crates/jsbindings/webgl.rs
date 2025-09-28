@@ -67,14 +67,11 @@ fn patch_glsl_source_from_str(s: &str) -> String {
     ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
-  // Check if version directive is missing and inject appropriate version
-  let source_to_parse = if !s.contains("#version") {
-    let version_directive = if detect_webgl2_syntax(s) {
-      "#version 300 es\n"
-    } else {
-      "#version 100\n"
-    };
-    format!("{}{}", version_directive, s)
+  // Only inject version directive for WebGL 2.0 shaders where it's required by spec
+  // WebGL 1.0 shaders should work without version directives per WebGL standard
+  let source_to_parse = if !s.contains("#version") && detect_webgl2_syntax(s) {
+    // WebGL 2.0 requires #version 300 es per specification
+    format!("#version 300 es\n{}", s)
   } else {
     s.to_string()
   };
@@ -254,15 +251,15 @@ void main() {
 
   #[test]
   fn test_patch_glsl_source_missing_version_webgl1() {
-    // Test case for the issue: shader without #version directive should get #version 100
+    // WebGL 1.0 shaders should NOT get version directive injected (per WebGL spec)
     let source_str = r#"void main() {
     gl_FragColor = vec4(0., 1., 0., 1.);
 }"#;
     let patched_source_str = patch_glsl_source_from_str(source_str);
+    // Should remain unchanged - WebGL 1.0 doesn't require #version
     assert_eq!(
       patched_source_str,
-      r#"#version 100
-void main() {
+      r#"void main() {
     gl_FragColor = vec4(0., 1., 0., 1.);
 }
 "#
@@ -271,7 +268,7 @@ void main() {
 
   #[test]
   fn test_patch_glsl_source_missing_version_webgl2() {
-    // Test case for WebGL 2.0 shader without #version directive
+    // WebGL 2.0 shaders SHOULD get #version 300 es injected (required by spec)
     let source_str = r#"precision mediump float;
 out vec4 fragColor;
 void main() {
@@ -292,7 +289,7 @@ void main() {
 
   #[test]
   fn test_patch_glsl_source_missing_version_webgl1_vertex() {
-    // Test WebGL 1.0 vertex shader without version directive
+    // WebGL 1.0 vertex shader should NOT get version directive injected
     let source_str = r#"attribute vec4 position;
 varying vec2 vTexCoord;
 void main() {
@@ -300,10 +297,10 @@ void main() {
     vTexCoord = position.xy;
 }"#;
     let patched_source_str = patch_glsl_source_from_str(source_str);
+    // Should remain unchanged - WebGL 1.0 doesn't require #version
     assert_eq!(
       patched_source_str,
-      r#"#version 100
-attribute vec4 position;
+      r#"attribute vec4 position;
 varying vec2 vTexCoord;
 void main() {
     gl_Position = position;
@@ -315,7 +312,7 @@ void main() {
 
   #[test]
   fn test_patch_glsl_source_missing_version_webgl2_vertex() {
-    // Test WebGL 2.0 vertex shader without version directive
+    // WebGL 2.0 vertex shader SHOULD get #version 300 es injected
     let source_str = r#"in vec4 position;
 in vec2 texCoord;
 out vec2 vTexCoord;

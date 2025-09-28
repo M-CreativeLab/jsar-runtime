@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLSL Version Directive Fix Test</title>
+    <title>WebGL Standards-Compliant GLSL Version Handling Test</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .test-result { margin: 10px 0; padding: 8px; border-radius: 4px; }
@@ -14,8 +14,12 @@
     </style>
 </head>
 <body>
-    <h1>GLSL Version Directive Fix Test</h1>
-    <p>This test validates that shaders without #version directives are properly handled by the JSAR Runtime GLSL patcher.</p>
+    <h1>WebGL Standards-Compliant GLSL Version Handling Test</h1>
+    <p>This test validates WebGL standards-compliant GLSL version handling:</p>
+    <ul>
+        <li><strong>WebGL 1.0</strong>: Version directives are optional (should default to GLSL ES 1.00)</li>
+        <li><strong>WebGL 2.0</strong>: Version directives are required (#version 300 es)</li>
+    </ul>
 
     <div id="results"></div>
 
@@ -84,8 +88,9 @@
             addResult(`WebGL context available: ${gl.constructor.name}`, true);
             addResult(`WebGL version: ${gl.getParameter(gl.VERSION)}`, true);
 
-            // Test 1: WebGL 1.0 shaders without version directive
-            const webgl1Section = addSection('WebGL 1.0 Shaders (should get #version 100)');
+            // Test 1: WebGL 1.0 shaders without version directive 
+            // Per WebGL spec, these should work WITHOUT version directives
+            const webgl1Section = addSection('WebGL 1.0 Shaders (should work without #version per WebGL spec)');
 
             // The exact failing case from the issue
             const fragmentShaderNoVersion = `
@@ -105,8 +110,9 @@ void main() {
                 'Fragment shader without #version (using gl_FragColor)', webgl1Section);
 
             // Test 2: WebGL 2.0 style shaders without version directive
+            // Per WebGL spec, these REQUIRE #version 300 es 
             if (gl.constructor.name.includes('WebGL2')) {
-                const webgl2Section = addSection('WebGL 2.0 Shaders (should get #version 300 es)');
+                const webgl2Section = addSection('WebGL 2.0 Shaders (MUST have #version 300 es per WebGL spec)');
                 
                 const vertexShaderWebGL2 = `
 in vec4 position;
