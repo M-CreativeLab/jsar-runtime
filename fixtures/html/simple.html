@@ -130,6 +130,21 @@
       background-color: rgb(134, 20, 98);
       color: #fff;
     }
+
+    #static-div {
+      position: static;
+      top: 200px;
+      left: 20;
+      background-color: rgba(20, 134, 69, 0.352);
+      padding: 20px;
+      font-size: 30px;
+      text-align: center;
+      color: #fff;
+      font-weight: bold;
+    }
+    #static-div:hover {
+      background-color: var(--secondary-color);
+    }
   </style>
   <script>
     console.log('Hello, world!');
@@ -144,6 +159,7 @@
   <div id="header">Hello World, JSAR 你好 😯</div>
   <span id="switch" class="sub">inline text</span>
   <img id="stereo-image" src="./images/sbs-example2.png" spatial="stereo">
+  <p id ="static-div">This is a staic positioned div</p>
   <main>
     <div id="float-area">
       <p>This is an absolutely positioned div 1</p>
