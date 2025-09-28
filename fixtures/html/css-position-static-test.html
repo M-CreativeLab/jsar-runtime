@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CSS Position Static Test - Inset Properties Ignored</title>
+  <style>
+    :root {
+      --container-width: 500px;
+      --test-color: #2196F3;
+      --test-color-secondary: #4CAF50;
+      --warning-color: #FF9800;
+    }
+
+    body {
+      background-color: #fff;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      width: 100%;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid var(--test-color);
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 24px;
+      margin-top: 30px;
+      color: #555;
+    }
+
+    .description {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-left: 4px solid var(--test-color);
+      border-radius: 4px;
+    }
+
+    .test-container {
+      position: relative;
+      width: var(--container-width);
+      height: 200px;
+      background-color: #e3f2fd;
+      border: 2px solid var(--test-color);
+      margin: 20px 0;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    /* Test 1: Static positioned element with inset properties */
+    .static-with-inset {
+      position: static;
+      top: 100px;          /* Should be IGNORED */
+      left: 100px;         /* Should be IGNORED */
+      right: 50px;         /* Should be IGNORED */
+      bottom: 50px;        /* Should be IGNORED */
+      width: 200px;
+      height: 60px;
+      background-color: var(--test-color);
+      color: white;
+      text-align: center;
+      line-height: 60px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    /* Test 2: Relative positioned element with same inset properties for comparison */
+    .relative-with-inset {
+      position: relative;
+      top: 20px;           /* Should be APPLIED */
+      left: 50px;          /* Should be APPLIED */
+      width: 200px;
+      height: 60px;
+      background-color: var(--test-color-secondary);
+      color: white;
+      text-align: center;
+      line-height: 60px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    /* Test 3: Static positioned element with large offset values */
+    .static-large-offset {
+      position: static;
+      top: 500px;          /* Large value - should be IGNORED */
+      left: 300px;         /* Large value - should be IGNORED */
+      width: 250px;
+      height: 50px;
+      background-color: var(--warning-color);
+      color: white;
+      text-align: center;
+      line-height: 50px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    /* Test 4: Nested static positioning */
+    .nested-container {
+      position: relative;
+      background-color: #fff3e0;
+      border: 2px dashed var(--warning-color);
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+
+    .nested-static {
+      position: static;
+      top: 80px;           /* Should be IGNORED even in nested context */
+      left: 120px;         /* Should be IGNORED even in nested context */
+      width: 180px;
+      height: 45px;
+      background-color: #795548;
+      color: white;
+      text-align: center;
+      line-height: 45px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .reference-box {
+      width: 100px;
+      height: 30px;
+      background-color: #ccc;
+      border: 1px solid #999;
+      margin: 5px 0;
+      text-align: center;
+      line-height: 30px;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .expected-behavior {
+      background-color: #e8f5e8;
+      border: 1px solid var(--test-color-secondary);
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    .actual-behavior {
+      background-color: #fff3e0;
+      border: 1px solid var(--warning-color);
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .spec-reference {
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 20px 0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CSS Position: Static Test - Inset Properties Should Be Ignored</h1>
+
+  <div class="description">
+    <strong>Issue:</strong> This test validates the fix for 
+    <a href="https://github.com/M-CreativeLab/jsar-runtime/issues/378" target="_blank">Issue #378</a> 
+    - CSS position: static should ignore top/left/right/bottom properties per web standards.
+  </div>
+
+  <div class="spec-reference">
+    <strong>CSS Specification:</strong> According to the 
+    <a href="https://www.w3.org/TR/css-position-3/#valdef-position-static" target="_blank">CSS Positioning Module Level 3</a>, 
+    when an element has <code>position: static</code>, the properties <code>top</code>, <code>left</code>, <code>right</code>, 
+    and <code>bottom</code> have no effect and should be ignored by the layout engine.
+  </div>
+
+  <h3>Test 1: Static Position with Inset Properties</h3>
+  <div class="test-container">
+    <div class="reference-box">Reference position</div>
+    <div class="static-with-inset">
+      Static: top:100px left:100px
+    </div>
+    <div class="expected-behavior">
+      <strong>✅ Expected:</strong> The blue box should appear directly below the reference box, 
+      ignoring the <code>top: 100px; left: 100px;</code> properties.
+    </div>
+  </div>
+
+  <h3>Test 2: Relative Position with Same Inset Properties (Comparison)</h3>
+  <div class="test-container">
+    <div class="reference-box">Reference position</div>
+    <div class="relative-with-inset">
+      Relative: top:20px left:50px
+    </div>
+    <div class="actual-behavior">
+      <strong>📝 Comparison:</strong> The green box should be offset by the specified 
+      <code>top: 20px; left: 50px;</code> values, demonstrating the difference from static positioning.
+    </div>
+  </div>
+
+  <h3>Test 3: Static Position with Large Offset Values</h3>
+  <div class="test-container">
+    <div class="reference-box">Reference position</div>
+    <div class="static-large-offset">
+      Static: top:500px left:300px
+    </div>
+    <div class="expected-behavior">
+      <strong>✅ Expected:</strong> The orange box should appear in normal document flow, 
+      completely ignoring the large <code>top: 500px; left: 300px;</code> offset values.
+    </div>
+  </div>
+
+  <h3>Test 4: Nested Static Positioning</h3>
+  <div class="test-container">
+    <div class="nested-container">
+      <div class="reference-box">Nested reference</div>
+      <div class="nested-static">
+        Nested Static: top:80px left:120px
+      </div>
+      <div class="expected-behavior">
+        <strong>✅ Expected:</strong> Even within a positioned container, the brown box 
+        should ignore <code>top: 80px; left: 120px;</code> and appear in normal flow.
+      </div>
+    </div>
+  </div>
+
+  <div class="description">
+    <strong>How to verify:</strong>
+    <ol>
+      <li>All colored boxes with <code>position: static</code> should appear in normal document flow</li>
+      <li>None of the static positioned elements should be offset by their top/left/right/bottom values</li>
+      <li>Compare with the relative positioned element (Test 2) which should be visibly offset</li>
+      <li>This behavior should match standard browsers like Chrome, Firefox, Safari</li>
+    </ol>
+  </div>
+
+  <div class="description">
+    <strong>Implementation Details:</strong> The fix operates at the Rust layout layer where inset properties 
+    are actively ignored (set to auto) when <code>position: static</code> is detected, ensuring compliance 
+    with CSS specifications regardless of the computed style values.
+  </div>
+
+</body>
+
+</html>
