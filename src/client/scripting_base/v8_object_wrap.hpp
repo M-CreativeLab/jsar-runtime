@@ -166,7 +166,7 @@ namespace scripting_base
       v8::EscapableHandleScope scope(isolate);
 
       v8::Local<v8::Object> jsThis = NewInstance(isolate, inner);
-      T *instance = Unwrap(jsThis);
+      T *instance = T::Unwrap(isolate, jsThis);
       instance->setNapiEnv(napiEnv);
       return scope.Escape(jsThis);
     }
@@ -180,11 +180,6 @@ namespace scripting_base
      */
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
     {
-      if constexpr (!std::is_same_v<D, void>)
-      {
-        assert(inner != nullptr && "inner must not be null when D is not void");
-      }
-
       v8::EscapableHandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
       v8::Local<v8::Function> constructor = constructor_handle_.Get(isolate);
@@ -208,9 +203,16 @@ namespace scripting_base
         return scope.Escape(v8::Local<v8::Object>());
       }
 
-      // Update the inner reference
-      T *instance = Unwrap(jsThis);
-      instance->setInner(inner);
+      // Set the inner handle if D is specified and handle is not null
+      if constexpr (!std::is_same_v<D, void>)
+      {
+        if (inner != nullptr)
+        {
+          // Update the inner reference
+          T *instance = T::Unwrap(isolate, jsThis);
+          instance->setInner(inner);
+        }
+      }
 
       // Return the created instance
       return scope.Escape(jsThis);
@@ -226,11 +228,7 @@ namespace scripting_base
         assert(false && "inner type must inherit from `JSObjectHolder`");
       }
 
-      if (inner == nullptr) [[unlikely]]
-      {
-        return v8::Local<v8::Object>();
-      }
-
+      assert(inner != nullptr && "inner must not be null");
       if (inner->hasJSObject())
       {
         v8::EscapableHandleScope scope(isolate);
@@ -250,8 +248,6 @@ namespace scripting_base
       assert(instance != nullptr && "instance must not be null");
 
       v8::HandleScope scope(isolate);
-      v8::Local<v8::Context> context = isolate->GetCurrentContext();
-
       object->SetInternalField(0, v8::External::New(isolate, instance));
     }
 
@@ -261,12 +257,13 @@ namespace scripting_base
      * @param object The v8::Object to unwrap
      * @returns The instance of the class T
      */
-    static T *Unwrap(v8::Local<v8::Object> object)
+    static T *Unwrap(v8::Isolate *isolate, v8::Local<v8::Object> object)
     {
+      v8::HandleScope scope(isolate);
       auto externalValue = object->GetInternalField(0);
       if (externalValue.IsEmpty())
         return nullptr;
-      return static_cast<T *>(v8::Local<v8::External>::Cast(externalValue)->Value());
+      return static_cast<T *>(externalValue.As<v8::External>()->Value());
     }
 
     /**
@@ -337,7 +334,7 @@ namespace scripting_base
         {
           assert(callbackData->callback != nullptr && "callback must not be null");
 
-          T *instance = T::Unwrap(info.This());
+          T *instance = T::Unwrap(isolate, info.This());
           if (instance == nullptr) [[unlikely]]
           {
             isolate->ThrowException(v8::Exception::TypeError(
@@ -346,6 +343,7 @@ namespace scripting_base
           }
 
           // Call the method callback
+          std::cerr << "Calling " << T::Name() << "::() at: " << instance << std::endl;
           std::bind(callbackData->callback, instance, std::placeholders::_1)(info);
           return;
         }
@@ -386,7 +384,7 @@ namespace scripting_base
         auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
         if (callbackData != nullptr && callbackData->getterCallback) [[likely]]
         {
-          T *instance = T::Unwrap(info.This());
+          T *instance = T::Unwrap(info.GetIsolate(), info.This());
           if (instance == nullptr) [[unlikely]]
           {
             isolate->ThrowException(v8::Exception::TypeError(
@@ -414,7 +412,7 @@ namespace scripting_base
         auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
         if (callbackData != nullptr && callbackData->setterCallback) [[likely]]
         {
-          T *instance = T::Unwrap(info.This());
+          T *instance = T::Unwrap(info.GetIsolate(), info.This());
           if (instance == nullptr) [[unlikely]]
           {
             isolate->ThrowException(v8::Exception::TypeError(
@@ -528,6 +526,10 @@ namespace scripting_base
     }
 
   public:
+    ObjectWrap(v8::Isolate *isolate)
+        : ObjectWrapBase(isolate)
+    {
+    }
     /**
      * Constructor for ObjectWrap.
      * 
@@ -620,9 +622,12 @@ namespace scripting_base
     static void Constructor(const v8::FunctionCallbackInfo<v8::Value> &args)
     {
       v8::Isolate *isolate = args.GetIsolate();
+      v8::HandleScope scope(isolate);
+      std::cerr << "Calling " << T::Name() << "::Constructor" << std::endl;
 
       if (!args.IsConstructCall())
       {
+        std::cerr << "Illegal constructor call for " << T::Name() << std::endl;
         isolate->ThrowException(v8::Exception::TypeError(
           v8::String::NewFromUtf8(isolate, "Illegal constructor").ToLocalChecked()));
         return;
@@ -630,6 +635,7 @@ namespace scripting_base
 
       T *instance = new T(isolate, args);
       assert(instance != nullptr && "Failed to create instance");
+      std::cerr << "Created " << T::Name() << "() wrapper: " << instance << std::endl;
 
       auto jsObject = args.This();
       Wrap(isolate, jsObject, instance);

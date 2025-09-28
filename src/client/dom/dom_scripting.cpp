@@ -189,6 +189,7 @@ namespace dom
     assert(v8ContextStore.IsEmpty());
     assert(nativeDocument != nullptr && nativeDocument->isHTMLDocument() &&
            "The document must be an HTML document.");
+    assert(nativeWindow != nullptr && "The window must not be null.");
 
     auto mainContext = isolate_->GetCurrentContext();
     {
@@ -198,19 +199,23 @@ namespace dom
 
       // Initialize the Window firstly
       auto Window = script_bindings::Window::Initialize(isolate_);
+
+      // Initialize the `v8::Context` with the window object.
       Local<Context> scriptingContext = Context::New(isolate_,
                                                      nullptr,
-                                                     script_bindings::Window::GetInstanceTemplate(isolate_),
-                                                     script_bindings::Window::GetOrNewInstance(isolate_, nativeWindow));
+                                                     script_bindings::Window::GetInstanceTemplate(isolate_));
       {
         Context::Scope contextScope(scriptingContext);
         HandleScope handleScope(isolate_);
+
+        // Setup the global/window object
+        Local<Object> global = scriptingContext->Global();
+        script_bindings::Window::Wrap(isolate_, global, new script_bindings::Window(isolate_, nativeWindow));
 
         // Initialize the scripting context from script bindings
         script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);
 
         // Set the `window` and `self` properties to refer to the global object itself
-        auto global = scriptingContext->Global();
         global->Set(scriptingContext,
                     String::NewFromUtf8(isolate_, "Window").ToLocalChecked(),
                     Window)

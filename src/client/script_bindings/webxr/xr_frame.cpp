@@ -80,7 +80,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -88,7 +88,7 @@ namespace script_bindings
       }
 
       // Get the associated XRSession object
-      auto frameWrapper = Unwrap(info.Holder());
+      auto frameWrapper = Unwrap(isolate, info.Holder());
       if (frameWrapper && frameWrapper->inner())
       {
         auto session = frameWrapper->inner()->session();
@@ -121,7 +121,7 @@ namespace script_bindings
         return;
       }
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
@@ -148,7 +148,7 @@ namespace script_bindings
         return;
       }
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -174,7 +174,7 @@ namespace script_bindings
         return;
       }
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
@@ -201,7 +201,7 @@ namespace script_bindings
         return;
       }
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -226,7 +226,7 @@ namespace script_bindings
         return;
       }
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -244,7 +244,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -262,7 +262,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRFrame *frame = scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Unwrap(info.This());
+      XRFrame *frame = Unwrap(isolate, info.This());
       if (frame == nullptr || frame->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));

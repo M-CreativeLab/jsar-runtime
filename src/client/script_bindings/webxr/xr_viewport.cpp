@@ -78,7 +78,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRViewport *viewport = scripting_base::ObjectWrap<XRViewport, client_xr::XRViewport>::Unwrap(info.This());
+      XRViewport *viewport = Unwrap(isolate, info.This());
       if (viewport == nullptr || viewport->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -95,7 +95,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRViewport *viewport = scripting_base::ObjectWrap<XRViewport, client_xr::XRViewport>::Unwrap(info.This());
+      XRViewport *viewport = Unwrap(isolate, info.This());
       if (viewport == nullptr || viewport->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -112,7 +112,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRViewport *viewport = scripting_base::ObjectWrap<XRViewport, client_xr::XRViewport>::Unwrap(info.This());
+      XRViewport *viewport = Unwrap(isolate, info.This());
       if (viewport == nullptr || viewport->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -129,7 +129,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRViewport *viewport = scripting_base::ObjectWrap<XRViewport, client_xr::XRViewport>::Unwrap(info.This());
+      XRViewport *viewport = Unwrap(isolate, info.This());
       if (viewport == nullptr || viewport->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));

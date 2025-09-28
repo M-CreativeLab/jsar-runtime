@@ -56,7 +56,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSystem *system = scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::Unwrap(info.This());
+      XRSystem *system = Unwrap(isolate, info.This());
       if (system == nullptr || system->inner() == nullptr)
       {
         // Return a rejected promise
@@ -82,7 +82,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSystem *system = scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::Unwrap(info.This());
+      XRSystem *system = Unwrap(isolate, info.This());
       if (system == nullptr || system->inner() == nullptr)
       {
         // Return a rejected promise

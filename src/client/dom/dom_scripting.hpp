@@ -304,6 +304,8 @@ namespace dom
   private:
     v8::Isolate *isolate_;
     v8::Global<v8::Context> v8ContextStore;
+    v8::Persistent<v8::Object> windowHandle;
+
     std::shared_ptr<RuntimeContext> runtimeContext;
     std::unordered_map<int, std::shared_ptr<DOMModule>> hashToModuleMap;
     std::unordered_map<uint32_t, std::shared_ptr<DOMClassicScript>> idToScriptMap;

@@ -76,7 +76,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -101,7 +101,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -120,7 +120,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         return;
@@ -137,7 +137,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -156,7 +156,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -174,7 +174,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         return;
@@ -202,7 +202,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -235,7 +235,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -270,7 +270,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -304,7 +304,7 @@ namespace script_bindings
         return;
       }
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -331,7 +331,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -349,7 +349,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -367,7 +367,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -385,7 +385,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(info.This());
+      Document *document = Unwrap(isolate, info.This());
       if (document == nullptr || document->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));

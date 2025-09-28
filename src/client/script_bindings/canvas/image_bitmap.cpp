@@ -46,7 +46,7 @@ namespace script_bindings
     void ImageBitmap::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = Unwrap(info.This());
+      ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
 
       if (imageBitmap && imageBitmap->inner())
       {
@@ -62,7 +62,7 @@ namespace script_bindings
     void ImageBitmap::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = Unwrap(info.This());
+      ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
 
       if (imageBitmap && imageBitmap->inner())
       {
@@ -78,7 +78,7 @@ namespace script_bindings
     void ImageBitmap::Close(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageBitmap *imageBitmap = Unwrap(info.This());
+      ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
 
       if (!imageBitmap || !imageBitmap->inner())
       {

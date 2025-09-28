@@ -59,7 +59,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Text *text = scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>::Unwrap(info.This());
+    Text *text = Unwrap(isolate, info.This());
     if (text == nullptr || text->inner() == nullptr)
     {
       info.GetReturnValue().SetEmptyString();
@@ -80,7 +80,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Text *text = scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>::Unwrap(info.This());
+    Text *text = Unwrap(isolate, info.This());
     if (text == nullptr || text->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();

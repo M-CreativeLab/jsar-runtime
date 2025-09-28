@@ -436,7 +436,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DrawBuffers(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native drawBuffers method
@@ -446,7 +446,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ClearBufferfv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native clearBufferfv method
@@ -456,7 +456,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ClearBufferiv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native clearBufferiv method
@@ -466,7 +466,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ClearBufferuiv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native clearBufferuiv method
@@ -476,7 +476,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ClearBufferfi(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native clearBufferfi method
@@ -487,7 +487,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CreateQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native createQuery method
@@ -497,7 +497,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DeleteQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native deleteQuery method
@@ -507,7 +507,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BeginQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native beginQuery method
@@ -517,7 +517,7 @@ namespace script_bindings
     void WebGL2RenderingContext::EndQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native endQuery method
@@ -527,7 +527,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getQuery method
@@ -537,7 +537,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetQueryParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getQueryParameter method
@@ -548,7 +548,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CreateSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native createSampler method
@@ -558,7 +558,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DeleteSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native deleteSampler method
@@ -568,7 +568,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BindSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native bindSampler method
@@ -578,7 +578,7 @@ namespace script_bindings
     void WebGL2RenderingContext::SamplerParameteri(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native samplerParameteri method
@@ -588,7 +588,7 @@ namespace script_bindings
     void WebGL2RenderingContext::SamplerParameterf(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native samplerParameterf method
@@ -598,7 +598,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetSamplerParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getSamplerParameter method
@@ -609,7 +609,7 @@ namespace script_bindings
     void WebGL2RenderingContext::FenceSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native fenceSync method
@@ -619,7 +619,7 @@ namespace script_bindings
     void WebGL2RenderingContext::IsSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native isSync method
@@ -629,7 +629,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DeleteSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native deleteSync method
@@ -639,7 +639,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ClientWaitSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native clientWaitSync method
@@ -649,7 +649,7 @@ namespace script_bindings
     void WebGL2RenderingContext::WaitSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native waitSync method
@@ -659,7 +659,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetSyncParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getSyncParameter method
@@ -670,7 +670,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CreateTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native createTransformFeedback method
@@ -680,7 +680,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DeleteTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native deleteTransformFeedback method
@@ -690,7 +690,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BindTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native bindTransformFeedback method
@@ -700,7 +700,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BeginTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native beginTransformFeedback method
@@ -710,7 +710,7 @@ namespace script_bindings
     void WebGL2RenderingContext::EndTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native endTransformFeedback method
@@ -720,7 +720,7 @@ namespace script_bindings
     void WebGL2RenderingContext::TransformFeedbackVaryings(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native transformFeedbackVaryings method
@@ -730,7 +730,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetTransformFeedbackVarying(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getTransformFeedbackVarying method
@@ -740,7 +740,7 @@ namespace script_bindings
     void WebGL2RenderingContext::PauseTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native pauseTransformFeedback method
@@ -750,7 +750,7 @@ namespace script_bindings
     void WebGL2RenderingContext::ResumeTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native resumeTransformFeedback method
@@ -761,7 +761,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BindBufferBase(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native bindBufferBase method
@@ -771,7 +771,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BindBufferRange(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native bindBufferRange method
@@ -781,7 +781,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetUniformIndices(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getUniformIndices method
@@ -791,7 +791,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetActiveUniforms(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getActiveUniforms method
@@ -801,7 +801,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetUniformBlockIndex(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getUniformBlockIndex method
@@ -811,7 +811,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetActiveUniformBlockParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getActiveUniformBlockParameter method
@@ -821,7 +821,7 @@ namespace script_bindings
     void WebGL2RenderingContext::GetActiveUniformBlockName(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native getActiveUniformBlockName method
@@ -831,7 +831,7 @@ namespace script_bindings
     void WebGL2RenderingContext::UniformBlockBinding(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native uniformBlockBinding method
@@ -842,7 +842,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CreateVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native createVertexArray method
@@ -852,7 +852,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DeleteVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native deleteVertexArray method
@@ -862,7 +862,7 @@ namespace script_bindings
     void WebGL2RenderingContext::BindVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native bindVertexArray method
@@ -872,7 +872,7 @@ namespace script_bindings
     void WebGL2RenderingContext::IsVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native isVertexArray method
@@ -883,7 +883,7 @@ namespace script_bindings
     void WebGL2RenderingContext::TexImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native texImage3D method
@@ -893,7 +893,7 @@ namespace script_bindings
     void WebGL2RenderingContext::TexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native texSubImage3D method
@@ -903,7 +903,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CopyTexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native copyTexSubImage3D method
@@ -913,7 +913,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CompressedTexImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native compressedTexImage3D method
@@ -923,7 +923,7 @@ namespace script_bindings
     void WebGL2RenderingContext::CompressedTexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native compressedTexSubImage3D method
@@ -934,7 +934,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DrawRangeElements(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native drawRangeElements method
@@ -944,7 +944,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DrawElementsInstanced(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native drawElementsInstanced method
@@ -954,7 +954,7 @@ namespace script_bindings
     void WebGL2RenderingContext::DrawArraysInstanced(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native drawArraysInstanced method
@@ -964,7 +964,7 @@ namespace script_bindings
     void WebGL2RenderingContext::VertexAttribDivisor(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(args.This());
+      auto *self = Unwrap(isolate, args.This());
       if (self && self->inner())
       {
         // Implementation would call native vertexAttribDivisor method

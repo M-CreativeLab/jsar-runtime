@@ -66,7 +66,7 @@ namespace script_bindings
     void ImageSource::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(info.This());
+      ImageSource *imageSource = Unwrap(isolate, info.This());
 
       if (imageSource && imageSource->inner())
       {
@@ -82,7 +82,7 @@ namespace script_bindings
     void ImageSource::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(info.This());
+      ImageSource *imageSource = Unwrap(isolate, info.This());
 
       if (imageSource && imageSource->inner())
       {
@@ -98,7 +98,7 @@ namespace script_bindings
     void ImageSource::NaturalWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(info.This());
+      ImageSource *imageSource = Unwrap(isolate, info.This());
 
       if (imageSource && imageSource->inner())
       {
@@ -115,7 +115,7 @@ namespace script_bindings
     void ImageSource::NaturalHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(info.This());
+      ImageSource *imageSource = Unwrap(isolate, info.This());
 
       if (imageSource && imageSource->inner())
       {
@@ -132,7 +132,7 @@ namespace script_bindings
     void ImageSource::GetImageData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageSource *imageSource = Unwrap(info.This());
+      ImageSource *imageSource = Unwrap(isolate, info.This());
 
       if (!imageSource || !imageSource->inner())
       {

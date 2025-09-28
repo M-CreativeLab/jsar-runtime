@@ -68,7 +68,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       info.GetReturnValue().SetEmptyString();
@@ -85,7 +85,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       return;
@@ -101,7 +101,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -118,7 +118,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       return;
@@ -136,7 +136,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       return;
@@ -151,7 +151,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       return;
@@ -166,7 +166,7 @@ namespace script_bindings::html_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    HTMLElement *element = HTMLElement::Unwrap(info.This());
+    HTMLElement *element = Unwrap(isolate, info.This());
     if (element == nullptr || element->inner() == nullptr)
     {
       return;

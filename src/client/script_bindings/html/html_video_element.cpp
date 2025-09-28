@@ -59,7 +59,8 @@ namespace script_bindings
     // Video-specific property getters/setters
     void HTMLVideoElement::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get width from native element
@@ -69,7 +70,8 @@ namespace script_bindings
 
     void HTMLVideoElement::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element && value->IsNumber())
       {
         // TODO: Set width on native element
@@ -78,7 +80,8 @@ namespace script_bindings
 
     void HTMLVideoElement::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get height from native element
@@ -88,7 +91,8 @@ namespace script_bindings
 
     void HTMLVideoElement::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element && value->IsNumber())
       {
         // TODO: Set height on native element
@@ -97,7 +101,8 @@ namespace script_bindings
 
     void HTMLVideoElement::VideoWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get intrinsic video width from native element
@@ -107,7 +112,8 @@ namespace script_bindings
 
     void HTMLVideoElement::VideoHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get intrinsic video height from native element
@@ -118,7 +124,7 @@ namespace script_bindings
     void HTMLVideoElement::PosterGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto element = Unwrap(info.This());
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get poster URL from native element
@@ -128,7 +134,8 @@ namespace script_bindings
 
     void HTMLVideoElement::PosterSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element && value->IsString())
       {
         // TODO: Set poster URL on native element
@@ -137,7 +144,8 @@ namespace script_bindings
 
     void HTMLVideoElement::PlaysinlineGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get playsInline state from native element
@@ -147,7 +155,8 @@ namespace script_bindings
 
     void HTMLVideoElement::PlaysinlineSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Set playsInline state on native element
@@ -157,7 +166,8 @@ namespace script_bindings
     // Video-specific methods
     void HTMLVideoElement::GetVideoPlaybackQuality(const FunctionCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Return VideoPlaybackQuality object
@@ -167,7 +177,8 @@ namespace script_bindings
 
     void HTMLVideoElement::RequestPictureInPicture(const FunctionCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Return Promise for picture-in-picture mode

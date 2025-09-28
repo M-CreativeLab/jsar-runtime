@@ -56,7 +56,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -73,7 +73,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -90,7 +90,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -107,7 +107,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -124,7 +124,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -141,7 +141,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -158,7 +158,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -176,7 +176,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsString())
       {
@@ -189,7 +189,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsNumber())
       {
@@ -202,7 +202,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -214,7 +214,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsNumber())
       {
@@ -230,7 +230,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -248,7 +248,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -265,7 +265,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLMediaElement *wrapper = Unwrap(info.This());
+      HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {

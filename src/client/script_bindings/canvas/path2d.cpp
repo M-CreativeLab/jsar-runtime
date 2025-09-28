@@ -44,7 +44,7 @@ namespace script_bindings
     void Path2D::AddPath(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -65,7 +65,7 @@ namespace script_bindings
     void Path2D::ClosePath(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -80,7 +80,7 @@ namespace script_bindings
     void Path2D::MoveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -104,7 +104,7 @@ namespace script_bindings
     void Path2D::LineTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -128,7 +128,7 @@ namespace script_bindings
     void Path2D::BezierCurveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -156,7 +156,7 @@ namespace script_bindings
     void Path2D::QuadraticCurveTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -182,7 +182,7 @@ namespace script_bindings
     void Path2D::Arc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -210,7 +210,7 @@ namespace script_bindings
     void Path2D::ArcTo(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -237,7 +237,7 @@ namespace script_bindings
     void Path2D::Ellipse(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -267,7 +267,7 @@ namespace script_bindings
     void Path2D::Rect(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {
@@ -293,7 +293,7 @@ namespace script_bindings
     void Path2D::RoundRect(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Path2D *path2D = Unwrap(info.This());
+      Path2D *path2D = Unwrap(isolate, info.This());
 
       if (!path2D || !path2D->inner())
       {

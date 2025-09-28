@@ -77,7 +77,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -98,7 +98,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -116,7 +116,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         return;
@@ -132,7 +132,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -157,7 +157,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -175,7 +175,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -193,7 +193,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRHand *hand = scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Unwrap(info.This());
+      XRHand *hand = Unwrap(isolate, info.This());
       if (hand == nullptr || hand->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

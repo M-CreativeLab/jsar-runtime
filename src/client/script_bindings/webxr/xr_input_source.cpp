@@ -103,7 +103,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -121,7 +121,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -139,7 +139,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -157,7 +157,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "none").ToLocalChecked());
@@ -174,7 +174,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "gaze").ToLocalChecked());
@@ -191,7 +191,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRInputSource *inputSource = scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Unwrap(info.This());
+      XRInputSource *inputSource = Unwrap(isolate, info.This());
       if (inputSource == nullptr || inputSource->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

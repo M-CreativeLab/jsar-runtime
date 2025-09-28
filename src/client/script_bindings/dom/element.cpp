@@ -100,7 +100,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetUndefined();
@@ -117,7 +117,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -134,7 +134,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -150,7 +150,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -167,7 +167,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -183,7 +183,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -200,7 +200,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -216,7 +216,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -233,7 +233,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -257,7 +257,7 @@ namespace script_bindings
         return;
       }
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -290,7 +290,7 @@ namespace script_bindings
         return;
       }
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -313,7 +313,7 @@ namespace script_bindings
         return;
       }
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         return;
@@ -335,7 +335,7 @@ namespace script_bindings
         return;
       }
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -353,7 +353,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -371,7 +371,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -389,7 +389,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -407,7 +407,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(info.This());
+      Element *element = Unwrap(isolate, info.This());
       if (element == nullptr || element->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));

@@ -77,7 +77,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      CharacterData *characterData = Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -94,7 +94,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         return;
@@ -115,7 +115,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         info.GetReturnValue().Set(Integer::New(isolate, 0));
@@ -141,7 +141,7 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -184,7 +184,7 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         return;
@@ -217,7 +217,7 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         return;
@@ -250,7 +250,7 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         return;
@@ -283,7 +283,7 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Unwrap(info.This());
+      CharacterData *characterData = Unwrap(isolate, info.This());
       if (characterData == nullptr || characterData->inner() == nullptr)
       {
         return;

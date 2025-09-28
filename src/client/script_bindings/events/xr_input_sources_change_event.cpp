@@ -74,7 +74,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
+    XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto session = self->inner()->session();
@@ -95,7 +95,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
+    XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto addedSources = self->inner()->added();
@@ -120,7 +120,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRInputSourcesChangeEvent *self = Unwrap(info.Holder());
+    XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto removedSources = self->inner()->removed();

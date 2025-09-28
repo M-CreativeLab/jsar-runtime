@@ -52,7 +52,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -69,7 +69,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -86,7 +86,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -103,7 +103,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -128,7 +128,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -146,7 +146,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {
@@ -159,7 +159,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsString())
       {
@@ -172,7 +172,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsString())
       {
@@ -185,7 +185,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner() && value->IsString())
       {
@@ -199,7 +199,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
-      HTMLButtonElement *wrapper = Unwrap(info.This());
+      HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
       if (wrapper && wrapper->inner())
       {

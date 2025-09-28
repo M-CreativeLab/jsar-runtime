@@ -151,7 +151,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -168,7 +168,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -185,7 +185,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -202,7 +202,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -220,7 +220,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -237,7 +237,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0));
@@ -254,7 +254,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -271,7 +271,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         return;
@@ -289,7 +289,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Unwrap(info.This());
+      XRWebGLLayer *layer = Unwrap(isolate, info.This());
       if (layer == nullptr || layer->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

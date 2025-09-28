@@ -131,7 +131,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -148,7 +148,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -165,7 +165,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -189,7 +189,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
@@ -212,7 +212,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -237,7 +237,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -262,7 +262,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -287,7 +287,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -312,7 +312,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -337,7 +337,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -361,7 +361,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -378,7 +378,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
@@ -403,7 +403,7 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
@@ -416,7 +416,7 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *childNode = Unwrap(Local<Object>::Cast(info[0]));
+    Node *childNode = Unwrap(isolate, Local<Object>::Cast(info[0]));
     if (childNode == nullptr || childNode->inner() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
@@ -449,7 +449,7 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
@@ -462,7 +462,7 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *childNode = Unwrap(Local<Object>::Cast(info[0]));
+    Node *childNode = Unwrap(isolate, Local<Object>::Cast(info[0]));
     if (childNode == nullptr || childNode->inner() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
@@ -495,14 +495,14 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
     }
 
-    auto newChildNode = Node::Unwrap(info[0].As<Object>())->inner();
-    auto refChildNode = Node::Unwrap(info[1].As<Object>())->inner();
+    auto newChildNode = Node::Unwrap(isolate, info[0].As<Object>())->inner();
+    auto refChildNode = Node::Unwrap(isolate, info[1].As<Object>())->inner();
     if (newChildNode == nullptr || refChildNode == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
@@ -535,14 +535,14 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
     }
 
-    auto newChildNode = Node::Unwrap(info[0].As<Object>())->inner();
-    auto oldChildNode = Node::Unwrap(info[1].As<Object>())->inner();
+    auto newChildNode = Node::Unwrap(isolate, info[0].As<Object>())->inner();
+    auto oldChildNode = Node::Unwrap(isolate, info[1].As<Object>())->inner();
     if (newChildNode == nullptr || oldChildNode == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
@@ -568,7 +568,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       return;
@@ -590,7 +590,7 @@ namespace script_bindings::dom_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(info.This());
+    Node *node = Unwrap(isolate, info.This());
     if (node == nullptr || node->inner() == nullptr)
     {
       info.GetReturnValue().Set(Boolean::New(isolate, false));

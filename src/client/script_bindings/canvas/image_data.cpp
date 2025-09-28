@@ -86,7 +86,7 @@ namespace script_bindings
     void ImageData::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(info.This());
+      ImageData *imageData = Unwrap(isolate, info.This());
 
       if (imageData && imageData->inner())
       {
@@ -102,7 +102,7 @@ namespace script_bindings
     void ImageData::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(info.This());
+      ImageData *imageData = Unwrap(isolate, info.This());
 
       if (imageData && imageData->inner())
       {
@@ -118,7 +118,7 @@ namespace script_bindings
     void ImageData::DataGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(info.This());
+      ImageData *imageData = Unwrap(isolate, info.This());
 
       if (imageData && imageData->inner())
       {
@@ -140,7 +140,7 @@ namespace script_bindings
     void ImageData::ColorSpaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      ImageData *imageData = Unwrap(info.This());
+      ImageData *imageData = Unwrap(isolate, info.This());
 
       string colorSpaceStr = "srgb"; // Default to "srgb"
       if (imageData && imageData->inner())

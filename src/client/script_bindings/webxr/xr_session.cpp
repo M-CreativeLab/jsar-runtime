@@ -97,7 +97,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -115,7 +115,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -133,7 +133,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetEmptyString();
@@ -150,7 +150,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
@@ -177,7 +177,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().Set(Integer::New(isolate, 0));
@@ -200,7 +200,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;
@@ -216,7 +216,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;
@@ -239,7 +239,7 @@ namespace script_bindings
         return;
       }
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -261,7 +261,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = XRSessionBase::Unwrap(info.This());
+      XRSession *session = Unwrap(isolate, info.This());
       if (session == nullptr || session->inner() == nullptr)
       {
         return;

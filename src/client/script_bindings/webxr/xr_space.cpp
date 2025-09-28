@@ -100,7 +100,7 @@ namespace script_bindings
         return;
       }
 
-      XRReferenceSpace *referenceSpace = scripting_base::ObjectWrap<XRReferenceSpace, client_xr::XRReferenceSpace, XRSpace>::Unwrap(info.This());
+      XRReferenceSpace *referenceSpace = Unwrap(isolate, info.This());
       if (referenceSpace == nullptr || referenceSpace->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

@@ -68,9 +68,10 @@ namespace script_bindings
   void Navigator::UserAgentGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
+      std::cerr << "navigator: " << navigator << ", inner: " << navigator->inner().get() << std::endl;
       auto userAgent = navigator->inner()->GetUserAgent();
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, userAgent.c_str()).ToLocalChecked());
     }
@@ -79,7 +80,7 @@ namespace script_bindings
   void Navigator::PlatformGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto platform = navigator->inner()->GetPlatform();
@@ -90,7 +91,7 @@ namespace script_bindings
   void Navigator::VendorGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto vendor = navigator->inner()->GetVendor();
@@ -101,7 +102,7 @@ namespace script_bindings
   void Navigator::VendorSubGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto vendorSub = navigator->inner()->GetVendorSub();
@@ -112,7 +113,7 @@ namespace script_bindings
   void Navigator::ProductGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto product = navigator->inner()->GetProduct();
@@ -123,7 +124,7 @@ namespace script_bindings
   void Navigator::ProductSubGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto productSub = navigator->inner()->GetProductSub();
@@ -134,7 +135,8 @@ namespace script_bindings
   // Browser capabilities property getters
   void Navigator::OnLineGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->IsOnLine());
@@ -143,7 +145,8 @@ namespace script_bindings
 
   void Navigator::CookieEnabledGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->IsCookieEnabled());
@@ -152,7 +155,8 @@ namespace script_bindings
 
   void Navigator::DoNotTrackGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->IsDoNotTrack());
@@ -161,7 +165,8 @@ namespace script_bindings
 
   void Navigator::HardwareConcurrencyGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->GetHardwareConcurrency());
@@ -170,7 +175,8 @@ namespace script_bindings
 
   void Navigator::MaxTouchPointsGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(static_cast<int32_t>(navigator->inner()->GetMaxTouchPoints()));
@@ -181,7 +187,7 @@ namespace script_bindings
   void Navigator::LanguageGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto language = navigator->inner()->GetLanguage();
@@ -193,7 +199,7 @@ namespace script_bindings
   {
     Isolate *isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto languages = navigator->inner()->GetLanguages();
@@ -214,7 +220,8 @@ namespace script_bindings
   // User preferences property getters
   void Navigator::JavaEnabledGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->IsJavaEnabled());
@@ -224,7 +231,7 @@ namespace script_bindings
   void Navigator::ColorSchemeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(info.This());
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       auto colorScheme = navigator->inner()->GetColorScheme();
@@ -235,7 +242,8 @@ namespace script_bindings
   // Platform features property getters
   void Navigator::WebGLGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->HasWebGL());
@@ -244,7 +252,8 @@ namespace script_bindings
 
   void Navigator::WebXRGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual XRSystem instance
@@ -254,67 +263,74 @@ namespace script_bindings
 
   void Navigator::ServiceWorkerGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual ServiceWorkerContainer instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::GeolocationGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual Geolocation instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::MediaDevicesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual MediaDevices instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::PermissionsGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual Permissions instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::BatteryGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual Battery instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::ClipboardGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       // TODO: Return actual Clipboard instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
+      info.GetReturnValue().Set(Undefined(isolate));
     }
   }
 
   void Navigator::StorageQuotaGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(static_cast<double>(navigator->inner()->GetStorageQuota()));
@@ -324,7 +340,8 @@ namespace script_bindings
   // Methods
   void Navigator::JavaEnabled(const FunctionCallbackInfo<Value> &info)
   {
-    auto navigator = Unwrap(info.This());
+    Isolate *isolate = info.GetIsolate();
+    auto navigator = Unwrap(isolate, info.This());
     if (navigator)
     {
       info.GetReturnValue().Set(navigator->inner()->IsJavaEnabled());

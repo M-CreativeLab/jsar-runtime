@@ -73,7 +73,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -90,7 +90,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -107,7 +107,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -124,7 +124,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
@@ -143,7 +143,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       return;
@@ -158,7 +158,7 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Event *event = Unwrap(info.This());
+    Event *event = Unwrap(isolate, info.This());
     if (event == nullptr || event->inner() == nullptr)
     {
       return;

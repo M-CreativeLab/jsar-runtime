@@ -22,10 +22,6 @@ namespace cssombinding
 
     static void Init(Napi::Env);
     static Napi::Value NewInstance(Napi::Env, std::shared_ptr<client_cssom::CSSStyleDeclaration>);
-    static inline CSSStyleDeclaration *Unwrap(v8::Local<v8::Object> object)
-    {
-      return scripting_base::ObjectWrap<CSSStyleDeclaration>::Unwrap(object);
-    }
     static void ConfigureFunctionTemplate(v8::Isolate *, v8::Local<v8::FunctionTemplate>);
 
   private:

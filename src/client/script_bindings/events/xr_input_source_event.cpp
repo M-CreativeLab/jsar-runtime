@@ -66,7 +66,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRInputSourceEvent *self = Unwrap(info.Holder());
+    XRInputSourceEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto frame = self->inner()->frame();
@@ -87,7 +87,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRInputSourceEvent *self = Unwrap(info.Holder());
+    XRInputSourceEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto inputSource = self->inner()->inputSource();

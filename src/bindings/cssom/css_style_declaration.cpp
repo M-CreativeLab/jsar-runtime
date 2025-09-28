@@ -93,7 +93,7 @@ namespace cssombinding
     v8::Local<v8::String> property = args[0].As<v8::String>();
     v8::String::Utf8Value propertyName(isolate, property);
 
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyPriority: instance is null");
 
     auto priority = instance->inner()->getPropertyPriority(*propertyName);
@@ -123,7 +123,7 @@ namespace cssombinding
     v8::Local<v8::String> property = args[0].As<v8::String>();
     v8::String::Utf8Value propertyName(isolate, property);
 
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyValue: instance is null");
 
     auto value = instance->inner()->getPropertyValue(*propertyName);
@@ -152,7 +152,7 @@ namespace cssombinding
     }
 
     auto index = args[0].As<v8::Number>()->Value();
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::Item: instance is null");
 
     auto value = instance->inner()->item(index);
@@ -174,7 +174,7 @@ namespace cssombinding
     auto property = args[0].As<v8::String>();
     v8::String::Utf8Value propertyName(isolate, property);
 
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::RemoveProperty: instance is null");
 
     auto result = instance->inner()->removeProperty(*propertyName);
@@ -222,7 +222,7 @@ namespace cssombinding
     v8::String::Utf8Value propertyName(isolate, property);
     v8::String::Utf8Value propertyValue(isolate, value);
 
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::SetProperty: instance is null");
 
     instance->inner()->setProperty(*propertyName, *propertyValue, priority);
@@ -235,7 +235,7 @@ namespace cssombinding
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::HandleScope scope(isolate);
 
-    auto instance = Unwrap(args.Holder());
+    auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::ToString: instance is null");
 
     auto cssText = instance->inner()->cssText();
@@ -265,7 +265,7 @@ namespace cssombinding
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    CSSStyleDeclaration *instance = Unwrap(isolate, info.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
 
     // scripting_base::console::Log(context, property.As<v8::Value>());
@@ -394,7 +394,7 @@ namespace cssombinding
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    CSSStyleDeclaration *instance = Unwrap(isolate, info.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
 
     // scripting_base::console::Log(context, property.As<v8::Value>());
@@ -442,7 +442,7 @@ namespace cssombinding
     v8::Isolate *isolate = info.GetIsolate();
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    CSSStyleDeclaration *instance = Unwrap(isolate, info.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
 
     // scripting_base::console::Log(context, property.As<v8::Value>());
@@ -471,7 +471,7 @@ namespace cssombinding
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
     v8::Local<v8::Array> keys = v8::Array::New(isolate, 0);
-    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    CSSStyleDeclaration *instance = Unwrap(isolate, info.Holder());
     if (instance != nullptr)
     {
       auto decls = instance->inner();

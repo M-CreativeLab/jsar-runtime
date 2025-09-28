@@ -67,7 +67,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRPose *pose = scripting_base::ObjectWrap<XRPose, client_xr::XRPose>::Unwrap(info.This());
+      XRPose *pose = Unwrap(isolate, info.This());
       if (pose == nullptr || pose->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -85,7 +85,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRPose *pose = scripting_base::ObjectWrap<XRPose, client_xr::XRPose>::Unwrap(info.This());
+      XRPose *pose = Unwrap(isolate, info.This());
       if (pose == nullptr || pose->inner() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
@@ -147,7 +147,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRViewerPose *viewerPose = scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>::Unwrap(info.This());
+      XRViewerPose *viewerPose = Unwrap(isolate, info.This());
       if (viewerPose == nullptr || viewerPose->inner() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));

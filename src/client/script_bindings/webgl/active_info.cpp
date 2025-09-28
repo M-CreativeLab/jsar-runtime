@@ -59,7 +59,7 @@ namespace script_bindings
     void WebGLActiveInfo::NameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
       if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
@@ -74,7 +74,7 @@ namespace script_bindings
     void WebGLActiveInfo::TypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
       if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
@@ -88,7 +88,7 @@ namespace script_bindings
     void WebGLActiveInfo::SizeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      WebGLActiveInfo *wrapper = Unwrap(info.This());
+      WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
       if (!wrapper || !wrapper->inner())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));

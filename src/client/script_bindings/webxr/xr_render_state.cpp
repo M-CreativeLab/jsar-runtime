@@ -78,7 +78,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRenderState *renderState = scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>::Unwrap(info.This());
+      XRRenderState *renderState = Unwrap(isolate, info.This());
       if (renderState == nullptr || renderState->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -96,7 +96,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRenderState *renderState = scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>::Unwrap(info.This());
+      XRRenderState *renderState = Unwrap(isolate, info.This());
       if (renderState == nullptr || renderState->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 1000.0));
@@ -113,7 +113,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRenderState *renderState = scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>::Unwrap(info.This());
+      XRRenderState *renderState = Unwrap(isolate, info.This());
       if (renderState == nullptr || renderState->inner() == nullptr)
       {
         info.GetReturnValue().Set(Number::New(isolate, 0.1));
@@ -130,7 +130,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRenderState *renderState = scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>::Unwrap(info.This());
+      XRRenderState *renderState = Unwrap(isolate, info.This());
       if (renderState == nullptr || renderState->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

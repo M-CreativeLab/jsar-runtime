@@ -76,7 +76,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = scripting_base::ObjectWrap<XRView, client_xr::XRView>::Unwrap(info.This());
+      XRView *view = Unwrap(isolate, info.This());
       if (view == nullptr || view->inner() == nullptr)
       {
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "none").ToLocalChecked());
@@ -94,7 +94,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = scripting_base::ObjectWrap<XRView, client_xr::XRView>::Unwrap(info.This());
+      XRView *view = Unwrap(isolate, info.This());
       if (view == nullptr || view->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -114,7 +114,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = scripting_base::ObjectWrap<XRView, client_xr::XRView>::Unwrap(info.This());
+      XRView *view = Unwrap(isolate, info.This());
       if (view == nullptr || view->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -134,7 +134,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = scripting_base::ObjectWrap<XRView, client_xr::XRView>::Unwrap(info.This());
+      XRView *view = Unwrap(isolate, info.This());
       if (view == nullptr || view->inner() == nullptr)
       {
         info.GetReturnValue().SetUndefined();

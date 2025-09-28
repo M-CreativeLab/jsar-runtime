@@ -56,7 +56,7 @@ namespace script_bindings::event_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    XRSessionEvent *self = Unwrap(info.Holder());
+    XRSessionEvent *self = Unwrap(isolate, info.Holder());
     if (self && self->inner())
     {
       auto session = self->inner()->session();

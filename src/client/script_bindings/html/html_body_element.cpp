@@ -43,17 +43,19 @@ namespace script_bindings
     // Event handler property getters/setters
     void HTMLBodyElement::OnLoadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get onload event handler
-        info.GetReturnValue().Set(Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(isolate));
       }
     }
 
     void HTMLBodyElement::OnLoadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Set onload event handler
@@ -62,17 +64,19 @@ namespace script_bindings
 
     void HTMLBodyElement::OnUnloadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get onunload event handler
-        info.GetReturnValue().Set(Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(isolate));
       }
     }
 
     void HTMLBodyElement::OnUnloadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Set onunload event handler
@@ -81,17 +85,19 @@ namespace script_bindings
 
     void HTMLBodyElement::OnBeforeUnloadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get onbeforeunload event handler
-        info.GetReturnValue().Set(Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(isolate));
       }
     }
 
     void HTMLBodyElement::OnBeforeUnloadSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Set onbeforeunload event handler
@@ -100,17 +106,19 @@ namespace script_bindings
 
     void HTMLBodyElement::OnResizeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get onresize event handler
-        info.GetReturnValue().Set(Null(info.GetIsolate()));
+        info.GetReturnValue().Set(Null(isolate));
       }
     }
 
     void HTMLBodyElement::OnResizeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      auto element = Unwrap(info.This());
+      Isolate *isolate = info.GetIsolate();
+      auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Set onresize event handler

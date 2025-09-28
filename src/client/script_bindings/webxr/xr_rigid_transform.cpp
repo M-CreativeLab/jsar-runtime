@@ -78,7 +78,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRigidTransform *transform = scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>::Unwrap(info.This());
+      XRRigidTransform *transform = Unwrap(isolate, info.This());
       if (transform == nullptr || transform->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -96,7 +96,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRigidTransform *transform = scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>::Unwrap(info.This());
+      XRRigidTransform *transform = Unwrap(isolate, info.This());
       if (transform == nullptr || transform->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -114,7 +114,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRigidTransform *transform = scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>::Unwrap(info.This());
+      XRRigidTransform *transform = Unwrap(isolate, info.This());
       if (transform == nullptr || transform->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -132,7 +132,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRigidTransform *transform = scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>::Unwrap(info.This());
+      XRRigidTransform *transform = Unwrap(isolate, info.This());
       if (transform == nullptr || transform->inner() == nullptr)
       {
         info.GetReturnValue().SetNull();

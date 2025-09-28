@@ -57,7 +57,7 @@ namespace script_bindings
       return;
     }
 
-    EventTarget *eventTarget = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>::Unwrap(info.This());
+    EventTarget *eventTarget = Unwrap(isolate, info.This());
     if (eventTarget == nullptr || eventTarget->inner() == nullptr)
     {
       return;
@@ -85,7 +85,7 @@ namespace script_bindings
       return;
     }
 
-    EventTarget *eventTarget = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>::Unwrap(info.This());
+    EventTarget *eventTarget = Unwrap(isolate, info.This());
     if (eventTarget == nullptr || eventTarget->inner() == nullptr)
     {
       return;
@@ -116,7 +116,7 @@ namespace script_bindings
       return;
     }
 
-    EventTarget *eventTarget = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>::Unwrap(info.This());
+    EventTarget *eventTarget = Unwrap(isolate, info.This());
     if (eventTarget == nullptr || eventTarget->inner() == nullptr)
     {
       return;

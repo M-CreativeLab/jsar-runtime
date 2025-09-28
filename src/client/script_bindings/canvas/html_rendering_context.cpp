@@ -37,7 +37,7 @@ namespace script_bindings
     void HTMLRenderingContext::CanvasGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = Unwrap(info.Holder());
+      HTMLRenderingContext *context = Unwrap(isolate, info.This());
 
       if (context && context->inner())
       {
@@ -54,7 +54,7 @@ namespace script_bindings
     void HTMLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = Unwrap(info.Holder());
+      HTMLRenderingContext *context = Unwrap(isolate, info.This());
 
       if (!context || !context->inner())
       {

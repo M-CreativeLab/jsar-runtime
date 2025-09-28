@@ -49,7 +49,7 @@ namespace script_bindings
     void Canvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner())
       {
@@ -65,7 +65,7 @@ namespace script_bindings
     void Canvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner())
       {
@@ -81,7 +81,7 @@ namespace script_bindings
     void Canvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner() && value->IsNumber())
       {
@@ -93,7 +93,7 @@ namespace script_bindings
     void Canvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner() && value->IsNumber())
       {
@@ -105,7 +105,7 @@ namespace script_bindings
     void Canvas::GetContext(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -130,7 +130,7 @@ namespace script_bindings
     void Canvas::ToDataURL(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -146,7 +146,7 @@ namespace script_bindings
     void Canvas::ToBlob(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -162,7 +162,7 @@ namespace script_bindings
     void Canvas::TransferToImageBitmap(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      Canvas *canvas = Unwrap(info.This());
+      Canvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -223,7 +223,7 @@ namespace script_bindings
     void OffscreenCanvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner())
       {
@@ -239,7 +239,7 @@ namespace script_bindings
     void OffscreenCanvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner())
       {
@@ -255,7 +255,7 @@ namespace script_bindings
     void OffscreenCanvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner() && value->IsNumber())
       {
@@ -267,7 +267,7 @@ namespace script_bindings
     void OffscreenCanvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (canvas && canvas->inner() && value->IsNumber())
       {
@@ -279,7 +279,7 @@ namespace script_bindings
     void OffscreenCanvas::GetContext(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -304,7 +304,7 @@ namespace script_bindings
     void OffscreenCanvas::ConvertToBlob(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
@@ -320,7 +320,7 @@ namespace script_bindings
     void OffscreenCanvas::TransferToImageBitmap(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(info.This());
+      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
       if (!canvas || !canvas->inner())
       {
