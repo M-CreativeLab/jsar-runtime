@@ -325,6 +325,7 @@ namespace dom
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
+        V8_SET_GLOBAL_FROM_MAIN(URLSearchParams);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
         V8_SET_GLOBAL_FROM_MAIN(FormData);
         V8_SET_GLOBAL_FROM_MAIN(XMLHttpRequest);
