@@ -249,6 +249,9 @@ namespace scripting_base
 
       v8::HandleScope scope(isolate);
       object->SetInternalField(0, v8::External::New(isolate, instance));
+
+      instance->object_handle_.Reset(isolate, object);
+      instance->object_handle_.SetWeak(instance, Finalizer, v8::WeakCallbackType::kParameter);
     }
 
     /**
@@ -623,7 +626,6 @@ namespace scripting_base
     {
       v8::Isolate *isolate = args.GetIsolate();
       v8::HandleScope scope(isolate);
-      std::cerr << "Calling " << T::Name() << "::Constructor" << std::endl;
 
       if (!args.IsConstructCall())
       {
@@ -635,13 +637,9 @@ namespace scripting_base
 
       T *instance = new T(isolate, args);
       assert(instance != nullptr && "Failed to create instance");
-      std::cerr << "Created " << T::Name() << "() wrapper: " << instance << std::endl;
 
       auto jsObject = args.This();
       Wrap(isolate, jsObject, instance);
-
-      instance->object_handle_.Reset(isolate, jsObject);
-      instance->object_handle_.SetWeak(instance, Finalizer, v8::WeakCallbackType::kParameter);
 
       args.GetReturnValue().Set(jsObject);
     }

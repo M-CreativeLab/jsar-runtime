@@ -210,7 +210,7 @@ namespace dom
 
         // Setup the global/window object
         Local<Object> global = scriptingContext->Global();
-        script_bindings::Window::Wrap(isolate_, global, new script_bindings::Window(isolate_, nativeWindow));
+        script_bindings::Window::MakeAndWrap(isolate_, global, nativeWindow);
 
         // Initialize the scripting context from script bindings
         script_bindings::Initialize(isolate_, scriptingContext, script_bindings::ContextType::kScripting);

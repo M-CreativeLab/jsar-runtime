@@ -18,13 +18,19 @@ namespace script_bindings
     }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
     static v8::Local<v8::ObjectTemplate> GetInstanceTemplate(v8::Isolate *isolate);
+    /**
+     * Create a new `Window` object and wrap it within the given object.
+     */
+    static v8::Local<v8::Object> MakeAndWrap(v8::Isolate *isolate,
+                                             v8::Local<v8::Object> object,
+                                             std::shared_ptr<::browser::Window> nativeWindow);
 
   public:
     Window(v8::Isolate *isolate, std::shared_ptr<::browser::Window> nativeWindow);
     Window(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
   private:
-    static void FooGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void NavigatorGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     void LocationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     void LocationSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 

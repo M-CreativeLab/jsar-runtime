@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace browser
 {
@@ -13,7 +14,7 @@ namespace browser
    * following the MDN Web API specification:
    * https://developer.mozilla.org/en-US/docs/Web/API/Navigator
    */
-  class Navigator
+  class Navigator : public scripting_base::JSObjectHolder
   {
   public:
     Navigator();

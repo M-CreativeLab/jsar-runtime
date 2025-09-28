@@ -49,8 +49,7 @@ namespace script_bindings
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, "http://example.com").ToLocalChecked());
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->href.c_str()).ToLocalChecked());
   }
 
   void Location::HrefSetter(Local<Value> value,
@@ -58,20 +57,13 @@ namespace script_bindings
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    // auto callbackImpl = [&isolate, &value, &info](Location *location)
-    // {
-    //   assert(location->inner() != nullptr && "Location object is not properly initialized");
-    //   location->inner()->href = *String::Utf8Value(isolate, value);
-    //   info.GetReturnValue().Set(String::NewFromUtf8(isolate,
-    //                                                 location->inner()->href.c_str())
-    //                               .ToLocalChecked());
-    // };
-    // MakeInstanceCallback(isolate, info.This(), callbackImpl);
   }
 
   void Location::ProtocolGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->protocol.c_str()).ToLocalChecked());
   }
 
   void Location::ProtocolSetter(Local<Value> value,
@@ -81,6 +73,9 @@ namespace script_bindings
 
   void Location::HostGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->host.c_str()).ToLocalChecked());
   }
 
   void Location::HostSetter(Local<Value> value,
@@ -90,6 +85,9 @@ namespace script_bindings
 
   void Location::HostnameGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->hostname.c_str()).ToLocalChecked());
   }
 
   void Location::HostnameSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
@@ -98,6 +96,11 @@ namespace script_bindings
 
   void Location::PortGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  to_string(handle()->port).c_str())
+                                .ToLocalChecked());
   }
 
   void Location::PortSetter(Local<Value> value,
@@ -107,6 +110,9 @@ namespace script_bindings
 
   void Location::PathnameGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->pathname.c_str()).ToLocalChecked());
   }
 
   void Location::PathnameSetter(Local<Value> value,
@@ -116,6 +122,9 @@ namespace script_bindings
 
   void Location::SearchGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->search.c_str()).ToLocalChecked());
   }
 
   void Location::SearchSetter(Local<Value> value,
@@ -125,6 +134,9 @@ namespace script_bindings
 
   void Location::HashGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->hash.c_str()).ToLocalChecked());
   }
 
   void Location::HashSetter(Local<Value> value,
@@ -134,6 +146,9 @@ namespace script_bindings
 
   void Location::OriginGetter(const PropertyCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->origin.c_str()).ToLocalChecked());
   }
 
   void Location::Assign(const FunctionCallbackInfo<Value> &info)
@@ -169,11 +184,8 @@ namespace script_bindings
 
   void Location::ToString(const FunctionCallbackInfo<Value> &info)
   {
-    if (info.Length() != 0)
-    {
-      info.GetIsolate()->ThrowException(
-        String::NewFromUtf8(info.GetIsolate(), "Location.toString doesn't accept any arguments").ToLocalChecked());
-      return;
-    }
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, handle()->href.c_str()).ToLocalChecked());
   }
 }
