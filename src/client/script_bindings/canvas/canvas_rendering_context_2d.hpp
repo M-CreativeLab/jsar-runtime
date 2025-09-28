@@ -34,21 +34,9 @@ namespace script_bindings
         return "CanvasRenderingContext2D";
       }
 
-      /**
-       * Configure the V8 function template with CanvasRenderingContext2D properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 CanvasRenderingContext2D instance from a native canvas::RenderingContext2D.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<NativeCanvasRenderingContext2D> nativeContext);
-
-      /**
-       * Initialize the CanvasRenderingContext2D class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+                                               std::shared_ptr<NativeCanvasRenderingContext2D> nativeRenderingContext);
 
     public:
       CanvasRenderingContext2D(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

@@ -5,32 +5,35 @@ namespace script_bindings
 {
   namespace canvas_bindings
   {
+    using namespace std;
     using namespace v8;
 
     void Canvas::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope handleScope(isolate);
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
+#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
+#define DEFINE_ACCESSOR(STR, GETTER, SETTER) \
+  prototypeTemplate->SetAccessor(NAME(STR), GETTER, SETTER);
+#define DEFINE_METHOD(STR, METHOD) \
+  prototypeTemplate->Set(NAME(STR), FunctionTemplate::New(isolate, METHOD));
+
       // Properties
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                    WidthGetter,
-                                    WidthSetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                    HeightGetter,
-                                    HeightSetter);
+      DEFINE_ACCESSOR("width", WidthGetter, WidthSetter);
+      DEFINE_ACCESSOR("height", HeightGetter, HeightSetter);
 
       // Methods
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetContext));
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "toDataURL").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ToDataURL));
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "toBlob").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ToBlob));
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, TransferToImageBitmap));
+      DEFINE_METHOD("getContext", GetContext);
+      DEFINE_METHOD("toDataURL", ToDataURL);
+      DEFINE_METHOD("toBlob", ToBlob);
+      DEFINE_METHOD("transferToImageBitmap", TransferToImageBitmap);
+#undef NAME
+#undef DEFINE_ACCESSOR
+#undef DEFINE_METHOD
     }
 
-    Local<Object> Canvas::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
+    Local<Object> Canvas::NewInstance(Isolate *isolate, shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
     {
       EscapableHandleScope scope(isolate);
       return nativeCanvas != nullptr
@@ -38,15 +41,9 @@ namespace script_bindings
                : scope.Escape(Local<Object>());
     }
 
-    Local<Function> Canvas::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
-    }
-
     Canvas::Canvas(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : CanvasBase(isolate, args)
     {
-      // TODO: Implement constructor logic if needed
     }
 
     void Canvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
@@ -123,7 +120,7 @@ namespace script_bindings
       }
 
       String::Utf8Value contextType(isolate, info[0]);
-      std::string type(*contextType);
+      string type(*contextType);
 
       // TODO: Implement context creation based on type ("2d", "webgl", etc.)
       // This should create and return the appropriate context wrapper

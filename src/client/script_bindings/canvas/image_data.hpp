@@ -30,25 +30,13 @@ namespace script_bindings
         return "ImageData";
       }
 
-      /**
-       * Configure the V8 function template with ImageData properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 ImageData instance from a native canvas::ImageData.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::canvas::ImageData> nativeImageData);
-
-      /**
-       * Create a new V8 ImageData instance with the given width, height, and color space.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, int width, int height, const std::string &colorSpace = "srgb");
-
-      /**
-       * Initialize the ImageData class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<::canvas::ImageData> nativeImageData);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               int width,
+                                               int height,
+                                               const std::string &colorSpace = "srgb");
 
     public:
       ImageData(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

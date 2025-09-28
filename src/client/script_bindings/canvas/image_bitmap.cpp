@@ -9,43 +9,33 @@ namespace script_bindings
 
     void ImageBitmap::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Properties (read-only)
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                    WidthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                    HeightGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
+                                     WidthGetter,
+                                     nullptr,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::ReadOnly);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
+                                     HeightGetter,
+                                     nullptr,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::ReadOnly);
 
       // Methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "close").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Close));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "close").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, Close));
     }
 
-    Local<Object> ImageBitmap::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageBitmap> nativeImageBitmap)
+    Local<Object> ImageBitmap::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageBitmap> nativeBitmap)
     {
       EscapableHandleScope scope(isolate);
-      if (nativeImageBitmap == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(ImageBitmapBase::NewInstance(isolate, nativeImageBitmap).As<Object>());
-      }
-    }
-
-    Local<Function> ImageBitmap::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
+      return nativeBitmap == nullptr
+               ? scope.Escape(Object::New(isolate))
+               : scope.Escape(ImageBitmapBase::NewInstance(isolate, nativeBitmap));
     }
 
     ImageBitmap::ImageBitmap(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

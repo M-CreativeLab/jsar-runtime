@@ -2,7 +2,6 @@
 
 // Include bindings for various modules
 #include <bindings/browser/binding.hpp>
-#include <bindings/canvas/binding.hpp>
 #include <bindings/cssom/binding.hpp>
 #include <bindings/dom/binding.hpp>
 #include <bindings/env/binding.hpp>
@@ -16,7 +15,6 @@
  */
 #define TR_NAPI_MODULE_MAP(MODULE) \
   MODULE(browser)                  \
-  MODULE(canvas)                   \
   MODULE(cssom)                    \
   MODULE(dom)                      \
   MODULE(env)                      \

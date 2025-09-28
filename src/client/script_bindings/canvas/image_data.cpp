@@ -5,64 +5,43 @@ namespace script_bindings
 {
   namespace canvas_bindings
   {
+    using namespace std;
     using namespace v8;
 
     void ImageData::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "ImageData").ToLocalChecked());
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
+#define DEFINE_READONLY_PROPERTY(STR, GETTER)            \
+  prototypeTemplate->SetAccessor(NAME(STR),              \
+                                 GETTER,                 \
+                                 nullptr,                \
+                                 Local<Value>(),         \
+                                 AccessControl::DEFAULT, \
+                                 PropertyAttribute::ReadOnly)
 
       // Properties (read-only)
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                    WidthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                    HeightGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "data").ToLocalChecked(),
-                                    DataGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "colorSpace").ToLocalChecked(),
-                                    ColorSpaceGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      DEFINE_READONLY_PROPERTY("width", WidthGetter);
+      DEFINE_READONLY_PROPERTY("height", HeightGetter);
+      DEFINE_READONLY_PROPERTY("data", DataGetter);
+      DEFINE_READONLY_PROPERTY("colorSpace", ColorSpaceGetter);
+#undef DEFINE_READONLY_PROPERTY
+#undef NAME
     }
 
-    Local<Object> ImageData::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageData> nativeImageData)
+    Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::canvas::ImageData> nativeImageData)
     {
       EscapableHandleScope scope(isolate);
-      if (nativeImageData == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(ImageDataBase::NewInstance(isolate, nativeImageData).As<Object>());
-      }
+      return nativeImageData == nullptr
+               ? scope.Escape(Local<Object>())
+               : scope.Escape(ImageDataBase::NewInstance(isolate, nativeImageData).As<Object>());
     }
 
-    Local<Object> ImageData::NewInstance(Isolate *isolate, int width, int height, const std::string &colorSpace)
+    Local<Object> ImageData::NewInstance(Isolate *isolate, int width, int height, const string &colorSpace)
     {
-      auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
+      auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
       return NewInstance(isolate, nativeImageData);
-    }
-
-    Local<Function> ImageData::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
     }
 
     ImageData::ImageData(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -74,13 +53,13 @@ namespace script_bindings
         int width = args[0]->Int32Value(isolate->GetCurrentContext()).FromJust();
         int height = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
 
-        std::string colorSpace = "srgb";
+        string colorSpace = "srgb";
         if (args.Length() >= 3 && args[2]->IsString())
         {
           String::Utf8Value colorSpaceValue(isolate, args[2]);
           colorSpace = *colorSpaceValue;
         }
-        // auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
+        // auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
         // SetNativeInstance(nativeImageData);
       }
       else if (args.Length() >= 3 && args[0]->IsUint8Array() && args[1]->IsNumber() && args[2]->IsNumber())
@@ -90,7 +69,7 @@ namespace script_bindings
         int width = args[1]->Int32Value(isolate->GetCurrentContext()).FromJust();
         int height = args[2]->Int32Value(isolate->GetCurrentContext()).FromJust();
 
-        std::string colorSpace = "srgb";
+        string colorSpace = "srgb";
         if (args.Length() >= 4 && args[3]->IsString())
         {
           String::Utf8Value colorSpaceValue(isolate, args[3]);
@@ -98,7 +77,7 @@ namespace script_bindings
         }
 
         // Create ImageData with provided data
-        // auto nativeImageData = std::make_shared<::canvas::ImageData>(width, height, colorSpace);
+        // auto nativeImageData = make_shared<::canvas::ImageData>(width, height, colorSpace);
         // TODO: Copy data from Uint8Array to native ImageData
         // SetNativeInstance(nativeImageData);
       }
@@ -163,7 +142,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(info.This());
 
-      std::string colorSpaceStr = "srgb"; // Default to "srgb"
+      string colorSpaceStr = "srgb"; // Default to "srgb"
       if (imageData && imageData->inner())
       {
         SkColorSpace *colorSpace = imageData->inner()->colorSpace();

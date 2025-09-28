@@ -31,20 +31,9 @@ namespace script_bindings
         return "Canvas";
       }
 
-      /**
-       * Configure the V8 function template with Canvas properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 Canvas instance from a native canvas::OffscreenCanvas.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas);
-
-      /**
-       * Initialize the Canvas class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas);
 
     public:
       Canvas(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

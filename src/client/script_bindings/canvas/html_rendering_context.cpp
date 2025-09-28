@@ -8,31 +8,25 @@ namespace script_bindings
 
     void HTMLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Properties (read-only)
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
-                                    CanvasGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
+                                     CanvasGetter,
+                                     nullptr,
+                                     Local<Value>(),
+                                     AccessControl::DEFAULT,
+                                     PropertyAttribute::ReadOnly);
 
       // Methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getContextAttributes").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetContextAttributes));
+      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getContextAttributes").ToLocalChecked(),
+                             FunctionTemplate::New(isolate, GetContextAttributes));
     }
 
     Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
     {
       EscapableHandleScope scope(isolate);
       return scope.Escape(HTMLRenderingContextBase::NewInstance(isolate, nullptr).As<Object>());
-    }
-
-    Local<Function> HTMLRenderingContext::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
     }
 
     HTMLRenderingContext::HTMLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

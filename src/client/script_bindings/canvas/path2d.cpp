@@ -9,34 +9,23 @@ namespace script_bindings
 
     void Path2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "Path2D").ToLocalChecked());
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
+#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
+#define METHOD(X) FunctionTemplate::New(isolate, X)
 
       // Path building methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "addPath").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, AddPath));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "closePath").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ClosePath));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "moveTo").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, MoveTo));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "lineTo").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, LineTo));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "bezierCurveTo").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, BezierCurveTo));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "quadraticCurveTo").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, QuadraticCurveTo));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "arc").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Arc));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "arcTo").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ArcTo));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "ellipse").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Ellipse));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "rect").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Rect));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "roundRect").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RoundRect));
+      prototypeTemplate->Set(NAME("addPath"), METHOD(AddPath));
+      prototypeTemplate->Set(NAME("closePath"), METHOD(ClosePath));
+      prototypeTemplate->Set(NAME("moveTo"), METHOD(MoveTo));
+      prototypeTemplate->Set(NAME("lineTo"), METHOD(LineTo));
+      prototypeTemplate->Set(NAME("bezierCurveTo"), METHOD(BezierCurveTo));
+      prototypeTemplate->Set(NAME("quadraticCurveTo"), METHOD(QuadraticCurveTo));
+      prototypeTemplate->Set(NAME("arc"), METHOD(Arc));
+      prototypeTemplate->Set(NAME("arcTo"), METHOD(ArcTo));
+      prototypeTemplate->Set(NAME("ellipse"), METHOD(Ellipse));
+      prototypeTemplate->Set(NAME("rect"), METHOD(Rect));
+      prototypeTemplate->Set(NAME("roundRect"), METHOD(RoundRect));
     }
 
     Local<Object> Path2D::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::Path2D> nativePath2D)
@@ -47,31 +36,9 @@ namespace script_bindings
                : scope.Escape(Local<Object>());
     }
 
-    Local<Function> Path2D::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
-    }
-
     Path2D::Path2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : Path2DBase(isolate, args)
     {
-      // Constructor implementation
-      auto nativePath2D = std::make_shared<::canvas::Path2D>();
-
-      if (args.Length() >= 1)
-      {
-        if (args[0]->IsString())
-        {
-          // Constructor with SVG path string
-          String::Utf8Value pathString(isolate, args[0]);
-          // nativePath2D->addPath(*pathString);
-        }
-        else if (args[0]->IsObject())
-        {
-          // Constructor with another Path2D object
-          // TODO: Copy path from another Path2D
-        }
-      }
     }
 
     void Path2D::AddPath(const FunctionCallbackInfo<Value> &info)

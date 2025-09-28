@@ -2,7 +2,6 @@
 #include <rapidjson/document.h>
 #include <idgen.hpp>
 #include <crates/bindings.hpp>
-#include <bindings/dom/console.hpp>
 #include <client/script_bindings/window.hpp>
 #include <client/script_bindings/dom/document.hpp>
 #include <client/script_bindings/binding.hpp>
@@ -373,7 +372,7 @@ namespace dom
 
         // Baisc objects
         // Create custom console object with CDP integration using the Console binding
-        V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate_, workerContext));
+        // V8_SET_GLOBAL_FROM_VALUE(console, dombinding::Console::CreateV8Console(isolate_, workerContext));
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);

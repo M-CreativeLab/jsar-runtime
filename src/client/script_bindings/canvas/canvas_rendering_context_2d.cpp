@@ -7,95 +7,71 @@ namespace script_bindings::canvas_bindings
 
   void CanvasRenderingContext2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
+
+#define NAME(STR) String::NewFromUtf8(isolate, STR).ToLocalChecked()
+#define DEFINE_METHOD(STR, FUNC) prototype->Set(NAME(STR), FunctionTemplate::New(isolate, FUNC))
+#define DEFINE_ACCESSOR(STR, GETTER, SETTER) prototype->SetAccessor(NAME(STR), GETTER, SETTER)
 
     // Drawing rectangles
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "fillRect").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, FillRect));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "strokeRect").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, StrokeRect));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "clearRect").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, ClearRect));
+    DEFINE_METHOD("fillRect", FillRect);
+    DEFINE_METHOD("strokeRect", StrokeRect);
+    DEFINE_METHOD("clearRect", ClearRect);
 
     // Drawing text
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "fillText").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, FillText));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "strokeText").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, StrokeText));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "measureText").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, MeasureText));
+    DEFINE_METHOD("fillText", FillText);
+    DEFINE_METHOD("strokeText", StrokeText);
+    DEFINE_METHOD("measureText", MeasureText);
 
     // Paths
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "beginPath").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, BeginPath));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "moveTo").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, MoveTo));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "lineTo").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, LineTo));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "bezierCurveTo").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, BezierCurveTo));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "quadraticCurveTo").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, QuadraticCurveTo));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "arc").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Arc));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "ellipse").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Ellipse));
+    DEFINE_METHOD("beginPath", BeginPath);
+    DEFINE_METHOD("moveTo", MoveTo);
+    DEFINE_METHOD("lineTo", LineTo);
+    DEFINE_METHOD("bezierCurveTo", BezierCurveTo);
+    DEFINE_METHOD("quadraticCurveTo", QuadraticCurveTo);
+    DEFINE_METHOD("arc", Arc);
+    DEFINE_METHOD("ellipse", Ellipse);
 
     // Drawing paths
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "fill").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Fill));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "stroke").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Stroke));
+    DEFINE_METHOD("fill", Fill);
+    DEFINE_METHOD("stroke", Stroke);
 
     // Transformations
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "scale").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Scale));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "rotate").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Rotate));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "translate").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Translate));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "transform").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Transform));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "setTransform").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, SetTransform));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "resetTransform").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, ResetTransform));
+    DEFINE_METHOD("scale", Scale);
+    DEFINE_METHOD("rotate", Rotate);
+    DEFINE_METHOD("translate", Translate);
+    DEFINE_METHOD("transform", Transform);
+    DEFINE_METHOD("setTransform", SetTransform);
+    DEFINE_METHOD("resetTransform", ResetTransform);
 
     // Image operations
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "drawImage").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, DrawImage));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "createImageData").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, CreateImageData));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "getImageData").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, GetImageData));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "putImageData").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, PutImageData));
+    DEFINE_METHOD("drawImage", DrawImage);
+    DEFINE_METHOD("createImageData", CreateImageData);
+    DEFINE_METHOD("getImageData", GetImageData);
+    DEFINE_METHOD("putImageData", PutImageData);
 
     // State management
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "save").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Save));
-    tpl->PrototypeTemplate()->Set(String::NewFromUtf8(isolate, "restore").ToLocalChecked(),
-                                  FunctionTemplate::New(isolate, Restore));
+    DEFINE_METHOD("save", Save);
+    DEFINE_METHOD("restore", Restore);
 
     // Properties
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
-                                         CanvasGetter,
-                                         nullptr);
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "fillStyle").ToLocalChecked(),
-                                         FillStyleGetter,
-                                         FillStyleSetter);
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "strokeStyle").ToLocalChecked(),
-                                         StrokeStyleGetter,
-                                         StrokeStyleSetter);
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "lineWidth").ToLocalChecked(),
-                                         LineWidthGetter,
-                                         LineWidthSetter);
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "globalAlpha").ToLocalChecked(),
-                                         GlobalAlphaGetter,
-                                         GlobalAlphaSetter);
-    tpl->InstanceTemplate()->SetAccessor(String::NewFromUtf8(isolate, "globalCompositeOperation").ToLocalChecked(),
-                                         GlobalCompositeOperationGetter,
-                                         GlobalCompositeOperationSetter);
+    DEFINE_ACCESSOR("canvas", CanvasGetter, nullptr);
+    DEFINE_ACCESSOR("fillStyle", FillStyleGetter, FillStyleSetter);
+    DEFINE_ACCESSOR("strokeStyle", StrokeStyleGetter, StrokeStyleSetter);
+    DEFINE_ACCESSOR("lineWidth", LineWidthGetter, LineWidthSetter);
+    DEFINE_ACCESSOR("globalAlpha", GlobalAlphaGetter, GlobalAlphaSetter);
+    DEFINE_ACCESSOR("globalCompositeOperation", GlobalCompositeOperationGetter, GlobalCompositeOperationSetter);
+
+#undef NAME
+#undef DEFINE_METHOD
+#undef DEFINE_ACCESSOR
+  }
+
+  Local<Object> CanvasRenderingContext2D::NewInstance(Isolate *isolate,
+                                                      shared_ptr<NativeCanvasRenderingContext2D> nativeRenderingContext)
+  {
+    assert(nativeRenderingContext != nullptr);
+    return CanvasRenderingContext2DBase::NewInstance(isolate, nativeRenderingContext).As<Object>();
   }
 
   CanvasRenderingContext2D::CanvasRenderingContext2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -298,15 +274,5 @@ namespace script_bindings::canvas_bindings
   void CanvasRenderingContext2D::GlobalCompositeOperationSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     // TODO: Implement globalCompositeOperation setter
-  }
-
-  Local<Object> CanvasRenderingContext2D::NewInstance(Isolate *isolate,
-                                                      shared_ptr<NativeCanvasRenderingContext2D> nativeContext)
-  {
-    EscapableHandleScope scope(isolate);
-    if (nativeContext == nullptr)
-      return scope.Escape(Local<Object>());
-    else
-      return scope.Escape(CanvasRenderingContext2DBase::NewInstance(isolate, nativeContext).As<Object>());
   }
 }

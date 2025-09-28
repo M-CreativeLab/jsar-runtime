@@ -27,8 +27,19 @@
 #include "./html/html_div_element.hpp"
 #include "./html/html_head_element.hpp"
 #include "./html/html_heading_element.hpp"
+#include "./html/html_html_element.hpp"
+#include "./html/html_iframe_element.hpp"
+#include "./html/html_image_element.hpp"
 #include "./html/html_input_element.hpp"
+#include "./html/html_link_element.hpp"
 #include "./html/html_media_element.hpp"
+#include "./html/html_meta_element.hpp"
+#include "./html/html_model_element.hpp"
+#include "./html/html_paragraph_element.hpp"
+#include "./html/html_script_element.hpp"
+#include "./html/html_span_element.hpp"
+#include "./html/html_style_element.hpp"
+#include "./html/html_template_element.hpp"
 #include "./html/html_video_element.hpp"
 
 // WebXR bindings
@@ -129,8 +140,19 @@ namespace script_bindings
       ADD_HTML_ELEMENT(HTMLDivElement)
       ADD_HTML_ELEMENT(HTMLHeadElement)
       ADD_HTML_ELEMENT(HTMLHeadingElement)
+      ADD_HTML_ELEMENT(HTMLHtmlElement)
+      ADD_HTML_ELEMENT(HTMLIframeElement)
+      ADD_HTML_ELEMENT(HTMLImageElement)
       ADD_HTML_ELEMENT(HTMLInputElement)
+      ADD_HTML_ELEMENT(HTMLLinkElement)
       ADD_HTML_ELEMENT(HTMLMediaElement)
+      ADD_HTML_ELEMENT(HTMLMetaElement)
+      ADD_HTML_ELEMENT(HTMLModelElement)
+      ADD_HTML_ELEMENT(HTMLParagraphElement)
+      ADD_HTML_ELEMENT(HTMLScriptElement)
+      ADD_HTML_ELEMENT(HTMLSpanElement)
+      ADD_HTML_ELEMENT(HTMLStyleElement)
+      ADD_HTML_ELEMENT(HTMLTemplateElement)
       ADD_HTML_ELEMENT(HTMLVideoElement)
 #undef ADD_HTML_ELEMENT
       {

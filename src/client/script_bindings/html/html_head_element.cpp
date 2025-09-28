@@ -24,11 +24,6 @@ namespace script_bindings
       }
     }
 
-    Local<Function> HTMLHeadElement::Initialize(Isolate *isolate)
-    {
-      return HTMLHeadElementBase::Initialize(isolate);
-    }
-
     HTMLHeadElement::HTMLHeadElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLHeadElementBase(isolate, args)
     {

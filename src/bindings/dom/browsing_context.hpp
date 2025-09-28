@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <napi.h>
-#include "client/dom/browsing_context.hpp"
+#include <client/dom/browsing_context.hpp>
 #include "./runtime_context.hpp"
 
 namespace dombinding

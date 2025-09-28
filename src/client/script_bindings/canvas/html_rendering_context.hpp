@@ -22,7 +22,6 @@ namespace script_bindings
 
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       HTMLRenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
