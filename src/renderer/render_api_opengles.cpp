@@ -50,6 +50,108 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
   }
 }
 
+/**
+ * Patch WebGL/GLSL ES shader source to work with desktop OpenGL Core Profile.
+ * This implements the same kind of translation that browsers like Chrome do via ANGLE.
+ * 
+ * Translates:
+ * - attribute -> in (vertex shaders)
+ * - varying -> out (vertex shaders) / in (fragment shaders)
+ * - gl_FragColor -> custom out vec4 fragColor
+ * - removes precision qualifiers (not valid in desktop GL)
+ * - adds appropriate #version directive
+ */
+string PatchWebGLShaderForDesktopGL(const string &source, GLuint shaderHandle)
+{
+  // Query the shader type from OpenGL
+  GLint shaderType;
+  glGetShaderiv(shaderHandle, GL_SHADER_TYPE, &shaderType);
+
+  istringstream ss(source);
+  string line, patched;
+  bool hasFragColor = false;
+  bool hasVersionDirective = source.find("#version") != string::npos;
+
+  // Add version directive if not present
+  if (!hasVersionDirective)
+  {
+    patched += "#version 410 core\n";
+  }
+
+  while (getline(ss, line))
+  {
+    string processedLine = line;
+
+    // Replace existing #version with desktop GL version
+    if (processedLine.find("#version") != string::npos)
+    {
+      processedLine = "#version 410 core";
+    }
+
+    // Remove precision qualifiers (not valid in desktop GL core)
+    if (processedLine.find("precision ") != string::npos)
+    {
+      continue; // Skip precision lines entirely
+    }
+
+    // Replace WebGL 1.0 keywords with desktop GL equivalents
+    size_t pos;
+
+    // attribute -> in (vertex shaders only)
+    if (shaderType == GL_VERTEX_SHADER && (pos = processedLine.find("attribute ")) != string::npos)
+    {
+      processedLine.replace(pos, 10, "in ");
+    }
+
+    // varying -> out (vertex) / in (fragment)
+    if ((pos = processedLine.find("varying ")) != string::npos)
+    {
+      if (shaderType == GL_VERTEX_SHADER)
+      {
+        processedLine.replace(pos, 8, "out ");
+      }
+      else
+      {
+        processedLine.replace(pos, 8, "in ");
+      }
+    }
+
+    // gl_FragColor -> fragColor (fragment shaders only)
+    if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("gl_FragColor")) != string::npos)
+    {
+      hasFragColor = true;
+      processedLine.replace(pos, 12, "fragColor");
+    }
+
+    // gl_FragData -> fragColor (fragment shaders only)
+    if (shaderType == GL_FRAGMENT_SHADER && (pos = processedLine.find("gl_FragData")) != string::npos)
+    {
+      // This is more complex as it involves array access, but for now replace with fragColor
+      processedLine.replace(pos, 11, "fragColor");
+    }
+
+    patched += processedLine + "\n";
+  }
+
+  // Add output declaration for fragment color if gl_FragColor was used
+  if (shaderType == GL_FRAGMENT_SHADER && hasFragColor)
+  {
+    // Insert after version directive but before other content
+    size_t versionPos = patched.find("#version 410 core\n");
+    if (versionPos != string::npos)
+    {
+      size_t insertPos = versionPos + strlen("#version 410 core\n");
+      patched.insert(insertPos, "out vec4 fragColor;\n");
+    }
+    else
+    {
+      patched = "out vec4 fragColor;\n" + patched;
+    }
+  }
+
+  return patched;
+}
+
 class RHI_OpenGL : public TrRenderHardwareInterface
 {
 private:
@@ -743,27 +845,24 @@ private:
       bool hasVersionDirective = source.find("#version") != string::npos;
 
 #ifdef __APPLE__
-      // On macOS, we need to ensure all shaders have a version directive for compatibility
+      // On macOS, we need to translate WebGL/GLSL ES shaders to desktop OpenGL Core Profile
+      fixedSource = PatchWebGLShaderForDesktopGL(source, shader);
+#else
+      // On other platforms, use the original approach
       if (!hasVersionDirective)
       {
         fixedSource += "#version 410 core\n";
       }
-#endif
 
       while (pos < source.size())
       {
         getline(source, line, pos);
         string newLine = line;
-#ifdef __APPLE__
-        /**
-				 * FIXME(Yorkie): This is a workaround for the shader source on macOS, we need to replace the version to 410 core
-				 * directly, a better solution is to use the shader preprocessor like google/angle to handle this.
-				 */
         if (line.find("#version") != string::npos)
           newLine = "#version 410 core";
-#endif
         fixedSource += newLine + "\n";
       }
+#endif
     }
 
     const char *sourceStr = fixedSource.c_str();
