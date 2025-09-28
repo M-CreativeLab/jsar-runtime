@@ -51,6 +51,52 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
 }
 
 /**
+ * Detect if shader source uses WebGL 2.0 syntax
+ * WebGL 2.0 requires #version 300 es per specification, WebGL 1.0 doesn't require version
+ */
+bool DetectWebGL2Syntax(const string &source)
+{
+  // WebGL 2.0 strong indicators (these only exist in WebGL 2.0)
+  if (source.find("out vec4") != string::npos ||
+      source.find("out mediump") != string::npos ||
+      source.find("out lowp") != string::npos ||
+      source.find("out highp") != string::npos ||
+      source.find("layout(location") != string::npos)
+  {
+    return true;
+  }
+
+  // Check for WebGL 2.0 built-ins
+  if (source.find("texture(") != string::npos && source.find("texture2D(") == string::npos)
+  {
+    return true;
+  }
+
+  // WebGL 1.0 strong indicators (these are deprecated/removed in WebGL 2.0)
+  if (source.find("gl_FragColor") != string::npos ||
+      source.find("gl_FragData") != string::npos ||
+      source.find("attribute ") != string::npos ||
+      source.find("varying ") != string::npos ||
+      source.find("texture2D(") != string::npos ||
+      source.find("textureCube(") != string::npos)
+  {
+    return false;
+  }
+
+  // Check for 'in ' keyword (could be WebGL 2.0, but be more specific)
+  if (source.find("in vec") != string::npos ||
+      source.find("in mediump") != string::npos ||
+      source.find("in lowp") != string::npos ||
+      source.find("in highp") != string::npos)
+  {
+    return true;
+  }
+
+  // Default to WebGL 1.0 for safety
+  return false;
+}
+
+/**
  * Patch WebGL/GLSL ES shader source to work with desktop OpenGL Core Profile.
  * This implements the same kind of translation that browsers like Chrome do via ANGLE.
  * 
@@ -892,18 +938,30 @@ private:
       // On macOS, we need to translate WebGL/GLSL ES shaders to desktop OpenGL Core Profile
       fixedSource = PatchWebGLShaderForDesktopGL(source, shader);
 #else
-      // On other platforms, use the original approach
+      // On other platforms, implement WebGL standards-compliant version handling
       if (!hasVersionDirective)
       {
-        fixedSource += "#version 410 core\n";
+        if (DetectWebGL2Syntax(source))
+        {
+          // WebGL 2.0 requires #version 300 es per specification
+          fixedSource += "#version 300 es\n";
+        }
+        // WebGL 1.0 shaders work without version directives per WebGL standard
+        // No version injection needed for WebGL 1.0
       }
 
       while (pos < source.size())
       {
         getline(source, line, pos);
         string newLine = line;
+        // Replace existing #version with appropriate version for backend
         if (line.find("#version") != string::npos)
-          newLine = "#version 410 core";
+        {
+          if (DetectWebGL2Syntax(source))
+            newLine = "#version 300 es";
+          else
+            newLine = "#version 100"; // WebGL 1.0 default
+        }
         fixedSource += newLine + "\n";
       }
 #endif
