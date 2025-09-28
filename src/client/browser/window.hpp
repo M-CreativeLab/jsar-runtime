@@ -15,6 +15,8 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
+#include <client/browser/location.hpp>
+#include <client/browser/navigator.hpp>
 
 // Forward declaration to avoid circular dependency
 namespace dom
@@ -189,6 +191,14 @@ namespace browser
     {
       return document_;
     }
+    inline std::shared_ptr<browser::Location> location() const
+    {
+      return location_;
+    }
+    inline std::shared_ptr<browser::Navigator> navigator() const
+    {
+      return navigator_;
+    }
 
   public:
     /**
@@ -266,12 +276,7 @@ namespace browser
 
   private:
     // Configure the document to the window.
-    void configureDocument(std::shared_ptr<dom::Document> document)
-    {
-      assert(is_document_configured_ == false);
-      document_ = document;
-      is_document_configured_ = true;
-    }
+    void configureDocument(std::shared_ptr<dom::Document> document);
 
   private: // Window properties
     std::string name_ = "";
@@ -287,6 +292,8 @@ namespace browser
     float scroll_x_ = 0.0f;
     float scroll_y_ = 0.0f;
     std::shared_ptr<dom::Document> document_;
+    std::shared_ptr<browser::Location> location_;
+    std::shared_ptr<browser::Navigator> navigator_;
 
   private:
     TrClientContextPerProcess *client_context_; // The client context for making RPC calls

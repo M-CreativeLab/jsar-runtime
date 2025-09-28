@@ -14,6 +14,57 @@
 
 namespace scripting_base
 {
+  template <typename T, typename TCallback>
+  struct MethodCallbackData
+  {
+    TCallback callback;
+    void *data;
+  };
+
+  template <typename T, typename TGetterCallback, typename TSetterCallback>
+  struct AccessorCallbackData
+  {
+    TGetterCallback getterCallback;
+    TSetterCallback setterCallback;
+    void *data;
+  };
+
+  constexpr int CONSTRUCTING_CONTEXT_FLAG = 0xFE32;
+
+  /**
+   * A struct to represent the context to construct the object.
+   */
+  struct ConstructingContext
+  {
+    enum : uint8_t
+    {
+      kScript = 0xf,
+      kNative,
+    };
+
+    int flag;
+    uint8_t source = kScript;
+
+    ConstructingContext(uint8_t source)
+        : flag(CONSTRUCTING_CONTEXT_FLAG)
+        , source(source)
+    {
+    }
+
+    bool isValid() const
+    {
+      return flag == CONSTRUCTING_CONTEXT_FLAG;
+    }
+    bool isNativeCall() const
+    {
+      return isValid() && source == kNative;
+    }
+    bool isScriptCall() const
+    {
+      return isValid() && source == kScript;
+    }
+  };
+
   /**
    * A base class for wrapping C++ objects in v8::Object instances.
    *
@@ -28,6 +79,14 @@ namespace scripting_base
   class ObjectWrap : public ObjectWrapBase
   {
     friend class ObjectWrap<T, D, B>;
+
+  protected:
+    using InstanceMethodCallback = void (T::*)(const v8::FunctionCallbackInfo<v8::Value> &);
+    using InstanceMethodCallbackData = MethodCallbackData<T, InstanceMethodCallback>;
+
+    using InstanceGetterCallback = void (T::*)(const v8::PropertyCallbackInfo<v8::Value> &);
+    using InstanceSetterCallback = void (T::*)(v8::Local<v8::Value>, const v8::PropertyCallbackInfo<void> &);
+    using InstanceAccessorCallbackData = AccessorCallbackData<T, InstanceGetterCallback, InstanceSetterCallback>;
 
   public:
     /**
@@ -109,7 +168,6 @@ namespace scripting_base
       v8::Local<v8::Object> jsThis = NewInstance(isolate, inner);
       T *instance = Unwrap(jsThis);
       instance->setNapiEnv(napiEnv);
-
       return scope.Escape(jsThis);
     }
 
@@ -137,7 +195,13 @@ namespace scripting_base
       }
 
       std::vector<v8::Local<v8::Value>> args;
-      v8::Local<v8::Object> jsThis = constructor->NewInstance(context, 0, nullptr).ToLocalChecked();
+      v8::Local<v8::External> option = v8::External::New(isolate,
+                                                         new ConstructingContext(ConstructingContext::kNative));
+      args.push_back(option);
+      v8::Local<v8::Object> jsThis = constructor->NewInstance(context,
+                                                              args.size(),
+                                                              args.data())
+                                       .ToLocalChecked();
       if (jsThis.IsEmpty()) [[unlikely]]
       {
         std::cerr << "Failed to create new instance of " << T::Name() << "()" << std::endl;
@@ -249,6 +313,145 @@ namespace scripting_base
 
   protected:
     /**
+     * Create a standardized method callback for instance methods.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param objectTemplate The object template to which the method will be added.
+     * @param name The name of the method.
+     * @param callback The method callback function.
+     */
+    static void InstanceMethod(v8::Isolate *isolate,
+                               v8::Local<v8::ObjectTemplate> objectTemplate,
+                               const char *name,
+                               InstanceMethodCallback callback)
+    {
+      v8::HandleScope scope(isolate);
+
+      auto callbackWrapper = [](const v8::FunctionCallbackInfo<v8::Value> &info) -> void
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::HandleScope scope(isolate);
+
+        auto callbackData = T::template GetCallbackData<InstanceMethodCallbackData>(info);
+        if (callbackData != nullptr)
+        {
+          assert(callbackData->callback != nullptr && "callback must not be null");
+
+          T *instance = T::Unwrap(info.This());
+          if (instance == nullptr) [[unlikely]]
+          {
+            isolate->ThrowException(v8::Exception::TypeError(
+              v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+            return;
+          }
+
+          // Call the method callback
+          std::bind(callbackData->callback, instance, std::placeholders::_1)(info);
+          return;
+        }
+      };
+
+      InstanceMethodCallbackData *callbackData = new InstanceMethodCallbackData{callback, nullptr};
+      v8::Local<v8::External> dataValue = v8::External::New(isolate, callbackData);
+
+      // Manage the lifetime of the callback data
+      auto handle = std::make_unique<v8::Persistent<v8::External>>(isolate, dataValue);
+      auto releaseCallback = [](const v8::WeakCallbackInfo<InstanceMethodCallbackData> &data)
+      {
+        InstanceMethodCallbackData *callbackData = data.GetParameter();
+        if (callbackData != nullptr)
+          delete callbackData;
+      };
+      handle->SetWeak(callbackData, releaseCallback, v8::WeakCallbackType::kParameter);
+      T::callback_data_handles_.emplace_back(std::move(handle));
+
+      objectTemplate->Set(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
+                          v8::FunctionTemplate::New(isolate, callbackWrapper, dataValue));
+    }
+    /**
+     * Create a standardized accessor callback for instance properties.
+     */
+    static void InstanceAccessor(v8::Isolate *isolate,
+                                 v8::Local<v8::ObjectTemplate> objectTemplate,
+                                 const char *name,
+                                 InstanceGetterCallback getter,
+                                 InstanceSetterCallback setter)
+    {
+      auto getterWrapper = [](v8::Local<v8::String> property,
+                              const v8::PropertyCallbackInfo<v8::Value> &info) -> void
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::HandleScope scope(isolate);
+
+        auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
+        if (callbackData != nullptr && callbackData->getterCallback) [[likely]]
+        {
+          T *instance = T::Unwrap(info.This());
+          if (instance == nullptr) [[unlikely]]
+          {
+            isolate->ThrowException(v8::Exception::TypeError(
+              v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+            return;
+          }
+
+          // Call the getter callback
+          std::bind(callbackData->getterCallback,
+                    instance,
+                    std::placeholders::_1)(info);
+          return;
+        }
+
+        // No getter defined, return undefined
+        info.GetReturnValue().Set(v8::Undefined(isolate));
+      };
+      auto setterWrapper = [](v8::Local<v8::String> property,
+                              v8::Local<v8::Value> value,
+                              const v8::PropertyCallbackInfo<void> &info) -> void
+      {
+        v8::Isolate *isolate = info.GetIsolate();
+        v8::HandleScope scope(isolate);
+
+        auto callbackData = T::template GetCallbackData<InstanceAccessorCallbackData>(info);
+        if (callbackData != nullptr && callbackData->setterCallback) [[likely]]
+        {
+          T *instance = T::Unwrap(info.This());
+          if (instance == nullptr) [[unlikely]]
+          {
+            isolate->ThrowException(v8::Exception::TypeError(
+              v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+            return;
+          }
+
+          // Call the setter callback
+          std::bind(callbackData->setterCallback,
+                    instance,
+                    std::placeholders::_1,
+                    std::placeholders::_2)(value, info);
+          return;
+        }
+      };
+
+      auto callbackData = new InstanceAccessorCallbackData{getter, setter, nullptr};
+      v8::Local<v8::External> dataValue = v8::External::New(isolate, callbackData);
+
+      // Manage the lifetime of the callback data
+      auto handle = std::make_unique<v8::Persistent<v8::External>>(isolate, dataValue);
+      auto releaseCallback = [](const v8::WeakCallbackInfo<InstanceAccessorCallbackData> &data)
+      {
+        InstanceAccessorCallbackData *callbackData = data.GetParameter();
+        if (callbackData != nullptr)
+          delete callbackData;
+      };
+      handle->SetWeak(callbackData, releaseCallback, v8::WeakCallbackType::kParameter);
+      T::callback_data_handles_.emplace_back(std::move(handle));
+
+      // Add the accessor to the object template
+      objectTemplate->SetAccessor(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
+                                  getterWrapper,
+                                  setterWrapper,
+                                  dataValue);
+    }
+    /**
      * Create a standardized error message for method failures.
      *
      * @param isolate The v8::Isolate instance.
@@ -262,11 +465,110 @@ namespace scripting_base
                         std::string(message);
       return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
     }
+    /**
+     * Create a standardized error message for method failures.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param method The name of the method where the error occurred.
+     * @param message The error message describing the failure.
+     * @returns A formatted error message string.
+     */
+    static v8::Local<v8::String> MakeMethodError(v8::Isolate *isolate, const char *method, const char *message)
+    {
+      std::string str = "Failed to execute '" + std::string(method) + "' on '" + T::Name() + "': " +
+                        std::string(message);
+      return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
+    }
+    /**
+     * Create a standardized error message for constructor failures.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param message The error message describing the failure.
+     * @returns A formatted error message string.
+     */
+    static v8::Local<v8::String> MakeConstructorError(v8::Isolate *isolate, const char *message)
+    {
+      std::string str = "Failed to construct '" + T::Name() + "': " + std::string(message);
+      return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
+    }
+
+  private:
+    template <typename TCallbackData>
+    static inline TCallbackData *GetCallbackData(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      return GetCallbackData<TCallbackData>(info.GetIsolate(), info.Data());
+    }
+    template <typename TCallbackData>
+    static inline TCallbackData *GetCallbackData(const v8::PropertyCallbackInfo<v8::Value> &info)
+    {
+      return GetCallbackData<TCallbackData>(info.GetIsolate(), info.Data());
+    }
+    template <typename TCallbackData>
+    static inline TCallbackData *GetCallbackData(const v8::PropertyCallbackInfo<void> &info)
+    {
+      return GetCallbackData<TCallbackData>(info.GetIsolate(), info.Data());
+    }
+    template <typename TCallbackData>
+    static TCallbackData *GetCallbackData(v8::Isolate *isolate, v8::Local<v8::Value> data)
+    {
+      v8::HandleScope scope(isolate);
+      assert(data->IsExternal() && "data must be an External");
+
+      auto external = data.As<v8::External>();
+      assert(external->Value() != nullptr && "callback data must not be null");
+
+      TCallbackData *callbackData = static_cast<TCallbackData *>(external->Value());
+      if (callbackData == nullptr) [[unlikely]]
+      {
+        isolate->ThrowException(v8::Exception::TypeError(
+          v8::String::NewFromUtf8(isolate, "Illegal invocation").ToLocalChecked()));
+        return nullptr;
+      }
+      return callbackData;
+    }
 
   public:
-    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+    /**
+     * Constructor for ObjectWrap.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param args The function callback info containing the arguments.
+     * @param nativeConstructingOnly If true, only allow native construction (not from script).
+     */
+    ObjectWrap(v8::Isolate *isolate,
+               const v8::FunctionCallbackInfo<v8::Value> &args,
+               bool nativeConstructingOnly = false)
         : ObjectWrapBase(isolate)
     {
+      v8::HandleScope scope(isolate);
+      if (!args.IsConstructCall())
+      {
+        isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
+                                                                              "Illegal constructor")));
+        return;
+      }
+
+      ConstructingContext *constructingContext = nullptr;
+
+      // Get the constructing context from the first argument if it is an `External` object
+      if (args.Length() == 1 && args[0]->IsExternal())
+      {
+        v8::Local<v8::External> firstArg = args[0].As<v8::External>();
+        assert(firstArg->Value() != nullptr && "option must not be null");
+        constructingContext = static_cast<ConstructingContext *>(firstArg->Value());
+      }
+
+      // If `nativeConstructingOnly` is true, only allow native construction
+      if (nativeConstructingOnly == true && (constructingContext == nullptr ||
+                                             constructingContext->isScriptCall())) [[unlikely]]
+      {
+        isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
+                                                                              "Illegal constructor")));
+      }
+
+      // Delete the constructing context if it was created
+      if (constructingContext != nullptr)
+        delete constructingContext;
     }
 
     virtual ~ObjectWrap()
@@ -287,11 +589,24 @@ namespace scripting_base
       }
     }
 
+    /**
+     * @returns The `ObjectWrap`'s V8 value.
+     */
     v8::Local<v8::Value> value() const
     {
       return object_handle_.Get(current_isolate_);
     }
-    std::shared_ptr<D> inner() const
+    /**
+     * @returns The `ObjectWrap`'s inner handle.
+     */
+    inline std::shared_ptr<D> inner() const
+    {
+      return inner_handle_;
+    }
+    /**
+     * @returns The `ObjectWrap`'s inner handle.
+     */
+    inline std::shared_ptr<D> handle() const
     {
       return inner_handle_;
     }
@@ -348,5 +663,6 @@ namespace scripting_base
     static thread_local inline bool initialized_ = false;
     static thread_local inline v8::Persistent<v8::FunctionTemplate> function_template_;
     static thread_local inline v8::Persistent<v8::Function> constructor_handle_;
+    static thread_local inline std::vector<std::unique_ptr<v8::Persistent<v8::External>>> callback_data_handles_{};
   };
 }

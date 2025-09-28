@@ -182,7 +182,8 @@ namespace dom
     isolate_->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
   }
 
-  void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument)
+  void DOMScriptingContext::makeMainContext(shared_ptr<dom::Node> nativeDocument,
+                                            shared_ptr<browser::Window> nativeWindow)
   {
     assert(!isContextInitialized);
     assert(v8ContextStore.IsEmpty());
@@ -199,7 +200,8 @@ namespace dom
       auto Window = script_bindings::Window::Initialize(isolate_);
       Local<Context> scriptingContext = Context::New(isolate_,
                                                      nullptr,
-                                                     script_bindings::Window::GetInstanceTemplate(isolate_));
+                                                     script_bindings::Window::GetInstanceTemplate(isolate_),
+                                                     script_bindings::Window::GetOrNewInstance(isolate_, nativeWindow));
       {
         Context::Scope contextScope(scriptingContext);
         HandleScope handleScope(isolate_);
@@ -263,8 +265,6 @@ namespace dom
          */
 
         // Baisc objects
-        // V8_SET_GLOBAL_FROM_MAIN(navigator);
-        V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(performance);
         V8_SET_GLOBAL_FROM_MAIN(console);
 

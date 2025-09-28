@@ -3,6 +3,7 @@
 #include "./event.hpp"
 #include "./event_target.hpp"
 #include "./navigator.hpp"
+#include "./location.hpp"
 #include "./events/all_events.hpp"
 #include "./dom/node.hpp"
 #include "./dom/element.hpp"
@@ -109,6 +110,9 @@ namespace script_bindings
                   NAME("navigator"),
                   Navigator::NewInstance(isolate, make_shared<browser::Navigator>()))
         .Check();
+
+      auto Location = Location::Initialize(isolate);
+      global->Set(context, NAME("Location"), Location).Check();
 
       // Base DOM classes
 #define ADD_DOM_TYPE(X) \

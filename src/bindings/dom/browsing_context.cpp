@@ -1,3 +1,4 @@
+#include <client/per_process.hpp>
 #include "./browsing_context.hpp"
 
 namespace dombinding
@@ -71,7 +72,7 @@ namespace dombinding
         contextImpl->setBaseURI(doc->baseURI);
 
         // Make sure the scripting context is created.
-        contextImpl->scriptingContext->makeMainContext(doc);
+        contextImpl->scriptingContext->makeMainContext(doc, TrClientContextPerProcess::Get()->window);
         contextImpl->open(doc);
         return env.Undefined();
       }

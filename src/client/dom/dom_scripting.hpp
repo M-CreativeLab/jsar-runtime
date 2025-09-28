@@ -9,6 +9,7 @@
 #include <node/node.h>
 #include <common/utility.hpp>
 #include <client/dom/node.hpp>
+#include <client/browser/window.hpp>
 
 template <typename T>
 inline void USE(T &&)
@@ -174,8 +175,9 @@ namespace dom
      * Make a v8::Context for the main script.
      *
      * @param document The document object to be used in scripting.
+     * @param window The window object to be used in scripting.
      */
-    void makeMainContext(std::shared_ptr<dom::Node> document);
+    void makeMainContext(std::shared_ptr<dom::Node>, std::shared_ptr<browser::Window>);
 
     /**
      * Make a v8::Context for the worker script.

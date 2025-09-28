@@ -6,8 +6,9 @@
  */
 namespace browser
 {
-  class Location; // Represents the location (URL) of a browser window
-  class Window;   // Represents a browser window
+  class Location;  // Represents the location (URL) of a browser window
+  class Navigator; // Represents the navigator object of a browser window
+  class Window;    // Represents a browser window
 }
 
 /**

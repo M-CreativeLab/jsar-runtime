@@ -18,6 +18,7 @@ namespace browser
   Window::Window(TrClientContextPerProcess *client_context)
       : dom::DOMEventTarget()
       , client_context_(client_context)
+      , navigator_(make_shared<browser::Navigator>())
   {
   }
 
@@ -160,5 +161,13 @@ namespace browser
         // TODO(yorkie): Add RPC call to notify about viewport size change
       }
     }
+  }
+
+  void Window::configureDocument(std::shared_ptr<dom::Document> document)
+  {
+    assert(is_document_configured_ == false);
+    document_ = document;
+    location_ = make_shared<browser::Location>(document_->baseURI);
+    is_document_configured_ = true;
   }
 }
