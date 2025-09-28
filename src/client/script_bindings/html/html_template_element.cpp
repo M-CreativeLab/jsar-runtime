@@ -10,7 +10,7 @@ namespace script_bindings::html_bindings
   }
 
   Local<Object> HTMLTemplateElement::NewInstance(Isolate *isolate,
-                                              shared_ptr<dom::HTMLTemplateElement> nativeElement)
+                                                 shared_ptr<dom::HTMLTemplateElement> nativeElement)
   {
     assert(nativeElement != nullptr);
     return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();

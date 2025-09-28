@@ -16,39 +16,39 @@ namespace script_bindings
 
     // Add property accessors
     prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                                  TypeGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+                                   TypeGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
     prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "bubbles").ToLocalChecked(),
-                                  BubblesGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+                                   BubblesGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
     prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "cancelable").ToLocalChecked(),
-                                  CancelableGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+                                   CancelableGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
     prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "composed").ToLocalChecked(),
-                                  ComposedGetter,
-                                  nullptr,
-                                  Local<Value>(),
-                                  AccessControl::DEFAULT,
-                                  PropertyAttribute::ReadOnly);
+                                   ComposedGetter,
+                                   nullptr,
+                                   Local<Value>(),
+                                   AccessControl::DEFAULT,
+                                   PropertyAttribute::ReadOnly);
 
     // Add methods
     prototypeTemplate->Set(String::NewFromUtf8(isolate, "preventDefault").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, PreventDefault));
+                           FunctionTemplate::New(isolate, PreventDefault));
 
     prototypeTemplate->Set(String::NewFromUtf8(isolate, "stopPropagation").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, StopPropagation));
+                           FunctionTemplate::New(isolate, StopPropagation));
   }
 
   // static

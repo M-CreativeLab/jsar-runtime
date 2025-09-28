@@ -10,7 +10,7 @@ namespace script_bindings::html_bindings
   }
 
   Local<Object> HTMLImageElement::NewInstance(Isolate *isolate,
-                                             shared_ptr<dom::HTMLImageElement> nativeElement)
+                                              shared_ptr<dom::HTMLImageElement> nativeElement)
   {
     assert(nativeElement != nullptr);
     return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();

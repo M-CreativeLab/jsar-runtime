@@ -11,7 +11,7 @@ namespace script_bindings::html_bindings
   }
 
   Local<Object> HTMLIframeElement::NewInstance(Isolate *isolate,
-                                             shared_ptr<dom::HTMLIframeElement> nativeElement)
+                                               shared_ptr<dom::HTMLIframeElement> nativeElement)
   {
     assert(nativeElement != nullptr);
     return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
