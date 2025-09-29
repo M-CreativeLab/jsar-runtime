@@ -4,7 +4,7 @@ import { buildStart } from './build-hooks.mjs'
 import taskCheckbox from 'markdown-it-task-checkbox'
 
 export default defineConfig({
-  base: '/jsar-runtime/',
+  base: process.env.BASE_PATH || '/',
   vite: {
     resolve: {
       alias: [

@@ -32,6 +32,7 @@ jobs:
       - name: Build documentation artifacts
         env:
           GTAG: ${{ secrets.GTAG }}
+          BASE_PATH: '/jsar-runtime/'
         run: |
           npm run build:website
 

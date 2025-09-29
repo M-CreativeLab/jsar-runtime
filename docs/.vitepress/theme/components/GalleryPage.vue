@@ -134,7 +134,7 @@ export default {
       try {
         this.loading = true;
         // Load the fixtures data JSON from public directory with correct base path
-        const response = await fetch('/jsar-runtime/fixtures-summary.json');
+        const response = await fetch('fixtures-summary.json');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
