@@ -3,7 +3,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <client/per_process.hpp>
 #include <client/scripting_base/v8_object_holder.hpp>
+#include <client/xr/webxr_system.hpp>
 
 namespace browser
 {
@@ -17,58 +19,70 @@ namespace browser
   class Navigator : public scripting_base::JSObjectHolder
   {
   public:
-    Navigator();
-    ~Navigator();
+    Navigator(TrClientContextPerProcess *client_context);
+    ~Navigator() = default;
 
     // Browser identification
-    std::string GetUserAgent() const;
-    std::string GetPlatform() const;
-    std::string GetVendor() const;
-    std::string GetVendorSub() const;
-    std::string GetProduct() const;
-    std::string GetProductSub() const;
+    std::string userAgent() const;
+    std::string platform() const;
+    std::string vendor() const;
+    std::string vendorSub() const;
+    std::string product() const;
+    std::string productSub() const;
 
     // Browser capabilities
-    bool IsOnLine() const;
-    bool IsCookieEnabled() const;
-    bool IsDoNotTrack() const;
-    int GetHardwareConcurrency() const;
-    long long GetMaxTouchPoints() const;
+    bool isOnline() const;
+    bool isCookieEnabled() const;
+    bool isDoNotTrack() const;
+    int hardwareConcurrency() const;
+    long long maxTouchPoints() const;
 
     // Language support
-    std::string GetLanguage() const;
-    std::vector<std::string> GetLanguages() const;
+    std::string language() const;
+    std::vector<std::string> languages() const;
 
     // User preferences
-    bool IsJavaEnabled() const;
-    std::string GetColorScheme() const;
+    bool isJavaEnabled() const;
+    std::string colorScheme() const;
 
     // Platform features
-    bool HasWebGL() const;
-    bool HasWebXR() const;
-    bool HasServiceWorker() const;
-    bool HasGeolocation() const;
-    bool HasMediaDevices() const;
-    bool HasPermissions() const;
+    bool hasWebGL() const;
+    bool hasWebXR() const;
+    bool hasServiceWorker() const;
+    bool hasGeolocation() const;
+    bool hasMediaDevices() const;
+    bool hasPermissions() const;
 
     // Battery API
-    bool HasBattery() const;
+    bool hasBattery() const;
 
     // Clipboard API
-    bool HasClipboard() const;
+    bool hasClipboard() const;
 
     // Storage
-    long long GetStorageQuota() const;
+    long long getStorageQuota() const;
+
+    // Components
+    inline std::shared_ptr<client_xr::XRSystem> getXRSystem() const
+    {
+      return xr_system_;
+    }
 
   private:
-    std::string userAgent_;
+    void initXRSystem(TrClientContextPerProcess *client_context);
+
+  private:
+    std::string user_agent_;
     std::string platform_;
     std::string vendor_;
     std::string language_;
     std::vector<std::string> languages_;
-    int hardwareConcurrency_;
-    bool onLine_;
-    bool cookieEnabled_;
-    bool doNotTrack_;
+    int hardware_concurrency_;
+    bool online_;
+    bool cookie_enabled_;
+    bool do_not_track_;
+
+    // Components
+    std::shared_ptr<client_xr::XRSystem> xr_system_;
   };
 }

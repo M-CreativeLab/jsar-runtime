@@ -1,142 +1,164 @@
-#include "navigator.hpp"
 #include <thread>
+#include <client/xr/device.hpp>
+#include "./navigator.hpp"
+
+using namespace std;
 
 namespace browser
 {
-  Navigator::Navigator()
-      : userAgent_("Mozilla/5.0 (JSAR-Runtime) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+  Navigator::Navigator(TrClientContextPerProcess *client_context)
+      : user_agent_("Mozilla/5.0 (JSAR-Runtime) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
       , platform_("JSAR")
       , vendor_("M-CreativeLab")
       , language_("en-US")
-      , hardwareConcurrency_(static_cast<int>(std::thread::hardware_concurrency()))
-      , onLine_(true)
-      , cookieEnabled_(true)
-      , doNotTrack_(false)
+      , hardware_concurrency_(static_cast<int>(thread::hardware_concurrency()))
+      , online_(true)
+      , cookie_enabled_(true)
+      , do_not_track_(false)
+      , xr_system_(nullptr)
   {
-    // Initialize languages array
-    languages_.push_back("en-US");
-    languages_.push_back("en");
+    // If the scripting event loop is already ready, initialize the XRSystem immediately
+    if (client_context->isScriptingEventLoopReady())
+    {
+      initXRSystem(client_context);
+    }
+    else
+    {
+      client_context->addEventListener(
+        TrClientContextEventType::ScriptingEventLoopReady,
+        [this](auto _type, auto _event)
+        {
+          initXRSystem(TrClientContextPerProcess::Get());
+        });
+    }
   }
 
-  Navigator::~Navigator() = default;
-
-  std::string Navigator::GetUserAgent() const
+  string Navigator::userAgent() const
   {
-    return userAgent_;
+    return user_agent_;
   }
 
-  std::string Navigator::GetPlatform() const
+  string Navigator::platform() const
   {
     return platform_;
   }
 
-  std::string Navigator::GetVendor() const
+  string Navigator::vendor() const
   {
     return vendor_;
   }
 
-  std::string Navigator::GetVendorSub() const
+  string Navigator::vendorSub() const
   {
     return "";
   }
 
-  std::string Navigator::GetProduct() const
+  string Navigator::product() const
   {
-    return "Gecko";
+    return "JSAR";
   }
 
-  std::string Navigator::GetProductSub() const
+  string Navigator::productSub() const
   {
     return "20030107";
   }
 
-  bool Navigator::IsOnLine() const
+  bool Navigator::isOnline() const
   {
-    return onLine_;
+    return online_;
   }
 
-  bool Navigator::IsCookieEnabled() const
+  bool Navigator::isCookieEnabled() const
   {
-    return cookieEnabled_;
+    return cookie_enabled_;
   }
 
-  bool Navigator::IsDoNotTrack() const
+  bool Navigator::isDoNotTrack() const
   {
-    return doNotTrack_;
+    return do_not_track_;
   }
 
-  int Navigator::GetHardwareConcurrency() const
+  int Navigator::hardwareConcurrency() const
   {
-    return hardwareConcurrency_;
+    return hardware_concurrency_;
   }
 
-  long long Navigator::GetMaxTouchPoints() const
+  long long Navigator::maxTouchPoints() const
   {
     return 1; // Default single touch support
   }
 
-  std::string Navigator::GetLanguage() const
+  string Navigator::language() const
   {
     return language_;
   }
 
-  std::vector<std::string> Navigator::GetLanguages() const
+  vector<string> Navigator::languages() const
   {
     return languages_;
   }
 
-  bool Navigator::IsJavaEnabled() const
+  bool Navigator::isJavaEnabled() const
   {
     return false; // Java not supported in JSAR Runtime
   }
 
-  std::string Navigator::GetColorScheme() const
+  string Navigator::colorScheme() const
   {
     return "light"; // Default color scheme
   }
 
-  bool Navigator::HasWebGL() const
+  bool Navigator::hasWebGL() const
   {
     return true; // WebGL supported
   }
 
-  bool Navigator::HasWebXR() const
+  bool Navigator::hasWebXR() const
   {
-    return true; // WebXR supported
+    return xr_system_ != nullptr;
   }
 
-  bool Navigator::HasServiceWorker() const
+  bool Navigator::hasServiceWorker() const
   {
     return true; // Service Workers supported
   }
 
-  bool Navigator::HasGeolocation() const
+  bool Navigator::hasGeolocation() const
   {
     return true; // Geolocation API supported
   }
 
-  bool Navigator::HasMediaDevices() const
+  bool Navigator::hasMediaDevices() const
   {
     return true; // MediaDevices API supported
   }
 
-  bool Navigator::HasPermissions() const
+  bool Navigator::hasPermissions() const
   {
     return true; // Permissions API supported
   }
 
-  bool Navigator::HasBattery() const
+  bool Navigator::hasBattery() const
   {
     return true; // Battery API supported
   }
 
-  bool Navigator::HasClipboard() const
+  bool Navigator::hasClipboard() const
   {
     return true; // Clipboard API supported
   }
 
-  long long Navigator::GetStorageQuota() const
+  long long Navigator::getStorageQuota() const
   {
     return 1024 * 1024 * 1024; // 1GB default storage quota
+  }
+
+  void Navigator::initXRSystem(TrClientContextPerProcess *client_context)
+  {
+    auto xrDevice = client_context->getXRDeviceClient();
+    uv_loop_t *loop = client_context->getScriptingEventLoop();
+    assert(loop != nullptr && "Event loop must be ready when creating XRSystem.");
+
+    xr_system_ = xrDevice->createXRSystem(loop);
   }
 }

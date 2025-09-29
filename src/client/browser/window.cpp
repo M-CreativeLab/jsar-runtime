@@ -18,7 +18,7 @@ namespace browser
   Window::Window(TrClientContextPerProcess *client_context)
       : dom::DOMEventTarget()
       , client_context_(client_context)
-      , navigator_(make_shared<browser::Navigator>())
+      , navigator_(make_shared<browser::Navigator>(client_context))
   {
   }
 

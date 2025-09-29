@@ -106,11 +106,6 @@ namespace script_bindings
       // Browser/Navigator object
       auto Navigator = Navigator::Initialize(isolate);
       global->Set(context, NAME("Navigator"), Navigator).Check();
-      global->Set(context,
-                  NAME("navigator"),
-                  Navigator::NewInstance(isolate, make_shared<browser::Navigator>()))
-        .Check();
-
       auto Location = Location::Initialize(isolate);
       global->Set(context, NAME("Location"), Location).Check();
 

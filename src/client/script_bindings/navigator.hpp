@@ -36,40 +36,40 @@ namespace script_bindings
 
   private:
     // Browser identification property getters
-    static void UserAgentGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void PlatformGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void VendorGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void VendorSubGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ProductGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ProductSubGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void UserAgentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void PlatformGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void VendorGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void VendorSubGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ProductGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ProductSubGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // Browser capabilities property getters
-    static void OnLineGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void CookieEnabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void DoNotTrackGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void HardwareConcurrencyGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void MaxTouchPointsGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void OnLineGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void CookieEnabledGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void DoNotTrackGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void HardwareConcurrencyGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void MaxTouchPointsGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // Language support property getters
-    static void LanguageGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void LanguagesGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void LanguageGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void LanguagesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // User preferences property getters
-    static void JavaEnabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ColorSchemeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void JavaEnabledGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ColorSchemeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // Platform features property getters (for capability detection)
-    static void WebGLGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WebXRGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ServiceWorkerGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void GeolocationGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void MediaDevicesGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void PermissionsGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void BatteryGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ClipboardGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void StorageQuotaGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void WebGLGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void WebXRGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ServiceWorkerGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void GeolocationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void MediaDevicesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void PermissionsGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void BatteryGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ClipboardGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void StorageQuotaGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // Methods
-    static void JavaEnabled(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void JavaEnabled(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }

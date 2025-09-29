@@ -1,3 +1,4 @@
+#include <client/script_bindings/webxr/xr_system.hpp>
 #include "navigator.hpp"
 
 using namespace std;
@@ -13,47 +14,44 @@ namespace script_bindings
 
   void Navigator::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    HandleScope handle_scope(isolate);
-    auto context = isolate->GetCurrentContext();
-    auto prototype_template = tpl->PrototypeTemplate();
-    auto instance_template = tpl->InstanceTemplate();
+    HandleScope scope(isolate);
+    auto prototype = tpl->PrototypeTemplate();
 
     // Browser identification properties
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "userAgent").ToLocalChecked(), UserAgentGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "platform").ToLocalChecked(), PlatformGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "vendor").ToLocalChecked(), VendorGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "vendorSub").ToLocalChecked(), VendorSubGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "product").ToLocalChecked(), ProductGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "productSub").ToLocalChecked(), ProductSubGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "userAgent", &Navigator::UserAgentGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "platform", &Navigator::PlatformGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "vendor", &Navigator::VendorGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "vendorSub", &Navigator::VendorSubGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "product", &Navigator::ProductGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "productSub", &Navigator::ProductSubGetter);
 
     // Browser capabilities properties
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "onLine").ToLocalChecked(), OnLineGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "cookieEnabled").ToLocalChecked(), CookieEnabledGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "doNotTrack").ToLocalChecked(), DoNotTrackGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "hardwareConcurrency").ToLocalChecked(), HardwareConcurrencyGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "maxTouchPoints").ToLocalChecked(), MaxTouchPointsGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "onLine", &Navigator::OnLineGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "cookieEnabled", &Navigator::CookieEnabledGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "doNotTrack", &Navigator::DoNotTrackGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "hardwareConcurrency", &Navigator::HardwareConcurrencyGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "maxTouchPoints", &Navigator::MaxTouchPointsGetter);
 
     // Language support properties
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "language").ToLocalChecked(), LanguageGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "languages").ToLocalChecked(), LanguagesGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "language", &Navigator::LanguageGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "languages", &Navigator::LanguagesGetter);
 
     // User preferences
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "colorScheme").ToLocalChecked(), ColorSchemeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "colorScheme", &Navigator::ColorSchemeGetter);
 
     // Platform features (for capability detection)
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "webgl").ToLocalChecked(), WebGLGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "xr").ToLocalChecked(), WebXRGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "serviceWorker").ToLocalChecked(), ServiceWorkerGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "geolocation").ToLocalChecked(), GeolocationGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "mediaDevices").ToLocalChecked(), MediaDevicesGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "permissions").ToLocalChecked(), PermissionsGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "getBattery").ToLocalChecked(), BatteryGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "clipboard").ToLocalChecked(), ClipboardGetter);
-    instance_template->SetAccessor(String::NewFromUtf8(isolate, "storageQuota").ToLocalChecked(), StorageQuotaGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "webgl", &Navigator::WebGLGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "xr", &Navigator::WebXRGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "serviceWorker", &Navigator::ServiceWorkerGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "geolocation", &Navigator::GeolocationGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "mediaDevices", &Navigator::MediaDevicesGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "permissions", &Navigator::PermissionsGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "getBattery", &Navigator::BatteryGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "clipboard", &Navigator::ClipboardGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "storageQuota", &Navigator::StorageQuotaGetter);
 
     // Methods
-    prototype_template->Set(String::NewFromUtf8(isolate, "javaEnabled").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, JavaEnabled));
+    InstanceMethod(isolate, prototype, "javaEnabled", &Navigator::JavaEnabled);
   }
 
   Local<Object> Navigator::NewInstance(Isolate *isolate, std::shared_ptr<browser::Navigator> nativeNavigator)
@@ -65,286 +63,240 @@ namespace script_bindings
   }
 
   // Browser identification property getters
-  void Navigator::UserAgentGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::UserAgentGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      std::cerr << "navigator: " << navigator << ", inner: " << navigator->inner().get() << std::endl;
-      auto userAgent = navigator->inner()->GetUserAgent();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, userAgent.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    string userAgent = handle()->userAgent();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  userAgent.c_str())
+                                .ToLocalChecked());
   }
 
-  void Navigator::PlatformGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::PlatformGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto platform = navigator->inner()->GetPlatform();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, platform.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto platform = handle()->platform();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  platform.c_str())
+                                .ToLocalChecked());
   }
 
-  void Navigator::VendorGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::VendorGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto vendor = navigator->inner()->GetVendor();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, vendor.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto vendor = handle()->vendor();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, vendor.c_str()).ToLocalChecked());
   }
 
-  void Navigator::VendorSubGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::VendorSubGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto vendorSub = navigator->inner()->GetVendorSub();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, vendorSub.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto vendorSub = handle()->vendorSub();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, vendorSub.c_str()).ToLocalChecked());
   }
 
-  void Navigator::ProductGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::ProductGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto product = navigator->inner()->GetProduct();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, product.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto product = handle()->product();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, product.c_str()).ToLocalChecked());
   }
 
-  void Navigator::ProductSubGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::ProductSubGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto productSub = navigator->inner()->GetProductSub();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, productSub.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto productSub = handle()->productSub();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, productSub.c_str()).ToLocalChecked());
   }
 
   // Browser capabilities property getters
-  void Navigator::OnLineGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::OnLineGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->IsOnLine());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->isOnline());
   }
 
-  void Navigator::CookieEnabledGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::CookieEnabledGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->IsCookieEnabled());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->isCookieEnabled());
   }
 
-  void Navigator::DoNotTrackGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::DoNotTrackGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->IsDoNotTrack());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->isDoNotTrack());
   }
 
-  void Navigator::HardwareConcurrencyGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::HardwareConcurrencyGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->GetHardwareConcurrency());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->hardwareConcurrency());
   }
 
-  void Navigator::MaxTouchPointsGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::MaxTouchPointsGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(static_cast<int32_t>(navigator->inner()->GetMaxTouchPoints()));
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(static_cast<int32_t>(handle()->maxTouchPoints()));
   }
 
   // Language support property getters
-  void Navigator::LanguageGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::LanguageGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto language = navigator->inner()->GetLanguage();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, language.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto language = handle()->language();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, language.c_str()).ToLocalChecked());
   }
 
-  void Navigator::LanguagesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::LanguagesGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto context = isolate->GetCurrentContext();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto languages = navigator->inner()->GetLanguages();
-      auto array = Array::New(isolate, static_cast<int>(languages.size()));
+    HandleScope scope(isolate);
 
-      for (size_t i = 0; i < languages.size(); ++i)
-      {
-        auto languageStr = String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked();
-        array->Set(context,
-                   static_cast<uint32_t>(i),
-                   languageStr)
-          .ToChecked();
-      }
-      info.GetReturnValue().Set(array);
+    auto context = isolate->GetCurrentContext();
+
+    auto languages = handle()->languages();
+    auto array = Array::New(isolate, static_cast<int>(languages.size()));
+
+    for (size_t i = 0; i < languages.size(); ++i)
+    {
+      auto languageStr = String::NewFromUtf8(isolate, languages[i].c_str()).ToLocalChecked();
+      array->Set(context,
+                 static_cast<uint32_t>(i),
+                 languageStr)
+        .ToChecked();
     }
+    info.GetReturnValue().Set(array);
   }
 
   // User preferences property getters
-  void Navigator::JavaEnabledGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::JavaEnabledGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->IsJavaEnabled());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->isJavaEnabled());
   }
 
-  void Navigator::ColorSchemeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::ColorSchemeGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      auto colorScheme = navigator->inner()->GetColorScheme();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorScheme.c_str()).ToLocalChecked());
-    }
+    HandleScope scope(isolate);
+
+    auto colorScheme = handle()->colorScheme();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate, colorScheme.c_str()).ToLocalChecked());
   }
 
   // Platform features property getters
-  void Navigator::WebGLGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::WebGLGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->HasWebGL());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->hasWebGL());
   }
 
-  void Navigator::WebXRGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::WebXRGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual XRSystem instance
-      info.GetReturnValue().Set(Undefined(info.GetIsolate()));
-    }
+    HandleScope scope(isolate);
+
+    auto xrValue = webxr_bindings::XRSystem::GetOrNewInstance(isolate, handle()->getXRSystem());
+    info.GetReturnValue().Set(xrValue);
   }
 
-  void Navigator::ServiceWorkerGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::ServiceWorkerGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual ServiceWorkerContainer instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual ServiceWorkerContainer instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::GeolocationGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::GeolocationGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual Geolocation instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual Geolocation instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::MediaDevicesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::MediaDevicesGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual MediaDevices instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual MediaDevices instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::PermissionsGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::PermissionsGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual Permissions instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual Permissions instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::BatteryGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::BatteryGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual Battery instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual Battery instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::ClipboardGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::ClipboardGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      // TODO: Return actual Clipboard instance
-      info.GetReturnValue().Set(Undefined(isolate));
-    }
+    HandleScope scope(isolate);
+
+    // TODO: Return actual Clipboard instance
+    info.GetReturnValue().Set(Undefined(isolate));
   }
 
-  void Navigator::StorageQuotaGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Navigator::StorageQuotaGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(static_cast<double>(navigator->inner()->GetStorageQuota()));
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(static_cast<double>(handle()->getStorageQuota()));
   }
 
   // Methods
   void Navigator::JavaEnabled(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
-    auto navigator = Unwrap(isolate, info.This());
-    if (navigator)
-    {
-      info.GetReturnValue().Set(navigator->inner()->IsJavaEnabled());
-    }
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(handle()->isJavaEnabled());
   }
 }
