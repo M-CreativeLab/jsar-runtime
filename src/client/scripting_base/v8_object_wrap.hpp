@@ -313,6 +313,31 @@ namespace scripting_base
 
   protected:
     /**
+     * Sets a read-only instance property with the specified name and value on a V8 ObjectTemplate.
+     *
+     * @param isolate         The V8 isolate in which to create the property.
+     * @param objectTemplate  The V8 ObjectTemplate to which the property will be added.
+     * @param name            The name of the property to set.
+     * @param value           The value to assign to the property.
+     *
+     * This function adds a read-only property with the given name and value to the provided
+     * ObjectTemplate, making it available on instances created from this template.
+     */
+    template <typename V>
+    static void IntegerConstant(v8::Isolate *isolate,
+                                v8::Local<v8::FunctionTemplate> tpl,
+                                const char *name,
+                                V value)
+    {
+      v8::HandleScope scope(isolate);
+      v8::Local<v8::String> nameString = v8::String::NewFromUtf8(isolate, name).ToLocalChecked();
+      v8::Local<v8::Number> valueNumber = v8::Integer::New(isolate, static_cast<int>(value));
+      v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>(v8::PropertyAttribute::ReadOnly |
+                                                                            v8::PropertyAttribute::DontDelete);
+      tpl->Set(nameString, valueNumber, attributes);
+      tpl->PrototypeTemplate()->Set(nameString, valueNumber, attributes);
+    }
+    /**
      * Create a standardized method callback for instance methods.
      * 
      * @param isolate The v8::Isolate instance.

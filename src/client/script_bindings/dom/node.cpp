@@ -13,6 +13,26 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
+#define NODE_TYPE_MAP(XX) \
+  XX(ATTRIBUTE_NODE)     \
+  XX(CDATA_SECTION_NODE) \
+  XX(COMMENT_NODE)      \
+  XX(DOCUMENT_FRAGMENT_NODE) \
+  XX(DOCUMENT_NODE)     \
+  XX(DOCUMENT_TYPE_NODE) \
+  XX(ELEMENT_NODE)      \
+  XX(ENTITY_NODE)       \
+  XX(ENTITY_REFERENCE_NODE) \
+  XX(NOTATION_NODE)    \
+  XX(PROCESSING_INSTRUCTION_NODE) \
+  XX(TEXT_NODE)
+#define XX(TYPE) \
+    IntegerConstant(isolate, tpl, #TYPE, ::dom::NodeType::TYPE);
+
+    NODE_TYPE_MAP(XX)
+#undef XX
+#undef NODE_TYPE_MAP
+
     // Add property accessors
     InstanceReadonlyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
     InstanceReadonlyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
