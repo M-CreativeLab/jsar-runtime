@@ -81,8 +81,8 @@ namespace script_bindings
 
       if (nativeElement->isHTMLElement())
       {
-        return scope.Escape(html_bindings::HTMLElement::NewInstance(
-          isolate, static_pointer_cast<::dom::HTMLElement>(nativeElement)));
+        auto htmlElement = static_pointer_cast<::dom::HTMLElement>(nativeElement);
+        return scope.Escape(html_bindings::HTMLElement::NewInstance(isolate, htmlElement));
       }
       else
       {

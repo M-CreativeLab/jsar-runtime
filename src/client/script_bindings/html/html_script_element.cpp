@@ -9,13 +9,6 @@ namespace script_bindings::html_bindings
   {
   }
 
-  Local<Object> HTMLScriptElement::NewInstance(Isolate *isolate,
-                                               shared_ptr<dom::HTMLScriptElement> nativeElement)
-  {
-    assert(nativeElement != nullptr);
-    return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
-  }
-
   HTMLScriptElement::HTMLScriptElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLScriptElementBase(isolate, args)
   {

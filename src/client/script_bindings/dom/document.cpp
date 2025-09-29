@@ -12,7 +12,6 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
-    // static
     void Document::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
@@ -35,7 +34,6 @@ namespace script_bindings
       InstanceMethod(isolate, prototype, "querySelectorAll", &Document::QuerySelectorAll);
     }
 
-    // static
     Local<Object> Document::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Document> nativeDocument)
     {
       EscapableHandleScope scope(isolate);
@@ -51,7 +49,6 @@ namespace script_bindings
 
     // Property getters and setters
 
-    // static
     void Document::DocumentElementGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -69,7 +66,6 @@ namespace script_bindings
       }
     }
 
-    // static
     void Document::BodyGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -81,7 +77,6 @@ namespace script_bindings
                : info.GetReturnValue().Set(html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement));
     }
 
-    // static
     void Document::BodySetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -92,7 +87,6 @@ namespace script_bindings
       return;
     }
 
-    // static
     void Document::HeadGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -104,7 +98,6 @@ namespace script_bindings
                : info.GetReturnValue().Set(html_bindings::HTMLHeadElement::GetOrNewInstance(isolate, headElement));
     }
 
-    // static
     void Document::TitleGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -115,7 +108,6 @@ namespace script_bindings
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, title.c_str()).ToLocalChecked());
     }
 
-    // static
     void Document::TitleSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -128,33 +120,36 @@ namespace script_bindings
 
     // Methods
 
-    // static
     void Document::CreateElement(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
       if (info.Length() < 1)
       {
         isolate->ThrowException(
-          Exception::TypeError(ErrorMessage(isolate,
-                                            "createElement",
-                                            "1 argument required, but only 0 present")));
+          Exception::TypeError(MakeMethodError(isolate,
+                                               "createElement",
+                                               "1 argument required, but only 0 present")));
         return;
       }
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
+      if (!info[0]->IsString())
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(
+          Exception::TypeError(MakeMethodError(isolate,
+                                               "createElement",
+                                               "Argument 1 must be a string")));
         return;
       }
 
-      String::Utf8Value tagName(isolate, info[0]);
-      auto element = document->inner()->createElement(string(*tagName));
+      String::Utf8Value tagName(isolate, info[0]->ToString(context).ToLocalChecked());
+      string tagNameStr = string(*tagName);
+
+      auto element = handle()->createElement(tagNameStr);
       if (element != nullptr)
       {
-        Local<Object> elementWrapper = Node::NewInstance(isolate, element);
+        Local<Object> elementWrapper = Element::NewInstance(isolate, element);
         info.GetReturnValue().Set(elementWrapper);
       }
       else
@@ -163,7 +158,6 @@ namespace script_bindings
       }
     }
 
-    // static
     void Document::CreateTextNode(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -198,7 +192,6 @@ namespace script_bindings
       }
     }
 
-    // static
     void Document::CreateComment(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -233,7 +226,6 @@ namespace script_bindings
       }
     }
 
-    // static
     void Document::GetElementById(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -259,7 +251,6 @@ namespace script_bindings
       }
     }
 
-    // static
     void Document::GetElementsByTagName(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -285,7 +276,6 @@ namespace script_bindings
       info.GetReturnValue().Set(resultArray);
     }
 
-    // static
     void Document::GetElementsByClassName(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -303,7 +293,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Array::New(isolate, 0));
     }
 
-    // static
     void Document::QuerySelector(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -321,7 +310,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void Document::QuerySelectorAll(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
