@@ -9,13 +9,6 @@ namespace script_bindings::html_bindings
   {
   }
 
-  Local<Object> HTMLParagraphElement::NewInstance(Isolate *isolate,
-                                                  shared_ptr<dom::HTMLParagraphElement> nativeElement)
-  {
-    assert(nativeElement != nullptr);
-    return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
-  }
-
   HTMLParagraphElement::HTMLParagraphElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLParagraphElementBase(isolate, args)
   {

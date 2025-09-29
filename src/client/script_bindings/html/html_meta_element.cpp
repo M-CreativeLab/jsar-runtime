@@ -9,13 +9,6 @@ namespace script_bindings::html_bindings
   {
   }
 
-  Local<Object> HTMLMetaElement::NewInstance(Isolate *isolate,
-                                             shared_ptr<dom::HTMLMetaElement> nativeElement)
-  {
-    assert(nativeElement != nullptr);
-    return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
-  }
-
   HTMLMetaElement::HTMLMetaElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLMetaElementBase(isolate, args)
   {

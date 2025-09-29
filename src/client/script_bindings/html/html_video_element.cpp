@@ -43,19 +43,6 @@ namespace script_bindings
                               FunctionTemplate::New(isolate, RequestPictureInPicture));
     }
 
-    Local<Object> HTMLVideoElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLVideoElement> nativeElement)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeElement != nullptr
-               ? scope.Escape(HTMLVideoElementBase::NewInstance(isolate, nativeElement).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
-    Local<Function> HTMLVideoElement::Initialize(Isolate *isolate)
-    {
-      return HTMLVideoElementBase::Initialize(isolate);
-    }
-
     // Video-specific property getters/setters
     void HTMLVideoElement::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {

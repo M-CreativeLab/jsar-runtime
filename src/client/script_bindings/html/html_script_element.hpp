@@ -15,9 +15,6 @@ namespace script_bindings
     class HTMLScriptElement : public HTMLScriptElementBase
     {
     public:
-      /**
-       * The name of the HTMLScriptElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLScriptElement";

@@ -9,13 +9,6 @@ namespace script_bindings::html_bindings
   {
   }
 
-  Local<Object> HTMLSpanElement::NewInstance(Isolate *isolate,
-                                             shared_ptr<dom::HTMLSpanElement> nativeElement)
-  {
-    assert(nativeElement != nullptr);
-    return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
-  }
-
   HTMLSpanElement::HTMLSpanElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLSpanElementBase(isolate, args)
   {

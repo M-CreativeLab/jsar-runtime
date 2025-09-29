@@ -24,10 +24,7 @@ namespace script_bindings
       {
         return "HTMLMetaElement";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<dom::HTMLMetaElement> nativeElement);
 
     public:
       HTMLMetaElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

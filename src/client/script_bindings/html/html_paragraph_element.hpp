@@ -14,20 +14,12 @@ namespace script_bindings
 
     class HTMLParagraphElement : public HTMLParagraphElementBase
     {
-      using HTMLParagraphElementBase::ObjectWrap;
-
     public:
-      /**
-       * The name of the HTMLParagraphElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLParagraphElement";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<dom::HTMLParagraphElement> nativeElement);
 
     public:
       HTMLParagraphElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

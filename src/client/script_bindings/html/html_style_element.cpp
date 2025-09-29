@@ -9,13 +9,6 @@ namespace script_bindings::html_bindings
   {
   }
 
-  Local<Object> HTMLStyleElement::NewInstance(Isolate *isolate,
-                                              shared_ptr<dom::HTMLStyleElement> nativeElement)
-  {
-    assert(nativeElement != nullptr);
-    return HTMLElement::NewInstance(isolate, nativeElement).As<Object>();
-  }
-
   HTMLStyleElement::HTMLStyleElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLStyleElementBase(isolate, args)
   {

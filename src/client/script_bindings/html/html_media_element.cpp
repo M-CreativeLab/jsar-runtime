@@ -28,24 +28,6 @@ namespace script_bindings
                              FunctionTemplate::New(isolate, Load));
     }
 
-    Local<Object> HTMLMediaElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLMediaElement> nativeMediaElement)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeMediaElement == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(HTMLMediaElementBase::NewInstance(isolate, nativeMediaElement).As<Object>());
-      }
-    }
-
-    Local<Function> HTMLMediaElement::Initialize(Isolate *isolate)
-    {
-      return HTMLMediaElementBase::Initialize(isolate);
-    }
-
     HTMLMediaElement::HTMLMediaElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLMediaElementBase(isolate, args)
     {
