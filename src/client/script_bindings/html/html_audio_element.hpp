@@ -37,20 +37,6 @@ namespace script_bindings
        * Configure the V8 function template with HTMLAudioElement properties and methods.
        */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 HTMLAudioElement instance from a native dom::HTMLAudioElement.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLAudioElement> nativeElement);
-
-      /**
-       * Initialize the HTMLAudioElement class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
-
-      /**
-       * Audio constructor function for JavaScript new Audio() calls.
-       */
       static void AudioConstructor(const v8::FunctionCallbackInfo<v8::Value> &info);
 
     public:

@@ -14,8 +14,6 @@ namespace script_bindings
 
     class HTMLHtmlElement : public HTMLHtmlElementBase
     {
-      using HTMLHtmlElementBase::ObjectWrap;
-
     public:
       /**
        * The name of the HTMLHtmlElement class for V8.
@@ -24,10 +22,7 @@ namespace script_bindings
       {
         return "HTMLHtmlElement";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<dom::HTMLHtmlElement> nativeElement);
 
     public:
       HTMLHtmlElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

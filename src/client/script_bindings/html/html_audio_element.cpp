@@ -35,24 +35,6 @@ namespace script_bindings::html_bindings
                                   DurationGetter);
   }
 
-  Local<Object> HTMLAudioElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLAudioElement> nativeElement)
-  {
-    EscapableHandleScope scope(isolate);
-    if (nativeElement == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(HTMLAudioElementBase::NewInstance(isolate, nativeElement).As<Object>());
-    }
-  }
-
-  Local<Function> HTMLAudioElement::Initialize(Isolate *isolate)
-  {
-    return HTMLAudioElement::ObjectWrap::Initialize(isolate);
-  }
-
   void HTMLAudioElement::AudioConstructor(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();

@@ -14,8 +14,6 @@ namespace script_bindings
 
     class HTMLImageElement : public HTMLImageElementBase
     {
-      using HTMLImageElementBase::ObjectWrap;
-
     public:
       /**
        * The name of the HTMLImageElement class for V8.
@@ -24,10 +22,7 @@ namespace script_bindings
       {
         return "HTMLImageElement";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<dom::HTMLImageElement> nativeElement);
 
     public:
       HTMLImageElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

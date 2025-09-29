@@ -16,26 +16,6 @@ namespace script_bindings
       // In a full implementation, specific HTML elements would add their own properties
     }
 
-    // static
-    Local<Object> HTMLDivElement::NewInstance(Isolate *isolate, std::shared_ptr<::dom::HTMLDivElement> nativeElement)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeElement == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(HTMLDivElementBase::NewInstance(isolate, nativeElement).As<Object>());
-      }
-    }
-
-    // static
-    Local<Function> HTMLDivElement::Initialize(Isolate *isolate)
-    {
-      return HTMLDivElementBase::Initialize(isolate);
-    }
-
     HTMLDivElement::HTMLDivElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLDivElementBase(isolate, args)
     {

@@ -25,28 +25,11 @@ namespace script_bindings
       using HTMLInputElementBase::ObjectWrap;
 
     public:
-      /**
-       * The name of the HTMLInputElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLInputElement";
       }
-
-      /**
-       * Configure the V8 function template with HTMLInputElement properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 HTMLInputElement instance from a native dom::HTMLInputElement.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::HTMLInputElement> nativeElement);
-
-      /**
-       * Initialize the HTMLInputElement class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       HTMLInputElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

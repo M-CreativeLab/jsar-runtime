@@ -58,19 +58,6 @@ namespace script_bindings
                               v8::FunctionTemplate::New(isolate, Select));
     }
 
-    Local<Object> HTMLInputElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLInputElement> nativeElement)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeElement != nullptr
-               ? scope.Escape(HTMLInputElementBase::NewInstance(isolate, nativeElement).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
-    v8::Local<v8::Function> HTMLInputElement::Initialize(v8::Isolate *isolate)
-    {
-      return HTMLInputElementBase::Initialize(isolate);
-    }
-
     // Input property getters/setters
     void HTMLInputElement::TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
     {

@@ -11,19 +11,6 @@ namespace script_bindings
     {
     }
 
-    Local<Object> HTMLHeadElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLHeadElement> nativeHeadElement)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeHeadElement == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(HTMLHeadElementBase::NewInstance(isolate, nativeHeadElement).As<Object>());
-      }
-    }
-
     HTMLHeadElement::HTMLHeadElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLHeadElementBase(isolate, args)
     {

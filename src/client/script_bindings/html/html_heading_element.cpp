@@ -10,24 +10,6 @@ namespace script_bindings
     {
     }
 
-    Local<Object> HTMLHeadingElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLHeadingElement> nativeHeadingElement)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeHeadingElement == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(HTMLHeadingElementBase::NewInstance(isolate, nativeHeadingElement).As<Object>());
-      }
-    }
-
-    Local<Function> HTMLHeadingElement::Initialize(Isolate *isolate)
-    {
-      return HTMLHeadingElementBase::Initialize(isolate);
-    }
-
     HTMLHeadingElement::HTMLHeadingElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLHeadingElementBase(isolate, args)
     {

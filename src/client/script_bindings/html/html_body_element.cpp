@@ -32,14 +32,6 @@ namespace script_bindings
                                      OnResizeSetter);
     }
 
-    Local<Object> HTMLBodyElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLBodyElement> nativeElement)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeElement != nullptr
-               ? scope.Escape(HTMLBodyElementBase::NewInstance(isolate, nativeElement).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
     // Event handler property getters/setters
     void HTMLBodyElement::OnLoadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
     {

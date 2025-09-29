@@ -24,24 +24,6 @@ namespace script_bindings
                              FunctionTemplate::New(isolate, Click));
     }
 
-    Local<Object> HTMLButtonElement::NewInstance(Isolate *isolate, std::shared_ptr<dom::HTMLButtonElement> nativeButtonElement)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeButtonElement == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(HTMLButtonElementBase::NewInstance(isolate, nativeButtonElement).As<Object>());
-      }
-    }
-
-    Local<Function> HTMLButtonElement::Initialize(Isolate *isolate)
-    {
-      return HTMLButtonElementBase::Initialize(isolate);
-    }
-
     HTMLButtonElement::HTMLButtonElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLButtonElementBase(isolate, args)
     {

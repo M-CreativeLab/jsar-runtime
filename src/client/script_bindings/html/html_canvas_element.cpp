@@ -25,24 +25,6 @@ namespace script_bindings::html_bindings
                                   HeightSetter);
   }
 
-  Local<Object> HTMLCanvasElement::NewInstance(Isolate *isolate, shared_ptr<dom::HTMLCanvasElement> nativeElement)
-  {
-    EscapableHandleScope scope(isolate);
-    if (nativeElement == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(HTMLCanvasElementBase::NewInstance(isolate, nativeElement).As<Object>());
-    }
-  }
-
-  Local<Function> HTMLCanvasElement::Initialize(Isolate *isolate)
-  {
-    return HTMLCanvasElement::ObjectWrap::Initialize(isolate);
-  }
-
   HTMLCanvasElement::HTMLCanvasElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLCanvasElementBase(isolate, args)
   {
