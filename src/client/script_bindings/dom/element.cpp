@@ -1,5 +1,6 @@
-#include "./element.hpp"
 #include <iostream>
+#include <client/script_bindings/html/html_element.hpp>
+#include "./element.hpp"
 
 using namespace std;
 using namespace v8;
@@ -76,15 +77,17 @@ namespace script_bindings
     Local<Object> Element::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement)
     {
       EscapableHandleScope scope(isolate);
+      assert(nativeElement != nullptr && "The native element is null.");
 
-      if (nativeElement == nullptr)
+      if (nativeElement->isHTMLElement())
       {
-        return scope.Escape(Local<Object>());
+        return scope.Escape(html_bindings::HTMLElement::NewInstance(
+          isolate, static_pointer_cast<::dom::HTMLElement>(nativeElement)));
       }
-
-      // TODO: Create appropriate subclass instances based on element tag name
-      // For now, just create a basic Element wrapper
-      return scope.Escape(ElementBase::NewInstance(isolate, nativeElement).As<Object>());
+      else
+      {
+        return scope.Escape(ElementBase::NewInstance(isolate, nativeElement).As<Object>());
+      }
     }
 
     Element::Element(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

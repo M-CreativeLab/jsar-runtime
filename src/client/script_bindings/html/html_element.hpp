@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
-#include <client/html/html_element.hpp>
 #include <client/script_bindings/dom/element.hpp>
+#include <client/html/html_element.hpp>
 
 namespace script_bindings
 {
@@ -25,20 +25,9 @@ namespace script_bindings
         return "HTMLElement";
       }
 
-      /**
-       * Configure the V8 function template with HTMLElement properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 HTMLElement instance from a native dom::HTMLElement.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::HTMLElement> nativeElement);
-
-      /**
-       * Initialize the HTMLElement class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                               std::shared_ptr<::dom::HTMLElement> nativeElement);
 
     public:
       HTMLElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
@@ -55,5 +44,8 @@ namespace script_bindings
       static void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
       static void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
+
+    // Type alias
+    using HTMLSectionElement = HTMLElement;
   }
 }

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <client/dom/element.hpp>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/dom/node.hpp>
-#include <client/dom/element.hpp>
 
 namespace script_bindings
 {

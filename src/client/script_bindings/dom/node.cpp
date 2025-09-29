@@ -1,7 +1,11 @@
 #include <iostream>
 #include <client/dom/node.hpp>
 #include <client/dom/document.hpp>
-#include "./node.hpp"
+#include <client/script_bindings/dom/node.hpp>
+#include <client/script_bindings/dom/element.hpp>
+#include <client/script_bindings/dom/character_data.hpp>
+#include <client/script_bindings/dom/document.hpp>
+#include <client/script_bindings/dom/document_fragment.hpp>
 
 using namespace std;
 using namespace v8;
@@ -13,21 +17,21 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
-#define NODE_TYPE_MAP(XX) \
-  XX(ATTRIBUTE_NODE)     \
-  XX(CDATA_SECTION_NODE) \
-  XX(COMMENT_NODE)      \
-  XX(DOCUMENT_FRAGMENT_NODE) \
-  XX(DOCUMENT_NODE)     \
-  XX(DOCUMENT_TYPE_NODE) \
-  XX(ELEMENT_NODE)      \
-  XX(ENTITY_NODE)       \
-  XX(ENTITY_REFERENCE_NODE) \
-  XX(NOTATION_NODE)    \
+#define NODE_TYPE_MAP(XX)         \
+  XX(ATTRIBUTE_NODE)              \
+  XX(CDATA_SECTION_NODE)          \
+  XX(COMMENT_NODE)                \
+  XX(DOCUMENT_FRAGMENT_NODE)      \
+  XX(DOCUMENT_NODE)               \
+  XX(DOCUMENT_TYPE_NODE)          \
+  XX(ELEMENT_NODE)                \
+  XX(ENTITY_NODE)                 \
+  XX(ENTITY_REFERENCE_NODE)       \
+  XX(NOTATION_NODE)               \
   XX(PROCESSING_INSTRUCTION_NODE) \
   XX(TEXT_NODE)
 #define XX(TYPE) \
-    IntegerConstant(isolate, tpl, #TYPE, ::dom::NodeType::TYPE);
+  IntegerConstant(isolate, tpl, #TYPE, ::dom::NodeType::TYPE);
 
     NODE_TYPE_MAP(XX)
 #undef XX
@@ -58,9 +62,27 @@ namespace script_bindings::dom_bindings
   Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
   {
     EscapableHandleScope scope(isolate);
-    if (nativeNode == nullptr)
+    assert(nativeNode != nullptr && "The native node is null.");
+
+    if (nativeNode->isDocument())
     {
-      return scope.Escape(Local<Object>());
+      return scope.Escape(Document::NewInstance(
+        isolate, static_pointer_cast<::dom::Document>(nativeNode)));
+    }
+    else if (nativeNode->isDocumentFragment())
+    {
+      return scope.Escape(DocumentFragment::NewInstance(
+        isolate, static_pointer_cast<::dom::DocumentFragment>(nativeNode)));
+    }
+    else if (nativeNode->isElement())
+    {
+      return scope.Escape(Element::NewInstance(
+        isolate, static_pointer_cast<::dom::Element>(nativeNode)));
+    }
+    else if (nativeNode->isCharacterData())
+    {
+      return scope.Escape(CharacterData::NewInstance(
+        isolate, static_pointer_cast<::dom::CharacterData>(nativeNode)));
     }
     else
     {

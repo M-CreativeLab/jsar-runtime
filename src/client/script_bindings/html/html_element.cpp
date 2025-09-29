@@ -1,4 +1,27 @@
 #include <iostream>
+#include <client/html/all_html_elements.hpp>
+
+#include "./html_audio_element.hpp"
+#include "./html_body_element.hpp"
+#include "./html_button_element.hpp"
+#include "./html_canvas_element.hpp"
+#include "./html_div_element.hpp"
+#include "./html_head_element.hpp"
+#include "./html_heading_element.hpp"
+#include "./html_html_element.hpp"
+#include "./html_iframe_element.hpp"
+#include "./html_image_element.hpp"
+#include "./html_input_element.hpp"
+#include "./html_link_element.hpp"
+#include "./html_media_element.hpp"
+#include "./html_meta_element.hpp"
+#include "./html_model_element.hpp"
+#include "./html_paragraph_element.hpp"
+#include "./html_script_element.hpp"
+#include "./html_span_element.hpp"
+#include "./html_style_element.hpp"
+#include "./html_template_element.hpp"
+#include "./html_video_element.hpp"
 #include "./html_element.hpp"
 
 using namespace std;
@@ -38,25 +61,24 @@ namespace script_bindings::html_bindings
   Local<Object> HTMLElement::NewInstance(Isolate *isolate, std::shared_ptr<::dom::HTMLElement> nativeElement)
   {
     EscapableHandleScope scope(isolate);
+    assert(nativeElement != nullptr && "nativeElement should not be null");
 
-    if (nativeElement == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(HTMLElementBase::NewInstance(isolate, nativeElement).As<Object>());
-    }
+#define XX(TAG_NAME_STR, ELEMENT_TYPE)                                    \
+  if (nativeElement->is(TAG_NAME_STR))                                    \
+  {                                                                       \
+    return scope.Escape(html_bindings::ELEMENT_TYPE::NewInstance(         \
+      isolate, static_pointer_cast<::dom::ELEMENT_TYPE>(nativeElement))); \
   }
 
-  // static
-  Local<Function> HTMLElement::Initialize(Isolate *isolate)
-  {
-    return HTMLElementBase::Initialize(isolate);
+    TYPED_ELEMENT_MAP(XX)
+#undef XX
+
+    // Fallback to return the HTMLElement type object.
+    return scope.Escape(HTMLElementBase::NewInstance(isolate, nativeElement).As<Object>());
   }
 
   HTMLElement::HTMLElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLElementBase(isolate, args)
+      : HTMLElementBase(isolate, args, false)
   {
   }
 
