@@ -10,6 +10,12 @@
 
     console.info('navigator.xr:', navigator.xr);
     console.info('navigator.gl', navigator.gl);
+    {
+      console.info('ACTIVE_ATTRIBUTES:', WebGL2RenderingContext.ACTIVE_ATTRIBUTES);
+      console.info('drawingBufferWidth:', navigator.gl.drawingBufferWidth);
+      console.info('drawingBufferHeight:', navigator.gl.drawingBufferHeight);
+      console.info(navigator.gl.texImage2D);
+    }
 
     console.info('window.URL', window.URL);
     console.info('window.fetch', window.fetch);

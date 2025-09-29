@@ -15,6 +15,7 @@ namespace browser
       , online_(true)
       , cookie_enabled_(true)
       , do_not_track_(false)
+      , gl_context_(client_context->createHostWebGLContext())
       , xr_system_(nullptr)
   {
     // If the scripting event loop is already ready, initialize the XRSystem immediately
@@ -110,7 +111,7 @@ namespace browser
 
   bool Navigator::hasWebGL() const
   {
-    return true; // WebGL supported
+    return gl_context_ != nullptr;
   }
 
   bool Navigator::hasWebXR() const

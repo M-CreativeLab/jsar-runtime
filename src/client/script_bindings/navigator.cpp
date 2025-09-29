@@ -1,4 +1,5 @@
 #include <client/script_bindings/webxr/xr_system.hpp>
+#include <client/script_bindings/webgl/webgl2_rendering_context.hpp>
 #include "navigator.hpp"
 
 using namespace std;
@@ -40,7 +41,7 @@ namespace script_bindings
     InstanceReadonlyAccessor(isolate, prototype, "colorScheme", &Navigator::ColorSchemeGetter);
 
     // Platform features (for capability detection)
-    InstanceReadonlyAccessor(isolate, prototype, "webgl", &Navigator::WebGLGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "gl", &Navigator::WebGLGetter);
     InstanceReadonlyAccessor(isolate, prototype, "xr", &Navigator::WebXRGetter);
     InstanceReadonlyAccessor(isolate, prototype, "serviceWorker", &Navigator::ServiceWorkerGetter);
     InstanceReadonlyAccessor(isolate, prototype, "geolocation", &Navigator::GeolocationGetter);
@@ -217,7 +218,8 @@ namespace script_bindings
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    info.GetReturnValue().Set(handle()->hasWebGL());
+    auto glValue = webgl_bindings::WebGL2RenderingContext::GetOrNewInstance(isolate, handle()->getWebGLContext());
+    info.GetReturnValue().Set(glValue);
   }
 
   void Navigator::WebXRGetter(const PropertyCallbackInfo<Value> &info)

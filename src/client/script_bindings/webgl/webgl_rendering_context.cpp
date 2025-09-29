@@ -370,7 +370,7 @@ namespace script_bindings
       SetupConstants(isolate, tpl);
 
       // Set up the WebGL 1.0 API methods and properties
-      auto prototype = tpl->InstanceTemplate();
+      auto prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL1_ACCESSOR(NAME, GETTER, SETTER) \
   prototype->SetAccessor(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), GETTER, SETTER);
@@ -378,9 +378,15 @@ namespace script_bindings
   prototype->Set(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), FunctionTemplate::New(isolate, CALLBACK));
 
       // Getters and setters
-      ADD_WEBGL1_ACCESSOR("canvas", CanvasGetter, nullptr)
-      ADD_WEBGL1_ACCESSOR("drawingBufferWidth", DrawingBufferWidthGetter, nullptr)
-      ADD_WEBGL1_ACCESSOR("drawingBufferHeight", DrawingBufferHeightGetter, nullptr)
+      InstanceReadonlyAccessor(isolate, prototype, "canvas", &WebGLRenderingContext::CanvasGetter);
+      InstanceReadonlyAccessor(isolate,
+                               prototype,
+                               "drawingBufferWidth",
+                               &WebGLRenderingContext::DrawingBufferWidthGetter);
+      InstanceReadonlyAccessor(isolate,
+                               prototype,
+                               "drawingBufferHeight",
+                               &WebGLRenderingContext::DrawingBufferHeightGetter);
 
       // Methods
       ADD_WEBGL1_METHOD("getContextAttributes", GetContextAttributes)
@@ -517,34 +523,31 @@ namespace script_bindings
     }
 
     // Method implementations - stubs for now, would need native implementation
-    void WebGLRenderingContext::CanvasGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void WebGLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
-      {
-        // Implementation would call native getContextAttributes method
-      }
+      HandleScope scope(isolate);
+
+      // TODO(yorkie): Return the actual canvas associated with this WebGL context.
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::DrawingBufferWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void WebGLRenderingContext::DrawingBufferWidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
-      {
-        // Implementation would return the drawing buffer width from native context
-      }
+      HandleScope scope(isolate);
+
+      auto width = handle()->drawingBufferWidth();
+      info.GetReturnValue().Set(Integer::New(isolate, width));
     }
 
-    void WebGLRenderingContext::DrawingBufferHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void WebGLRenderingContext::DrawingBufferHeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
-      {
-        // Implementation would return the drawing buffer height from native context
-      }
+      HandleScope scope(isolate);
+
+      auto height = handle()->drawingBufferHeight();
+      info.GetReturnValue().Set(Integer::New(isolate, height));
     }
 
     void WebGLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)

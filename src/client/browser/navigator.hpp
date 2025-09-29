@@ -5,6 +5,7 @@
 #include <vector>
 #include <client/per_process.hpp>
 #include <client/scripting_base/v8_object_holder.hpp>
+#include <client/graphics/webgl_context.hpp>
 #include <client/xr/webxr_system.hpp>
 
 namespace browser
@@ -63,6 +64,10 @@ namespace browser
     long long getStorageQuota() const;
 
     // Components
+    inline std::shared_ptr<client_graphics::WebGL2Context> getWebGLContext() const
+    {
+      return gl_context_;
+    }
     inline std::shared_ptr<client_xr::XRSystem> getXRSystem() const
     {
       return xr_system_;
@@ -83,6 +88,7 @@ namespace browser
     bool do_not_track_;
 
     // Components
+    std::shared_ptr<client_graphics::WebGL2Context> gl_context_;
     std::shared_ptr<client_xr::XRSystem> xr_system_;
   };
 }

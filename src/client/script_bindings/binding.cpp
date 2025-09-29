@@ -43,6 +43,19 @@
 #include "./html/html_template_element.hpp"
 #include "./html/html_video_element.hpp"
 
+// WebGL bindings
+#include "./webgl/active_info.hpp"
+#include "./webgl/buffer.hpp"
+#include "./webgl/framebuffer.hpp"
+#include "./webgl/program.hpp"
+#include "./webgl/renderbuffer.hpp"
+#include "./webgl/shader.hpp"
+#include "./webgl/texture.hpp"
+#include "./webgl/uniform_location.hpp"
+#include "./webgl/vertex_array.hpp"
+#include "./webgl/webgl_rendering_context.hpp"
+#include "./webgl/webgl2_rendering_context.hpp"
+
 // WebXR bindings
 #include "./webxr/xr_space.hpp"
 #include "./webxr/xr_session.hpp"
@@ -161,6 +174,23 @@ namespace script_bindings
                                   .ToLocalChecked();
         global->Set(context, NAME("Audio"), AudioConstructor).Check();
       }
+
+      // WebGL classes
+#define ADD_WEBGL_TYPE(X) \
+  global->Set(context, NAME(#X), webgl_bindings::X::Initialize(isolate)).Check();
+
+      ADD_WEBGL_TYPE(WebGLActiveInfo)
+      ADD_WEBGL_TYPE(WebGLBuffer)
+      ADD_WEBGL_TYPE(WebGLFramebuffer)
+      ADD_WEBGL_TYPE(WebGLProgram)
+      ADD_WEBGL_TYPE(WebGLRenderbuffer)
+      ADD_WEBGL_TYPE(WebGLShader)
+      ADD_WEBGL_TYPE(WebGLTexture)
+      ADD_WEBGL_TYPE(WebGLUniformLocation)
+      ADD_WEBGL_TYPE(WebGLVertexArray)
+      ADD_WEBGL_TYPE(WebGLRenderingContext)
+      ADD_WEBGL_TYPE(WebGL2RenderingContext)
+#undef ADD_WEBGL_TYPE
 
       // WebXR classes
       // Initialize WebXR classes

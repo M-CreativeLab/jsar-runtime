@@ -334,7 +334,7 @@ namespace script_bindings
       SetupConstants(isolate, tpl);
 
       // Set up WebGL 2.0 specific methods
-      auto prototype = tpl->InstanceTemplate();
+      auto prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL2_METHOD(NAME, CALLBACK) \
   prototype->Set(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), FunctionTemplate::New(isolate, CALLBACK));

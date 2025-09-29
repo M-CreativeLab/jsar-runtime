@@ -35,9 +35,9 @@ namespace script_bindings
 
     private:
       // Canvas properties
-      static void CanvasGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DrawingBufferWidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DrawingBufferHeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DrawingBufferWidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DrawingBufferHeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Basic methods
       static void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);

@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <common/utility.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include <client/xr/common.hpp>
 
 #include "../per_process.hpp"
@@ -269,7 +270,7 @@ namespace client_graphics
    * The `WebGLContext` class implements the WebGLRenderingContext interface in C/C++ at the client-side, this is used to
    * implement the WebGL API, and support native C/C++ renderer.
    */
-  class WebGLContext
+  class WebGLContext : public scripting_base::JSObjectHolder
   {
     friend class WebGLProgramScope;
     friend class client_xr::XRSession;      // Allow XRSession to call `connectXRSession()`.
@@ -873,7 +874,7 @@ namespace client_graphics
     weak_ptr<client_xr::XRSession> connectedXRSession_;
   };
 
-  class WebGL2Context : public WebGLContext
+  class WebGL2Context final : public WebGLContext
   {
   public:
     /**
