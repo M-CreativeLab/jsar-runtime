@@ -32,34 +32,34 @@ namespace script_bindings
       }
 
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Node> handle);
 
     public:
       Node(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void NodeNameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NodeTypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NodeValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NodeValueSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ParentNodeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void FirstChildGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void LastChildGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NextSiblingGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PreviousSiblingGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OwnerDocumentGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TextContentGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TextContentSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void NodeNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NodeTypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NodeValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NodeValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ParentNodeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void FirstChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LastChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NextSiblingGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PreviousSiblingGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void OwnerDocumentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TextContentGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TextContentSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
-      static void AppendChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void RemoveChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void InsertBefore(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ReplaceChild(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Contains(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void AppendChild(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void RemoveChild(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InsertBefore(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ReplaceChild(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Contains(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

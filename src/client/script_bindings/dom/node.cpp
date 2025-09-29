@@ -8,103 +8,33 @@ using namespace v8;
 
 namespace script_bindings::dom_bindings
 {
-  // static
   void Node::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
-
-    // Set up the instance template
-    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeName").ToLocalChecked(),
-                                   NodeNameGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeType").ToLocalChecked(),
-                                   NodeTypeGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nodeValue").ToLocalChecked(),
-                                   NodeValueGetter,
-                                   NodeValueSetter);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "parentNode").ToLocalChecked(),
-                                   ParentNodeGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "firstChild").ToLocalChecked(),
-                                   FirstChildGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "lastChild").ToLocalChecked(),
-                                   LastChildGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "nextSibling").ToLocalChecked(),
-                                   NextSiblingGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "previousSibling").ToLocalChecked(),
-                                   PreviousSiblingGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "ownerDocument").ToLocalChecked(),
-                                   OwnerDocumentGetter,
-                                   nullptr,
-                                   Local<Value>(),
-                                   AccessControl::DEFAULT,
-                                   PropertyAttribute::ReadOnly);
-
-    prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "textContent").ToLocalChecked(),
-                                   TextContentGetter,
-                                   TextContentSetter);
+    InstanceReadonlyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "previousSibling", &Node::PreviousSiblingGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "ownerDocument", &Node::OwnerDocumentGetter);
+    InstanceAccessor(isolate, prototype, "nodeValue", &Node::NodeValueGetter, &Node::NodeValueSetter);
+    InstanceAccessor(isolate, prototype, "textContent", &Node::TextContentGetter, &Node::TextContentSetter);
 
     // Add methods
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "appendChild").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, AppendChild));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeChild").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, RemoveChild));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "insertBefore").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, InsertBefore));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "replaceChild").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, ReplaceChild));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "cloneNode").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, CloneNode));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "hasChildNodes").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, HasChildNodes));
-
-    prototypeTemplate->Set(String::NewFromUtf8(isolate, "contains").ToLocalChecked(),
-                           FunctionTemplate::New(isolate, Contains));
+    InstanceMethod(isolate, prototype, "appendChild", &Node::AppendChild);
+    InstanceMethod(isolate, prototype, "removeChild", &Node::RemoveChild);
+    InstanceMethod(isolate, prototype, "insertBefore", &Node::InsertBefore);
+    InstanceMethod(isolate, prototype, "replaceChild", &Node::ReplaceChild);
+    InstanceMethod(isolate, prototype, "cloneNode", &Node::CloneNode);
+    InstanceMethod(isolate, prototype, "hasChildNodes", &Node::HasChildNodes);
+    InstanceMethod(isolate, prototype, "contains", &Node::Contains);
   }
 
-  // static
   Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
   {
     EscapableHandleScope scope(isolate);
@@ -119,107 +49,68 @@ namespace script_bindings::dom_bindings
   }
 
   Node::Node(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : NodeBase(isolate, args)
+      : NodeBase(isolate, args, true)
   {
   }
 
   // Property getters
 
-  // static
-  void Node::NodeNameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::NodeNameGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    string nodeName = node->inner()->nodeName;
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, nodeName.c_str()).ToLocalChecked());
+    string nodeName = handle()->nodeName;
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  nodeName.c_str())
+                                .ToLocalChecked());
   }
 
-  // static
-  void Node::NodeTypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::NodeTypeGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetUndefined();
-      return;
-    }
-
-    int nodeType = static_cast<int>(node->inner()->nodeType);
+    int nodeType = static_cast<int>(handle()->nodeType);
     info.GetReturnValue().Set(Integer::New(isolate, nodeType));
   }
 
-  // static
-  void Node::NodeValueGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::NodeValueGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    optional<string> nodeValue = node->inner()->nodeValue();
+    optional<string> nodeValue = handle()->nodeValue();
     if (!nodeValue.has_value())
-    {
       info.GetReturnValue().SetNull();
-    }
     else
-    {
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, nodeValue.value_or("").c_str()).ToLocalChecked());
-    }
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    nodeValue.value_or("").c_str())
+                                  .ToLocalChecked());
   }
 
-  // static
-  void Node::NodeValueSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void Node::NodeValueSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      return;
-    }
 
     if (value->IsNull() || value->IsUndefined())
     {
-      node->inner()->setNodeValue("");
+      handle()->setNodeValue("");
     }
     else
     {
       String::Utf8Value utf8Value(isolate, value);
-      node->inner()->setNodeValue(string(*utf8Value));
+      handle()->setNodeValue(string(*utf8Value));
     }
   }
 
-  // static
-  void Node::ParentNodeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::ParentNodeGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    auto parentNode = node->inner()->parentNode.lock();
+    auto parentNode = handle()->parentNode.lock();
     if (parentNode == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -231,20 +122,12 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::FirstChildGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::FirstChildGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    auto firstChild = node->inner()->firstChild();
+    auto firstChild = handle()->firstChild();
     if (firstChild == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -256,20 +139,12 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::LastChildGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::LastChildGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    auto lastChild = node->inner()->lastChild();
+    auto lastChild = handle()->lastChild();
     if (lastChild == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -281,20 +156,12 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::NextSiblingGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::NextSiblingGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    auto nextSibling = node->inner()->nextSibling();
+    auto nextSibling = handle()->nextSibling();
     if (nextSibling == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -306,20 +173,12 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::PreviousSiblingGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::PreviousSiblingGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    auto previousSibling = node->inner()->previousSibling();
+    auto previousSibling = handle()->previousSibling();
     if (previousSibling == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -331,20 +190,12 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::OwnerDocumentGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::OwnerDocumentGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    shared_ptr<::dom::Document> ownerDocument = node->inner()->getOwnerDocumentReference();
+    shared_ptr<::dom::Document> ownerDocument = handle()->getOwnerDocumentReference();
     if (ownerDocument == nullptr)
     {
       info.GetReturnValue().SetNull();
@@ -355,57 +206,38 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
-  void Node::TextContentGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void Node::TextContentGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().SetNull();
-      return;
-    }
-
-    string textContent = node->inner()->textContent();
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, textContent.c_str()).ToLocalChecked());
+    string textContent = handle()->textContent();
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  textContent.c_str())
+                                .ToLocalChecked());
   }
 
-  // static
-  void Node::TextContentSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void Node::TextContentSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      return;
-    }
-
     String::Utf8Value utf8Value(isolate, value);
-    node->inner()->setTextContent(string(*utf8Value));
+    handle()->setTextContent(string(*utf8Value));
   }
 
   // Methods
 
-  // static
   void Node::AppendChild(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 1)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "appendChild requires 1 argument").ToLocalChecked()));
-      return;
-    }
-
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
+        MakeMethodError(isolate, "appendChild", "appendChild requires 1 argument")));
       return;
     }
 
@@ -416,15 +248,15 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *childNode = Unwrap(isolate, Local<Object>::Cast(info[0]));
-    if (childNode == nullptr || childNode->inner() == nullptr)
+    Node *childNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    if (childNode == nullptr || childNode->handle() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Argument must be a Node").ToLocalChecked()));
+        MakeMethodError(isolate, "appendChild", "Argument must be a Node")));
       return;
     }
 
-    auto result = node->inner()->appendChild(childNode->inner());
+    auto result = handle()->appendChild(childNode->handle());
     if (result != nullptr)
     {
       Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
@@ -436,41 +268,35 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
   void Node::RemoveChild(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 1)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "removeChild requires 1 argument").ToLocalChecked()));
-      return;
-    }
-
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
+        MakeMethodError(isolate, "removeChild", "removeChild requires 1 argument")));
       return;
     }
 
     if (!info[0]->IsObject())
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Argument must be a Node").ToLocalChecked()));
+        MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
       return;
     }
 
-    Node *childNode = Unwrap(isolate, Local<Object>::Cast(info[0]));
-    if (childNode == nullptr || childNode->inner() == nullptr)
+    Node *childNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    if (childNode == nullptr || childNode->handle() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Argument must be a Node").ToLocalChecked()));
+        MakeMethodError(isolate, "removeChild", "Argument must be a Node")));
       return;
     }
 
-    auto result = node->inner()->removeChild(childNode->inner());
+    auto result = handle()->removeChild(childNode->handle());
     if (result != nullptr)
     {
       Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, result);
@@ -482,35 +308,29 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
   void Node::InsertBefore(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 2)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Illegal arguments").ToLocalChecked()));
+        MakeMethodError(isolate, "insertBefore", "Illegal arguments")));
       return;
     }
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      return;
-    }
-
-    auto newChildNode = Node::Unwrap(isolate, info[0].As<Object>())->inner();
-    auto refChildNode = Node::Unwrap(isolate, info[1].As<Object>())->inner();
+    auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
+    auto refChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
     if (newChildNode == nullptr || refChildNode == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Arguments must be Nodes").ToLocalChecked()));
+        MakeMethodError(isolate, "insertBefore", "Arguments must be Nodes")));
       return;
     }
 
-    auto insertedNode = node->inner()->insertBefore(newChildNode, refChildNode);
+    auto insertedNode = handle()->insertBefore(newChildNode, refChildNode);
     if (insertedNode != nullptr)
     {
       Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, insertedNode);
@@ -522,35 +342,35 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
   void Node::ReplaceChild(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 2)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "replaceChild requires 2 arguments").ToLocalChecked()));
+        MakeMethodError(isolate, "replaceChild", "replaceChild requires 2 arguments")));
       return;
     }
-
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
+    if (!info[0]->IsObject() || !info[1]->IsObject())
     {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
       return;
     }
 
-    auto newChildNode = Node::Unwrap(isolate, info[0].As<Object>())->inner();
-    auto oldChildNode = Node::Unwrap(isolate, info[1].As<Object>())->inner();
+    auto newChildNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked())->handle();
+    auto oldChildNode = Node::Unwrap(isolate, info[1]->ToObject(context).ToLocalChecked())->handle();
     if (newChildNode == nullptr || oldChildNode == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Arguments must be Nodes").ToLocalChecked()));
+        MakeMethodError(isolate, "replaceChild", "Arguments must be Nodes")));
       return;
     }
 
-    auto replacedNode = node->inner()->replaceChild(newChildNode, oldChildNode);
+    auto replacedNode = handle()->replaceChild(newChildNode, oldChildNode);
     if (replacedNode != nullptr)
     {
       Local<Object> resultWrapper = Node::GetOrNewInstance(isolate, replacedNode);
@@ -562,54 +382,49 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  // static
   void Node::CloneNode(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      return;
-    }
-
     bool deep = false;
     if (info.Length() > 0 && info[0]->IsBoolean())
-    {
       deep = info[0]->BooleanValue(isolate);
-    }
 
-    auto clonedNode = node->inner()->cloneNode(deep);
+    auto clonedNode = handle()->cloneNode(deep);
     return info.GetReturnValue().Set(Node::GetOrNewInstance(isolate, clonedNode));
   }
 
-  // static
   void Node::HasChildNodes(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
-
-    Node *node = Unwrap(isolate, info.This());
-    if (node == nullptr || node->inner() == nullptr)
-    {
-      info.GetReturnValue().Set(Boolean::New(isolate, false));
-      return;
-    }
-
-    bool hasChildren = node->inner()->hasChildNodes();
-    info.GetReturnValue().Set(Boolean::New(isolate, hasChildren));
+    info.GetReturnValue().Set(Boolean::New(isolate,
+                                           handle()->hasChildNodes()));
   }
 
-  // static
   void Node::Contains(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
 
-    // TODO(yorkie): implement this method
-    isolate->ThrowException(Exception::TypeError(
-      String::NewFromUtf8(isolate, "Failed to call 'contains' method: Not implemented").ToLocalChecked()));
-    return;
+    if (info.Length() < 1 || !info[0]->IsObject())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "contains", "Argument must be a Node")));
+      return;
+    }
+
+    Local<Context> context = isolate->GetCurrentContext();
+    Node *otherNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    if (otherNode == nullptr || otherNode->handle() == nullptr)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "contains", "Argument must be a Node")));
+      return;
+    }
+
+    // TODO: implement contains properly
+    info.GetReturnValue().Set(Boolean::New(isolate, false));
   }
 }

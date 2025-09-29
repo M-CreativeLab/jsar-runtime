@@ -36,13 +36,13 @@ namespace script_bindings
 
   private:
     // Property getters
-    static void TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void BubblesGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void CancelableGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void ComposedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void BubblesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void CancelableGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+    void ComposedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
     // Methods
-    static void PreventDefault(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void StopPropagation(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void PreventDefault(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void StopPropagation(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }
