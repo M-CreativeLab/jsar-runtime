@@ -3,6 +3,7 @@
 #include <client/cssom/computed_style.hpp>
 #include <client/cssom/values/specified/position.hpp>
 #include <client/cssom/values/computed/position.hpp>
+#include "css_test_helpers.hpp"
 
 using namespace client_layout;
 using namespace client_cssom;
@@ -69,9 +70,8 @@ TEST_CASE("Layout Position Tests", "[layout-position]")
     
     using namespace client_cssom::values;
     
-    // Create a computed style with position: static and inset values
-    ComputedStyle staticStyle;
-    computed::Context context;
+    // Create proper computed context for testing
+    computed::Context context = tests::CreateComputedContext();
     
     // Test with position: static - inset values should be ignored
     specified::PositionType staticPosition;

@@ -684,7 +684,7 @@ impl From<ffi::Position> for taffy::Position {
 impl From<taffy::Position> for ffi::Position {
   fn from(value: taffy::Position) -> Self {
     match value {
-      taffy::Position::Relative => Self::Static, // Default mapping
+      taffy::Position::Relative => Self::Static, // Note: Loss of Static vs Relative distinction
       taffy::Position::Absolute => Self::Absolute,
       _ => Self::Static,
     }
