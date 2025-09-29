@@ -16,42 +16,23 @@ namespace script_bindings
     void Document::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-
-#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
-#define METHOD(X) FunctionTemplate::New(isolate, X)
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(NAME("documentElement"),
-                                    DocumentElementGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(NAME("body"), BodyGetter, BodySetter);
-      instanceTemplate->SetAccessor(NAME("head"),
-                                    HeadGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-      instanceTemplate->SetAccessor(NAME("title"), TitleGetter, TitleSetter);
+      InstanceReadonlyAccessor(isolate, prototype, "documentElement", &Document::DocumentElementGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "head", &Document::HeadGetter);
+      InstanceAccessor(isolate, prototype, "body", &Document::BodyGetter, &Document::BodySetter);
+      InstanceAccessor(isolate, prototype, "title", &Document::TitleGetter, &Document::TitleSetter);
 
       // Add methods
-      instanceTemplate->Set(NAME("createElement"), METHOD(CreateElement));
-      instanceTemplate->Set(NAME("createTextNode"), METHOD(CreateTextNode));
-      instanceTemplate->Set(NAME("createComment"), METHOD(CreateComment));
-      instanceTemplate->Set(NAME("getElementById"), METHOD(GetElementById));
-      instanceTemplate->Set(NAME("getElementsByTagName"), METHOD(GetElementsByTagName));
-      instanceTemplate->Set(NAME("getElementsByClassName"), METHOD(GetElementsByClassName));
-      instanceTemplate->Set(NAME("querySelector"), METHOD(QuerySelector));
-      instanceTemplate->Set(NAME("querySelectorAll"), METHOD(QuerySelectorAll));
-
-#undef NAME
-#undef METHOD
+      InstanceMethod(isolate, prototype, "createElement", &Document::CreateElement);
+      InstanceMethod(isolate, prototype, "createTextNode", &Document::CreateTextNode);
+      InstanceMethod(isolate, prototype, "createComment", &Document::CreateComment);
+      InstanceMethod(isolate, prototype, "getElementById", &Document::GetElementById);
+      InstanceMethod(isolate, prototype, "getElementsByTagName", &Document::GetElementsByTagName);
+      InstanceMethod(isolate, prototype, "getElementsByClassName", &Document::GetElementsByClassName);
+      InstanceMethod(isolate, prototype, "querySelector", &Document::QuerySelector);
+      InstanceMethod(isolate, prototype, "querySelectorAll", &Document::QuerySelectorAll);
     }
 
     // static
@@ -71,19 +52,12 @@ namespace script_bindings
     // Property getters and setters
 
     // static
-    void Document::DocumentElementGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Document::DocumentElementGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      auto documentElement = document->inner()->documentElement();
+      auto documentElement = handle()->documentElement();
       if (documentElement == nullptr)
       {
         info.GetReturnValue().SetNull();
@@ -96,72 +70,45 @@ namespace script_bindings
     }
 
     // static
-    void Document::BodyGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Document::BodyGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      auto bodyElement = document->inner()->body();
+      auto bodyElement = handle()->body();
       return bodyElement == nullptr
                ? info.GetReturnValue().SetNull()
                : info.GetReturnValue().Set(html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement));
     }
 
     // static
-    void Document::BodySetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Document::BodySetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        return;
-      }
-
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "Setting document.body is not supported").ToLocalChecked()));
+        MakeMethodError(isolate, "body", "Setting document.body is not supported")));
       return;
     }
 
     // static
-    void Document::HeadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Document::HeadGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      auto headElement = document->inner()->head();
+      auto headElement = handle()->head();
       return headElement == nullptr
                ? info.GetReturnValue().SetNull()
                : info.GetReturnValue().Set(html_bindings::HTMLHeadElement::GetOrNewInstance(isolate, headElement));
     }
 
     // static
-    void Document::TitleGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Document::TitleGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
 
       // TODO(yorkie): Implement proper title retrieval
       string title = "";
@@ -169,16 +116,10 @@ namespace script_bindings
     }
 
     // static
-    void Document::TitleSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Document::TitleSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        return;
-      }
 
       // TODO(yorkie): Implement proper title setting
       String::Utf8Value utf8Value(isolate, value);
@@ -300,23 +241,16 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getElementById", "1 argument required, but only 0 present.")));
         return;
       }
 
       String::Utf8Value id(isolate, info[0]);
-      auto element = document->inner()->getElementById(string(*id));
-
+      auto element = handle()->getElementById(string(*id));
       if (element != nullptr)
       {
-        Local<Object> elementWrapper = Element::NewInstance(isolate, element);
+        Local<Object> elementWrapper = Element::GetOrNewInstance(isolate, element);
         info.GetReturnValue().Set(elementWrapper);
       }
       else
@@ -330,17 +264,25 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
+      if (info.Length() < 1)
       {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getElementsByTagName", "1 argument required, but only 0 present.")));
         return;
       }
 
-      // TODO: Implement getElementsByTagName - return NodeList
-      cout << "getElementsByTagName called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      String::Utf8Value tagName(isolate, info[0]);
+      auto elements = handle()->getElementsByTagName(string(*tagName));
+
+      Local<Array> resultArray = Array::New(isolate, elements.size());
+      for (size_t i = 0; i < elements.size(); ++i)
+      {
+        Local<Object> elementWrapper = Element::GetOrNewInstance(isolate, elements[i]);
+        resultArray->Set(context, static_cast<uint32_t>(i), elementWrapper).Check();
+      }
+      info.GetReturnValue().Set(resultArray);
     }
 
     // static

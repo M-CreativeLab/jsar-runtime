@@ -6,7 +6,10 @@
 
 namespace script_bindings
 {
-  class EventTarget : public scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>
+  class EventTarget;
+  using EventTargetBase = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>;
+
+  class EventTarget : public EventTargetBase
   {
   public:
     static std::string Name()
@@ -17,11 +20,15 @@ namespace script_bindings
 
   public:
     EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    virtual ::dom::DOMEventTargetType eventTargetType() const
+    {
+      return ::dom::DOMEventTargetType::kEventTarget;
+    }
 
   private:
     // Event methods
-    static void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void RemoveEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
-    static void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void RemoveEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }
