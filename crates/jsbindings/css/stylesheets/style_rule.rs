@@ -25,7 +25,7 @@ impl StyleRule {
       .borrow()
       .to_css(&mut selectors_text)
       .expect("Failed to convert selectors to CSS");
- 
+
     Self {
       selectors: SelectorList::new(&handle.selectors),
       selectors_text,

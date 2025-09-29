@@ -62,21 +62,72 @@ impl VisitorMut for MyGLSLPatcher {
   }
 }
 
+/// Detect if shader source uses WebGL 2.0 syntax
+/// WebGL 2.0 requires #version 300 es per specification, WebGL 1.0 doesn't require version
+fn detect_webgl2_syntax(s: &str) -> bool {
+  // WebGL 2.0 strong indicators (these only exist in WebGL 2.0)
+  if s.contains("out vec4")
+    || s.contains("out mediump")
+    || s.contains("out lowp")
+    || s.contains("out highp")
+    || s.contains("layout(location")
+  {
+    return true;
+  }
+
+  // Check for WebGL 2.0 built-ins - texture() without texture2D()
+  if s.contains("texture(") && !s.contains("texture2D(") {
+    return true;
+  }
+
+  // WebGL 1.0 strong indicators (these are deprecated/removed in WebGL 2.0)
+  if s.contains("gl_FragColor")
+    || s.contains("gl_FragData")
+    || s.contains("attribute ")
+    || s.contains("varying ")
+    || s.contains("texture2D(")
+    || s.contains("textureCube(")
+  {
+    return false;
+  }
+
+  // Check for 'in ' keyword (could be WebGL 2.0, but be more specific)
+  if s.contains("in vec")
+    || s.contains("in mediump")
+    || s.contains("in lowp")
+    || s.contains("in highp")
+  {
+    return true;
+  }
+
+  // Default to WebGL 1.0 for safety
+  false
+}
+
 fn patch_glsl_source_from_str(s: &str) -> String {
   use glsl_lang::{
     ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
+  // Apply WebGL standards-compliant version handling first
+  let source_to_parse = if !s.contains("#version") && detect_webgl2_syntax(s) {
+    // WebGL 2.0 requires #version 300 es per specification
+    format!("#version 300 es\n{}", s)
+  } else {
+    // WebGL 1.0 shaders work without version directives per WebGL standard
+    s.to_string()
+  };
+
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
   let mut tu: TranslationUnit = processor
-    .open_source(s, Path::new("."))
+    .open_source(&source_to_parse, Path::new("."))
     .builder()
     .parse()
     .map(|(mut tu, _, iter)| {
       iter.into_directives().inject(&mut tu);
       tu
     })
-    .expect(format!("Failed to parse GLSL source: \n{}\n", s).as_str());
+    .expect(format!("Failed to parse GLSL source: \n{}\n", source_to_parse).as_str());
 
   let mut my_glsl_patcher = MyGLSLPatcher {};
   tu.visit_mut(&mut my_glsl_patcher);
@@ -234,5 +285,118 @@ vec3 test() {
 }
 "#
     )
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl1_fragment() {
+    let source_str = r#"
+precision mediump float;
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    // WebGL 1.0 shaders should remain unchanged (no version injection)
+    assert_eq!(
+      patched_source_str,
+      r#"precision mediump float;
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}
+"#
+    );
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl2_fragment() {
+    let source_str = r#"
+precision mediump float;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    // WebGL 2.0 shaders should get #version 300 es injected
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+precision mediump float;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(1., 0., 0., 1.);
+}
+"#
+    );
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl1_vertex() {
+    let source_str = r#"
+attribute vec4 a_position;
+varying vec2 v_texcoord;
+void main() {
+    gl_Position = a_position;
+    v_texcoord = a_position.xy;
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    // WebGL 1.0 vertex shader should remain unchanged
+    assert_eq!(
+      patched_source_str,
+      r#"attribute vec4 a_position;
+varying vec2 v_texcoord;
+void main() {
+    gl_Position = a_position;
+    v_texcoord = a_position.xy;
+}
+"#
+    );
+  }
+
+  #[test]
+  fn test_patch_glsl_source_missing_version_webgl2_vertex() {
+    let source_str = r#"
+layout(location = 0) in vec4 a_position;
+out vec2 v_texcoord;
+void main() {
+    gl_Position = a_position;
+    v_texcoord = a_position.xy;
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    // WebGL 2.0 vertex shader should get #version 300 es injected
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+layout(location = 0) in vec4 a_position;
+out vec2 v_texcoord;
+void main() {
+    gl_Position = a_position;
+    v_texcoord = a_position.xy;
+}
+"#
+    );
+  }
+
+  #[test]
+  fn test_patch_glsl_source_existing_version_unchanged() {
+    let source_str = r#"#version 100
+precision mediump float;
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    // Existing version should remain unchanged
+    assert_eq!(
+      patched_source_str,
+      r#"#version 100
+precision mediump float;
+void main() {
+    gl_FragColor = vec4(0., 1., 0., 1.);
+}
+"#
+    );
   }
 }
