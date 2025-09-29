@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkbox and Radio Button Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: inline-block;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        input[type="checkbox"], input[type="radio"] {
+            margin-right: 8px;
+        }
+        .disabled {
+            opacity: 0.6;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .demo-controls {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSAR Runtime: Checkbox and Radio Button Demo</h1>
+    
+    <div class="section">
+        <h2>Checkbox Examples</h2>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkbox1" name="feature1">
+            <label for="checkbox1">Enable notifications</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkbox2" name="feature2" checked>
+            <label for="checkbox2">Auto-save (pre-checked)</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkbox3" name="feature3" disabled>
+            <label for="checkbox3" class="disabled">Disabled option</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkbox4" name="feature4" checked disabled>
+            <label for="checkbox4" class="disabled">Disabled and checked</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkboxIndeterminate" name="feature5">
+            <label for="checkboxIndeterminate">Indeterminate state (see demo controls)</label>
+        </div>
+        
+        <div class="form-group">
+            <input type="checkbox" id="checkboxRequired" name="feature6" required>
+            <label for="checkboxRequired">Required checkbox *</label>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Radio Button Examples</h2>
+        
+        <div class="form-group">
+            <strong>Choose your preferred theme:</strong><br>
+            <input type="radio" id="light" name="theme" value="light" checked>
+            <label for="light">Light theme</label><br>
+            
+            <input type="radio" id="dark" name="theme" value="dark">
+            <label for="dark">Dark theme</label><br>
+            
+            <input type="radio" id="auto" name="theme" value="auto">
+            <label for="auto">Auto theme</label>
+        </div>
+        
+        <div class="form-group">
+            <strong>Subscription level:</strong><br>
+            <input type="radio" id="free" name="subscription" value="free" checked>
+            <label for="free">Free</label><br>
+            
+            <input type="radio" id="premium" name="subscription" value="premium">
+            <label for="premium">Premium</label><br>
+            
+            <input type="radio" id="enterprise" name="subscription" value="enterprise" disabled>
+            <label for="enterprise" class="disabled">Enterprise (disabled)</label>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Form Validation Demo</h2>
+        <form id="demoForm">
+            <div class="form-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">I agree to the terms and conditions *</label>
+            </div>
+            
+            <div class="form-group">
+                <strong>Select your age group: *</strong><br>
+                <input type="radio" id="age1" name="age" value="18-25" required>
+                <label for="age1">18-25</label><br>
+                
+                <input type="radio" id="age2" name="age" value="26-35" required>
+                <label for="age2">26-35</label><br>
+                
+                <input type="radio" id="age3" name="age" value="36+" required>
+                <label for="age3">36+</label>
+            </div>
+            
+            <button type="submit">Submit Form</button>
+        </form>
+    </div>
+    
+    <div class="section demo-controls">
+        <h2>Demo Controls</h2>
+        <p>These buttons demonstrate programmatic control of checkboxes and radio buttons:</p>
+        
+        <button onclick="toggleIndeterminate()">Toggle Indeterminate State</button>
+        <button onclick="toggleAllCheckboxes()">Toggle All Checkboxes</button>
+        <button onclick="selectRandomTheme()">Select Random Theme</button>
+        <button onclick="validateForm()">Validate Form</button>
+        
+        <div id="status" style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px;"></div>
+    </div>
+
+    <script>
+        // Demo functionality
+        function toggleIndeterminate() {
+            const checkbox = document.getElementById('checkboxIndeterminate');
+            checkbox.indeterminate = !checkbox.indeterminate;
+            updateStatus(`Indeterminate state: ${checkbox.indeterminate}`);
+        }
+        
+        function toggleAllCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:not([disabled])');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+                cb.indeterminate = false;
+            });
+            
+            updateStatus(`All checkboxes ${allChecked ? 'unchecked' : 'checked'}`);
+        }
+        
+        function selectRandomTheme() {
+            const themes = document.querySelectorAll('input[name="theme"]');
+            const randomIndex = Math.floor(Math.random() * themes.length);
+            themes[randomIndex].checked = true;
+            updateStatus(`Selected theme: ${themes[randomIndex].value}`);
+        }
+        
+        function validateForm() {
+            const form = document.getElementById('demoForm');
+            const isValid = form.checkValidity();
+            
+            if (isValid) {
+                updateStatus('✅ Form is valid!', 'success');
+            } else {
+                updateStatus('❌ Form is invalid. Please fill required fields.', 'error');
+            }
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.backgroundColor = type === 'success' ? '#d4edda' : 
+                                         type === 'error' ? '#f8d7da' : '#d1ecf1';
+            status.style.color = type === 'success' ? '#155724' : 
+                               type === 'error' ? '#721c24' : '#0c5460';
+        }
+        
+        // Add change event listeners
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const type = this.type;
+                const name = this.name || 'unnamed';
+                const state = type === 'checkbox' ? (this.checked ? 'checked' : 'unchecked') : 
+                              `selected (${this.value})`;
+                updateStatus(`${type} "${name}": ${state}`);
+            });
+        });
+        
+        // Form submission handler
+        document.getElementById('demoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateStatus('✅ Form submitted successfully!', 'success');
+        });
+        
+        // Initial status
+        updateStatus('Demo loaded. Interact with controls to see their behavior.');
+    </script>
+</body>
+</html>

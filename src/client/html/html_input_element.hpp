@@ -42,7 +42,12 @@ namespace dom
     }
     void setChecked(bool value)
     {
-      checked_ = value;
+      if (checked_ != value)
+      {
+        checked_ = value;
+        // Update visual representation when checked state changes
+        updateVisualRepresentation();
+      }
     }
 
     bool disabled() const
@@ -104,15 +109,41 @@ namespace dom
     double valueAsNumber() const;
     void setValueAsNumber(double value);
 
+    // Interaction handling
+    void handleClick();
+    void click() override; // Override click to handle checkbox/radio interaction
+
+    // Support for indeterminate state (checkbox only)
+    bool indeterminate() const
+    {
+      return indeterminate_;
+    }
+    void setIndeterminate(bool value)
+    {
+      indeterminate_ = value;
+    }
+
+    // Focus state support
+    bool focused() const
+    {
+      return focused_;
+    }
+    void focus() override;
+    void blur() override;
+
   private:
     void createdCallback(bool from_scripting) override;
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue,
                                   const std::string &newValue) override;
+    void triggerChangeEvent();
+    void updateVisualRepresentation();
 
   private:
     std::string value_;
     bool checked_ = false;
+    bool indeterminate_ = false;
+    bool focused_ = false;
     std::string custom_validity_message_;
   };
 }

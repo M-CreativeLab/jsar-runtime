@@ -40,6 +40,9 @@ namespace dombinding
     Napi::Value ValueAsNumberGetter(const Napi::CallbackInfo &info);
     void ValueAsNumberSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
+    Napi::Value IndeterminateGetter(const Napi::CallbackInfo &info);
+    void IndeterminateSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+
   private:
     // Methods
     Napi::Value CheckValidity(const Napi::CallbackInfo &info);

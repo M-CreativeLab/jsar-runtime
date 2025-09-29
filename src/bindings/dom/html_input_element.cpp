@@ -18,6 +18,7 @@ namespace dombinding
         T::InstanceAccessor("placeholder", &T::PlaceholderGetter, &T::PlaceholderSetter),
         T::InstanceAccessor("name", &T::NameGetter, &T::NameSetter),
         T::InstanceAccessor("valueAsNumber", &T::ValueAsNumberGetter, &T::ValueAsNumberSetter),
+        T::InstanceAccessor("indeterminate", &T::IndeterminateGetter, &T::IndeterminateSetter),
 
         // Methods
         T::InstanceMethod("checkValidity", &T::CheckValidity),
@@ -176,6 +177,23 @@ namespace dombinding
     if (value.IsNumber())
     {
       node->setValueAsNumber(value.As<Napi::Number>().DoubleValue());
+    }
+  }
+
+  Napi::Value HTMLInputElement::IndeterminateGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Boolean::New(env, node->indeterminate());
+  }
+
+  void HTMLInputElement::IndeterminateSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    if (value.IsBoolean())
+    {
+      node->setIndeterminate(value.As<Napi::Boolean>().Value());
     }
   }
 
