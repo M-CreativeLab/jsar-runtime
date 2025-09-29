@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <common/viewport.hpp>
 
 using namespace std;
 

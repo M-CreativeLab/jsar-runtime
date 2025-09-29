@@ -90,37 +90,139 @@ namespace script_bindings
 
   void Window::Alert(const FunctionCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "alert", "1 argument required, but only 0 present.")));
+      return;
+    }
+
+    String::Utf8Value message(isolate, info[0]);
+    handle()->alert(*message ? *message : "");
     info.GetReturnValue().SetNull();
   }
 
   void Window::Blur(const FunctionCallbackInfo<Value> &info)
   {
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "blur", "Not implemented.")));
+    return;
   }
 
   void Window::Close(const FunctionCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    handle()->close();
     info.GetReturnValue().SetNull();
   }
 
   void Window::Confirm(const FunctionCallbackInfo<Value> &info)
   {
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "confirm", "1 argument required, but only 0 present.")));
+      return;
+    }
+
+    String::Utf8Value message(isolate, info[0]);
+    bool result = handle()->confirm(*message ? *message : "");
+    info.GetReturnValue().Set(Boolean::New(isolate, result));
   }
 
   void Window::Focus(const FunctionCallbackInfo<Value> &info)
   {
-    info.GetReturnValue().SetNull();
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::TypeError(
+      MakeMethodError(isolate, "focus", "Not implemented.")));
+    return;
   }
 
   void Window::Open(const FunctionCallbackInfo<Value> &info)
   {
-    cerr << "open:: this() = " << this << endl;
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "open", "1 argument required, but only 0 present.")));
+      return;
+    }
+
+    String::Utf8Value url(isolate, info[0]);
+    browser::WindowTarget target = browser::WindowTarget::Self;
+    if (info.Length() >= 2 && info[1]->IsString())
+    {
+      String::Utf8Value targetValue(isolate, info[1]);
+      string targetStr = *targetValue ? *targetValue : "";
+      if (targetStr == "_self")
+      {
+        target = browser::WindowTarget::Self;
+      }
+      else if (targetStr == "_blank")
+      {
+        target = browser::WindowTarget::Blank;
+      }
+      else if (targetStr == "_blankClassic")
+      {
+        target = browser::WindowTarget::BlankClassic;
+      }
+      else if (targetStr == "_parent")
+      {
+        target = browser::WindowTarget::Parent;
+      }
+      else if (targetStr == "_top")
+      {
+        target = browser::WindowTarget::Top;
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "open", ("Invalid target: " + targetStr).c_str())));
+        return;
+      }
+    }
+
+    handle()->open(*url ? *url : "", target);
     info.GetReturnValue().SetNull();
   }
 
   void Window::Prompt(const FunctionCallbackInfo<Value> &info)
   {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "prompt", "1 argument required, but only 0 present.")));
+      return;
+    }
+
+    String::Utf8Value message(isolate, info[0]);
+    std::string defaultValue = "";
+    if (info.Length() >= 2 && info[1]->IsString())
+    {
+      String::Utf8Value defaultValueValue(isolate, info[1]);
+      defaultValue = *defaultValueValue ? *defaultValueValue : "";
+    }
+
+    handle()->prompt(*message ? *message : "", defaultValue);
+    // TODO(yorkie): Return the actual result from the RPC call.
     info.GetReturnValue().SetNull();
   }
 }

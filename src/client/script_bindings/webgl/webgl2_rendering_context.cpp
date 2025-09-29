@@ -10,7 +10,7 @@ namespace script_bindings
     void WebGL2RenderingContext::SetupConstants(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       // WebGL 2.0 constants as per MDN spec
-      auto prototype = tpl->PrototypeTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL2_CONSTANT(name) \
   prototype->Set(String::NewFromUtf8(isolate, #name).ToLocalChecked(), Integer::New(isolate, WEBGL2_##name));
@@ -330,6 +330,12 @@ namespace script_bindings
 
     void WebGL2RenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      /**
+       * WebGL2RenderingContext does not inherit from WebGLRenderingContext directly, but it should reuse the same
+       * configuration for shared methods and properties.
+       */
+      WebGLRenderingContext::ConfigureFunctionTemplate(isolate, tpl);
+
       // WebGL 2.0 constants
       SetupConstants(isolate, tpl);
 
@@ -414,21 +420,15 @@ namespace script_bindings
     }
 
     Local<Object> WebGL2RenderingContext::NewInstance(Isolate *isolate,
-                                                      shared_ptr<client_graphics::WebGL2Context> nativeContext)
+                                                      shared_ptr<client_graphics::WebGL2Context> handle)
     {
       EscapableHandleScope scope(isolate);
-      if (nativeContext == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(WebGL2RenderingContextBase::NewInstance(isolate, nativeContext).As<Object>());
-      }
+      assert(handle != nullptr && "WebGL2RenderingContext requires a valid WebGL2Context handle");
+      return scope.Escape(WebGL2RenderingContextBase::NewInstance(isolate, handle).As<Object>());
     }
 
     WebGL2RenderingContext::WebGL2RenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGL2RenderingContextBase(isolate, args)
+        : WebGL2RenderingContextBase(isolate, args, true)
     {
     }
 

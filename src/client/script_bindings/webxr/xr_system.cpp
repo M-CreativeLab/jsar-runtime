@@ -1,5 +1,6 @@
-#include "./xr_system.hpp"
 #include <iostream>
+#include "./xr_system.hpp"
+#include "./xr_session.hpp"
 
 using namespace std;
 using namespace v8;
@@ -17,34 +18,21 @@ namespace script_bindings
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "isSessionSupported").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, IsSessionSupported));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "requestSession").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RequestSession));
+      InstanceMethod(isolate, instanceTemplate, "isSessionSupported", &XRSystem::IsSessionSupported);
+      InstanceMethod(isolate, instanceTemplate, "requestSession", &XRSystem::RequestSession);
     }
 
     // static
-    Local<Object> XRSystem::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSystem> nativeSystem)
+    Local<Object> XRSystem::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSystem> handle)
     {
       EscapableHandleScope scope(isolate);
 
-      if (nativeSystem == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::NewInstance(isolate, nativeSystem).As<Object>());
-    }
-
-    // static
-    Local<Function> XRSystem::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>::Initialize(isolate);
+      assert(handle != nullptr && "XRSystem handle is null");
+      return scope.Escape(XRSystemBase::NewInstance(isolate, handle).As<Object>());
     }
 
     XRSystem::XRSystem(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRSystem, client_xr::XRSystem>(isolate, args)
+        : XRSystemBase(isolate, args, true)
     {
     }
 
@@ -56,24 +44,52 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSystem *system = Unwrap(isolate, info.This());
-      if (system == nullptr || system->inner() == nullptr)
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+
+      client_xr::XRSessionMode requestMode;
+      if (info.Length() < 1 || !info[0]->IsString())
       {
-        // Return a rejected promise
-        Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-        resolver->Reject(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "XRSystem not available").ToLocalChecked()).Check();
+        resolver->Reject(context,
+                         MakeMethodError(isolate, "isSessionSupported", "Invalid or missing session mode"))
+          .Check();
         info.GetReturnValue().Set(resolver->GetPromise());
         return;
       }
 
-      // TODO: Check actual session support from native system implementation
-      // Should query native XR runtime for the requested session mode support
-      cout << "system.isSessionSupported called" << endl;
+      string requestModeStr;
+      {
+        String::Utf8Value utf8String(isolate, info[0]);
+        requestModeStr = string(*utf8String);
+      }
+
+      if (requestModeStr == "inline")
+      {
+        requestMode = client_xr::XRSessionMode::Inline;
+      }
+      else if (requestModeStr == "immersive-vr")
+      {
+        requestMode = client_xr::XRSessionMode::ImmersiveVR;
+      }
+      else if (requestModeStr == "immersive-ar")
+      {
+        requestMode = client_xr::XRSessionMode::ImmersiveAR;
+      }
+      else
+      {
+        resolver->Reject(context,
+                         MakeMethodError(isolate, "isSessionSupported", "Invalid session mode"))
+          .Check();
+        info.GetReturnValue().Set(resolver->GetPromise());
+        return;
+      }
 
       // Return a resolved promise for now
-      Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-      resolver->Resolve(isolate->GetCurrentContext(), Boolean::New(isolate, true)).Check();
+      resolver->Resolve(context,
+                        Boolean::New(isolate, handle()->isSessionSupported(requestMode)))
+        .Check();
       info.GetReturnValue().Set(resolver->GetPromise());
+      return;
     }
 
     // static
@@ -82,24 +98,149 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSystem *system = Unwrap(isolate, info.This());
-      if (system == nullptr || system->inner() == nullptr)
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Promise::Resolver> resolver = Promise::Resolver::New(context).ToLocalChecked();
+
+      client_xr::XRSessionMode requestMode;
+      if (info.Length() < 1 || !info[0]->IsString())
       {
-        // Return a rejected promise
-        Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-        resolver->Reject(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "XRSystem not available").ToLocalChecked()).Check();
+        resolver->Reject(context,
+                         MakeMethodError(isolate, "requestSession", "Invalid or missing session mode"))
+          .Check();
         info.GetReturnValue().Set(resolver->GetPromise());
         return;
       }
 
-      // TODO: Validate session mode and options, create actual XRSession from native system
-      // Should handle 'inline', 'immersive-vr', 'immersive-ar' modes
-      cout << "system.requestSession called" << endl;
+      string requestModeStr;
+      {
+        String::Utf8Value utf8String(isolate, info[0]);
+        requestModeStr = string(*utf8String);
+      }
 
-      // Return a rejected promise for now (no session implementation yet)
-      Local<Promise::Resolver> resolver = Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
-      resolver->Reject(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "Session creation not implemented").ToLocalChecked()).Check();
+      if (requestModeStr == "inline")
+      {
+        requestMode = client_xr::XRSessionMode::Inline;
+      }
+      else if (requestModeStr == "immersive-vr")
+      {
+        requestMode = client_xr::XRSessionMode::ImmersiveVR;
+      }
+      else if (requestModeStr == "immersive-ar")
+      {
+        requestMode = client_xr::XRSessionMode::ImmersiveAR;
+      }
+      else
+      {
+        resolver->Reject(context,
+                         MakeMethodError(isolate, "requestSession", "Invalid session mode"))
+          .Check();
+        info.GetReturnValue().Set(resolver->GetPromise());
+        return;
+      }
+
+      auto requestInit = client_xr::XRSessionRequestInit::Default();
+      if (info.Length() > 1 && info[1]->IsObject())
+      {
+        Local<String> requiredKey = String::NewFromUtf8(isolate, "requiredFeatures").ToLocalChecked();
+        Local<String> optionalKey = String::NewFromUtf8(isolate, "optionalFeatures").ToLocalChecked();
+        Local<Object> jsOptions = info[1]->ToObject(context).ToLocalChecked();
+
+        // Reset required and optional features
+        if (jsOptions->Has(context, requiredKey).FromMaybe(false))
+        {
+          Local<Value> requiredFeaturesVal;
+          if (jsOptions->Get(context, requiredKey).ToLocal(&requiredFeaturesVal) && requiredFeaturesVal->IsArray())
+          {
+            Local<Array> requiredFeaturesArray = requiredFeaturesVal.As<Array>();
+            requestInit.requiredFeatures.clear();
+            for (uint32_t i = 0; i < requiredFeaturesArray->Length(); ++i)
+            {
+              Local<Value> featureVal;
+              if (requiredFeaturesArray->Get(context, i).ToLocal(&featureVal) && featureVal->IsString())
+              {
+                String::Utf8Value utf8String(isolate, featureVal);
+                auto featureOpt = StringToXRFeature(*utf8String);
+                if (featureOpt.has_value())
+                {
+                  requestInit.requiredFeatures.push_back(featureOpt.value());
+                }
+                else
+                {
+                  resolver->Reject(context,
+                                   MakeMethodError(isolate, "requestSession", "Invalid required feature"))
+                    .Check();
+                  info.GetReturnValue().Set(resolver->GetPromise());
+                  return;
+                }
+              }
+            }
+          }
+        }
+
+        // Reset optional features
+        if (jsOptions->Has(context, optionalKey).FromMaybe(false))
+        {
+          Local<Value> optionalFeaturesVal;
+          if (jsOptions->Get(context, optionalKey).ToLocal(&optionalFeaturesVal) && optionalFeaturesVal->IsArray())
+          {
+            Local<Array> optionalFeaturesArray = optionalFeaturesVal.As<Array>();
+            requestInit.optionalFeatures.clear();
+            for (uint32_t i = 0; i < optionalFeaturesArray->Length(); ++i)
+            {
+              Local<Value> featureVal;
+              if (optionalFeaturesArray->Get(context, i).ToLocal(&featureVal) && featureVal->IsString())
+              {
+                String::Utf8Value utf8String(isolate, featureVal);
+                auto featureOpt = StringToXRFeature(*utf8String);
+                if (featureOpt.has_value())
+                {
+                  requestInit.optionalFeatures.push_back(featureOpt.value());
+                }
+                else
+                {
+                  resolver->Reject(context,
+                                   MakeMethodError(isolate, "requestSession", "Invalid optional feature"))
+                    .Check();
+                  info.GetReturnValue().Set(resolver->GetPromise());
+                  return;
+                }
+              }
+            }
+          }
+        }
+      
+        // TODO(yorkie): support `domOverlay`, `depthSensing`, etc.
+      }
+
+      auto sessionHandle = handle()->requestSession(requestMode, requestInit);
+      auto sessionValue = XRSession::NewInstance(isolate, sessionHandle);
+      resolver->Resolve(context, sessionValue).Check();
       info.GetReturnValue().Set(resolver->GetPromise());
+      return;
+    }
+
+    optional<xr::TrXRFeature> XRSystem::StringToXRFeature(const std::string &featureStr)
+    {
+      if (featureStr == "local")
+        return xr::TrXRFeature::LOCAL;
+      else if (featureStr == "local-floor")
+        return xr::TrXRFeature::LOCAL_FLOOR;
+      else if (featureStr == "bounded-floor")
+        return xr::TrXRFeature::BOUNDED_FLOOR;
+      else if (featureStr == "unbounded")
+        return xr::TrXRFeature::UNBOUNDED;
+      else if (featureStr == "hand-tracking")
+        return xr::TrXRFeature::HAND_TRACKING;
+      else if (featureStr == "anchors")
+        return xr::TrXRFeature::ANCHORS;
+      else if (featureStr == "hit-test")
+        return xr::TrXRFeature::HIT_TEST;
+      else if (featureStr == "depth-sensing")
+        return xr::TrXRFeature::DEPTH_SENSING;
+      else if (featureStr == "viewer")
+        return xr::TrXRFeature::VIEWER;
+      else
+        return nullopt;
     }
   }
 }

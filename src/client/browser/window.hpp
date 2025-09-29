@@ -212,6 +212,16 @@ namespace browser
     }
 
     /**
+     * Sends a confirmation dialog with the specified message.
+     */
+    inline bool confirm(const std::string &message)
+    {
+      client_context_->makeRpcCall("window.confirm", {message});
+      // TODO(yorkie): Return the actual result from the RPC call.
+      return true;
+    }
+
+    /**
      * Closes the current window.
      */
     inline void close()

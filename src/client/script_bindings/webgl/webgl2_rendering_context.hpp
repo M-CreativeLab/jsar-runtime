@@ -11,8 +11,7 @@ namespace script_bindings
   {
     class WebGL2RenderingContext;
     using WebGL2RenderingContextBase = scripting_base::ObjectWrap<WebGL2RenderingContext,
-                                                                  client_graphics::WebGL2Context,
-                                                                  WebGLRenderingContext>;
+                                                                  client_graphics::WebGL2Context>;
 
     class WebGL2RenderingContext : public WebGL2RenderingContextBase
     {
