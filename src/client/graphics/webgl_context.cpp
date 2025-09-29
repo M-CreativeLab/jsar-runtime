@@ -28,6 +28,71 @@ namespace client_graphics
     throw runtime_error(msg);                                                                          \
   }
 
+  /// Detect if shader source uses WebGL 2.0 syntax
+  /// WebGL 2.0 requires #version 300 es per specification, WebGL 1.0 doesn't require version
+  bool detectWebGL2Syntax(const string &source)
+  {
+    // WebGL 2.0 strong indicators (these only exist in WebGL 2.0)
+    if (source.find("out vec4") != string::npos ||
+        source.find("out mediump") != string::npos ||
+        source.find("out lowp") != string::npos ||
+        source.find("out highp") != string::npos ||
+        source.find("layout(location") != string::npos)
+    {
+      return true;
+    }
+
+    // Check for WebGL 2.0 built-ins - texture() without texture2D()
+    if (source.find("texture(") != string::npos && source.find("texture2D(") == string::npos)
+    {
+      return true;
+    }
+
+    // WebGL 1.0 strong indicators (these are deprecated/removed in WebGL 2.0)
+    if (source.find("gl_FragColor") != string::npos ||
+        source.find("gl_FragData") != string::npos ||
+        source.find("attribute ") != string::npos ||
+        source.find("varying ") != string::npos ||
+        source.find("texture2D(") != string::npos ||
+        source.find("textureCube(") != string::npos)
+    {
+      return false;
+    }
+
+    // Check for 'in ' keyword (could be WebGL 2.0, but be more specific)
+    if (source.find("in vec") != string::npos ||
+        source.find("in mediump") != string::npos ||
+        source.find("in lowp") != string::npos ||
+        source.find("in highp") != string::npos)
+    {
+      return true;
+    }
+
+    // Default to WebGL 1.0 for safety
+    return false;
+  }
+
+  /// Apply WebGL standards-compliant version handling
+  /// WebGL 1.0: Version directives are optional (defaults to GLSL ES 1.00)
+  /// WebGL 2.0: Version directives are required (#version 300 es)
+  string applyWebGLVersionHandling(const string &source)
+  {
+    // If shader already has a version directive, leave it unchanged
+    if (source.find("#version") != string::npos)
+    {
+      return source;
+    }
+
+    // WebGL 2.0 requires #version 300 es per specification
+    if (detectWebGL2Syntax(source))
+    {
+      return "#version 300 es\n" + source;
+    }
+
+    // WebGL 1.0 shaders work without version directives per WebGL standard
+    return source;
+  }
+
   void WebGLState::Restore(WebGLState &state, shared_ptr<WebGL2Context> context)
   {
     context->useProgram(state.program.value_or(nullptr));
@@ -350,7 +415,11 @@ namespace client_graphics
 
   void WebGLContext::shaderSource(shared_ptr<WebGLShader> shader, const string &source)
   {
-    shader->source = GLSLSourcePatcher2::GetPatchedSource(source);
+    // Apply WebGL standards-compliant version handling first
+    string processedSource = applyWebGLVersionHandling(source);
+
+    // Then apply GLSL patching (reordering of directives, etc.)
+    shader->source = GLSLSourcePatcher2::GetPatchedSource(processedSource);
     auto req = ShaderSourceCommandBufferRequest(shader->id, shader->source);
     sendCommandBufferRequest(req);
   }
