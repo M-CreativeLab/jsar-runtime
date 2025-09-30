@@ -9,27 +9,26 @@ namespace script_bindings
 
     void WebGLRenderingContext::SetupConstants(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope scope(isolate);
+
       // WebGL 1.0 constants as per MDN spec
-      auto prototype = tpl->PrototypeTemplate();
+#define ADD_WEBGL_CONSTANT(NAME) IntegerConstant(isolate, tpl, #NAME, WEBGL_##NAME);
 
-#define ADD_WEBGL_CONSTANT(name) \
-  prototype->Set(String::NewFromUtf8(isolate, #name).ToLocalChecked(), Integer::New(isolate, WEBGL_##name));
-
-#define WEBGL1_CONSTANTS_CLEARING_BUFFERS \
-  ADD_WEBGL_CONSTANT(DEPTH_BUFFER_BIT)    \
-  ADD_WEBGL_CONSTANT(STENCIL_BUFFER_BIT)  \
+#define WEBGL1_CONSTANTS_CLEARING_BUFFERS() \
+  ADD_WEBGL_CONSTANT(DEPTH_BUFFER_BIT)      \
+  ADD_WEBGL_CONSTANT(STENCIL_BUFFER_BIT)    \
   ADD_WEBGL_CONSTANT(COLOR_BUFFER_BIT)
 
-#define WEBGL1_CONSTANTS_RENDERING_PRIMITIVES \
-  ADD_WEBGL_CONSTANT(POINTS)                  \
-  ADD_WEBGL_CONSTANT(LINES)                   \
-  ADD_WEBGL_CONSTANT(LINE_LOOP)               \
-  ADD_WEBGL_CONSTANT(LINE_STRIP)              \
-  ADD_WEBGL_CONSTANT(TRIANGLES)               \
-  ADD_WEBGL_CONSTANT(TRIANGLE_STRIP)          \
+#define WEBGL1_CONSTANTS_RENDERING_PRIMITIVES() \
+  ADD_WEBGL_CONSTANT(POINTS)                    \
+  ADD_WEBGL_CONSTANT(LINES)                     \
+  ADD_WEBGL_CONSTANT(LINE_LOOP)                 \
+  ADD_WEBGL_CONSTANT(LINE_STRIP)                \
+  ADD_WEBGL_CONSTANT(TRIANGLES)                 \
+  ADD_WEBGL_CONSTANT(TRIANGLE_STRIP)            \
   ADD_WEBGL_CONSTANT(TRIANGLE_FAN)
 
-#define WEBGL1_CONSTANTS_BLENDING                      \
+#define WEBGL1_CONSTANTS_BLENDING()                    \
   ADD_WEBGL_CONSTANT(ZERO)                             \
   ADD_WEBGL_CONSTANT(ONE)                              \
   ADD_WEBGL_CONSTANT(SRC_COLOR)                        \
@@ -112,7 +111,7 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(IMPLEMENTATION_COLOR_READ_FORMAT) \
   ADD_WEBGL_CONSTANT(BROWSER_DEFAULT_WEBGL)
 
-#define WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS     \
+#define WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS()   \
   ADD_WEBGL_CONSTANT(STATIC_DRAW)                    \
   ADD_WEBGL_CONSTANT(STREAM_DRAW)                    \
   ADD_WEBGL_CONSTANT(DYNAMIC_DRAW)                   \
@@ -129,13 +128,13 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(VERTEX_ATTRIB_ARRAY_POINTER)    \
   ADD_WEBGL_CONSTANT(VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)
 
-#define WEBGL1_CONSTANTS_CULLING \
-  ADD_WEBGL_CONSTANT(CULL_FACE)  \
-  ADD_WEBGL_CONSTANT(FRONT)      \
-  ADD_WEBGL_CONSTANT(BACK)       \
+#define WEBGL1_CONSTANTS_CULLING() \
+  ADD_WEBGL_CONSTANT(CULL_FACE)    \
+  ADD_WEBGL_CONSTANT(FRONT)        \
+  ADD_WEBGL_CONSTANT(BACK)         \
   ADD_WEBGL_CONSTANT(FRONT_AND_BACK)
 
-#define WEBGL1_CONSTANTS_ENABLE_AND_DISABLE    \
+#define WEBGL1_CONSTANTS_ENABLE_AND_DISABLE()  \
   ADD_WEBGL_CONSTANT(BLEND)                    \
   ADD_WEBGL_CONSTANT(DEPTH_TEST)               \
   ADD_WEBGL_CONSTANT(DITHER)                   \
@@ -145,7 +144,7 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(SCISSOR_TEST)             \
   ADD_WEBGL_CONSTANT(STENCIL_TEST)
 
-#define WEBGL1_CONSTANTS_ERRORS         \
+#define WEBGL1_CONSTANTS_ERRORS()       \
   ADD_WEBGL_CONSTANT(NO_ERROR)          \
   ADD_WEBGL_CONSTANT(INVALID_ENUM)      \
   ADD_WEBGL_CONSTANT(INVALID_VALUE)     \
@@ -153,16 +152,16 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(OUT_OF_MEMORY)     \
   ADD_WEBGL_CONSTANT(CONTEXT_LOST_WEBGL)
 
-#define WEBGL1_CONSTANTS_FRONTFACE \
-  ADD_WEBGL_CONSTANT(CW)           \
+#define WEBGL1_CONSTANTS_FRONTFACE() \
+  ADD_WEBGL_CONSTANT(CW)             \
   ADD_WEBGL_CONSTANT(CCW)
 
-#define WEBGL1_CONSTANTS_HINTS  \
-  ADD_WEBGL_CONSTANT(DONT_CARE) \
-  ADD_WEBGL_CONSTANT(FASTEST)   \
+#define WEBGL1_CONSTANTS_HINTS() \
+  ADD_WEBGL_CONSTANT(DONT_CARE)  \
+  ADD_WEBGL_CONSTANT(FASTEST)    \
   ADD_WEBGL_CONSTANT(NICEST)
 
-#define WEBGL1_CONSTANTS_DATATYPES   \
+#define WEBGL1_CONSTANTS_DATATYPES() \
   ADD_WEBGL_CONSTANT(BYTE)           \
   ADD_WEBGL_CONSTANT(UNSIGNED_BYTE)  \
   ADD_WEBGL_CONSTANT(SHORT)          \
@@ -171,7 +170,7 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(UNSIGNED_INT)   \
   ADD_WEBGL_CONSTANT(FLOAT)
 
-#define WEBGL1_CONSTANTS_PIXELS                      \
+#define WEBGL1_CONSTANTS_PIXELS()                    \
   ADD_WEBGL_CONSTANT(DEPTH_COMPONENT)                \
   ADD_WEBGL_CONSTANT(ALPHA)                          \
   ADD_WEBGL_CONSTANT(RGB)                            \
@@ -185,7 +184,7 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(UNPACK_PREMULTIPLY_ALPHA_WEBGL) \
   ADD_WEBGL_CONSTANT(UNPACK_COLORSPACE_CONVERSION_WEBGL)
 
-#define WEBGL1_CONSTANTS_SHADERS                       \
+#define WEBGL1_CONSTANTS_SHADERS()                     \
   ADD_WEBGL_CONSTANT(FRAGMENT_SHADER)                  \
   ADD_WEBGL_CONSTANT(VERTEX_SHADER)                    \
   ADD_WEBGL_CONSTANT(COMPILE_STATUS)                   \
@@ -212,24 +211,24 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(MEDIUM_INT)                       \
   ADD_WEBGL_CONSTANT(HIGH_INT)
 
-#define WEBGL1_CONSTANTS_DEPTH_AND_STENCIL \
-  ADD_WEBGL_CONSTANT(NEVER)                \
-  ADD_WEBGL_CONSTANT(LESS)                 \
-  ADD_WEBGL_CONSTANT(EQUAL)                \
-  ADD_WEBGL_CONSTANT(LEQUAL)               \
-  ADD_WEBGL_CONSTANT(GREATER)              \
-  ADD_WEBGL_CONSTANT(NOTEQUAL)             \
-  ADD_WEBGL_CONSTANT(GEQUAL)               \
-  ADD_WEBGL_CONSTANT(ALWAYS)               \
-  ADD_WEBGL_CONSTANT(KEEP)                 \
-  ADD_WEBGL_CONSTANT(REPLACE)              \
-  ADD_WEBGL_CONSTANT(INCR)                 \
-  ADD_WEBGL_CONSTANT(DECR)                 \
-  ADD_WEBGL_CONSTANT(INVERT)               \
-  ADD_WEBGL_CONSTANT(INCR_WRAP)            \
+#define WEBGL1_CONSTANTS_DEPTH_AND_STENCIL() \
+  ADD_WEBGL_CONSTANT(NEVER)                  \
+  ADD_WEBGL_CONSTANT(LESS)                   \
+  ADD_WEBGL_CONSTANT(EQUAL)                  \
+  ADD_WEBGL_CONSTANT(LEQUAL)                 \
+  ADD_WEBGL_CONSTANT(GREATER)                \
+  ADD_WEBGL_CONSTANT(NOTEQUAL)               \
+  ADD_WEBGL_CONSTANT(GEQUAL)                 \
+  ADD_WEBGL_CONSTANT(ALWAYS)                 \
+  ADD_WEBGL_CONSTANT(KEEP)                   \
+  ADD_WEBGL_CONSTANT(REPLACE)                \
+  ADD_WEBGL_CONSTANT(INCR)                   \
+  ADD_WEBGL_CONSTANT(DECR)                   \
+  ADD_WEBGL_CONSTANT(INVERT)                 \
+  ADD_WEBGL_CONSTANT(INCR_WRAP)              \
   ADD_WEBGL_CONSTANT(DECR_WRAP)
 
-#define WEBGL1_CONSTANTS_TEXTURE                  \
+#define WEBGL1_CONSTANTS_TEXTURE()                \
   ADD_WEBGL_CONSTANT(NEAREST)                     \
   ADD_WEBGL_CONSTANT(LINEAR)                      \
   ADD_WEBGL_CONSTANT(NEAREST_MIPMAP_NEAREST)      \
@@ -288,24 +287,24 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(CLAMP_TO_EDGE)               \
   ADD_WEBGL_CONSTANT(MIRRORED_REPEAT)
 
-#define WEBGL1_CONSTANTS_UNIFORM_TYPES \
-  ADD_WEBGL_CONSTANT(FLOAT_VEC2)       \
-  ADD_WEBGL_CONSTANT(FLOAT_VEC3)       \
-  ADD_WEBGL_CONSTANT(FLOAT_VEC4)       \
-  ADD_WEBGL_CONSTANT(INT_VEC2)         \
-  ADD_WEBGL_CONSTANT(INT_VEC3)         \
-  ADD_WEBGL_CONSTANT(INT_VEC4)         \
-  ADD_WEBGL_CONSTANT(BOOL)             \
-  ADD_WEBGL_CONSTANT(BOOL_VEC2)        \
-  ADD_WEBGL_CONSTANT(BOOL_VEC3)        \
-  ADD_WEBGL_CONSTANT(BOOL_VEC4)        \
-  ADD_WEBGL_CONSTANT(FLOAT_MAT2)       \
-  ADD_WEBGL_CONSTANT(FLOAT_MAT3)       \
-  ADD_WEBGL_CONSTANT(FLOAT_MAT4)       \
-  ADD_WEBGL_CONSTANT(SAMPLER_2D)       \
+#define WEBGL1_CONSTANTS_UNIFORM_TYPES() \
+  ADD_WEBGL_CONSTANT(FLOAT_VEC2)         \
+  ADD_WEBGL_CONSTANT(FLOAT_VEC3)         \
+  ADD_WEBGL_CONSTANT(FLOAT_VEC4)         \
+  ADD_WEBGL_CONSTANT(INT_VEC2)           \
+  ADD_WEBGL_CONSTANT(INT_VEC3)           \
+  ADD_WEBGL_CONSTANT(INT_VEC4)           \
+  ADD_WEBGL_CONSTANT(BOOL)               \
+  ADD_WEBGL_CONSTANT(BOOL_VEC2)          \
+  ADD_WEBGL_CONSTANT(BOOL_VEC3)          \
+  ADD_WEBGL_CONSTANT(BOOL_VEC4)          \
+  ADD_WEBGL_CONSTANT(FLOAT_MAT2)         \
+  ADD_WEBGL_CONSTANT(FLOAT_MAT3)         \
+  ADD_WEBGL_CONSTANT(FLOAT_MAT4)         \
+  ADD_WEBGL_CONSTANT(SAMPLER_2D)         \
   ADD_WEBGL_CONSTANT(SAMPLER_CUBE)
 
-#define WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER              \
+#define WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER()            \
   ADD_WEBGL_CONSTANT(FRAMEBUFFER)                                  \
   ADD_WEBGL_CONSTANT(RENDERBUFFER)                                 \
   ADD_WEBGL_CONSTANT(RGBA4)                                        \
@@ -342,40 +341,40 @@ namespace script_bindings
   ADD_WEBGL_CONSTANT(MAX_RENDERBUFFER_SIZE)                        \
   ADD_WEBGL_CONSTANT(INVALID_FRAMEBUFFER_OPERATION)
 
-#define WEBGL1_CONSTANTS                   \
-  WEBGL1_CONSTANTS_CLEARING_BUFFERS        \
-  WEBGL1_CONSTANTS_RENDERING_PRIMITIVES    \
-  WEBGL1_CONSTANTS_BLENDING                \
-  WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS \
-  WEBGL1_CONSTANTS_CULLING                 \
-  WEBGL1_CONSTANTS_ENABLE_AND_DISABLE      \
-  WEBGL1_CONSTANTS_ERRORS                  \
-  WEBGL1_CONSTANTS_FRONTFACE               \
-  WEBGL1_CONSTANTS_HINTS                   \
-  WEBGL1_CONSTANTS_DATATYPES               \
-  WEBGL1_CONSTANTS_PIXELS                  \
-  WEBGL1_CONSTANTS_SHADERS                 \
-  WEBGL1_CONSTANTS_DEPTH_AND_STENCIL       \
-  WEBGL1_CONSTANTS_TEXTURE                 \
-  WEBGL1_CONSTANTS_UNIFORM_TYPES           \
-  WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER
-
-      prototype->Set(String::NewFromUtf8(isolate, "__webgl1_constants__").ToLocalChecked(),
-                     Boolean::New(isolate, true));
+      WEBGL1_CONSTANTS_CLEARING_BUFFERS()
+      WEBGL1_CONSTANTS_RENDERING_PRIMITIVES()
+      WEBGL1_CONSTANTS_BLENDING()
+      WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS()
+      WEBGL1_CONSTANTS_CULLING()
+      WEBGL1_CONSTANTS_ENABLE_AND_DISABLE()
+      WEBGL1_CONSTANTS_ERRORS()
+      WEBGL1_CONSTANTS_FRONTFACE()
+      WEBGL1_CONSTANTS_HINTS()
+      WEBGL1_CONSTANTS_DATATYPES()
+      WEBGL1_CONSTANTS_PIXELS()
+      WEBGL1_CONSTANTS_SHADERS()
+      WEBGL1_CONSTANTS_DEPTH_AND_STENCIL()
+      WEBGL1_CONSTANTS_TEXTURE()
+      WEBGL1_CONSTANTS_UNIFORM_TYPES()
+      WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER()
+#undef ADD_WEBGL_CONSTANT
     }
 
     void WebGLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope scope(isolate);
+
       // WebGL constants
       SetupConstants(isolate, tpl);
 
       // Set up the WebGL 1.0 API methods and properties
       auto prototype = tpl->PrototypeTemplate();
 
-#define ADD_WEBGL1_ACCESSOR(NAME, GETTER, SETTER) \
-  prototype->SetAccessor(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), GETTER, SETTER);
 #define ADD_WEBGL1_METHOD(NAME, CALLBACK) \
-  prototype->Set(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), FunctionTemplate::New(isolate, CALLBACK));
+  InstanceMethod(isolate,                 \
+                 prototype,               \
+                 NAME,                    \
+                 &WebGLRenderingContext::CALLBACK);
 
       // Getters and setters
       InstanceReadonlyAccessor(isolate, prototype, "canvas", &WebGLRenderingContext::CanvasGetter);
@@ -503,22 +502,8 @@ namespace script_bindings
       ADD_WEBGL1_METHOD("getSupportedExtensions", GetSupportedExtensions)
     }
 
-    Local<Object> WebGLRenderingContext::NewInstance(Isolate *isolate,
-                                                     shared_ptr<client_graphics::WebGLContext> nativeContext)
-    {
-      EscapableHandleScope scope(isolate);
-      if (nativeContext == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(WebGLRenderingContextBase::NewInstance(isolate, nativeContext).As<Object>());
-      }
-    }
-
     WebGLRenderingContext::WebGLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGLRenderingContextBase(isolate, args)
+        : WebGLRenderingContextBase(isolate, args, true)
     {
     }
 

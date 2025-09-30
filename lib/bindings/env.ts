@@ -3,7 +3,6 @@ import { isMainThread } from 'node:worker_threads';
 let nativeContext: Transmute.TrClientContext = null;
 try {
   // Preload the followings because this module "transmute:env" depends on them.
-  process._linkedBinding('transmute:browser');
   process._linkedBinding('transmute:dom');
   process._linkedBinding('transmute:messaging');
   process._linkedBinding('transmute:renderer');

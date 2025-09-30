@@ -33,75 +33,75 @@ namespace script_bindings
 
     private:
       // WebGL 2.0 specific methods
-      static void DrawBuffers(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ClearBufferfv(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ClearBufferiv(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ClearBufferuiv(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ClearBufferfi(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DrawBuffers(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ClearBufferfv(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ClearBufferiv(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ClearBufferuiv(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ClearBufferfi(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Query objects
-      static void CreateQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DeleteQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BeginQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void EndQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetQueryParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CreateQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DeleteQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BeginQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void EndQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetQuery(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetQueryParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Sampler objects
-      static void CreateSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DeleteSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BindSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void SamplerParameteri(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void SamplerParameterf(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetSamplerParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CreateSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DeleteSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BindSampler(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void SamplerParameteri(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void SamplerParameterf(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetSamplerParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Sync objects
-      static void FenceSync(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void IsSync(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DeleteSync(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ClientWaitSync(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void WaitSync(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetSyncParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void FenceSync(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsSync(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DeleteSync(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ClientWaitSync(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void WaitSync(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetSyncParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Transform feedback
-      static void CreateTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DeleteTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BindTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BeginTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void EndTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void TransformFeedbackVaryings(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetTransformFeedbackVarying(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void PauseTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void ResumeTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CreateTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DeleteTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BindTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BeginTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void EndTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TransformFeedbackVaryings(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetTransformFeedbackVarying(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void PauseTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void ResumeTransformFeedback(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Uniform buffer objects
-      static void BindBufferBase(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BindBufferRange(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetUniformIndices(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetActiveUniforms(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetUniformBlockIndex(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetActiveUniformBlockParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void GetActiveUniformBlockName(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void UniformBlockBinding(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BindBufferBase(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BindBufferRange(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetUniformIndices(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetActiveUniforms(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetUniformBlockIndex(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetActiveUniformBlockParameter(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void GetActiveUniformBlockName(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void UniformBlockBinding(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Vertex array objects
-      static void CreateVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DeleteVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void BindVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void IsVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CreateVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DeleteVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void BindVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void IsVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Enhanced texture operations
-      static void TexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void TexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void CopyTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void CompressedTexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void CompressedTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CopyTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CompressedTexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void CompressedTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
 
       // Enhanced drawing operations
-      static void DrawRangeElements(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DrawElementsInstanced(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void DrawArraysInstanced(const v8::FunctionCallbackInfo<v8::Value> &args);
-      static void VertexAttribDivisor(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DrawRangeElements(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DrawElementsInstanced(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void DrawArraysInstanced(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void VertexAttribDivisor(const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

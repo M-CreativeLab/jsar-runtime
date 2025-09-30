@@ -9,13 +9,10 @@ namespace script_bindings
 
     void WebGL2RenderingContext::SetupConstants(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      // WebGL 2.0 constants as per MDN spec
-      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
+      HandleScope scope(isolate);
 
-#define ADD_WEBGL2_CONSTANT(name) \
-  prototype->Set(String::NewFromUtf8(isolate, #name).ToLocalChecked(), Integer::New(isolate, WEBGL2_##name));
-
-#define WEBGL2_CONSTANTS_PARAMETERS                    \
+#define ADD_WEBGL2_CONSTANT(NAME) IntegerConstant(isolate, tpl, #NAME, WEBGL2_##NAME);
+#define WEBGL2_CONSTANTS_PARAMETERS()                  \
   ADD_WEBGL2_CONSTANT(READ_BUFFER)                     \
   ADD_WEBGL2_CONSTANT(UNPACK_ROW_LENGTH)               \
   ADD_WEBGL2_CONSTANT(UNPACK_SKIP_ROWS)                \
@@ -44,7 +41,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(MAX_SERVER_WAIT_TIMEOUT)         \
   ADD_WEBGL2_CONSTANT(MAX_ELEMENT_INDEX)
 
-#define WEBGL2_CONSTANTS_TEXTURES               \
+#define WEBGL2_CONSTANTS_TEXTURES()             \
   ADD_WEBGL2_CONSTANT(RED)                      \
   ADD_WEBGL2_CONSTANT(RGB8)                     \
   ADD_WEBGL2_CONSTANT(RGBA8)                    \
@@ -110,7 +107,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(TEXTURE_IMMUTABLE_FORMAT) \
   ADD_WEBGL2_CONSTANT(TEXTURE_IMMUTABLE_LEVELS)
 
-#define WEBGL2_CONSTANTS_PIXELTYPES                   \
+#define WEBGL2_CONSTANTS_PIXELTYPES()                 \
   ADD_WEBGL2_CONSTANT(UNSIGNED_INT_2_10_10_10_REV)    \
   ADD_WEBGL2_CONSTANT(UNSIGNED_INT_10F_11F_11F_REV)   \
   ADD_WEBGL2_CONSTANT(UNSIGNED_INT_5_9_9_9_REV)       \
@@ -121,14 +118,14 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(RG_INTEGER)                     \
   ADD_WEBGL2_CONSTANT(INT_2_10_10_10_REV)
 
-#define WEBGL2_CONSTANTS_QUERIES              \
+#define WEBGL2_CONSTANTS_QUERIES()            \
   ADD_WEBGL2_CONSTANT(CURRENT_QUERY)          \
   ADD_WEBGL2_CONSTANT(QUERY_RESULT)           \
   ADD_WEBGL2_CONSTANT(QUERY_RESULT_AVAILABLE) \
   ADD_WEBGL2_CONSTANT(ANY_SAMPLES_PASSED)     \
   ADD_WEBGL2_CONSTANT(ANY_SAMPLES_PASSED_CONSERVATIVE)
 
-#define WEBGL2_CONSTANTS_DRAWBUFFERS         \
+#define WEBGL2_CONSTANTS_DRAWBUFFERS()       \
   ADD_WEBGL2_CONSTANT(MAX_DRAW_BUFFERS)      \
   ADD_WEBGL2_CONSTANT(DRAW_BUFFER0)          \
   ADD_WEBGL2_CONSTANT(DRAW_BUFFER1)          \
@@ -163,7 +160,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(COLOR_ATTACHMENT14)    \
   ADD_WEBGL2_CONSTANT(COLOR_ATTACHMENT15)
 
-#define WEBGL2_CONSTANTS_SAMPLERS                    \
+#define WEBGL2_CONSTANTS_SAMPLERS()                  \
   ADD_WEBGL2_CONSTANT(SAMPLER_3D)                    \
   ADD_WEBGL2_CONSTANT(SAMPLER_2D_SHADOW)             \
   ADD_WEBGL2_CONSTANT(SAMPLER_2D_ARRAY)              \
@@ -180,7 +177,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(MAX_SAMPLES)                   \
   ADD_WEBGL2_CONSTANT(SAMPLER_BINDING)
 
-#define WEBGL2_CONSTANTS_BUFFERS                   \
+#define WEBGL2_CONSTANTS_BUFFERS()                 \
   ADD_WEBGL2_CONSTANT(PIXEL_PACK_BUFFER)           \
   ADD_WEBGL2_CONSTANT(PIXEL_UNPACK_BUFFER)         \
   ADD_WEBGL2_CONSTANT(PIXEL_PACK_BUFFER_BINDING)   \
@@ -190,7 +187,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(COPY_READ_BUFFER_BINDING)    \
   ADD_WEBGL2_CONSTANT(COPY_WRITE_BUFFER_BINDING)
 
-#define WEBGL2_CONSTANTS_DATA_TYPES        \
+#define WEBGL2_CONSTANTS_DATA_TYPES()      \
   ADD_WEBGL2_CONSTANT(FLOAT_MAT2x3)        \
   ADD_WEBGL2_CONSTANT(FLOAT_MAT2x4)        \
   ADD_WEBGL2_CONSTANT(FLOAT_MAT3x2)        \
@@ -203,11 +200,11 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(UNSIGNED_NORMALIZED) \
   ADD_WEBGL2_CONSTANT(SIGNED_NORMALIZED)
 
-#define WEBGL2_CONSTANTS_VERTEX_ATTRIBS            \
+#define WEBGL2_CONSTANTS_VERTEX_ATTRIBS()          \
   ADD_WEBGL2_CONSTANT(VERTEX_ATTRIB_ARRAY_INTEGER) \
   ADD_WEBGL2_CONSTANT(VERTEX_ATTRIB_ARRAY_DIVISOR)
 
-#define WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK                          \
+#define WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK()                        \
   ADD_WEBGL2_CONSTANT(TRANSFORM_FEEDBACK_BUFFER_MODE)                \
   ADD_WEBGL2_CONSTANT(MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS)    \
   ADD_WEBGL2_CONSTANT(TRANSFORM_FEEDBACK_VARYINGS)                   \
@@ -225,7 +222,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(TRANSFORM_FEEDBACK_ACTIVE)                     \
   ADD_WEBGL2_CONSTANT(TRANSFORM_FEEDBACK_BINDING)
 
-#define WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS      \
+#define WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS()    \
   ADD_WEBGL2_CONSTANT(FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING) \
   ADD_WEBGL2_CONSTANT(FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) \
   ADD_WEBGL2_CONSTANT(FRAMEBUFFER_ATTACHMENT_RED_SIZE)       \
@@ -246,7 +243,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER)  \
   ADD_WEBGL2_CONSTANT(FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)
 
-#define WEBGL2_CONSTANTS_UNIFORMS                                \
+#define WEBGL2_CONSTANTS_UNIFORMS()                              \
   ADD_WEBGL2_CONSTANT(UNIFORM_BUFFER)                            \
   ADD_WEBGL2_CONSTANT(UNIFORM_BUFFER_BINDING)                    \
   ADD_WEBGL2_CONSTANT(UNIFORM_BUFFER_START)                      \
@@ -274,7 +271,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER) \
   ADD_WEBGL2_CONSTANT(UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER)
 
-#define WEBGL2_CONSTANTS_SYNC_OBJECTS             \
+#define WEBGL2_CONSTANTS_SYNC_OBJECTS()           \
   ADD_WEBGL2_CONSTANT(OBJECT_TYPE)                \
   ADD_WEBGL2_CONSTANT(SYNC_CONDITION)             \
   ADD_WEBGL2_CONSTANT(SYNC_STATUS)                \
@@ -289,7 +286,7 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(WAIT_FAILED)                \
   ADD_WEBGL2_CONSTANT(SYNC_FLUSH_COMMANDS_BIT)
 
-#define WEBGL2_CONSTANTS_MISCELLANEOUS    \
+#define WEBGL2_CONSTANTS_MISCELLANEOUS()  \
   ADD_WEBGL2_CONSTANT(COLOR)              \
   ADD_WEBGL2_CONSTANT(DEPTH)              \
   ADD_WEBGL2_CONSTANT(STENCIL)            \
@@ -308,28 +305,28 @@ namespace script_bindings
   ADD_WEBGL2_CONSTANT(TIMEOUT_IGNORED)    \
   ADD_WEBGL2_CONSTANT(MAX_CLIENT_WAIT_TIMEOUT_WEBGL)
 
-#define WEBGL2_CONSTANTS                          \
-  WEBGL2_CONSTANTS_PARAMETERS                     \
-  WEBGL2_CONSTANTS_TEXTURES                       \
-  WEBGL2_CONSTANTS_PIXELTYPES                     \
-  WEBGL2_CONSTANTS_QUERIES                        \
-  WEBGL2_CONSTANTS_DRAWBUFFERS                    \
-  WEBGL2_CONSTANTS_SAMPLERS                       \
-  WEBGL2_CONSTANTS_BUFFERS                        \
-  WEBGL2_CONSTANTS_DATA_TYPES                     \
-  WEBGL2_CONSTANTS_VERTEX_ATTRIBS                 \
-  WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK             \
-  WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS \
-  WEBGL2_CONSTANTS_UNIFORMS                       \
-  WEBGL2_CONSTANTS_SYNC_OBJECTS                   \
-  WEBGL2_CONSTANTS_MISCELLANEOUS
+      WEBGL2_CONSTANTS_PARAMETERS()
+      WEBGL2_CONSTANTS_TEXTURES()
+      WEBGL2_CONSTANTS_PIXELTYPES()
+      WEBGL2_CONSTANTS_QUERIES()
+      WEBGL2_CONSTANTS_DRAWBUFFERS()
+      WEBGL2_CONSTANTS_SAMPLERS()
+      WEBGL2_CONSTANTS_BUFFERS()
+      WEBGL2_CONSTANTS_DATA_TYPES()
+      WEBGL2_CONSTANTS_VERTEX_ATTRIBS()
+      WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK()
+      WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS()
+      WEBGL2_CONSTANTS_UNIFORMS()
+      WEBGL2_CONSTANTS_SYNC_OBJECTS()
+      WEBGL2_CONSTANTS_MISCELLANEOUS()
 
-      prototype->Set(String::NewFromUtf8(isolate, "__webgl2_constants__").ToLocalChecked(),
-                     Boolean::New(isolate, true));
+#undef ADD_WEBGL2_CONSTANT
     }
 
     void WebGL2RenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope scope(isolate);
+
       /**
        * WebGL2RenderingContext does not inherit from WebGLRenderingContext directly, but it should reuse the same
        * configuration for shared methods and properties.
@@ -343,7 +340,7 @@ namespace script_bindings
       auto prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL2_METHOD(NAME, CALLBACK) \
-  prototype->Set(String::NewFromUtf8(isolate, NAME).ToLocalChecked(), FunctionTemplate::New(isolate, CALLBACK));
+      InstanceMethod(isolate, prototype, NAME, &WebGL2RenderingContext::CALLBACK);
 
       // WebGL 2.0 specific methods
       ADD_WEBGL2_METHOD("drawBuffers", DrawBuffers)
