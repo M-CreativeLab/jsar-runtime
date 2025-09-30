@@ -39,10 +39,12 @@ namespace script_bindings::dom_bindings
 #undef NODE_TYPE_MAP
 
     // Add property accessors
+    InstanceReadonlyAccessor(isolate, prototype, "baseURI", &Node::BaseURIGetter);
     InstanceReadonlyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
     InstanceReadonlyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
     InstanceReadonlyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
     InstanceReadonlyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "parentElement", &Node::ParentElementGetter);
     InstanceReadonlyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
     InstanceReadonlyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
     InstanceReadonlyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
@@ -103,6 +105,15 @@ namespace script_bindings::dom_bindings
   }
 
   // Property getters
+
+  void Node::BaseURIGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                  handle()->baseURI.c_str())
+                                .ToLocalChecked());
+  }
 
   void Node::NodeNameGetter(const PropertyCallbackInfo<Value> &info)
   {
@@ -174,6 +185,23 @@ namespace script_bindings::dom_bindings
     else
     {
       Local<Object> parentWrapper = Node::GetOrNewInstance(isolate, parentNode);
+      info.GetReturnValue().Set(parentWrapper);
+    }
+  }
+
+  void Node::ParentElementGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto parentElement = handle()->getParentElement();
+    if (parentElement == nullptr)
+    {
+      info.GetReturnValue().SetNull();
+    }
+    else
+    {
+      Local<Object> parentWrapper = Element::GetOrNewInstance(isolate, parentElement);
       info.GetReturnValue().Set(parentWrapper);
     }
   }

@@ -39,12 +39,14 @@ namespace script_bindings
 
     private:
       // Property getters
+      void BaseURIGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeTypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
       void IsConnectedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void ParentNodeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ParentElementGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void ChildNodesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void FirstChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void LastChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
