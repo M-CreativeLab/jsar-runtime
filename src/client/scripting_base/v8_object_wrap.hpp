@@ -237,7 +237,7 @@ namespace scripting_base
       }
       else
       {
-        return NewInstance(isolate, inner);
+        return T::NewInstance(isolate, inner);
       }
     }
 

@@ -4,6 +4,7 @@
 
 #include "./document.hpp"
 #include "./element.hpp"
+#include "./node_list.hpp"
 
 using namespace std;
 using namespace v8;
@@ -166,23 +167,14 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "createTextNode requires 1 argument").ToLocalChecked()));
-        return;
-      }
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
+          MakeMethodError(isolate, "createTextNode", "1 argument required, but only 0 present.")));
         return;
       }
 
       String::Utf8Value data(isolate, info[0]);
-      auto textNode = document->inner()->createTextNode(string(*data));
-
+      auto textNode = handle()->createTextNode(string(*data));
       if (textNode != nullptr)
       {
-        // TODO: Create Text node wrapper instead of generic Node
         Local<Object> nodeWrapper = Node::NewInstance(isolate, textNode);
         info.GetReturnValue().Set(nodeWrapper);
       }
@@ -200,23 +192,14 @@ namespace script_bindings
       if (info.Length() < 1)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "createComment requires 1 argument").ToLocalChecked()));
-        return;
-      }
-
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
+          MakeMethodError(isolate, "createComment", "1 argument required, but only 0 present.")));
         return;
       }
 
       String::Utf8Value data(isolate, info[0]);
-      auto commentNode = document->inner()->createComment(string(*data));
-
+      auto commentNode = handle()->createComment(string(*data));
       if (commentNode != nullptr)
       {
-        // TODO: Create Comment node wrapper instead of generic Node
         Local<Object> nodeWrapper = Node::NewInstance(isolate, commentNode);
         info.GetReturnValue().Set(nodeWrapper);
       }
@@ -298,16 +281,24 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
+      if (info.Length() < 1)
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "querySelector", "1 argument required, but only 0 present.")));
         return;
       }
 
-      // TODO: Implement querySelector
-      cout << "querySelector called" << endl;
-      info.GetReturnValue().SetNull();
+      String::Utf8Value selectors(isolate, info[0]);
+      auto element = handle()->querySelector(string(*selectors));
+      if (element != nullptr)
+      {
+        Local<Object> elementWrapper = Element::GetOrNewInstance(isolate, element);
+        info.GetReturnValue().Set(elementWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
     }
 
     void Document::QuerySelectorAll(const FunctionCallbackInfo<Value> &info)
@@ -315,16 +306,28 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
+      if (info.Length() < 1)
       {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "querySelector", "1 argument required, but only 0 present.")));
         return;
       }
 
-      // TODO: Implement querySelectorAll - return NodeList
-      cout << "querySelectorAll called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      String::Utf8Value selectors(isolate, info[0]);
+      try
+      {
+        auto elements = make_unique<::dom::NodeList<::dom::Element>>(handle()->querySelectorAll(string(*selectors)));
+        Local<Value> nodeList = NodeList::NewInstance(isolate, std::move(elements));
+        info.GetReturnValue().Set(nodeList);
+        return;
+      }
+      catch (const exception &e)
+      {
+        string message = "'" + string(*selectors) + "' is not a valid selector.";
+        isolate->ThrowException(Exception::Error(
+          MakeMethodError(isolate, "querySelectorAll", message.c_str())));
+        return;
+      }
     }
   }
 }

@@ -20,24 +20,21 @@ namespace script_bindings
       {
         return "NodeList";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<dom::NodeListApi>);
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Core methods
-      static void Item(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Entries(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ForEach(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Keys(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Values(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Item(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Entries(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ForEach(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Keys(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Values(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Property getters
-      static void LengthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LengthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Indexed property handlers for array-like access
       static void IndexedPropertyGetter(uint32_t index, const v8::PropertyCallbackInfo<v8::Value> &info);

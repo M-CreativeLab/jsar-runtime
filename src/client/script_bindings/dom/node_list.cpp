@@ -1,5 +1,6 @@
-#include "./node_list.hpp"
 #include <iostream>
+#include "./node_list.hpp"
+#include "./node.hpp"
 
 using namespace std;
 using namespace v8;
@@ -12,15 +13,14 @@ namespace script_bindings::dom_bindings
     Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add properties
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "length").ToLocalChecked(),
-                                  LengthGetter);
+    InstanceReadonlyAccessor(isolate, instanceTemplate, "length", &NodeList::LengthGetter);
 
     // Add methods
-    prototypeTemplate->Set(isolate, "item", FunctionTemplate::New(isolate, Item));
-    prototypeTemplate->Set(isolate, "entries", FunctionTemplate::New(isolate, Entries));
-    prototypeTemplate->Set(isolate, "forEach", FunctionTemplate::New(isolate, ForEach));
-    prototypeTemplate->Set(isolate, "keys", FunctionTemplate::New(isolate, Keys));
-    prototypeTemplate->Set(isolate, "values", FunctionTemplate::New(isolate, Values));
+    InstanceMethod(isolate, prototypeTemplate, "item", &NodeList::Item);
+    InstanceMethod(isolate, prototypeTemplate, "entries", &NodeList::Entries);
+    InstanceMethod(isolate, prototypeTemplate, "forEach", &NodeList::ForEach);
+    InstanceMethod(isolate, prototypeTemplate, "keys", &NodeList::Keys);
+    InstanceMethod(isolate, prototypeTemplate, "values", &NodeList::Values);
 
     // Set up indexed property handlers for array-like access
     instanceTemplate->SetHandler(IndexedPropertyHandlerConfiguration(
@@ -29,25 +29,6 @@ namespace script_bindings::dom_bindings
       IndexedPropertyQuery,
       nullptr, // No deleter - NodeList is read-only
       IndexedPropertyEnumerator));
-  }
-
-  Local<Object> NodeList::NewInstance(Isolate *isolate, shared_ptr<dom::NodeListApi> nativeList)
-  {
-    EscapableHandleScope scope(isolate);
-
-    if (nativeList == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(NodeListBase::NewInstance(isolate, nativeList).As<Object>());
-    }
-  }
-
-  Local<Function> NodeList::Initialize(Isolate *isolate)
-  {
-    return NodeList::ObjectWrap::Initialize(isolate);
   }
 
   NodeList::NodeList(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -60,19 +41,27 @@ namespace script_bindings::dom_bindings
   void NodeList::Item(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 1 || !info[0]->IsNumber())
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "NodeList.item requires a numeric index").ToLocalChecked()));
+        MakeMethodError(isolate, "item", "1 argument required, but only 0 present.")));
       return;
     }
 
-    uint32_t index = info[0]->Uint32Value(isolate->GetCurrentContext()).FromMaybe(0);
-    cout << "NodeList.item(" << index << ") called" << endl;
-
-    // TODO: Return the node at the specified index
-    info.GetReturnValue().SetNull();
+    uint32_t index = info[0]->Uint32Value(context).FromMaybe(0);
+    auto node = handle()->item(index);
+    if (node != nullptr)
+    {
+      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, node);
+      info.GetReturnValue().Set(nodeWrapper);
+    }
+    else
+    {
+      info.GetReturnValue().SetNull();
+    }
   }
 
   void NodeList::Entries(const FunctionCallbackInfo<Value> &info)
@@ -114,11 +103,13 @@ namespace script_bindings::dom_bindings
   }
 
   // Property getters
-  void NodeList::LengthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void NodeList::LengthGetter(const PropertyCallbackInfo<Value> &info)
   {
-    cout << "NodeList.length getter called" << endl;
-    // TODO: Return the actual length of the node list
-    info.GetReturnValue().Set(0);
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    int length = handle()->length();
+    info.GetReturnValue().Set(Integer::New(isolate, length));
   }
 
   // Indexed property handlers
