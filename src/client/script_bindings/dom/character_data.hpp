@@ -34,16 +34,16 @@ namespace script_bindings
 
     private:
       // Property getters and setters
-      static void DataGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DataSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void LengthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DataGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DataSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void LengthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Methods
-      static void SubstringData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void AppendData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void InsertData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void DeleteData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ReplaceData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SubstringData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void AppendData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void InsertData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void DeleteData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ReplaceData(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

@@ -10,44 +10,23 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
-    // static
     void CharacterData::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "data").ToLocalChecked(),
-                                     DataGetter,
-                                     DataSetter);
-
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "length").ToLocalChecked(),
-                                     LengthGetter,
-                                     nullptr,
-                                     Local<Value>(),
-                                     AccessControl::DEFAULT,
-                                     PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, prototype, "length", &CharacterData::LengthGetter);
+      InstanceAccessor(isolate, prototype, "data", &CharacterData::DataGetter, &CharacterData::DataSetter);
 
       // Add methods
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "substringData").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, SubstringData));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "appendData").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, AppendData));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "insertData").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, InsertData));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "deleteData").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, DeleteData));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "replaceData").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, ReplaceData));
+      InstanceMethod(isolate, prototype, "substringData", &CharacterData::SubstringData);
+      InstanceMethod(isolate, prototype, "appendData", &CharacterData::AppendData);
+      InstanceMethod(isolate, prototype, "insertData", &CharacterData::InsertData);
+      InstanceMethod(isolate, prototype, "deleteData", &CharacterData::DeleteData);
+      InstanceMethod(isolate, prototype, "replaceData", &CharacterData::ReplaceData);
     }
 
-    // static
     Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle)
     {
       EscapableHandleScope scope(isolate);
@@ -62,40 +41,27 @@ namespace script_bindings
     }
 
     CharacterData::CharacterData(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>(isolate, args)
+        : CharacterDataBase(isolate, args, true)
     {
     }
 
     // Property getters and setters
 
-    // static
-    void CharacterData::DataGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void CharacterData::DataGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
-
-      string data = characterData->inner()->data();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, data.c_str()).ToLocalChecked());
+      string data = handle()->data();
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    data.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
-    void CharacterData::DataSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void CharacterData::DataSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        return;
-      }
 
       string newData = "";
       if (value->IsString())
@@ -103,33 +69,25 @@ namespace script_bindings
         String::Utf8Value utf8Value(isolate, value);
         newData = string(*utf8Value);
       }
-      characterData->inner()->data() = newData;
+      handle()->data() = newData;
     }
 
-    // static
-    void CharacterData::LengthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void CharacterData::LengthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Integer::New(isolate, 0));
-        return;
-      }
-
-      int length = static_cast<int>(characterData->inner()->data().length());
+      int length = static_cast<int>(handle()->data().length());
       info.GetReturnValue().Set(Integer::New(isolate, length));
     }
 
     // Methods
 
-    // static
     void CharacterData::SubstringData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
       if (info.Length() < 2)
       {
@@ -138,17 +96,10 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
+      int offset = info[0]->Int32Value(context).FromMaybe(0);
+      int count = info[1]->Int32Value(context).FromMaybe(0);
 
-      int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-      int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-
-      string data = characterData->inner()->data();
+      string data = handle()->data();
       if (offset < 0 || offset >= static_cast<int>(data.length()))
       {
         info.GetReturnValue().SetEmptyString();
@@ -157,10 +108,11 @@ namespace script_bindings
 
       int endPos = min(offset + count, static_cast<int>(data.length()));
       string substring = data.substr(offset, endPos - offset);
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, substring.c_str()).ToLocalChecked());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    substring.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
     void CharacterData::AppendData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -181,19 +133,12 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        return;
-      }
-
       Local<String> dataString = info[0].As<String>();
       String::Utf8Value utf8Value(isolate, dataString);
-      characterData->inner()->appendData(string(*utf8Value));
+      handle()->appendData(string(*utf8Value));
       return info.GetReturnValue().SetUndefined();
     }
 
-    // static
     void CharacterData::InsertData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -214,19 +159,12 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        return;
-      }
-
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       String::Utf8Value utf8Value(isolate, info[1]);
-      characterData->inner()->insertData(offset, string(*utf8Value));
+      handle()->insertData(offset, string(*utf8Value));
       return info.GetReturnValue().SetUndefined();
     }
 
-    // static
     void CharacterData::DeleteData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -247,19 +185,12 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        return;
-      }
-
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-      characterData->inner()->deleteData(offset, count);
+      handle()->deleteData(offset, count);
       return info.GetReturnValue().SetUndefined();
     }
 
-    // static
     void CharacterData::ReplaceData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -280,16 +211,10 @@ namespace script_bindings
         return;
       }
 
-      CharacterData *characterData = Unwrap(isolate, info.This());
-      if (characterData == nullptr || characterData->inner() == nullptr)
-      {
-        return;
-      }
-
       int offset = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
       String::Utf8Value utf8Value(isolate, info[2]);
-      characterData->inner()->replaceData(offset, count, string(*utf8Value));
+      handle()->replaceData(offset, count, string(*utf8Value));
       return info.GetReturnValue().SetUndefined();
     }
   }

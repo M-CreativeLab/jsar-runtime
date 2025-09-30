@@ -12,44 +12,21 @@ namespace script_bindings::dom_bindings
     Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
     // Add properties
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "childElementCount").ToLocalChecked(),
-                                  ChildElementCountGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "firstElementChild").ToLocalChecked(),
-                                  FirstElementChildGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "lastElementChild").ToLocalChecked(),
-                                  LastElementChildGetter);
+    InstanceReadonlyAccessor(isolate, instanceTemplate, "childElementCount", &DocumentFragment::ChildElementCountGetter);
+    InstanceReadonlyAccessor(isolate, instanceTemplate, "firstElementChild", &DocumentFragment::FirstElementChildGetter);
+    InstanceReadonlyAccessor(isolate, instanceTemplate, "lastElementChild", &DocumentFragment::LastElementChildGetter);
 
     // Add methods
-    prototypeTemplate->Set(isolate, "querySelector", FunctionTemplate::New(isolate, QuerySelector));
-    prototypeTemplate->Set(isolate, "querySelectorAll", FunctionTemplate::New(isolate, QuerySelectorAll));
-    prototypeTemplate->Set(isolate, "getElementById", FunctionTemplate::New(isolate, GetElementById));
-    prototypeTemplate->Set(isolate, "getElementsByTagName", FunctionTemplate::New(isolate, GetElementsByTagName));
-    prototypeTemplate->Set(isolate, "getElementsByClassName", FunctionTemplate::New(isolate, GetElementsByClassName));
-  }
-
-  Local<Object> DocumentFragment::NewInstance(Isolate *isolate, shared_ptr<dom::DocumentFragment> native)
-  {
-    EscapableHandleScope scope(isolate);
-
-    if (native == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-    else
-    {
-      return scope.Escape(DocumentFragmentBase::NewInstance(isolate, native).As<Object>());
-    }
-  }
-
-  Local<Function> DocumentFragment::Initialize(Isolate *isolate)
-  {
-    return DocumentFragment::ObjectWrap::Initialize(isolate);
+    InstanceMethod(isolate, prototypeTemplate, "getElementById", &DocumentFragment::GetElementById);
+    InstanceMethod(isolate, prototypeTemplate, "getElementsByTagName", &DocumentFragment::GetElementsByTagName);
+    InstanceMethod(isolate, prototypeTemplate, "getElementsByClassName", &DocumentFragment::GetElementsByClassName);
+    InstanceMethod(isolate, prototypeTemplate, "querySelector", &DocumentFragment::QuerySelector);
+    InstanceMethod(isolate, prototypeTemplate, "querySelectorAll", &DocumentFragment::QuerySelectorAll);
   }
 
   DocumentFragment::DocumentFragment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : DocumentFragmentBase(isolate, args)
+      : DocumentFragmentBase(isolate, args, true)
   {
-    // DocumentFragment constructor
   }
 
   // Method implementations
@@ -89,21 +66,21 @@ namespace script_bindings::dom_bindings
   }
 
   // Property getters
-  void DocumentFragment::ChildElementCountGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void DocumentFragment::ChildElementCountGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "DocumentFragment.childElementCount getter called" << endl;
     // TODO: Return the actual child element count
     info.GetReturnValue().Set(0);
   }
 
-  void DocumentFragment::FirstElementChildGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void DocumentFragment::FirstElementChildGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "DocumentFragment.firstElementChild getter called" << endl;
     // TODO: Return the first element child
     info.GetReturnValue().SetNull();
   }
 
-  void DocumentFragment::LastElementChildGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void DocumentFragment::LastElementChildGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "DocumentFragment.lastElementChild getter called" << endl;
     // TODO: Return the last element child

@@ -25,11 +25,6 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  Local<Function> Comment::Initialize(Isolate *isolate)
-  {
-    return Comment::ObjectWrap::Initialize(isolate);
-  }
-
   Comment::Comment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : CommentBase(isolate, args)
   {
