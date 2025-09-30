@@ -23,9 +23,6 @@ namespace script_bindings
     class HTMLBodyElement : public HTMLBodyElementBase
     {
     public:
-      /**
-       * The name of the HTMLBodyElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLBodyElement";
@@ -34,17 +31,6 @@ namespace script_bindings
 
     public:
       HTMLBodyElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
-    private:
-      // Event handler properties
-      static void OnLoadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OnLoadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void OnUnloadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OnUnloadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void OnBeforeUnloadGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OnBeforeUnloadSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void OnResizeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OnResizeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
     };
   }
 }

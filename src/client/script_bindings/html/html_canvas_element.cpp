@@ -11,36 +11,88 @@ namespace script_bindings::html_bindings
     Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
     Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-    // Canvas methods
-    prototypeTemplate->Set(isolate, "getContext", FunctionTemplate::New(isolate, GetContext));
-    prototypeTemplate->Set(isolate, "toDataURL", FunctionTemplate::New(isolate, ToDataURL));
-    prototypeTemplate->Set(isolate, "toBlob", FunctionTemplate::New(isolate, ToBlob));
-
     // Canvas properties
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                  WidthGetter,
-                                  WidthSetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                  HeightGetter,
-                                  HeightSetter);
+    InstanceAccessor(isolate,
+                     instanceTemplate,
+                     "width",
+                     &HTMLCanvasElement::WidthGetter,
+                     &HTMLCanvasElement::WidthSetter);
+    InstanceAccessor(isolate,
+                     instanceTemplate,
+                     "height",
+                     &HTMLCanvasElement::HeightGetter,
+                     &HTMLCanvasElement::HeightSetter);
+
+    // Canvas methods
+    InstanceMethod(isolate, prototypeTemplate, "getContext", &HTMLCanvasElement::GetContext);
+    InstanceMethod(isolate, prototypeTemplate, "toDataURL", &HTMLCanvasElement::ToDataURL);
+    InstanceMethod(isolate, prototypeTemplate, "toBlob", &HTMLCanvasElement::ToBlob);
   }
 
   HTMLCanvasElement::HTMLCanvasElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLCanvasElementBase(isolate, args)
+      : HTMLCanvasElementBase(isolate, args, true)
   {
-    // HTMLCanvasElement constructor
-    cout << "HTMLCanvasElement V8 wrapper created" << endl;
+  }
+
+  void HTMLCanvasElement::WidthGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    HandleScope scope(info.GetIsolate());
+    int width = handle()->width();
+    info.GetReturnValue().Set(Integer::New(info.GetIsolate(), width));
+  }
+
+  void HTMLCanvasElement::WidthSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (!value->IsNumber())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "set", "width must be a number")));
+      return;
+    }
+
+    int width = value->Int32Value(context).FromMaybe(0);
+    handle()->setWidth(width);
+  }
+
+  void HTMLCanvasElement::HeightGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    HandleScope scope(info.GetIsolate());
+    int height = handle()->height();
+    info.GetReturnValue().Set(Integer::New(info.GetIsolate(), height));
+  }
+
+  void HTMLCanvasElement::HeightSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (!value->IsNumber())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "set", "height must be a number")));
+      return;
+    }
+
+    int height = value->Int32Value(context).FromMaybe(0);
+    handle()->setHeight(height);
   }
 
   // Canvas methods
   void HTMLCanvasElement::GetContext(const FunctionCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
 
     if (info.Length() < 1)
     {
       isolate->ThrowException(Exception::TypeError(
-        String::NewFromUtf8(isolate, "HTMLCanvasElement.getContext requires a context type").ToLocalChecked()));
+        MakeMethodError(isolate, "getContext", "requires at least 1 argument")));
       return;
     }
 
@@ -82,32 +134,5 @@ namespace script_bindings::html_bindings
     // Should call the callback with a Blob containing the canvas content
 
     info.GetReturnValue().SetUndefined();
-  }
-
-  // Property implementations
-  void HTMLCanvasElement::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-  {
-    cout << "HTMLCanvasElement.width getter called" << endl;
-    // TODO: Return the canvas width
-    info.GetReturnValue().Set(300); // Default width
-  }
-
-  void HTMLCanvasElement::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
-  {
-    cout << "HTMLCanvasElement.width setter called" << endl;
-    // TODO: Set the canvas width and clear the canvas
-  }
-
-  void HTMLCanvasElement::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
-  {
-    cout << "HTMLCanvasElement.height getter called" << endl;
-    // TODO: Return the canvas height
-    info.GetReturnValue().Set(150); // Default height
-  }
-
-  void HTMLCanvasElement::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
-  {
-    cout << "HTMLCanvasElement.height setter called" << endl;
-    // TODO: Set the canvas height and clear the canvas
   }
 }

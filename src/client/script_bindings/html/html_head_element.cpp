@@ -12,7 +12,7 @@ namespace script_bindings
     }
 
     HTMLHeadElement::HTMLHeadElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : HTMLHeadElementBase(isolate, args)
+        : HTMLHeadElementBase(isolate, args, true)
     {
     }
   }

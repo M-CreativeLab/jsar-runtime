@@ -6,22 +6,38 @@ namespace script_bindings
   namespace html_bindings
   {
     using namespace v8;
+    using namespace std;
 
     void HTMLButtonElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Button-specific properties
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "disabled").ToLocalChecked(), DisabledGetter, DisabledSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "type").ToLocalChecked(), TypeGetter, TypeSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "value").ToLocalChecked(), ValueGetter, ValueSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "form").ToLocalChecked(), FormGetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "name").ToLocalChecked(), NameGetter, NameSetter);
+      InstanceReadonlyAccessor(isolate, prototype, "form", &HTMLButtonElement::FormGetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "disabled",
+                       &HTMLButtonElement::DisabledGetter,
+                       &HTMLButtonElement::DisabledSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "type",
+                       &HTMLButtonElement::TypeGetter,
+                       &HTMLButtonElement::TypeSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "value",
+                       &HTMLButtonElement::ValueGetter,
+                       &HTMLButtonElement::ValueSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "name",
+                       &HTMLButtonElement::NameGetter,
+                       &HTMLButtonElement::NameSetter);
 
       // Button methods
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "click").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, Click));
+      InstanceMethod(isolate, prototype, "click", &HTMLButtonElement::Click);
     }
 
     HTMLButtonElement::HTMLButtonElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -30,7 +46,7 @@ namespace script_bindings
     }
 
     // Property getters
-    void HTMLButtonElement::DisabledGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLButtonElement::DisabledGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -47,7 +63,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::TypeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLButtonElement::TypeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -64,7 +80,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::ValueGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLButtonElement::ValueGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -81,7 +97,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::FormGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLButtonElement::FormGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -106,7 +122,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::NameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLButtonElement::NameGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -124,7 +140,7 @@ namespace script_bindings
     }
 
     // Property setters
-    void HTMLButtonElement::DisabledSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLButtonElement::DisabledSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -137,7 +153,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::TypeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLButtonElement::TypeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -150,7 +166,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::ValueSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLButtonElement::ValueSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -163,7 +179,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLButtonElement::NameSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLButtonElement::NameSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();

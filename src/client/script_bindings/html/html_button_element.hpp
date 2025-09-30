@@ -22,9 +22,6 @@ namespace script_bindings
     class HTMLButtonElement : public HTMLButtonElementBase
     {
     public:
-      /**
-       * The name of the HTMLButtonElement class for V8.
-       */
       static std::string Name()
       {
         return "HTMLButtonElement";
@@ -36,20 +33,20 @@ namespace script_bindings
 
     private:
       // Property getters
-      static void DisabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void FormGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DisabledGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void FormGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Property setters
-      static void DisabledSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void TypeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ValueSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void NameSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void DisabledSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TypeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void NameSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
-      static void Click(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Click(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }
