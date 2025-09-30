@@ -20,26 +20,26 @@
   console.info(HTMLBodyElement.prototype);
   console.info('=>', document.head.addEventListener);
 
-  // const script = document.createElement('script');
-  // script.src = './document.js';
+  const script = document.createElement('script');
+  script.src = './document.js';
   // script.addEventListener('load', () => {
   //   console.info('load event listener');
   // });
-  // script.onload = function () {
-  //   console.info('onload');
-  // };
-  // document.head.appendChild(script);
+  script.onload = function () {
+    console.info('onload');
+  };
+  document.head.appendChild(script);
 
-  // const listContainer = document.querySelector('#list');
-  // const textNode = document.createTextNode('text node');
-  // listContainer.appendChild(textNode);
+  const listContainer = document.querySelector('#list');
+  const textNode = document.createTextNode('text node');
+  listContainer.appendChild(textNode);
 
-  // console.info('empty text node:', document.createTextNode(''));
+  console.info('empty text node:', document.createTextNode(''));
 
-  // const comment = document.createComment('comment');
-  // console.info(comment);
-  // document.body.appendChild(comment);
-  // console.info(document.body.innerHTML);
+  const comment = document.createComment('comment');
+  console.info(comment);
+  document.body.appendChild(comment);
+  console.info(document.body.innerHTML);
 </script>
 
 </html>

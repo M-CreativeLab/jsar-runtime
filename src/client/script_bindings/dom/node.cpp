@@ -348,7 +348,7 @@ namespace script_bindings::dom_bindings
       return;
     }
 
-    Node *childNode = Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    Node *childNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
     if (childNode == nullptr || childNode->handle() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(

@@ -134,6 +134,7 @@ namespace dom
     shared_ptr<dom::DOMScript> compiledScript;
     bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
+    bool scriptExecuting = false;
     bool scriptExecutionScheduled = false;
 
     // Whether the script uses the execution queue
