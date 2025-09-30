@@ -22,14 +22,10 @@ namespace script_bindings
     class Element : public ElementBase
     {
     public:
-      /**
-       * The name of the Element class for V8.
-       */
       static std::string Name()
       {
         return "Element";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement);
 
@@ -38,25 +34,30 @@ namespace script_bindings
 
     private:
       // Property getters and setters
-      static void TagNameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IdGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IdSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ClassNameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ClassNameSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void InnerHTMLGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void InnerHTMLSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void OuterHTMLGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OuterHTMLSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TagNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void IdGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void IdSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ClassListGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ClassNameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ClassNameSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ChildrenGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void FirstElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LastElementChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void InnerHTMLGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void InnerHTMLSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void OuterHTMLGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void OuterHTMLSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
-      static void GetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void SetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void RemoveAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void HasAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void GetElementsByTagName(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void GetElementsByClassName(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void QuerySelector(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void QuerySelectorAll(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Append(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void RemoveAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void HasAttribute(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetElementsByTagName(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetElementsByClassName(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void QuerySelector(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void QuerySelectorAll(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

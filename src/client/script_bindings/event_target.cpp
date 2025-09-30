@@ -96,6 +96,7 @@ namespace script_bindings
     {
       isolate->ThrowException(Exception::TypeError(
         MakeMethodError(isolate, "dispatchEvent", "dispatchEvent requires 1 argument")));
+      info.GetReturnValue().SetUndefined();
       return;
     }
 
@@ -103,14 +104,16 @@ namespace script_bindings
     {
       isolate->ThrowException(Exception::TypeError(
         MakeMethodError(isolate, "dispatchEvent", "First argument must be an Event object")));
+      info.GetReturnValue().SetUndefined();
       return;
     }
 
     Event* event = Event::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
-    if (event == nullptr || event->inner() == nullptr)
+    if (event == nullptr || event->handle() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(
         MakeMethodError(isolate, "dispatchEvent", "Invalid Event object")));
+      info.GetReturnValue().SetUndefined();
       return;
     }
 

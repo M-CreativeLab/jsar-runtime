@@ -2,6 +2,7 @@
 #include <client/dom/node.hpp>
 #include <client/dom/document.hpp>
 #include <client/script_bindings/dom/node.hpp>
+#include <client/script_bindings/dom/node_list.hpp>
 #include <client/script_bindings/dom/element.hpp>
 #include <client/script_bindings/dom/character_data.hpp>
 #include <client/script_bindings/dom/document.hpp>
@@ -40,7 +41,9 @@ namespace script_bindings::dom_bindings
     // Add property accessors
     InstanceReadonlyAccessor(isolate, prototype, "nodeName", &Node::NodeNameGetter);
     InstanceReadonlyAccessor(isolate, prototype, "nodeType", &Node::NodeTypeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "isConnected", &Node::IsConnectedGetter);
     InstanceReadonlyAccessor(isolate, prototype, "parentNode", &Node::ParentNodeGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "childNodes", &Node::ChildNodesGetter);
     InstanceReadonlyAccessor(isolate, prototype, "firstChild", &Node::FirstChildGetter);
     InstanceReadonlyAccessor(isolate, prototype, "lastChild", &Node::LastChildGetter);
     InstanceReadonlyAccessor(isolate, prototype, "nextSibling", &Node::NextSiblingGetter);
@@ -57,6 +60,10 @@ namespace script_bindings::dom_bindings
     InstanceMethod(isolate, prototype, "cloneNode", &Node::CloneNode);
     InstanceMethod(isolate, prototype, "hasChildNodes", &Node::HasChildNodes);
     InstanceMethod(isolate, prototype, "contains", &Node::Contains);
+    InstanceMethod(isolate, prototype, "isDefaultNamespace", &Node::IsDefaultNamespace);
+    InstanceMethod(isolate, prototype, "isEqualNode", &Node::IsEqualNode);
+    InstanceMethod(isolate, prototype, "isSameNode", &Node::IsSameNode);
+    InstanceMethod(isolate, prototype, "normalize", &Node::Normalize);
   }
 
   Local<Object> Node::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Node> nativeNode)
@@ -147,6 +154,13 @@ namespace script_bindings::dom_bindings
     }
   }
 
+  void Node::IsConnectedGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    info.GetReturnValue().Set(Boolean::New(isolate, handle()->connected));
+  }
+
   void Node::ParentNodeGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
@@ -162,6 +176,22 @@ namespace script_bindings::dom_bindings
       Local<Object> parentWrapper = Node::GetOrNewInstance(isolate, parentNode);
       info.GetReturnValue().Set(parentWrapper);
     }
+  }
+
+  void Node::ChildNodesGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    auto childNodes = handle()->childNodes;
+    Local<Array> resultArray = Array::New(isolate, childNodes.size());
+    for (size_t i = 0; i < childNodes.size(); ++i)
+    {
+      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, childNodes[i]);
+      resultArray->Set(context, static_cast<uint32_t>(i), nodeWrapper).Check();
+    }
+    info.GetReturnValue().Set(resultArray);
   }
 
   void Node::FirstChildGetter(const PropertyCallbackInfo<Value> &info)
@@ -434,7 +464,15 @@ namespace script_bindings::dom_bindings
       deep = info[0]->BooleanValue(isolate);
 
     auto clonedNode = handle()->cloneNode(deep);
-    return info.GetReturnValue().Set(Node::GetOrNewInstance(isolate, clonedNode));
+    if (clonedNode != nullptr)
+    {
+      Local<Object> nodeWrapper = Node::GetOrNewInstance(isolate, clonedNode);
+      info.GetReturnValue().Set(nodeWrapper);
+    }
+    else
+    {
+      info.GetReturnValue().SetNull();
+    }
   }
 
   void Node::HasChildNodes(const FunctionCallbackInfo<Value> &info)
@@ -468,5 +506,100 @@ namespace script_bindings::dom_bindings
 
     // TODO: implement contains properly
     info.GetReturnValue().Set(Boolean::New(isolate, false));
+  }
+
+  void Node::IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "isDefaultNamespace", "Not implemented")));
+    return;
+  }
+
+  void Node::IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isEqualNode", "Requires 1 argument but 0 given")));
+      return;
+    }
+
+    if (info[0]->IsNull())
+    {
+      info.GetReturnValue().Set(Boolean::New(isolate, false));
+      return;
+    }
+    else if (!info[0]->IsObject())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
+      return;
+    }
+
+    auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    if (otherNode == nullptr || otherNode->handle() == nullptr)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isEqualNode", "Argument must be a Node or null")));
+      return;
+    }
+
+    bool isEqual = handle()->isEqualNode(*otherNode->handle());
+    info.GetReturnValue().Set(Boolean::New(isolate, isEqual));
+  }
+
+  void Node::IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+    Local<Context> context = isolate->GetCurrentContext();
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isSameNode", "Requires 1 argument but 0 given")));
+      return;
+    }
+    if (!info[0]->IsObject())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
+      return;
+    }
+
+    // Fast path for the same JS object
+    if (info[0]->StrictEquals(info.This()))
+    {
+      info.GetReturnValue().Set(Boolean::New(isolate, true));
+      return;
+    }
+
+    auto otherNode = Node::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    if (otherNode == nullptr || otherNode->handle() == nullptr)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "isSameNode", "Argument must be a Node")));
+      return;
+    }
+
+    bool isSame = handle()->isSameNode(*otherNode->handle());
+    info.GetReturnValue().Set(Boolean::New(isolate, isSame));
+  }
+
+  void Node::Normalize(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    isolate->ThrowException(Exception::Error(
+      MakeMethodError(isolate, "normalize", "Not implemented")));
+    return;
   }
 }

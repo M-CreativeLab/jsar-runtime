@@ -19,6 +19,9 @@
 #include "./dom/mutation_record.hpp"
 #include "./dom/node_list.hpp"
 
+// CSSOM
+#include "./cssom/css_style_declaration.hpp"
+
 // HTML element bindings
 #include "./html/html_element.hpp"
 #include "./html/html_audio_element.hpp"
@@ -139,6 +142,13 @@ namespace script_bindings
       ADD_DOM_TYPE(MutationObserver)
       ADD_DOM_TYPE(MutationRecord)
 #undef ADD_DOM_TYPE
+
+      // CSSOM
+#define ADD_CSSOM_TYPE(X) \
+  global->Set(context, NAME(#X), cssom_bindings::X::Initialize(isolate)).Check();
+
+      ADD_CSSOM_TYPE(CSSStyleDeclaration)
+#undef ADD_CSSOM_TYPE
 
       // HTML elements
 #define ADD_HTML_ELEMENT(X) \

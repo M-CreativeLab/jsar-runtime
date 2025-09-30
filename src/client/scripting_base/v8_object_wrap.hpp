@@ -376,7 +376,8 @@ namespace scripting_base
                                  v8::Local<v8::ObjectTemplate> objectTemplate,
                                  const char *name,
                                  InstanceGetterCallback getter,
-                                 InstanceSetterCallback setter)
+                                 InstanceSetterCallback setter,
+                                 v8::PropertyAttribute attributes = v8::PropertyAttribute::None)
     {
       auto callbackData = new InstanceAccessorCallbackData{getter, setter, nullptr};
       v8::Local<v8::External> dataValue = v8::External::New(isolate, callbackData);
@@ -396,12 +397,15 @@ namespace scripting_base
       objectTemplate->SetAccessor(v8::String::NewFromUtf8(isolate, name).ToLocalChecked(),
                                   GetterWrapper,
                                   SetterWrapper,
-                                  dataValue);
+                                  dataValue,
+                                  v8::AccessControl::DEFAULT,
+                                  attributes);
     }
     static void InstanceReadonlyAccessor(v8::Isolate *isolate,
                                          v8::Local<v8::ObjectTemplate> objectTemplate,
                                          const char *name,
-                                         InstanceGetterCallback getter)
+                                         InstanceGetterCallback getter,
+                                         v8::PropertyAttribute attributes = v8::PropertyAttribute::ReadOnly)
     {
       auto callbackData = new InstanceAccessorCallbackData{getter, nullptr, nullptr};
       v8::Local<v8::External> dataValue = v8::External::New(isolate, callbackData);
@@ -423,7 +427,7 @@ namespace scripting_base
                                   nullptr,
                                   dataValue,
                                   v8::AccessControl::DEFAULT,
-                                  v8::PropertyAttribute::ReadOnly);
+                                  attributes);
     }
     /**
      * Create a standardized error message for method failures.

@@ -49,6 +49,7 @@ namespace script_bindings
                        const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
+      void CreateDocumentFragment(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateElement(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateTextNode(const v8::FunctionCallbackInfo<v8::Value> &info);
       void CreateComment(const v8::FunctionCallbackInfo<v8::Value> &info);

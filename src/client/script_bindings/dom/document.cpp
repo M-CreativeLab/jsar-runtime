@@ -3,6 +3,7 @@
 #include <client/script_bindings/html/html_head_element.hpp>
 
 #include "./document.hpp"
+#include "./document_fragment.hpp"
 #include "./element.hpp"
 #include "./node_list.hpp"
 
@@ -25,6 +26,7 @@ namespace script_bindings
       InstanceAccessor(isolate, prototype, "title", &Document::TitleGetter, &Document::TitleSetter);
 
       // Add methods
+      InstanceMethod(isolate, prototype, "createDocumentFragment", &Document::CreateDocumentFragment);
       InstanceMethod(isolate, prototype, "createElement", &Document::CreateElement);
       InstanceMethod(isolate, prototype, "createTextNode", &Document::CreateTextNode);
       InstanceMethod(isolate, prototype, "createComment", &Document::CreateComment);
@@ -120,6 +122,23 @@ namespace script_bindings
     }
 
     // Methods
+
+    void Document::CreateDocumentFragment(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      auto fragment = handle()->createDocumentFragment();
+      if (fragment != nullptr)
+      {
+        Local<Object> fragmentWrapper = DocumentFragment::NewInstance(isolate, fragment);
+        info.GetReturnValue().Set(fragmentWrapper);
+      }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
 
     void Document::CreateElement(const FunctionCallbackInfo<Value> &info)
     {
@@ -263,17 +282,25 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      Document *document = Unwrap(isolate, info.This());
-      if (document == nullptr || document->inner() == nullptr)
+      if (info.Length() < 1)
       {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getElementsByClassName", "1 argument required, but only 0 present.")));
         return;
       }
 
-      // TODO: Implement getElementsByClassName - return NodeList
-      cout << "getElementsByClassName called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      String::Utf8Value className(isolate, info[0]);
+      auto elements = handle()->getElementsByClassName(string(*className));
+
+      Local<Array> resultArray = Array::New(isolate, elements.size());
+      for (size_t i = 0; i < elements.size(); ++i)
+      {
+        Local<Object> elementWrapper = Element::GetOrNewInstance(isolate, elements[i]);
+        resultArray->Set(context, static_cast<uint32_t>(i), elementWrapper).Check();
+      }
+      info.GetReturnValue().Set(resultArray);
     }
 
     void Document::QuerySelector(const FunctionCallbackInfo<Value> &info)

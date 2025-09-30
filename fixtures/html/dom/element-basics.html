@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>DOM Element Basic Functionality Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    section {
+      margin-bottom: 2em;
+      padding: 1em;
+      border: 1px solid #ccc;
+    }
+
+    .pass {
+      color: green;
+    }
+
+    .fail {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>DOM Element Basic Functionality Test</h1>
+  <div id="results"></div>
+
+  <script>
+    function assert(name, cond) {
+      const div = document.createElement('div');
+      div.innerHTML = (cond ? '✔' : '✘') + ' ' + name;
+      div.className = cond ? 'pass' : 'fail';
+      document.getElementById('results').appendChild(div);
+    }
+
+    // 1. Element creation and tagName
+    const el = document.createElement('div');
+    assert('element.tagName returns uppercase', el.tagName === 'DIV');
+
+    // 2. set/getAttribute
+    el.setAttribute('foo', 'bar');
+    assert('setAttribute/getAttribute', el.getAttribute('foo') === 'bar');
+
+    // 3. className and classList
+    el.className = 'test1 test2';
+    assert('className', el.className === 'test1 test2');
+    // el.classList.add('test3');
+    // assert('classList.add', el.classList.contains('test3'));
+    // el.classList.remove('test1');
+    // assert('classList.remove', !el.classList.contains('test1'));
+    // el.classList.toggle('test2');
+    // assert('classList.toggle', !el.classList.contains('test2'));
+
+    // 4. id property
+    el.id = 'myid';
+    assert('id property', el.id === 'myid');
+    assert('id reflected in attribute', el.getAttribute('id') === 'myid');
+
+    // 5. innerHTML / outerHTML / textContent
+    el.innerHTML = '<span>hello</span>';
+    assert('innerHTML', el.firstChild.tagName === 'SPAN');
+    el.textContent = 'abc';
+    assert('textContent', el.textContent === 'abc');
+    assert('innerHTML after textContent', el.innerHTML === 'abc');
+
+    // 6. appendChild / insertBefore / removeChild / replaceChild
+    const parent = document.createElement('div');
+    const a = document.createElement('a');
+    const b = document.createElement('b');
+    parent.appendChild(a);
+    parent.appendChild(b);
+    assert('appendChild', parent.childNodes.length === 2 && parent.lastChild === b);
+    const c = document.createElement('c');
+    parent.insertBefore(c, b);
+    assert('insertBefore', parent.childNodes[1] === c);
+    parent.removeChild(a);
+    assert('removeChild', !Array.from(parent.childNodes).includes(a));
+    const d = document.createElement('d');
+    parent.replaceChild(d, c);
+    assert('replaceChild', parent.childNodes[0] === d);
+
+    // 7. parentNode/children/childNodes/firstChild/lastChild
+    assert('parentNode', d.parentNode === parent);
+    // assert('children', parent.children.length === 2);
+    assert('firstChild/lastChild', parent.firstChild === d && parent.lastChild === b);
+
+    // 8. getElementsByTagName / getElementsByClassName / querySelector
+    parent.innerHTML = '<p class="x"></p><span class="x"></span>';
+    // assert('getElementsByTagName', parent.getElementsByTagName('p').length === 1);
+    // assert('getElementsByClassName', parent.getElementsByClassName('x').length === 2);
+    // assert('querySelector', parent.querySelector('.x').tagName === 'P');
+
+    // 9. style property
+    el.style.backgroundColor = 'red';
+    assert('element.style property', el.style.backgroundColor === 'red' || el.style.backgroundColor === 'rgb(255, 0, 0)');
+
+    // 10. events (onclick, addEventListener/removeEventListener)
+    let clicked = false;
+    el.onclick = () => { clicked = true; };
+    el.click && el.click(); // Only works if .click() implemented
+    // console.info(MouseEvent, new MouseEvent('click', { bubbles: true }));
+    // el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    // setTimeout(() => {
+    //   assert('onclick event handler', clicked);
+
+    //   clicked = false;
+    //   function handler() { clicked = true; }
+    //   el.addEventListener('mousedown', handler);
+    //   el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    //   assert('addEventListener', clicked);
+    //   el.removeEventListener('mousedown', handler);
+    //   clicked = false;
+    //   el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    //   assert('removeEventListener', !clicked);
+    // });
+
+    // 11. dataset property
+    el.setAttribute('data-foo', 'bar');
+    assert('dataset property', el.dataset.foo === 'bar');
+
+    // 12. cloneNode
+    const clone = el.cloneNode(true);
+    assert('cloneNode', clone.outerHTML === el.outerHTML);
+
+    // 13. matches/closest (if supported)
+    if ('matches' in el) {
+      el.className = 'foo';
+      assert('element.matches', el.matches('.foo'));
+    }
+
+    if ('closest' in el) {
+      parent.appendChild(el);
+      assert('element.closest', el.closest('div') === parent);
+    }
+  </script>
+</body>
+
+</html>

@@ -21,8 +21,23 @@ namespace script_bindings::event_bindings
                                                 std::shared_ptr<::dom::events::MouseEvent> nativeEvent)
   {
     EscapableHandleScope scope(isolate);
-    return nativeEvent == nullptr
-             ? scope.Escape(Local<Object>())
-             : scope.Escape(MouseEventBase::NewInstance(isolate, nativeEvent).As<Object>());
+    assert(nativeEvent != nullptr && "nativeEvent must not be null");
+    return scope.Escape(MouseEventBase::NewInstance(isolate, nativeEvent).As<Object>());
+  }
+
+  MouseEvent::MouseEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+      : MouseEventBase(isolate, args)
+  {
+    HandleScope scope(isolate);
+
+    if (args.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeConstructorError(isolate, "1 argument required, but only 0 present.")));
+      return;
+    }
+
+    // TODO(yorkie): implement this.
+    // setInner(make_shared<::dom::events::MouseEvent>());
   }
 }

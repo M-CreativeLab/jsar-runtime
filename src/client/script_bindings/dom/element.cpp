@@ -9,71 +9,50 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
-    // static
     void Element::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
 
       // Set up the instance template
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "tagName").ToLocalChecked(),
-                                     TagNameGetter,
-                                     nullptr,
-                                     Local<Value>(),
-                                     AccessControl::DEFAULT,
-                                     PropertyAttribute::ReadOnly);
-
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "id").ToLocalChecked(),
-                                     IdGetter,
-                                     IdSetter);
-
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "className").ToLocalChecked(),
-                                     ClassNameGetter,
-                                     ClassNameSetter);
-
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerHTML").ToLocalChecked(),
-                                     InnerHTMLGetter,
-                                     InnerHTMLSetter,
-                                     Local<Value>(),
-                                     AccessControl::DEFAULT,
-                                     PropertyAttribute::DontEnum);
-
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "outerHTML").ToLocalChecked(),
-                                     OuterHTMLGetter,
-                                     OuterHTMLSetter,
-                                     Local<Value>(),
-                                     AccessControl::DEFAULT,
-                                     PropertyAttribute::DontEnum);
+      InstanceReadonlyAccessor(isolate, prototype, "tagName", &Element::TagNameGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "classList", &Element::ClassListGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "children", &Element::ChildrenGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "firstElementChild", &Element::FirstElementChildGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "lastElementChild", &Element::LastElementChildGetter);
+      InstanceAccessor(isolate, prototype, "id", &Element::IdGetter, &Element::IdSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "className",
+                       &Element::ClassNameGetter,
+                       &Element::ClassNameSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "innerHTML",
+                       &Element::InnerHTMLGetter,
+                       &Element::InnerHTMLSetter,
+                       PropertyAttribute::DontEnum);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "outerHTML",
+                       &Element::OuterHTMLGetter,
+                       &Element::OuterHTMLSetter,
+                       PropertyAttribute::DontEnum);
 
       // Add methods
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getAttribute").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, GetAttribute));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "setAttribute").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, SetAttribute));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "removeAttribute").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, RemoveAttribute));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "hasAttribute").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, HasAttribute));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getElementsByTagName").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, GetElementsByTagName));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getElementsByClassName").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, GetElementsByClassName));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "querySelector").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, QuerySelector));
-
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "querySelectorAll").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, QuerySelectorAll));
+      InstanceMethod(isolate, prototype, "append", &Element::Append);
+      InstanceMethod(isolate, prototype, "getAttribute", &Element::GetAttribute);
+      InstanceMethod(isolate, prototype, "setAttribute", &Element::SetAttribute);
+      InstanceMethod(isolate, prototype, "removeAttribute", &Element::RemoveAttribute);
+      InstanceMethod(isolate, prototype, "hasAttribute", &Element::HasAttribute);
+      InstanceMethod(isolate, prototype, "getElementsByTagName", &Element::GetElementsByTagName);
+      InstanceMethod(isolate, prototype, "getElementsByClassName", &Element::GetElementsByClassName);
+      InstanceMethod(isolate, prototype, "querySelector", &Element::QuerySelector);
+      InstanceMethod(isolate, prototype, "querySelectorAll", &Element::QuerySelectorAll);
     }
 
-    // static
     Local<Object> Element::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Element> nativeElement)
     {
       EscapableHandleScope scope(isolate);
@@ -97,158 +76,156 @@ namespace script_bindings
 
     // Property getters and setters
 
-    // static
-    void Element::TagNameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Element::TagNameGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().SetUndefined();
-        return;
-      }
-
-      string tagName = element->inner()->tagName;
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, tagName.c_str()).ToLocalChecked());
+      string tagName = handle()->tagName;
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    tagName.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
-    void Element::IdGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Element::IdGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
-
-      string id = element->inner()->getAttribute("id");
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, id.c_str()).ToLocalChecked());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->id.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
-    void Element::IdSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Element::IdSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
       {
-        return;
+        String::Utf8Value utf8Value(isolate, value);
+        handle()->setId(string(*utf8Value));
       }
-
-      String::Utf8Value utf8Value(isolate, value);
-      element->inner()->setAttribute("id", string(*utf8Value));
     }
 
-    // static
-    void Element::ClassNameGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Element::ClassListGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
-
-      string className = element->inner()->getAttribute("class");
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, className.c_str()).ToLocalChecked());
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "classList", "Not implemented")));
     }
 
-    // static
-    void Element::ClassNameSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Element::ClassNameGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        return;
-      }
-
-      String::Utf8Value utf8Value(isolate, value);
-      element->inner()->setAttribute("class", string(*utf8Value));
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->className().c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
-    void Element::InnerHTMLGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Element::ClassNameSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
       {
-        info.GetReturnValue().SetEmptyString();
-        return;
+        String::Utf8Value utf8Value(isolate, value);
+        handle()->setClassName(string(*utf8Value));
       }
-
-      string innerHTML = element->inner()->getInnerHTML();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, innerHTML.c_str()).ToLocalChecked());
     }
 
-    // static
-    void Element::InnerHTMLSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Element::ChildrenGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        return;
-      }
-
-      String::Utf8Value utf8Value(isolate, value);
-      element->inner()->setInnerHTML(string(*utf8Value));
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "children", "Not implemented")));
     }
 
-    // static
-    void Element::OuterHTMLGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Element::FirstElementChildGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
+      auto element = handle()->firstElementChild();
+      if (element != nullptr)
       {
-        info.GetReturnValue().SetEmptyString();
-        return;
+        auto elementWrapper = Element::NewInstance(isolate, element);
+        info.GetReturnValue().Set(elementWrapper);
       }
-
-      string outerHTML = element->inner()->getOuterHTML();
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, outerHTML.c_str()).ToLocalChecked());
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
     }
 
-    // static
-    void Element::OuterHTMLSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Element::LastElementChildGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
+      auto element = handle()->lastElementChild();
+      if (element != nullptr)
       {
-        return;
+        auto elementWrapper = Element::NewInstance(isolate, element);
+        info.GetReturnValue().Set(elementWrapper);
       }
+      else
+      {
+        info.GetReturnValue().SetNull();
+      }
+    }
 
-      String::Utf8Value utf8Value(isolate, value);
-      element->inner()->setOuterHTML(string(*utf8Value));
+    void Element::InnerHTMLGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->getInnerHTML().c_str())
+                                  .ToLocalChecked());
+    }
+
+    void Element::InnerHTMLSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      {
+        String::Utf8Value utf8Value(isolate, value);
+        handle()->setInnerHTML(string(*utf8Value));
+      }
+    }
+
+    void Element::OuterHTMLGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    handle()->getOuterHTML().c_str())
+                                  .ToLocalChecked());
+    }
+
+    void Element::OuterHTMLSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      {
+        String::Utf8Value utf8Value(isolate, value);
+        handle()->setOuterHTML(string(*utf8Value));
+      }
     }
 
     // Methods
 
-    // static
+    void Element::Append(const v8::FunctionCallbackInfo<v8::Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "append", "Not implemented")));
+    }
+
     void Element::GetAttribute(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -260,27 +237,13 @@ namespace script_bindings
         return;
       }
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
       String::Utf8Value attrName(isolate, info[0]);
-      string value = element->inner()->getAttribute(string(*attrName));
-
-      if (value.empty())
-      {
-        info.GetReturnValue().SetNull();
-      }
-      else
-      {
-        info.GetReturnValue().Set(String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
-      }
+      string value = handle()->getAttribute(string(*attrName));
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    value.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
     void Element::SetAttribute(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -289,23 +252,23 @@ namespace script_bindings
       if (info.Length() < 2)
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "setAttribute requires 2 arguments").ToLocalChecked()));
+          MakeMethodError(isolate, "setAttribute", "2 arguments required")));
         return;
       }
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
+      if (!info[0]->IsString() || !info[1]->IsString())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "setAttribute", "Both arguments must be strings")));
         return;
       }
 
       String::Utf8Value attrName(isolate, info[0]);
       String::Utf8Value attrValue(isolate, info[1]);
-
-      element->inner()->setAttribute(string(*attrName), string(*attrValue));
+      handle()->setAttribute(string(*attrName), string(*attrValue));
+      info.GetReturnValue().SetNull();
     }
 
-    // static
     void Element::RemoveAttribute(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -313,20 +276,22 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "removeAttribute", "1 argument required")));
         return;
       }
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
+      if (!info[0]->IsString())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "removeAttribute", "Argument must be a string")));
         return;
       }
 
       String::Utf8Value attrName(isolate, info[0]);
-      element->inner()->removeAttribute(string(*attrName));
+      handle()->removeAttribute(string(*attrName));
+      info.GetReturnValue().SetNull();
     }
 
-    // static
     void Element::HasAttribute(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -334,92 +299,56 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "hasAttribute", "1 argument required")));
         return;
       }
-
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
+      if (!info[0]->IsString())
       {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "hasAttribute", "Argument must be a string")));
         return;
       }
 
       String::Utf8Value attrName(isolate, info[0]);
-      bool hasAttr = element->inner()->hasAttribute(string(*attrName));
+      bool hasAttr = handle()->hasAttribute(string(*attrName));
       info.GetReturnValue().Set(Boolean::New(isolate, hasAttr));
     }
 
-    // static
     void Element::GetElementsByTagName(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Implement getElementsByTagName - return NodeList
-      cout << "getElementsByTagName called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getElementsByTagName", "Not implemented")));
     }
 
-    // static
     void Element::GetElementsByClassName(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Implement getElementsByClassName - return NodeList
-      cout << "getElementsByClassName called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getElementsByClassName", "Not implemented")));
     }
 
-    // static
     void Element::QuerySelector(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Implement querySelector
-      cout << "querySelector called" << endl;
-      info.GetReturnValue().SetNull();
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "querySelector", "Not implemented")));
     }
 
-    // static
     void Element::QuerySelectorAll(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      Element *element = Unwrap(isolate, info.This());
-      if (element == nullptr || element->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Implement querySelectorAll - return NodeList
-      cout << "querySelectorAll called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "querySelectorAll", "Not implemented")));
     }
   }
 }

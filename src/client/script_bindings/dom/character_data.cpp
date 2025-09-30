@@ -1,5 +1,7 @@
-#include "./character_data.hpp"
 #include <iostream>
+#include "./character_data.hpp"
+#include "./comment.hpp"
+#include "./text.hpp"
 
 using namespace std;
 using namespace v8;
@@ -46,22 +48,17 @@ namespace script_bindings
     }
 
     // static
-    Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::dom::CharacterData> nativeCharacterData)
+    Local<Object> CharacterData::NewInstance(Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle)
     {
       EscapableHandleScope scope(isolate);
+      assert(handle != nullptr && "CharacterData::NewInstance: handle is null");
 
-      if (nativeCharacterData == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::NewInstance(isolate, nativeCharacterData).As<Object>());
-    }
-
-    // static
-    Local<Function> CharacterData::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>::Initialize(isolate);
+      if (handle->isText())
+        return scope.Escape(Text::NewInstance(isolate, static_pointer_cast<::dom::Text>(handle)));
+      else if (handle->isComment())
+        return scope.Escape(Comment::NewInstance(isolate, static_pointer_cast<::dom::Comment>(handle)));
+      else
+        return scope.Escape(CharacterDataBase::NewInstance(isolate, handle));
     }
 
     CharacterData::CharacterData(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

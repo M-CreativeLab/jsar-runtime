@@ -9,6 +9,9 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
+    class CharacterData;
+    using CharacterDataBase = scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>;
+
     /**
      * CharacterData wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -16,31 +19,15 @@ namespace script_bindings
      * It provides the standard DOM CharacterData interface including properties like data,
      * length and methods like substringData, appendData, etc.
      */
-    class CharacterData : public scripting_base::ObjectWrap<CharacterData, ::dom::CharacterData, Node>
+    class CharacterData : public CharacterDataBase
     {
     public:
-      /**
-       * The name of the CharacterData class for V8.
-       */
       static std::string Name()
       {
         return "CharacterData";
       }
-
-      /**
-       * Configure the V8 function template with CharacterData properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 CharacterData instance from a native dom::CharacterData.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::CharacterData> nativeCharacterData);
-
-      /**
-       * Initialize the CharacterData class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle);
 
     public:
       CharacterData(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

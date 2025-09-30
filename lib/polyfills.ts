@@ -8,7 +8,6 @@ import { WorkerImpl } from './webworkers/worker';
 export function loadPolyfills() {
   // Load Web APIs
   process._linkedBinding('transmute:dom');
-  process._linkedBinding('transmute:cssom');
 
   globalThis['WebSocket'] = undici.WebSocket as unknown as typeof WebSocket;
   globalThis['XMLHttpRequest'] = XMLHttpRequestImpl as any;

@@ -297,6 +297,10 @@ namespace dom
     {
       return false;
     }
+    virtual bool isComment() const
+    {
+      return false;
+    }
     virtual bool isHTMLHeadElement() const
     {
       return false;

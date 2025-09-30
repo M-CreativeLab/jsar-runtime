@@ -3,44 +3,149 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 
-namespace script_bindings
+namespace script_bindings::dom_bindings
 {
-  namespace dom_bindings
+  /**
+   * An abstract interface representing a source of key-value string pairs for DOMStringMap.
+   */
+  class DOMStringMapSource
   {
-    class DOMStringMap;
-    using DOMStringMapBase = scripting_base::ObjectWrap<DOMStringMap>;
+  public:
+    virtual ~DOMStringMapSource() = default;
 
-    class DOMStringMap : public DOMStringMapBase
+  public:
+    virtual std::optional<std::string> get(const std::string &key) const = 0;
+    virtual void set(const std::string &key, const std::string &value) = 0;
+    virtual void unset(const std::string &key) = 0;
+  };
+
+  class DOMStringMap : public scripting_base::ObjectWrap<DOMStringMap, DOMStringMapSource>
+  {
+    using Base = scripting_base::ObjectWrap<DOMStringMap, DOMStringMapSource>;
+
+  public:
+    static std::string Name()
     {
-      using DOMStringMapBase::ObjectWrap;
+      return "DOMStringMap";
+    }
+    static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+    {
+      v8::Local<v8::ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
-    public:
-      static std::string Name()
+      // Set up named property handlers for dynamic access to dataset attributes
+      instanceTemplate->SetHandler(v8::NamedPropertyHandlerConfiguration(NamedPropertyGetter,
+                                                                         NamedPropertySetter,
+                                                                         nullptr,
+                                                                         NamedPropertyDeleter,
+                                                                         nullptr));
+    }
+
+    /**
+     * Create a new instance of `DOMStringMap` wrapping the provided data source.
+     */
+    template <typename D>
+      requires std::is_base_of_v<DOMStringMapSource, D>
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
+                                             std::shared_ptr<D> source)
+    {
+      assert(source != nullptr && "source should not be null");
+      v8::EscapableHandleScope scope(isolate);
+
+      auto base_source = std::dynamic_pointer_cast<DOMStringMapSource>(source);
+      if (!base_source)
       {
-        return "DOMStringMap";
+        isolate->ThrowException(v8::Exception::TypeError(MakeMethodError(isolate,
+                                                                         "new",
+                                                                         "Invalid source type")));
+        return v8::Local<v8::Object>();
+      }
+      else
+      {
+        v8::Local<v8::Object> instance = Base::NewInstance(isolate, base_source);
+        return scope.Escape(instance);
+      }
+    }
+
+  public:
+    DOMStringMap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+        : Base(isolate, args, true)
+    {
+    }
+
+  private:
+    static void NamedPropertyGetter(v8::Local<v8::Name> property,
+                                    const v8::PropertyCallbackInfo<v8::Value> &info)
+    {
+      v8::Isolate *isolate = info.GetIsolate();
+      v8::HandleScope scope(isolate);
+
+      v8::String::Utf8Value property_utf8(isolate, property);
+
+      auto instance = Unwrap(isolate, info.Holder());
+      if (!instance)
+      {
+        info.GetReturnValue().SetUndefined();
+        return;
       }
 
-      static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate);
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      std::optional<std::string> value = instance->handle()->get(*property_utf8);
+      if (value.has_value())
+        info.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value->c_str()).ToLocalChecked());
+      else
+        info.GetReturnValue().SetUndefined();
+    }
 
-    public:
-      DOMStringMap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void NamedPropertySetter(v8::Local<v8::Name> property,
+                                    v8::Local<v8::Value> value,
+                                    const v8::PropertyCallbackInfo<v8::Value> &info)
+    {
+      v8::Isolate *isolate = info.GetIsolate();
+      v8::HandleScope scope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
 
-    private:
-      // Indexed property handlers for dynamic dataset access
-      static void IndexedPropertyGetter(uint32_t index, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IndexedPropertySetter(uint32_t index, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void IndexedPropertyQuery(uint32_t index, const v8::PropertyCallbackInfo<v8::Integer> &info);
-      static void IndexedPropertyDeleter(uint32_t index, const v8::PropertyCallbackInfo<v8::Boolean> &info);
-      static void IndexedPropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
+      auto instance = Unwrap(isolate, info.Holder());
+      if (!instance)
+      {
+        isolate->ThrowException(v8::Exception::TypeError(
+          MakeMethodError(isolate, "set", "Instance is null")));
+        return;
+      }
 
-      // Named property handlers for dynamic dataset access
-      static void NamedPropertyGetter(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NamedPropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NamedPropertyQuery(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Integer> &info);
-      static void NamedPropertyDeleter(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Boolean> &info);
-      static void NamedPropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
-    };
-  }
+      v8::String::Utf8Value key_utf8(isolate, property);
+      std::string key(*key_utf8);
+
+      v8::MaybeLocal<v8::String> maybe_str = value->ToString(context);
+      if (maybe_str.IsEmpty())
+      {
+        isolate->ThrowException(v8::Exception::TypeError(
+          MakeMethodError(isolate, "set", "Value cannot be converted to string")));
+        return;
+      }
+      v8::Local<v8::String> str = maybe_str.ToLocalChecked();
+      v8::String::Utf8Value value_utf8(isolate, str);
+      std::string value_str(*value_utf8);
+
+      instance->handle()->set(key, value_str);
+      info.GetReturnValue().Set(value);
+    }
+
+    static void NamedPropertyDeleter(v8::Local<v8::Name> property,
+                                     const v8::PropertyCallbackInfo<v8::Boolean> &info)
+    {
+      v8::Isolate *isolate = info.GetIsolate();
+      v8::HandleScope scope(isolate);
+
+      v8::String::Utf8Value property_utf8(isolate, property);
+
+      auto instance = Unwrap(isolate, info.Holder());
+      if (!instance)
+      {
+        info.GetReturnValue().Set(false);
+        return;
+      }
+
+      instance->handle()->unset(*property_utf8);
+      info.GetReturnValue().Set(true);
+    }
+  };
 }

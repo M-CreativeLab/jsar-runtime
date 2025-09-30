@@ -22,8 +22,6 @@ namespace script_bindings::event_bindings
    */
   class MouseEvent : public MouseEventBase
   {
-    using MouseEventBase::ObjectWrap;
-
   public:
     static std::string Name()
     {
@@ -33,5 +31,8 @@ namespace script_bindings::event_bindings
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                              std::shared_ptr<::dom::events::MouseEvent> nativeEvent);
+
+  public:
+    MouseEvent(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
   };
 }

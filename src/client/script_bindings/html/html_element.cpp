@@ -1,6 +1,8 @@
 #include <iostream>
 #include <client/html/all_html_elements.hpp>
+#include <client/script_bindings/cssom/css_style_declaration.hpp>
 
+#include "./html_element_dataset.hpp"
 #include "./html_audio_element.hpp"
 #include "./html_body_element.hpp"
 #include "./html_button_element.hpp"
@@ -33,28 +35,24 @@ namespace script_bindings::html_bindings
   void HTMLElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
-
-    // Set up the instance template
-    Local<ObjectTemplate> instanceTemplate = tpl->PrototypeTemplate();
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "innerText").ToLocalChecked(),
-                                  InnerTextGetter,
-                                  InnerTextSetter);
-
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "hidden").ToLocalChecked(),
-                                  HiddenGetter,
-                                  HiddenSetter);
+    InstanceReadonlyAccessor(isolate, prototype, "dataset", &HTMLElement::DatasetGetter);
+    InstanceReadonlyAccessor(isolate, prototype, "style", &HTMLElement::StyleGetter);
+    InstanceAccessor(isolate, prototype, "dir", &HTMLElement::DirGetter, &HTMLElement::DirSetter);
+    InstanceAccessor(isolate,
+                     prototype,
+                     "innerText",
+                     &HTMLElement::InnerTextGetter,
+                     &HTMLElement::InnerTextSetter,
+                     PropertyAttribute::DontEnum);
+    InstanceAccessor(isolate, prototype, "hidden", &HTMLElement::HiddenGetter, &HTMLElement::HiddenSetter);
 
     // Add methods
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "click").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, Click));
-
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "focus").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, Focus));
-
-    instanceTemplate->Set(String::NewFromUtf8(isolate, "blur").ToLocalChecked(),
-                          FunctionTemplate::New(isolate, Blur));
+    InstanceMethod(isolate, prototype, "click", &HTMLElement::Click);
+    InstanceMethod(isolate, prototype, "focus", &HTMLElement::Focus);
+    InstanceMethod(isolate, prototype, "blur", &HTMLElement::Blur);
   }
 
   // static
@@ -84,8 +82,79 @@ namespace script_bindings::html_bindings
 
   // Property getters and setters
 
+  void HTMLElement::DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    info.GetReturnValue().Set(HTMLElementDataset::NewInstance(isolate, handle()));
+  }
+
+  void HTMLElement::DirGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    using Dir = ::dom::HTMLElementDirection;
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    switch (handle()->dir)
+    {
+    case Dir::LTR:
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "ltr").ToLocalChecked());
+      break;
+    case Dir::RTL:
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "rtl").ToLocalChecked());
+      break;
+    case Dir::Auto:
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "auto").ToLocalChecked());
+      break;
+    default:
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "").ToLocalChecked());
+      break;
+    }
+  }
+
+  void HTMLElement::DirSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+  {
+    using Dir = ::dom::HTMLElementDirection;
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (!value.IsEmpty() && value->IsString())
+    {
+      String::Utf8Value utf8Value(isolate, value);
+      string dirStr(*utf8Value);
+      if (dirStr == "ltr")
+        handle()->dir = Dir::LTR;
+      else if (dirStr == "rtl")
+        handle()->dir = Dir::RTL;
+      else
+        handle()->dir = Dir::Auto;
+    }
+    else
+    {
+      handle()->dir = Dir::Auto;
+    }
+  }
+
+  void HTMLElement::StyleGetter(const PropertyCallbackInfo<Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto style = handle()->styleRef();
+    if (style != nullptr)
+    {
+      auto styleWrapper = cssom_bindings::CSSStyleDeclaration::GetOrNewInstance(isolate, style);
+      info.GetReturnValue().Set(styleWrapper);
+    }
+    else
+    {
+      info.GetReturnValue().SetUndefined();
+    }
+  }
+
   // static
-  void HTMLElement::InnerTextGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLElement::InnerTextGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -102,7 +171,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::InnerTextSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLElement::InnerTextSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -118,7 +187,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::HiddenGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLElement::HiddenGetter(const PropertyCallbackInfo<Value> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);
@@ -135,7 +204,7 @@ namespace script_bindings::html_bindings
   }
 
   // static
-  void HTMLElement::HiddenSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLElement::HiddenSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     Isolate *isolate = info.GetIsolate();
     HandleScope scope(isolate);

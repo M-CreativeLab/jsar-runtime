@@ -43,7 +43,9 @@ namespace script_bindings
       void NodeTypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NodeValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void IsConnectedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void ParentNodeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ChildNodesGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void FirstChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void LastChildGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void NextSiblingGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
@@ -60,6 +62,10 @@ namespace script_bindings
       void CloneNode(const v8::FunctionCallbackInfo<v8::Value> &info);
       void HasChildNodes(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Contains(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IsDefaultNamespace(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IsEqualNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IsSameNode(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Normalize(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }
