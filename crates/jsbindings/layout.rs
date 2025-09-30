@@ -672,6 +672,7 @@ impl_type_casting_simple!(Overflow, { Visible, Clip, Hidden, Scroll }, Visible);
 impl From<ffi::Position> for taffy::Position {
   fn from(value: ffi::Position) -> Self {
     match value {
+      // todo:support position: static
       ffi::Position::Static => Self::Relative, // Static position maps to Relative in taffy
       ffi::Position::Relative => Self::Relative,
       ffi::Position::Absolute => Self::Absolute,
@@ -684,6 +685,8 @@ impl From<ffi::Position> for taffy::Position {
 impl From<taffy::Position> for ffi::Position {
   fn from(value: taffy::Position) -> Self {
     match value {
+      // Note: Taffy does not have a Static position, so we map Relative to Static here.
+      // taffy roadmap:https://github.com/DioxusLabs/taffy/issues/345 indicates that Static may be added in the future.
       taffy::Position::Relative => Self::Static, // Note: Loss of Static vs Relative distinction
       taffy::Position::Absolute => Self::Absolute,
       _ => Self::Static,
