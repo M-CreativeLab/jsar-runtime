@@ -11,6 +11,8 @@ namespace script_bindings
 
   class EventTarget : public EventTargetBase
   {
+    using EventTargetBase::ObjectWrap;
+
   public:
     static std::string Name()
     {
@@ -19,10 +21,9 @@ namespace script_bindings
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
   public:
-    EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-    virtual ::dom::DOMEventTargetType eventTargetType() const
+    virtual dom::DOMEventTargetType eventTargetType() const
     {
-      return ::dom::DOMEventTargetType::kEventTarget;
+      return dom::DOMEventTargetType::kEventTarget;
     }
 
   private:

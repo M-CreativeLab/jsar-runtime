@@ -39,11 +39,6 @@ namespace script_bindings
     return NewInstance(isolate, make_shared<browser::Location>(url));
   }
 
-  Location::Location(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : LocationBase(isolate, args, true)
-  {
-  }
-
   // Instance accessors
   void Location::HrefGetter(const PropertyCallbackInfo<Value> &info)
   {

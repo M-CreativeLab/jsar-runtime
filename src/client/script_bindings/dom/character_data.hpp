@@ -21,6 +21,8 @@ namespace script_bindings
      */
     class CharacterData : public CharacterDataBase
     {
+      using CharacterDataBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
@@ -28,9 +30,6 @@ namespace script_bindings
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::CharacterData> handle);
-
-    public:
-      CharacterData(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters and setters

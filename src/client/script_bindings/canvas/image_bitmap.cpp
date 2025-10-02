@@ -31,9 +31,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
 
-      if (imageBitmap && imageBitmap->inner())
+      if (imageBitmap && imageBitmap->handle())
       {
-        int width = imageBitmap->inner()->width();
+        int width = imageBitmap->handle()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -47,9 +47,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageBitmap *imageBitmap = Unwrap(isolate, info.This());
 
-      if (imageBitmap && imageBitmap->inner())
+      if (imageBitmap && imageBitmap->handle())
       {
-        int height = imageBitmap->inner()->height();
+        int height = imageBitmap->handle()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else

@@ -35,9 +35,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner())
+      if (canvas && canvas->handle())
       {
-        int width = canvas->inner()->width();
+        int width = canvas->handle()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -51,9 +51,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner())
+      if (canvas && canvas->handle())
       {
-        int height = canvas->inner()->height();
+        int height = canvas->handle()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -67,10 +67,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner() && value->IsNumber())
+      if (canvas && canvas->handle() && value->IsNumber())
       {
         int width = value->Int32Value(isolate->GetCurrentContext()).FromJust();
-        canvas->inner()->setWidth(width);
+        canvas->handle()->setWidth(width);
       }
     }
 
@@ -79,10 +79,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner() && value->IsNumber())
+      if (canvas && canvas->handle() && value->IsNumber())
       {
         int height = value->Int32Value(isolate->GetCurrentContext()).FromJust();
-        canvas->inner()->setHeight(height);
+        canvas->handle()->setHeight(height);
       }
     }
 
@@ -91,7 +91,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
         return;
@@ -116,7 +116,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
         return;
@@ -132,7 +132,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
         return;
@@ -148,7 +148,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid canvas instance").ToLocalChecked()));
         return;
@@ -225,10 +225,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner() && value->IsNumber())
+      if (canvas && canvas->handle() && value->IsNumber())
       {
         int width = value->Int32Value(isolate->GetCurrentContext()).FromJust();
-        canvas->inner()->setWidth(width);
+        canvas->handle()->setWidth(width);
       }
     }
 
@@ -237,10 +237,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
-      if (canvas && canvas->inner() && value->IsNumber())
+      if (canvas && canvas->handle() && value->IsNumber())
       {
         int height = value->Int32Value(isolate->GetCurrentContext()).FromJust();
-        canvas->inner()->setHeight(height);
+        canvas->handle()->setHeight(height);
       }
     }
 
@@ -249,7 +249,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
         return;
@@ -274,7 +274,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
         return;
@@ -290,7 +290,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
 
-      if (!canvas || !canvas->inner())
+      if (!canvas || !canvas->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid OffscreenCanvas instance").ToLocalChecked()));
         return;

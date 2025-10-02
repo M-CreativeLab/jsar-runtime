@@ -9,7 +9,6 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
-    // static
     void XRSystem::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
@@ -22,7 +21,6 @@ namespace script_bindings
       InstanceMethod(isolate, instanceTemplate, "requestSession", &XRSystem::RequestSession);
     }
 
-    // static
     Local<Object> XRSystem::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSystem> handle)
     {
       EscapableHandleScope scope(isolate);
@@ -31,14 +29,8 @@ namespace script_bindings
       return scope.Escape(XRSystemBase::NewInstance(isolate, handle).As<Object>());
     }
 
-    XRSystem::XRSystem(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRSystemBase(isolate, args, true)
-    {
-    }
-
     // Methods
 
-    // static
     void XRSystem::IsSessionSupported(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -92,7 +84,6 @@ namespace script_bindings
       return;
     }
 
-    // static
     void XRSystem::RequestSession(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -208,7 +199,7 @@ namespace script_bindings
             }
           }
         }
-      
+
         // TODO(yorkie): support `domOverlay`, `depthSensing`, etc.
       }
 

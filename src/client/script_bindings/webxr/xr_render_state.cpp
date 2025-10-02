@@ -23,11 +23,6 @@ namespace script_bindings
                                &XRRenderState::InlineVerticalFieldOfViewGetter);
     }
 
-    XRRenderState::XRRenderState(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRRenderStateBase(isolate, args, true)
-    {
-    }
-
     // Property getters
 
     void XRRenderState::BaseLayerGetter(const PropertyCallbackInfo<Value> &info)
@@ -36,7 +31,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRRenderState *renderState = Unwrap(isolate, info.This());
-      if (renderState == nullptr || renderState->inner() == nullptr)
+      if (renderState == nullptr || renderState->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

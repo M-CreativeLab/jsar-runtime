@@ -33,31 +33,12 @@ namespace script_bindings
     void HTMLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = Unwrap(isolate, info.This());
-
-      if (context && context->inner())
-      {
-        // TODO: Return the associated canvas element
-        // This should return the Canvas or HTMLCanvasElement that this context belongs to
-        info.GetReturnValue().SetNull();
-      }
-      else
-      {
-        info.GetReturnValue().SetNull();
-      }
+      info.GetReturnValue().SetNull();
     }
 
     void HTMLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      HTMLRenderingContext *context = Unwrap(isolate, info.This());
-
-      if (!context || !context->inner())
-      {
-        isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid HTMLRenderingContext instance").ToLocalChecked()));
-        return;
-      }
-
       // TODO: Implement getContextAttributes method
       // This should return an object with context attributes
       Local<Object> attributes = Object::New(isolate);

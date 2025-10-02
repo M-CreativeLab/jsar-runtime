@@ -40,11 +40,6 @@ namespace script_bindings
         return scope.Escape(CharacterDataBase::NewInstance(isolate, handle));
     }
 
-    CharacterData::CharacterData(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : CharacterDataBase(isolate, args, true)
-    {
-    }
-
     // Property getters and setters
 
     void CharacterData::DataGetter(const PropertyCallbackInfo<Value> &info)

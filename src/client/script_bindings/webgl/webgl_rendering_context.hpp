@@ -13,6 +13,8 @@ namespace script_bindings
 
     class WebGLRenderingContext : public WebGLRenderingContextBase
     {
+      using WebGLRenderingContextBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
@@ -20,9 +22,6 @@ namespace script_bindings
       }
       static void SetupConstants(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      WebGLRenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Canvas properties

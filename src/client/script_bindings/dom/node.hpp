@@ -10,7 +10,7 @@ namespace script_bindings
   namespace dom_bindings
   {
     class Node;
-    using NodeBase = scripting_base::ObjectWrap<Node, ::dom::Node, EventTarget>;
+    using NodeBase = scripting_base::ObjectWrap<Node, dom::Node, EventTarget>;
 
     /**
      * Node wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -21,6 +21,7 @@ namespace script_bindings
      */
     class Node : public NodeBase
     {
+      using NodeBase::ObjectWrap;
 
     public:
       /**
@@ -33,9 +34,6 @@ namespace script_bindings
 
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Node> handle);
-
-    public:
-      Node(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters

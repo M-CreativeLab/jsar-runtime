@@ -75,11 +75,6 @@ namespace script_bindings::html_bindings
     return scope.Escape(HTMLElementBase::NewInstance(isolate, nativeElement).As<Object>());
   }
 
-  HTMLElement::HTMLElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLElementBase(isolate, args, false)
-  {
-  }
-
   // Property getters and setters
 
   void HTMLElement::DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -160,13 +155,13 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       info.GetReturnValue().SetEmptyString();
       return;
     }
 
-    string innerText = element->inner()->innerText;
+    string innerText = element->handle()->innerText;
     info.GetReturnValue().Set(String::NewFromUtf8(isolate, innerText.c_str()).ToLocalChecked());
   }
 
@@ -177,13 +172,13 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       return;
     }
 
     String::Utf8Value utf8Value(isolate, value);
-    element->inner()->setInnerText(string(*utf8Value));
+    element->handle()->setInnerText(string(*utf8Value));
   }
 
   // static
@@ -193,13 +188,13 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       info.GetReturnValue().Set(Boolean::New(isolate, false));
       return;
     }
 
-    bool hidden = element->inner()->hidden;
+    bool hidden = element->handle()->hidden;
     info.GetReturnValue().Set(Boolean::New(isolate, hidden));
   }
 
@@ -210,13 +205,13 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       return;
     }
 
     bool hidden = value->BooleanValue(isolate);
-    element->inner()->setHidden(hidden);
+    element->handle()->setHidden(hidden);
   }
 
   // Methods
@@ -228,12 +223,12 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       return;
     }
 
-    element->inner()->click();
+    element->handle()->click();
   }
 
   // static
@@ -243,12 +238,12 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       return;
     }
 
-    element->inner()->focus();
+    element->handle()->focus();
   }
 
   // static
@@ -258,11 +253,11 @@ namespace script_bindings::html_bindings
     HandleScope scope(isolate);
 
     HTMLElement *element = Unwrap(isolate, info.This());
-    if (element == nullptr || element->inner() == nullptr)
+    if (element == nullptr || element->handle() == nullptr)
     {
       return;
     }
 
-    element->inner()->blur();
+    element->handle()->blur();
   }
 }

@@ -3,12 +3,14 @@
 #include <memory>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./image_source.hpp"
 
 namespace canvas
 {
   class ImageData;
-  class ImageBitmap : public ImageSource
+  class ImageBitmap : public ImageSource,
+                      public scripting_base::JSObjectHolder
   {
   public:
     static std::shared_ptr<ImageBitmap> CreateImageBitmap(const void *imageData, size_t imageByteLength, float sx, float sy, float sw, float sh);

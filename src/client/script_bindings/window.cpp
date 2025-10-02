@@ -52,7 +52,7 @@ namespace script_bindings
   Window::Window(Isolate *isolate, std::shared_ptr<::browser::Window> nativeWindow)
       : WindowBase(isolate)
   {
-    setInner(nativeWindow);
+    setData(nativeWindow);
   }
 
   Window::Window(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

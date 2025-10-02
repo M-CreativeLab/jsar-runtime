@@ -40,9 +40,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        std::string src = wrapper->inner()->getSrc();
+        std::string src = wrapper->handle()->getSrc();
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, src.c_str()).ToLocalChecked());
       }
       else
@@ -57,9 +57,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        double currentTime = wrapper->inner()->currentTime;
+        double currentTime = wrapper->handle()->currentTime;
         info.GetReturnValue().Set(Number::New(isolate, currentTime));
       }
       else
@@ -74,9 +74,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        double duration = wrapper->inner()->duration();
+        double duration = wrapper->handle()->duration();
         info.GetReturnValue().Set(Number::New(isolate, duration));
       }
       else
@@ -91,9 +91,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        bool paused = wrapper->inner()->paused();
+        bool paused = wrapper->handle()->paused();
         info.GetReturnValue().Set(Boolean::New(isolate, paused));
       }
       else
@@ -108,9 +108,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        bool muted = wrapper->inner()->muted();
+        bool muted = wrapper->handle()->muted();
         info.GetReturnValue().Set(Boolean::New(isolate, muted));
       }
       else
@@ -125,9 +125,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        double volume = wrapper->inner()->getVolume();
+        double volume = wrapper->handle()->getVolume();
         info.GetReturnValue().Set(Number::New(isolate, volume));
       }
       else
@@ -142,9 +142,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        int readyState = static_cast<int>(wrapper->inner()->readyState);
+        int readyState = static_cast<int>(wrapper->handle()->readyState);
         info.GetReturnValue().Set(Integer::New(isolate, readyState));
       }
       else
@@ -160,10 +160,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsString())
+      if (wrapper && wrapper->handle() && value->IsString())
       {
         String::Utf8Value src(isolate, value);
-        wrapper->inner()->setSrc(*src);
+        wrapper->handle()->setSrc(*src);
       }
     }
 
@@ -173,10 +173,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsNumber())
+      if (wrapper && wrapper->handle() && value->IsNumber())
       {
         double currentTime = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0);
-        wrapper->inner()->currentTime = currentTime;
+        wrapper->handle()->currentTime = currentTime;
       }
     }
 
@@ -186,9 +186,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        wrapper->inner()->setMuted(value->BooleanValue(isolate));
+        wrapper->handle()->setMuted(value->BooleanValue(isolate));
       }
     }
 
@@ -198,12 +198,12 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsNumber())
+      if (wrapper && wrapper->handle() && value->IsNumber())
       {
         double volume = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(1.0);
         // Clamp volume between 0.0 and 1.0
         volume = std::max(0.0, std::min(1.0, volume));
-        wrapper->inner()->setVolume(volume);
+        wrapper->handle()->setVolume(volume);
       }
     }
 
@@ -214,9 +214,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        wrapper->inner()->play();
+        wrapper->handle()->play();
         // Return a Promise (for now, just return undefined)
         info.GetReturnValue().SetUndefined();
       }
@@ -232,9 +232,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        wrapper->inner()->pause();
+        wrapper->handle()->pause();
         info.GetReturnValue().SetUndefined();
       }
       else
@@ -249,9 +249,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLMediaElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        wrapper->inner()->load();
+        wrapper->handle()->load();
         info.GetReturnValue().SetUndefined();
       }
       else

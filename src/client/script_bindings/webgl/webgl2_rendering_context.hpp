@@ -28,9 +28,6 @@ namespace script_bindings
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<client_graphics::WebGL2Context> nativeContext);
 
-    public:
-      WebGL2RenderingContext(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
     private:
       // WebGL 2.0 specific methods
       void DrawBuffers(const v8::FunctionCallbackInfo<v8::Value> &args);

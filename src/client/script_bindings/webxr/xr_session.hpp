@@ -21,15 +21,14 @@ namespace script_bindings
 
     class XRSession : public XRSessionBase
     {
+      using XRSessionBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRSession";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRSession(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters and setters

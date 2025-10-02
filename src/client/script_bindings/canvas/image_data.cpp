@@ -78,9 +78,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
 
-      if (imageData && imageData->inner())
+      if (imageData && imageData->handle())
       {
-        int width = imageData->inner()->width();
+        int width = imageData->handle()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -94,9 +94,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
 
-      if (imageData && imageData->inner())
+      if (imageData && imageData->handle())
       {
-        int height = imageData->inner()->height();
+        int height = imageData->handle()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -110,11 +110,11 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
 
-      if (imageData && imageData->inner())
+      if (imageData && imageData->handle())
       {
         // TODO: Return Uint8ClampedArray with image data
         // For now, return an empty Uint8ClampedArray
-        size_t dataLength = imageData->inner()->width() * imageData->inner()->height() * 4;
+        size_t dataLength = imageData->handle()->width() * imageData->handle()->height() * 4;
         Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, dataLength);
         Local<Uint8ClampedArray> dataArray = Uint8ClampedArray::New(buffer, 0, dataLength);
         info.GetReturnValue().Set(dataArray);
@@ -133,9 +133,9 @@ namespace script_bindings
       ImageData *imageData = Unwrap(isolate, info.This());
 
       string colorSpaceStr = "srgb"; // Default to "srgb"
-      if (imageData && imageData->inner())
+      if (imageData && imageData->handle())
       {
-        SkColorSpace *colorSpace = imageData->inner()->colorSpace();
+        SkColorSpace *colorSpace = imageData->handle()->colorSpace();
         if (colorSpace)
         {
           if (colorSpace->isSRGB())

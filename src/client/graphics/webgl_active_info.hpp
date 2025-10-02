@@ -2,10 +2,11 @@
 
 #include <string>
 #include <common/command_buffers/details/program.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace client_graphics
 {
-  class WebGLActiveInfo
+  class WebGLActiveInfo : public scripting_base::JSObjectHolder
   {
   public:
     WebGLActiveInfo()

@@ -7,7 +7,6 @@ using namespace v8;
 
 namespace script_bindings
 {
-  // static
   void EventTarget::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
     HandleScope scope(isolate);
@@ -17,11 +16,6 @@ namespace script_bindings
     InstanceMethod(isolate, prototype, "addEventListener", &EventTarget::AddEventListener);
     InstanceMethod(isolate, prototype, "removeEventListener", &EventTarget::RemoveEventListener);
     InstanceMethod(isolate, prototype, "dispatchEvent", &EventTarget::DispatchEvent);
-  }
-
-  EventTarget::EventTarget(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : EventTargetBase(isolate, args)
-  {
   }
 
   void EventTarget::AddEventListener(const FunctionCallbackInfo<Value> &info)
@@ -49,16 +43,18 @@ namespace script_bindings
         MakeMethodError(isolate, "addEventListener", "Second argument must be a function")));
       return;
     }
-
+ 
+    cerr << "addEventListener called" << endl;
     String::Utf8Value typeString(isolate, info[0]);
-    Local<Function> listener = Local<Function>::Cast(info[1]);
+    Local<Function> listener = info[1].As<Function>();
 
-    auto listenerCallback = [](::dom::DOMEventType type, shared_ptr<::dom::Event> event)
+    auto listenerCallback = [](dom::DOMEventType type, shared_ptr<dom::Event> event)
     {
       cout << "Event triggered: " << static_cast<int>(type) << endl;
     };
 
-    std::optional<dom::DOMEventType> eventType = dom::StringToEventType(*typeString, eventTargetType());
+    cerr << "Event type string: " << *typeString << endl;
+    optional<dom::DOMEventType> eventType = dom::StringToEventType(*typeString, eventTargetType());
     auto listenerHandle = handle()->addEventListener(*eventType, listenerCallback);
     info.GetReturnValue().SetUndefined();
   }
@@ -76,7 +72,7 @@ namespace script_bindings
     }
 
     EventTarget *eventTarget = Unwrap(isolate, info.This());
-    if (eventTarget == nullptr || eventTarget->inner() == nullptr)
+    if (eventTarget == nullptr || eventTarget->handle() == nullptr)
     {
       return;
     }
@@ -108,7 +104,7 @@ namespace script_bindings
       return;
     }
 
-    Event* event = Event::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+    Event *event = Event::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
     if (event == nullptr || event->handle() == nullptr)
     {
       isolate->ThrowException(Exception::TypeError(

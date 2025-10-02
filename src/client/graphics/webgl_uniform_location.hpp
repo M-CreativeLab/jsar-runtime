@@ -2,10 +2,11 @@
 
 #include <string>
 #include <optional>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace client_graphics
 {
-  class WebGLUniformLocation
+  class WebGLUniformLocation : public scripting_base::JSObjectHolder
   {
   public:
     WebGLUniformLocation()

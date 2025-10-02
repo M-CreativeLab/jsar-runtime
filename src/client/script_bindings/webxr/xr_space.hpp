@@ -14,15 +14,14 @@ namespace script_bindings
 
     class XRSpace : public XRSpaceBase
     {
+      using XRSpaceBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRSpace";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRSpace(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
     };
 
     class XRReferenceSpace;
@@ -36,6 +35,8 @@ namespace script_bindings
      */
     class XRReferenceSpace : public XRReferenceSpaceBase
     {
+      using XRReferenceSpaceBase::ObjectWrap;
+
     public:
       /**
        * The name of the XRReferenceSpace class for V8.
@@ -45,9 +46,6 @@ namespace script_bindings
         return "XRReferenceSpace";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRReferenceSpace(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Methods

@@ -6,6 +6,7 @@
 #include <optional>
 #include <functional>
 #include <shared_mutex>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./node.hpp"
 #include "./node_list-inl.hpp"
@@ -23,7 +24,7 @@ namespace dom
     ChildList,
   };
 
-  class MutationRecord
+  class MutationRecord : public scripting_base::JSObjectHolder
   {
     friend class MutationObserver;
 
@@ -136,7 +137,8 @@ namespace dom
     std::weak_ptr<Node> nextSibling;
   };
 
-  class MutationObserver : public std::enable_shared_from_this<MutationObserver>
+  class MutationObserver : public scripting_base::JSObjectHolder,
+                           public std::enable_shared_from_this<MutationObserver>
   {
     friend class Node;
 

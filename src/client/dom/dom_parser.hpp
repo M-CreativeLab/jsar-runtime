@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./document.hpp"
 
 namespace dom
@@ -13,7 +14,8 @@ namespace dom
     XSML,
     SVG,
   };
-  class DOMParser
+
+  class DOMParser : public scripting_base::JSObjectHolder
   {
   public:
     DOMParser();

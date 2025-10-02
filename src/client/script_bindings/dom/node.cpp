@@ -99,11 +99,6 @@ namespace script_bindings::dom_bindings
     }
   }
 
-  Node::Node(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : NodeBase(isolate, args, true)
-  {
-  }
-
   // Property getters
 
   void Node::BaseURIGetter(const PropertyCallbackInfo<Value> &info)

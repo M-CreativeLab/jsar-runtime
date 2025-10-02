@@ -79,7 +79,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRRigidTransform *transform = Unwrap(isolate, info.This());
-      if (transform == nullptr || transform->inner() == nullptr)
+      if (transform == nullptr || transform->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -97,7 +97,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRRigidTransform *transform = Unwrap(isolate, info.This());
-      if (transform == nullptr || transform->inner() == nullptr)
+      if (transform == nullptr || transform->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -115,7 +115,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRRigidTransform *transform = Unwrap(isolate, info.This());
-      if (transform == nullptr || transform->inner() == nullptr)
+      if (transform == nullptr || transform->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -133,7 +133,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRRigidTransform *transform = Unwrap(isolate, info.This());
-      if (transform == nullptr || transform->inner() == nullptr)
+      if (transform == nullptr || transform->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

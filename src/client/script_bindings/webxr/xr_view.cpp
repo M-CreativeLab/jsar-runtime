@@ -24,11 +24,6 @@ namespace script_bindings
       InstanceMethod(isolate, prototype, "requestViewportScale", &XRView::RequestViewportScale);
     }
 
-    XRView::XRView(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRViewBase(isolate, args, true)
-    {
-    }
-
     // Property getters
 
     void XRView::EyeGetter(const PropertyCallbackInfo<Value> &info)
@@ -62,7 +57,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->inner() == nullptr)
+      if (view == nullptr || view->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -81,7 +76,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->inner() == nullptr)
+      if (view == nullptr || view->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

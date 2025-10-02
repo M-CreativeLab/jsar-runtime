@@ -19,10 +19,11 @@ namespace scripting_base
         : value_(nullptr)
     {
     }
-    JSObjectHolder(JSObjectHolder &that)
+    JSObjectHolder(const JSObjectHolder &that)
         : value_(that.value_)
     {
     }
+    virtual ~JSObjectHolder() = default;
 
   public:
     /**
@@ -35,7 +36,7 @@ namespace scripting_base
     /**
      * @returns The JavaScript object wrap.
      */
-    inline ObjectWrapBase *getJSObjectWrap()
+    inline BaseObject *getJSObjectWrap()
     {
       assert(hasJSObject());
       return value_;
@@ -43,7 +44,7 @@ namespace scripting_base
     /**
      * @returns The JavaScript object value.
      */
-    inline ObjectWrapBase &getJSObject()
+    inline BaseObject &getJSObject()
     {
       // TODO(yorkie): returns the v8::Object instance instead of ObjectWrapBase.
       assert(hasJSObject());
@@ -54,7 +55,7 @@ namespace scripting_base
      * @returns The JavaScript object wrap as the specified type.
      */
     template <typename T>
-      requires std::is_base_of_v<ObjectWrapBase, T>
+      requires std::is_base_of_v<BaseObject, T>
     inline T &getJSObjectAs()
     {
       assert(hasJSObject());
@@ -65,7 +66,7 @@ namespace scripting_base
     /**
      * @returns The instance reference.
      */
-    inline ObjectWrapBase *getReference()
+    inline BaseObject *getReference()
     {
       return value_;
     }
@@ -74,7 +75,7 @@ namespace scripting_base
      *
      * @param instance The new value to set, or `nullptr` to set the reference value.
      */
-    inline void setReference(ObjectWrapBase *value = nullptr)
+    inline void setReference(BaseObject *value = nullptr)
     {
       if (value != nullptr && value_ != nullptr)
         throw std::runtime_error("JavaScript holder's value must be reset a nullptr before setting a new instance.");
@@ -87,7 +88,7 @@ namespace scripting_base
      *
      * @param value The value to reference.
      */
-    inline void ref(ObjectWrapBase *value)
+    inline void ref(BaseObject *value)
     {
       setReference(value);
     }
@@ -101,6 +102,6 @@ namespace scripting_base
     }
 
   private:
-    ObjectWrapBase *value_;
+    BaseObject *value_;
   };
 }

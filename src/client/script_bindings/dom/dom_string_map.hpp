@@ -2,13 +2,14 @@
 
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace script_bindings::dom_bindings
 {
   /**
    * An abstract interface representing a source of key-value string pairs for DOMStringMap.
    */
-  class DOMStringMapSource
+  class DOMStringMapSource : public scripting_base::JSObjectHolder
   {
   public:
     virtual ~DOMStringMapSource() = default;
@@ -27,6 +28,10 @@ namespace script_bindings::dom_bindings
     static std::string Name()
     {
       return "DOMStringMap";
+    }
+    static bool NativeConstructorRequired()
+    {
+      return true;
     }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
     {
@@ -68,7 +73,7 @@ namespace script_bindings::dom_bindings
 
   public:
     DOMStringMap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
-        : Base(isolate, args, true)
+        : Base(isolate, args)
     {
     }
 

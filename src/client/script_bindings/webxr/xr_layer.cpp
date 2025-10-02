@@ -17,11 +17,6 @@ namespace script_bindings
       // XRLayer is a base class with no specific properties or methods
     }
 
-    XRLayer::XRLayer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRLayerBase(isolate, args, true)
-    {
-    }
-
     // XRWebGLLayer implementation
 
     void XRWebGLLayer::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -61,11 +56,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Number::New(isolate, 1.0));
     }
 
-    XRWebGLLayer::XRWebGLLayer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRWebGLLayerBase(isolate, args, true)
-    {
-    }
-
     // Property getters and setters
 
     void XRWebGLLayer::AntialiasGetter(const PropertyCallbackInfo<Value> &info)
@@ -101,7 +91,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
+      if (layer == nullptr || layer->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -136,7 +126,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
+      if (layer == nullptr || layer->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -152,7 +142,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
+      if (layer == nullptr || layer->handle() == nullptr)
       {
         return;
       }
@@ -169,7 +159,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
+      if (layer == nullptr || layer->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

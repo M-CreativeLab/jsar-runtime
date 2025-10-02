@@ -29,9 +29,6 @@ namespace script_bindings
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<browser::Location> nativeLocation);
     static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, const std::string &url);
 
-  public:
-    Location(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
-
   private:
     // Browser identification property getters
     void HrefGetter(const v8::PropertyCallbackInfo<v8::Value> &info);

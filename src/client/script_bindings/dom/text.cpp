@@ -60,7 +60,7 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
 
     Text *text = Unwrap(isolate, info.This());
-    if (text == nullptr || text->inner() == nullptr)
+    if (text == nullptr || text->handle() == nullptr)
     {
       info.GetReturnValue().SetEmptyString();
       return;
@@ -68,7 +68,7 @@ namespace script_bindings::dom_bindings
 
     // For now, return the same as data. In a full implementation, this would
     // concatenate adjacent text nodes
-    string wholeText = text->inner()->data();
+    string wholeText = text->handle()->data();
     info.GetReturnValue().Set(String::NewFromUtf8(isolate, wholeText.c_str()).ToLocalChecked());
   }
 
@@ -81,7 +81,7 @@ namespace script_bindings::dom_bindings
     HandleScope scope(isolate);
 
     Text *text = Unwrap(isolate, info.This());
-    if (text == nullptr || text->inner() == nullptr)
+    if (text == nullptr || text->handle() == nullptr)
     {
       info.GetReturnValue().SetNull();
       return;

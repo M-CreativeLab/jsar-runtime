@@ -7,6 +7,7 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./rendering_context.hpp"
 #include "./image_source.hpp"
@@ -21,6 +22,7 @@ namespace canvas
    */
   template <typename T>
   class CanvasBase : public ImageSource,
+                     public scripting_base::JSObjectHolder,
                      public std::enable_shared_from_this<T>
   {
   public:

@@ -88,7 +88,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyPriority: instance is null");
 
-    auto priority = instance->inner()->getPropertyPriority(*propertyName);
+    auto priority = instance->handle()->getPropertyPriority(*propertyName);
     if (priority == client_cssom::CSSPropertyPriority::Important)
     {
       args.GetReturnValue()
@@ -118,7 +118,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyValue: instance is null");
 
-    auto value = instance->inner()->getPropertyValue(*propertyName);
+    auto value = instance->handle()->getPropertyValue(*propertyName);
     if (value.empty())
     {
       args.GetReturnValue()
@@ -147,7 +147,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::Item: instance is null");
 
-    auto value = instance->inner()->item(index);
+    auto value = instance->handle()->item(index);
     args.GetReturnValue().Set(String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
   }
 
@@ -169,7 +169,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::RemoveProperty: instance is null");
 
-    auto result = instance->inner()->removeProperty(*propertyName);
+    auto result = instance->handle()->removeProperty(*propertyName);
     if (result.empty())
     {
       args.GetReturnValue().Set(Undefined(isolate));
@@ -217,7 +217,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::SetProperty: instance is null");
 
-    instance->inner()->setProperty(*propertyName, *propertyValue, priority);
+    instance->handle()->setProperty(*propertyName, *propertyValue, priority);
     args.GetReturnValue().Set(Undefined(isolate));
   }
 
@@ -230,7 +230,7 @@ namespace script_bindings::cssom_bindings
     auto instance = Unwrap(isolate, args.Holder());
     assert(instance != nullptr && "CSSStyleDeclaration::ToString: instance is null");
 
-    auto cssText = instance->inner()->cssText();
+    auto cssText = instance->handle()->cssText();
     args.GetReturnValue()
       .Set(String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
   }
@@ -263,7 +263,7 @@ namespace script_bindings::cssom_bindings
     // .cssText
     if (property->StrictEquals(String::NewFromUtf8(isolate, "cssText").ToLocalChecked()))
     {
-      auto cssText = instance->inner()->cssText();
+      auto cssText = instance->handle()->cssText();
       info.GetReturnValue()
         .Set(String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
       return;
@@ -272,7 +272,7 @@ namespace script_bindings::cssom_bindings
     // .length
     if (property->StrictEquals(String::NewFromUtf8(isolate, "length").ToLocalChecked()))
     {
-      auto length = instance->inner()->length();
+      auto length = instance->handle()->length();
       info.GetReturnValue().Set(Number::New(isolate, length));
       return;
     }
@@ -330,7 +330,7 @@ namespace script_bindings::cssom_bindings
     // .cssFloat: alias for .float
     if (property->StrictEquals(String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked()))
     {
-      auto floatValue = instance->inner()->getPropertyValue("float");
+      auto floatValue = instance->handle()->getPropertyValue("float");
       if (floatValue.empty())
       {
         info.GetReturnValue()
@@ -352,7 +352,7 @@ namespace script_bindings::cssom_bindings
     if (propertyNameStr.find('-') == string::npos)
       propertyNameStr = camel_to_kebab_case(propertyNameStr);
 
-    auto value = instance->inner()->getPropertyValue(propertyNameStr);
+    auto value = instance->handle()->getPropertyValue(propertyNameStr);
     if (value.empty())
     {
       info.GetReturnValue()
@@ -386,7 +386,7 @@ namespace script_bindings::cssom_bindings
     if (property->StrictEquals(String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked()))
     {
       String::Utf8Value propertyValue(isolate, value);
-      instance->inner()->setProperty("float", *propertyValue);
+      instance->handle()->setProperty("float", *propertyValue);
       info.GetReturnValue().Set(Undefined(isolate));
       return;
     }
@@ -395,7 +395,7 @@ namespace script_bindings::cssom_bindings
     if (property->StrictEquals(String::NewFromUtf8(isolate, "cssText").ToLocalChecked()))
     {
       String::Utf8Value cssTextValue(isolate, value);
-      instance->inner()->setCssText(*cssTextValue);
+      instance->handle()->setCssText(*cssTextValue);
       info.GetReturnValue().Set(Undefined(isolate));
       return;
     }
@@ -408,7 +408,7 @@ namespace script_bindings::cssom_bindings
       propertyNameStr = camel_to_kebab_case(propertyNameStr);
 
     String::Utf8Value propertyValue(isolate, value);
-    instance->inner()->setProperty(propertyNameStr, *propertyValue);
+    instance->handle()->setProperty(propertyNameStr, *propertyValue);
     info.GetReturnValue().Set(Undefined(isolate));
   }
 
@@ -437,7 +437,7 @@ namespace script_bindings::cssom_bindings
     if (propertyNameStr.find('-') == string::npos)
       propertyNameStr = camel_to_kebab_case(propertyNameStr);
 
-    auto removedName = instance->inner()->removeProperty(propertyNameStr);
+    auto removedName = instance->handle()->removeProperty(propertyNameStr);
     info.GetReturnValue().Set(Boolean::New(isolate, !removedName.empty()));
   }
 
@@ -450,7 +450,7 @@ namespace script_bindings::cssom_bindings
     CSSStyleDeclaration *instance = Unwrap(isolate, info.Holder());
     if (instance != nullptr)
     {
-      auto decls = instance->inner();
+      auto decls = instance->handle();
       for (size_t index = 0; index < decls->length(); index++)
       {
         auto key = String::NewFromUtf8(isolate,

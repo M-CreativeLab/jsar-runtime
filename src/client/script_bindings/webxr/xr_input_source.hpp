@@ -23,6 +23,8 @@ namespace script_bindings
      */
     class XRInputSource : public XRInputSourceBase
     {
+      using XRInputSourceBase::ObjectWrap;
+
     public:
       static std::string Name()
       {

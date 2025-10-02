@@ -20,15 +20,14 @@ namespace script_bindings
      */
     class XRLayer : public XRLayerBase
     {
+      using XRLayerBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRLayer";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRLayer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
     };
 
     class XRWebGLLayer;
@@ -43,15 +42,14 @@ namespace script_bindings
      */
     class XRWebGLLayer : public XRWebGLLayerBase
     {
+      using XRWebGLLayerBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRWebGLLayer";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRWebGLLayer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Static methods

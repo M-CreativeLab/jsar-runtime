@@ -26,7 +26,7 @@ namespace script_bindings
     }
 
     XRInputSource::XRInputSource(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRInputSourceBase(isolate, args, true)
+        : XRInputSourceBase(isolate, args)
     {
     }
 
@@ -38,7 +38,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -55,7 +55,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -72,7 +72,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -89,7 +89,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "none").ToLocalChecked());
         return;
@@ -105,7 +105,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, "gaze").ToLocalChecked());
         return;
@@ -121,7 +121,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRInputSource *inputSource = Unwrap(isolate, info.This());
-      if (inputSource == nullptr || inputSource->inner() == nullptr)
+      if (inputSource == nullptr || inputSource->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

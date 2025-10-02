@@ -60,13 +60,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
-      if (!wrapper || !wrapper->inner())
+      if (!wrapper || !wrapper->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->inner();
+      auto nativeInfo = wrapper->handle();
       string name = nativeInfo->name;
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked());
     }
@@ -75,13 +75,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
-      if (!wrapper || !wrapper->inner())
+      if (!wrapper || !wrapper->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->inner();
+      auto nativeInfo = wrapper->handle();
       info.GetReturnValue().Set(Integer::NewFromUnsigned(isolate, nativeInfo->type));
     }
 
@@ -89,13 +89,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       WebGLActiveInfo *wrapper = Unwrap(isolate, info.This());
-      if (!wrapper || !wrapper->inner())
+      if (!wrapper || !wrapper->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid WebGLActiveInfo object").ToLocalChecked()));
         return;
       }
 
-      auto nativeInfo = wrapper->inner();
+      auto nativeInfo = wrapper->handle();
       info.GetReturnValue().Set(Integer::New(isolate, nativeInfo->size));
     }
 

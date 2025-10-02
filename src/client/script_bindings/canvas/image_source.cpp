@@ -55,9 +55,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageSource *imageSource = Unwrap(isolate, info.This());
 
-      if (imageSource && imageSource->inner())
+      if (imageSource && imageSource->handle())
       {
-        int width = imageSource->inner()->width();
+        int width = imageSource->handle()->width();
         info.GetReturnValue().Set(Number::New(isolate, width));
       }
       else
@@ -71,9 +71,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageSource *imageSource = Unwrap(isolate, info.This());
 
-      if (imageSource && imageSource->inner())
+      if (imageSource && imageSource->handle())
       {
-        int height = imageSource->inner()->height();
+        int height = imageSource->handle()->height();
         info.GetReturnValue().Set(Number::New(isolate, height));
       }
       else
@@ -87,10 +87,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageSource *imageSource = Unwrap(isolate, info.This());
 
-      if (imageSource && imageSource->inner())
+      if (imageSource && imageSource->handle())
       {
         // TODO(yorkie): Consider using actual natural width if different from width
-        int naturalWidth = imageSource->inner()->width();
+        int naturalWidth = imageSource->handle()->width();
         info.GetReturnValue().Set(Number::New(isolate, naturalWidth));
       }
       else
@@ -104,10 +104,10 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageSource *imageSource = Unwrap(isolate, info.This());
 
-      if (imageSource && imageSource->inner())
+      if (imageSource && imageSource->handle())
       {
         // TODO(yorkie): Consider using actual natural height if different from height
-        int naturalHeight = imageSource->inner()->height();
+        int naturalHeight = imageSource->handle()->height();
         info.GetReturnValue().Set(Number::New(isolate, naturalHeight));
       }
       else
@@ -121,7 +121,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       ImageSource *imageSource = Unwrap(isolate, info.This());
 
-      if (!imageSource || !imageSource->inner())
+      if (!imageSource || !imageSource->handle())
       {
         isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Invalid ImageSource instance").ToLocalChecked()));
         return;

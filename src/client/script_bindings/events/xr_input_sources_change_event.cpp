@@ -75,9 +75,9 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
-    if (self && self->inner())
+    if (self && self->handle())
     {
-      auto session = self->inner()->session();
+      auto session = self->handle()->session();
       if (session)
       {
         Local<Object> sessionObj = webxr_bindings::XRSession::GetOrNewInstance(isolate, session);
@@ -96,9 +96,9 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
-    if (self && self->inner())
+    if (self && self->handle())
     {
-      auto addedSources = self->inner()->added();
+      auto addedSources = self->handle()->added();
       Local<Array> array = Array::New(isolate, addedSources.size());
 
       for (size_t i = 0; i < addedSources.size(); ++i)
@@ -121,9 +121,9 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     XRInputSourcesChangeEvent *self = Unwrap(isolate, info.Holder());
-    if (self && self->inner())
+    if (self && self->handle())
     {
-      auto removedSources = self->inner()->removed();
+      auto removedSources = self->handle()->removed();
       Local<Array> array = Array::New(isolate, removedSources.size());
 
       for (size_t i = 0; i < removedSources.size(); ++i)

@@ -51,7 +51,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -68,7 +68,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         return;
       }
@@ -83,7 +83,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -107,7 +107,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -124,7 +124,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -141,7 +141,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
+      if (hand == nullptr || hand->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

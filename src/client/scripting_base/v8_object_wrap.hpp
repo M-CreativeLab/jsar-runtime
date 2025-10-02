@@ -66,19 +66,19 @@ namespace scripting_base
   };
 
   /**
-   * A base class for wrapping C++ objects in v8::Object instances.
+   * A base class for wrapping C++ class in `v8::Object` instance.
    *
    * This class is useful for wrapping C++ objects when the N-API's ObjectWrap is not available such as in the case of
    * using the V8 API directly.
    *
    * @tparam T The class to wrap.
-   * @tparam D The type of the optional inner instance.
-   * @tparam B The base class of T, if T is derived from another ObjectWrap class.
+   * @tparam TData The type of the optional data handle.
+   * @tparam TBase The base class of T, if T is derived from another ObjectWrap class.
    */
-  template <typename T, typename D = void, typename B = void>
-  class ObjectWrap : public ObjectWrapBase
+  template <typename T, typename TData = void, typename TBase = BaseObject>
+  class ObjectWrap : public TBase
   {
-    friend class ObjectWrap<T, D, B>;
+    friend class ObjectWrap<T, TData, TBase>;
 
   protected:
     using InstanceMethodCallback = void (T::*)(const v8::FunctionCallbackInfo<v8::Value> &);
@@ -97,6 +97,14 @@ namespace scripting_base
     static std::string Name()
     {
       return "Object";
+    }
+
+    /**
+     * Checks if this class requires native constructor call.
+     */
+    static bool NativeConstructorRequired()
+    {
+      return false;
     }
 
     static v8::Local<v8::FunctionTemplate> GetFunctionTemplate(v8::Isolate *isolate)
@@ -152,20 +160,20 @@ namespace scripting_base
      * @tparam Args The types of the arguments to pass to the constructor of T
      *
      * @param isolate The v8::Isolate instance
-     * @param inner The optional inner instance of the class D
+     * @param data The optional data instance of the class D
      * @returns The wrapped v8::Object
      */
-    static v8::Local<v8::Object> NewInstance(napi_env napiEnv, std::shared_ptr<D> inner = nullptr)
+    static v8::Local<v8::Object> NewInstance(napi_env napiEnv, std::shared_ptr<TData> handle = nullptr)
     {
-      if constexpr (!std::is_same_v<D, void>)
+      if constexpr (!std::is_same_v<TData, void>)
       {
-        assert(inner != nullptr && "inner must not be null when D is not void");
+        assert(handle != nullptr && "data handle must not be null when D is not void");
       }
 
       v8::Isolate *isolate = v8::Isolate::GetCurrent();
       v8::EscapableHandleScope scope(isolate);
 
-      v8::Local<v8::Object> jsThis = NewInstance(isolate, inner);
+      v8::Local<v8::Object> jsThis = NewInstance(isolate, handle);
       T *instance = T::Unwrap(isolate, jsThis);
       instance->setNapiEnv(napiEnv);
       return scope.Escape(jsThis);
@@ -175,10 +183,10 @@ namespace scripting_base
      * Create the instance of the class T and wrap it in a v8::Object
      *
      * @param isolate The v8::Isolate instance
-     * @param inner The optional inner instance of the class D
-     * @returns The wrapped v8::Object
+     * @param handle The optional data instance of the class `TData`
+     * @returns The wrapped `v8::Object`
      */
-    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<TData> handle)
     {
       v8::EscapableHandleScope scope(isolate);
       v8::Local<v8::Context> context = isolate->GetCurrentContext();
@@ -203,14 +211,14 @@ namespace scripting_base
         return scope.Escape(v8::Local<v8::Object>());
       }
 
-      // Set the inner handle if D is specified and handle is not null
-      if constexpr (!std::is_same_v<D, void>)
+      // Set the data handle if `TData` is specified and handle is not null
+      if constexpr (!std::is_same_v<TData, void>)
       {
-        if (inner != nullptr)
+        if (handle != nullptr)
         {
-          // Update the inner reference
+          // Update the data reference
           T *instance = T::Unwrap(isolate, jsThis);
-          instance->setInner(inner);
+          instance->setData(handle);
         }
       }
 
@@ -221,23 +229,23 @@ namespace scripting_base
     /**
      * Get the instance object.
      */
-    static v8::Local<v8::Object> GetOrNewInstance(v8::Isolate *isolate, std::shared_ptr<D> inner)
+    static v8::Local<v8::Object> GetOrNewInstance(v8::Isolate *isolate, std::shared_ptr<TData> handle)
     {
-      if constexpr (!std::is_base_of_v<JSObjectHolder, D>)
+      if constexpr (!std::is_base_of_v<JSObjectHolder, TData>)
       {
-        assert(false && "inner type must inherit from `JSObjectHolder`");
+        assert(false && "data type must inherit from `JSObjectHolder`");
       }
 
-      assert(inner != nullptr && "inner must not be null");
-      if (inner->hasJSObject())
+      assert(handle != nullptr && "handle must not be null");
+      if (handle->hasJSObject())
       {
         v8::EscapableHandleScope scope(isolate);
-        ObjectWrapBase *objectWrap = inner->getJSObjectWrap();
-        return scope.Escape(objectWrap->getJSObject(isolate));
+        BaseObject *object = handle->getJSObjectWrap();
+        return scope.Escape(object->getJSObject(isolate));
       }
       else
       {
-        return T::NewInstance(isolate, inner);
+        return T::NewInstance(isolate, handle);
       }
     }
 
@@ -289,15 +297,15 @@ namespace scripting_base
       tpl->SetClassName(v8::String::NewFromUtf8(isolate, T::Name().c_str()).ToLocalChecked());
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-      // Set up inheritance if `B` is specified
-      if constexpr (!std::is_same_v<B, void>)
+      // Set up inheritance if `TBase` is specified
+      if constexpr (!std::is_same_v<TBase, BaseObject>)
       {
         // Ensure base class is initialized first
-        B::Initialize(isolate);
-        v8::Local<v8::FunctionTemplate> base = B::GetFunctionTemplate(isolate);
-        if (!base.IsEmpty())
+        TBase::Initialize(isolate);
+        v8::Local<v8::FunctionTemplate> baseType = TBase::GetFunctionTemplate(isolate);
+        if (!baseType.IsEmpty())
         {
-          tpl->Inherit(base);
+          tpl->Inherit(baseType);
         }
       }
 
@@ -584,23 +592,34 @@ namespace scripting_base
     }
 
   public:
+    /**
+     * Constructing an object without JavaScript arguments.
+     */
     ObjectWrap(v8::Isolate *isolate)
-        : ObjectWrapBase(isolate)
+        : TBase(isolate)
     {
     }
+
     /**
      * Constructor for ObjectWrap.
      * 
      * @param isolate The v8::Isolate instance.
      * @param args The function callback info containing the arguments.
-     * @param nativeConstructingOnly If true, only allow native construction (not from script).
      */
-    ObjectWrap(v8::Isolate *isolate,
-               const v8::FunctionCallbackInfo<v8::Value> &args,
-               bool nativeConstructingOnly = false)
-        : ObjectWrapBase(isolate)
+    ObjectWrap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+        : TBase(isolate, args)
     {
+    }
+
+    virtual ~ObjectWrap()
+    {
+    }
+
+    static void Constructor(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      v8::Isolate *isolate = args.GetIsolate();
       v8::HandleScope scope(isolate);
+
       if (!args.IsConstructCall())
       {
         isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
@@ -609,8 +628,6 @@ namespace scripting_base
       }
 
       ConstructingContext *constructingContext = nullptr;
-
-      // Get the constructing context from the first argument if it is an `External` object
       if (args.Length() == 1 && args[0]->IsExternal())
       {
         v8::Local<v8::External> firstArg = args[0].As<v8::External>();
@@ -618,8 +635,8 @@ namespace scripting_base
         constructingContext = static_cast<ConstructingContext *>(firstArg->Value());
       }
 
-      // If `nativeConstructingOnly` is true, only allow native construction
-      if (nativeConstructingOnly == true && (constructingContext == nullptr ||
+      // If `NativeConstructorRequired` is true, only allow native construction
+      if (T::NativeConstructorRequired() && (constructingContext == nullptr ||
                                              constructingContext->isScriptCall())) [[unlikely]]
       {
         isolate->ThrowException(v8::Exception::TypeError(MakeConstructorError(isolate,
@@ -629,76 +646,41 @@ namespace scripting_base
       // Delete the constructing context if it was created
       if (constructingContext != nullptr)
         delete constructingContext;
-    }
+      // TODO(yorkie): support call parent's JavaScript constructor?
 
-    virtual ~ObjectWrap()
-    {
+      T *instance = new T(isolate, args);
+      assert(instance != nullptr && "Failed to create instance");
+
+      auto jsThis = args.This();
+      Wrap(isolate, jsThis, instance);
+
+      args.GetReturnValue().Set(jsThis);
     }
 
   public:
-    void setInner(std::shared_ptr<D> data)
-    {
-      inner_handle_ = data;
-      onDataSet(data);
-
-      // Set the weak reference back to this object if D is derived from `JSObjectHolder`.
-      if constexpr (std::is_base_of_v<JSObjectHolder, D>)
-      {
-        if (inner_handle_ != nullptr)
-          inner_handle_->setReference(this);
-      }
-    }
-
     /**
      * @returns The `ObjectWrap`'s V8 value.
      */
     v8::Local<v8::Value> value() const
     {
-      return object_handle_.Get(current_isolate_);
-    }
-    /**
-     * @returns The `ObjectWrap`'s inner handle.
-     */
-    inline std::shared_ptr<D> inner() const
-    {
-      return inner_handle_;
-    }
-    /**
-     * @returns The `ObjectWrap`'s inner handle.
-     */
-    inline std::shared_ptr<D> handle() const
-    {
-      return inner_handle_;
+      return this->object_handle_.Get(this->current_isolate_);
     }
 
-  protected:
-    virtual void onDataSet(std::shared_ptr<D> data)
+    /**
+     * @returns The `ObjectWrap`'s data handle.
+     */
+    inline std::shared_ptr<TData> handle() const
     {
+      std::shared_ptr<TData> data_handle = std::dynamic_pointer_cast<TData>(this->data_handle_);
+      if (data_handle == nullptr) [[unlikely]]
+      {
+        std::cerr << "Error: failed to get data handle of '" << T::Name() << "'." << std::endl;
+        assert(false && "`data_handle` is null");
+      }
+      return data_handle;
     }
 
   private:
-    static void Constructor(const v8::FunctionCallbackInfo<v8::Value> &args)
-    {
-      v8::Isolate *isolate = args.GetIsolate();
-      v8::HandleScope scope(isolate);
-
-      if (!args.IsConstructCall())
-      {
-        std::cerr << "Illegal constructor call for " << T::Name() << std::endl;
-        isolate->ThrowException(v8::Exception::TypeError(
-          v8::String::NewFromUtf8(isolate, "Illegal constructor").ToLocalChecked()));
-        return;
-      }
-
-      T *instance = new T(isolate, args);
-      assert(instance != nullptr && "Failed to create instance");
-
-      auto jsObject = args.This();
-      Wrap(isolate, jsObject, instance);
-
-      args.GetReturnValue().Set(jsObject);
-    }
-
     static void Finalizer(const v8::WeakCallbackInfo<T> &data)
     {
       T *instance = data.GetParameter();
@@ -713,10 +695,6 @@ namespace scripting_base
       if (instance != nullptr)
         delete instance;
     }
-
-  protected:
-    // Inner is a weak pointer to the optional inner instance of the class D.
-    std::shared_ptr<D> inner_handle_;
 
   private:
     static thread_local inline bool initialized_ = false;

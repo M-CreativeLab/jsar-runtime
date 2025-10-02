@@ -7,10 +7,12 @@
 namespace script_bindings
 {
   class Window;
-  using WindowBase = scripting_base::ObjectWrap<Window, ::browser::Window, EventTarget>;
+  using WindowBase = scripting_base::ObjectWrap<Window, browser::Window, EventTarget>;
 
   class Window : public WindowBase
   {
+    using WindowBase::ObjectWrap;
+
   public:
     static std::string Name()
     {

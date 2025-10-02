@@ -22,15 +22,14 @@ namespace script_bindings
      */
     class XRPose : public XRPoseBase
     {
+      using XRPoseBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRPose";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRPose(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
@@ -50,15 +49,14 @@ namespace script_bindings
      */
     class XRViewerPose : public XRViewerPoseBase
     {
+      using XRViewerPoseBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRViewerPose";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRViewerPose(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters

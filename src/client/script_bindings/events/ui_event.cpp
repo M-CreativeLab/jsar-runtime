@@ -37,7 +37,7 @@ namespace script_bindings::event_bindings
     HandleScope scope(isolate);
 
     UIEvent *event = Unwrap(isolate, info.This());
-    if (event == nullptr || event->inner() == nullptr)
+    if (event == nullptr || event->handle() == nullptr)
     {
       info.GetReturnValue().SetUndefined();
       return;

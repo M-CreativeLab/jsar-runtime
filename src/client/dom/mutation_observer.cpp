@@ -61,7 +61,8 @@ namespace dom
   }
 
   MutationObserver::MutationObserver(MutationCallback callback)
-      : callback_(callback)
+      : scripting_base::JSObjectHolder()
+      , callback_(callback)
   {
   }
 

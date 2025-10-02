@@ -22,6 +22,8 @@ namespace script_bindings
      */
     class XRSystem : public XRSystemBase
     {
+      using XRSystemBase::ObjectWrap;
+
     public:
       /**
        * The name of the XRSystem class for V8.
@@ -34,9 +36,6 @@ namespace script_bindings
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<client_xr::XRSystem> handle);
-
-    public:
-      XRSystem(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Methods

@@ -47,11 +47,6 @@ namespace script_bindings::html_bindings
              FunctionTemplate::New(isolate, &HTMLScriptElement::Supports));
   }
 
-  HTMLScriptElement::HTMLScriptElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLScriptElementBase(isolate, args, true)
-  {
-  }
-
   // Static methods
   void HTMLScriptElement::Supports(const FunctionCallbackInfo<Value> &info)
   {

@@ -424,17 +424,12 @@ namespace script_bindings
       return scope.Escape(WebGL2RenderingContextBase::NewInstance(isolate, handle).As<Object>());
     }
 
-    WebGL2RenderingContext::WebGL2RenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGL2RenderingContextBase(isolate, args, true)
-    {
-    }
-
     // WebGL 2.0 specific methods
     void WebGL2RenderingContext::DrawBuffers(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native drawBuffers method
       }
@@ -444,7 +439,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native clearBufferfv method
       }
@@ -454,7 +449,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native clearBufferiv method
       }
@@ -464,7 +459,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native clearBufferuiv method
       }
@@ -474,7 +469,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native clearBufferfi method
       }
@@ -485,7 +480,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native createQuery method
       }
@@ -495,7 +490,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native deleteQuery method
       }
@@ -505,7 +500,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native beginQuery method
       }
@@ -515,7 +510,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native endQuery method
       }
@@ -525,7 +520,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getQuery method
       }
@@ -535,7 +530,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getQueryParameter method
       }
@@ -546,7 +541,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native createSampler method
       }
@@ -556,7 +551,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native deleteSampler method
       }
@@ -566,7 +561,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native bindSampler method
       }
@@ -576,7 +571,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native samplerParameteri method
       }
@@ -586,7 +581,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native samplerParameterf method
       }
@@ -596,7 +591,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getSamplerParameter method
       }
@@ -607,7 +602,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native fenceSync method
       }
@@ -617,7 +612,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native isSync method
       }
@@ -627,7 +622,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native deleteSync method
       }
@@ -637,7 +632,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native clientWaitSync method
       }
@@ -647,7 +642,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native waitSync method
       }
@@ -657,7 +652,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getSyncParameter method
       }
@@ -668,7 +663,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native createTransformFeedback method
       }
@@ -678,7 +673,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native deleteTransformFeedback method
       }
@@ -688,7 +683,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native bindTransformFeedback method
       }
@@ -698,7 +693,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native beginTransformFeedback method
       }
@@ -708,7 +703,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native endTransformFeedback method
       }
@@ -718,7 +713,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native transformFeedbackVaryings method
       }
@@ -728,7 +723,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getTransformFeedbackVarying method
       }
@@ -738,7 +733,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native pauseTransformFeedback method
       }
@@ -748,7 +743,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native resumeTransformFeedback method
       }
@@ -759,7 +754,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native bindBufferBase method
       }
@@ -769,7 +764,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native bindBufferRange method
       }
@@ -779,7 +774,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getUniformIndices method
       }
@@ -789,7 +784,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getActiveUniforms method
       }
@@ -799,7 +794,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getUniformBlockIndex method
       }
@@ -809,7 +804,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getActiveUniformBlockParameter method
       }
@@ -819,7 +814,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getActiveUniformBlockName method
       }
@@ -829,7 +824,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native uniformBlockBinding method
       }
@@ -840,7 +835,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native createVertexArray method
       }
@@ -850,7 +845,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native deleteVertexArray method
       }
@@ -860,7 +855,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native bindVertexArray method
       }
@@ -870,7 +865,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native isVertexArray method
       }
@@ -881,7 +876,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native texImage3D method
       }
@@ -891,7 +886,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native texSubImage3D method
       }
@@ -901,7 +896,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native copyTexSubImage3D method
       }
@@ -911,7 +906,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native compressedTexImage3D method
       }
@@ -921,7 +916,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native compressedTexSubImage3D method
       }
@@ -932,7 +927,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native drawRangeElements method
       }
@@ -942,7 +937,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native drawElementsInstanced method
       }
@@ -952,7 +947,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native drawArraysInstanced method
       }
@@ -962,7 +957,7 @@ namespace script_bindings
     {
       Isolate *isolate = args.GetIsolate();
       auto *self = Unwrap(isolate, args.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native vertexAttribDivisor method
       }

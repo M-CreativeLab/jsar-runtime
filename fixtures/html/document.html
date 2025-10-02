@@ -22,9 +22,9 @@
 
   const script = document.createElement('script');
   script.src = './document.js';
-  // script.addEventListener('load', () => {
-  //   console.info('load event listener');
-  // });
+  script.addEventListener('load', () => {
+    console.info('load event listener');
+  });
   script.onload = function () {
     console.info('onload');
   };

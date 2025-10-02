@@ -7,6 +7,7 @@
 
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 namespace dom
 {
@@ -325,7 +326,8 @@ namespace dom
    * @see https://dom.spec.whatwg.org/#event
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Event
    */
-  class Event : public events_comm::TrEvent<DOMEventType>
+  class Event : public events_comm::TrEvent<DOMEventType>,
+                public scripting_base::JSObjectHolder
   {
   public:
     using events_comm::TrEvent<DOMEventType>::TrEvent;
@@ -340,6 +342,7 @@ namespace dom
      */
     Event(DOMEventConstructorType constructor, DOMEventType type, DOMEventInit init = DOMEventInit::Default())
         : events_comm::TrEvent<DOMEventType>(type)
+        , scripting_base::JSObjectHolder()
         , constructor_(constructor)
         , bubbles_(init.bubbles)
         , cancelable_(init.cancelable)
@@ -354,6 +357,7 @@ namespace dom
 
     Event(Event &that)
         : events_comm::TrEvent<DOMEventType>(that)
+        , scripting_base::JSObjectHolder(that)
         , constructor_(that.constructor_)
         , bubbles_(that.bubbles_)
         , cancelable_(that.cancelable_)

@@ -52,9 +52,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        bool disabled = wrapper->inner()->disabled;
+        bool disabled = wrapper->handle()->disabled;
         info.GetReturnValue().Set(Boolean::New(isolate, disabled));
       }
       else
@@ -69,9 +69,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        std::string type = wrapper->inner()->type;
+        std::string type = wrapper->handle()->type;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked());
       }
       else
@@ -86,9 +86,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        std::string value = wrapper->inner()->value;
+        std::string value = wrapper->handle()->value;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
       }
       else
@@ -103,9 +103,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        auto form = wrapper->inner()->form;
+        auto form = wrapper->handle()->form;
         if (form.empty())
         {
           // TODO: Return wrapped HTMLFormElement
@@ -128,9 +128,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        std::string name = wrapper->inner()->name;
+        std::string name = wrapper->handle()->name;
         info.GetReturnValue().Set(String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked());
       }
       else
@@ -146,10 +146,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
         bool disabled = value->BooleanValue(isolate);
-        wrapper->inner()->disabled = disabled;
+        wrapper->handle()->disabled = disabled;
       }
     }
 
@@ -159,10 +159,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsString())
+      if (wrapper && wrapper->handle() && value->IsString())
       {
         String::Utf8Value type(isolate, value);
-        wrapper->inner()->type = *type;
+        wrapper->handle()->type = *type;
       }
     }
 
@@ -172,10 +172,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsString())
+      if (wrapper && wrapper->handle() && value->IsString())
       {
         String::Utf8Value val(isolate, value);
-        wrapper->inner()->setNodeValue(*val);
+        wrapper->handle()->setNodeValue(*val);
       }
     }
 
@@ -185,10 +185,10 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner() && value->IsString())
+      if (wrapper && wrapper->handle() && value->IsString())
       {
         String::Utf8Value name(isolate, value);
-        wrapper->inner()->name = *name;
+        wrapper->handle()->name = *name;
       }
     }
 
@@ -199,9 +199,9 @@ namespace script_bindings
       Local<Object> self = info.Holder();
       HTMLButtonElement *wrapper = Unwrap(isolate, info.This());
 
-      if (wrapper && wrapper->inner())
+      if (wrapper && wrapper->handle())
       {
-        wrapper->inner()->click();
+        wrapper->handle()->click();
         info.GetReturnValue().SetUndefined();
       }
       else

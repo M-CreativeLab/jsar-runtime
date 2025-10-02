@@ -14,15 +14,14 @@ namespace script_bindings
 
     class HTMLScriptElement : public HTMLScriptElementBase
     {
+      using HTMLScriptElementBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "HTMLScriptElement";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      HTMLScriptElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters/setters

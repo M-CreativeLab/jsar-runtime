@@ -21,11 +21,6 @@ namespace script_bindings
       InstanceReadonlyAccessor(isolate, instance, "emulatedPosition", &XRPose::EmulatedPositionGetter);
     }
 
-    XRPose::XRPose(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRPoseBase(isolate, args, true)
-    {
-    }
-
     // Property getters
 
     void XRPose::TransformGetter(const PropertyCallbackInfo<Value> &info)
@@ -34,7 +29,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRPose *pose = Unwrap(isolate, info.This());
-      if (pose == nullptr || pose->inner() == nullptr)
+      if (pose == nullptr || pose->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -51,13 +46,13 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRPose *pose = Unwrap(isolate, info.This());
-      if (pose == nullptr || pose->inner() == nullptr)
+      if (pose == nullptr || pose->handle() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
         return;
       }
 
-      bool emulatedPosition = pose->inner()->emulatedPosition;
+      bool emulatedPosition = pose->handle()->emulatedPosition;
       info.GetReturnValue().Set(Boolean::New(isolate, emulatedPosition));
     }
 
@@ -70,11 +65,6 @@ namespace script_bindings
 
       // Add property accessors
       InstanceReadonlyAccessor(isolate, instance, "views", &XRViewerPose::ViewsGetter);
-    }
-
-    XRViewerPose::XRViewerPose(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRViewerPoseBase(isolate, args, true)
-    {
     }
 
     // Property getters

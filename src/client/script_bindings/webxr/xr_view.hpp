@@ -23,15 +23,14 @@ namespace script_bindings
      */
     class XRView : public XRViewBase
     {
+      using XRViewBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "XRView";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      XRView(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters

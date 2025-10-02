@@ -10,10 +10,5 @@ namespace script_bindings
     void HTMLHeadElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
     }
-
-    HTMLHeadElement::HTMLHeadElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : HTMLHeadElementBase(isolate, args, true)
-    {
-    }
   }
 }

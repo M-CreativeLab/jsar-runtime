@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <assert.h>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "../per_process.hpp"
 
 namespace canvas
@@ -17,7 +18,7 @@ namespace canvas
   };
 
   template <typename CanvasType>
-  class RenderingContextBase
+  class RenderingContextBase : public scripting_base::JSObjectHolder
   {
   public:
     RenderingContextBase(RenderingContextType type, std::shared_ptr<CanvasType> canvasRef)

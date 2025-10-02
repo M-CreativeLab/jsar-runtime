@@ -502,11 +502,6 @@ namespace script_bindings
       ADD_WEBGL1_METHOD("getSupportedExtensions", GetSupportedExtensions)
     }
 
-    WebGLRenderingContext::WebGLRenderingContext(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : WebGLRenderingContextBase(isolate, args, true)
-    {
-    }
-
     // Method implementations - stubs for now, would need native implementation
     void WebGLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
     {
@@ -539,7 +534,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native getContextAttributes method
       }
@@ -549,7 +544,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native isContextLost method
       }
@@ -559,7 +554,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native makeXRCompatible method
       }
@@ -569,7 +564,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
         // Implementation would call native setDefaultCoordHandedness method
       }
@@ -580,11 +575,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int mode = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->hint(target, mode);
+        // self->handle()->hint(target, mode);
       }
     }
 
@@ -592,10 +587,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         float width = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->lineWidth(width);
+        self->handle()->lineWidth(width);
       }
     }
 
@@ -603,11 +598,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int pname = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int param = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->pixelStorei(static_cast<client_graphics::WebGLPixelStorageParameterName>(pname),
+        self->handle()->pixelStorei(static_cast<client_graphics::WebGLPixelStorageParameterName>(pname),
                                    param);
       }
     }
@@ -616,11 +611,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         float factor = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float units = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->polygonOffset(factor, units);
+        self->handle()->polygonOffset(factor, units);
       }
     }
 
@@ -628,10 +623,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->cullFace(mode);
+        self->handle()->cullFace(mode);
       }
     }
 
@@ -639,10 +634,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->frontFace(mode);
+        self->handle()->frontFace(mode);
       }
     }
 
@@ -650,10 +645,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int texture = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->activeTexture(texture);
+        // self->handle()->activeTexture(texture);
       }
     }
 
@@ -661,13 +656,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto shader = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program && shader)
         {
-          // self->inner()->attachShader(program, shader);
+          // self->handle()->attachShader(program, shader);
         }
       }
     }
@@ -676,13 +671,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto shader = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program && shader)
         {
-          // self->inner()->DetachShader(program, shader);
+          // self->handle()->DetachShader(program, shader);
         }
       }
     }
@@ -691,14 +686,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsString())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsString())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         v8::String::Utf8Value name(isolate, info[2]);
         if (program && *name)
         {
-          // self->inner()->BindAttribLocation(program, index, *name);
+          // self->handle()->BindAttribLocation(program, index, *name);
         }
       }
     }
@@ -707,13 +702,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto buffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (buffer)
         {
-          // self->inner()->BindBuffer(target, buffer);
+          // self->handle()->BindBuffer(target, buffer);
         }
       }
     }
@@ -722,13 +717,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto framebuffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (framebuffer)
         {
-          // self->inner()->BindFramebuffer(target, framebuffer);
+          // self->handle()->BindFramebuffer(target, framebuffer);
         }
       }
     }
@@ -737,13 +732,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto renderbuffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (renderbuffer)
         {
-          // self->inner()->BindRenderbuffer(target, renderbuffer);
+          // self->handle()->BindRenderbuffer(target, renderbuffer);
         }
       }
     }
@@ -752,13 +747,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto texture = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (texture)
         {
-          // self->inner()->BindTexture(target, texture);
+          // self->handle()->BindTexture(target, texture);
         }
       }
     }
@@ -768,7 +763,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[2]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int usage = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -776,12 +771,12 @@ namespace script_bindings
         if (info[1]->IsTypedArray() || info[1]->IsArrayBuffer())
         {
           // Handle TypedArray or ArrayBuffer
-          // self->inner()->bufferData(target, data, usage);
+          // self->handle()->bufferData(target, data, usage);
         }
         else if (info[1]->IsNumber())
         {
           int size = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-          // self->inner()->bufferData(target, size, usage);
+          // self->handle()->bufferData(target, size, usage);
         }
       }
     }
@@ -790,7 +785,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int offset = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -798,7 +793,7 @@ namespace script_bindings
         if (info[2]->IsTypedArray() || info[2]->IsArrayBuffer())
         {
           // Handle TypedArray or ArrayBuffer
-          // self->inner()->bufferSubData(target, offset, data);
+          // self->handle()->bufferSubData(target, offset, data);
         }
       }
     }
@@ -808,13 +803,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int attachment = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int renderbuffertarget = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto renderbuffer = info[3]->IsObject() ? Unwrap(isolate, info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()) : nullptr;
-        // self->inner()->framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+        // self->handle()->framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
       }
     }
 
@@ -822,14 +817,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 5)
+      if (self && self->handle() && info.Length() >= 5)
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int attachment = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int textarget = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto texture = info[3]->IsObject() ? Unwrap(isolate, info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()) : nullptr;
         int level = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->framebufferTexture2D(target, attachment, textarget, texture, level);
+        // self->handle()->framebufferTexture2D(target, attachment, textarget, texture, level);
       }
     }
 
@@ -837,10 +832,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // int result = self->inner()->checkFramebufferStatus(target);
+        // int result = self->handle()->checkFramebufferStatus(target);
         // info.GetReturnValue().Set(Integer::New(isolate, result));
       }
     }
@@ -849,10 +844,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int mask = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->clear(mask);
+        self->handle()->clear(mask);
       }
     }
 
@@ -860,13 +855,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         float red = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float green = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float blue = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float alpha = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->clearColor(red, green, blue, alpha);
+        self->handle()->clearColor(red, green, blue, alpha);
       }
     }
 
@@ -874,10 +869,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         float depth = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->clearDepth(depth);
+        self->handle()->clearDepth(depth);
       }
     }
 
@@ -885,10 +880,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int s = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->clearStencil(s);
+        self->handle()->clearStencil(s);
       }
     }
 
@@ -896,13 +891,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         bool red = info[0]->BooleanValue(isolate);
         bool green = info[1]->BooleanValue(isolate);
         bool blue = info[2]->BooleanValue(isolate);
         bool alpha = info[3]->BooleanValue(isolate);
-        self->inner()->colorMask(red, green, blue, alpha);
+        self->handle()->colorMask(red, green, blue, alpha);
       }
     }
 
@@ -910,10 +905,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1)
+      if (self && self->handle() && info.Length() >= 1)
       {
         bool flag = info[0]->BooleanValue(isolate);
-        self->inner()->depthMask(flag);
+        self->handle()->depthMask(flag);
       }
     }
 
@@ -921,10 +916,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int func = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->depthFunc(func);
+        self->handle()->depthFunc(func);
       }
     }
 
@@ -932,11 +927,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2)
+      if (self && self->handle() && info.Length() >= 2)
       {
         float zNear = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float zFar = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->depthRange(zNear, zFar);
+        self->handle()->depthRange(zNear, zFar);
       }
     }
 
@@ -944,12 +939,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3)
+      if (self && self->handle() && info.Length() >= 3)
       {
         int func = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int ref = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int mask = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilFunc(func, ref, mask);
+        self->handle()->stencilFunc(func, ref, mask);
       }
     }
 
@@ -957,13 +952,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int func = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int ref = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int mask = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilFuncSeparate(face, func, ref, mask);
+        self->handle()->stencilFuncSeparate(face, func, ref, mask);
       }
     }
 
@@ -971,10 +966,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int mask = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilMask(mask);
+        self->handle()->stencilMask(mask);
       }
     }
 
@@ -982,11 +977,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2)
+      if (self && self->handle() && info.Length() >= 2)
       {
         int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int mask = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilMaskSeparate(face, mask);
+        self->handle()->stencilMaskSeparate(face, mask);
       }
     }
 
@@ -994,12 +989,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3)
+      if (self && self->handle() && info.Length() >= 3)
       {
         int fail = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int zfail = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int zpass = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilOp(fail, zfail, zpass);
+        self->handle()->stencilOp(fail, zfail, zpass);
       }
     }
 
@@ -1007,13 +1002,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         int face = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int fail = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int zfail = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int zpass = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->stencilOpSeparate(face, fail, zfail, zpass);
+        self->handle()->stencilOpSeparate(face, fail, zfail, zpass);
       }
     }
 
@@ -1021,13 +1016,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4)
+      if (self && self->handle() && info.Length() >= 4)
       {
         float red = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float green = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float blue = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float alpha = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->blendColor(red, green, blue, alpha);
+        self->handle()->blendColor(red, green, blue, alpha);
       }
     }
 
@@ -1035,10 +1030,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->blendEquation(mode);
+        self->handle()->blendEquation(mode);
       }
     }
 
@@ -1046,11 +1041,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int modeRGB = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int modeAlpha = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->blendEquationSeparate(modeRGB, modeAlpha);
+        self->handle()->blendEquationSeparate(modeRGB, modeAlpha);
       }
     }
 
@@ -1058,11 +1053,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int sfactor = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int dfactor = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->blendFunc(sfactor, dfactor);
+        self->handle()->blendFunc(sfactor, dfactor);
       }
     }
 
@@ -1070,13 +1065,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         int srcRGB = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int dstRGB = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int srcAlpha = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int dstAlpha = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+        self->handle()->blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
       }
     }
 
@@ -1084,13 +1079,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int internalformat = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->renderbufferStorage(target, internalformat, width, height);
+        // self->handle()->renderbufferStorage(target, internalformat, width, height);
       }
     }
 
@@ -1098,12 +1093,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (shader)
         {
-          // self->inner()->compileShader(shader);
+          // self->handle()->compileShader(shader);
         }
       }
     }
@@ -1112,9 +1107,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        auto program = self->inner()->createProgram();
+        auto program = self->handle()->createProgram();
         // info.GetReturnValue().Set(Wrap(program));
       }
     }
@@ -1123,10 +1118,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int type = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // auto shader = self->inner()->createShader(type);
+        // auto shader = self->handle()->createShader(type);
         // info.GetReturnValue().Set(Wrap(shader));
       }
     }
@@ -1135,9 +1130,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        auto buffer = self->inner()->createBuffer();
+        auto buffer = self->handle()->createBuffer();
         // info.GetReturnValue().Set(Wrap(buffer));
       }
     }
@@ -1146,9 +1141,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        auto framebuffer = self->inner()->createFramebuffer();
+        auto framebuffer = self->handle()->createFramebuffer();
         // info.GetReturnValue().Set(Wrap(framebuffer));
       }
     }
@@ -1157,9 +1152,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        auto renderbuffer = self->inner()->createRenderbuffer();
+        auto renderbuffer = self->handle()->createRenderbuffer();
         // info.GetReturnValue().Set(Wrap(renderbuffer));
       }
     }
@@ -1168,9 +1163,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        auto texture = self->inner()->createTexture();
+        auto texture = self->handle()->createTexture();
         // info.GetReturnValue().Set(Wrap(texture));
       }
     }
@@ -1179,12 +1174,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto buffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (buffer)
         {
-          // self->inner()->deleteBuffer(buffer);
+          // self->handle()->deleteBuffer(buffer);
         }
       }
     }
@@ -1193,12 +1188,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto framebuffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (framebuffer)
         {
-          // self->inner()->deleteFramebuffer(framebuffer);
+          // self->handle()->deleteFramebuffer(framebuffer);
         }
       }
     }
@@ -1207,12 +1202,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program)
         {
-          // self->inner()->deleteProgram(program);
+          // self->handle()->deleteProgram(program);
         }
       }
     }
@@ -1221,12 +1216,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto renderbuffer = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (renderbuffer)
         {
-          // self->inner()->deleteRenderbuffer(renderbuffer);
+          // self->handle()->deleteRenderbuffer(renderbuffer);
         }
       }
     }
@@ -1235,12 +1230,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (shader)
         {
-          // self->inner()->deleteShader(shader);
+          // self->handle()->deleteShader(shader);
         }
       }
     }
@@ -1249,12 +1244,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto texture = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (texture)
         {
-          // self->inner()->deleteTexture(texture);
+          // self->handle()->deleteTexture(texture);
         }
       }
     }
@@ -1263,12 +1258,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int first = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int count = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->drawArrays(mode, first, count);
+        // self->handle()->drawArrays(mode, first, count);
       }
     }
 
@@ -1276,13 +1271,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsObject())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsObject())
       {
         int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int count = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int type = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         auto indices = info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked();
-        // self->inner()->drawElements(mode, count, type, indices);
+        // self->handle()->drawElements(mode, count, type, indices);
       }
     }
 
@@ -1290,10 +1285,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int cap = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->enable(cap);
+        self->handle()->enable(cap);
       }
     }
 
@@ -1301,10 +1296,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int cap = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->disable(cap);
+        self->handle()->disable(cap);
       }
     }
 
@@ -1312,10 +1307,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->enableVertexAttribArray(index);
+        self->handle()->enableVertexAttribArray(index);
       }
     }
 
@@ -1323,10 +1318,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->disableVertexAttribArray(index);
+        self->handle()->disableVertexAttribArray(index);
       }
     }
 
@@ -1334,13 +1329,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (program)
         {
-          // auto attrib = self->inner()->getActiveAttrib(program, index);
+          // auto attrib = self->handle()->getActiveAttrib(program, index);
           // Wrap and return the attribute
         }
       }
@@ -1350,13 +1345,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (program)
         {
-          // auto uniform = self->inner()->getActiveUniform(program, index);
+          // auto uniform = self->handle()->getActiveUniform(program, index);
           // Wrap and return the uniform
         }
       }
@@ -1366,13 +1361,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         v8::String::Utf8Value name(isolate, info[1]);
         if (program && *name)
         {
-          // int location = self->inner()->getAttribLocation(program, *name);
+          // int location = self->handle()->getAttribLocation(program, *name);
           // info.GetReturnValue().Set(Integer::New(isolate, location));
         }
       }
@@ -1382,13 +1377,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         v8::String::Utf8Value name(isolate, info[1]);
         if (program && *name)
         {
-          // auto location = self->inner()->getUniformLocation(program, *name);
+          // auto location = self->handle()->getUniformLocation(program, *name);
           // Wrap and return the location
         }
       }
@@ -1398,12 +1393,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program)
         {
-          // self->inner()->linkProgram(program);
+          // self->handle()->linkProgram(program);
         }
       }
     }
@@ -1412,12 +1407,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program)
         {
-          // self->inner()->useProgram(program);
+          // self->handle()->useProgram(program);
         }
       }
     }
@@ -1426,12 +1421,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program)
         {
-          // self->inner()->validateProgram(program);
+          // self->handle()->validateProgram(program);
         }
       }
     }
@@ -1440,13 +1435,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         v8::String::Utf8Value source(isolate, info[1]);
         if (shader && *source)
         {
-          // self->inner()->shaderSource(shader, *source);
+          // self->handle()->shaderSource(shader, *source);
         }
       }
     }
@@ -1455,12 +1450,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (shader)
         {
-          // std::string source = self->inner()->getShaderSource(shader);
+          // std::string source = self->handle()->getShaderSource(shader);
           // info.GetReturnValue().Set(String::NewFromUtf8(isolate, source.c_str()).ToLocalChecked());
         }
       }
@@ -1470,7 +1465,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() &&
+      if (self && self->handle() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() &&
           info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -1483,11 +1478,11 @@ namespace script_bindings
         // if (info.Length() >= 7 && (info[6]->IsTypedArray() || info[6]->IsArrayBuffer()))
         // {
         //   // Handle pixel data
-        //   self->inner()->texImage2D(target, level, internalformat, width, height, border, info[6]);
+        //   self->handle()->texImage2D(target, level, internalformat, width, height, border, info[6]);
         // }
         // else
         // {
-        //   self->inner()->texImage2D(target, level, internalformat, width, height, border);
+        //   self->handle()->texImage2D(target, level, internalformat, width, height, border);
         // }
       }
     }
@@ -1496,7 +1491,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
+      if (self && self->handle() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
           info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
           info[6]->IsTypedArray())
       {
@@ -1507,7 +1502,7 @@ namespace script_bindings
         int width = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int height = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
 
-        // self->inner()->texSubImage2D(target, level, xoffset, yoffset, width, height, info[6]);
+        // self->handle()->texSubImage2D(target, level, xoffset, yoffset, width, height, info[6]);
       }
     }
 
@@ -1515,12 +1510,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         float param = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        // self->inner()->texParameterf(target, pname, param);
+        // self->handle()->texParameterf(target, pname, param);
       }
     }
 
@@ -1528,12 +1523,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int param = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->texParameteri(target, pname, param);
+        // self->handle()->texParameteri(target, pname, param);
       }
     }
 
@@ -1541,7 +1536,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 8 && info[0]->IsNumber() && info[1]->IsNumber() &&
+      if (self && self->handle() && info.Length() >= 8 && info[0]->IsNumber() && info[1]->IsNumber() &&
           info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
           info[6]->IsNumber() && info[7]->IsNumber())
       {
@@ -1553,7 +1548,7 @@ namespace script_bindings
         int width = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int height = info[6]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int border = info[7]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->copyTexImage2D(target, level, internalformat, x, y, width, height, border);
+        // self->handle()->copyTexImage2D(target, level, internalformat, x, y, width, height, border);
       }
     }
 
@@ -1561,7 +1556,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
+      if (self && self->handle() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
           info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
           info[6]->IsNumber())
       {
@@ -1572,7 +1567,7 @@ namespace script_bindings
         int x = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int y = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int width = info[6]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width);
+        // self->handle()->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width);
       }
     }
 
@@ -1580,10 +1575,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->inner()->generateMipmap(target);
+        // self->handle()->generateMipmap(target);
       }
     }
 
@@ -1591,13 +1586,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         if (location)
         {
-          // self->inner()->uniform1f(location, x);
+          // self->handle()->uniform1f(location, x);
         }
       }
     }
@@ -1606,13 +1601,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (location)
         {
-          // self->inner()->uniform1i(location, x);
+          // self->handle()->uniform1i(location, x);
         }
       }
     }
@@ -1621,14 +1616,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         if (location)
         {
-          // self->inner()->uniform2f(location, x, y);
+          // self->handle()->uniform2f(location, x, y);
         }
       }
     }
@@ -1637,14 +1632,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int y = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (location)
         {
-          // self->inner()->uniform2i(location, x, y);
+          // self->handle()->uniform2i(location, x, y);
         }
       }
     }
@@ -1653,7 +1648,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
@@ -1661,7 +1656,7 @@ namespace script_bindings
         float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         if (location)
         {
-          // self->inner()->uniform3f(location, x, y, z);
+          // self->handle()->uniform3f(location, x, y, z);
         }
       }
     }
@@ -1670,7 +1665,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -1678,7 +1673,7 @@ namespace script_bindings
         int z = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (location)
         {
-          // self->inner()->uniform3i(location, x, y, z);
+          // self->handle()->uniform3i(location, x, y, z);
         }
       }
     }
@@ -1687,7 +1682,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      if (self && self->handle() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
@@ -1696,7 +1691,7 @@ namespace script_bindings
         float w = static_cast<float>(info[4]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         if (location)
         {
-          // self->inner()->uniform4f(location, x, y, z, w);
+          // self->handle()->uniform4f(location, x, y, z, w);
         }
       }
     }
@@ -1705,7 +1700,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      if (self && self->handle() && info.Length() >= 5 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int x = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -1714,7 +1709,7 @@ namespace script_bindings
         int w = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (location)
         {
-          // self->inner()->uniform4i(location, x, y, z, w);
+          // self->handle()->uniform4i(location, x, y, z, w);
         }
       }
     }
@@ -1723,14 +1718,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Float32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform1fv(location, static_cast<float *>(contents.Data()), data->Length());
+          // self->handle()->uniform1fv(location, static_cast<float *>(contents.Data()), data->Length());
         }
       }
     }
@@ -1739,14 +1734,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Int32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform1iv(location, static_cast<int *>(contents.Data()), data->Length());
+          // self->handle()->uniform1iv(location, static_cast<int *>(contents.Data()), data->Length());
         }
       }
     }
@@ -1755,14 +1750,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Float32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform2fv(location, static_cast<float *>(contents.Data()), data->Length() / 2);
+          // self->handle()->uniform2fv(location, static_cast<float *>(contents.Data()), data->Length() / 2);
         }
       }
     }
@@ -1771,14 +1766,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Int32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform2iv(location, static_cast<int *>(contents.Data()), data->Length() / 2);
+          // self->handle()->uniform2iv(location, static_cast<int *>(contents.Data()), data->Length() / 2);
         }
       }
     }
@@ -1787,14 +1782,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Float32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform3fv(location, static_cast<float *>(contents.Data()), data->Length() / 3);
+          // self->handle()->uniform3fv(location, static_cast<float *>(contents.Data()), data->Length() / 3);
         }
       }
     }
@@ -1803,14 +1798,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Int32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform3iv(location, static_cast<int *>(contents.Data()), data->Length() / 3);
+          // self->handle()->uniform3iv(location, static_cast<int *>(contents.Data()), data->Length() / 3);
         }
       }
     }
@@ -1819,14 +1814,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Float32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform4fv(location, static_cast<float *>(contents.Data()), data->Length() / 4);
+          // self->handle()->uniform4fv(location, static_cast<float *>(contents.Data()), data->Length() / 4);
         }
       }
     }
@@ -1835,14 +1830,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         auto data = info[1].As<v8::Int32Array>();
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniform4iv(location, static_cast<int *>(contents.Data()), data->Length() / 4);
+          // self->handle()->uniform4iv(location, static_cast<int *>(contents.Data()), data->Length() / 4);
         }
       }
     }
@@ -1851,7 +1846,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
@@ -1859,7 +1854,7 @@ namespace script_bindings
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniformMatrix2fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 4);
+          // self->handle()->uniformMatrix2fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 4);
         }
       }
     }
@@ -1868,7 +1863,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
@@ -1876,7 +1871,7 @@ namespace script_bindings
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniformMatrix3fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 9);
+          // self->handle()->uniformMatrix3fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 9);
         }
       }
     }
@@ -1885,7 +1880,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
@@ -1893,7 +1888,7 @@ namespace script_bindings
         if (location && !data.IsEmpty())
         {
           // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->inner()->uniformMatrix4fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 16);
+          // self->handle()->uniformMatrix4fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 16);
         }
       }
     }
@@ -1902,11 +1897,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->vertexAttrib1f(index, x);
+        self->handle()->vertexAttrib1f(index, x);
       }
     }
 
@@ -1914,12 +1909,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
+      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->vertexAttrib2f(index, x, y);
+        self->handle()->vertexAttrib2f(index, x, y);
       }
     }
 
@@ -1927,13 +1922,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->vertexAttrib3f(index, x, y, z);
+        self->handle()->vertexAttrib3f(index, x, y, z);
       }
     }
 
@@ -1941,14 +1936,14 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 5 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
+      if (self && self->handle() && info.Length() >= 5 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         float x = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float y = static_cast<float>(info[2]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float z = static_cast<float>(info[3]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
         float w = static_cast<float>(info[4]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->inner()->vertexAttrib4f(index, x, y, z, w);
+        self->handle()->vertexAttrib4f(index, x, y, z, w);
       }
     }
 
@@ -1956,7 +1951,7 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsBoolean() && info[4]->IsNumber() && info[5]->IsNumber())
+      if (self && self->handle() && info.Length() >= 6 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsBoolean() && info[4]->IsNumber() && info[5]->IsNumber())
       {
         int index = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int size = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
@@ -1964,7 +1959,7 @@ namespace script_bindings
         bool normalized = info[3]->BooleanValue(isolate);
         int stride = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int offset = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->vertexAttribPointer(index, size, type, normalized, stride, offset);
+        self->handle()->vertexAttribPointer(index, size, type, normalized, stride, offset);
       }
     }
 
@@ -1972,13 +1967,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         int x = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int y = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->viewport(x, y, width, height);
+        self->handle()->viewport(x, y, width, height);
       }
     }
 
@@ -1986,13 +1981,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
+      if (self && self->handle() && info.Length() >= 4 && info[0]->IsNumber() && info[1]->IsNumber() && info[2]->IsNumber() && info[3]->IsNumber())
       {
         int x = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int y = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int width = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int height = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->inner()->scissor(x, y, width, height);
+        self->handle()->scissor(x, y, width, height);
       }
     }
 
@@ -2000,9 +1995,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        int error = self->inner()->getError();
+        int error = self->handle()->getError();
         info.GetReturnValue().Set(Integer::New(isolate, error));
       }
     }
@@ -2011,10 +2006,10 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsNumber())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
       {
         int pname = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // auto value = self->inner()->getParameter(pname);
+        // auto value = self->handle()->getParameter(pname);
         // Wrap and return the value
       }
     }
@@ -2023,13 +2018,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (program)
         {
-          // auto value = self->inner()->getProgramParameter(program, pname);
+          // auto value = self->handle()->getProgramParameter(program, pname);
           // Wrap and return the value
         }
       }
@@ -2039,13 +2034,13 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsNumber())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int pname = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         if (shader)
         {
-          // auto value = self->inner()->getShaderParameter(shader, pname);
+          // auto value = self->handle()->getShaderParameter(shader, pname);
           // Wrap and return the value
         }
       }
@@ -2055,11 +2050,11 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
       {
         int shadertype = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
         int precisiontype = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto format = self->inner()->getShaderPrecisionFormat(shadertype, precisiontype);
+        auto format = self->handle()->getShaderPrecisionFormat(shadertype, precisiontype);
         // Wrap and return the format
       }
     }
@@ -2068,12 +2063,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (program)
         {
-          // std::string log = self->inner()->getProgramInfoLog(program);
+          // std::string log = self->handle()->getProgramInfoLog(program);
           // info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
         }
       }
@@ -2083,12 +2078,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsObject())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         if (shader)
         {
-          // std::string log = self->inner()->getShaderInfoLog(shader);
+          // std::string log = self->handle()->getShaderInfoLog(shader);
           // info.GetReturnValue().Set(String::NewFromUtf8(isolate, log.c_str()).ToLocalChecked());
         }
       }
@@ -2098,12 +2093,12 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner() && info.Length() >= 1 && info[0]->IsString())
+      if (self && self->handle() && info.Length() >= 1 && info[0]->IsString())
       {
         v8::String::Utf8Value name(isolate, info[0]);
         if (*name)
         {
-          // auto extension = self->inner()->getExtension(*name);
+          // auto extension = self->handle()->getExtension(*name);
           // Wrap and return the extension
         }
       }
@@ -2113,9 +2108,9 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
-      if (self && self->inner())
+      if (self && self->handle())
       {
-        // auto extensions = self->inner()->getSupportedExtensions();
+        // auto extensions = self->handle()->getSupportedExtensions();
         // Wrap and return the extensions
       }
     }

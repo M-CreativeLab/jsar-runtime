@@ -29,11 +29,6 @@ namespace script_bindings::html_bindings
     InstanceMethod(isolate, prototypeTemplate, "toBlob", &HTMLCanvasElement::ToBlob);
   }
 
-  HTMLCanvasElement::HTMLCanvasElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : HTMLCanvasElementBase(isolate, args, true)
-  {
-  }
-
   void HTMLCanvasElement::WidthGetter(const PropertyCallbackInfo<Value> &info)
   {
     HandleScope scope(info.GetIsolate());

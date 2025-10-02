@@ -35,11 +35,6 @@ namespace script_bindings
       return scope.Escape(XRFrameBase::NewInstance(isolate, nativeFrame).As<Object>());
     }
 
-    XRFrame::XRFrame(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRFrameBase(isolate, args, true)
-    {
-    }
-
     // Property getters
 
     void XRFrame::SessionGetter(const PropertyCallbackInfo<Value> &info)
@@ -48,7 +43,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -56,9 +51,9 @@ namespace script_bindings
 
       // Get the associated XRSession object
       auto frameWrapper = Unwrap(isolate, info.Holder());
-      if (frameWrapper && frameWrapper->inner())
+      if (frameWrapper && frameWrapper->handle())
       {
-        auto session = frameWrapper->inner()->session();
+        auto session = frameWrapper->handle()->session();
         if (session)
         {
           // TODO: Create XRSession wrapper and return it
@@ -88,7 +83,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
           String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));
@@ -114,7 +109,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;
@@ -139,7 +134,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         isolate->ThrowException(Exception::Error(
           String::NewFromUtf8(isolate, "Invalid XRFrame object").ToLocalChecked()));
@@ -165,7 +160,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
         return;
@@ -189,7 +184,7 @@ namespace script_bindings
       }
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().Set(Array::New(isolate, 0));
         return;
@@ -206,7 +201,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
         return;
@@ -223,7 +218,7 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       XRFrame *frame = Unwrap(isolate, info.This());
-      if (frame == nullptr || frame->inner() == nullptr)
+      if (frame == nullptr || frame->handle() == nullptr)
       {
         info.GetReturnValue().Set(Boolean::New(isolate, false));
         return;

@@ -6,11 +6,13 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <skia/include/core/SkColorSpace.h>
+#include <client/scripting_base/v8_object_holder.hpp>
 #include "./image_source.hpp"
 
 namespace canvas
 {
-  class ImageData : public ImageSource
+  class ImageData : public ImageSource,
+                    public scripting_base::JSObjectHolder
   {
   public:
     ImageData(size_t width, size_t height, std::string colorSpaceName = "srgb");

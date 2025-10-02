@@ -21,11 +21,6 @@ namespace script_bindings
       // Most functionality is in derived classes
     }
 
-    XRSpace::XRSpace(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRSpaceBase(isolate, args, true)
-    {
-    }
-
     // XRReferenceSpace implementation
 
     void XRReferenceSpace::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
@@ -38,11 +33,6 @@ namespace script_bindings
                      prototype,
                      "getOffsetReferenceSpace",
                      &XRReferenceSpace::GetOffsetReferenceSpace);
-    }
-
-    XRReferenceSpace::XRReferenceSpace(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRReferenceSpaceBase(isolate, args, true)
-    {
     }
 
     // Methods
@@ -60,7 +50,7 @@ namespace script_bindings
       }
 
       XRReferenceSpace *referenceSpace = Unwrap(isolate, info.This());
-      if (referenceSpace == nullptr || referenceSpace->inner() == nullptr)
+      if (referenceSpace == nullptr || referenceSpace->handle() == nullptr)
       {
         info.GetReturnValue().SetNull();
         return;

@@ -25,7 +25,7 @@ namespace script_bindings::dom_bindings
   }
 
   DocumentFragment::DocumentFragment(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : DocumentFragmentBase(isolate, args, true)
+      : DocumentFragmentBase(isolate, args)
   {
   }
 
