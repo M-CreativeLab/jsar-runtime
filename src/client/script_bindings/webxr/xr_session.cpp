@@ -9,61 +9,26 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
-    // static
     void XRSession::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "inputSources").ToLocalChecked(),
-                                    InputSourcesGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "renderState").ToLocalChecked(),
-                                    RenderStateGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "environmentBlendMode").ToLocalChecked(),
-                                    EnvironmentBlendModeGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "enabledFeatures").ToLocalChecked(),
-                                    EnabledFeaturesGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, instance, "inputSources", &XRSession::InputSourcesGetter);
+      InstanceReadonlyAccessor(isolate, instance, "renderState", &XRSession::RenderStateGetter);
+      InstanceReadonlyAccessor(isolate, instance, "environmentBlendMode", &XRSession::EnvironmentBlendModeGetter);
+      InstanceReadonlyAccessor(isolate, instance, "enabledFeatures", &XRSession::EnabledFeaturesGetter);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "requestAnimationFrame").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RequestAnimationFrame));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "cancelAnimationFrame").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, CancelAnimationFrame));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "updateRenderState").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, UpdateRenderState));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "requestReferenceSpace").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RequestReferenceSpace));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "end").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, End));
+      InstanceMethod(isolate, prototype, "requestAnimationFrame", &XRSession::RequestAnimationFrame);
+      InstanceMethod(isolate, prototype, "cancelAnimationFrame", &XRSession::CancelAnimationFrame);
+      InstanceMethod(isolate, prototype, "updateRenderState", &XRSession::UpdateRenderState);
+      InstanceMethod(isolate, prototype, "requestReferenceSpace", &XRSession::RequestReferenceSpace);
+      InstanceMethod(isolate, prototype, "end", &XRSession::End);
     }
 
-    // static
     Local<Object> XRSession::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSession> nativeSession)
     {
       EscapableHandleScope scope(isolate);
@@ -78,21 +43,14 @@ namespace script_bindings
       }
     }
 
-    // static
-    Local<Function> XRSession::Initialize(Isolate *isolate)
-    {
-      return XRSessionBase::Initialize(isolate);
-    }
-
     XRSession::XRSession(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRSessionBase(isolate, args)
+        : XRSessionBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRSession::InputSourcesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRSession::InputSourcesGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -109,8 +67,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRSession::RenderStateGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRSession::RenderStateGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -127,8 +84,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRSession::EnvironmentBlendModeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRSession::EnvironmentBlendModeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -144,8 +100,7 @@ namespace script_bindings
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, "opaque").ToLocalChecked());
     }
 
-    // static
-    void XRSession::EnabledFeaturesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRSession::EnabledFeaturesGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -164,7 +119,6 @@ namespace script_bindings
 
     // Methods
 
-    // static
     void XRSession::RequestAnimationFrame(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -189,7 +143,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Integer::New(isolate, 1)); // Return dummy handle
     }
 
-    // static
     void XRSession::CancelAnimationFrame(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -210,7 +163,6 @@ namespace script_bindings
       cout << "cancelAnimationFrame called" << endl;
     }
 
-    // static
     void XRSession::UpdateRenderState(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -226,7 +178,6 @@ namespace script_bindings
       cout << "updateRenderState called" << endl;
     }
 
-    // static
     void XRSession::RequestReferenceSpace(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -255,22 +206,13 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRSession::End(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->inner() == nullptr)
-      {
-        return;
-      }
-
-      // TODO: Implement session.end() with proper cleanup
-      cout << "session.end() called" << endl;
-
-      // Return a Promise for now (in full implementation, this should return a proper Promise)
+      // No arguments expected
+      handle()->end();
       info.GetReturnValue().SetUndefined();
     }
   }

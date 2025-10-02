@@ -10,7 +10,6 @@ namespace script_bindings
   {
     // XRSpace implementation
 
-    // static
     void XRSpace::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
@@ -22,72 +21,32 @@ namespace script_bindings
       // Most functionality is in derived classes
     }
 
-    // static
-    Local<Object> XRSpace::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSpace> nativeSpace)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeSpace == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(XRSpaceBase::NewInstance(isolate, nativeSpace).As<Object>());
-    }
-
-    // static
-    Local<Function> XRSpace::Initialize(Isolate *isolate)
-    {
-      return XRSpaceBase::Initialize(isolate);
-    }
-
     XRSpace::XRSpace(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : XRSpaceBase(isolate, args)
+        : XRSpaceBase(isolate, args, true)
     {
     }
 
     // XRReferenceSpace implementation
 
-    // static
     void XRReferenceSpace::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getOffsetReferenceSpace").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetOffsetReferenceSpace));
-    }
-
-    // static
-    Local<Object> XRReferenceSpace::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRReferenceSpace> nativeSpace)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeSpace == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRReferenceSpace, client_xr::XRReferenceSpace, XRSpace>::NewInstance(isolate, nativeSpace).As<Object>());
-    }
-
-    // static
-    Local<Function> XRReferenceSpace::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRReferenceSpace, client_xr::XRReferenceSpace, XRSpace>::Initialize(isolate);
+      InstanceMethod(isolate,
+                     prototype,
+                     "getOffsetReferenceSpace",
+                     &XRReferenceSpace::GetOffsetReferenceSpace);
     }
 
     XRReferenceSpace::XRReferenceSpace(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRReferenceSpace, client_xr::XRReferenceSpace, XRSpace>(isolate, args)
+        : XRReferenceSpaceBase(isolate, args, true)
     {
     }
 
     // Methods
 
-    // static
     void XRReferenceSpace::GetOffsetReferenceSpace(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();

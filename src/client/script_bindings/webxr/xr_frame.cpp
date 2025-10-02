@@ -1,6 +1,6 @@
+#include <iostream>
 #include "./xr_frame.hpp"
 #include "./xr_session.hpp"
-#include <iostream>
 
 using namespace std;
 using namespace v8;
@@ -9,73 +9,40 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
-    // static
     void XRFrame::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "session").ToLocalChecked(),
-                                    SessionGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "session", &XRFrame::SessionGetter);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getPose").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetPose));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getViewerPose").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetViewerPose));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "createAnchor").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, CreateAnchor));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getHitTestResults").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetHitTestResults));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getHitTestResultsForTransientInput").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetHitTestResultsForTransientInput));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "fillPoses").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, FillPoses));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "fillJointRadii").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, FillJointRadii));
+      InstanceMethod(isolate, instanceTemplate, "getPose", &XRFrame::GetPose);
+      InstanceMethod(isolate, instanceTemplate, "getViewerPose", &XRFrame::GetViewerPose);
+      InstanceMethod(isolate, instanceTemplate, "createAnchor", &XRFrame::CreateAnchor);
+      InstanceMethod(isolate, instanceTemplate, "getHitTestResults", &XRFrame::GetHitTestResults);
+      InstanceMethod(isolate, instanceTemplate, "getHitTestResultsForTransientInput", &XRFrame::GetHitTestResultsForTransientInput);
+      InstanceMethod(isolate, instanceTemplate, "fillPoses", &XRFrame::FillPoses);
+      InstanceMethod(isolate, instanceTemplate, "fillJointRadii", &XRFrame::FillJointRadii);
     }
 
-    // static
     Local<Object> XRFrame::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRFrame> nativeFrame)
     {
       EscapableHandleScope scope(isolate);
-
-      if (nativeFrame == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::NewInstance(isolate, nativeFrame).As<Object>());
-    }
-
-    // static
-    Local<Function> XRFrame::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>::Initialize(isolate);
+      assert(nativeFrame != nullptr && "nativeFrame must not be null");
+      return scope.Escape(XRFrameBase::NewInstance(isolate, nativeFrame).As<Object>());
     }
 
     XRFrame::XRFrame(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRFrame, client_xr::XRFrame>(isolate, args)
+        : XRFrameBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRFrame::SessionGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRFrame::SessionGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -108,7 +75,6 @@ namespace script_bindings
 
     // Methods
 
-    // static
     void XRFrame::GetPose(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -135,7 +101,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRFrame::GetViewerPose(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -161,7 +126,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRFrame::CreateAnchor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -188,7 +152,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRFrame::GetHitTestResults(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -213,7 +176,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Array::New(isolate, 0));
     }
 
-    // static
     void XRFrame::GetHitTestResultsForTransientInput(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -238,7 +200,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Array::New(isolate, 0));
     }
 
-    // static
     void XRFrame::FillPoses(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -256,7 +217,6 @@ namespace script_bindings
       info.GetReturnValue().Set(Boolean::New(isolate, false));
     }
 
-    // static
     void XRFrame::FillJointRadii(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();

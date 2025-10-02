@@ -11,120 +11,43 @@ namespace script_bindings
   {
     // XRLayer implementation
 
-    // static
     void XRLayer::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
       // XRLayer is a base class with no specific properties or methods
     }
 
-    // static
-    Local<Object> XRLayer::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRLayer> nativeLayer)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeLayer == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRLayer, client_xr::XRLayer>::NewInstance(isolate, nativeLayer).As<Object>());
-    }
-
-    // static
-    Local<Function> XRLayer::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRLayer, client_xr::XRLayer>::Initialize(isolate);
-    }
-
     XRLayer::XRLayer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRLayer, client_xr::XRLayer>(isolate, args)
+        : XRLayerBase(isolate, args, true)
     {
     }
 
     // XRWebGLLayer implementation
 
-    // static
     void XRWebGLLayer::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "antialias").ToLocalChecked(),
-                                    AntialiasGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "ignoreDepthValues").ToLocalChecked(),
-                                    IgnoreDepthValuesGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "multiviewRequired").ToLocalChecked(),
-                                    MultiviewRequiredGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "framebuffer").ToLocalChecked(),
-                                    FramebufferGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "framebufferWidth").ToLocalChecked(),
-                                    FramebufferWidthGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "framebufferHeight").ToLocalChecked(),
-                                    FramebufferHeightGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "fixedFoveation").ToLocalChecked(),
-                                    FixedFoveationGetter,
-                                    FixedFoveationSetter);
+      InstanceReadonlyAccessor(isolate, instance, "antialias", &XRWebGLLayer::AntialiasGetter);
+      InstanceReadonlyAccessor(isolate, instance, "ignoreDepthValues", &XRWebGLLayer::IgnoreDepthValuesGetter);
+      InstanceReadonlyAccessor(isolate, instance, "multiviewRequired", &XRWebGLLayer::MultiviewRequiredGetter);
+      InstanceReadonlyAccessor(isolate, instance, "framebuffer", &XRWebGLLayer::FramebufferGetter);
+      InstanceReadonlyAccessor(isolate, instance, "framebufferWidth", &XRWebGLLayer::FramebufferWidthGetter);
+      InstanceReadonlyAccessor(isolate, instance, "framebufferHeight", &XRWebGLLayer::FramebufferHeightGetter);
+      InstanceAccessor(isolate,
+                       instance,
+                       "fixedFoveation",
+                       &XRWebGLLayer::FixedFoveationGetter,
+                       &XRWebGLLayer::FixedFoveationSetter);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getViewport").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetViewport));
+      InstanceMethod(isolate, instance, "getViewport", &XRWebGLLayer::GetViewport);
 
       // Add static methods
       tpl->Set(String::NewFromUtf8(isolate, "getNativeFramebufferScaleFactor").ToLocalChecked(),
                FunctionTemplate::New(isolate, GetNativeFramebufferScaleFactor));
-    }
-
-    // static
-    Local<Object> XRWebGLLayer::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRWebGLLayer> nativeLayer)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeLayer == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::NewInstance(isolate, nativeLayer).As<Object>());
-    }
-
-    // static
-    Local<Function> XRWebGLLayer::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>::Initialize(isolate);
     }
 
     // static
@@ -139,65 +62,40 @@ namespace script_bindings
     }
 
     XRWebGLLayer::XRWebGLLayer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRWebGLLayer, client_xr::XRWebGLLayer, XRLayer>(isolate, args)
+        : XRWebGLLayerBase(isolate, args, true)
     {
     }
 
     // Property getters and setters
 
-    // static
-    void XRWebGLLayer::AntialiasGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::AntialiasGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
-        return;
-      }
-
-      // TODO: Get actual antialias setting from native layer
-      info.GetReturnValue().Set(Boolean::New(isolate, false));
+      auto antialias = handle()->antialias;
+      info.GetReturnValue().Set(Boolean::New(isolate, antialias));
     }
 
-    // static
-    void XRWebGLLayer::IgnoreDepthValuesGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::IgnoreDepthValuesGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
-        return;
-      }
-
-      // TODO: Get actual ignoreDepthValues setting from native layer
-      info.GetReturnValue().Set(Boolean::New(isolate, false));
+      auto ignoreDepthValues = handle()->ignoreDepthValues;
+      info.GetReturnValue().Set(Boolean::New(isolate, ignoreDepthValues));
     }
 
-    // static
-    void XRWebGLLayer::MultiviewRequiredGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::MultiviewRequiredGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
-        return;
-      }
-
-      // TODO: Get actual multiviewRequired setting from native layer
-      info.GetReturnValue().Set(Boolean::New(isolate, false));
+      auto multiviewRequired = handle()->multiviewRequired;
+      info.GetReturnValue().Set(Boolean::New(isolate, multiviewRequired));
     }
 
-    // static
-    void XRWebGLLayer::FramebufferGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::FramebufferGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -214,42 +112,25 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRWebGLLayer::FramebufferWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::FramebufferWidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Get actual framebuffer width from native layer
-      info.GetReturnValue().Set(Number::New(isolate, 1920));
+      auto width = handle()->framebufferWidth;
+      info.GetReturnValue().Set(Number::New(isolate, width));
     }
 
-    // static
-    void XRWebGLLayer::FramebufferHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::FramebufferHeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Get actual framebuffer height from native layer
-      info.GetReturnValue().Set(Number::New(isolate, 1080));
+      auto height = handle()->framebufferHeight;
+      info.GetReturnValue().Set(Number::New(isolate, height));
     }
 
-    // static
-    void XRWebGLLayer::FixedFoveationGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRWebGLLayer::FixedFoveationGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -265,8 +146,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRWebGLLayer::FixedFoveationSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void XRWebGLLayer::FixedFoveationSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -283,7 +163,6 @@ namespace script_bindings
 
     // Methods
 
-    // static
     void XRWebGLLayer::GetViewport(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();

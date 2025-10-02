@@ -9,87 +9,54 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
-    // static
     void XRView::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "eye").ToLocalChecked(),
-                                    EyeGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "projectionMatrix").ToLocalChecked(),
-                                    ProjectionMatrixGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "transform").ToLocalChecked(),
-                                    TransformGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, instance, "eye", &XRView::EyeGetter);
+      InstanceReadonlyAccessor(isolate, instance, "projectionMatrix", &XRView::ProjectionMatrixGetter);
+      InstanceReadonlyAccessor(isolate, instance, "transform", &XRView::TransformGetter);
 
       // Add methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "requestViewportScale").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, RequestViewportScale));
-    }
-
-    // static
-    Local<Object> XRView::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRView> nativeView)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeView == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRView, client_xr::XRView>::NewInstance(isolate, nativeView).As<Object>());
-    }
-
-    // static
-    Local<Function> XRView::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRView, client_xr::XRView>::Initialize(isolate);
+      InstanceMethod(isolate, prototype, "requestViewportScale", &XRView::RequestViewportScale);
     }
 
     XRView::XRView(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRView, client_xr::XRView>(isolate, args)
+        : XRViewBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRView::EyeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRView::EyeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->inner() == nullptr)
+      string eyeStr;
+      switch (handle()->eye())
       {
-        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "none").ToLocalChecked());
-        return;
+      case client_xr::XREye::kLeft:
+        eyeStr = "left";
+        break;
+      case client_xr::XREye::kRight:
+        eyeStr = "right";
+        break;
+      case client_xr::XREye::kNone:
+      default:
+        eyeStr = "none";
+        break;
       }
 
-      // TODO: Get actual eye from native view (left, right, none)
-      cout << "view.eye getter called" << endl;
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "left").ToLocalChecked());
+      info.GetReturnValue().Set(String::NewFromUtf8(isolate,
+                                                    eyeStr.c_str())
+                                  .ToLocalChecked());
     }
 
-    // static
-    void XRView::ProjectionMatrixGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRView::ProjectionMatrixGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -108,8 +75,7 @@ namespace script_bindings
       info.GetReturnValue().Set(matrix);
     }
 
-    // static
-    void XRView::TransformGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRView::TransformGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -128,21 +94,21 @@ namespace script_bindings
 
     // Methods
 
-    // static
     void XRView::RequestViewportScale(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->inner() == nullptr)
+      if (info.Length() < 1 || !info[0]->IsNumber())
       {
-        info.GetReturnValue().SetUndefined();
+        isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "requestViewportScale", "requires a number argument")));
         return;
       }
 
-      // TODO: Implement viewport scaling request
-      cout << "view.requestViewportScale called" << endl;
+      float scale = info[0]->NumberValue(context).FromMaybe(1.0f);
+      handle()->requestViewportScale(scale);
       info.GetReturnValue().SetUndefined();
     }
   }

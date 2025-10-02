@@ -10,6 +10,8 @@ namespace script_bindings
   {
     // Forward declarations
     class XRLayer;
+    class XRRenderState;
+    using XRRenderStateBase = scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>;
 
     /**
      * XRRenderState wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -18,41 +20,24 @@ namespace script_bindings
      * It provides the standard WebXR XRRenderState interface for managing
      * rendering state including layers and depth settings.
      */
-    class XRRenderState : public scripting_base::ObjectWrap<XRRenderState, client_xr::XRRenderState>
+    class XRRenderState : public XRRenderStateBase
     {
     public:
-      /**
-       * The name of the XRRenderState class for V8.
-       */
       static std::string Name()
       {
         return "XRRenderState";
       }
-
-      /**
-       * Configure the V8 function template with XRRenderState properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 XRRenderState instance from a native client_xr::XRRenderState.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_xr::XRRenderState> nativeRenderState);
-
-      /**
-       * Initialize the XRRenderState class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       XRRenderState(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void BaseLayerGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DepthFarGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DepthNearGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void InlineVerticalFieldOfViewGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void BaseLayerGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DepthFarGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DepthNearGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void InlineVerticalFieldOfViewGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
   }
 }
