@@ -29,20 +29,6 @@ namespace script_bindings
       InstanceMethod(isolate, prototype, "end", &XRSession::End);
     }
 
-    Local<Object> XRSession::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRSession> nativeSession)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeSession == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-      else
-      {
-        return scope.Escape(XRSessionBase::NewInstance(isolate, nativeSession).As<Object>());
-      }
-    }
-
     XRSession::XRSession(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : XRSessionBase(isolate, args, true)
     {

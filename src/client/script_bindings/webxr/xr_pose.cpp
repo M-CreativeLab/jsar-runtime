@@ -11,58 +11,24 @@ namespace script_bindings
   {
     // XRPose implementation
 
-    // static
     void XRPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "transform").ToLocalChecked(),
-                                    TransformGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "emulatedPosition").ToLocalChecked(),
-                                    EmulatedPositionGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-    }
-
-    // static
-    Local<Object> XRPose::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRPose> nativePose)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativePose == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRPose, client_xr::XRPose>::NewInstance(isolate, nativePose).As<Object>());
-    }
-
-    // static
-    Local<Function> XRPose::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRPose, client_xr::XRPose>::Initialize(isolate);
+      InstanceReadonlyAccessor(isolate, instance, "transform", &XRPose::TransformGetter);
+      InstanceReadonlyAccessor(isolate, instance, "emulatedPosition", &XRPose::EmulatedPositionGetter);
     }
 
     XRPose::XRPose(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRPose, client_xr::XRPose>(isolate, args)
+        : XRPoseBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRPose::TransformGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRPose::TransformGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -79,8 +45,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRPose::EmulatedPositionGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRPose::EmulatedPositionGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -98,61 +63,26 @@ namespace script_bindings
 
     // XRViewerPose implementation
 
-    // static
     void XRViewerPose::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "views").ToLocalChecked(),
-                                    ViewsGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-    }
-
-    // static
-    Local<Object> XRViewerPose::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRViewerPose> nativeViewerPose)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeViewerPose == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>::NewInstance(isolate, nativeViewerPose).As<Object>());
-    }
-
-    // static
-    Local<Function> XRViewerPose::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>::Initialize(isolate);
+      InstanceReadonlyAccessor(isolate, instance, "views", &XRViewerPose::ViewsGetter);
     }
 
     XRViewerPose::XRViewerPose(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>(isolate, args)
+        : XRViewerPoseBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRViewerPose::ViewsGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRViewerPose::ViewsGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRViewerPose *viewerPose = Unwrap(isolate, info.This());
-      if (viewerPose == nullptr || viewerPose->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
-        return;
-      }
 
       // TODO: Return array of XRView objects
       cout << "viewerPose.views getter called" << endl;

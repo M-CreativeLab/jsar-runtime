@@ -10,6 +10,8 @@ namespace script_bindings
   {
     // Forward declarations
     class XRRigidTransform;
+    class XRPose;
+    using XRPoseBase = scripting_base::ObjectWrap<XRPose, client_xr::XRPose>;
 
     /**
      * XRPose wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -18,40 +20,26 @@ namespace script_bindings
      * It provides the standard WebXR XRPose interface for representing
      * position and orientation at a specific time.
      */
-    class XRPose : public scripting_base::ObjectWrap<XRPose, client_xr::XRPose>
+    class XRPose : public XRPoseBase
     {
     public:
-      /**
-       * The name of the XRPose class for V8.
-       */
       static std::string Name()
       {
         return "XRPose";
       }
-
-      /**
-       * Configure the V8 function template with XRPose properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 XRPose instance from a native client_xr::XRPose.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_xr::XRPose> nativePose);
-
-      /**
-       * Initialize the XRPose class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       XRPose(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void TransformGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void EmulatedPositionGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TransformGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void EmulatedPositionGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
+
+    class XRViewerPose;
+    using XRViewerPoseBase = scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>;
 
     /**
      * XRViewerPose wrapper for V8 objects using scripting_base::ObjectWrap.
@@ -60,38 +48,21 @@ namespace script_bindings
      * It provides the standard WebXR XRViewerPose interface for representing
      * the viewer's pose with associated views.
      */
-    class XRViewerPose : public scripting_base::ObjectWrap<XRViewerPose, client_xr::XRViewerPose, XRPose>
+    class XRViewerPose : public XRViewerPoseBase
     {
     public:
-      /**
-       * The name of the XRViewerPose class for V8.
-       */
       static std::string Name()
       {
         return "XRViewerPose";
       }
-
-      /**
-       * Configure the V8 function template with XRViewerPose properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 XRViewerPose instance from a native client_xr::XRViewerPose.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_xr::XRViewerPose> nativeViewerPose);
-
-      /**
-       * Initialize the XRViewerPose class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       XRViewerPose(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void ViewsGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ViewsGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
   }
 }

@@ -8,91 +8,43 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
-    // static
     void XRHand::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "size").ToLocalChecked(),
-                                    SizeGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, instance, "size", &XRHand::SizeGetter);
 
       // Add Map-like methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "entries").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Entries));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "forEach").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ForEach));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "get").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Get));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "keys").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Keys));
-
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "values").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, Values));
+      InstanceMethod(isolate, prototype, "entries", &XRHand::Entries);
+      InstanceMethod(isolate, prototype, "forEach", &XRHand::ForEach);
+      InstanceMethod(isolate, prototype, "get", &XRHand::Get);
+      InstanceMethod(isolate, prototype, "keys", &XRHand::Keys);
+      InstanceMethod(isolate, prototype, "values", &XRHand::Values);
 
       // Add iterator support
-      Local<String> iteratorSymbol = String::NewFromUtf8(isolate, "Symbol.iterator").ToLocalChecked();
-      instanceTemplate->Set(iteratorSymbol, FunctionTemplate::New(isolate, Iterator));
-    }
-
-    // static
-    Local<Object> XRHand::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRHand> nativeHand)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeHand == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::NewInstance(isolate, nativeHand).As<Object>());
-    }
-
-    // static
-    Local<Function> XRHand::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRHand, client_xr::XRHand>::Initialize(isolate);
+      // TODO(yorkie): support Symbol?
+      InstanceMethod(isolate, prototype, "Symbol.iterator", &XRHand::Iterator);
     }
 
     XRHand::XRHand(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRHand, client_xr::XRHand>(isolate, args)
+        : XRHandBase(isolate, args)
     {
     }
 
     // Property getters
 
-    // static
-    void XRHand::SizeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRHand::SizeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRHand *hand = Unwrap(isolate, info.This());
-      if (hand == nullptr || hand->inner() == nullptr)
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Get actual hand joint count from native hand implementation
-      // Standard WebXR hand tracking has 25 joints (including wrist)
-      // This should query the native hand for actual joint count
-      info.GetReturnValue().Set(Number::New(isolate, 25));
+      info.GetReturnValue().Set(Number::New(isolate, handle()->size()));
     }
 
     // Map-like methods
 
-    // static
     void XRHand::Entries(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -110,7 +62,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRHand::ForEach(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -126,7 +77,6 @@ namespace script_bindings
       cout << "hand.forEach called" << endl;
     }
 
-    // static
     void XRHand::Get(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -151,7 +101,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRHand::Keys(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -169,7 +118,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRHand::Values(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
@@ -187,7 +135,6 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
     void XRHand::Iterator(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();

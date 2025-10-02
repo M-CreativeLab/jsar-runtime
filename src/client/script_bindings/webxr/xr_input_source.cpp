@@ -11,94 +11,28 @@ namespace script_bindings
   {
     // XRInputSource implementation
 
-    // static
     void XRInputSource::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
-
-      // Set up the instance template
-      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
 
       // Add property accessors
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "gamepad").ToLocalChecked(),
-                                    GamepadGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "gripSpace").ToLocalChecked(),
-                                    GripSpaceGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "hand").ToLocalChecked(),
-                                    HandGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "handedness").ToLocalChecked(),
-                                    HandednessGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "targetRayMode").ToLocalChecked(),
-                                    TargetRayModeGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "targetRaySpace").ToLocalChecked(),
-                                    TargetRaySpaceGetter,
-                                    nullptr,
-                                    Local<Value>(),
-                                    AccessControl::DEFAULT,
-                                    PropertyAttribute::ReadOnly);
-    }
-
-    // static
-    Local<Object> XRInputSource::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRInputSource> nativeInputSource)
-    {
-      EscapableHandleScope scope(isolate);
-
-      if (nativeInputSource == nullptr)
-      {
-        return scope.Escape(Local<Object>());
-      }
-
-      return scope.Escape(scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::NewInstance(isolate, nativeInputSource).As<Object>());
-    }
-
-    // static
-    Local<Object> XRInputSource::GetOrNewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRInputSource> nativeInputSource)
-    {
-      // For now, just create a new instance. In a full implementation,
-      // we might cache instances to maintain object identity.
-      return NewInstance(isolate, nativeInputSource);
-    }
-
-    // static
-    Local<Function> XRInputSource::Initialize(Isolate *isolate)
-    {
-      return scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>::Initialize(isolate);
+      InstanceReadonlyAccessor(isolate, instance, "gamepad", &XRInputSource::GamepadGetter);
+      InstanceReadonlyAccessor(isolate, instance, "gripSpace", &XRInputSource::GripSpaceGetter);
+      InstanceReadonlyAccessor(isolate, instance, "hand", &XRInputSource::HandGetter);
+      InstanceReadonlyAccessor(isolate, instance, "handedness", &XRInputSource::HandednessGetter);
+      InstanceReadonlyAccessor(isolate, instance, "targetRayMode", &XRInputSource::TargetRayModeGetter);
+      InstanceReadonlyAccessor(isolate, instance, "targetRaySpace", &XRInputSource::TargetRaySpaceGetter);
     }
 
     XRInputSource::XRInputSource(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-        : scripting_base::ObjectWrap<XRInputSource, client_xr::XRInputSource>(isolate, args)
+        : XRInputSourceBase(isolate, args, true)
     {
     }
 
     // Property getters
 
-    // static
-    void XRInputSource::GamepadGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::GamepadGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -115,8 +49,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRInputSource::GripSpaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::GripSpaceGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -133,8 +66,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRInputSource::HandGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::HandGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -151,8 +83,7 @@ namespace script_bindings
       info.GetReturnValue().SetNull();
     }
 
-    // static
-    void XRInputSource::HandednessGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::HandednessGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -168,8 +99,7 @@ namespace script_bindings
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, "right").ToLocalChecked());
     }
 
-    // static
-    void XRInputSource::TargetRayModeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::TargetRayModeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -185,8 +115,7 @@ namespace script_bindings
       info.GetReturnValue().Set(String::NewFromUtf8(isolate, "tracked-pointer").ToLocalChecked());
     }
 
-    // static
-    void XRInputSource::TargetRaySpaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void XRInputSource::TargetRaySpaceGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
@@ -205,18 +134,16 @@ namespace script_bindings
 
     // XRInputSourceArray implementation
 
-    // static
-    Local<Array> XRInputSourceArray::NewInstance(Isolate *isolate, const std::vector<std::shared_ptr<client_xr::XRInputSource>> &inputSources)
+    Local<Array> XRInputSourceArray::NewInstance(Isolate *isolate,
+                                                 const vector<shared_ptr<client_xr::XRInputSource>> &inputSources)
     {
       EscapableHandleScope scope(isolate);
-
       Local<Array> array = Array::New(isolate, inputSources.size());
       for (size_t i = 0; i < inputSources.size(); ++i)
       {
         Local<Object> inputSourceObj = XRInputSource::GetOrNewInstance(isolate, inputSources[i]);
         array->Set(isolate->GetCurrentContext(), i, inputSourceObj).Check();
       }
-
       return scope.Escape(array);
     }
   }
