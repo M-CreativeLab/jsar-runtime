@@ -20,38 +20,30 @@ namespace script_bindings
      */
     class Canvas : public CanvasBase
     {
-      using CanvasBase::ObjectWrap;
-
     public:
-      /**
-       * The name of the Canvas class for V8.
-       */
       static std::string Name()
       {
         return "Canvas";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas);
 
     public:
       Canvas(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void WidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void HeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Property setters
-      static void WidthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void HeightSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void WidthSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void HeightSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
-      static void GetContext(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ToDataURL(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ToBlob(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void TransferToImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetContext(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ToDataURL(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ToBlob(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void TransferToImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
 
     class OffscreenCanvas;
@@ -96,17 +88,17 @@ namespace script_bindings
 
     private:
       // Property getters
-      static void WidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void HeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Property setters
-      static void WidthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void HeightSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void WidthSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void HeightSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Methods
-      static void GetContext(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ConvertToBlob(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void TransferToImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetContext(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ConvertToBlob(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void TransferToImageBitmap(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

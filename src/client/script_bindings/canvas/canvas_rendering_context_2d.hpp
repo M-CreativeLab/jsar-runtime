@@ -43,105 +43,87 @@ namespace script_bindings
 
     private:
       // Drawing rectangles
-      static void FillRect(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void StrokeRect(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ClearRect(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FillRect(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void StrokeRect(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ClearRect(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Drawing text
-      static void FillText(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void StrokeText(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void MeasureText(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void FillText(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void StrokeText(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void MeasureText(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Line caps/joins
-      static void LineCap(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void LineJoin(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void LineWidth(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void MiterLimit(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LineCap(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LineJoin(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LineWidth(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void MiterLimit(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Fill and stroke styles
-      static void FillStyleGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void FillStyleSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void StrokeStyleGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void StrokeStyleSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void FillStyleGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void FillStyleSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void StrokeStyleGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void StrokeStyleSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Shadows
-      static void ShadowBlurGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ShadowBlurSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ShadowColorGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ShadowColorSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ShadowOffsetXGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ShadowOffsetXSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ShadowOffsetYGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ShadowOffsetYSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ShadowBlurGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ShadowBlurSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ShadowColorGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ShadowColorSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ShadowOffsetXGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ShadowOffsetXSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ShadowOffsetYGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ShadowOffsetYSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Drawing paths
-      static void BeginPath(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ClosePath(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void MoveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void LineTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void BezierCurveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void QuadraticCurveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Arc(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ArcTo(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Ellipse(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Rect(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void BeginPath(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ClosePath(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void MoveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void LineTo(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void BezierCurveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void QuadraticCurveTo(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Arc(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ArcTo(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Ellipse(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Rect(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Drawing path methods
-      static void Fill(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Stroke(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Clip(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void IsPointInPath(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void IsPointInStroke(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Fill(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Stroke(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Clip(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IsPointInPath(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void IsPointInStroke(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Transformations
-      static void Scale(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Rotate(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Translate(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Transform(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void SetTransform(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ResetTransform(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Scale(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Rotate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Translate(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Transform(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetTransform(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ResetTransform(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Drawing images
-      static void DrawImage(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void DrawImage(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Pixel manipulation
-      static void CreateImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void GetImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void PutImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CreateImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void PutImageData(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Canvas state
-      static void Save(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Restore(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Save(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Restore(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Canvas element property
-      static void CanvasGetter(
-        v8::Local<v8::String> property,
-        const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
-      static void LineWidthGetter(
-        v8::Local<v8::String> property,
-        const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void LineWidthSetter(
-        v8::Local<v8::String> property,
-        v8::Local<v8::Value> value,
-        const v8::PropertyCallbackInfo<void> &info);
-      static void LineCapGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void LineCapSetter(
-        v8::Local<v8::String> property,
-        v8::Local<v8::Value> value,
-        const v8::PropertyCallbackInfo<void> &info);
-      static void GlobalAlphaGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void GlobalAlphaSetter(
-        v8::Local<v8::String> property,
-        v8::Local<v8::Value> value,
-        const v8::PropertyCallbackInfo<void> &info);
-      static void GlobalCompositeOperationGetter(
-        v8::Local<v8::String> property,
-        const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void GlobalCompositeOperationSetter(
-        v8::Local<v8::String> property,
-        v8::Local<v8::Value> value,
-        const v8::PropertyCallbackInfo<void> &info);
+      void LineWidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LineWidthSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void LineCapGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void LineCapSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void GlobalAlphaGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void GlobalAlphaSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void GlobalCompositeOperationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void GlobalCompositeOperationSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
     };
   }
 }

@@ -28,10 +28,10 @@ namespace script_bindings
 
     private:
       // Property getters
-      static void CanvasGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CanvasGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Methods
-      static void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetContextAttributes(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

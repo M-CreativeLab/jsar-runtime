@@ -8,19 +8,15 @@ namespace script_bindings
 
     void HTMLRenderingContext::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
       // Properties (read-only)
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "canvas").ToLocalChecked(),
-                                     CanvasGetter,
-                                     nullptr,
-                                     Local<Value>(),
-                                     AccessControl::DEFAULT,
-                                     PropertyAttribute::ReadOnly);
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "canvas", &HTMLRenderingContext::CanvasGetter);
 
       // Methods
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "getContextAttributes").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, GetContextAttributes));
+      InstanceMethod(isolate, prototypeTemplate, "getContextAttributes", &HTMLRenderingContext::GetContextAttributes);
     }
 
     Local<Object> HTMLRenderingContext::NewInstance(Isolate *isolate)
@@ -34,7 +30,7 @@ namespace script_bindings
     {
     }
 
-    void HTMLRenderingContext::CanvasGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLRenderingContext::CanvasGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HTMLRenderingContext *context = Unwrap(isolate, info.This());

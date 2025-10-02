@@ -12,33 +12,17 @@ namespace script_bindings
     {
       HandleScope handleScope(isolate);
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
-
-#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
-#define DEFINE_ACCESSOR(STR, GETTER, SETTER) \
-  prototypeTemplate->SetAccessor(NAME(STR), GETTER, SETTER);
-#define DEFINE_METHOD(STR, METHOD) \
-  prototypeTemplate->Set(NAME(STR), FunctionTemplate::New(isolate, METHOD));
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
       // Properties
-      DEFINE_ACCESSOR("width", WidthGetter, WidthSetter);
-      DEFINE_ACCESSOR("height", HeightGetter, HeightSetter);
+      InstanceAccessor(isolate, instanceTemplate, "width", &Canvas::WidthGetter, &Canvas::WidthSetter);
+      InstanceAccessor(isolate, instanceTemplate, "height", &Canvas::HeightGetter, &Canvas::HeightSetter);
 
       // Methods
-      DEFINE_METHOD("getContext", GetContext);
-      DEFINE_METHOD("toDataURL", ToDataURL);
-      DEFINE_METHOD("toBlob", ToBlob);
-      DEFINE_METHOD("transferToImageBitmap", TransferToImageBitmap);
-#undef NAME
-#undef DEFINE_ACCESSOR
-#undef DEFINE_METHOD
-    }
-
-    Local<Object> Canvas::NewInstance(Isolate *isolate, shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeCanvas != nullptr
-               ? scope.Escape(CanvasBase::NewInstance(isolate, nativeCanvas).As<Object>())
-               : scope.Escape(Local<Object>());
+      InstanceMethod(isolate, prototypeTemplate, "getContext", &Canvas::GetContext);
+      InstanceMethod(isolate, prototypeTemplate, "toDataURL", &Canvas::ToDataURL);
+      InstanceMethod(isolate, prototypeTemplate, "toBlob", &Canvas::ToBlob);
+      InstanceMethod(isolate, prototypeTemplate, "transferToImageBitmap", &Canvas::TransferToImageBitmap);
     }
 
     Canvas::Canvas(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -46,7 +30,7 @@ namespace script_bindings
     {
     }
 
-    void Canvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Canvas::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
@@ -62,7 +46,7 @@ namespace script_bindings
       }
     }
 
-    void Canvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void Canvas::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
@@ -78,7 +62,7 @@ namespace script_bindings
       }
     }
 
-    void Canvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Canvas::WidthSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
@@ -90,7 +74,7 @@ namespace script_bindings
       }
     }
 
-    void Canvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void Canvas::HeightSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Canvas *canvas = Unwrap(isolate, info.This());
@@ -178,26 +162,26 @@ namespace script_bindings
     // OffscreenCanvas implementation
     void OffscreenCanvas::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      tpl->SetClassName(String::NewFromUtf8(isolate, "OffscreenCanvas").ToLocalChecked());
-
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
       Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-      instanceTemplate->SetInternalFieldCount(1);
 
       // Properties
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                    WidthGetter,
-                                    WidthSetter);
-      instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                    HeightGetter,
-                                    HeightSetter);
+      InstanceAccessor(isolate,
+                       instanceTemplate,
+                       "width",
+                       &OffscreenCanvas::WidthGetter,
+                       &OffscreenCanvas::WidthSetter);
+      InstanceAccessor(isolate,
+                       instanceTemplate,
+                       "height",
+                       &OffscreenCanvas::HeightGetter,
+                       &OffscreenCanvas::HeightSetter);
 
       // Methods
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "getContext").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, GetContext));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "convertToBlob").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, ConvertToBlob));
-      instanceTemplate->Set(String::NewFromUtf8(isolate, "transferToImageBitmap").ToLocalChecked(),
-                            FunctionTemplate::New(isolate, TransferToImageBitmap));
+      InstanceMethod(isolate, prototypeTemplate, "getContext", &OffscreenCanvas::GetContext);
+      InstanceMethod(isolate, prototypeTemplate, "convertToBlob", &OffscreenCanvas::ConvertToBlob);
+      InstanceMethod(isolate, prototypeTemplate, "transferToImageBitmap", &OffscreenCanvas::TransferToImageBitmap);
     }
 
     Local<Object> OffscreenCanvas::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::OffscreenCanvas> nativeCanvas)
@@ -220,39 +204,23 @@ namespace script_bindings
       // TODO: Implement constructor logic if needed
     }
 
-    void OffscreenCanvas::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void OffscreenCanvas::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
-
-      if (canvas && canvas->inner())
-      {
-        int width = canvas->inner()->width();
-        info.GetReturnValue().Set(Number::New(isolate, width));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Number::New(isolate,
+                                            handle()->width()));
     }
 
-    void OffscreenCanvas::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void OffscreenCanvas::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      OffscreenCanvas *canvas = Unwrap(isolate, info.This());
-
-      if (canvas && canvas->inner())
-      {
-        int height = canvas->inner()->height();
-        info.GetReturnValue().Set(Number::New(isolate, height));
-      }
-      else
-      {
-        info.GetReturnValue().Set(Number::New(isolate, 0));
-      }
+      HandleScope scope(isolate);
+      info.GetReturnValue().Set(Number::New(isolate,
+                                            handle()->height()));
     }
 
-    void OffscreenCanvas::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void OffscreenCanvas::WidthSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());
@@ -264,7 +232,7 @@ namespace script_bindings
       }
     }
 
-    void OffscreenCanvas::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void OffscreenCanvas::HeightSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       OffscreenCanvas *canvas = Unwrap(isolate, info.This());

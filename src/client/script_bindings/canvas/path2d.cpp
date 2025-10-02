@@ -9,31 +9,22 @@ namespace script_bindings
 
     void Path2D::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
       Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
 
-#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
-#define METHOD(X) FunctionTemplate::New(isolate, X)
-
       // Path building methods
-      prototypeTemplate->Set(NAME("addPath"), METHOD(AddPath));
-      prototypeTemplate->Set(NAME("closePath"), METHOD(ClosePath));
-      prototypeTemplate->Set(NAME("moveTo"), METHOD(MoveTo));
-      prototypeTemplate->Set(NAME("lineTo"), METHOD(LineTo));
-      prototypeTemplate->Set(NAME("bezierCurveTo"), METHOD(BezierCurveTo));
-      prototypeTemplate->Set(NAME("quadraticCurveTo"), METHOD(QuadraticCurveTo));
-      prototypeTemplate->Set(NAME("arc"), METHOD(Arc));
-      prototypeTemplate->Set(NAME("arcTo"), METHOD(ArcTo));
-      prototypeTemplate->Set(NAME("ellipse"), METHOD(Ellipse));
-      prototypeTemplate->Set(NAME("rect"), METHOD(Rect));
-      prototypeTemplate->Set(NAME("roundRect"), METHOD(RoundRect));
-    }
-
-    Local<Object> Path2D::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::Path2D> nativePath2D)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativePath2D != nullptr
-               ? scope.Escape(Path2DBase::NewInstance(isolate, nativePath2D).As<Object>())
-               : scope.Escape(Local<Object>());
+      InstanceMethod(isolate, prototypeTemplate, "addPath", &Path2D::AddPath);
+      InstanceMethod(isolate, prototypeTemplate, "closePath", &Path2D::ClosePath);
+      InstanceMethod(isolate, prototypeTemplate, "moveTo", &Path2D::MoveTo);
+      InstanceMethod(isolate, prototypeTemplate, "lineTo", &Path2D::LineTo);
+      InstanceMethod(isolate, prototypeTemplate, "bezierCurveTo", &Path2D::BezierCurveTo);
+      InstanceMethod(isolate, prototypeTemplate, "quadraticCurveTo", &Path2D::QuadraticCurveTo);
+      InstanceMethod(isolate, prototypeTemplate, "arc", &Path2D::Arc);
+      InstanceMethod(isolate, prototypeTemplate, "arcTo", &Path2D::ArcTo);
+      InstanceMethod(isolate, prototypeTemplate, "ellipse", &Path2D::Ellipse);
+      InstanceMethod(isolate, prototypeTemplate, "rect", &Path2D::Rect);
+      InstanceMethod(isolate, prototypeTemplate, "roundRect", &Path2D::RoundRect);
     }
 
     Path2D::Path2D(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

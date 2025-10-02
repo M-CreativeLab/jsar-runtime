@@ -10,24 +10,14 @@ namespace script_bindings
 
     void ImageData::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
-
-#define NAME(X) String::NewFromUtf8(isolate, X).ToLocalChecked()
-#define DEFINE_READONLY_PROPERTY(STR, GETTER)            \
-  prototypeTemplate->SetAccessor(NAME(STR),              \
-                                 GETTER,                 \
-                                 nullptr,                \
-                                 Local<Value>(),         \
-                                 AccessControl::DEFAULT, \
-                                 PropertyAttribute::ReadOnly)
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
 
       // Properties (read-only)
-      DEFINE_READONLY_PROPERTY("width", WidthGetter);
-      DEFINE_READONLY_PROPERTY("height", HeightGetter);
-      DEFINE_READONLY_PROPERTY("data", DataGetter);
-      DEFINE_READONLY_PROPERTY("colorSpace", ColorSpaceGetter);
-#undef DEFINE_READONLY_PROPERTY
-#undef NAME
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "width", &ImageData::WidthGetter);
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "height", &ImageData::HeightGetter);
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "data", &ImageData::DataGetter);
+      InstanceReadonlyAccessor(isolate, instanceTemplate, "colorSpace", &ImageData::ColorSpaceGetter);
     }
 
     Local<Object> ImageData::NewInstance(Isolate *isolate, shared_ptr<::canvas::ImageData> nativeImageData)
@@ -83,7 +73,7 @@ namespace script_bindings
       }
     }
 
-    void ImageData::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void ImageData::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
@@ -99,7 +89,7 @@ namespace script_bindings
       }
     }
 
-    void ImageData::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void ImageData::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
@@ -115,7 +105,7 @@ namespace script_bindings
       }
     }
 
-    void ImageData::DataGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void ImageData::DataGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());
@@ -137,7 +127,7 @@ namespace script_bindings
       }
     }
 
-    void ImageData::ColorSpaceGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void ImageData::ColorSpaceGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       ImageData *imageData = Unwrap(isolate, info.This());

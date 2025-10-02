@@ -19,12 +19,7 @@ namespace script_bindings
      */
     class ImageData : public ImageDataBase
     {
-      using ImageDataBase::ObjectWrap;
-
     public:
-      /**
-       * The name of the ImageData class for V8.
-       */
       static std::string Name()
       {
         return "ImageData";
@@ -43,10 +38,10 @@ namespace script_bindings
 
     private:
       // Property getters
-      static void WidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void HeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DataGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ColorSpaceGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DataGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ColorSpaceGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
   }
 }

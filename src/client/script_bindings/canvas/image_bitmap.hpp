@@ -19,31 +19,23 @@ namespace script_bindings
      */
     class ImageBitmap : public ImageBitmapBase
     {
-      using ImageBitmapBase::ObjectWrap;
-
     public:
-      /**
-       * The name of the ImageBitmap class for V8.
-       */
       static std::string Name()
       {
         return "ImageBitmap";
       }
-
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
-                                               std::shared_ptr<::canvas::ImageBitmap> nativeBitmap);
 
     public:
       ImageBitmap(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void WidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void HeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 
       // Methods
-      static void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Close(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

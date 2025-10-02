@@ -45,19 +45,6 @@ namespace script_bindings
                             FunctionTemplate::New(isolate, GetImageData));
     }
 
-    Local<Object> ImageSource::NewInstance(Isolate *isolate, std::shared_ptr<::canvas::ImageSource> nativeImageSource)
-    {
-      EscapableHandleScope scope(isolate);
-      return nativeImageSource != nullptr
-               ? scope.Escape(ImageSourceBase::NewInstance(isolate, nativeImageSource).As<Object>())
-               : scope.Escape(Local<Object>());
-    }
-
-    Local<Function> ImageSource::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
-    }
-
     ImageSource::ImageSource(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : ImageSourceBase(isolate, args)
     {
