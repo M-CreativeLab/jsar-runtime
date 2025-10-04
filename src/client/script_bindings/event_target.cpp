@@ -44,7 +44,6 @@ namespace script_bindings
       return;
     }
  
-    cerr << "addEventListener called" << endl;
     String::Utf8Value typeString(isolate, info[0]);
     Local<Function> listener = info[1].As<Function>();
 
@@ -53,7 +52,6 @@ namespace script_bindings
       cout << "Event triggered: " << static_cast<int>(type) << endl;
     };
 
-    cerr << "Event type string: " << *typeString << endl;
     optional<dom::DOMEventType> eventType = dom::StringToEventType(*typeString, eventTargetType());
     auto listenerHandle = handle()->addEventListener(*eventType, listenerCallback);
     info.GetReturnValue().SetUndefined();

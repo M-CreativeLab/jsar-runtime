@@ -3,6 +3,7 @@
 #include <memory>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/dom/dom_event_target.hpp>
+#include <node/uv.h>
 
 namespace script_bindings
 {
@@ -31,5 +32,8 @@ namespace script_bindings
     void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
     void RemoveEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
     void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+  private:
+    uv_async_t async_handle_;
   };
 }
