@@ -1,6 +1,8 @@
-#include "./xr_layer.hpp"
-#include "./xr_viewport.hpp"
 #include <iostream>
+#include <client/script_bindings/webgl/framebuffer.hpp>
+#include "./xr_layer.hpp"
+#include "./xr_view.hpp"
+#include "./xr_viewport.hpp"
 
 using namespace std;
 using namespace v8;
@@ -51,8 +53,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      // TODO: Get actual native framebuffer scale factor
-      cout << "XRWebGLLayer.getNativeFramebufferScaleFactor called" << endl;
+      // TODO(yorkie): Get actual native framebuffer scale factor
       info.GetReturnValue().Set(Number::New(isolate, 1.0));
     }
 
@@ -90,16 +91,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return actual WebGL framebuffer from native layer
-      cout << "webglLayer.framebuffer getter called" << endl;
-      info.GetReturnValue().SetNull();
+      auto framebufferValue = webgl_bindings::WebGLFramebuffer::NewInstance(isolate,
+                                                                            handle()->framebuffer);
+      info.GetReturnValue().Set(framebufferValue);
     }
 
     void XRWebGLLayer::FramebufferWidthGetter(const PropertyCallbackInfo<Value> &info)
@@ -125,15 +119,7 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Get actual fixed foveation setting from native layer
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(Number::New(isolate, handle()->framebufferScaleFactor));
     }
 
     void XRWebGLLayer::FixedFoveationSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
@@ -141,14 +127,21 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->handle() == nullptr)
+      if (!value->IsNumber())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "fixedFoveation", "Value must be a number")));
         return;
       }
 
-      // TODO: Set actual fixed foveation setting on native layer
-      cout << "webglLayer.fixedFoveation setter called" << endl;
+      double foveation = value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0);
+      if (foveation < 0.0 || foveation > 1.0)
+      {
+        isolate->ThrowException(Exception::RangeError(
+          MakeMethodError(isolate, "fixedFoveation", "Value must be between 0.0 and 1.0")));
+        return;
+      }
+      handle()->framebufferScaleFactor = foveation;
     }
 
     // Methods
@@ -157,16 +150,33 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      XRWebGLLayer *layer = Unwrap(isolate, info.This());
-      if (layer == nullptr || layer->handle() == nullptr)
+      if (info.Length() < 1)
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getViewport", "getViewport requires 1 argument")));
+        info.GetReturnValue().SetUndefined();
+        return;
+      }
+      if (!info[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getViewport", "First argument must be an XRView object")));
+        info.GetReturnValue().SetUndefined();
         return;
       }
 
-      // TODO: Return actual XRViewport for the given view
-      cout << "webglLayer.getViewport called" << endl;
+      XRView *current_view = XRView::Unwrap(isolate, info[0]->ToObject(context).ToLocalChecked());
+      if (current_view == nullptr || current_view->handle() == nullptr)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getViewport", "Invalid XRView object")));
+        info.GetReturnValue().SetUndefined();
+        return;
+      }
+
+      // TODO(yorkie): Get actual viewport from the XRWebGLLayer and XRView
       info.GetReturnValue().SetNull();
     }
   }

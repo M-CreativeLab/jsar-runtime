@@ -211,13 +211,15 @@ namespace scripting_base
         return scope.Escape(v8::Local<v8::Object>());
       }
 
-      // Set the data handle if `TData` is specified and handle is not null
-      if constexpr (!std::is_same_v<TData, void>)
+      // Unwrap and check if the instance is valid
       {
-        if (handle != nullptr)
+        T *instance = T::Unwrap(isolate, jsThis);
+        assert(instance != nullptr && "Failed to unwrap the instance");
+
+        // Set the data handle if `TData` is specified and handle is not null
+        if constexpr (!std::is_same_v<TData, void>)
         {
           // Update the data reference
-          T *instance = T::Unwrap(isolate, jsThis);
           instance->setData(handle);
         }
       }

@@ -15,20 +15,18 @@ namespace script_bindings
                                                 std::shared_ptr<client_graphics::WebGLFramebuffer> nativeFramebuffer)
     {
       EscapableHandleScope scope(isolate);
-      return nativeFramebuffer != nullptr
-               ? scope.Escape(WebGLFramebufferBase::NewInstance(isolate, nativeFramebuffer).As<Object>())
-               : scope.Escape(Local<Object>());
+      assert(nativeFramebuffer != nullptr && "nativeFramebuffer must not be null");
+      return scope.Escape(WebGLFramebufferBase::NewInstance(isolate, nativeFramebuffer).As<Object>());
     }
 
-    Local<Function> WebGLFramebuffer::Initialize(Isolate *isolate)
+    Local<Object> WebGLFramebuffer::NewInstance(Isolate *isolate, uint32_t framebufferId)
     {
-      return ObjectWrap::Initialize(isolate);
+      return NewInstance(isolate, make_shared<client_graphics::WebGLFramebuffer>(framebufferId));
     }
 
     WebGLFramebuffer::WebGLFramebuffer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLFramebufferBase(isolate, args)
     {
     }
-
   } // namespace webgl
 } // namespace script_bindings

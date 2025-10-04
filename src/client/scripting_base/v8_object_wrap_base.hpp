@@ -3,6 +3,7 @@
 #include <memory>
 #include <node/v8.h>
 #include <node/node_api.h>
+#include <node/uv.h>
 
 namespace scripting_base
 {
@@ -16,17 +17,25 @@ namespace scripting_base
   protected:
     BaseObject(v8::Isolate *isolate);
     BaseObject(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    BaseObject(const BaseObject &);
 
   public:
     virtual ~BaseObject();
 
   public:
+    uv_loop_t* getEventLoop() const;
     v8::Local<v8::Object> getJSObject(v8::Isolate *) const;
+    bool hasData() const;
     void setData(std::shared_ptr<JSObjectHolder>);
     void setNapiEnv(napi_env env);
 
   protected:
-    v8::Isolate *current_isolate_;
+    virtual void onDataUpdated()
+    {
+    }
+
+  protected:
+    v8::Isolate *current_isolate_ = nullptr;
     v8::Persistent<v8::Object> object_handle_;
     std::shared_ptr<JSObjectHolder> data_handle_;
 

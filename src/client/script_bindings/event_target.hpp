@@ -1,14 +1,39 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <shared_mutex>
+#include <mutex>
+#include <condition_variable>
+
+#include <node/uv.h>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/dom/dom_event_target.hpp>
-#include <node/uv.h>
 
 namespace script_bindings
 {
   class EventTarget;
   using EventTargetBase = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>;
+
+  class EventListenersList : std::vector<std::shared_ptr<v8::Persistent<v8::Function>>>
+  {
+  public:
+    EventListenersList() = default;
+    ~EventListenersList()
+    {
+      for (auto &listener : *this)
+        listener->Reset();
+      this->clear();
+    }
+
+  public:
+    size_t count() const;
+    void addListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
+    void removeListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
+    void dispatchEvent(v8::Isolate *isolate, std::shared_ptr<dom::Event> event);
+  };
 
   class EventTarget : public EventTargetBase
   {
@@ -20,6 +45,7 @@ namespace script_bindings
       return "EventTarget";
     }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+    static void EventCallback(uv_async_t *handle);
 
   public:
     virtual dom::DOMEventTargetType eventTargetType() const
@@ -27,13 +53,28 @@ namespace script_bindings
       return dom::DOMEventTargetType::kEventTarget;
     }
 
+    EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    virtual ~EventTarget() override;
+
   private:
-    // Event methods
+    void onDataUpdated() override;
+
+    // internal event methods
+    void listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event);
+    void setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners);
+    void didDispatchPendingEvent();
+
+    // Exposed Event methods
     void AddEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
     void RemoveEventListener(const v8::FunctionCallbackInfo<v8::Value> &info);
     void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
 
   private:
-    uv_async_t async_handle_;
+    std::unique_ptr<uv_async_t> async_handle_;
+    std::shared_ptr<dom::Event> pending_event_;
+    std::mutex dispatch_mutex_;
+    std::condition_variable dispatch_cv_;
+    std::shared_mutex event_listeners_mutex_;
+    std::unordered_map<std::string, EventListenersList> event_listeners_;
   };
 }

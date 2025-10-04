@@ -1,5 +1,6 @@
 #include <iostream>
 #include "./xr_render_state.hpp"
+#include "./xr_layer.hpp"
 
 using namespace std;
 using namespace v8;
@@ -30,16 +31,16 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRRenderState *renderState = Unwrap(isolate, info.This());
-      if (renderState == nullptr || renderState->handle() == nullptr)
+      auto baseLayer = handle()->baseLayer;
+      if (baseLayer)
+      {
+        auto jsBaseLayer = XRLayer::GetOrNewInstance(isolate, baseLayer);
+        info.GetReturnValue().Set(jsBaseLayer);
+      }
+      else
       {
         info.GetReturnValue().SetNull();
-        return;
       }
-
-      // TODO: Return actual base layer from native render state
-      cout << "renderState.baseLayer getter called" << endl;
-      info.GetReturnValue().SetNull();
     }
 
     void XRRenderState::DepthFarGetter(const PropertyCallbackInfo<Value> &info)

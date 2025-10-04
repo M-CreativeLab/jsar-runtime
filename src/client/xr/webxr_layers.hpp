@@ -9,7 +9,7 @@
 
 namespace client_xr
 {
-  class XRLayer
+  class XRLayer : public scripting_base::JSObjectHolder
   {
   public:
     XRLayer(std::shared_ptr<XRSession> session);
@@ -26,8 +26,7 @@ namespace client_xr
   };
 
   class XRWebGLLayer : public XRLayer,
-                       public xr::WebGLLayer,
-                       public scripting_base::JSObjectHolder
+                       public xr::WebGLLayer
   {
   public:
     /**

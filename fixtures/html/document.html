@@ -22,11 +22,11 @@
 
   const script = document.createElement('script');
   script.src = './document.js';
-  script.addEventListener('load', () => {
-    console.info('load event listener');
+  script.addEventListener('load', (...args) => {
+    console.info('load event listener', args);
   });
   script.onload = function () {
-    console.info('onload');
+    console.info('onload', arguments);
   };
   document.head.appendChild(script);
 
