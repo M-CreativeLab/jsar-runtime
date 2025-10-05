@@ -98,7 +98,8 @@
     "__availability": "cpp",
     "span": "cpp",
     "execution": "cpp",
-    "cassert": "cpp"
+    "cassert": "cpp",
+    "print": "cpp"
   },
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",

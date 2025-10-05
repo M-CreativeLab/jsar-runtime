@@ -24,12 +24,17 @@ namespace scripting_base
 
   public:
     uv_loop_t* getEventLoop() const;
-    v8::Local<v8::Object> getJSObject(v8::Isolate *) const;
     bool hasData() const;
     void setData(std::shared_ptr<JSObjectHolder>);
     void setNapiEnv(napi_env env);
 
+    v8::Local<v8::Object> getJSObject(v8::Isolate *) const;
+    v8::Local<v8::Object> This() const;
+
   protected:
+    virtual void onCreated()
+    {
+    }
     virtual void onDataUpdated()
     {
     }

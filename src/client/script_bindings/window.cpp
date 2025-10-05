@@ -44,8 +44,9 @@ namespace script_bindings
                                     Local<Object> object,
                                     std::shared_ptr<::browser::Window> nativeWindow)
   {
-    Window *instance = new Window(isolate, nativeWindow);
-    Wrap(isolate, object, instance);
+    Window *window = new Window(isolate, nativeWindow);
+    window->onCreated();
+    Wrap(isolate, object, window);
     return object;
   }
 

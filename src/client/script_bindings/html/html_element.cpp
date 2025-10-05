@@ -75,6 +75,26 @@ namespace script_bindings::html_bindings
     return scope.Escape(HTMLElementBase::NewInstance(isolate, nativeElement).As<Object>());
   }
 
+  void HTMLElement::onCreated()
+  {
+    Element::onCreated();
+
+    // Register common events
+    registerEvent("beforetoggle");
+    registerEvent("change");
+    registerEvent("command");
+    registerEvent("drag");
+    registerEvent("dragend");
+    registerEvent("dragenter");
+    registerEvent("dragleave");
+    registerEvent("dragover");
+    registerEvent("dragstart");
+    registerEvent("drop");
+    registerEvent("error");
+    registerEvent("load");
+    registerEvent("toggle");
+  }
+
   // Property getters and setters
 
   void HTMLElement::DatasetGetter(const v8::PropertyCallbackInfo<v8::Value> &info)

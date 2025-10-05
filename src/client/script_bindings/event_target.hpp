@@ -56,10 +56,15 @@ namespace script_bindings
     EventTarget(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
     virtual ~EventTarget() override;
 
+  protected:
+    void registerEvent(const std::string &eventType);
+    bool matchRegisteredEvent(const std::string &eventType) const;
+
   private:
     void onDataUpdated() override;
 
     // internal event methods
+    void initAsyncHandle();
     void listenerCallback(dom::DOMEventType type, shared_ptr<dom::Event> event);
     void setPendingEventAndDispatch(shared_ptr<dom::Event> event, const EventListenersList &listeners);
     void didDispatchPendingEvent();
@@ -70,6 +75,7 @@ namespace script_bindings
     void DispatchEvent(const v8::FunctionCallbackInfo<v8::Value> &info);
 
   private:
+    std::vector<std::string> registered_event_types_;
     std::unique_ptr<uv_async_t> async_handle_;
     std::shared_ptr<dom::Event> pending_event_;
     std::mutex dispatch_mutex_;

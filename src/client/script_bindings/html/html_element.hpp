@@ -16,6 +16,7 @@ namespace script_bindings
 
     class HTMLElement : public HTMLElementBase
     {
+      friend class scripting_base::ObjectWrap<HTMLElement, dom::HTMLElement, dom_bindings::Element>;
       using HTMLElementBase::ObjectWrap;
 
     public:
@@ -26,6 +27,9 @@ namespace script_bindings
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<::dom::HTMLElement> nativeElement);
+
+    protected:
+      void onCreated() override;
 
     private:
       // Property getters and setters

@@ -40,11 +40,6 @@ namespace scripting_base
     return current_event_loop;
   }
 
-  Local<Object> BaseObject::getJSObject(Isolate *isolate) const
-  {
-    return object_handle_.Get(isolate);
-  }
-
   bool BaseObject::hasData() const
   {
     return data_handle_ != nullptr;
@@ -66,5 +61,16 @@ namespace scripting_base
   void BaseObject::setNapiEnv(napi_env env)
   {
     napi_env_ = env;
+  }
+
+  Local<Object> BaseObject::getJSObject(Isolate *isolate) const
+  {
+    return object_handle_.Get(isolate);
+  }
+
+  Local<Object> BaseObject::This() const
+  {
+    EscapableHandleScope scope(current_isolate_);
+    return scope.Escape(object_handle_.Get(current_isolate_));
   }
 }

@@ -222,6 +222,9 @@ namespace scripting_base
           // Update the data reference
           instance->setData(handle);
         }
+
+        // Call the onCreated hook
+        instance->onCreated();
       }
 
       // Return the created instance
