@@ -8,31 +8,37 @@ namespace script_bindings::html_bindings
 {
   void HTMLAudioElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
   {
-    Local<ObjectTemplate> instanceTemplate = tpl->InstanceTemplate();
-    Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+    Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+    Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Media control methods
-    prototypeTemplate->Set(isolate, "play", FunctionTemplate::New(isolate, Play));
-    prototypeTemplate->Set(isolate, "pause", FunctionTemplate::New(isolate, Pause));
-    prototypeTemplate->Set(isolate, "load", FunctionTemplate::New(isolate, Load));
+    InstanceMethod(isolate, prototype, "play", &HTMLAudioElement::Play);
+    InstanceMethod(isolate, prototype, "pause", &HTMLAudioElement::Pause);
+    InstanceMethod(isolate, prototype, "load", &HTMLAudioElement::Load);
 
     // Media properties
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "src").ToLocalChecked(),
-                                  SrcGetter,
-                                  SrcSetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "volume").ToLocalChecked(),
-                                  VolumeGetter,
-                                  VolumeSetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "muted").ToLocalChecked(),
-                                  MutedGetter,
-                                  MutedSetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "paused").ToLocalChecked(),
-                                  PausedGetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "currentTime").ToLocalChecked(),
-                                  CurrentTimeGetter,
-                                  CurrentTimeSetter);
-    instanceTemplate->SetAccessor(String::NewFromUtf8(isolate, "duration").ToLocalChecked(),
-                                  DurationGetter);
+    InstanceReadonlyAccessor(isolate, instance, "paused", &HTMLAudioElement::PausedGetter);
+    InstanceReadonlyAccessor(isolate, instance, "duration", &HTMLAudioElement::DurationGetter);
+    InstanceAccessor(isolate,
+                     instance,
+                     "src",
+                     &HTMLAudioElement::SrcGetter,
+                     &HTMLAudioElement::SrcSetter);
+    InstanceAccessor(isolate,
+                     instance,
+                     "volume",
+                     &HTMLAudioElement::VolumeGetter,
+                     &HTMLAudioElement::VolumeSetter);
+    InstanceAccessor(isolate,
+                     instance,
+                     "muted",
+                     &HTMLAudioElement::MutedGetter,
+                     &HTMLAudioElement::MutedSetter);
+    InstanceAccessor(isolate,
+                     instance,
+                     "currentTime",
+                     &HTMLAudioElement::CurrentTimeGetter,
+                     &HTMLAudioElement::CurrentTimeSetter);
   }
 
   void HTMLAudioElement::AudioConstructor(const FunctionCallbackInfo<Value> &info)
@@ -58,8 +64,6 @@ namespace script_bindings::html_bindings
   HTMLAudioElement::HTMLAudioElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
       : HTMLAudioElementBase(isolate, args)
   {
-    // HTMLAudioElement constructor
-    cout << "HTMLAudioElement V8 wrapper created" << endl;
   }
 
   // Media control methods
@@ -85,66 +89,66 @@ namespace script_bindings::html_bindings
   }
 
   // Property implementations
-  void HTMLAudioElement::SrcGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::SrcGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.src getter called" << endl;
     // TODO: Return the current source URL
     info.GetReturnValue().Set(String::NewFromUtf8(info.GetIsolate(), "").ToLocalChecked());
   }
 
-  void HTMLAudioElement::SrcSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLAudioElement::SrcSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     cout << "HTMLAudioElement.src setter called" << endl;
     // TODO: Set the source URL and trigger loading
   }
 
-  void HTMLAudioElement::VolumeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::VolumeGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.volume getter called" << endl;
     // TODO: Return the current volume (0.0 to 1.0)
     info.GetReturnValue().Set(1.0);
   }
 
-  void HTMLAudioElement::VolumeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLAudioElement::VolumeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     cout << "HTMLAudioElement.volume setter called" << endl;
     // TODO: Set the volume level
   }
 
-  void HTMLAudioElement::MutedGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::MutedGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.muted getter called" << endl;
     // TODO: Return the muted state
     info.GetReturnValue().Set(false);
   }
 
-  void HTMLAudioElement::MutedSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLAudioElement::MutedSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     cout << "HTMLAudioElement.muted setter called" << endl;
     // TODO: Set the muted state
   }
 
-  void HTMLAudioElement::PausedGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::PausedGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.paused getter called" << endl;
     // TODO: Return the paused state
     info.GetReturnValue().Set(true);
   }
 
-  void HTMLAudioElement::CurrentTimeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::CurrentTimeGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.currentTime getter called" << endl;
     // TODO: Return the current playback time
     info.GetReturnValue().Set(0.0);
   }
 
-  void HTMLAudioElement::CurrentTimeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+  void HTMLAudioElement::CurrentTimeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
   {
     cout << "HTMLAudioElement.currentTime setter called" << endl;
     // TODO: Set the current playback time
   }
 
-  void HTMLAudioElement::DurationGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+  void HTMLAudioElement::DurationGetter(const PropertyCallbackInfo<Value> &info)
   {
     cout << "HTMLAudioElement.duration getter called" << endl;
     // TODO: Return the media duration

@@ -36,20 +36,20 @@ namespace script_bindings
 
     private:
       // Video-specific properties
-      static void WidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void WidthSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void HeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void HeightSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void VideoWidthGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void VideoHeightGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PosterGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PosterSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void PlaysinlineGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PlaysinlineSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void WidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void WidthSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void HeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void HeightSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void VideoWidthGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void VideoHeightGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PosterGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PosterSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void PlaysinlineGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PlaysinlineSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Video-specific methods
-      static void GetVideoPlaybackQuality(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void RequestPictureInPicture(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void GetVideoPlaybackQuality(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void RequestPictureInPicture(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

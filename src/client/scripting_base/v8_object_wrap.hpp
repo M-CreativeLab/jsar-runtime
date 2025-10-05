@@ -148,7 +148,7 @@ namespace scripting_base
         return false;
 
       v8::Local<v8::Object> obj = value.As<v8::Object>();
-      v8::Local<v8::Function> constructor = GetConstructorFunction(isolate);
+      v8::Local<v8::Function> constructor = T::GetConstructorFunction(isolate);
       if (constructor.IsEmpty())
         return false;
       return obj->InstanceOf(isolate->GetCurrentContext(), constructor).FromMaybe(false);

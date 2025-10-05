@@ -4,28 +4,35 @@ namespace script_bindings
 {
   namespace html_bindings
   {
+    using namespace std;
     using namespace v8;
 
     void HTMLMediaElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      Local<ObjectTemplate> prototypeTemplate = tpl->PrototypeTemplate();
+      HandleScope scope(isolate);
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Media-specific properties
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "src").ToLocalChecked(), SrcGetter, SrcSetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "currentTime").ToLocalChecked(), CurrentTimeGetter, CurrentTimeSetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "duration").ToLocalChecked(), DurationGetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "paused").ToLocalChecked(), PausedGetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "muted").ToLocalChecked(), MutedGetter, MutedSetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "volume").ToLocalChecked(), VolumeGetter, VolumeSetter);
-      prototypeTemplate->SetAccessor(String::NewFromUtf8(isolate, "readyState").ToLocalChecked(), ReadyStateGetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "src",
+                       &HTMLMediaElement::SrcGetter,
+                       &HTMLMediaElement::SrcSetter);
+      InstanceAccessor(isolate,
+                       prototype,
+                       "currentTime",
+                       &HTMLMediaElement::CurrentTimeGetter,
+                       &HTMLMediaElement::CurrentTimeSetter);
+      InstanceAccessor(isolate, prototype, "muted", &HTMLMediaElement::MutedGetter, &HTMLMediaElement::MutedSetter);
+      InstanceAccessor(isolate, prototype, "volume", &HTMLMediaElement::VolumeGetter, &HTMLMediaElement::VolumeSetter);
+      InstanceAccessor(isolate, prototype, "duration", &HTMLMediaElement::DurationGetter, nullptr);
+      InstanceAccessor(isolate, prototype, "paused", &HTMLMediaElement::PausedGetter, nullptr);
+      InstanceAccessor(isolate, prototype, "readyState", &HTMLMediaElement::ReadyStateGetter, nullptr);
 
       // Media control methods
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "play").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, Play));
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "pause").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, Pause));
-      prototypeTemplate->Set(String::NewFromUtf8(isolate, "load").ToLocalChecked(),
-                             FunctionTemplate::New(isolate, Load));
+      InstanceMethod(isolate, prototype, "play", &HTMLMediaElement::Play);
+      InstanceMethod(isolate, prototype, "pause", &HTMLMediaElement::Pause);
+      InstanceMethod(isolate, prototype, "load", &HTMLMediaElement::Load);
     }
 
     HTMLMediaElement::HTMLMediaElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -34,7 +41,7 @@ namespace script_bindings
     }
 
     // Property getters
-    void HTMLMediaElement::SrcGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::SrcGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -51,7 +58,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::CurrentTimeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::CurrentTimeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -68,7 +75,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::DurationGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::DurationGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -85,7 +92,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::PausedGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::PausedGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -102,7 +109,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::MutedGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::MutedGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -119,7 +126,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::VolumeGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::VolumeGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -136,7 +143,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::ReadyStateGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLMediaElement::ReadyStateGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -154,7 +161,7 @@ namespace script_bindings
     }
 
     // Property setters
-    void HTMLMediaElement::SrcSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLMediaElement::SrcSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -167,7 +174,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::CurrentTimeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLMediaElement::CurrentTimeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -180,7 +187,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::MutedSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLMediaElement::MutedSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();
@@ -192,7 +199,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLMediaElement::VolumeSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLMediaElement::VolumeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       Local<Object> self = info.Holder();

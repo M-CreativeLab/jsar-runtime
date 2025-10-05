@@ -1,6 +1,10 @@
+#include <iostream>
+
 #include "./xr_session.hpp"
 #include "./xr_space.hpp"
-#include <iostream>
+#include "./xr_frame.hpp"
+#include "./xr_input_source.hpp"
+#include "./xr_render_state.hpp"
 
 using namespace std;
 using namespace v8;
@@ -36,16 +40,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Implement inputSources getter - return XRInputSourceArray
-      cout << "inputSources getter called" << endl;
-      info.GetReturnValue().SetNull();
+      // TODO(yorkie): Implement inputSources getter - return array of XRInputSource
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "inputSources", "Not implemented")));
     }
 
     void XRSession::RenderStateGetter(const PropertyCallbackInfo<Value> &info)
@@ -53,16 +50,9 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Implement renderState getter - return XRRenderState
-      cout << "renderState getter called" << endl;
-      info.GetReturnValue().SetNull();
+      Local<Object> renderStateValue = XRRenderState::GetOrNewInstance(
+        isolate, make_shared<client_xr::XRRenderState>(handle()->renderState()));
+      info.GetReturnValue().Set(renderStateValue);
     }
 
     void XRSession::EnvironmentBlendModeGetter(const PropertyCallbackInfo<Value> &info)
@@ -70,15 +60,11 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
-      {
-        info.GetReturnValue().SetEmptyString();
-        return;
-      }
-
-      // TODO: Get actual environment blend mode from session
-      info.GetReturnValue().Set(String::NewFromUtf8(isolate, "opaque").ToLocalChecked());
+      auto mode = handle()->environmentBlendMode();
+      info.GetReturnValue().Set(String::NewFromUtf8(
+                                  isolate,
+                                  client_xr::to_string(mode).c_str())
+                                  .ToLocalChecked());
     }
 
     void XRSession::EnabledFeaturesGetter(const PropertyCallbackInfo<Value> &info)
@@ -86,16 +72,18 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
-      {
-        info.GetReturnValue().Set(Array::New(isolate, 0));
-        return;
-      }
+      auto featuresArray = Array::New(isolate);
+      auto list = handle()->enabledFeatures;
 
-      // TODO: Implement enabledFeatures getter - return array of enabled features
-      cout << "enabledFeatures getter called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      uint32_t index = 0;
+      for (const auto &feature : list)
+      {
+        featuresArray->Set(isolate->GetCurrentContext(),
+                           index++,
+                           String::NewFromUtf8(isolate, to_string(feature).c_str()).ToLocalChecked())
+          .Check();
+      }
+      info.GetReturnValue().Set(featuresArray);
     }
 
     // Methods

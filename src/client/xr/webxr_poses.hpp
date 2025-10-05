@@ -1,12 +1,14 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
+
 #include "./common.hpp"
 #include "./webxr_rigid_transform.hpp"
 
 namespace client_xr
 {
-  class XRPose
+  class XRPose : public scripting_base::JSObjectHolder
   {
   public:
     XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);

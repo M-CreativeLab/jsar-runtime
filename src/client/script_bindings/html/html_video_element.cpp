@@ -15,36 +15,28 @@ namespace script_bindings
     void HTMLVideoElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope handle_scope(isolate);
-      auto instance_template = tpl->InstanceTemplate();
-      auto prototype_template = tpl->PrototypeTemplate();
+      auto instance = tpl->InstanceTemplate();
+      auto prototype = tpl->PrototypeTemplate();
 
       // Video-specific properties
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "width").ToLocalChecked(),
-                                     WidthGetter,
-                                     WidthSetter);
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "height").ToLocalChecked(),
-                                     HeightGetter,
-                                     HeightSetter);
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "videoWidth").ToLocalChecked(),
-                                     VideoWidthGetter);
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "videoHeight").ToLocalChecked(),
-                                     VideoHeightGetter);
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "poster").ToLocalChecked(),
-                                     PosterGetter,
-                                     PosterSetter);
-      instance_template->SetAccessor(String::NewFromUtf8(isolate, "playsInline").ToLocalChecked(),
-                                     PlaysinlineGetter,
-                                     PlaysinlineSetter);
+      InstanceAccessor(isolate, instance, "width", &HTMLVideoElement::WidthGetter, &HTMLVideoElement::WidthSetter);
+      InstanceAccessor(isolate, instance, "height", &HTMLVideoElement::HeightGetter, &HTMLVideoElement::HeightSetter);
+      InstanceAccessor(isolate, instance, "videoWidth", &HTMLVideoElement::VideoWidthGetter, nullptr);
+      InstanceAccessor(isolate, instance, "videoHeight", &HTMLVideoElement::VideoHeightGetter, nullptr);
+      InstanceAccessor(isolate, instance, "poster", &HTMLVideoElement::PosterGetter, &HTMLVideoElement::PosterSetter);
+      InstanceAccessor(isolate,
+                       instance,
+                       "playsInline",
+                       &HTMLVideoElement::PlaysinlineGetter,
+                       &HTMLVideoElement::PlaysinlineSetter);
 
       // Video-specific methods
-      prototype_template->Set(String::NewFromUtf8(isolate, "getVideoPlaybackQuality").ToLocalChecked(),
-                              FunctionTemplate::New(isolate, GetVideoPlaybackQuality));
-      prototype_template->Set(String::NewFromUtf8(isolate, "requestPictureInPicture").ToLocalChecked(),
-                              FunctionTemplate::New(isolate, RequestPictureInPicture));
+      InstanceMethod(isolate, prototype, "getVideoPlaybackQuality", &HTMLVideoElement::GetVideoPlaybackQuality);
+      InstanceMethod(isolate, prototype, "requestPictureInPicture", &HTMLVideoElement::RequestPictureInPicture);
     }
 
     // Video-specific property getters/setters
-    void HTMLVideoElement::WidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::WidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -55,7 +47,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::WidthSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLVideoElement::WidthSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -65,7 +57,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::HeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::HeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -76,7 +68,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::HeightSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLVideoElement::HeightSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -86,7 +78,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::VideoWidthGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::VideoWidthGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -97,7 +89,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::VideoHeightGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::VideoHeightGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -108,7 +100,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::PosterGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::PosterGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -119,7 +111,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::PosterSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLVideoElement::PosterSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -129,7 +121,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::PlaysinlineGetter(Local<String> property, const PropertyCallbackInfo<Value> &info)
+    void HTMLVideoElement::PlaysinlineGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
@@ -140,7 +132,7 @@ namespace script_bindings
       }
     }
 
-    void HTMLVideoElement::PlaysinlineSetter(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void> &info)
+    void HTMLVideoElement::PlaysinlineSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());

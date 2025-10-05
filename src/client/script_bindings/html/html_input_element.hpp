@@ -36,30 +36,30 @@ namespace script_bindings
 
     private:
       // Input properties
-      static void TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void TypeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void ValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void ValueSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void PlaceholderGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void PlaceholderSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void DisabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void DisabledSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void RequiredGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void RequiredSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void CheckedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void CheckedSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void NameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void NameSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void TypeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void TypeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void ValueGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void ValueSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void PlaceholderGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PlaceholderSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void DisabledGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void DisabledSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void RequiredGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void RequiredSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void CheckedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CheckedSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void NameGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void NameSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
 
       // Validation methods
-      static void CheckValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void ReportValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void SetCustomValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void CheckValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void ReportValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void SetCustomValidity(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Focus methods
-      static void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Select(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Select(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
   }
 }

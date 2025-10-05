@@ -44,21 +44,21 @@ namespace script_bindings
 
     private:
       // Media control methods (inherited from HTMLMediaElement)
-      static void Play(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Pause(const v8::FunctionCallbackInfo<v8::Value> &info);
-      static void Load(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Play(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Pause(const v8::FunctionCallbackInfo<v8::Value> &info);
+      void Load(const v8::FunctionCallbackInfo<v8::Value> &info);
 
       // Property getters/setters
-      static void SrcGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void SrcSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void VolumeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void VolumeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void MutedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void MutedSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void PausedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void CurrentTimeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void CurrentTimeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
-      static void DurationGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void SrcGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void SrcSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void VolumeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void VolumeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void MutedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void MutedSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void PausedGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CurrentTimeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void CurrentTimeSetter(v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info);
+      void DurationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
   }
 }

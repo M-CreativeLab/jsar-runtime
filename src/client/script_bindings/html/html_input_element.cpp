@@ -7,72 +7,50 @@ namespace script_bindings
 {
   namespace html_bindings
   {
-    HTMLInputElement::HTMLInputElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args)
+    HTMLInputElement::HTMLInputElement(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : HTMLInputElementBase(isolate, args)
     {
     }
 
-    void HTMLInputElement::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+    void HTMLInputElement::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
-      v8::HandleScope handle_scope(isolate);
-      auto instance_template = tpl->InstanceTemplate();
-      auto prototype_template = tpl->PrototypeTemplate();
+      HandleScope handle_scope(isolate);
+      auto instance = tpl->InstanceTemplate();
+      auto prototype = tpl->PrototypeTemplate();
 
       // Input properties
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "type").ToLocalChecked(),
-                                     TypeGetter,
-                                     TypeSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "value").ToLocalChecked(),
-                                     ValueGetter,
-                                     ValueSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "placeholder").ToLocalChecked(),
-                                     PlaceholderGetter,
-                                     PlaceholderSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "disabled").ToLocalChecked(),
-                                     DisabledGetter,
-                                     DisabledSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "required").ToLocalChecked(),
-                                     RequiredGetter,
-                                     RequiredSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "checked").ToLocalChecked(),
-                                     CheckedGetter,
-                                     CheckedSetter);
-      instance_template->SetAccessor(v8::String::NewFromUtf8(isolate, "name").ToLocalChecked(),
-                                     NameGetter,
-                                     NameSetter);
+      InstanceAccessor(isolate, instance, "type", &HTMLInputElement::TypeGetter, &HTMLInputElement::TypeSetter);
+      InstanceAccessor(isolate, instance, "value", &HTMLInputElement::ValueGetter, &HTMLInputElement::ValueSetter);
+      InstanceAccessor(isolate, instance, "placeholder", &HTMLInputElement::PlaceholderGetter, &HTMLInputElement::PlaceholderSetter);
+      InstanceAccessor(isolate, instance, "disabled", &HTMLInputElement::DisabledGetter, &HTMLInputElement::DisabledSetter);
+      InstanceAccessor(isolate, instance, "required", &HTMLInputElement::RequiredGetter, &HTMLInputElement::RequiredSetter);
+      InstanceAccessor(isolate, instance, "checked", &HTMLInputElement::CheckedGetter, &HTMLInputElement::CheckedSetter);
+      InstanceAccessor(isolate, instance, "name", &HTMLInputElement::NameGetter, &HTMLInputElement::NameSetter);
 
-      // Validation methods
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "checkValidity").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, CheckValidity));
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "reportValidity").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, ReportValidity));
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "setCustomValidity").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, SetCustomValidity));
-
-      // Focus methods
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "focus").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, Focus));
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "blur").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, Blur));
-      prototype_template->Set(v8::String::NewFromUtf8(isolate, "select").ToLocalChecked(),
-                              v8::FunctionTemplate::New(isolate, Select));
+      // Methods
+      InstanceMethod(isolate, prototype, "checkValidity", &HTMLInputElement::CheckValidity);
+      InstanceMethod(isolate, prototype, "reportValidity", &HTMLInputElement::ReportValidity);
+      InstanceMethod(isolate, prototype, "setCustomValidity", &HTMLInputElement::SetCustomValidity);
+      InstanceMethod(isolate, prototype, "focus", &HTMLInputElement::Focus);
+      InstanceMethod(isolate, prototype, "blur", &HTMLInputElement::Blur);
+      InstanceMethod(isolate, prototype, "select", &HTMLInputElement::Select);
     }
 
     // Input property getters/setters
-    void HTMLInputElement::TypeGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::TypeGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get input type from native element
-        info.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "text").ToLocalChecked());
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "text").ToLocalChecked());
       }
     }
 
-    void HTMLInputElement::TypeSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::TypeSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element && value->IsString())
       {
@@ -80,20 +58,20 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::ValueGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::ValueGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get value from native element
-        info.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "").ToLocalChecked());
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "").ToLocalChecked());
       }
     }
 
-    void HTMLInputElement::ValueSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::ValueSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element && value->IsString())
       {
@@ -101,20 +79,20 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::PlaceholderGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::PlaceholderGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get placeholder from native element
-        info.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "").ToLocalChecked());
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "").ToLocalChecked());
       }
     }
 
-    void HTMLInputElement::PlaceholderSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::PlaceholderSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element && value->IsString())
       {
@@ -122,9 +100,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::DisabledGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::DisabledGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -133,9 +111,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::DisabledSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::DisabledSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -143,9 +121,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::RequiredGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::RequiredGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -154,9 +132,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::RequiredSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::RequiredSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -164,9 +142,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::CheckedGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::CheckedGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -175,9 +153,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::CheckedSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::CheckedSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -185,20 +163,20 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::NameGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::NameGetter(const PropertyCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
         // TODO: Get name from native element
-        info.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, "").ToLocalChecked());
+        info.GetReturnValue().Set(String::NewFromUtf8(isolate, "").ToLocalChecked());
       }
     }
 
-    void HTMLInputElement::NameSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void> &info)
+    void HTMLInputElement::NameSetter(Local<Value> value, const PropertyCallbackInfo<void> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element && value->IsString())
       {
@@ -207,9 +185,9 @@ namespace script_bindings
     }
 
     // Validation methods
-    void HTMLInputElement::CheckValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::CheckValidity(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -218,9 +196,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::ReportValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::ReportValidity(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -229,9 +207,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::SetCustomValidity(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::SetCustomValidity(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element && info.Length() > 0 && info[0]->IsString())
       {
@@ -240,9 +218,9 @@ namespace script_bindings
     }
 
     // Focus methods
-    void HTMLInputElement::Focus(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::Focus(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -250,9 +228,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::Blur(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::Blur(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
@@ -260,9 +238,9 @@ namespace script_bindings
       }
     }
 
-    void HTMLInputElement::Select(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void HTMLInputElement::Select(const FunctionCallbackInfo<Value> &info)
     {
-      v8::Isolate *isolate = info.GetIsolate();
+      Isolate *isolate = info.GetIsolate();
       auto element = Unwrap(isolate, info.This());
       if (element)
       {
