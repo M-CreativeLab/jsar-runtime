@@ -12,13 +12,14 @@ namespace script_bindings
     HandleScope scope(isolate);
 
     // Set up the instance template
+    Local<ObjectTemplate> instance = tpl->InstanceTemplate();
     Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
     // Add property accessors
-    InstanceReadonlyAccessor(isolate, prototype, "type", &Event::TypeGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "bubbles", &Event::BubblesGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "cancelable", &Event::CancelableGetter);
-    InstanceReadonlyAccessor(isolate, prototype, "composed", &Event::ComposedGetter);
+    InstanceReadonlyAccessor(isolate, instance, "type", &Event::TypeGetter);
+    InstanceReadonlyAccessor(isolate, instance, "bubbles", &Event::BubblesGetter);
+    InstanceReadonlyAccessor(isolate, instance, "cancelable", &Event::CancelableGetter);
+    InstanceReadonlyAccessor(isolate, instance, "composed", &Event::ComposedGetter);
 
     // Add methods
     InstanceMethod(isolate, prototype, "preventDefault", &Event::PreventDefault);
