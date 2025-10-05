@@ -1,4 +1,5 @@
 #include <node/v8.h>
+#include <crates/bindings.hpp>
 #include "./runtime_context.hpp"
 
 namespace dom
@@ -213,6 +214,28 @@ namespace dom
     return handleScope.Escape(creatingFetchResult);
   }
 
+  // Normalize URL by combining with baseURI if relative
+  static string normalize(const string &url, const string &baseURI)
+  {
+    if (url.find("://") != string::npos || url.rfind("about:", 0) == 0)
+    {
+      // url is absolute
+      return url;
+    }
+    else
+    {
+      // url is relative, combine with baseURI
+      if (!baseURI.empty() && baseURI != "about:blank")
+      {
+        return crates::UrlHelper::CreateUrlStringWithPath(baseURI, url);
+      }
+      else
+      {
+        return url;
+      }
+    }
+  }
+
   void RuntimeContext::fetchResourceImpl(const string &url,
                                          const string &responseType,
                                          const FunctionCallback &responseCallback,
@@ -226,7 +249,7 @@ namespace dom
     v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::Context::Scope contextScope(context);
 
-    v8::Local<v8::Value> promiseValue = callFetchFunction(url, responseType);
+    v8::Local<v8::Value> promiseValue = callFetchFunction(normalize(url, baseURI), responseType);
     if (!promiseValue->IsPromise())
       return;
 

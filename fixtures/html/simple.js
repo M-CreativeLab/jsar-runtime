@@ -1,42 +1,47 @@
 console.info('hello script!');
 
-console.info(document.body.childNodes);
-console.info(document.createElement('div'));
-console.info(document.createElement('span'));
-console.info(document.createElement('p'));
+try {
+  // console.info(document.body.childNodes);
+  console.info(document.createElement('div'));
+  console.info(document.createElement('span'));
+  console.info(document.createElement('p'));
 
-const image = document.querySelector('img');
-const div = document.getElementById('header');
+  // const image = document.querySelector('img');
+  const div = document.getElementById('header');
 
-console.info('querySelector() =>', document.querySelector('.first'));
-{
-  const elements = document.querySelectorAll('p');
-  let index = 0;
-  for (const element of elements) {
-    console.info(`p[${index++}]`, element);
+  // console.info('querySelector() =>', document.querySelector('.first'));
+  {
+    // const elements = document.querySelectorAll('p');
+    // let index = 0;
+    // for (const element of elements) {
+    //   console.info(`p[${index++}]`, element);
+    // }
   }
+
+  // const main = document.querySelector('main');
+  // console.info(main);
+  // console.info('main.lastChild should be comment node', main?.lastElementChild);
+  // main.addEventListener('mouseenter', (event) => {
+  //   console.info('main mouseenter', event);
+  // });
+  // main.addEventListener('mouseleave', (event) => {
+  //   console.info('main mouseleave', event);
+  // });
+
+  // const switchDiv = document.getElementById('switch');
+  // switchDiv.addEventListener('click', () => {
+  //   // test append style
+  //   const style = document.createElement('style');
+  //   style.textContent = `
+  //   body {
+  //     background-color: #87e8de;
+  //   }
+  // `;
+  //   document.head.appendChild(style);
+  // });
+} catch (err) {
+  console.warn('Error during initial DOM operations:', err);
 }
-
-const main = document.querySelector('main');
-console.info('main.lastChild should be comment node', main.lastElementChild);
-main.addEventListener('mouseenter', (event) => {
-  console.info('main mouseenter', event);
-});
-main.addEventListener('mouseleave', (event) => {
-  console.info('main mouseleave', event);
-});
-
-const switchDiv = document.getElementById('switch');
-switchDiv.addEventListener('click', () => {
-  // test append style
-  const style = document.createElement('style');
-  style.textContent = `
-    body {
-      background-color: #87e8de;
-    }
-  `;
-  document.head.appendChild(style);
-});
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,30 +56,30 @@ async function run(fn) {
 }
 
 run(async () => {
-  await sleep(1000);
-  const some = document.createElement('div');
-  some.style.setProperty('width', '100px');
-  some.style.setProperty('height', '100px');
-  some.style.setProperty('background-color', 'red');
-  document.body.appendChild(some);
+  // await sleep(1000);
+  // const some = document.createElement('div');
+  // some.style.setProperty('width', '100px');
+  // some.style.setProperty('height', '100px');
+  // some.style.setProperty('background-color', 'red');
+  // document.body.appendChild(some);
 
-  await sleep(1000);
-  const bar = document.createElement('div');
-  bar.style.width = '100px';
-  bar.style.height = '100px';
-  bar.style.backgroundColor = 'green';
-  document.body.replaceChild(bar, some);
+  // await sleep(1000);
+  // const bar = document.createElement('div');
+  // bar.style.width = '100px';
+  // bar.style.height = '100px';
+  // bar.style.backgroundColor = 'green';
+  // document.body.replaceChild(bar, some);
 
-  bar.addEventListener('click', () => {
-    document.body.removeChild(bar);
-  });
+  // bar.addEventListener('click', () => {
+  //   document.body.removeChild(bar);
+  // });
 
-  await sleep(500);
-  const script = document.createElement('script');
-  script.textContent = `
-    console.info('hello from dynamically added script!');
-  `;
-  document.body.appendChild(script);
+  // await sleep(500);
+  // const script = document.createElement('script');
+  // script.textContent = `
+  //   console.info('hello from dynamically added script!');
+  // `;
+  // document.body.appendChild(script);
 
   // await sleep(1000);
   // const main = document.querySelector('main');
