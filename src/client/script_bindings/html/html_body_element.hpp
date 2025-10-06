@@ -22,15 +22,14 @@ namespace script_bindings
      */
     class HTMLBodyElement : public HTMLBodyElementBase
     {
+      using HTMLBodyElementBase::ObjectWrap;
+
     public:
       static std::string Name()
       {
         return "HTMLBodyElement";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-    public:
-      HTMLBodyElement(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
     };
   }
 }

@@ -31,23 +31,12 @@ namespace script_bindings::dom_bindings
   Local<Object> Text::NewInstance(Isolate *isolate, std::shared_ptr<::dom::Text> nativeText)
   {
     EscapableHandleScope scope(isolate);
-
-    if (nativeText == nullptr)
-    {
-      return scope.Escape(Local<Object>());
-    }
-
-    return scope.Escape(scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>::NewInstance(isolate, nativeText).As<Object>());
-  }
-
-  // static
-  Local<Function> Text::Initialize(Isolate *isolate)
-  {
-    return scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>::Initialize(isolate);
+    assert(nativeText != nullptr && "Text instance is null.");
+    return scope.Escape(TextBase::NewInstance(isolate, nativeText).As<Object>());
   }
 
   Text::Text(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
-      : scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>(isolate, args)
+      : TextBase(isolate, args)
   {
   }
 

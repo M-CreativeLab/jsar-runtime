@@ -47,8 +47,5 @@ namespace script_bindings
       void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
       void Blur(const v8::FunctionCallbackInfo<v8::Value> &info);
     };
-
-    // Type alias
-    using HTMLSectionElement = HTMLElement;
   }
 }

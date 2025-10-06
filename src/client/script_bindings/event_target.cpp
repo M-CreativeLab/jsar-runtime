@@ -92,8 +92,11 @@ namespace script_bindings
     // Close the async handle if it exists
     if (async_handle_)
     {
-      uv_close(reinterpret_cast<uv_handle_t *>(async_handle_.get()), nullptr);
-      async_handle_.reset();
+      auto afterClose = [](uv_handle_t *handle)
+      {
+        delete reinterpret_cast<uv_async_t *>(handle);
+      };
+      uv_close(reinterpret_cast<uv_handle_t *>(async_handle_.release()), afterClose);
     }
   }
 
@@ -104,6 +107,7 @@ namespace script_bindings
 
     // Register the event type
     registered_event_types_.emplace_back(event_type);
+    initAsyncHandle();
   }
 
   bool EventTarget::matchRegisteredEvent(const string &event_type) const
@@ -169,6 +173,7 @@ namespace script_bindings
     pending_event_ = event;
 
     // Send async signal to the event loop to process the event
+    assert(async_handle_ != nullptr && "Async handle is not initialized.");
     uv_async_send(async_handle_.get());
   }
 

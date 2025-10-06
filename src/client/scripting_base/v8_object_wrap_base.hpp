@@ -23,13 +23,14 @@ namespace scripting_base
     virtual ~BaseObject();
 
   public:
-    uv_loop_t* getEventLoop() const;
+    uv_loop_t *getEventLoop() const;
     bool hasData() const;
     void setData(std::shared_ptr<JSObjectHolder>);
     void setNapiEnv(napi_env env);
 
     v8::Local<v8::Object> getJSObject(v8::Isolate *) const;
     v8::Local<v8::Object> This() const;
+    void Reset(v8::Local<v8::Object> object);
 
   protected:
     virtual void onCreated()
@@ -39,9 +40,13 @@ namespace scripting_base
     {
     }
 
+  private:
+    static void Finalizer(const v8::WeakCallbackInfo<BaseObject> &);
+    static void Cleanup(const v8::WeakCallbackInfo<BaseObject> &);
+
   protected:
     v8::Isolate *current_isolate_ = nullptr;
-    v8::Persistent<v8::Object> object_handle_;
+    v8::Global<v8::Object> object_handle_;
     std::shared_ptr<JSObjectHolder> data_handle_;
 
     // @deprecated

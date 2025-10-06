@@ -246,7 +246,14 @@ namespace scripting_base
       {
         v8::EscapableHandleScope scope(isolate);
         BaseObject *object = handle->getJSObjectWrap();
-        return scope.Escape(object->getJSObject(isolate));
+        assert(object != nullptr && "object wrap must not be null");
+        v8::Local<v8::Object> value = object->getJSObject(isolate);
+        if (value.IsEmpty())
+        {
+          std::cerr << "Failed to get JS object from the handle(" << T::Name() << "@" << object << ")" << std::endl;
+          assert(false && "failed to get JS object from the handle");
+        }
+        return scope.Escape(value);
       }
       else
       {
@@ -262,9 +269,7 @@ namespace scripting_base
 
       v8::HandleScope scope(isolate);
       object->SetInternalField(0, v8::External::New(isolate, instance));
-
-      instance->object_handle_.Reset(isolate, object);
-      instance->object_handle_.SetWeak(instance, Finalizer, v8::WeakCallbackType::kParameter);
+      instance->Reset(object);
     }
 
     /**
@@ -683,22 +688,6 @@ namespace scripting_base
         assert(false && "`data_handle` is null");
       }
       return data_handle;
-    }
-
-  private:
-    static void Finalizer(const v8::WeakCallbackInfo<T> &data)
-    {
-      T *instance = data.GetParameter();
-      if (instance != nullptr)
-        instance->object_handle_.Reset();
-      data.SetSecondPassCallback(Cleanup);
-    }
-
-    static void Cleanup(const v8::WeakCallbackInfo<T> &data)
-    {
-      T *instance = data.GetParameter();
-      if (instance != nullptr)
-        delete instance;
     }
 
   private:

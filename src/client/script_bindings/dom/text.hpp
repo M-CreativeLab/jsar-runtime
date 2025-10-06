@@ -9,6 +9,9 @@ namespace script_bindings
 {
   namespace dom_bindings
   {
+    class Text;
+    using TextBase = scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>;
+
     /**
      * Text wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -16,31 +19,15 @@ namespace script_bindings
      * It provides the standard DOM Text interface including properties like data,
      * length and methods like substringData, appendData, etc.
      */
-    class Text : public scripting_base::ObjectWrap<Text, ::dom::Text, CharacterData>
+    class Text : public TextBase
     {
     public:
-      /**
-       * The name of the Text class for V8.
-       */
       static std::string Name()
       {
         return "Text";
       }
-
-      /**
-       * Configure the V8 function template with Text properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 Text instance from a native dom::Text.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<::dom::Text> nativeText);
-
-      /**
-       * Initialize the Text class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       Text(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

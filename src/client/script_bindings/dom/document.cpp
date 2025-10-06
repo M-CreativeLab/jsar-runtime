@@ -17,13 +17,14 @@ namespace script_bindings
     void Document::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
+      Local<ObjectTemplate> instance = tpl->InstanceTemplate();
       Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
-      InstanceReadonlyAccessor(isolate, prototype, "documentElement", &Document::DocumentElementGetter);
-      InstanceReadonlyAccessor(isolate, prototype, "head", &Document::HeadGetter);
-      InstanceAccessor(isolate, prototype, "body", &Document::BodyGetter, &Document::BodySetter);
-      InstanceAccessor(isolate, prototype, "title", &Document::TitleGetter, &Document::TitleSetter);
+      InstanceReadonlyAccessor(isolate, instance, "documentElement", &Document::DocumentElementGetter);
+      InstanceReadonlyAccessor(isolate, instance, "head", &Document::HeadGetter);
+      InstanceAccessor(isolate, instance, "body", &Document::BodyGetter, &Document::BodySetter);
+      InstanceAccessor(isolate, instance, "title", &Document::TitleGetter, &Document::TitleSetter);
 
       // Add methods
       InstanceMethod(isolate, prototype, "createDocumentFragment", &Document::CreateDocumentFragment);
@@ -75,9 +76,9 @@ namespace script_bindings
       HandleScope scope(isolate);
 
       auto bodyElement = handle()->body();
-      return bodyElement == nullptr
-               ? info.GetReturnValue().SetNull()
-               : info.GetReturnValue().Set(html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement));
+      assert(bodyElement != nullptr && "Document::BodyGetter: bodyElement is null");
+      auto jsValue = html_bindings::HTMLBodyElement::GetOrNewInstance(isolate, bodyElement);
+      info.GetReturnValue().Set(jsValue);
     }
 
     void Document::BodySetter(Local<Value> value, const PropertyCallbackInfo<void> &info)

@@ -65,12 +65,51 @@ namespace scripting_base
 
   Local<Object> BaseObject::getJSObject(Isolate *isolate) const
   {
-    return object_handle_.Get(isolate);
+    EscapableHandleScope scope(isolate);
+    return scope.Escape(object_handle_.Get(isolate));
   }
 
   Local<Object> BaseObject::This() const
   {
     EscapableHandleScope scope(current_isolate_);
     return scope.Escape(object_handle_.Get(current_isolate_));
+  }
+
+  void BaseObject::Reset(Local<Object> object)
+  {
+    Isolate *isolate = current_isolate_;
+    HandleScope scope(isolate);
+
+    if (object_handle_.IsEmpty())
+    {
+      object_handle_.Reset(isolate, object);
+
+      // TODO(yorkie): SetWeak causes this object can be collected by v8, considering mark weak only for the objects
+      // created from JavaScript.
+      object_handle_.SetWeak(this, Finalizer, WeakCallbackType::kParameter);
+    }
+  }
+
+  // static
+  void BaseObject::Finalizer(const WeakCallbackInfo<BaseObject> &data)
+  {
+    BaseObject *instance = data.GetParameter();
+    if (instance != nullptr)
+    {
+      instance->object_handle_.Reset();
+
+      // Clear the data handle's ref
+      if (instance->data_handle_)
+        instance->data_handle_->setReference(nullptr);
+    }
+    data.SetSecondPassCallback(Cleanup);
+  }
+
+  // static
+  void BaseObject::Cleanup(const WeakCallbackInfo<BaseObject> &data)
+  {
+    BaseObject *instance = data.GetParameter();
+    if (instance != nullptr)
+      delete instance;
   }
 }

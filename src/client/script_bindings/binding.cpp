@@ -41,6 +41,7 @@
 #include "./html/html_model_element.hpp"
 #include "./html/html_paragraph_element.hpp"
 #include "./html/html_script_element.hpp"
+#include "./html/html_section_element.hpp"
 #include "./html/html_span_element.hpp"
 #include "./html/html_style_element.hpp"
 #include "./html/html_template_element.hpp"
@@ -178,11 +179,16 @@ namespace script_bindings
       ADD_HTML_ELEMENT(HTMLVideoElement)
 #undef ADD_HTML_ELEMENT
       {
+        using namespace html_bindings;
+
         // Set up constructor as a global function: Audio, Image, etc.
-        auto AudioConstructor = FunctionTemplate::New(isolate, html_bindings::HTMLAudioElement::AudioConstructor)
+        auto AudioConstructor = FunctionTemplate::New(isolate, HTMLAudioElement::AudioConstructor)
                                   ->GetFunction(context)
                                   .ToLocalChecked();
         global->Set(context, NAME("Audio"), AudioConstructor).Check();
+
+        // Initialize HTML elements which won't be exposed
+        HTMLSectionElement::Initialize(isolate);
       }
 
       // WebGL classes
