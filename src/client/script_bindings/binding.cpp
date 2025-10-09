@@ -201,6 +201,7 @@ namespace script_bindings
       ADD_WEBGL_TYPE(WebGLProgram)
       ADD_WEBGL_TYPE(WebGLRenderbuffer)
       ADD_WEBGL_TYPE(WebGLShader)
+      ADD_WEBGL_TYPE(WebGLShaderPrecisionFormat)
       ADD_WEBGL_TYPE(WebGLTexture)
       ADD_WEBGL_TYPE(WebGLUniformLocation)
       ADD_WEBGL_TYPE(WebGLVertexArray)

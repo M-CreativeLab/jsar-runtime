@@ -1,4 +1,6 @@
 #include "./webgl_rendering_context.hpp"
+#include "./shader.hpp"
+#include "./extensions/all.hpp"
 
 namespace script_bindings
 {
@@ -499,6 +501,7 @@ namespace script_bindings
       ADD_WEBGL1_METHOD("getParameter", GetParameter)
       ADD_WEBGL1_METHOD("getShaderPrecisionFormat", GetShaderPrecisionFormat)
       ADD_WEBGL1_METHOD("getError", GetError)
+      ADD_WEBGL1_METHOD("getExtension", GetExtension)
       ADD_WEBGL1_METHOD("getSupportedExtensions", GetSupportedExtensions)
     }
 
@@ -533,126 +536,283 @@ namespace script_bindings
     void WebGLRenderingContext::GetContextAttributes(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getContextAttributes method
-      }
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      const auto &context_attribs = handle()->contextAttributes;
+      auto obj = Object::New(isolate);
+
+#define SET_CONTEXT_ATTRIB_BOOL(NAME)                            \
+  obj->Set(context,                                              \
+           String::NewFromUtf8(isolate, #NAME).ToLocalChecked(), \
+           Boolean::New(isolate, context_attribs.NAME))          \
+    .Check();
+
+      SET_CONTEXT_ATTRIB_BOOL(alpha)
+      SET_CONTEXT_ATTRIB_BOOL(antialias)
+      SET_CONTEXT_ATTRIB_BOOL(depth)
+      SET_CONTEXT_ATTRIB_BOOL(stencil)
+      SET_CONTEXT_ATTRIB_BOOL(failIfMajorPerformanceCaveat)
+      SET_CONTEXT_ATTRIB_BOOL(premultipliedAlpha)
+      SET_CONTEXT_ATTRIB_BOOL(preserveDrawingBuffer)
+      SET_CONTEXT_ATTRIB_BOOL(xrCompatible)
+#undef SET_CONTEXT_ATTRIB_BOOL
+
+      obj->Set(context,
+               String::NewFromUtf8(isolate, "powerPreference").ToLocalChecked(),
+               String::NewFromUtf8(isolate, context_attribs.powerPreference.c_str()).ToLocalChecked())
+        .Check();
+      info.GetReturnValue().Set(obj);
     }
 
     void WebGLRenderingContext::IsContextLost(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native isContextLost method
-      }
+      HandleScope scope(isolate);
+
+      bool is_lost = handle()->isContextLost();
+      info.GetReturnValue().Set(Boolean::New(isolate, is_lost));
     }
 
     void WebGLRenderingContext::MakeXRCompatible(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native makeXRCompatible method
-      }
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      handle()->makeXRCompatible();
+      auto deferred = Promise::Resolver::New(context).ToLocalChecked();
+      deferred->Resolve(context, Undefined(isolate)).Check();
+      info.GetReturnValue().Set(deferred->GetPromise());
     }
 
     void WebGLRenderingContext::SetDefaultCoordHandedness(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 1)
       {
-        // Implementation would call native setDefaultCoordHandedness method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "setDefaultCoordHandedness", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "setDefaultCoordHandedness", "first argument must be a string")));
+        return;
+      }
+
+      auto handedness_utf8 = String::Utf8Value(isolate, info[0]);
+      string handedness = *handedness_utf8;
+      if (handedness == "left")
+        handle()->defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_LEFT_HANDED;
+      else if (handedness == "right")
+        handle()->defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(MakeMethodError(
+          isolate, "setDefaultCoordHandedness", "first argument must be 'left' or 'right'")));
+        return;
+      }
+
+      info.GetReturnValue().SetUndefined();
     }
 
     // State management
-    void WebGLRenderingContext::Hint(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Hint(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int mode = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->hint(target, mode);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "hint", "2 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "hint", "first argument must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "hint", "second argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Int32Value(context).FromMaybe(0);
+      int mode = info[1]->Int32Value(context).FromMaybe(0);
+
+      handle()->hint(static_cast<client_graphics::WebGLHintTargetBehavior>(target),
+                     static_cast<client_graphics::WebGLHintBehaviorMode>(mode));
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::LineWidth(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::LineWidth(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        float width = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->lineWidth(width);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "lineWidth", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "lineWidth", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float width = static_cast<float>(info[0]->NumberValue(context).FromMaybe(1.0));
+      handle()->lineWidth(width);
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::PixelStorei(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::PixelStorei(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        int pname = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int param = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->pixelStorei(static_cast<client_graphics::WebGLPixelStorageParameterName>(pname),
-                                   param);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "pixelStorei", "2 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "pixelStorei", "first argument must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "pixelStorei", "second argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int pname = info[0]->Int32Value(context).FromMaybe(0);
+      int param = info[1]->Int32Value(context).FromMaybe(0);
+      handle()->pixelStorei(static_cast<client_graphics::WebGLPixelStorageParameterName>(pname), param);
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::PolygonOffset(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::PolygonOffset(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 2)
       {
-        float factor = static_cast<float>(info[0]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        float units = static_cast<float>(info[1]->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
-        self->handle()->polygonOffset(factor, units);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "polygonOffset", "2 arguments required, but only fewer present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "polygonOffset", "first argument must be a number")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "polygonOffset", "second argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      float factor = static_cast<float>(info[0]->NumberValue(context).FromMaybe(0.0));
+      float units = static_cast<float>(info[1]->NumberValue(context).FromMaybe(0.0));
+      handle()->polygonOffset(factor, units);
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::CullFace(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CullFace(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->cullFace(mode);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cullFace", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cullFace", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mode = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->cullFace(mode);
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::FrontFace(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::FrontFace(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int mode = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        self->handle()->frontFace(mode);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "frontFace", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "frontFace", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int mode = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->frontFace(mode);
+      info.GetReturnValue().SetUndefined();
     }
 
-    void WebGLRenderingContext::ActiveTexture(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ActiveTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int texture = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->activeTexture(texture);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "activeTexture", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "activeTexture", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int texture = info[0]->Int32Value(context).FromMaybe(0);
+      handle()->activeTexture(client_graphics::WebGLTextureUnit(texture));
     }
 
-    void WebGLRenderingContext::AttachShader(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::AttachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -667,7 +827,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DetachShader(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DetachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -682,7 +842,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BindAttribLocation(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BindAttribLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -690,7 +850,7 @@ namespace script_bindings
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        v8::String::Utf8Value name(isolate, info[2]);
+        String::Utf8Value name(isolate, info[2]);
         if (program && *name)
         {
           // self->handle()->BindAttribLocation(program, index, *name);
@@ -698,7 +858,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BindBuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BindBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -713,7 +873,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BindFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BindFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -728,7 +888,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BindRenderbuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BindRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -743,7 +903,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BindTexture(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BindTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -759,7 +919,7 @@ namespace script_bindings
     }
 
     // Buffer operations
-    void WebGLRenderingContext::BufferData(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BufferData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -781,7 +941,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BufferSubData(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BufferSubData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -799,7 +959,7 @@ namespace script_bindings
     }
 
     // Framebuffer operations
-    void WebGLRenderingContext::FramebufferRenderbuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::FramebufferRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -813,7 +973,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::FramebufferTexture2D(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::FramebufferTexture2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -828,7 +988,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CheckFramebufferStatus(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CheckFramebufferStatus(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -840,7 +1000,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Clear(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Clear(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -851,7 +1011,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ClearColor(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ClearColor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -865,7 +1025,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ClearDepth(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ClearDepth(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -876,7 +1036,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ClearStencil(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ClearStencil(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -887,7 +1047,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ColorMask(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ColorMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -901,7 +1061,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DepthMask(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DepthMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -912,7 +1072,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DepthFunc(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DepthFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -923,7 +1083,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DepthRange(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DepthRange(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -935,7 +1095,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilFunc(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -948,7 +1108,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilFuncSeparate(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilFuncSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -962,7 +1122,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilMask(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilMask(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -973,7 +1133,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilMaskSeparate(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilMaskSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -985,7 +1145,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilOp(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilOp(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -998,7 +1158,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::StencilOpSeparate(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::StencilOpSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1012,7 +1172,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BlendColor(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BlendColor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1026,7 +1186,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BlendEquation(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BlendEquation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1037,7 +1197,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BlendEquationSeparate(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BlendEquationSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1049,7 +1209,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BlendFunc(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BlendFunc(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1061,7 +1221,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::BlendFuncSeparate(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::BlendFuncSeparate(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1075,7 +1235,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::RenderbufferStorage(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::RenderbufferStorage(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1089,7 +1249,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CompileShader(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CompileShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1103,7 +1263,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateProgram(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1114,7 +1274,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateShader(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1126,7 +1286,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateBuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1137,7 +1297,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1148,7 +1308,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateRenderbuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1159,7 +1319,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CreateTexture(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CreateTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1170,7 +1330,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteBuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1184,7 +1344,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1198,7 +1358,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteProgram(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1212,7 +1372,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteRenderbuffer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1226,7 +1386,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteShader(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1240,7 +1400,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DeleteTexture(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DeleteTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1254,7 +1414,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DrawArrays(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DrawArrays(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1267,7 +1427,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DrawElements(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DrawElements(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1281,7 +1441,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Enable(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Enable(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1292,7 +1452,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Disable(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Disable(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1303,7 +1463,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::EnableVertexAttribArray(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::EnableVertexAttribArray(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1314,7 +1474,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::DisableVertexAttribArray(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::DisableVertexAttribArray(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1325,7 +1485,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetActiveAttrib(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetActiveAttrib(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1341,7 +1501,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetActiveUniform(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetActiveUniform(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1357,14 +1517,14 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetAttribLocation(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetAttribLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        v8::String::Utf8Value name(isolate, info[1]);
+        String::Utf8Value name(isolate, info[1]);
         if (program && *name)
         {
           // int location = self->handle()->getAttribLocation(program, *name);
@@ -1373,14 +1533,14 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetUniformLocation(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetUniformLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        v8::String::Utf8Value name(isolate, info[1]);
+        String::Utf8Value name(isolate, info[1]);
         if (program && *name)
         {
           // auto location = self->handle()->getUniformLocation(program, *name);
@@ -1389,7 +1549,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::LinkProgram(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::LinkProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1403,7 +1563,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::UseProgram(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::UseProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1417,7 +1577,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ValidateProgram(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ValidateProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1431,14 +1591,14 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::ShaderSource(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::ShaderSource(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsString())
       {
         auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        v8::String::Utf8Value source(isolate, info[1]);
+        String::Utf8Value source(isolate, info[1]);
         if (shader && *source)
         {
           // self->handle()->shaderSource(shader, *source);
@@ -1446,7 +1606,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetShaderSource(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetShaderSource(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1461,7 +1621,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::TexImage2D(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::TexImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1487,7 +1647,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::TexSubImage2D(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::TexSubImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1506,7 +1666,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::TexParameterf(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::TexParameterf(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1519,7 +1679,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::TexParameteri(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::TexParameteri(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1532,7 +1692,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CopyTexImage2D(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CopyTexImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1552,7 +1712,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::CopyTexSubImage2D(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::CopyTexSubImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1571,7 +1731,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GenerateMipmap(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GenerateMipmap(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1582,7 +1742,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform1f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform1f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1597,7 +1757,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform1i(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform1i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1612,7 +1772,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform2f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform2f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1628,7 +1788,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform2i(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform2i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1644,7 +1804,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform3f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform3f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1661,7 +1821,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform3i(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform3i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1678,7 +1838,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform4f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform4f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1696,7 +1856,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform4i(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform4i(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1714,135 +1874,135 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Uniform1fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform1fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Float32Array>();
+        auto data = info[1].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform1fv(location, static_cast<float *>(contents.Data()), data->Length());
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform1iv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform1iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Int32Array>();
+        auto data = info[1].As<Int32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform1iv(location, static_cast<int *>(contents.Data()), data->Length());
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform2fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform2fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Float32Array>();
+        auto data = info[1].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform2fv(location, static_cast<float *>(contents.Data()), data->Length() / 2);
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform2iv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform2iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Int32Array>();
+        auto data = info[1].As<Int32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform2iv(location, static_cast<int *>(contents.Data()), data->Length() / 2);
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform3fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform3fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Float32Array>();
+        auto data = info[1].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform3fv(location, static_cast<float *>(contents.Data()), data->Length() / 3);
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform3iv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform3iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Int32Array>();
+        auto data = info[1].As<Int32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform3iv(location, static_cast<int *>(contents.Data()), data->Length() / 3);
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform4fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform4fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Float32Array>();
+        auto data = info[1].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform4fv(location, static_cast<float *>(contents.Data()), data->Length() / 4);
         }
       }
     }
 
-    void WebGLRenderingContext::Uniform4iv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Uniform4iv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
       if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsTypedArray())
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto data = info[1].As<v8::Int32Array>();
+        auto data = info[1].As<Int32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniform4iv(location, static_cast<int *>(contents.Data()), data->Length() / 4);
         }
       }
     }
 
-    void WebGLRenderingContext::UniformMatrix2fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::UniformMatrix2fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1850,16 +2010,16 @@ namespace script_bindings
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<v8::Float32Array>();
+        auto data = info[2].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniformMatrix2fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 4);
         }
       }
     }
 
-    void WebGLRenderingContext::UniformMatrix3fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::UniformMatrix3fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1867,16 +2027,16 @@ namespace script_bindings
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<v8::Float32Array>();
+        auto data = info[2].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniformMatrix3fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 9);
         }
       }
     }
 
-    void WebGLRenderingContext::UniformMatrix4fv(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::UniformMatrix4fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1884,16 +2044,16 @@ namespace script_bindings
       {
         auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
         bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<v8::Float32Array>();
+        auto data = info[2].As<Float32Array>();
         if (location && !data.IsEmpty())
         {
-          // v8::ArrayBuffer::Contents contents = data->Buffer()->GetContents();
+          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
           // self->handle()->uniformMatrix4fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 16);
         }
       }
     }
 
-    void WebGLRenderingContext::VertexAttrib1f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::VertexAttrib1f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1905,7 +2065,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::VertexAttrib2f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::VertexAttrib2f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1918,7 +2078,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::VertexAttrib3f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::VertexAttrib3f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1932,7 +2092,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::VertexAttrib4f(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::VertexAttrib4f(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1947,7 +2107,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::VertexAttribPointer(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::VertexAttribPointer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1963,7 +2123,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Viewport(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Viewport(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1977,7 +2137,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::Scissor(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::Scissor(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -1991,7 +2151,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetError(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetError(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2002,7 +2162,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetParameter(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2014,7 +2174,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetProgramParameter(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetProgramParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2030,7 +2190,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetShaderParameter(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetShaderParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2046,20 +2206,38 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetShaderPrecisionFormat(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetShaderPrecisionFormat(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsNumber())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
       {
-        int shadertype = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int precisiontype = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto format = self->handle()->getShaderPrecisionFormat(shadertype, precisiontype);
-        // Wrap and return the format
+        string msg = "Requires 2 arguments, but only " + to_string(info.Length()) + " present.";
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getShaderPrecisionFormat", msg.c_str())));
+        info.GetReturnValue().SetUndefined();
+        return;
+      }
+
+      int shader_type = info[0]->ToNumber(context).ToLocalChecked()->Value();
+      int precision_type = info[1]->ToNumber(context).ToLocalChecked()->Value();
+      try
+      {
+        const auto &precision_format = handle()->getShaderPrecisionFormat(shader_type, precision_type);
+        info.GetReturnValue().Set(WebGLShaderPrecisionFormat::NewInstance(isolate, precision_format));
+      }
+      catch (const std::exception &e)
+      {
+        isolate->ThrowException(Exception::Error(
+          MakeMethodError(isolate, "getShaderPrecisionFormat", e.what())));
+        info.GetReturnValue().SetUndefined();
+        return;
       }
     }
 
-    void WebGLRenderingContext::GetProgramInfoLog(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetProgramInfoLog(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2074,7 +2252,7 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetShaderInfoLog(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetShaderInfoLog(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       auto *self = Unwrap(isolate, info.This());
@@ -2089,30 +2267,43 @@ namespace script_bindings
       }
     }
 
-    void WebGLRenderingContext::GetExtension(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetExtension(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsString())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1 || !info[0]->IsString())
       {
-        v8::String::Utf8Value name(isolate, info[0]);
-        if (*name)
-        {
-          // auto extension = self->handle()->getExtension(*name);
-          // Wrap and return the extension
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getExtension", "First argument must be a string")));
+        return;
       }
+
+      auto name_utf8 = String::Utf8Value(isolate, info[0]);
+      string name = *name_utf8 ? *name_utf8 : "";
+      info.GetReturnValue().Set(WebGLExtensions::GetExtension(isolate, name));
     }
 
-    void WebGLRenderingContext::GetSupportedExtensions(const v8::FunctionCallbackInfo<v8::Value> &info)
+    void WebGLRenderingContext::GetSupportedExtensions(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      auto extensions = Array::New(isolate);
       {
-        // auto extensions = self->handle()->getSupportedExtensions();
-        // Wrap and return the extensions
+        int index = 0;
+        const auto &list = handle()->getSupportedExtensions();
+        for (const auto &name : list)
+        {
+          if (WebGLExtensions::HasExtension(name))
+          {
+            auto value = String::NewFromUtf8(isolate, name.c_str()).ToLocalChecked();
+            extensions->Set(context, index++, value).Check();
+          }
+        }
       }
+      info.GetReturnValue().Set(extensions);
     }
   }
 }

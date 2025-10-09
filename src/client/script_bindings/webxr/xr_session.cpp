@@ -40,9 +40,17 @@ namespace script_bindings
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      // TODO(yorkie): Implement inputSources getter - return array of XRInputSource
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "inputSources", "Not implemented")));
+      auto inputSources = handle()->inputSources;
+      if (inputSources.has_value())
+      {
+        info.GetReturnValue().Set(XRInputSourceArray::NewInstance(isolate, inputSources.value()));
+        return;
+      }
+      else
+      {
+        info.GetReturnValue().Set(Array::New(isolate));
+        return;
+      }
     }
 
     void XRSession::RenderStateGetter(const PropertyCallbackInfo<Value> &info)
@@ -96,20 +104,15 @@ namespace script_bindings
       if (info.Length() < 1 || !info[0]->IsFunction())
       {
         isolate->ThrowException(Exception::TypeError(
-          String::NewFromUtf8(isolate, "requestAnimationFrame requires a callback function").ToLocalChecked()));
+          MakeMethodError(isolate, "requestAnimationFrame", "Requires a callback function as argument")));
         return;
       }
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
-      {
-        info.GetReturnValue().Set(Integer::New(isolate, 0));
-        return;
-      }
-
-      // TODO: Implement requestAnimationFrame with proper frame callback handling
-      cout << "requestAnimationFrame called" << endl;
-      info.GetReturnValue().Set(Integer::New(isolate, 1)); // Return dummy handle
+      auto frame_handler = [](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *data) {
+        cout << "XRSession::RequestAnimationFrame callback invoked at time: " << time << endl;
+      };
+      info.GetReturnValue().Set(Integer::New(isolate,
+                                             handle()->requestAnimationFrame(frame_handler)));
     }
 
     void XRSession::CancelAnimationFrame(const FunctionCallbackInfo<Value> &info)
@@ -119,17 +122,20 @@ namespace script_bindings
 
       if (info.Length() < 1)
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cancelAnimationFrame", "Requires 1 argument, but got 0")));
         return;
       }
-
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
+      if (!info[0]->IsNumber())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
         return;
       }
 
-      // TODO: Implement cancelAnimationFrame
-      cout << "cancelAnimationFrame called" << endl;
+      uint32_t callback_handle = info[0].As<Number>()->Value();
+      handle()->cancelAnimationFrame(callback_handle);
+      info.GetReturnValue().SetUndefined();
     }
 
     void XRSession::UpdateRenderState(const FunctionCallbackInfo<Value> &info)

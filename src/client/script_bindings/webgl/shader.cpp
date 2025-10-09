@@ -18,7 +18,7 @@ namespace script_bindings
       // WebGLShader has no methods or properties - it's an opaque handle
     }
 
-    Local<Object> WebGLShader::NewInstance(Isolate *isolate, std::shared_ptr<client_graphics::WebGLShader> nativeShader)
+    Local<Object> WebGLShader::NewInstance(Isolate *isolate, shared_ptr<client_graphics::WebGLShader> nativeShader)
     {
       EscapableHandleScope scope(isolate);
       return nativeShader != nullptr
@@ -29,6 +29,14 @@ namespace script_bindings
     WebGLShader::WebGLShader(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLShaderBase(isolate, args)
     {
+    }
+
+    Local<Object> WebGLShaderPrecisionFormat::NewInstance(
+      Isolate *isolate,
+      const client_graphics::WebGLShaderPrecisionFormat &precisionFormat)
+    {
+      return WebGLShaderPrecisionFormatBase::NewInstance(
+        isolate, make_shared<client_graphics::WebGLShaderPrecisionFormat>(precisionFormat));
     }
   }
 }

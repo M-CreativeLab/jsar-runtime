@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <client/graphics/webgl_shader.hpp>
+#include <client/graphics/webgl_shader_precision_format.hpp>
 #include <client/scripting_base/v8_object_wrap.hpp>
 #include <client/script_bindings/webgl/object.hpp>
 
@@ -39,6 +40,22 @@ namespace script_bindings
 
     public:
       WebGLShader(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+    };
+
+    class WebGLShaderPrecisionFormat;
+    using WebGLShaderPrecisionFormatBase = scripting_base::ObjectWrap<WebGLShaderPrecisionFormat,
+                                                                      client_graphics::WebGLShaderPrecisionFormat>;
+
+    class WebGLShaderPrecisionFormat : public WebGLShaderPrecisionFormatBase
+    {
+      using WebGLShaderPrecisionFormatBase::ObjectWrap;
+
+    public:
+      static std::string Name()
+      {
+        return "WebGLShaderPrecisionFormat";
+      }
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *, const client_graphics::WebGLShaderPrecisionFormat &);
     };
   }
 }

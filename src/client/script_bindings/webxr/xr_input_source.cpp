@@ -135,7 +135,7 @@ namespace script_bindings
     // XRInputSourceArray implementation
 
     Local<Array> XRInputSourceArray::NewInstance(Isolate *isolate,
-                                                 const vector<shared_ptr<client_xr::XRInputSource>> &inputSources)
+                                                 const client_xr::XRInputSourceArray &inputSources)
     {
       EscapableHandleScope scope(isolate);
       Local<Array> array = Array::New(isolate, inputSources.size());

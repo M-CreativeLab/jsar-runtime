@@ -56,7 +56,8 @@ namespace script_bindings
       /**
        * Create a new V8 array for XRInputSource objects.
        */
-      static v8::Local<v8::Array> NewInstance(v8::Isolate *isolate, const std::vector<std::shared_ptr<client_xr::XRInputSource>> &inputSources);
+      static v8::Local<v8::Array> NewInstance(v8::Isolate *isolate,
+                                              const client_xr::XRInputSourceArray &inputSources);
     };
   }
 }
