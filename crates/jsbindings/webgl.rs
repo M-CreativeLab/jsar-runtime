@@ -1,45 +1,394 @@
 use glsl_lang::ast;
-use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
+use glsl_lang::visitor::{Host, HostMut, Visit, Visitor, VisitorMut};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use crate::glsl_transpiler;
 
-struct MyGLSLPatcher {}
+const FRAGMENT_OUTPUT_NAME: &str = "fragColor";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ShaderStage {
+  Vertex,
+  Fragment,
+}
+
+#[derive(Default)]
+struct StageDetector {
+  has_fragment_builtin: bool,
+}
+
+impl StageDetector {
+  fn stage(&self) -> ShaderStage {
+    if self.has_fragment_builtin {
+      ShaderStage::Fragment
+    } else {
+      ShaderStage::Vertex
+    }
+  }
+}
+
+impl Visitor for StageDetector {
+  fn visit_identifier(&mut self, ident: &ast::Identifier) -> Visit {
+    let name = ident.content.as_str();
+    match name {
+      "gl_FragColor" | "gl_FragData" | "gl_FragDepth" | "gl_FragCoord" | "gl_SampleMask" => {
+        self.has_fragment_builtin = true;
+      }
+      _ => {}
+    }
+    Visit::Children
+  }
+}
+
+struct MyGLSLPatcher {
+  stage: ShaderStage,
+  saw_gl_fragcolor: bool,
+  fragment_output_declared: bool,
+  fragdata_indices: BTreeSet<u32>,
+}
 
 impl MyGLSLPatcher {
+  fn fragment_output_name(index: u32) -> String {
+    if index == 0 {
+      FRAGMENT_OUTPUT_NAME.to_string()
+    } else {
+      format!("{}{}", FRAGMENT_OUTPUT_NAME, index)
+    }
+  }
+
+  fn fragment_output_exists(tu: &ast::TranslationUnit, name: &str) -> bool {
+    tu.0.iter().any(|decl| {
+      if let ast::ExternalDeclarationData::Declaration(decl_node) = &decl.content {
+        if let ast::DeclarationData::InitDeclaratorList(list) = &decl_node.content {
+          let head = &list.content.head.content;
+          if let Some(identifier) = &head.name {
+            return identifier.content.as_str() == name;
+          }
+        }
+      }
+      false
+    })
+  }
+
+  fn fragment_output_insertion_index(tu: &ast::TranslationUnit) -> usize {
+    let mut insertion_index = 0;
+    for (idx, decl) in tu.0.iter().enumerate() {
+      match &decl.content {
+        ast::ExternalDeclarationData::Preprocessor(_) => {
+          insertion_index = idx + 1;
+        }
+        ast::ExternalDeclarationData::Declaration(_) => {
+          insertion_index = idx + 1;
+        }
+        ast::ExternalDeclarationData::FunctionDefinition(_) => {
+          break;
+        }
+      }
+    }
+    insertion_index
+  }
+
+  fn extract_constant_u32(expr: &ast::Expr) -> Option<u32> {
+    match &expr.content {
+      ast::ExprData::IntConst(value) => value.to_string().parse().ok(),
+      ast::ExprData::UIntConst(value) => value
+        .to_string()
+        .trim_end_matches('u')
+        .parse()
+        .ok(),
+      _ => None,
+    }
+  }
+
+  fn ensure_additional_fragdata_declarations(&mut self, tu: &mut ast::TranslationUnit) {
+    let need_fragcolor = self.saw_gl_fragcolor || self.fragdata_indices.contains(&0);
+    if need_fragcolor && !self.fragment_output_declared {
+      self.ensure_fragment_output_declaration(tu);
+    }
+
+    let extra_indices: Vec<u32> = self
+      .fragdata_indices
+      .iter()
+      .copied()
+      .filter(|&idx| idx != 0)
+      .collect();
+
+    for index in extra_indices {
+      let name = Self::fragment_output_name(index);
+      if Self::fragment_output_exists(tu, &name) {
+        continue;
+      }
+
+      let insertion_index = Self::fragment_output_insertion_index(tu);
+      tu.0
+        .insert(insertion_index, self.build_fragment_output_declaration(&name));
+    }
+  }
+
+  fn new(stage: ShaderStage) -> Self {
+    Self {
+      stage,
+      saw_gl_fragcolor: false,
+      fragment_output_declared: false,
+      fragdata_indices: BTreeSet::new(),
+    }
+  }
+
+  fn apply(&mut self, tu: &mut ast::TranslationUnit) {
+    self.remove_precision_declarations(tu);
+    tu.visit_mut(self);
+    if self.stage == ShaderStage::Fragment {
+      if self.saw_gl_fragcolor {
+        self.ensure_fragment_output_declaration(tu);
+      }
+      self.ensure_additional_fragdata_declarations(tu);
+    }
+    self.ensure_version_and_extension_order(tu);
+  }
+
+  fn remove_precision_declarations(&self, tu: &mut ast::TranslationUnit) {
+    tu.0.retain(|decl| {
+      !matches!(
+        &decl.content,
+        ast::ExternalDeclarationData::Declaration(node)
+          if matches!(node.content, ast::DeclarationData::Precision(_, _))
+      )
+    });
+  }
+
+  fn sanitize_type_qualifier(&self, qualifier: &mut ast::TypeQualifier) {
+    use ast::{StorageQualifierData, TypeQualifierSpecData};
+
+    let mut seen_storage: Option<StorageQualifierData> = None;
+    let mut sanitized = Vec::with_capacity(qualifier.content.qualifiers.len());
+
+    for mut spec in qualifier.content.qualifiers.drain(..) {
+      let keep = match &mut spec.content {
+        TypeQualifierSpecData::Storage(storage) => {
+          match storage.content {
+            StorageQualifierData::Attribute => {
+              storage.content = StorageQualifierData::In;
+            }
+            StorageQualifierData::Varying => {
+              storage.content = match self.stage {
+                ShaderStage::Vertex => StorageQualifierData::Out,
+                ShaderStage::Fragment => StorageQualifierData::In,
+              };
+            }
+            _ => {}
+          }
+
+          if let Some(existing) = &seen_storage {
+            if existing == &storage.content {
+              false
+            } else {
+              seen_storage = Some(storage.content.clone());
+              true
+            }
+          } else {
+            seen_storage = Some(storage.content.clone());
+            true
+          }
+        }
+        TypeQualifierSpecData::Precision(_) => false,
+        _ => true,
+      };
+
+      if keep {
+        sanitized.push(spec);
+      }
+    }
+
+    qualifier.content.qualifiers = sanitized;
+  }
+
   fn create_model_view_matrix_expr(&self) -> ast::Expr {
     let new_lhs: ast::Expr =
-      ast::ExprData::Variable(ast::IdentifierData(ast::SmolStr::new_inline("viewMatrix")).into())
-        .into();
+      ast::ExprData::Variable(ast::IdentifierData::from("viewMatrix").into()).into();
     let new_rhs: ast::Expr =
-      ast::ExprData::Variable(ast::IdentifierData(ast::SmolStr::new_inline("modelMatrix")).into())
-        .into();
-    let new_binary_expr: ast::Expr = ast::ExprData::Binary(
+      ast::ExprData::Variable(ast::IdentifierData::from("modelMatrix").into()).into();
+    ast::ExprData::Binary(
       ast::BinaryOpData::Mult.into(),
       Box::new(new_lhs),
       Box::new(new_rhs),
     )
-    .into();
-    new_binary_expr
+    .into()
   }
 
-  fn handle_expr(&self, expr: &mut ast::Expr) -> bool {
+  fn ensure_fragment_output_declaration(&mut self, tu: &mut ast::TranslationUnit) {
+    if self.fragment_output_declared {
+      return;
+    }
+
+    for decl in &mut tu.0 {
+      if let ast::ExternalDeclarationData::Declaration(decl_node) = &mut decl.content {
+        if let ast::DeclarationData::InitDeclaratorList(list) = &mut decl_node.content {
+          let head = &mut list.content.head.content;
+          if let Some(name) = &mut head.name {
+            let ident = name.content.as_str();
+            if ident == FRAGMENT_OUTPUT_NAME || ident == "glFragColor" {
+              name.content = ast::IdentifierData::from(FRAGMENT_OUTPUT_NAME);
+              self.prepare_fragment_output_type(&mut head.ty);
+              list.content.tail.clear();
+              self.fragment_output_declared = true;
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    let insertion_index = Self::fragment_output_insertion_index(tu);
+    tu.0
+      .insert(insertion_index, self.build_fragment_output_declaration(FRAGMENT_OUTPUT_NAME));
+    self.fragment_output_declared = true;
+  }
+
+  fn prepare_fragment_output_type(&self, ty: &mut ast::FullySpecifiedType) {
+    ty.content.ty = ast::TypeSpecifierData {
+      ty: ast::TypeSpecifierNonArrayData::Vec4.into(),
+      array_specifier: None,
+    }
+    .into();
+
+    let qualifier = ty.content.qualifier.get_or_insert_with(|| {
+      ast::TypeQualifierData {
+        qualifiers: Vec::new(),
+      }
+      .into()
+    });
+
+    self.sanitize_type_qualifier(qualifier);
+
+    let has_out = qualifier.content.qualifiers.iter().any(|spec| {
+      matches!(
+        &spec.content,
+        ast::TypeQualifierSpecData::Storage(storage)
+          if matches!(storage.content, ast::StorageQualifierData::Out)
+      )
+    });
+
+    if !has_out {
+      qualifier
+        .content
+        .qualifiers
+        .push(ast::TypeQualifierSpecData::Storage(ast::StorageQualifierData::Out.into()).into());
+    }
+
+    if qualifier.content.qualifiers.is_empty() {
+      ty.content.qualifier = None;
+    }
+  }
+
+  fn build_fragment_output_declaration(&self, name: &str) -> ast::ExternalDeclaration {
+    let qualifier: ast::TypeQualifier = ast::TypeQualifierData {
+      qualifiers: vec![
+        ast::TypeQualifierSpecData::Storage(ast::StorageQualifierData::Out.into()).into(),
+      ],
+    }
+    .into();
+
+    let ty: ast::FullySpecifiedType = ast::FullySpecifiedTypeData {
+      qualifier: Some(qualifier),
+      ty: ast::TypeSpecifierData {
+        ty: ast::TypeSpecifierNonArrayData::Vec4.into(),
+        array_specifier: None,
+      }
+      .into(),
+    }
+    .into();
+
+    let single_decl: ast::SingleDeclaration = ast::SingleDeclarationData {
+      ty,
+      name: Some(ast::IdentifierData::from(name).into()),
+      array_specifier: None,
+      initializer: None,
+    }
+    .into();
+
+    let init_list: ast::InitDeclaratorList = ast::InitDeclaratorListData {
+      head: single_decl,
+      tail: Vec::new(),
+    }
+    .into();
+
+    ast::ExternalDeclarationData::Declaration(
+      ast::DeclarationData::InitDeclaratorList(init_list).into(),
+    )
+    .into()
+  }
+
+  fn ensure_version_and_extension_order(&self, tu: &mut ast::TranslationUnit) {
+    let mut versions = Vec::new();
+    let mut extensions = Vec::new();
+
+    tu.0.retain(|decl| {
+      if let ast::ExternalDeclarationData::Preprocessor(preprocessor) = &decl.content {
+        match &preprocessor.content {
+          ast::PreprocessorData::Version(_) => {
+            let mut updated = decl.clone();
+            if let ast::ExternalDeclarationData::Preprocessor(pre) = &mut updated.content {
+              if let ast::PreprocessorData::Version(version) = &mut pre.content {
+                version.content.version = 300;
+                version.content.profile = Some(ast::PreprocessorVersionProfileData::Es.into());
+              }
+            }
+            versions.push(updated);
+            return false;
+          }
+          ast::PreprocessorData::Extension(_) => {
+            extensions.push(decl.clone());
+            return false;
+          }
+          _ => {}
+        }
+      }
+      true
+    });
+
+    if versions.is_empty() {
+      let version = ast::PreprocessorVersionData {
+        version: 300,
+        profile: Some(ast::PreprocessorVersionProfileData::Es.into()),
+      }
+      .into();
+      versions.push(
+        ast::ExternalDeclarationData::Preprocessor(ast::PreprocessorData::Version(version).into())
+          .into(),
+      );
+    }
+
+    tu.0.splice(0..0, extensions);
+    tu.0.splice(0..0, versions);
+  }
+
+  fn handle_expr(&mut self, expr: &mut ast::Expr) -> bool {
     match &mut expr.content {
       ast::ExprData::Variable(identifier) => {
-        if identifier.content.0 == "modelViewMatrix" {
+        if identifier.content.as_str() == "modelViewMatrix" {
           *expr = self.create_model_view_matrix_expr();
-          true
-        } else {
-          false
+          return true;
         }
+        if self.stage == ShaderStage::Fragment && identifier.content.as_str() == "gl_FragColor" {
+          print!("Rewriting gl_FragColor to {}", FRAGMENT_OUTPUT_NAME);
+          identifier.content = ast::IdentifierData::from(FRAGMENT_OUTPUT_NAME);
+          self.saw_gl_fragcolor = true;
+          return true;
+        }
+        false
       }
       ast::ExprData::Unary(_, operand) => self.handle_expr(operand),
       ast::ExprData::Binary(_, lhs, rhs) => {
-        let r1 = self.handle_expr(lhs);
-        let r2 = self.handle_expr(rhs);
-        r1 || r2
+        let l = self.handle_expr(lhs);
+        let r = self.handle_expr(rhs);
+        l || r
       }
-      ast::ExprData::Assignment(_, _, rhs) => self.handle_expr(rhs),
+      ast::ExprData::Assignment(lhs, _, rhs) => {
+        let l = self.handle_expr(lhs);
+        let r = self.handle_expr(rhs);
+        l || r
+      }
       ast::ExprData::FunCall(_, args) => {
         let mut changed = false;
         for arg in args {
@@ -47,6 +396,33 @@ impl MyGLSLPatcher {
         }
         changed
       }
+      ast::ExprData::Ternary(cond, then_branch, else_branch) => {
+        let r1 = self.handle_expr(cond);
+        let r2 = self.handle_expr(then_branch);
+        let r3 = self.handle_expr(else_branch);
+        r1 || r2 || r3
+      }
+      ast::ExprData::Comma(lhs, rhs) => self.handle_expr(lhs) || self.handle_expr(rhs),
+      ast::ExprData::Bracket(inner, index) => {
+        if self.stage == ShaderStage::Fragment {
+          if let ast::ExprData::Variable(identifier) = &inner.content {
+            if identifier.content.as_str() == "gl_FragData" {
+              if let Some(idx) = Self::extract_constant_u32(index) {
+                let name = Self::fragment_output_name(idx);
+                *expr = ast::ExprData::Variable(ast::IdentifierData::from(name.as_str()).into()).into();
+                self.fragdata_indices.insert(idx);
+                if idx == 0 {
+                  self.saw_gl_fragcolor = true;
+                }
+                return true;
+              }
+            }
+          }
+        }
+        self.handle_expr(inner) || self.handle_expr(index)
+      }
+      ast::ExprData::Dot(inner, _) => self.handle_expr(inner),
+      ast::ExprData::PostInc(inner) | ast::ExprData::PostDec(inner) => self.handle_expr(inner),
       _ => false,
     }
   }
@@ -60,48 +436,31 @@ impl VisitorMut for MyGLSLPatcher {
       Visit::Children
     }
   }
-}
 
-/// Detect if shader source uses WebGL 2.0 syntax
-/// WebGL 2.0 requires #version 300 es per specification, WebGL 1.0 doesn't require version
-fn detect_webgl2_syntax(s: &str) -> bool {
-  // WebGL 2.0 strong indicators (these only exist in WebGL 2.0)
-  if s.contains("out vec4")
-    || s.contains("out mediump")
-    || s.contains("out lowp")
-    || s.contains("out highp")
-    || s.contains("layout(location")
-  {
-    return true;
+  fn visit_full_specified_type(&mut self, ty: &mut ast::FullySpecifiedType) -> Visit {
+    if let Some(qualifier) = &mut ty.content.qualifier {
+      self.sanitize_type_qualifier(qualifier);
+      if qualifier.content.qualifiers.is_empty() {
+        ty.content.qualifier = None;
+      }
+    }
+    Visit::Children
   }
 
-  // Check for WebGL 2.0 built-ins - texture() without texture2D()
-  if s.contains("texture(") && !s.contains("texture2D(") {
-    return true;
+  fn visit_struct_field_specifier(&mut self, field: &mut ast::StructFieldSpecifier) -> Visit {
+    if let Some(qualifier) = &mut field.content.qualifier {
+      self.sanitize_type_qualifier(qualifier);
+      if qualifier.content.qualifiers.is_empty() {
+        field.content.qualifier = None;
+      }
+    }
+    Visit::Children
   }
 
-  // WebGL 1.0 strong indicators (these are deprecated/removed in WebGL 2.0)
-  if s.contains("gl_FragColor")
-    || s.contains("gl_FragData")
-    || s.contains("attribute ")
-    || s.contains("varying ")
-    || s.contains("texture2D(")
-    || s.contains("textureCube(")
-  {
-    return false;
+  fn visit_type_qualifier(&mut self, qualifier: &mut ast::TypeQualifier) -> Visit {
+    self.sanitize_type_qualifier(qualifier);
+    Visit::Children
   }
-
-  // Check for 'in ' keyword (could be WebGL 2.0, but be more specific)
-  if s.contains("in vec")
-    || s.contains("in mediump")
-    || s.contains("in lowp")
-    || s.contains("in highp")
-  {
-    return true;
-  }
-
-  // Default to WebGL 1.0 for safety
-  false
 }
 
 fn patch_glsl_source_from_str(s: &str) -> String {
@@ -109,55 +468,22 @@ fn patch_glsl_source_from_str(s: &str) -> String {
     ast::TranslationUnit, lexer::full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
-  // Apply WebGL standards-compliant version handling first
-  let source_to_parse = if !s.contains("#version") && detect_webgl2_syntax(s) {
-    // WebGL 2.0 requires #version 300 es per specification
-    format!("#version 300 es\n{}", s)
-  } else {
-    // WebGL 1.0 shaders work without version directives per WebGL standard
-    s.to_string()
-  };
-
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
   let mut tu: TranslationUnit = processor
-    .open_source(&source_to_parse, Path::new("."))
+    .open_source(s, Path::new("."))
     .builder()
     .parse()
     .map(|(mut tu, _, iter)| {
       iter.into_directives().inject(&mut tu);
       tu
     })
-    .expect(format!("Failed to parse GLSL source: \n{}\n", source_to_parse).as_str());
+    .expect(format!("Failed to parse GLSL source: \n{}\n", s).as_str());
 
-  let mut my_glsl_patcher = MyGLSLPatcher {};
-  tu.visit_mut(&mut my_glsl_patcher);
-
-  {
-    /*
-     * This reorders the preprocessor directives in the GLSL source code.
-     *
-     * 1. Move the #version directive to the top.
-     * 2. Move the #extension directives to the top after the #version directive if exists.
-     */
-    let mut versions_list = Vec::new();
-    let mut extensions_list = Vec::new();
-    tu.0.retain(|decl| match &decl.content {
-      ast::ExternalDeclarationData::Preprocessor(processor) => match processor.content {
-        ast::PreprocessorData::Version(_) => {
-          versions_list.push(decl.clone());
-          false
-        }
-        ast::PreprocessorData::Extension(_) => {
-          extensions_list.push(decl.clone());
-          false
-        }
-        _ => true,
-      },
-      _ => true,
-    });
-    tu.0.splice(0..0, extensions_list);
-    tu.0.splice(0..0, versions_list);
-  }
+  let mut detector = StageDetector::default();
+  tu.visit(&mut detector);
+  let stage = detector.stage();
+  let mut patcher = MyGLSLPatcher::new(stage);
+  patcher.apply(&mut tu);
 
   let mut s = String::new();
   glsl_transpiler::glsl::show_translation_unit(
@@ -180,39 +506,50 @@ mod ffi {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use std::ffi::CString;
 
   #[test]
-  fn test_patch_glsl_source() {
+  fn test_fragment_shader_rewrites_gl_frag_color() {
     let source_str = r#"
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
+precision mediump float;
+varying highp vec2 vUv;
 
-#version 300 es
-precision highp float;
-highp float a = 1.0;
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 0) out highp vec4 glFragColor;
-#extension GL_OES_standard_derivatives : enable
-
-void main() { 
-  gl_FragColor = vec4(1, 1, 1, 1); 
-}"#;
+void main() {
+  gl_FragColor = vec4(vUv, 0.0, 1.0);
+}
+"#;
     let patched_source_str = patch_glsl_source_from_str(source_str);
     assert_eq!(
       patched_source_str,
       r#"#version 300 es
-#extension GL_OVR_multiview2 : enable
-#extension GL_OES_standard_derivatives : enable
-layout(num_views = 2) in;
-precision highp float;
-highp float a = 1.;
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-layout(location = 0) out highp vec4 glFragColor;
+in vec2 vUv;
+out vec4 fragColor;
 void main() {
-    gl_FragColor = vec4(1, 1, 1, 1);
+    fragColor = vec4(vUv, 0., 1.);
+}
+"#
+    )
+  }
+
+  #[test]
+  fn test_vertex_attribute_and_varying_transforms() {
+    let source_str = r#"
+attribute vec3 position;
+attribute vec3 normal;
+varying mediump vec2 vUv;
+
+void main() {
+  gl_Position = vec4(position, 1.0);
+}
+"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+in vec3 position;
+in vec3 normal;
+out vec2 vUv;
+void main() {
+    gl_Position = vec4(position, 1.);
 }
 "#
     )
