@@ -10,6 +10,24 @@
 $ make darwin CLEAN=yes
 ```
 
+#### 使用调试符号编译
+
+如需生成带有 dSYM 调试信息的构建,可以使用 Debug 模式:
+
+```sh
+$ make darwin CLEAN=yes RELEASE=no
+```
+
+这将生成:
+- 编译时使用 `-g -fno-limit-debug-info` 标志以包含完整的调试信息
+- 为每个目标自动生成 `.dSYM` 调试包
+- dSYM 文件将被安装到输出目录中,与二进制文件一起
+
+生成的 dSYM 文件可以用于:
+- 使用 `lldb` 进行源码级调试
+- 崩溃日志符号化
+- 性能分析工具
+
 ### Android
 
 编译 Android 平台需要下载 NDK，下载完成后，新开一个终端配置参数：
