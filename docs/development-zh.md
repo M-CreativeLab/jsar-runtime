@@ -147,6 +147,27 @@ $ lldb -p <pid>
 (lldb) image list
 ```
 
+**8. 使用 VSCode 调试：**
+
+项目在 `.vscode/launch.json` 中提供了 VSCode 启动配置，方便进行调试。使用方法：
+
+1. **在 VSCode 中安装 CodeLLDB 扩展**（macOS 上使用 lldb 调试所必需）
+
+2. **使用调试符号编译：**
+   ```sh
+   $ make darwin CLEAN=yes RELEASE=no
+   ```
+
+3. **在 VSCode 中打开项目**，然后选择可用的调试配置之一：
+   - **Debug transmute_browser**：使用 `fixtures/html/document.html` 启动 transmute_browser
+   - **Debug transmute_browser (Custom HTML)**：提示输入自定义 HTML 文件路径
+   - **Debug TransmuteClient**：启动 TransmuteClient
+   - **Attach to Process**：附加到运行中的进程
+
+4. **开始调试**：按 `F5` 或使用调试面板开始调试
+
+启动配置会自动加载 dSYM 文件并设置调试器以获得最佳调试体验。
+
 ### Android
 
 编译 Android 平台需要下载 NDK，下载完成后，新开一个终端配置参数：

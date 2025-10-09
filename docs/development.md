@@ -147,6 +147,27 @@ $ lldb -p <pid>
 (lldb) image list
 ```
 
+**8. Debugging with VSCode:**
+
+A VSCode launch configuration is provided in `.vscode/launch.json` for easy debugging. To use it:
+
+1. **Install the CodeLLDB extension** in VSCode (required for lldb debugging on macOS)
+
+2. **Build with debug symbols:**
+   ```sh
+   $ make darwin CLEAN=yes RELEASE=no
+   ```
+
+3. **Open the project in VSCode** and select one of the available debug configurations:
+   - **Debug transmute_browser**: Launches transmute_browser with `fixtures/html/document.html`
+   - **Debug transmute_browser (Custom HTML)**: Prompts for a custom HTML file path
+   - **Debug TransmuteClient**: Launches TransmuteClient
+   - **Attach to Process**: Attaches to a running process
+
+4. **Start debugging**: Press `F5` or use the Debug panel to start debugging
+
+The launch configuration automatically loads dSYM files and sets up the debugger for optimal debugging experience.
+
 ### Android
 
 To build for Android, download the NDK first, then open a new terminal and configure the environment:
