@@ -28,6 +28,125 @@ $ make darwin CLEAN=yes RELEASE=no
 - 崩溃日志符号化
 - 性能分析工具
 
+#### 使用 lldb 调试
+
+在使用调试符号编译后，按照以下步骤使用 lldb 进行调试：
+
+**1. 启动 lldb 并加载二进制文件：**
+
+```sh
+$ lldb ./build/output/release/universal-apple-darwin/transmute_browser
+```
+
+**2. 加载 dSYM 文件（如果未自动检测到）：**
+
+通常情况下，如果 dSYM 文件与二进制文件在同一目录中，lldb 会自动加载。要验证或手动加载：
+
+```sh
+# 检查调试符号是否已加载
+(lldb) image list transmute_browser
+
+# 如果调试符号未显示，手动添加 dSYM 包
+(lldb) target symbols add ./build/output/release/universal-apple-darwin/transmute_browser.dSYM
+```
+
+**3. 设置断点：**
+
+```sh
+# 按函数名设置断点
+(lldb) breakpoint set --name main
+(lldb) b main
+
+# 在特定文件和行号设置断点
+(lldb) breakpoint set --file main.cpp --line 42
+(lldb) b main.cpp:42
+
+# 列出所有断点
+(lldb) breakpoint list
+```
+
+**4. 运行程序：**
+
+```sh
+# 带参数运行
+(lldb) run /path/to/test.html
+
+# 或使用简写 'r'
+(lldb) r /path/to/test.html
+```
+
+**5. 调试命令：**
+
+```sh
+# 继续执行
+(lldb) continue
+(lldb) c
+
+# 单步跳过（执行当前行）
+(lldb) next
+(lldb) n
+
+# 单步进入（进入函数调用）
+(lldb) step
+(lldb) s
+
+# 单步跳出（完成当前函数）
+(lldb) finish
+
+# 打印回溯（堆栈跟踪）
+(lldb) backtrace
+(lldb) bt
+
+# 打印变量值
+(lldb) print variable_name
+(lldb) p variable_name
+
+# 打印帧变量
+(lldb) frame variable
+
+# 检查内存
+(lldb) memory read 0x12345678
+(lldb) x 0x12345678
+```
+
+**6. 调试崩溃：**
+
+如果程序崩溃，lldb 会在崩溃点停止：
+
+```sh
+# 查看崩溃位置
+(lldb) bt
+
+# 移动到特定帧
+(lldb) frame select 2
+(lldb) f 2
+
+# 查看局部变量
+(lldb) frame variable
+
+# 查看崩溃点的源代码
+(lldb) source list
+```
+
+**7. 高级调试：**
+
+```sh
+# 附加到运行中的进程
+$ lldb -p <pid>
+
+# 或从 lldb 内部附加
+(lldb) process attach --pid <pid>
+
+# 设置条件断点
+(lldb) breakpoint set --name foo --condition 'x > 10'
+
+# 在变量上设置观察点
+(lldb) watchpoint set variable my_var
+
+# 查看所有加载的模块
+(lldb) image list
+```
+
 ### Android
 
 编译 Android 平台需要下载 NDK，下载完成后，新开一个终端配置参数：
