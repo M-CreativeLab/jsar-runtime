@@ -1,8 +1,11 @@
 #include <iostream>
 #include <client/script_bindings/webgl/framebuffer.hpp>
+#include <client/script_bindings/webgl/webgl_rendering_context.hpp>
+#include <client/script_bindings/webgl/webgl2_rendering_context.hpp>
 #include "./xr_layer.hpp"
 #include "./xr_view.hpp"
 #include "./xr_viewport.hpp"
+#include "./xr_session.hpp"
 
 using namespace std;
 using namespace v8;
@@ -45,6 +48,56 @@ namespace script_bindings
       // Add static methods
       tpl->Set(String::NewFromUtf8(isolate, "getNativeFramebufferScaleFactor").ToLocalChecked(),
                FunctionTemplate::New(isolate, GetNativeFramebufferScaleFactor));
+    }
+
+    XRWebGLLayer::XRWebGLLayer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
+        : XRWebGLLayerBase(isolate, args)
+    {
+      HandleScope scope(isolate);
+
+      if (args.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeConstructorError(isolate, "Requires at least 2 arguments")));
+        return;
+      }
+      if (!XRSession::IsInstanceOf(isolate, args[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeConstructorError(isolate, "First argument must be an XRSession object")));
+        return;
+      }
+      if (!webgl_bindings::WebGLRenderingContext::IsInstanceOf(isolate, args[1]) &&
+          !webgl_bindings::WebGL2RenderingContext::IsInstanceOf(isolate, args[1]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeConstructorError(isolate,
+                               "Second argument must be a WebGLRenderingContext or WebGL2RenderingContext object")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      XRSession *session = XRSession::Unwrap(isolate, args[0]->ToObject(context).ToLocalChecked());
+      assert(session != nullptr && "XRSession handle is null");
+
+      shared_ptr<client_graphics::WebGLContext> gl_context;
+      if (webgl_bindings::WebGLRenderingContext::IsInstanceOf(isolate, args[1]))
+      {
+        auto webgl1 = webgl_bindings::WebGLRenderingContext::Unwrap(
+          isolate, args[1]->ToObject(context).ToLocalChecked());
+        assert(webgl1 != nullptr && "WebGLRenderingContext handle is null");
+        gl_context = webgl1->handle();
+      }
+      else if (webgl_bindings::WebGL2RenderingContext::IsInstanceOf(isolate, args[1]))
+      {
+        auto webgl2 = webgl_bindings::WebGL2RenderingContext::Unwrap(
+          isolate, args[1]->ToObject(context).ToLocalChecked());
+        assert(webgl2 != nullptr && "WebGL2RenderingContext handle is null");
+        gl_context = webgl2->handle();
+      }
+
+      // Create the native `client_xr::XRWebGLLayer` object and associate it with this wrapper
+      setData(make_shared<client_xr::XRWebGLLayer>(session->handle(), gl_context));
     }
 
     // static

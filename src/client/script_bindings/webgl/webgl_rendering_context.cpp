@@ -2165,13 +2165,134 @@ namespace script_bindings
     void WebGLRenderingContext::GetParameter(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1 || !info[0]->IsNumber())
       {
-        int pname = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // auto value = self->handle()->getParameter(pname);
-        // Wrap and return the value
+        string msg = "Requires 1 argument, but only " + to_string(info.Length()) + " present.";
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getParameter", msg.c_str())));
+        info.GetReturnValue().SetUndefined();
+        return;
       }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      Local<Value> jsValue = Undefined(isolate);
+
+      int pname = info[0]->ToNumber(context).ToLocalChecked()->Value();
+      switch (pname)
+      {
+      /**
+       * GLint
+       */
+      case WEBGL_ALPHA_BITS:
+      case WEBGL_BLUE_BITS:
+      case WEBGL_RED_BITS:
+      case WEBGL_DEPTH_BITS:
+      case WEBGL_GREEN_BITS:
+      case WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+      case WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE:
+      case WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS:
+      case WEBGL_MAX_RENDERBUFFER_SIZE:
+      case WEBGL_MAX_TEXTURE_IMAGE_UNITS:
+      case WEBGL_MAX_TEXTURE_SIZE:
+      case WEBGL_MAX_VARYING_VECTORS:
+      case WEBGL_MAX_VERTEX_ATTRIBS:
+      case WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+      case WEBGL_MAX_VERTEX_UNIFORM_VECTORS:
+      case WEBGL_PACK_ALIGNMENT:
+      case WEBGL_SAMPLE_BUFFERS:
+      case WEBGL_SAMPLES:
+      case WEBGL_STENCIL_BACK_REF:
+      case WEBGL_STENCIL_BITS:
+      case WEBGL_STENCIL_CLEAR_VALUE:
+      case WEBGL_STENCIL_REF:
+      case WEBGL_SUBPIXEL_BITS:
+      case WEBGL_UNPACK_ALIGNMENT:
+      /**
+       * GLenum
+       */
+      case WEBGL_ACTIVE_TEXTURE:
+      case WEBGL_BLEND_DST_ALPHA:
+      case WEBGL_BLEND_DST_RGB:
+      case WEBGL_BLEND_EQUATION:
+      // case WEBGL_BLEND_EQUATION_RGB: /** same as BLEND_EQUATION */
+      case WEBGL_BLEND_EQUATION_ALPHA:
+      case WEBGL_BLEND_SRC_ALPHA:
+      case WEBGL_BLEND_SRC_RGB:
+      case WEBGL_CULL_FACE_MODE:
+      case WEBGL_DEPTH_FUNC:
+      case WEBGL_FRONT_FACE:
+      case WEBGL_GENERATE_MIPMAP_HINT:
+      case WEBGL_IMPLEMENTATION_COLOR_READ_FORMAT:
+      case WEBGL_IMPLEMENTATION_COLOR_READ_TYPE:
+      case WEBGL_STENCIL_BACK_FAIL:
+      case WEBGL_STENCIL_BACK_FUNC:
+      case WEBGL_STENCIL_BACK_PASS_DEPTH_FAIL:
+      case WEBGL_STENCIL_BACK_PASS_DEPTH_PASS:
+      case WEBGL_STENCIL_FAIL:
+      case WEBGL_STENCIL_FUNC:
+      case WEBGL_STENCIL_PASS_DEPTH_FAIL:
+      case WEBGL_STENCIL_PASS_DEPTH_PASS:
+      case WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL:
+      {
+        auto value = handle()->getParameter(static_cast<client_graphics::WebGLIntegerParameterName>(pname));
+        jsValue = Integer::New(isolate, value);
+        break;
+      }
+      /**
+       * GLboolean
+       */
+      case WEBGL_BLEND:
+      case WEBGL_CULL_FACE:
+      case WEBGL_DEPTH_TEST:
+      case WEBGL_DEPTH_WRITEMASK:
+      case WEBGL_DITHER:
+      case WEBGL_POLYGON_OFFSET_FILL:
+      case WEBGL_SAMPLE_COVERAGE_INVERT:
+      case WEBGL_SCISSOR_TEST:
+      case WEBGL_STENCIL_TEST:
+      case WEBGL_UNPACK_FLIP_Y_WEBGL:
+      case WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+      {
+        jsValue = Boolean::New(isolate,
+                               handle()->getParameter(static_cast<client_graphics::WebGLBooleanParameterName>(pname)));
+        break;
+      }
+      /**
+       * GLfloat[]
+       */
+      case WEBGL_VIEWPORT:
+      case WEBGL_SCISSOR_BOX:
+      {
+        auto values = handle()->getParameter(static_cast<client_graphics::WebGLFloatArrayParameterName>(pname));
+        auto arraybuffer = ArrayBuffer::New(isolate, sizeof(float) * values.size());
+        for (size_t i = 0; i < values.size(); i++)
+        {
+          arraybuffer->Set(context, i, Number::New(isolate, values[i])).Check();
+        }
+        jsValue = Float32Array::New(arraybuffer, 0, values.size());
+        break;
+      }
+      /**
+       * GLstring
+       */
+      case WEBGL_RENDERER:
+      case WEBGL_SHADING_LANGUAGE_VERSION:
+      case WEBGL_VENDOR:
+      case WEBGL_VERSION:
+      {
+        auto value = handle()->getParameter(static_cast<client_graphics::WebGLStringParameterName>(pname));
+        jsValue = String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked();
+        break;
+      }
+      default:
+        cerr << "WebGLRenderingContext::GetParameter: Unhandled pname " << pname << endl;
+        break;
+      }
+
+      // Return the value
+      info.GetReturnValue().Set(jsValue);
     }
 
     void WebGLRenderingContext::GetProgramParameter(const FunctionCallbackInfo<Value> &info)

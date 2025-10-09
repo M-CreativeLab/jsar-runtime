@@ -51,6 +51,9 @@ namespace script_bindings
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
+    public:
+      XRWebGLLayer(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
+
     private:
       // Static methods
       static void GetNativeFramebufferScaleFactor(const v8::FunctionCallbackInfo<v8::Value> &info);
