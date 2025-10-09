@@ -216,32 +216,68 @@ impl MyGLSLPatcher {
     .into()
   }
 
+  /// Ensures that the fragment shader has a proper output declaration.
+  /// If an existing declaration is found (either "fragColor" or "glFragColor"),
+  /// it will be updated to the correct type and name. Otherwise, a new declaration is inserted.
   fn ensure_fragment_output_declaration(&mut self, tu: &mut ast::TranslationUnit) {
     if self.fragment_output_declared {
       return;
     }
 
+    // Try to find and update existing fragment output declaration
+    if self.try_update_existing_fragment_output(tu) {
+      return;
+    }
+
+    // No existing declaration found, create a new one
+    self.insert_new_fragment_output_declaration(tu);
+  }
+
+  /// Attempts to find and update an existing fragment output declaration.
+  /// Returns true if an existing declaration was found and updated.
+  fn try_update_existing_fragment_output(&mut self, tu: &mut ast::TranslationUnit) -> bool {
     for decl in &mut tu.0 {
-      if let ast::ExternalDeclarationData::Declaration(decl_node) = &mut decl.content {
-        if let ast::DeclarationData::InitDeclaratorList(list) = &mut decl_node.content {
-          let head = &mut list.content.head.content;
-          if let Some(name) = &mut head.name {
-            let ident = name.content.as_str();
-            if ident == FRAGMENT_OUTPUT_NAME || ident == "glFragColor" {
-              name.content = ast::IdentifierData::from(FRAGMENT_OUTPUT_NAME);
-              self.prepare_fragment_output_type(&mut head.ty);
-              list.content.tail.clear();
-              self.fragment_output_declared = true;
-              return;
-            }
+      if let Some(declaration_list) = self.extract_declaration_list(decl) {
+        let head = &mut declaration_list.content.head.content;
+        
+        if let Some(variable_name) = &mut head.name {
+          let identifier = variable_name.content.as_str();
+          
+          if self.is_fragment_output_variable(identifier) {
+            // Update the existing declaration
+            variable_name.content = ast::IdentifierData::from(FRAGMENT_OUTPUT_NAME);
+            self.prepare_fragment_output_type(&mut head.ty);
+            declaration_list.content.tail.clear();
+            self.fragment_output_declared = true;
+            return true;
           }
         }
       }
     }
+    false
+  }
 
+  /// Extracts the InitDeclaratorList from a declaration if it exists.
+  fn extract_declaration_list<'a>(&self, decl: &'a mut ast::ExternalDeclaration) 
+    -> Option<&'a mut ast::InitDeclaratorList> {
+    if let ast::ExternalDeclarationData::Declaration(decl_node) = &mut decl.content {
+      if let ast::DeclarationData::InitDeclaratorList(list) = &mut decl_node.content {
+        return Some(list);
+      }
+    }
+    None
+  }
+
+  /// Checks if the given identifier represents a fragment output variable.
+  fn is_fragment_output_variable(&self, identifier: &str) -> bool {
+    identifier == FRAGMENT_OUTPUT_NAME || identifier == "glFragColor"
+  }
+
+  /// Inserts a new fragment output declaration at the appropriate position.
+  fn insert_new_fragment_output_declaration(&mut self, tu: &mut ast::TranslationUnit) {
     let insertion_index = Self::fragment_output_insertion_index(tu);
-    tu.0
-      .insert(insertion_index, self.build_fragment_output_declaration(FRAGMENT_OUTPUT_NAME));
+    let new_declaration = self.build_fragment_output_declaration(FRAGMENT_OUTPUT_NAME);
+    tu.0.insert(insertion_index, new_declaration);
     self.fragment_output_declared = true;
   }
 
@@ -371,7 +407,6 @@ impl MyGLSLPatcher {
           return true;
         }
         if self.stage == ShaderStage::Fragment && identifier.content.as_str() == "gl_FragColor" {
-          print!("Rewriting gl_FragColor to {}", FRAGMENT_OUTPUT_NAME);
           identifier.content = ast::IdentifierData::from(FRAGMENT_OUTPUT_NAME);
           self.saw_gl_fragcolor = true;
           return true;
