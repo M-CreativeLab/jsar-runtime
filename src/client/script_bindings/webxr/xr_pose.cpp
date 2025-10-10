@@ -29,17 +29,8 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRPose *pose = Unwrap(isolate, info.This());
-      if (pose == nullptr || pose->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return XRRigidTransform for the pose's transform
-      cout << "pose.transform getter called" << endl;
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(XRRigidTransform::NewInstance(isolate,
+                                                              handle()->transform));
     }
 
     void XRPose::EmulatedPositionGetter(const PropertyCallbackInfo<Value> &info)

@@ -35,6 +35,7 @@ namespace script_bindings
     private:
       // Property getters
       void EyeGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void IsFirstPersonObserverGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void ProjectionMatrixGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
       void TransformGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
 

@@ -17,6 +17,7 @@ namespace script_bindings
 
       // Add property accessors
       InstanceReadonlyAccessor(isolate, instance, "eye", &XRView::EyeGetter);
+      InstanceReadonlyAccessor(isolate, instance, "isFirstPersonObserver", &XRView::IsFirstPersonObserverGetter);
       InstanceReadonlyAccessor(isolate, instance, "projectionMatrix", &XRView::ProjectionMatrixGetter);
       InstanceReadonlyAccessor(isolate, instance, "transform", &XRView::TransformGetter);
 
@@ -51,40 +52,35 @@ namespace script_bindings
                                   .ToLocalChecked());
     }
 
+    void XRView::IsFirstPersonObserverGetter(const PropertyCallbackInfo<Value> &info)
+    {
+      Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+
+      // For simplicity, we assume views are first-person observers
+      info.GetReturnValue().Set(Boolean::New(isolate, true));
+    }
+
     void XRView::ProjectionMatrixGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
 
-      XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
+      const glm::mat4 &matrix = handle()->projectionMatrix();
+      constexpr int len = 16;
 
-      // TODO: Return actual projection matrix as Float32Array from native
-      cout << "view.projectionMatrix getter called" << endl;
-      Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, 16 * sizeof(float));
-      Local<Float32Array> matrix = Float32Array::New(buffer, 0, 16);
-      info.GetReturnValue().Set(matrix);
+      Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, len * sizeof(float));
+      float *data = static_cast<float *>(buffer->GetBackingStore()->Data());
+      memcpy(data, &matrix, len * sizeof(float));
+      info.GetReturnValue().Set(Float32Array::New(buffer, 0, len));
     }
 
     void XRView::TransformGetter(const PropertyCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRView *view = Unwrap(isolate, info.This());
-      if (view == nullptr || view->handle() == nullptr)
-      {
-        info.GetReturnValue().SetNull();
-        return;
-      }
-
-      // TODO: Return XRRigidTransform for the view's transform
-      cout << "view.transform getter called" << endl;
-      info.GetReturnValue().SetNull();
+      info.GetReturnValue().Set(XRRigidTransform::NewInstance(isolate,
+                                                              handle()->transform()));
     }
 
     // Methods
@@ -98,7 +94,7 @@ namespace script_bindings
       if (info.Length() < 1 || !info[0]->IsNumber())
       {
         isolate->ThrowException(Exception::TypeError(
-            MakeMethodError(isolate, "requestViewportScale", "requires a number argument")));
+          MakeMethodError(isolate, "requestViewportScale", "requires a number argument")));
         return;
       }
 

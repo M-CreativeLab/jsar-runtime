@@ -8,6 +8,9 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
+    class XRRigidTransform;
+    using XRRigidTransformBase = scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>;
+
     /**
      * XRRigidTransform wrapper for V8 objects using scripting_base::ObjectWrap.
      *
@@ -15,41 +18,25 @@ namespace script_bindings
      * It provides the standard WebXR XRRigidTransform interface for representing
      * position and orientation in 3D space.
      */
-    class XRRigidTransform : public scripting_base::ObjectWrap<XRRigidTransform, client_xr::XRRigidTransform>
+    class XRRigidTransform : public XRRigidTransformBase
     {
     public:
-      /**
-       * The name of the XRRigidTransform class for V8.
-       */
       static std::string Name()
       {
         return "XRRigidTransform";
       }
-
-      /**
-       * Configure the V8 function template with XRRigidTransform properties and methods.
-       */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 XRRigidTransform instance from a native client_xr::XRRigidTransform.
-       */
-      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, std::shared_ptr<client_xr::XRRigidTransform> nativeTransform);
-
-      /**
-       * Initialize the XRRigidTransform class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, const client_xr::XRRigidTransform &transform);
 
     public:
       XRRigidTransform(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);
 
     private:
       // Property getters
-      static void PositionGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void OrientationGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void MatrixGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-      static void InverseGetter(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+      void PositionGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void OrientationGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void MatrixGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
+      void InverseGetter(const v8::PropertyCallbackInfo<v8::Value> &info);
     };
   }
 }
