@@ -21,19 +21,6 @@ namespace client_xr
   {
   }
 
-  XRFrame::XRFrame(XRFrame &other)
-      : frameRequestData_(other.frameRequestData_)
-      , id_(other.id_)
-      , stereoId_(other.stereoId_)
-      , timestamp_(other.timestamp_)
-      , session_(other.session_)
-      , sessionId_(other.sessionId_)
-      , device_(other.device_)
-      , active_(other.active_)
-      , animationFrame_(other.animationFrame_)
-  {
-  }
-
   void XRFrame::startFrame()
   {
     active_ = true;

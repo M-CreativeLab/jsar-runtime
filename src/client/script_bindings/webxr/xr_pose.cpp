@@ -1,6 +1,8 @@
+#include <iostream>
+
 #include "./xr_pose.hpp"
 #include "./xr_rigid_transform.hpp"
-#include <iostream>
+#include "./xr_view.hpp"
 
 using namespace std;
 using namespace v8;
@@ -73,10 +75,20 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      // TODO: Return array of XRView objects
-      cout << "viewerPose.views getter called" << endl;
-      info.GetReturnValue().Set(Array::New(isolate, 0));
+      const auto &views = handle()->views();
+      Local<Array> viewsArray = Array::New(isolate, static_cast<int>(views.size()));
+
+      for (size_t i = 0; i < views.size(); ++i)
+      {
+        auto view = views[i];
+        viewsArray->Set(context,
+                        static_cast<uint32_t>(i),
+                        XRView::GetOrNewInstance(isolate, view))
+          .Check();
+      }
+      info.GetReturnValue().Set(viewsArray);
     }
   }
 }

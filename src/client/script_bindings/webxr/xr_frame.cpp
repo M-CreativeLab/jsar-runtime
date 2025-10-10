@@ -33,7 +33,10 @@ namespace script_bindings
     Local<Object> XRFrame::NewInstance(Isolate *isolate, std::shared_ptr<client_xr::XRFrame> nativeFrame)
     {
       EscapableHandleScope scope(isolate);
-      assert(nativeFrame != nullptr && "nativeFrame must not be null");
+      assert(nativeFrame != nullptr &&
+             "nativeFrame must not be null");
+      assert(nativeFrame->session() != nullptr &&
+             "session in native frame must not be null");
       return scope.Escape(XRFrameBase::NewInstance(isolate, nativeFrame).As<Object>());
     }
 
@@ -109,7 +112,7 @@ namespace script_bindings
         return;
       }
 
-      if (XRReferenceSpace::IsInstanceOf(isolate, info[0]) == false)
+      if (!XRReferenceSpace::IsInstanceOf(isolate, info[0]))
       {
         isolate->ThrowException(Exception::TypeError(
           MakeMethodError(isolate, "getViewerPose", "Argument must be an `XRReferenceSpace` object")));

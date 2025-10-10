@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <glm/glm.hpp>
+#include <client/scripting_base/v8_object_holder.hpp>
 
 #include "./common.hpp"
 #include "./webxr_viewport.hpp"
@@ -16,7 +17,7 @@ namespace client_xr
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/XRView
    */
-  class XRView
+  class XRView : public scripting_base::JSObjectHolder
   {
   public:
     /**

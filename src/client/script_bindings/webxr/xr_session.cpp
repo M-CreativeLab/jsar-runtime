@@ -1,4 +1,5 @@
 #include <iostream>
+#include <client/scripting_base/threadsafe_function.hpp>
 
 #include "./xr_session.hpp"
 #include "./xr_space.hpp"
@@ -109,9 +110,42 @@ namespace script_bindings
         return;
       }
 
-      auto frame_handler = [](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *data)
+      Local<Function> callback = info[0].As<Function>();
+      scripting_base::ThreadSafeFunction *tsfn = new scripting_base::ThreadSafeFunction(isolate, info.This(), callback);
+      auto frame_handler = [tsfn](uint32_t time, shared_ptr<client_xr::XRFrame> frame_ptr, void *data)
       {
-        cout << "XRSession::RequestAnimationFrame callback invoked at time: " << time << endl;
+        // Copy the frame to avoid dangling reference
+        const client_xr::XRFrame frame = *frame_ptr;
+        auto custom_call = [tsfn, time, frame](v8::Isolate *isolate,
+                                               v8::Local<Value> recv,
+                                               v8::Local<v8::Function> callback)
+        {
+          HandleScope scope(isolate);
+          Local<Context> context = isolate->GetCurrentContext();
+
+          constexpr int argc = 2;
+          Local<Value> argv[argc] = {Number::New(isolate, time),
+                                     XRFrame::NewInstance(isolate, make_shared<client_xr::XRFrame>(frame))};
+
+          TryCatch try_catch(isolate);
+          auto r = callback->Call(context, recv, argc, argv);
+          if (r.IsEmpty())
+          {
+            Local<String> error_string = try_catch.Exception().As<String>();
+            String::Utf8Value error_utf8(isolate, error_string);
+            string error_str = "Failed to invoke frame callback: " + string(*error_utf8);
+            isolate->ThrowException(Exception::Error(
+              XRSession::MakeMethodError(isolate, "requestAnimationFrame", error_str.c_str())));
+          }
+          else
+          {
+            r.ToLocalChecked();
+          }
+
+          // Delete the tsfn instance after the call
+          delete tsfn;
+        };
+        tsfn->nonBlockingCall(custom_call);
       };
       info.GetReturnValue().Set(Integer::New(isolate,
                                              handle()->requestAnimationFrame(frame_handler)));

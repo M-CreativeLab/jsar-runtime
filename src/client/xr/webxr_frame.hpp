@@ -90,30 +90,29 @@ namespace client_xr
 
   public:
     XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session);
-    XRFrame(XRFrame &other);
+    XRFrame(const XRFrame &other) = default;
 
   public:
-    inline uint32_t id()
+    inline uint32_t id() const
     {
       return id_;
     }
-    inline uint32_t stereoId()
+    inline uint32_t stereoId() const
     {
       return stereoId_;
     }
-    inline bool active()
+    inline bool active() const
     {
       return active_;
     }
-    inline bool animationFrame()
+    inline bool animationFrame() const
     {
       return animationFrame_;
     }
-    inline std::shared_ptr<XRSession> session()
+    inline std::shared_ptr<XRSession> session() const
     {
       return session_;
     }
-
 
   public:
     void startFrame();
