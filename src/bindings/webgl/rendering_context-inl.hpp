@@ -158,6 +158,10 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+    if (glContext_ == nullptr)
+    {
+      return Napi::Boolean::New(env, true);
+    }
     return Napi::Boolean::New(env, glContext_->isContextLost());
   }
 
@@ -166,6 +170,11 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (glContext_ == nullptr)
+    {
+      return env.Null();
+    }
 
     auto &contextAttributes = glContext_->contextAttributes;
     Napi::Object attribs = Napi::Object::New(env);
@@ -2652,6 +2661,10 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+    if (glContext_ == nullptr)
+    {
+      return Napi::Number::New(env, 0);
+    }
     return Napi::Number::New(env, glContext_->drawingBufferWidth());
   }
 
@@ -2669,6 +2682,10 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+    if (glContext_ == nullptr)
+    {
+      return Napi::Number::New(env, 0);
+    }
     return Napi::Number::New(env, glContext_->drawingBufferHeight());
   }
 
