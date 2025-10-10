@@ -1165,7 +1165,8 @@ namespace webgl
       width = imagePixmap.width();
       height = imagePixmap.height();
       format = WEBGL_RGBA;
-      internalformat = WEBGL2_RGBA8;
+      // In WebGL 1.0, internalformat must equal format. In WebGL 2.0, we can use sized internal formats.
+      internalformat = isWebGL2() ? WEBGL2_RGBA8 : WEBGL_RGBA;
       pixelsData = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
     }
     else if (info.Length() == 9)
