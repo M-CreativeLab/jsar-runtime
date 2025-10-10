@@ -28,6 +28,7 @@ The alpha version of JSAR is the first version of the project.
 #### Canvas & WebGL
 - **Canvas 2D**: Implement strokeRect() method in Canvas 2D rendering context (#294)
 - **WebGL**: Implement WebGL validateProgram method (#253)
+- **Shader Script Tags**: Add support for x-shader/x-vertex and x-shader/x-fragment script tags for embedding GLSL shader code in HTML
 
 #### Browser & Rendering
 - **Parallel Rendering**: Use `std::async` to make each web content rendering run in parallel (#310)
