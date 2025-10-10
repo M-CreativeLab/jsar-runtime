@@ -3,23 +3,26 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include <math/matrix.hpp>
+#include <client/dom/dom_event_target.hpp>
 #include "./common.hpp"
 
 namespace client_xr
 {
 #define TR_XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->inverseBaseMatrix() * space->baseMatrix()
 
-  class XRSpace
+  class XRSpace : public dom::DOMEventTarget
   {
   public:
     XRSpace(bool isReferenceSpace = false)
-        : lastFrameId_(-1)
+        : dom::DOMEventTarget()
+        , lastFrameId_(-1)
         , baseMatrix_(1.0f)
         , isReferenceSpace_(isReferenceSpace)
     {
     }
     XRSpace(glm::mat4 baseMatrix, XRSpaceSubType subType)
-        : subType(subType)
+        : dom::DOMEventTarget()
+        , subType(subType)
         , lastFrameId_(-1)
         , baseMatrix_(baseMatrix)
         , isReferenceSpace_(false)

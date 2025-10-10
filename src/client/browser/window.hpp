@@ -17,6 +17,7 @@
 #include <client/dom/dom_event_target.hpp>
 #include <client/browser/location.hpp>
 #include <client/browser/navigator.hpp>
+#include <client/frame/animation_frame_provider.hpp>
 
 // Forward declaration to avoid circular dependency
 namespace dom
@@ -252,6 +253,28 @@ namespace browser
       client_context_->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
+    using AnimationFrameCallback = std::function<void(uint32_t time)>;
+
+    /**
+     * Schedules a callback to be invoked before the next repaint.
+     * 
+     * @param AnimationFrameCallback The callback to be invoked.
+     * @return A long integer representing the request ID, which can be used to cancel the request.
+     */
+    long requestAnimationFrame(AnimationFrameCallback);
+
+    /**
+     * Cancels a previously scheduled animation frame request.
+     * 
+     * @param handle The request ID returned by `requestAnimationFrame`.
+     */
+    void cancelAnimationFrame(long handle);
+
+    /**
+     * Starts the animation frame provider if it is not already started.
+     */
+    void startAnimationFrameProvider();
+
     /**
      * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and 
      * resolving any basic computation those values may contain.
@@ -304,6 +327,7 @@ namespace browser
     std::shared_ptr<dom::Document> document_;
     std::shared_ptr<browser::Location> location_;
     std::shared_ptr<browser::Navigator> navigator_;
+    std::shared_ptr<client_frame::AnimationFrameProvider> animation_frame_provider_;
 
   private:
     TrClientContextPerProcess *client_context_; // The client context for making RPC calls

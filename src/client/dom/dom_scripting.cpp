@@ -261,7 +261,14 @@ namespace dom
     auto maybeValue = mainContext->Global()->Get(mainContext, String::NewFromUtf8(isolate_, #name).ToLocalChecked()); \
     if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                     \
     {                                                                                                                 \
-      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                                     \
+      if (valueToSet->IsUndefined() || valueToSet->IsNull())                                                          \
+      {                                                                                                               \
+        cerr << "Warning: The global object(" << #name << ") is undefined or null in the main context." << endl;      \
+      }                                                                                                               \
+      else                                                                                                            \
+      {                                                                                                               \
+        V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                                   \
+      }                                                                                                               \
     }                                                                                                                 \
   } while (0)
 
@@ -293,8 +300,6 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
         V8_SET_GLOBAL_FROM_MAIN(setInterval);
         V8_SET_GLOBAL_FROM_MAIN(clearInterval);
-        V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
-        V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
         V8_SET_GLOBAL_FROM_MAIN(queueMicrotask);
 
         // Fetch API related objects

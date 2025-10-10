@@ -3,6 +3,7 @@
 #include "./xr_session.hpp"
 #include "./xr_space.hpp"
 #include "./xr_frame.hpp"
+#include "./xr_layer.hpp"
 #include "./xr_input_source.hpp"
 #include "./xr_render_state.hpp"
 
@@ -108,7 +109,8 @@ namespace script_bindings
         return;
       }
 
-      auto frame_handler = [](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *data) {
+      auto frame_handler = [](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *data)
+      {
         cout << "XRSession::RequestAnimationFrame callback invoked at time: " << time << endl;
       };
       info.GetReturnValue().Set(Integer::New(isolate,
@@ -142,21 +144,112 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
+      if (info.Length() < 1 || !info[0]->IsObject())
       {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "updateRenderState", "Requires a render state object as argument")));
         return;
       }
 
-      // TODO: Implement updateRenderState with proper render state handling
-      cout << "updateRenderState called" << endl;
+      client_xr::XRRenderState newState;
+      Local<Object> newStateObj = info[0].As<Object>();
+
+      {
+        Local<String> key = String::NewFromUtf8(isolate, "baseLayer").ToLocalChecked();
+        if (newStateObj->Has(context, key).FromMaybe(false))
+        {
+          auto baseLayerValue = newStateObj->Get(context, key).ToLocalChecked();
+          if (XRWebGLLayer::IsInstanceOf(isolate, baseLayerValue))
+          {
+            auto layerBinding = XRWebGLLayer::Unwrap(isolate, baseLayerValue.As<Object>());
+            if (layerBinding == nullptr || !layerBinding->hasData())
+            {
+              isolate->ThrowException(Exception::TypeError(
+                MakeMethodError(isolate, "updateRenderState", "Failed to unwrap XRWebGLLayer")));
+              return;
+            }
+            shared_ptr<client_xr::XRWebGLLayer> layer = layerBinding->handle();
+            if (layer->session() == nullptr)
+            {
+              isolate->ThrowException(Exception::TypeError(
+                MakeMethodError(isolate, "updateRenderState", "XRWebGLLayer is not associated with any XRSession")));
+              return;
+            }
+            if (layer->session() != handle())
+            {
+              isolate->ThrowException(Exception::TypeError(
+                MakeMethodError(isolate, "updateRenderState", "XRWebGLLayer is associated with a different XRSession")));
+              return;
+            }
+            newState.baseLayer = layer;
+          }
+        }
+      }
+
+      {
+        Local<String> key = String::NewFromUtf8(isolate, "inlineVerticalFieldOfView").ToLocalChecked();
+        if (newStateObj->Has(context, key).FromMaybe(false))
+        {
+          auto fovValue = newStateObj->Get(context, key).ToLocalChecked();
+          if (fovValue->IsNumber())
+          {
+            if (handle()->immersive())
+            {
+              isolate->ThrowException(Exception::TypeError(
+                MakeMethodError(isolate,
+                                "updateRenderState",
+                                "Cannot set inlineVerticalFieldOfView in an immersive session")));
+              return;
+            }
+            else
+            {
+              double fov = fovValue.As<Number>()->Value();
+              newState.inlineVerticalFieldOfView = fmin(3.13, fmax(0.01, fov));
+            }
+          }
+        }
+      }
+
+      {
+        // Set depthNear if provided
+        Local<String> key = String::NewFromUtf8(isolate, "depthNear").ToLocalChecked();
+        if (newStateObj->Has(context, key).FromMaybe(false))
+        {
+          auto nearValue = newStateObj->Get(context, key).ToLocalChecked();
+          newState.depthNear = nearValue.As<Number>()->Value();
+        }
+      }
+
+      {
+        // Set depthFar if provided
+        Local<String> key = String::NewFromUtf8(isolate, "depthFar").ToLocalChecked();
+        if (newStateObj->Has(context, key).FromMaybe(false))
+        {
+          auto farValue = newStateObj->Get(context, key).ToLocalChecked();
+          newState.depthFar = farValue.As<Number>()->Value();
+        }
+      }
+
+      try
+      {
+        handle()->updateRenderState(newState);
+      }
+      catch (const std::exception &e)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "updateRenderState", e.what())));
+        return;
+      }
+      info.GetReturnValue().SetUndefined();
     }
 
     void XRSession::RequestReferenceSpace(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
 
       if (info.Length() < 1)
       {
@@ -164,21 +257,31 @@ namespace script_bindings
           String::NewFromUtf8(isolate, "requestReferenceSpace requires 1 argument").ToLocalChecked()));
         return;
       }
-
-      XRSession *session = Unwrap(isolate, info.This());
-      if (session == nullptr || session->handle() == nullptr)
+      if (!info[0]->IsString())
       {
-        info.GetReturnValue().SetNull();
+        isolate->ThrowException(Exception::TypeError(
+          String::NewFromUtf8(isolate, "The first argument must be a string").ToLocalChecked()));
         return;
       }
 
+      auto deferred = Promise::Resolver::New(context).ToLocalChecked();
       String::Utf8Value referenceSpaceType(isolate, info[0]);
+      try
+      {
+        string requestType = *referenceSpaceType ? *referenceSpaceType : "";
+        auto space = handle()->requestReferenceSpace(requestType);
+        deferred->Resolve(context, XRReferenceSpace::GetOrNewInstance(isolate, space)).Check();
+      }
+      catch (const std::exception &e)
+      {
+        deferred->Reject(context,
+                         Exception::TypeError(
+                           MakeMethodError(isolate, "requestReferenceSpace", e.what())))
+          .Check();
+      }
 
-      // TODO: Implement requestReferenceSpace with proper space creation
-      cout << "requestReferenceSpace called with type: " << *referenceSpaceType << endl;
-
-      // Return a Promise for now (in full implementation, this should return a proper Promise)
-      info.GetReturnValue().SetNull();
+      // Return a Promise for now
+      info.GetReturnValue().Set(deferred->GetPromise());
     }
 
     void XRSession::End(const FunctionCallbackInfo<Value> &info)

@@ -48,8 +48,15 @@ namespace script_bindings
         Local<Object> eventObj = Event::GetOrNewInstance(isolate, event);
         if (!eventObj.IsEmpty())
         {
+          TryCatch try_catch(isolate);
           Local<Value> argv[] = {eventObj};
-          func->Call(context, Null(isolate), 1, argv).ToLocalChecked();
+          MaybeLocal<Value> res = func->Call(context, Null(isolate), 1, argv);
+          if (res.IsEmpty() || try_catch.HasCaught())
+          {
+            String::Utf8Value error(isolate, try_catch.Exception());
+            cerr << "Failed to dispatch event '" << event->typeStr()
+                 << "': " << (*error ? *error : "Unknown error") << endl;
+          }
         }
       }
     }

@@ -12,27 +12,29 @@ namespace script_bindings
   {
     HandleScope handle_scope(isolate);
     auto context = isolate->GetCurrentContext();
-    auto prototype_template = tpl->PrototypeTemplate();
-    auto instance_template = tpl->InstanceTemplate();
+    auto prototype = tpl->PrototypeTemplate();
+    auto instance = tpl->InstanceTemplate();
 
     InstanceAccessor(isolate,
-                     instance_template,
+                     instance,
                      "navigator",
                      &Window::NavigatorGetter,
                      nullptr);
     InstanceAccessor(isolate,
-                     instance_template,
+                     instance,
                      "location",
                      &Window::LocationGetter,
                      &Window::LocationSetter);
 
-    InstanceMethod(isolate, instance_template, "alert", &Window::Alert);
-    InstanceMethod(isolate, instance_template, "blur", &Window::Blur);
-    InstanceMethod(isolate, instance_template, "close", &Window::Close);
-    InstanceMethod(isolate, instance_template, "confirm", &Window::Confirm);
-    InstanceMethod(isolate, instance_template, "focus", &Window::Focus);
-    InstanceMethod(isolate, instance_template, "open", &Window::Open);
-    InstanceMethod(isolate, instance_template, "prompt", &Window::Prompt);
+    InstanceMethod(isolate, prototype, "alert", &Window::Alert);
+    InstanceMethod(isolate, prototype, "blur", &Window::Blur);
+    InstanceMethod(isolate, prototype, "close", &Window::Close);
+    InstanceMethod(isolate, prototype, "confirm", &Window::Confirm);
+    InstanceMethod(isolate, prototype, "focus", &Window::Focus);
+    InstanceMethod(isolate, prototype, "open", &Window::Open);
+    InstanceMethod(isolate, prototype, "prompt", &Window::Prompt);
+    InstanceMethod(isolate, prototype, "requestAnimationFrame", &Window::RequestAnimationFrame);
+    InstanceMethod(isolate, prototype, "cancelAnimationFrame", &Window::CancelAnimationFrame);
   }
 
   Local<ObjectTemplate> Window::GetInstanceTemplate(Isolate *isolate)
@@ -54,6 +56,10 @@ namespace script_bindings
       : WindowBase(isolate)
   {
     setData(nativeWindow);
+    assert(handle() != nullptr && "Native Window must not be null.");
+
+    // Start the animation frame provider
+    handle()->startAnimationFrameProvider();
   }
 
   Window::Window(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
@@ -225,5 +231,39 @@ namespace script_bindings
     handle()->prompt(*message ? *message : "", defaultValue);
     // TODO(yorkie): Return the actual result from the RPC call.
     info.GetReturnValue().SetNull();
+  }
+
+  void Window::RequestAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    auto callback = [](uint32_t time) {
+      cout << "Animation frame at time: " << time << " ms" << endl;
+    };
+    auto frame_handle = handle()->requestAnimationFrame(callback);
+    info.GetReturnValue().Set(Integer::New(isolate, frame_handle));
+  }
+
+  void Window::CancelAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info)
+  {
+    Isolate *isolate = info.GetIsolate();
+    HandleScope scope(isolate);
+
+    if (info.Length() < 1)
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
+      return;
+    }
+    if (!info[0]->IsNumber())
+    {
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "cancelAnimationFrame", "The first argument must be a number")));
+      return;
+    }
+
+    uint32_t frame_handle = info[0].As<Number>()->Value();
+    handle()->cancelAnimationFrame(frame_handle);
   }
 }

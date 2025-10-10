@@ -43,5 +43,8 @@ namespace script_bindings
     void Focus(const v8::FunctionCallbackInfo<v8::Value> &info);
     void Open(const v8::FunctionCallbackInfo<v8::Value> &info);
     void Prompt(const v8::FunctionCallbackInfo<v8::Value> &info);
+
+    void RequestAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info);
+    void CancelAnimationFrame(const v8::FunctionCallbackInfo<v8::Value> &info);
   };
 }

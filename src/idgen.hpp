@@ -14,6 +14,13 @@ public:
 };
 
 template <>
+class TrIdTraits<long>
+{
+public:
+  static constexpr long MaxId = std::numeric_limits<long>::max();
+};
+
+template <>
 class TrIdTraits<uint64_t>
 {
 public:

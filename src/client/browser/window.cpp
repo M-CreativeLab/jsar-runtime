@@ -163,6 +163,28 @@ namespace browser
     }
   }
 
+  long Window::requestAnimationFrame(AnimationFrameCallback callback)
+  {
+    assert(animation_frame_provider_ != nullptr && animation_frame_provider_->isStarted() &&
+           "AnimationFrameProvider must be started before requesting animation frames.");
+    return animation_frame_provider_->requestAnimationFrame(callback);
+  }
+
+  void Window::cancelAnimationFrame(long handle)
+  {
+    if (animation_frame_provider_ == nullptr || !animation_frame_provider_->isStarted())
+      return;
+    animation_frame_provider_->cancelAnimationFrame(handle);
+  }
+
+  void Window::startAnimationFrameProvider()
+  {
+    assert((animation_frame_provider_ == nullptr || !animation_frame_provider_->isStarted()) &&
+           "AnimationFrameProvider must be null and not started.");
+    animation_frame_provider_ = make_shared<client_frame::AnimationFrameProvider>();
+    animation_frame_provider_->start();
+  }
+
   void Window::configureDocument(std::shared_ptr<dom::Document> document)
   {
     assert(is_document_configured_ == false);

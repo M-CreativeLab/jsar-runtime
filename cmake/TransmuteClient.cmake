@@ -6,6 +6,7 @@ file(GLOB_RECURSE TR_CLIENT_LIBRARY_SOURCE
     "src/client/canvas/*.cpp"
     "src/client/cssom/*.cpp"
     "src/client/dom/*.cpp"
+    "src/client/frame/*.cpp"
     "src/client/graphics/*.cpp"
     "src/client/html/*.cpp"
     "src/client/layout/*.cpp"
