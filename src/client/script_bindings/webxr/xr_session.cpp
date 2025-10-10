@@ -1,5 +1,6 @@
 #include <iostream>
 #include <client/scripting_base/threadsafe_function.hpp>
+#include <client/scripting_base/v8_utils.hpp>
 
 #include "./xr_session.hpp"
 #include "./xr_space.hpp"
@@ -129,13 +130,10 @@ namespace script_bindings
 
           TryCatch try_catch(isolate);
           auto r = callback->Call(context, recv, argc, argv);
-          if (r.IsEmpty())
+          if (r.IsEmpty() || try_catch.HasCaught())
           {
-            Local<String> error_string = try_catch.Exception().As<String>();
-            String::Utf8Value error_utf8(isolate, error_string);
-            string error_str = "Failed to invoke frame callback: " + string(*error_utf8);
-            isolate->ThrowException(Exception::Error(
-              XRSession::MakeMethodError(isolate, "requestAnimationFrame", error_str.c_str())));
+            string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
+            cerr << "Failed to execute frame callback at 'XRSession': " << message << endl;
           }
           else
           {

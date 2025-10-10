@@ -229,8 +229,8 @@ namespace script_bindings
         return;
       }
 
-      // TODO(yorkie): Get actual viewport from the XRWebGLLayer and XRView
-      info.GetReturnValue().SetNull();
+      auto viewport = handle()->getViewport(current_view->handle());
+      info.GetReturnValue().Set(XRViewport::NewInstance(isolate, viewport));
     }
   }
 }

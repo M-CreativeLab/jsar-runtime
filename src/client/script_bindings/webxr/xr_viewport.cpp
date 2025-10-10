@@ -8,6 +8,7 @@ namespace script_bindings
 {
   namespace webxr_bindings
   {
+    // static
     void XRViewport::ConfigureFunctionTemplate(Isolate *isolate, Local<FunctionTemplate> tpl)
     {
       HandleScope scope(isolate);
@@ -18,6 +19,12 @@ namespace script_bindings
       InstanceReadonlyAccessor(isolate, instance, "y", &XRViewport::YGetter);
       InstanceReadonlyAccessor(isolate, instance, "width", &XRViewport::WidthGetter);
       InstanceReadonlyAccessor(isolate, instance, "height", &XRViewport::HeightGetter);
+    }
+
+    // static
+    v8::Local<v8::Object> XRViewport::NewInstance(v8::Isolate *isolate, const client_xr::XRViewport &viewport)
+    {
+      return XRViewportBase::NewInstance(isolate, make_shared<client_xr::XRViewport>(viewport));
     }
 
     XRViewport::XRViewport(Isolate *isolate, const FunctionCallbackInfo<Value> &args)

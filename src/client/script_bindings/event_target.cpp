@@ -1,4 +1,8 @@
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <client/scripting_base/v8_utils.hpp>
+
 #include "./event_target.hpp"
 #include "./event.hpp"
 
@@ -48,14 +52,16 @@ namespace script_bindings
         Local<Object> eventObj = Event::GetOrNewInstance(isolate, event);
         if (!eventObj.IsEmpty())
         {
+          constexpr int argc = 1;
+          Local<Value> argv[argc] = {eventObj};
+
           TryCatch try_catch(isolate);
-          Local<Value> argv[] = {eventObj};
-          MaybeLocal<Value> res = func->Call(context, Null(isolate), 1, argv);
+          // TODO(yorkie): Use proper 'this' value
+          MaybeLocal<Value> res = func->Call(context, Null(isolate), argc, argv);
           if (res.IsEmpty() || try_catch.HasCaught())
           {
-            String::Utf8Value error(isolate, try_catch.Exception());
-            cerr << "Failed to dispatch event '" << event->typeStr()
-                 << "': " << (*error ? *error : "Unknown error") << endl;
+            string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
+            cerr << "Failed to dispatch event '" << event->typeStr() << "': " << message << endl;
           }
         }
       }

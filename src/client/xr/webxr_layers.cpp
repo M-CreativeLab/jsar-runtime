@@ -26,6 +26,11 @@ namespace client_xr
   {
   }
 
+  XRViewport &XRWebGLLayer::getViewport(std::shared_ptr<XRView> view)
+  {
+    return view->viewport();
+  }
+
   XRCompositionLayer::XRCompositionLayer(shared_ptr<XRSession> session)
       : XRLayer(session)
   {

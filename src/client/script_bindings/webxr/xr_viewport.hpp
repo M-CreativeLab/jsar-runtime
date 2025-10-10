@@ -26,6 +26,7 @@ namespace script_bindings
         return "XRViewport";
       }
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
+      static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate, const client_xr::XRViewport &viewport);
 
     public:
       XRViewport(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

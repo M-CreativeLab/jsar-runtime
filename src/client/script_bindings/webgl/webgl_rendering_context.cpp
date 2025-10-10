@@ -820,43 +820,307 @@ namespace script_bindings
     void WebGLRenderingContext::AttachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "attachShader", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "attachShader", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "attachShader", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!WebGLShader::IsInstanceOf(isolate, info[1]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "attachShader", "second argument must be a WebGLShader object")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "attachShader", "invalid WebGLProgram object")));
+        return;
+      }
+
+      auto shaderObj = info[1]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "attachShader", "invalid WebGLShader object")));
+        return;
+      }
+
+      handle()->attachShader(programBinding->handle(), shaderBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::DetachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "detachShader", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "detachShader", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "detachShader", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!WebGLShader::IsInstanceOf(isolate, info[1]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "detachShader", "second argument must be a WebGLShader object")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "detachShader", "invalid WebGLProgram object")));
+        return;
+      }
+
+      auto shaderObj = info[1]->ToObject(context).ToLocalChecked();
+      auto shaderBinding = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shaderBinding == nullptr || !shaderBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "detachShader", "invalid WebGLShader object")));
+        return;
+      }
+
+      handle()->detachShader(programBinding->handle(), shaderBinding->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BindAttribLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bindAttribLocation", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 3)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindAttribLocation", "3 arguments required, but only fewer present")));
+        return;
+      }
+      if (!WebGLProgram::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindAttribLocation", "first argument must be a WebGLProgram object")));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindAttribLocation", "second argument must be a number")));
+        return;
+      }
+      if (!info[2]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindAttribLocation", "third argument must be a string")));
+        return;
+      }
+
+      auto programObj = info[0]->ToObject(context).ToLocalChecked();
+      auto programBinding = WebGLProgram::Unwrap(isolate, programObj);
+      if (programBinding == nullptr || !programBinding->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindAttribLocation", "invalid WebGLProgram object")));
+        return;
+      }
+
+      int index = info[1]->Int32Value(context).FromMaybe(0);
+      auto name_utf8 = String::Utf8Value(isolate, info[2]);
+      string name = *name_utf8;
+      handle()->bindAttribLocation(programBinding->handle(), index, name);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BindBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bindBuffer", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindBuffer", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindBuffer", "first argument must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLBufferBindingTarget bufferTarget;
+      {
+        int intValue = info[0]->Int32Value(context).FromMaybe(0);
+        bufferTarget = static_cast<client_graphics::WebGLBufferBindingTarget>(intValue);
+      }
+
+      if (info[1]->IsNull())
+      {
+        handle()->bindBuffer(bufferTarget, nullptr);
+      }
+      else if (WebGLBuffer::IsInstanceOf(isolate, info[1]))
+      {
+        auto bufferObj = info[1]->ToObject(context).ToLocalChecked();
+        auto bufferBinding = WebGLBuffer::Unwrap(isolate, bufferObj);
+        if (bufferBinding == nullptr || !bufferBinding->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "bindBuffer", "invalid WebGLBuffer object")));
+          return;
+        }
+        else
+        {
+          handle()->bindBuffer(bufferTarget, bufferBinding->handle());
+        }
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindBuffer", "second argument must be a WebGLBuffer or null")));
+        return;
+      }
+
+      // Always return undefined
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BindFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bindFramebuffer", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindFramebuffer", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindFramebuffer", "first argument must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferBindingTarget framebufferTarget;
+      {
+        int intValue = info[0]->Int32Value(context).FromMaybe(0);
+        framebufferTarget = static_cast<client_graphics::WebGLFramebufferBindingTarget>(intValue);
+      }
+
+      if (info[1]->IsNull())
+      {
+        handle()->bindFramebuffer(framebufferTarget, nullptr);
+      }
+      else if (WebGLFramebuffer::IsInstanceOf(isolate, info[1]))
+      {
+        auto framebufferObj = info[1]->ToObject(context).ToLocalChecked();
+        auto framebufferBinding = WebGLFramebuffer::Unwrap(isolate, framebufferObj);
+        if (framebufferBinding == nullptr || !framebufferBinding->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "bindFramebuffer", "invalid WebGLFramebuffer object")));
+          return;
+        }
+        else
+        {
+          handle()->bindFramebuffer(framebufferTarget, framebufferBinding->handle());
+        }
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindFramebuffer", "second argument must be a WebGLFramebuffer or null")));
+        return;
+      }
+
+      // Always return undefined
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BindRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      isolate->ThrowException(Exception::TypeError(
-        MakeMethodError(isolate, "bindRenderbuffer", "not implemented")));
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindRenderbuffer", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindRenderbuffer", "first argument must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLRenderbufferBindingTarget renderbufferTarget;
+      {
+        int intValue = info[0]->Int32Value(context).FromMaybe(0);
+        renderbufferTarget = static_cast<client_graphics::WebGLRenderbufferBindingTarget>(intValue);
+      }
+
+      if (info[1]->IsNull())
+      {
+        handle()->bindRenderbuffer(renderbufferTarget, nullptr);
+      }
+      else if (WebGLRenderbuffer::IsInstanceOf(isolate, info[1]))
+      {
+        auto renderbufferObj = info[1]->ToObject(context).ToLocalChecked();
+        auto renderbufferBinding = WebGLRenderbuffer::Unwrap(isolate, renderbufferObj);
+        if (renderbufferBinding == nullptr || !renderbufferBinding->hasData())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "bindRenderbuffer", "invalid WebGLRenderbuffer object")));
+          return;
+        }
+        else
+        {
+          handle()->bindRenderbuffer(renderbufferTarget, renderbufferBinding->handle());
+        }
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindRenderbuffer", "second argument must be a WebGLRenderbuffer or null")));
+        return;
+      }
+
+      // Always return undefined
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::BindTexture(const FunctionCallbackInfo<Value> &info)
@@ -917,6 +1181,34 @@ namespace script_bindings
     void WebGLRenderingContext::BufferData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferData", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferData", "first argument must be a number")));
+        return;
+      }
+      if (!info[1]->IsArrayBuffer() && !info[1]->IsTypedArray() && !info[1]->IsNull())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bufferData", "second argument must be an ArrayBuffer, TypedArray, or null")));
+        return;
+      }
+
+      client_graphics::WebGLBufferBindingTarget bufferTarget;
+      {
+        int intValue = info[0]->Int32Value(context).FromMaybe(0);
+        bufferTarget = static_cast<client_graphics::WebGLBufferBindingTarget>(intValue);
+      }
+
       isolate->ThrowException(Exception::TypeError(
         MakeMethodError(isolate, "bufferData", "not implemented")));
     }
