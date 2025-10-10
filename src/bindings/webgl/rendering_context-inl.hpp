@@ -79,6 +79,7 @@ namespace webgl
                                                                      getDrawingBufferWidth(),
                                                                      getDrawingBufferHeight());
       jsThis.Set("_screenCanvas", canvas);
+      jsThis.Set("canvas", canvas); // Also set standard WebGL 'canvas' property
     }
     else if (
       sourceType == WebGLRenderingContextSourceType::kCanvas ||
