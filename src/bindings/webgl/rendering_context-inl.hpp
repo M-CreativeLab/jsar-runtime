@@ -168,7 +168,6 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-
     auto &contextAttributes = glContext_->contextAttributes;
     Napi::Object attribs = Napi::Object::New(env);
     attribs.Set("alpha", Napi::Boolean::New(env, contextAttributes.alpha));
