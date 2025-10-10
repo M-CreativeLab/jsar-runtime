@@ -1,5 +1,10 @@
 #include "./webgl_rendering_context.hpp"
 #include "./shader.hpp"
+#include "./program.hpp"
+#include "./buffer.hpp"
+#include "./texture.hpp"
+#include "./renderbuffer.hpp"
+#include "./framebuffer.hpp"
 #include "./extensions/all.hpp"
 
 namespace script_bindings
@@ -815,189 +820,151 @@ namespace script_bindings
     void WebGLRenderingContext::AttachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
-      {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto shader = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program && shader)
-        {
-          // self->handle()->attachShader(program, shader);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "attachShader", "not implemented")));
     }
 
     void WebGLRenderingContext::DetachShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsObject() && info[1]->IsObject())
-      {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        auto shader = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (program && shader)
-        {
-          // self->handle()->DetachShader(program, shader);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "detachShader", "not implemented")));
     }
 
     void WebGLRenderingContext::BindAttribLocation(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsNumber() && info[2]->IsString())
-      {
-        auto program = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        int index = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        String::Utf8Value name(isolate, info[2]);
-        if (program && *name)
-        {
-          // self->handle()->BindAttribLocation(program, index, *name);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bindAttribLocation", "not implemented")));
     }
 
     void WebGLRenderingContext::BindBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto buffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (buffer)
-        {
-          // self->handle()->BindBuffer(target, buffer);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bindBuffer", "not implemented")));
     }
 
     void WebGLRenderingContext::BindFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto framebuffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (framebuffer)
-        {
-          // self->handle()->BindFramebuffer(target, framebuffer);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bindFramebuffer", "not implemented")));
     }
 
     void WebGLRenderingContext::BindRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto renderbuffer = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (renderbuffer)
-        {
-          // self->handle()->BindRenderbuffer(target, renderbuffer);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bindRenderbuffer", "not implemented")));
     }
 
     void WebGLRenderingContext::BindTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 2 && info[0]->IsNumber() && info[1]->IsObject())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 2)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto texture = Unwrap(isolate, info[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (texture)
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindTexture", "2 arguments required, but only fewer present")));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindTexture", "first argument must be a number")));
+        return;
+      }
+
+      client_graphics::WebGLTextureTarget textureTarget;
+      {
+        int intValue = info[0]->Int32Value(context).FromMaybe(0);
+        textureTarget = static_cast<client_graphics::WebGLTextureTarget>(intValue);
+      }
+
+      if (info[1]->IsNull())
+      {
+        handle()->bindTexture(textureTarget, nullptr);
+      }
+      else if (WebGLTexture::IsInstanceOf(isolate, info[1]))
+      {
+        auto textureObj = info[1]->ToObject(context).ToLocalChecked();
+        auto textureBinding = WebGLTexture::Unwrap(isolate, textureObj);
+        if (textureBinding == nullptr || !textureBinding->hasData())
         {
-          // self->handle()->BindTexture(target, texture);
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "bindTexture", "invalid WebGLTexture object")));
+          return;
+        }
+        else
+        {
+          handle()->bindTexture(textureTarget, textureBinding->handle());
         }
       }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindTexture", "second argument must be a WebGLTexture or null")));
+        return;
+      }
+
+      info.GetReturnValue().SetUndefined();
     }
 
     // Buffer operations
     void WebGLRenderingContext::BufferData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[2]->IsNumber())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int usage = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-
-        if (info[1]->IsTypedArray() || info[1]->IsArrayBuffer())
-        {
-          // Handle TypedArray or ArrayBuffer
-          // self->handle()->bufferData(target, data, usage);
-        }
-        else if (info[1]->IsNumber())
-        {
-          int size = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-          // self->handle()->bufferData(target, size, usage);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bufferData", "not implemented")));
     }
 
     void WebGLRenderingContext::BufferSubData(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsNumber() && info[1]->IsNumber())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int offset = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-
-        if (info[2]->IsTypedArray() || info[2]->IsArrayBuffer())
-        {
-          // Handle TypedArray or ArrayBuffer
-          // self->handle()->bufferSubData(target, offset, data);
-        }
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "bufferSubData", "not implemented")));
     }
 
     // Framebuffer operations
     void WebGLRenderingContext::FramebufferRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 4)
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int attachment = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int renderbuffertarget = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto renderbuffer = info[3]->IsObject() ? Unwrap(isolate, info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()) : nullptr;
-        // self->handle()->framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "framebufferRenderbuffer", "not implemented")));
     }
 
     void WebGLRenderingContext::FramebufferTexture2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 5)
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int attachment = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int textarget = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        auto texture = info[3]->IsObject() ? Unwrap(isolate, info[3]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()) : nullptr;
-        int level = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // self->handle()->framebufferTexture2D(target, attachment, textarget, texture, level);
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "framebufferTexture2D", "not implemented")));
     }
 
     void WebGLRenderingContext::CheckFramebufferStatus(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // int result = self->handle()->checkFramebufferStatus(target);
-        // info.GetReturnValue().Set(Integer::New(isolate, result));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "checkFramebufferStatus", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "checkFramebufferStatus", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int target = info[0]->Uint32Value(context).FromMaybe(0);
+      int status = handle()->checkFramebufferStatus(static_cast<client_graphics::WebGLFramebufferBindingTarget>(target));
+      info.GetReturnValue().Set(Integer::New(isolate, status));
     }
 
     void WebGLRenderingContext::Clear(const FunctionCallbackInfo<Value> &info)
@@ -1252,82 +1219,102 @@ namespace script_bindings
     void WebGLRenderingContext::CompileShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsObject())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        auto shader = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        if (shader)
-        {
-          // self->handle()->compileShader(shader);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "compileShader", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!WebGLShader::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "compileShader", "first argument must be a WebGLShader")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto shaderObj = info[0]->ToObject(context).ToLocalChecked();
+      auto shader = WebGLShader::Unwrap(isolate, shaderObj);
+      if (shader == nullptr || !shader->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "compileShader", "invalid WebGLShader object")));
+        return;
+      }
+
+      handle()->compileShader(shader->handle());
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::CreateProgram(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        auto program = self->handle()->createProgram();
-        // info.GetReturnValue().Set(Wrap(program));
-      }
+      HandleScope scope(isolate);
+
+      auto newProgram = handle()->createProgram();
+      info.GetReturnValue().Set(WebGLProgram::NewInstance(isolate, newProgram));
     }
 
     void WebGLRenderingContext::CreateShader(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 1 && info[0]->IsNumber())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 1)
       {
-        int type = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        // auto shader = self->handle()->createShader(type);
-        // info.GetReturnValue().Set(Wrap(shader));
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "createShader", "1 argument required, but only 0 present")));
+        return;
       }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "createShader", "first argument must be a number")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      int type = info[0]->Int32Value(context).FromMaybe(0);
+      auto newShader = handle()->createShader(static_cast<client_graphics::WebGLShaderType>(type));
+      info.GetReturnValue().Set(WebGLShader::NewInstance(isolate, newShader));
     }
 
     void WebGLRenderingContext::CreateBuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        auto buffer = self->handle()->createBuffer();
-        // info.GetReturnValue().Set(Wrap(buffer));
-      }
+      HandleScope scope(isolate);
+
+      auto newBuffer = handle()->createBuffer();
+      info.GetReturnValue().Set(WebGLBuffer::NewInstance(isolate, newBuffer));
     }
 
     void WebGLRenderingContext::CreateFramebuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        auto framebuffer = self->handle()->createFramebuffer();
-        // info.GetReturnValue().Set(Wrap(framebuffer));
-      }
+      HandleScope scope(isolate);
+
+      auto newFramebuffer = handle()->createFramebuffer();
+      info.GetReturnValue().Set(WebGLFramebuffer::NewInstance(isolate, newFramebuffer));
     }
 
     void WebGLRenderingContext::CreateRenderbuffer(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        auto renderbuffer = self->handle()->createRenderbuffer();
-        // info.GetReturnValue().Set(Wrap(renderbuffer));
-      }
+      HandleScope scope(isolate);
+
+      auto newRenderbuffer = handle()->createRenderbuffer();
+      info.GetReturnValue().Set(WebGLRenderbuffer::NewInstance(isolate, newRenderbuffer));
     }
 
     void WebGLRenderingContext::CreateTexture(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle())
-      {
-        auto texture = self->handle()->createTexture();
-        // info.GetReturnValue().Set(Wrap(texture));
-      }
+      HandleScope scope(isolate);
+
+      auto newTexture = handle()->createTexture();
+      info.GetReturnValue().Set(WebGLTexture::NewInstance(isolate, newTexture));
     }
 
     void WebGLRenderingContext::DeleteBuffer(const FunctionCallbackInfo<Value> &info)

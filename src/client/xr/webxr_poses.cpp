@@ -4,45 +4,49 @@
 #include "./webxr_session.hpp"
 #include "./webxr_frame.hpp"
 
+using namespace std;
+
 namespace client_xr
 {
-  XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
+  XRPose::XRPose(shared_ptr<XRSession> session, shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
       : session_(session)
       , device_(session->device())
-      , frameRequestData_(frame->frameRequestData_)
       , transform(transformationMatrix)
       , emulatedPosition(false)
   {
   }
 
-  XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform)
+  XRPose::XRPose(shared_ptr<XRSession> session, shared_ptr<XRFrame> frame, XRRigidTransform &transform)
       : session_(session)
       , device_(session->device())
-      , frameRequestData_(frame->frameRequestData_)
       , transform(transform)
       , emulatedPosition(false)
   {
   }
 
-  XRViewerPose::XRViewerPose(std::shared_ptr<XRSession> session,
-                             std::shared_ptr<XRFrame> frame,
+  XRViewerPose::XRViewerPose(shared_ptr<XRSession> session,
+                             shared_ptr<XRFrame> frame,
                              glm::mat4 &transformationMatrix,
-                             std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
+                             shared_ptr<XRReferenceSpace> baseReferenceSpace)
       : XRPose(session, frame, transformationMatrix)
   {
-    setupViews(baseReferenceSpace);
+    setupViews(frame, baseReferenceSpace);
   }
-  XRViewerPose::XRViewerPose(std::shared_ptr<XRSession> session,
-                             std::shared_ptr<XRFrame> frame,
+  XRViewerPose::XRViewerPose(shared_ptr<XRSession> session,
+                             shared_ptr<XRFrame> frame,
                              XRRigidTransform &transform,
-                             std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
+                             shared_ptr<XRReferenceSpace> baseReferenceSpace)
       : XRPose(session, frame, transform)
   {
-    setupViews(baseReferenceSpace);
+    setupViews(frame, baseReferenceSpace);
   }
 
-  void XRViewerPose::setupViews(std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
+  void XRViewerPose::setupViews(shared_ptr<XRFrame> frame,
+                                shared_ptr<XRReferenceSpace> baseReferenceSpace)
   {
+    // Use the frame request data from the frame
+    const xr::TrXRFrameRequest &frameRequestData = frame->frameRequestData_;
+
     /**
      * Create views.
      *
@@ -52,25 +56,25 @@ namespace client_xr
     auto device = session_->device();
     if (device->getDeviceInit().renderedAsMultipass())
     {
-      auto &viewData = frameRequestData_->views[frameRequestData_->viewIndex];
-      views_.push_back(std::make_shared<XRView>(viewData, session_, baseReferenceSpace));
+      auto &viewData = frameRequestData.views[frameRequestData.viewIndex];
+      views_.push_back(make_shared<XRView>(viewData, session_, baseReferenceSpace));
     }
     else
     {
       for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
       {
-        auto &viewData = frameRequestData_->views[viewIndex];
-        views_.push_back(std::make_shared<XRView>(viewData, session_, baseReferenceSpace));
+        const auto &viewData = frameRequestData.views[viewIndex];
+        views_.push_back(make_shared<XRView>(viewData, session_, baseReferenceSpace));
       }
     }
   }
 
-  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
+  XRJointPose::XRJointPose(shared_ptr<XRSession> session, shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
       : XRPose(session, frame, transformationMatrix)
   {
   }
 
-  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform)
+  XRJointPose::XRJointPose(shared_ptr<XRSession> session, shared_ptr<XRFrame> frame, XRRigidTransform &transform)
       : XRPose(session, frame, transform)
   {
   }

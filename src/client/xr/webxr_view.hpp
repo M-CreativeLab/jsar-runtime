@@ -27,7 +27,7 @@ namespace client_xr
      * @param session The session that the view belongs to.
      * @param baseReferenceSpace The reference space that the view is based on.
      */
-    XRView(xr::TrXRView &viewData,
+    XRView(const xr::TrXRView &viewData,
            std::shared_ptr<XRSession> session,
            std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 

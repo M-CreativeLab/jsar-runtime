@@ -13,6 +13,8 @@ namespace script_bindings
     {
       EscapableHandleScope scope(isolate);
       Local<Context> context = isolate->GetCurrentContext();
+
+      cerr << "MakeDOMPointObject: " << x << ", " << y << ", " << z << ", " << w << endl;
       // TODO(yorkie): Implement DOMPoint instead of a plain object
       Local<Object> point = Object::New(isolate);
       point->Set(context,
@@ -50,12 +52,13 @@ namespace script_bindings
 
       // Set up the instance template
       Local<ObjectTemplate> instance = tpl->InstanceTemplate();
+      Local<ObjectTemplate> prototype = tpl->PrototypeTemplate();
 
       // Add property accessors
       InstanceReadonlyAccessor(isolate, instance, "position", &XRRigidTransform::PositionGetter);
       InstanceReadonlyAccessor(isolate, instance, "orientation", &XRRigidTransform::OrientationGetter);
       InstanceReadonlyAccessor(isolate, instance, "matrix", &XRRigidTransform::MatrixGetter);
-      InstanceReadonlyAccessor(isolate, instance, "inverse", &XRRigidTransform::InverseGetter);
+      InstanceReadonlyAccessor(isolate, prototype, "inverse", &XRRigidTransform::InverseGetter);
     }
 
     Local<Object> XRRigidTransform::NewInstance(Isolate *isolate, const client_xr::XRRigidTransform &transform)
@@ -144,7 +147,6 @@ namespace script_bindings
       if (args.Length() == 0)
       {
         setData(make_shared<client_xr::XRRigidTransform>());
-        return;
       }
       else if (args.Length() == 1)
       {
@@ -169,14 +171,12 @@ namespace script_bindings
 
           float *values = static_cast<float *>(array->Buffer()->GetBackingStore()->Data());
           setData(make_shared<client_xr::XRRigidTransform>(glm::make_mat4(values)));
-          return;
         }
         else if (firstArg->IsObject())
         {
           glm::vec3 position(0.0f);
           UpdatePositionFromObject(isolate, firstArg.As<Object>(), position);
           setData(make_shared<client_xr::XRRigidTransform>(position));
-          return;
         }
         else
         {
@@ -208,6 +208,8 @@ namespace script_bindings
                                "Illegal constructor arguments. Expected zero, one, or two arguments.")));
         return;
       }
+
+      assert(hasData() && "setData should have been called by now");
     }
 
     // Property getters

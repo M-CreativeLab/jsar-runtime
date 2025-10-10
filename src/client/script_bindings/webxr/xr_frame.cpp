@@ -128,8 +128,7 @@ namespace script_bindings
       }
       else
       {
-        auto jsViewerPose = XRViewerPose::GetOrNewInstance(isolate, viewerPose);
-        info.GetReturnValue().Set(jsViewerPose);
+        info.GetReturnValue().Set(XRViewerPose::NewInstance(isolate, viewerPose));
         return;
       }
     }

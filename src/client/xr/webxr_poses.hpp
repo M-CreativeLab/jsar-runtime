@@ -21,7 +21,6 @@ namespace client_xr
   protected:
     std::shared_ptr<XRSession> session_;
     std::shared_ptr<XRDeviceClient> device_;
-    xr::TrXRFrameRequest *frameRequestData_;
   };
 
   class XRViewerPose : public XRPose
@@ -37,7 +36,7 @@ namespace client_xr
     }
 
   private:
-    void setupViews(std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
+    void setupViews(std::shared_ptr<XRFrame> frame, std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 
   private:
     std::vector<std::shared_ptr<XRView>> views_;

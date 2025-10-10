@@ -220,11 +220,11 @@ namespace xr
     }
 
   public:
-    inline glm::mat4 getViewMatrix()
+    inline glm::mat4 getViewMatrix() const
     {
       return glm::make_mat4(viewMatrix);
     }
-    inline glm::mat4 getProjectionMatrix()
+    inline glm::mat4 getProjectionMatrix() const
     {
       return glm::make_mat4(projectionMatrix);
     }

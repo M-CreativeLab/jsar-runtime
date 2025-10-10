@@ -73,6 +73,7 @@ namespace client_xr
   {
     friend class XRSession;
     friend class XRPose;
+    friend class XRViewerPose;
     friend class XRInputSource;
 
   public:
@@ -166,7 +167,7 @@ namespace client_xr
     bool animationFrame_;
     std::shared_ptr<XRSession> session_;
     std::shared_ptr<XRDeviceClient> device_;
-    xr::TrXRFrameRequest *frameRequestData_;
+    xr::TrXRFrameRequest frameRequestData_;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime_;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime_;
 

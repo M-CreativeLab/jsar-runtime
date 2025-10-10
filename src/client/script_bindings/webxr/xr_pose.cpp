@@ -37,16 +37,8 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      XRPose *pose = Unwrap(isolate, info.This());
-      if (pose == nullptr || pose->handle() == nullptr)
-      {
-        info.GetReturnValue().Set(Boolean::New(isolate, false));
-        return;
-      }
-
-      bool emulatedPosition = pose->handle()->emulatedPosition;
-      info.GetReturnValue().Set(Boolean::New(isolate, emulatedPosition));
+      info.GetReturnValue().Set(Boolean::New(isolate,
+                                             handle()->emulatedPosition));
     }
 
     // XRViewerPose implementation
