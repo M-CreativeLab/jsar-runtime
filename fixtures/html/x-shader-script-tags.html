@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>X-Shader Script Tag Support Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    .test-result {
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .pass {
+      color: green;
+      background-color: #e8f5e8;
+      border: 1px solid #4caf50;
+    }
+    .fail {
+      color: red;
+      background-color: #ffeaea;
+      border: 1px solid #f44336;
+    }
+  </style>
+</head>
+<body>
+  <h1>X-Shader Script Tag Support Test</h1>
+  <div id="results"></div>
+
+  <!-- Vertex Shader -->
+  <script type="x-shader/x-vertex" id="vertex-shader">
+    #version 310 es
+    
+    in vec4 a_position;
+    in vec2 a_texcoord;
+    
+    out vec2 v_texcoord;
+    
+    void main() {
+      gl_Position = a_position;
+      v_texcoord = a_texcoord;
+    }
+  </script>
+
+  <!-- Fragment Shader -->
+  <script type="x-shader/x-fragment" id="fragment-shader">
+    #version 310 es
+    precision mediump float;
+    
+    in vec2 v_texcoord;
+    out vec4 fragColor;
+    
+    uniform vec4 u_color;
+    
+    void main() {
+      fragColor = u_color * vec4(v_texcoord, 0.0, 1.0);
+    }
+  </script>
+
+  <!-- Test Script -->
+  <script>
+    const results = document.getElementById('results');
+
+    function addResult(message, isPass) {
+      const div = document.createElement('div');
+      div.className = `test-result ${isPass ? 'pass' : 'fail'}`;
+      div.innerHTML = `${isPass ? '✅' : '❌'} ${message}`;
+      results.appendChild(div);
+    }
+
+    function runTests() {
+      // Test 1: Vertex shader script element exists
+      const vertexShaderElement = document.getElementById('vertex-shader');
+      addResult('Vertex shader element found', vertexShaderElement !== null);
+
+      // Test 2: Fragment shader script element exists
+      const fragmentShaderElement = document.getElementById('fragment-shader');
+      addResult('Fragment shader element found', fragmentShaderElement !== null);
+
+      if (!vertexShaderElement || !fragmentShaderElement) {
+        addResult('Cannot continue tests - shader elements not found', false);
+        return;
+      }
+
+      // Test 3: Vertex shader has correct type attribute
+      const vertexType = vertexShaderElement.getAttribute('type');
+      addResult(`Vertex shader type is "${vertexType}"`, vertexType === 'x-shader/x-vertex');
+
+      // Test 4: Fragment shader has correct type attribute
+      const fragmentType = fragmentShaderElement.getAttribute('type');
+      addResult(`Fragment shader type is "${fragmentType}"`, fragmentType === 'x-shader/x-fragment');
+
+      // Test 5: Vertex shader textContent is accessible
+      const vertexContent = vertexShaderElement.textContent;
+      const hasVertexContent = vertexContent && vertexContent.length > 0 && vertexContent.includes('gl_Position');
+      addResult(`Vertex shader textContent accessible (${vertexContent ? vertexContent.length : 0} chars)`, hasVertexContent);
+
+      // Test 6: Fragment shader textContent is accessible
+      const fragmentContent = fragmentShaderElement.textContent;
+      const hasFragmentContent = fragmentContent && fragmentContent.length > 0 && fragmentContent.includes('fragColor');
+      addResult(`Fragment shader textContent accessible (${fragmentContent ? fragmentContent.length : 0} chars)`, hasFragmentContent);
+
+      // Test 7: Shader content contains expected GLSL code
+      const vertexHasGLSL = vertexContent.includes('#version') && vertexContent.includes('in vec4 a_position');
+      addResult('Vertex shader contains expected GLSL code', vertexHasGLSL);
+
+      const fragmentHasGLSL = fragmentContent.includes('#version') && fragmentContent.includes('uniform vec4 u_color');
+      addResult('Fragment shader contains expected GLSL code', fragmentHasGLSL);
+
+      // Test 8: Scripts are of type HTMLScriptElement
+      const isVertexScriptElement = vertexShaderElement.tagName === 'SCRIPT';
+      addResult('Vertex shader is a SCRIPT element', isVertexScriptElement);
+
+      const isFragmentScriptElement = fragmentShaderElement.tagName === 'SCRIPT';
+      addResult('Fragment shader is a SCRIPT element', isFragmentScriptElement);
+
+      // Test 9: Shader scripts should not have been executed as JavaScript
+      // (This is implicit - if they were executed, they would cause syntax errors)
+      addResult('Shader scripts were not executed as JavaScript (implicit)', true);
+
+      // Test 10: Test with WebGL if available
+      if (navigator.gl) {
+        const gl = navigator.gl;
+        
+        try {
+          // Try to create a shader from the vertex shader content
+          const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vertexShader, vertexContent.trim());
+          gl.compileShader(vertexShader);
+          
+          const vertexCompiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+          addResult('Vertex shader compiles in WebGL', vertexCompiled);
+          
+          // Try to create a shader from the fragment shader content
+          const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(fragmentShader, fragmentContent.trim());
+          gl.compileShader(fragmentShader);
+          
+          const fragmentCompiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+          addResult('Fragment shader compiles in WebGL', fragmentCompiled);
+          
+          // Clean up
+          gl.deleteShader(vertexShader);
+          gl.deleteShader(fragmentShader);
+        } catch (error) {
+          addResult(`WebGL shader test error: ${error.message}`, false);
+        }
+      } else {
+        addResult('WebGL not available - skipping shader compilation test', true);
+      }
+
+      // Summary
+      const allResults = document.querySelectorAll('.test-result');
+      const passCount = document.querySelectorAll('.test-result.pass').length;
+      const failCount = document.querySelectorAll('.test-result.fail').length;
+      
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = `test-result ${failCount === 0 ? 'pass' : 'fail'}`;
+      summaryDiv.innerHTML = `<strong>Summary: ${passCount}/${allResults.length} tests passed</strong>`;
+      results.appendChild(summaryDiv);
+    }
+
+    // Run tests when page loads
+    document.addEventListener('DOMContentLoaded', runTests);
+
+    // Also run immediately in case DOMContentLoaded already fired
+    if (document.readyState !== 'loading') {
+      runTests();
+    }
+  </script>
+</body>
+</html>

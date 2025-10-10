@@ -5,6 +5,93 @@ JSAR implements the [WebGL][] and [WebGL 2.0][WebGL2] standards, and also provid
 [WebGL]: https://registry.khronos.org/webgl/specs/latest/1.0/
 [WebGL2]: https://registry.khronos.org/webgl/specs/latest/2.0/
 
+## Shader Script Tags
+
+JSAR supports embedding shader source code in HTML using `<script>` tags with shader MIME types. This is a common pattern in WebGL applications that allows developers to keep shader code separate from JavaScript while still being accessible from the HTML document.
+
+### Supported Shader Types
+
+The following shader script types are supported:
+
+- `x-shader/x-vertex` - For vertex shaders
+- `x-shader/x-fragment` - For fragment shaders
+
+These script tags are treated as data blocks and are **not executed as JavaScript**. The shader source code remains accessible via the `textContent` property of the script element.
+
+### Example Usage
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebGL Shader Example</title>
+  
+  <!-- Vertex Shader -->
+  <script type="x-shader/x-vertex" id="vertex-shader">
+    #version 310 es
+    
+    in vec4 a_position;
+    in vec2 a_texcoord;
+    
+    out vec2 v_texcoord;
+    
+    void main() {
+      gl_Position = a_position;
+      v_texcoord = a_texcoord;
+    }
+  </script>
+
+  <!-- Fragment Shader -->
+  <script type="x-shader/x-fragment" id="fragment-shader">
+    #version 310 es
+    precision mediump float;
+    
+    in vec2 v_texcoord;
+    out vec4 fragColor;
+    
+    uniform sampler2D u_texture;
+    
+    void main() {
+      fragColor = texture(u_texture, v_texcoord);
+    }
+  </script>
+
+  <script>
+    // Access shader source code from JavaScript
+    const vertexShaderSource = document.getElementById('vertex-shader').textContent;
+    const fragmentShaderSource = document.getElementById('fragment-shader').textContent;
+    
+    // Use with WebGL
+    const gl = navigator.gl;
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexShaderSource);
+    gl.compileShader(vertexShader);
+    
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentShaderSource);
+    gl.compileShader(fragmentShader);
+    
+    // Link shaders into a program
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+  </script>
+</head>
+<body>
+</body>
+</html>
+```
+
+### Benefits
+
+Using shader script tags provides several advantages:
+
+- **Separation of Concerns**: Keep shader code separate from JavaScript logic
+- **Syntax Highlighting**: Many editors can provide GLSL syntax highlighting in these script tags
+- **Easy Maintenance**: Shader code is easier to locate and modify
+- **No String Escaping**: Avoid the need to escape special characters in shader strings
+
 ## Convention
 
 In this document, we will use the following convention to describe implementation status:

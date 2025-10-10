@@ -60,7 +60,9 @@ namespace dom
     }
     // TODO(yorkie): support "speculationrules"?
 
-    // By default, The embedded content is treated as a data block, and won't be processed by the browser.
+    // For all other types (including x-shader/x-vertex, x-shader/x-fragment, or any custom types),
+    // the embedded content is treated as a data block and won't be processed by the browser.
+    // The textContent remains accessible via JavaScript for custom processing (e.g., WebGL shaders).
   }
 
   void HTMLScriptElement::beforeLoadedCallback()

@@ -50,6 +50,20 @@ namespace dom
     {
       return type == "importmap";
     }
+    // Check if this is a shader script (x-shader/x-vertex or x-shader/x-fragment)
+    // These are treated as data blocks and not executed as JavaScript
+    inline bool isShaderScript()
+    {
+      return type.find("x-shader/") == 0;
+    }
+    // Check if this is a data block (non-executable script)
+    inline bool isDataBlock()
+    {
+      return !type.empty() &&
+             !isClassicScript() &&
+             !isModuleScript() &&
+             !isImportMap();
+    }
     inline void setAsync(bool value)
     {
       async = value;
