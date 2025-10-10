@@ -17,7 +17,7 @@ namespace script_bindings
   class EventTarget;
   using EventTargetBase = scripting_base::ObjectWrap<EventTarget, ::dom::DOMEventTarget>;
 
-  class EventListenersList : std::vector<std::shared_ptr<v8::Persistent<v8::Function>>>
+  class EventListenersList : std::vector<std::shared_ptr<v8::Global<v8::Function>>>
   {
   public:
     EventListenersList() = default;
@@ -32,7 +32,7 @@ namespace script_bindings
     size_t count() const;
     void addListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
     void removeListener(v8::Isolate *isolate, v8::Local<v8::Function> listener);
-    void dispatchEvent(v8::Isolate *isolate, std::shared_ptr<dom::Event> event);
+    void dispatchEvent(v8::Isolate *isolate, v8::Local<v8::Value> recv, std::shared_ptr<dom::Event> event);
   };
 
   class EventTarget : public EventTargetBase

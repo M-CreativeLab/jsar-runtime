@@ -18,7 +18,7 @@ namespace script_bindings
 
   void EventListenersList::addListener(v8::Isolate *isolate, v8::Local<v8::Function> listener)
   {
-    auto persistent = make_shared<v8::Persistent<v8::Function>>(isolate, listener);
+    auto persistent = make_shared<v8::Global<v8::Function>>(isolate, listener);
     this->emplace_back(persistent);
   }
 
@@ -38,31 +38,31 @@ namespace script_bindings
     }
   }
 
-  void EventListenersList::dispatchEvent(v8::Isolate *isolate, shared_ptr<dom::Event> event)
+  void EventListenersList::dispatchEvent(v8::Isolate *isolate, v8::Local<Value> recv, shared_ptr<dom::Event> event)
   {
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
 
+    // Wrap the native event into a V8 Event object
+    Local<Object> eventObj = Event::GetOrNewInstance(isolate, event);
+    if (eventObj.IsEmpty())
+      return;
+
+    // Call each listener with the event object
     for (const auto &listener : *this)
     {
       Local<Function> func = listener->Get(isolate);
       if (!func.IsEmpty())
       {
-        // Create a new Event object to pass to the listener
-        Local<Object> eventObj = Event::GetOrNewInstance(isolate, event);
-        if (!eventObj.IsEmpty())
-        {
-          constexpr int argc = 1;
-          Local<Value> argv[argc] = {eventObj};
+        constexpr int argc = 1;
+        Local<Value> argv[argc] = {eventObj};
 
-          TryCatch try_catch(isolate);
-          // TODO(yorkie): Use proper 'this' value
-          MaybeLocal<Value> res = func->Call(context, Null(isolate), argc, argv);
-          if (res.IsEmpty() || try_catch.HasCaught())
-          {
-            string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
-            cerr << "Failed to dispatch event '" << event->typeStr() << "': " << message << endl;
-          }
+        TryCatch try_catch(isolate);
+        MaybeLocal<Value> res = func->Call(context, recv, argc, argv);
+        if (res.IsEmpty() || try_catch.HasCaught())
+        {
+          string message = scripting_base::ReportExceptionToString(isolate, try_catch.Exception());
+          cerr << "Failed to dispatch event '" << event->typeStr() << "': " << message << endl;
         }
       }
     }
@@ -197,7 +197,9 @@ namespace script_bindings
       return;
 
     {
-      HandleScope scope(current_isolate_);
+      Isolate::Scope isolate_scope(current_isolate_);
+      HandleScope handle_scope(current_isolate_);
+
       Local<Context> context = current_isolate_->GetCurrentContext();
       string event_type = pending_event_->typeStr();
 
@@ -224,7 +226,7 @@ namespace script_bindings
         shared_lock<shared_mutex> lock(event_listeners_mutex_);
         auto listeners = event_listeners_.find(event_type);
         if (listeners != event_listeners_.end())
-          listeners->second.dispatchEvent(current_isolate_, pending_event_);
+          listeners->second.dispatchEvent(current_isolate_, value(), pending_event_);
       }
     }
     pending_event_.reset();

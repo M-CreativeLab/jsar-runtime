@@ -172,6 +172,9 @@ namespace dom
       , runtimeContext(runtimeContext)
   {
     assert(isolate_ != nullptr && "Failed to get the current V8 isolate.");
+
+    // Enable stack trace for uncaught exceptions
+    isolate_->SetCaptureStackTraceForUncaughtExceptions(true, 20, v8::StackTrace::kDetailed);
   }
 
   void DOMScriptingContext::enableDynamicImport()
