@@ -195,26 +195,14 @@ namespace webgl
     }
     int getDrawingBufferWidth()
     {
-      if (glContext_ == nullptr)
-      {
-        return 0;
-      }
       return glContext_->drawingBufferWidth();
     }
     int getDrawingBufferHeight()
     {
-      if (glContext_ == nullptr)
-      {
-        return 0;
-      }
       return glContext_->drawingBufferHeight();
     }
     bool isWebGL2Context()
     {
-      if (glContext_ == nullptr)
-      {
-        return false;
-      }
       return glContext_->isWebGL2();
     }
 
