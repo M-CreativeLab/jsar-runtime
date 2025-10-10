@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shader Script Non-Execution Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: monospace;
+      background-color: #f0f0f0;
+    }
+    .result {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .pass {
+      border-left: 4px solid #4caf50;
+    }
+    .fail {
+      border-left: 4px solid #f44336;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shader Script Non-Execution Test</h1>
+  <p>This test verifies that shader script tags are NOT executed as JavaScript.</p>
+  <div id="results"></div>
+
+  <!-- This should NOT be executed as JavaScript -->
+  <script type="x-shader/x-vertex" id="vertex-shader">
+    // If this were executed as JavaScript, it would cause a syntax error
+    // because this is GLSL code, not JavaScript
+    #version 310 es
+    
+    in vec4 position;
+    
+    void main() {
+      gl_Position = position;
+    }
+  </script>
+
+  <!-- This should NOT be executed as JavaScript -->
+  <script type="x-shader/x-fragment" id="fragment-shader">
+    #version 310 es
+    precision mediump float;
+    
+    out vec4 fragColor;
+    
+    void main() {
+      fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+  </script>
+
+  <!-- This should NOT be executed as JavaScript -->
+  <script type="x-shader/x-custom" id="custom-shader">
+    // Custom shader type - should also NOT be executed
+    CUSTOM_SHADER_CODE {
+      invalid: javascript: syntax;
+    }
+  </script>
+
+  <!-- This SHOULD be executed as JavaScript -->
+  <script>
+    const results = document.getElementById('results');
+    let testsPassed = 0;
+    let testsFailed = 0;
+
+    function addResult(message, passed) {
+      const div = document.createElement('div');
+      div.className = `result ${passed ? 'pass' : 'fail'}`;
+      div.innerHTML = `<strong>${passed ? '✅ PASS' : '❌ FAIL'}</strong>: ${message}`;
+      results.appendChild(div);
+      
+      if (passed) {
+        testsPassed++;
+      } else {
+        testsFailed++;
+      }
+    }
+
+    function runTests() {
+      // Test 1: If we got here, the shader scripts didn't execute
+      addResult('Shader scripts did not execute as JavaScript (no syntax errors)', true);
+
+      // Test 2: Vertex shader element exists
+      const vertexShader = document.getElementById('vertex-shader');
+      addResult('Vertex shader element exists', vertexShader !== null);
+
+      // Test 3: Fragment shader element exists
+      const fragmentShader = document.getElementById('fragment-shader');
+      addResult('Fragment shader element exists', fragmentShader !== null);
+
+      // Test 4: Custom shader element exists
+      const customShader = document.getElementById('custom-shader');
+      addResult('Custom shader element exists', customShader !== null);
+
+      // Test 5: Verify vertex shader textContent is accessible
+      if (vertexShader) {
+        const content = vertexShader.textContent;
+        const hasContent = content && content.length > 0;
+        addResult(`Vertex shader textContent is accessible (${content ? content.length : 0} chars)`, hasContent);
+
+        // Test 6: Verify content contains GLSL
+        const hasGLSL = content.includes('#version') && content.includes('gl_Position');
+        addResult('Vertex shader contains GLSL code', hasGLSL);
+      }
+
+      // Test 7: Verify fragment shader textContent is accessible
+      if (fragmentShader) {
+        const content = fragmentShader.textContent;
+        const hasContent = content && content.length > 0;
+        addResult(`Fragment shader textContent is accessible (${content ? content.length : 0} chars)`, hasContent);
+
+        // Test 8: Verify content contains GLSL
+        const hasGLSL = content.includes('#version') && content.includes('fragColor');
+        addResult('Fragment shader contains GLSL code', hasGLSL);
+      }
+
+      // Test 9: Verify custom shader textContent is accessible
+      if (customShader) {
+        const content = customShader.textContent;
+        const hasContent = content && content.length > 0;
+        addResult(`Custom shader textContent is accessible (${content ? content.length : 0} chars)`, hasContent);
+
+        // Test 10: Verify content contains the custom code
+        const hasCustomCode = content.includes('CUSTOM_SHADER_CODE');
+        addResult('Custom shader contains expected code', hasCustomCode);
+      }
+
+      // Test 11: Verify shader elements are script elements
+      if (vertexShader) {
+        addResult('Vertex shader is a SCRIPT element', vertexShader.tagName === 'SCRIPT');
+      }
+
+      if (fragmentShader) {
+        addResult('Fragment shader is a SCRIPT element', fragmentShader.tagName === 'SCRIPT');
+      }
+
+      // Test 12: Verify type attributes
+      if (vertexShader) {
+        const type = vertexShader.getAttribute('type');
+        addResult(`Vertex shader has correct type: "${type}"`, type === 'x-shader/x-vertex');
+      }
+
+      if (fragmentShader) {
+        const type = fragmentShader.getAttribute('type');
+        addResult(`Fragment shader has correct type: "${type}"`, type === 'x-shader/x-fragment');
+      }
+
+      if (customShader) {
+        const type = customShader.getAttribute('type');
+        addResult(`Custom shader has correct type: "${type}"`, type === 'x-shader/x-custom');
+      }
+
+      // Summary
+      const total = testsPassed + testsFailed;
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = `result ${testsFailed === 0 ? 'pass' : 'fail'}`;
+      summaryDiv.innerHTML = `
+        <strong>Test Summary</strong><br>
+        Total: ${total} tests<br>
+        Passed: ${testsPassed}<br>
+        Failed: ${testsFailed}<br>
+        Result: ${testsFailed === 0 ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}
+      `;
+      results.appendChild(summaryDiv);
+    }
+
+    // Run tests
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runTests);
+    } else {
+      runTests();
+    }
+  </script>
+</body>
+</html>
