@@ -2,45 +2,131 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Script Text Property Test</title>
+  <title>Test HTMLScriptElement.text Getter/Setter</title>
+  <style>
+    body { font-family: sans-serif; }
+    .result-pass { color: green; }
+    .result-fail { color: red; }
+    .result { margin-bottom: 4px; }
+    pre { background: #f6f8fa; padding: 6px 10px; border-radius: 3px; }
+  </style>
 </head>
 <body>
-  <script id="normalScript" type="text/javascript">
-  const a = 1;
-  const b = 2;
+  <h2>Test <code>HTMLScriptElement.text</code> Getter/Setter</h2>
+  <div id="results"></div>
+  <pre id="details"></pre>
+  <script id="script1" type="text/javascript">
+    // Hello from script1
+    var x = 42;
   </script>
-
-  <script id="moduleScript" type="module">
-  import foo from './foo.js';
-  </script>
-
-  <script id="emptyScript"></script>
-
   <script>
-    // Test 1: Get text from normal script
-    const normalScript = document.getElementById("normalScript");
-    const normalScriptText = normalScript.text;
-    console.log("Normal script text:", JSON.stringify(normalScriptText));
+    function logResult(pass, message) {
+      const div = document.createElement('div');
+      div.className = 'result ' + (pass ? 'result-pass' : 'result-fail');
+      div.textContent = (pass ? "PASS: " : "FAIL: ") + message;
+      document.getElementById('results').appendChild(div);
+      console.log((pass ? "PASS: " : "FAIL: ") + message);
+    }
+    function appendDetails(text) {
+      document.getElementById('details').textContent += text + "\n";
+    }
+
+    const s1 = document.getElementById('script1');
+    appendDetails("Original .text: " + JSON.stringify(s1.text));
+    appendDetails("Original .textContent: " + JSON.stringify(s1.textContent));
+    logResult(
+      typeof s1.text === "string" && s1.text.includes('var x = 42;'),
+      "Getter: .text should contain script content"
+    );
+
+    s1.text = "// Replaced!\nlet y = 99;";
+    appendDetails("After set .text: " + JSON.stringify(s1.text));
+    logResult(
+      s1.text === "// Replaced!\nlet y = 99;",
+      "Setter: .text should replace script content"
+    );
+    logResult(
+      s1.textContent === s1.text,
+      ".textContent should equal .text after set"
+    );
+
+    s1.text = "";
+    appendDetails("After set .text to empty: " + JSON.stringify(s1.text));
+    logResult(
+      s1.text === "",
+      "Setter: .text='' should clear script content"
+    );
+    logResult(
+      s1.childNodes.length === 0,
+      "Setter: .text='' should remove all child nodes"
+    );
+
+    s1.text = "console.log('test again');";
+    appendDetails("After set .text again: " + JSON.stringify(s1.text));
+    logResult(
+      s1.text === "console.log('test again');",
+      "Setter: .text can be set multiple times"
+    );
+
+    // Test multiple text nodes case
+    const scriptMulti = document.createElement('script');
+    const textNode1 = document.createTextNode('var a = 1;');
+    const textNode2 = document.createTextNode('var b = 2;');
+    const comment = document.createComment('this is a comment');
     
-    // Test 2: Get text from module script
-    const moduleScript = document.getElementById("moduleScript");
-    const moduleScriptText = moduleScript.text;
-    console.log("Module script text:", JSON.stringify(moduleScriptText));
+    scriptMulti.appendChild(textNode1);
+    scriptMulti.appendChild(comment);
+    scriptMulti.appendChild(textNode2);
     
-    // Test 3: Get text from empty script
-    const emptyScript = document.getElementById("emptyScript");
-    const emptyScriptText = emptyScript.text;
-    console.log("Empty script text:", JSON.stringify(emptyScriptText));
+    appendDetails("Multiple text nodes .text: " + JSON.stringify(scriptMulti.text));
+    logResult(
+      scriptMulti.text === 'var a = 1;var b = 2;',
+      "Getter: .text should concatenate multiple text nodes, ignoring comments"
+    );
+    appendDetails("Multiple text nodes .textContent: " + JSON.stringify(scriptMulti.textContent));
+    logResult(
+      scriptMulti.textContent === 'var a = 1;var b = 2;',
+      "Multiple text nodes: .textContent should equal .text"
+    );
+
+    // Test no text nodes case
+    const scriptEmpty = document.createElement('script');
+    const spanElement = document.createElement('span');
+    spanElement.textContent = 'nested content';
+    const commentOnly = document.createComment('only comment');
     
-    // Test 4: Set text property
-    const testScript = document.createElement("script");
-    testScript.text = "console.log('Set via text property');";
-    console.log("Set script text:", JSON.stringify(testScript.text));
+    scriptEmpty.appendChild(spanElement);
+    scriptEmpty.appendChild(commentOnly);
     
-    // Test 5: Verify it's the same as textContent
-    console.log("normalScript.text === normalScript.textContent:", normalScript.text === normalScript.textContent);
+    appendDetails("No text nodes .text: " + JSON.stringify(scriptEmpty.text));
+    logResult(
+      scriptEmpty.text === '',
+      "Getter: .text should return empty string when no direct text children"
+    );
+    appendDetails("No text nodes .textContent: " + JSON.stringify(scriptEmpty.textContent));
+    logResult(
+      scriptEmpty.textContent === 'nested content',
+      "No text nodes: .textContent should include nested element content"
+    );
+    logResult(
+      scriptEmpty.text !== scriptEmpty.textContent,
+      "No text nodes: .text should differ from .textContent (spec compliance)"
+    );
+
+    // Test single text node fast path
+    const scriptSingle = document.createElement('script');
+    const singleTextNode = document.createTextNode('single text content');
+    scriptSingle.appendChild(singleTextNode);
     
-    console.log("All tests completed!");
+    appendDetails("Single text node .text: " + JSON.stringify(scriptSingle.text));
+    logResult(
+      scriptSingle.text === 'single text content',
+      "Getter: .text should handle single text node (fast path)"
+    );
+    logResult(
+      scriptSingle.text === scriptSingle.textContent,
+      "Single text node: .text should equal .textContent"
+    );
   </script>
 </body>
 </html>
