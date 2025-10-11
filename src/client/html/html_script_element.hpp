@@ -65,19 +65,8 @@ namespace endor
       src = value;
       setAttribute("src", value);
     }
-    inline string getText() const
-    {
-      // Returns the child text content of the element.
-      // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-text
-      // https://dom.spec.whatwg.org/#concept-child-text-content
-      return textContent();
-    }
-    inline void setText(const string &value)
-    {
-      // Replaces the element's children with the text given by value.
-      // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-text
-      setTextContent(value);
-    }
+    string getText() const;
+    void setText(const string &value);
 
     protected:
       void createdCallback(bool from_scripting) override;
