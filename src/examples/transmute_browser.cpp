@@ -397,7 +397,9 @@ namespace jsar::example
       {
         xr::TrDeviceInit init;
         init.active = true;
-        init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass : xr::TrStereoRenderingMode::SinglePass;
+        init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass
+                                             : xr::TrStereoRenderingMode::SinglePass;
+        init.usedViewsCount = monoMode ? 1 : 2;
         embedder_->configureXrDevice(init);
         windowCtx_->createXrRenderer(monoMode);
       }

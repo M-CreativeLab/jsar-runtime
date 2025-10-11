@@ -16,7 +16,16 @@ namespace client_xr
       , xr::WebGLLayer()
       , glContext_(glContext)
   {
-    multiviewRequired = session->device()->getDeviceInit().multiviewRequired();
+    auto device = session->device();
+    multiviewRequired = device->getDeviceInit().multiviewRequired();
+
+    auto deviceContext = device->contextZone();
+    if (deviceContext != nullptr)
+    {
+      const auto &framebufferConfig = deviceContext->getFramebufferConfig();
+      framebufferWidth = framebufferConfig.width;
+      framebufferHeight = framebufferConfig.height;
+    }
   }
 
   XRWebGLLayer::XRWebGLLayer(xr::WebGLLayer &layerData)

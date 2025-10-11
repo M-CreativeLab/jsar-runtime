@@ -378,6 +378,7 @@ namespace script_bindings
       SetupConstants(isolate, tpl);
 
       // Set up the WebGL 1.0 API methods and properties
+      auto instance = tpl->InstanceTemplate();
       auto prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL1_METHOD(NAME, CALLBACK) \
@@ -387,13 +388,13 @@ namespace script_bindings
                  &WebGLRenderingContext::CALLBACK);
 
       // Getters and setters
-      InstanceReadonlyAccessor(isolate, prototype, "canvas", &WebGLRenderingContext::CanvasGetter);
+      InstanceReadonlyAccessor(isolate, instance, "canvas", &WebGLRenderingContext::CanvasGetter);
       InstanceReadonlyAccessor(isolate,
-                               prototype,
+                               instance,
                                "drawingBufferWidth",
                                &WebGLRenderingContext::DrawingBufferWidthGetter);
       InstanceReadonlyAccessor(isolate,
-                               prototype,
+                               instance,
                                "drawingBufferHeight",
                                &WebGLRenderingContext::DrawingBufferHeightGetter);
 
@@ -2837,7 +2838,7 @@ namespace script_bindings
       }
 
       auto sourceUtf8 = String::Utf8Value(isolate, info[1]);
-      std::string source = *sourceUtf8 ? *sourceUtf8 : "";
+      string source = *sourceUtf8 ? *sourceUtf8 : "";
 
       handle()->shaderSource(shaderBinding->handle(), source);
       info.GetReturnValue().SetUndefined();
@@ -2879,31 +2880,33 @@ namespace script_bindings
     {
       Isolate *isolate = info.GetIsolate();
       HandleScope scope(isolate);
-
-      if (info.Length() < 9)
-      {
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "texImage2D", "9 arguments required, but fewer were provided")));
-        return;
-      }
-
-      if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() ||
-          !info[3]->IsNumber() || !info[4]->IsNumber() || !info[5]->IsNumber() ||
-          !info[6]->IsNumber() || !info[7]->IsNumber())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "texImage2D", "Arguments 0-7 must be numbers")));
-        return;
-      }
-
-      if (!info[8]->IsTypedArray() && !info[8]->IsNull())
-      {
-        isolate->ThrowException(Exception::TypeError(
-          MakeMethodError(isolate, "texImage2D", "Argument 8 must be a TypedArray or null")));
-        return;
-      }
-
       Local<Context> context = isolate->GetCurrentContext();
+
+      if (info.Length() < 6)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "texImage2D", 6, info.Length())));
+        return;
+      }
+      if (!info[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texImage2D", "target", "number", info[0])));
+        return;
+      }
+      if (!info[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texImage2D", "level", "number", info[1])));
+        return;
+      }
+      if (!info[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "texImage2D", "internalformat", "number", info[2])));
+        return;
+      }
+
       client_graphics::WebGLTexture2DTarget target;
       {
         int value = info[0]->Int32Value(context).FromMaybe(0);
@@ -2911,56 +2914,105 @@ namespace script_bindings
       }
       int level = info[1]->Int32Value(context).FromMaybe(0);
       int internalformat = info[2]->Int32Value(context).FromMaybe(0);
-      int width = info[3]->Int32Value(context).FromMaybe(0);
-      int height = info[4]->Int32Value(context).FromMaybe(0);
-      int border = info[5]->Int32Value(context).FromMaybe(0);
-
+      int width;
+      int height;
+      int border;
       client_graphics::WebGLTextureFormat format;
-      {
-        int value = info[6]->Int32Value(context).FromMaybe(0);
-        format = static_cast<client_graphics::WebGLTextureFormat>(value);
-      }
       client_graphics::WebGLPixelType pixelType;
-      {
-        int value = info[7]->Int32Value(context).FromMaybe(0);
-        pixelType = static_cast<client_graphics::WebGLPixelType>(value);
-      }
+      unsigned char *pixels = nullptr;
 
-      if (info[8]->IsNull())
+      if (info.Length() == 6)
       {
-        handle()->texImage2D(target,
-                             level,
-                             internalformat,
-                             width,
-                             height,
-                             border,
-                             format,
-                             pixelType,
-                             nullptr);
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage2D", "6-argument version is not implemented yet")));
+        return;
       }
-      else
+      else if (info.Length() >= 9)
       {
-        auto data = info[8].As<ArrayBufferView>();
-        auto arrayBuffer = data->Buffer();
-        if (arrayBuffer.IsEmpty())
+        if (!info[3]->IsNumber())
         {
           isolate->ThrowException(Exception::TypeError(
-            MakeMethodError(isolate, "texImage2D", "Invalid ArrayBufferView")));
+            MakeMethodArgTypeError(isolate, "texImage2D", "width", "number", info[3])));
+          return;
+        }
+        if (!info[4]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "height", "number", info[4])));
+          return;
+        }
+        if (!info[5]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "border", "number", info[5])));
+          return;
+        }
+        if (!info[6]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "format", "number", info[6])));
+          return;
+        }
+        if (!info[7]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage2D", "type", "number", info[7])));
           return;
         }
 
-        auto bufferData = static_cast<uint8_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset();
-        handle()->texImage2D(target,
-                             level,
-                             internalformat,
-                             width,
-                             height,
-                             border,
-                             format,
-                             pixelType,
-                             bufferData);
+        width = info[3]->Int32Value(context).FromMaybe(0);
+        height = info[4]->Int32Value(context).FromMaybe(0);
+        border = info[5]->Int32Value(context).FromMaybe(0);
+        {
+          // Update `format` from args[6]
+          int value = info[6]->Int32Value(context).FromMaybe(0);
+          format = static_cast<client_graphics::WebGLTextureFormat>(value);
+        }
+        {
+          // Assign `pixelType` from args[7]
+          int value = info[7]->Int32Value(context).FromMaybe(0);
+          pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+        }
+
+        if (info[8]->IsNull())
+        {
+          pixels = nullptr;
+        }
+        else if (info[8]->IsArrayBufferView())
+        {
+          auto data = info[8].As<ArrayBufferView>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "texImage2D", "Invalid ArrayBufferView")));
+            return;
+          }
+          pixels = static_cast<uint8_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset();
+        }
+        else
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "texImage2D", "Argument 8 must be a TypedArray or null object")));
+          return;
+        }
+      }
+      else
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage2D", "Either 6 or 9 arguments must be provided")));
+        return;
       }
 
+      handle()->texImage2D(target,
+                           level,
+                           internalformat,
+                           width,
+                           height,
+                           border,
+                           format,
+                           pixelType,
+                           pixels);
       info.GetReturnValue().SetUndefined();
     }
 
@@ -4085,6 +4137,50 @@ namespace script_bindings
       default:
         cerr << "WebGLRenderingContext::GetParameter: Unhandled pname " << pname << endl;
         break;
+      }
+
+      // WebGL2 parameters
+      if (handle()->isWebGL2())
+      {
+        switch (pname)
+        {
+        case WEBGL2_MAX_ARRAY_TEXTURE_LAYERS:
+        case WEBGL2_MAX_COLOR_ATTACHMENTS:
+        case WEBGL2_MAX_COMBINED_UNIFORM_BLOCKS:
+        case WEBGL2_MAX_DRAW_BUFFERS:
+        case WEBGL2_MAX_ELEMENTS_INDICES:
+        case WEBGL2_MAX_ELEMENTS_VERTICES:
+        case WEBGL2_MAX_FRAGMENT_INPUT_COMPONENTS:
+        case WEBGL2_MAX_FRAGMENT_UNIFORM_BLOCKS:
+        case WEBGL2_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+        case WEBGL2_MAX_PROGRAM_TEXEL_OFFSET:
+        case WEBGL2_MAX_SAMPLES:
+        case WEBGL2_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
+        case WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
+        case WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
+        case WEBGL2_MAX_UNIFORM_BUFFER_BINDINGS:
+        case WEBGL2_MAX_VARYING_COMPONENTS:
+        case WEBGL2_MAX_VERTEX_OUTPUT_COMPONENTS:
+        case WEBGL2_MAX_VERTEX_UNIFORM_BLOCKS:
+        case WEBGL2_MAX_VERTEX_UNIFORM_COMPONENTS:
+        case WEBGL2_MIN_PROGRAM_TEXEL_OFFSET:
+        case WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+        case WEBGL2_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+        case WEBGL2_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+        case WEBGL2_MAX_ELEMENT_INDEX:
+        case WEBGL2_MAX_SERVER_WAIT_TIMEOUT:
+        case WEBGL2_MAX_UNIFORM_BLOCK_SIZE:
+        case WEBGL2_MAX_TEXTURE_LOD_BIAS:
+        case WEBGL2_EXT_MAX_VIEWS_OVR:
+        {
+          auto value = handle<client_graphics::WebGL2Context>()
+                         ->getParameterV2(static_cast<client_graphics::WebGL2IntegerParameterName>(pname));
+          jsValue = Integer::New(isolate, value);
+          break;
+        }
+        default:
+          break;
+        }
       }
 
       // Return the value

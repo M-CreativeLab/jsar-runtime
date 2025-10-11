@@ -102,7 +102,6 @@ namespace client_frame
 
     long id = s_CallbackIdGen.get();
     frame_callbacks_.emplace_back(id, callback);
-    cout << "registered animation frame callback, id: " << id << ", total callbacks: " << frame_callbacks_.size() << endl;
     return id;
   }
 
@@ -115,6 +114,5 @@ namespace client_frame
                 [id](const pair<long, AnimationFrameCallback> &item)
                 { return item.first == id; }),
       frame_callbacks_.end());
-    cout << "canceled animation frame callback, id: " << id << ", total callbacks: " << frame_callbacks_.size() << endl;
   }
 }

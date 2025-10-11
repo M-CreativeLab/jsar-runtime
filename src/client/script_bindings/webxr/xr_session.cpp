@@ -117,7 +117,7 @@ namespace script_bindings
       {
         // Copy the frame to avoid dangling reference
         const client_xr::XRFrame frame = *frame_ptr;
-        auto custom_call = [tsfn, time, frame](v8::Isolate *isolate,
+        auto custom_call = [time, frame](v8::Isolate *isolate,
                                                v8::Local<Value> recv,
                                                v8::Local<v8::Function> callback)
         {
@@ -139,11 +139,9 @@ namespace script_bindings
           {
             r.ToLocalChecked();
           }
-
-          // Delete the tsfn instance after the call
-          delete tsfn;
         };
-        tsfn->nonBlockingCall(custom_call);
+        tsfn->unsafeCall(custom_call);
+        delete tsfn;
       };
       info.GetReturnValue().Set(Integer::New(isolate,
                                              handle()->requestAnimationFrame(frame_handler)));

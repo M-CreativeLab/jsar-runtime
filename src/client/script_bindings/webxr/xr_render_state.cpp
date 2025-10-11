@@ -34,7 +34,7 @@ namespace script_bindings
       auto baseLayer = handle()->baseLayer;
       if (baseLayer)
       {
-        auto jsBaseLayer = XRLayer::GetOrNewInstance(isolate, baseLayer);
+        auto jsBaseLayer = XRWebGLLayer::GetOrNewInstance(isolate, baseLayer);
         info.GetReturnValue().Set(jsBaseLayer);
       }
       else

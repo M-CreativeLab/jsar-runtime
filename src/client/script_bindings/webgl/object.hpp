@@ -35,17 +35,8 @@ namespace script_bindings
        * Configure the V8 function template with WebGLObject properties.
        */
       static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
-
-      /**
-       * Create a new V8 WebGLObject instance from a native webgl::WebGLObject.
-       */
       static v8::Local<v8::Object> NewInstance(v8::Isolate *isolate,
                                                std::shared_ptr<client_graphics::WebGLObject> nativeObject);
-
-      /**
-       * Initialize the WebGLObject class and register it with V8.
-       */
-      static v8::Local<v8::Function> Initialize(v8::Isolate *isolate);
 
     public:
       WebGLObject(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &args);

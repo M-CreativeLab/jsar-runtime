@@ -20,11 +20,6 @@ namespace script_bindings
                : scope.Escape(Local<Object>());
     }
 
-    Local<Function> WebGLObject::Initialize(Isolate *isolate)
-    {
-      return ObjectWrap::Initialize(isolate);
-    }
-
     WebGLObject::WebGLObject(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLObjectBase(isolate, args)
     {

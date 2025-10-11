@@ -20,16 +20,6 @@ namespace script_bindings
                : scope.Escape(Local<Object>());
     }
 
-    bool WebGLBuffer::IsInstanceOf(Isolate *isolate, Local<Value> value)
-    {
-      return WebGLBufferBase::IsInstanceOf(isolate, value);
-    }
-
-    Local<Function> WebGLBuffer::Initialize(Isolate *isolate)
-    {
-      return WebGLBufferBase::Initialize(isolate);
-    }
-
     WebGLBuffer::WebGLBuffer(Isolate *isolate, const FunctionCallbackInfo<Value> &args)
         : WebGLBufferBase(isolate, args)
     {

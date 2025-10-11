@@ -513,6 +513,32 @@ namespace scripting_base
       return MakeMethodError(isolate, method, str.c_str());
     }
     /**
+     * Create a standardized error message for method argument type errors.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param method The name of the method where the error occurred.
+     * @param name The name of the argument that has the wrong type.
+     * @param expectedType The expected type of the argument.
+     * @param arg The actual argument value.
+     */
+    static v8::Local<v8::String> MakeMethodArgTypeError(v8::Isolate *isolate,
+                                                        const char *method,
+                                                        const char *name,
+                                                        const char *expectedType,
+                                                        v8::Local<v8::Value> arg)
+    {
+      if (arg->IsObject())
+      {
+        std::cerr << "Argument '" << name << "' is an object:" << std::endl;
+        Warn(isolate, arg); // Log the actual argument value for debugging
+      }
+
+      v8::String::Utf8Value argUtf8(isolate, arg);
+      std::string str = "Argument '" + std::string(name) + "' must be of type " + std::string(expectedType) + ", " +
+                        "but got '" + std::string(*argUtf8) + "'.";
+      return MakeMethodError(isolate, method, str.c_str());
+    }
+    /**
      * Create a standardized error message for constructor failures.
      * 
      * @param isolate The v8::Isolate instance.
@@ -523,6 +549,55 @@ namespace scripting_base
     {
       std::string str = "Failed to construct '" + T::Name() + "': " + std::string(message);
       return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
+    }
+    /**
+     * Use current global's `console` object to log the value.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param method The console method to use, e.g. "log", "warn", "error".
+     * @param value The value to log.
+     */
+    static void Log(v8::Isolate *isolate, const char *method, v8::Local<v8::Value> value)
+    {
+      v8::HandleScope scope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+      v8::Local<v8::String> consoleKey = v8::String::NewFromUtf8(isolate, "console").ToLocalChecked();
+      v8::Local<v8::Value> consoleValue = context->Global()->Get(context, consoleKey).ToLocalChecked();
+
+      if (consoleValue->IsObject())
+      {
+        v8::Local<v8::Object> console = consoleValue.As<v8::Object>();
+        v8::Local<v8::Value> methodValue = console->Get(context,
+                                                        v8::String::NewFromUtf8(isolate, method).ToLocalChecked())
+                                             .ToLocalChecked();
+
+        if (methodValue->IsFunction())
+        {
+          v8::Local<v8::Function> logFunction = methodValue.As<v8::Function>();
+          v8::Local<v8::Value> args[] = {value};
+          logFunction->Call(context, console, 1, args).ToLocalChecked();
+          return;
+        }
+      }
+
+      // Fallback: console.log is not available
+      assert(false && "console.log is not available");
+    }
+    static inline void Log(v8::Isolate *isolate, v8::Local<v8::Value> value)
+    {
+      Log(isolate, "log", value);
+    }
+    static inline void Warn(v8::Isolate *isolate, v8::Local<v8::Value> value)
+    {
+      Log(isolate, "warn", value);
+    }
+    static inline void Error(v8::Isolate *isolate, v8::Local<v8::Value> value)
+    {
+      Log(isolate, "error", value);
+    }
+    static inline void Trace(v8::Isolate *isolate, v8::Local<v8::Value> value)
+    {
+      Log(isolate, "trace", value);
     }
 
   private:
@@ -714,14 +789,20 @@ namespace scripting_base
     }
 
     /**
-     * @returns The `ObjectWrap`'s data handle.
+     * Get the data handle as a specific type.
+     * 
+     * @tparam U The type to cast the data handle to.
+     * @returns The data handle cast to the specified type.
      */
-    inline std::shared_ptr<TData> handle() const
+    template <typename U = TData>
+    inline std::shared_ptr<U> handle() const
     {
-      std::shared_ptr<TData> data_handle = std::dynamic_pointer_cast<TData>(this->data_handle_);
+      static_assert(!std::is_same_v<U, void>, "U must not be void");
+      std::shared_ptr<U> data_handle = std::dynamic_pointer_cast<U>(this->data_handle_);
       if (data_handle == nullptr) [[unlikely]]
       {
-        std::cerr << "Error: failed to get data handle of '" << T::Name() << "'." << std::endl;
+        std::cerr << "Error: failed to get data handle of '" << T::Name() << "' as '" << typeid(U).name() << "'."
+                  << std::endl;
         assert(false && "`data_handle` is null");
       }
       return data_handle;

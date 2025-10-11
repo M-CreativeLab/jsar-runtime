@@ -403,9 +403,15 @@ namespace script_bindings
       ADD_WEBGL2_METHOD("bindVertexArray", BindVertexArray)
       ADD_WEBGL2_METHOD("isVertexArray", IsVertexArray)
 
+      // Enhanced framebuffer operations
+      ADD_WEBGL2_METHOD("blitFramebuffer", BlitFramebuffer)
+      ADD_WEBGL2_METHOD("renderbufferStorageMultisample", RenderbufferStorageMultisample)
+
       // Enhanced texture operations
       ADD_WEBGL2_METHOD("texImage3D", TexImage3D)
       ADD_WEBGL2_METHOD("texSubImage3D", TexSubImage3D)
+      ADD_WEBGL2_METHOD("texStorage2D", TexStorage2D)
+      ADD_WEBGL2_METHOD("texStorage3D", TexStorage3D)
       ADD_WEBGL2_METHOD("copyTexSubImage3D", CopyTexSubImage3D)
       ADD_WEBGL2_METHOD("compressedTexImage3D", CompressedTexImage3D)
       ADD_WEBGL2_METHOD("compressedTexSubImage3D", CompressedTexSubImage3D)
@@ -1330,6 +1336,94 @@ namespace script_bindings
       args.GetReturnValue().Set(Boolean::New(isolate, result));
     }
 
+    void WebGL2RenderingContext::BlitFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 10)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "blitFramebuffer", 10, args.Length())));
+        return;
+      }
+      for (int i = 0; i < 10; ++i)
+      {
+        if (!args[i]->IsNumber())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "blitFramebuffer", i, "number", args[i])));
+          return;
+        }
+      }
+
+      int srcX0 = args[0]->Int32Value(context).ToChecked();
+      int srcY0 = args[1]->Int32Value(context).ToChecked();
+      int srcX1 = args[2]->Int32Value(context).ToChecked();
+      int srcY1 = args[3]->Int32Value(context).ToChecked();
+      int dstX0 = args[4]->Int32Value(context).ToChecked();
+      int dstY0 = args[5]->Int32Value(context).ToChecked();
+      int dstX1 = args[6]->Int32Value(context).ToChecked();
+      int dstY1 = args[7]->Int32Value(context).ToChecked();
+      uint32_t mask = args[8]->Uint32Value(context).ToChecked();
+      uint32_t filter = args[9]->Uint32Value(context).ToChecked();
+
+      handle()->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+      args.GetReturnValue().SetUndefined();
+    }
+
+    void WebGL2RenderingContext::RenderbufferStorageMultisample(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 4)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "renderbufferStorageMultisample", 4, args.Length())));
+        return;
+      }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "renderbufferStorageMultisample", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "renderbufferStorageMultisample", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "renderbufferStorageMultisample", 2, "number", args[2])));
+        return;
+      }
+      if (!args[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "renderbufferStorageMultisample", 3, "number", args[3])));
+        return;
+      }
+
+      client_graphics::WebGLRenderbufferBindingTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLRenderbufferBindingTarget>(value);
+      }
+      int samples = args[1]->Int32Value(context).ToChecked();
+      int internalformat = args[2]->Int32Value(context).ToChecked();
+      int width = args[3]->Int32Value(context).ToChecked();
+      int height = args[4]->Int32Value(context).ToChecked();
+
+      handle()->renderbufferStorageMultisample(target, samples, internalformat, width, height);
+      args.GetReturnValue().SetUndefined();
+    }
+
     // Enhanced texture operations
     void WebGL2RenderingContext::TexImage3D(const FunctionCallbackInfo<Value> &args)
     {
@@ -1488,6 +1582,76 @@ namespace script_bindings
                               format,
                               pixelType,
                               pixels);
+      args.GetReturnValue().SetUndefined();
+    }
+
+    void WebGL2RenderingContext::TexStorage2D(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 4)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "texStorage2D", 4, args.Length())));
+        return;
+      }
+
+      if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() || !args[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texStorage2D", "Invalid argument types")));
+        return;
+      }
+
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int levels = args[1]->Int32Value(context).ToChecked();
+      int internalformat = args[2]->Int32Value(context).ToChecked();
+      int width = args[3]->Int32Value(context).ToChecked();
+      int height = args[4]->Int32Value(context).ToChecked();
+
+      handle()->texStorage2D(target, levels, internalformat, width, height);
+      args.GetReturnValue().SetUndefined();
+    }
+
+    void WebGL2RenderingContext::TexStorage3D(const v8::FunctionCallbackInfo<v8::Value> &args)
+    {
+      Isolate *isolate = args.GetIsolate();
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 5)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "texStorage3D", 5, args.Length())));
+        return;
+      }
+
+      if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() ||
+          !args[3]->IsNumber() || !args[4]->IsNumber() || !args[5]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texStorage3D", "Invalid argument types")));
+        return;
+      }
+
+      client_graphics::WebGLTexture3DTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLTexture3DTarget>(value);
+      }
+      int levels = args[1]->Int32Value(context).ToChecked();
+      int internalformat = args[2]->Int32Value(context).ToChecked();
+      int width = args[3]->Int32Value(context).ToChecked();
+      int height = args[4]->Int32Value(context).ToChecked();
+      int depth = args[5]->Int32Value(context).ToChecked();
+
+      handle()->texStorage3D(target, levels, internalformat, width, height, depth);
       args.GetReturnValue().SetUndefined();
     }
 

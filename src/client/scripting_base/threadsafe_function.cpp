@@ -1,4 +1,5 @@
 #include <client/per_process.hpp>
+#include "./v8_utils.hpp"
 #include "./threadsafe_function.hpp"
 
 using namespace std;
@@ -6,7 +7,7 @@ using namespace v8;
 
 namespace scripting_base
 {
-  ThreadSafeFunction::ThreadSafeFunction(Isolate *isolate, Local<Value> recv, Local<Function> js_callback)
+  ThreadSafeFunction::ThreadSafeFunction(Isolate *isolate, Local<v8::Value> recv, Local<Function> js_callback)
       : isolate_(isolate)
       , js_recv_(isolate, recv)
       , js_callback_(isolate, js_callback)
@@ -45,6 +46,33 @@ namespace scripting_base
     js_callback_.Reset();
   }
 
+  void ThreadSafeFunction::unsafeCall(CustomCallback custom_callback)
+  {
+    HandleScope scope(isolate_);
+    Local<Context> context = isolate_->GetCurrentContext();
+    Local<v8::Value> recv = js_recv_.Get(isolate_);
+    Local<Function> callback = js_callback_.Get(isolate_);
+
+    if (custom_callback)
+    {
+      custom_callback(isolate_, recv, callback);
+    }
+    else
+    {
+      TryCatch try_catch(isolate_);
+      MaybeLocal<v8::Value> r = callback->Call(context, recv, 0, nullptr);
+      if (r.IsEmpty() || try_catch.HasCaught())
+      {
+        string message = scripting_base::ReportExceptionToString(isolate_, try_catch.Exception());
+        cerr << "Failed to execute callback at 'ThreadSafeFunction': " << message << endl;
+      }
+      else
+      {
+        r.ToLocalChecked();
+      }
+    }
+  }
+
   void ThreadSafeFunction::nonBlockingCall(CustomCallback custom_callback)
   {
     if (custom_callback != nullptr)
@@ -54,21 +82,15 @@ namespace scripting_base
 
   bool ThreadSafeFunction::handleCallRequest()
   {
-    HandleScope scope(isolate_);
-    Local<Context> context = isolate_->GetCurrentContext();
-    Local<Value> recv = js_recv_.Get(isolate_);
-    Local<Function> callback = js_callback_.Get(isolate_);
-
     if (custom_callback_)
     {
-      const auto &custom_callback = custom_callback_.value();
-      custom_callback(isolate_, recv, callback);
+      unsafeCall(custom_callback_.value());
       custom_callback_ = nullopt;
       return false;
     }
     else
     {
-      callback->Call(context, recv, 0, nullptr).ToLocalChecked();
+      unsafeCall(nullptr);
       return true;
     }
   }

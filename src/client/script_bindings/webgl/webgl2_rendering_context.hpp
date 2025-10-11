@@ -87,9 +87,15 @@ namespace script_bindings
       void BindVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
       void IsVertexArray(const v8::FunctionCallbackInfo<v8::Value> &args);
 
+      // Enhanced framebuffer operations
+      void BlitFramebuffer(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void RenderbufferStorageMultisample(const v8::FunctionCallbackInfo<v8::Value> &args);
+
       // Enhanced texture operations
       void TexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
       void TexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TexStorage2D(const v8::FunctionCallbackInfo<v8::Value> &args);
+      void TexStorage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
       void CopyTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
       void CompressedTexImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);
       void CompressedTexSubImage3D(const v8::FunctionCallbackInfo<v8::Value> &args);

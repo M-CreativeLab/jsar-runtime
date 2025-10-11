@@ -84,8 +84,16 @@ bool TrClientEntry::parseConfig(string &configJson)
       clientContext->xrDeviceInit.enabled = xrDeviceDoc["enabled"].GetBool();
     if (xrDeviceDoc.HasMember("active") && xrDeviceDoc["active"].IsBool())
       clientContext->xrDeviceInit.active = xrDeviceDoc["active"].GetBool();
-    if (xrDeviceDoc.HasMember("stereoRenderingMode") && xrDeviceDoc["stereoRenderingMode"].IsNumber())
+    if (xrDeviceDoc.HasMember("stereoRenderingMode") &&
+        xrDeviceDoc["stereoRenderingMode"].IsNumber())
+    {
       clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDeviceDoc["stereoRenderingMode"].GetInt();
+    }
+    if (xrDeviceDoc.HasMember("usedViewsCount") &&
+        xrDeviceDoc["usedViewsCount"].IsUint())
+    {
+      clientContext->xrDeviceInit.usedViewsCount = xrDeviceDoc["usedViewsCount"].GetUint();
+    }
     if (xrDeviceDoc.HasMember("commandChanPort") && xrDeviceDoc["commandChanPort"].IsInt())
       clientContext->xrDeviceInit.commandChanPort = xrDeviceDoc["commandChanPort"].GetInt();
     if (xrDeviceDoc.HasMember("sessionContextZoneDirectory") && xrDeviceDoc["sessionContextZoneDirectory"].IsString())

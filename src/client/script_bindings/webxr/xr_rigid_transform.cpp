@@ -14,7 +14,6 @@ namespace script_bindings
       EscapableHandleScope scope(isolate);
       Local<Context> context = isolate->GetCurrentContext();
 
-      cerr << "MakeDOMPointObject: " << x << ", " << y << ", " << z << ", " << w << endl;
       // TODO(yorkie): Implement DOMPoint instead of a plain object
       Local<Object> point = Object::New(isolate);
       point->Set(context,

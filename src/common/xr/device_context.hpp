@@ -38,6 +38,10 @@ namespace xr
      * Recommended fov value for client.
      */
     float recommendedFov = 0;
+    /**
+     * The number of views (eyes) for stereo rendering to be used, default is 1.
+     */
+    size_t usedViewsCount = 2;
 
   public: // No need to setup, the following fields are set by server.
     /**
@@ -123,6 +127,7 @@ namespace xr
     TrXRDeviceContextData() = default;
     TrXRDeviceContextData(TrXRDeviceContextData &that)
         : enabled(that.enabled.load())
+        , usedViewsCount(that.usedViewsCount.load())
         , stereoRenderingMode(that.stereoRenderingMode)
         , recommendedFov(that.recommendedFov.load())
         , stereoFrame(that.stereoFrame)
@@ -136,6 +141,10 @@ namespace xr
      * If this device is enabled.
      */
     atomic<bool> enabled;
+    /**
+     * The number of views (eyes) for stereo rendering to be used, default is 2.
+     */
+    atomic<size_t> usedViewsCount = 2;
     /**
      * The stereo rendering mode.
      */
@@ -167,10 +176,11 @@ namespace xr
     }
 
   public:
-    void configure(bool enabled, TrStereoRenderingMode mode)
+    void configure(bool enabled, TrStereoRenderingMode mode, size_t viewsCount)
     {
       data->enabled = enabled;
       data->stereoRenderingMode = mode;
+      data->usedViewsCount = viewsCount;
     }
     TrXRView &getStereoView(uint32_t viewIndex)
     {

@@ -24,6 +24,13 @@ namespace scripting_base
 
   public:
     /**
+     * Make a function call without thread safety guarantees, that does not use libuv async handle, instead calling
+     * the JavaScript function directly from the current stack.
+     * 
+     * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
+     */
+    void unsafeCall(CustomCallback custom_callback = nullptr);
+    /**
      * Make a non-blocking call to the JavaScript function.
      * 
      * @param custom_callback Optional custom callback to be invoked instead of the original JavaScript function.
