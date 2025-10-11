@@ -2967,20 +2967,10 @@ namespace script_bindings
     void WebGLRenderingContext::TexSubImage2D(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 7 && info[0]->IsNumber() && info[1]->IsNumber() &&
-          info[2]->IsNumber() && info[3]->IsNumber() && info[4]->IsNumber() && info[5]->IsNumber() &&
-          info[6]->IsTypedArray())
-      {
-        int target = info[0]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int level = info[1]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int xoffset = info[2]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int yoffset = info[3]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int width = info[4]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
-        int height = info[5]->Int32Value(isolate->GetCurrentContext()).FromMaybe(0);
+      HandleScope scope(isolate);
 
-        // self->handle()->texSubImage2D(target, level, xoffset, yoffset, width, height, info[6]);
-      }
+      isolate->ThrowException(Exception::TypeError(
+        MakeMethodError(isolate, "texSubImage2D", "Not implemented yet")));
     }
 
     void WebGLRenderingContext::TexParameterf(const FunctionCallbackInfo<Value> &info)
@@ -3627,52 +3617,145 @@ namespace script_bindings
     void WebGLRenderingContext::UniformMatrix2fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniformMatrix2fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 4);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix2fv", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix2fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsBoolean())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix2fv", "Second argument must be a boolean")));
+        return;
+      }
+      if (!info[2]->IsTypedArray() && !info[2]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix2fv", "Third argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      bool transpose = info[1]->BooleanValue(isolate);
+      const auto &values = GetFloatValuesFromValue(isolate, info[2]);
+
+      if (values.size() % 4 != 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix2fv", "Data length must be a multiple of 4")));
+        return;
+      }
+
+      handle()->uniformMatrix2fv(locBinding->handleRef(), transpose, values);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::UniformMatrix3fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniformMatrix3fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 9);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix3fv", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix3fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsBoolean())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix3fv", "Second argument must be a boolean")));
+        return;
+      }
+      if (!info[2]->IsTypedArray() && !info[2]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix3fv", "Third argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      bool transpose = info[1]->BooleanValue(isolate);
+      const auto &values = GetFloatValuesFromValue(isolate, info[2]);
+
+      if (values.size() % 9 != 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix3fv", "Data length must be a multiple of 9")));
+        return;
+      }
+
+      handle()->uniformMatrix3fv(locBinding->handleRef(), transpose, values);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::UniformMatrix4fv(const FunctionCallbackInfo<Value> &info)
     {
       Isolate *isolate = info.GetIsolate();
-      auto *self = Unwrap(isolate, info.This());
-      if (self && self->handle() && info.Length() >= 3 && info[0]->IsObject() && info[1]->IsBoolean() && info[2]->IsTypedArray())
+      HandleScope scope(isolate);
+
+      if (info.Length() < 3)
       {
-        auto location = Unwrap(isolate, info[0]->ToObject(isolate->GetCurrentContext()).ToLocalChecked());
-        bool transpose = info[1]->BooleanValue(isolate);
-        auto data = info[2].As<Float32Array>();
-        if (location && !data.IsEmpty())
-        {
-          // ArrayBuffer::Contents contents = data->Buffer()->GetContents();
-          // self->handle()->uniformMatrix4fv(location, transpose, static_cast<float *>(contents.Data()), data->Length() / 16);
-        }
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix4fv", "3 arguments required, but fewer were provided")));
+        return;
       }
+      if (!WebGLUniformLocation::IsInstanceOf(isolate, info[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix4fv", "First argument must be a WebGLUniformLocation object")));
+        return;
+      }
+      if (!info[1]->IsBoolean())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix4fv", "Second argument must be a boolean")));
+        return;
+      }
+      if (!info[2]->IsTypedArray() && !info[2]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix4fv", "Third argument must be a Float32Array or Array")));
+        return;
+      }
+
+      Local<Context> context = isolate->GetCurrentContext();
+      auto locObj = info[0]->ToObject(context).ToLocalChecked();
+      auto locBinding = WebGLUniformLocation::Unwrap(isolate, locObj);
+
+      bool transpose = info[1]->BooleanValue(isolate);
+      const auto &values = GetFloatValuesFromValue(isolate, info[2]);
+
+      if (values.size() % 16 != 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformMatrix4fv", "Data length must be a multiple of 16")));
+        return;
+      }
+
+      handle()->uniformMatrix4fv(locBinding->handleRef(), transpose, values);
+      info.GetReturnValue().SetUndefined();
     }
 
     void WebGLRenderingContext::VertexAttrib1f(const FunctionCallbackInfo<Value> &info)

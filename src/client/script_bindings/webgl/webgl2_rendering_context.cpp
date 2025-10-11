@@ -1,4 +1,7 @@
 #include "./webgl2_rendering_context.hpp"
+#include "./buffer.hpp"
+#include "./program.hpp"
+#include "./vertex_array.hpp"
 
 namespace script_bindings
 {
@@ -340,7 +343,7 @@ namespace script_bindings
       auto prototype = tpl->PrototypeTemplate();
 
 #define ADD_WEBGL2_METHOD(NAME, CALLBACK) \
-      InstanceMethod(isolate, prototype, NAME, &WebGL2RenderingContext::CALLBACK);
+  InstanceMethod(isolate, prototype, NAME, &WebGL2RenderingContext::CALLBACK);
 
       // WebGL 2.0 specific methods
       ADD_WEBGL2_METHOD("drawBuffers", DrawBuffers)
@@ -428,539 +431,1237 @@ namespace script_bindings
     void WebGL2RenderingContext::DrawBuffers(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 1)
       {
-        // Implementation would call native drawBuffers method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "drawBuffers", 1, args.Length())));
+        return;
       }
+      if (!args[0]->IsArray())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "drawBuffers", 0, "Array", args[0])));
+      }
+
+      vector<uint32_t> buffers;
+      Local<Array> array = args[0].As<Array>();
+      uint32_t length = array->Length();
+      buffers.reserve(length);
+
+      for (uint32_t i = 0; i < length; ++i)
+      {
+        Local<Value> item = array->Get(context, i).ToLocalChecked();
+        buffers.push_back(item->Uint32Value(context).ToChecked());
+      }
+
+      handle()->drawBuffers(buffers);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::ClearBufferfv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 3)
       {
-        // Implementation would call native clearBufferfv method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "clearBufferfv", 3, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfv", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfv", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsArray() && !args[2]->IsFloat32Array())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfv", 2, "Array or Float32Array", args[1])));
+      }
+
+      client_graphics::WebGLFramebufferAttachmentType buffer;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        buffer = static_cast<client_graphics::WebGLFramebufferAttachmentType>(value);
+      }
+      int drawbuffer = args[1]->Int32Value(context).ToChecked();
+
+      vector<float> values;
+      {
+        auto arg = args[2];
+        if (arg->IsFloat32Array())
+        {
+          auto data = arg.As<Float32Array>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "clearBufferfv", "Invalid Float32Array")));
+            return;
+          }
+
+          auto bufferData = static_cast<float *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(float);
+          values.assign(bufferData, bufferData + data->Length());
+        }
+        else if (arg->IsArray())
+        {
+          Local<Array> array = args[2].As<Array>();
+          uint32_t length = array->Length();
+          values.reserve(length);
+
+          for (uint32_t i = 0; i < length; ++i)
+          {
+            Local<Value> item = array->Get(context, i).ToLocalChecked();
+            values.push_back(static_cast<float>(item->NumberValue(context).ToChecked()));
+          }
+        }
+      }
+
+      if (args.Length() >= 4)
+      {
+        isolate->ThrowException(Exception::Error(
+          MakeMethodError(isolate, "clearBufferfv", "Not supported for given srcOffset argument")));
+      }
+      else
+      {
+        handle()->clearBufferfv(buffer, drawbuffer, values);
+      }
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::ClearBufferiv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 3)
       {
-        // Implementation would call native clearBufferiv method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "clearBufferiv", 3, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferiv", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferiv", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsArray() && !args[2]->IsInt32Array())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferiv", 2, "Array or Int32Array", args[2])));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferAttachmentType buffer;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        buffer = static_cast<client_graphics::WebGLFramebufferAttachmentType>(value);
+      }
+      int drawbuffer = args[1]->Int32Value(context).ToChecked();
+
+      vector<int32_t> values;
+      {
+        auto arg = args[2];
+        if (arg->IsInt32Array())
+        {
+          auto data = arg.As<Int32Array>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "clearBufferiv", "Invalid Int32Array")));
+            return;
+          }
+
+          auto bufferData = static_cast<int32_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(int32_t);
+          values.assign(bufferData, bufferData + data->Length());
+        }
+        else if (arg->IsArray())
+        {
+          Local<Array> array = args[2].As<Array>();
+          uint32_t length = array->Length();
+          values.reserve(length);
+
+          for (uint32_t i = 0; i < length; ++i)
+          {
+            Local<Value> item = array->Get(context, i).ToLocalChecked();
+            values.push_back(item->Int32Value(context).ToChecked());
+          }
+        }
+      }
+
+      handle()->clearBufferiv(buffer, drawbuffer, values);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::ClearBufferuiv(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 3)
       {
-        // Implementation would call native clearBufferuiv method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "clearBufferuiv", 3, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferuiv", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferuiv", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsArray() && !args[2]->IsUint32Array())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferuiv", 2, "Array or Uint32Array", args[2])));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferAttachmentType buffer;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        buffer = static_cast<client_graphics::WebGLFramebufferAttachmentType>(value);
+      }
+      int drawbuffer = args[1]->Int32Value(context).ToChecked();
+
+      vector<uint32_t> values;
+      {
+        auto arg = args[2];
+        if (arg->IsUint32Array())
+        {
+          auto data = arg.As<Uint32Array>();
+          auto arrayBuffer = data->Buffer();
+          if (arrayBuffer.IsEmpty())
+          {
+            isolate->ThrowException(Exception::TypeError(
+              MakeMethodError(isolate, "clearBufferuiv", "Invalid Uint32Array")));
+            return;
+          }
+
+          auto bufferData = static_cast<uint32_t *>(arrayBuffer->GetBackingStore()->Data()) + data->ByteOffset() / sizeof(uint32_t);
+          values.assign(bufferData, bufferData + data->Length());
+        }
+        else if (arg->IsArray())
+        {
+          Local<Array> array = args[2].As<Array>();
+          uint32_t length = array->Length();
+          values.reserve(length);
+
+          for (uint32_t i = 0; i < length; ++i)
+          {
+            Local<Value> item = array->Get(context, i).ToLocalChecked();
+            values.push_back(item->Uint32Value(context).ToChecked());
+          }
+        }
+      }
+
+      handle()->clearBufferuiv(buffer, drawbuffer, values);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::ClearBufferfi(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 4)
       {
-        // Implementation would call native clearBufferfi method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "clearBufferfi", 4, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfi", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfi", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfi", 2, "number", args[2])));
+        return;
+      }
+      if (!args[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "clearBufferfi", 3, "number", args[3])));
+        return;
+      }
+
+      client_graphics::WebGLFramebufferAttachmentType buffer;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        buffer = static_cast<client_graphics::WebGLFramebufferAttachmentType>(value);
+      }
+      int drawbuffer = args[1]->Int32Value(context).ToChecked();
+      float depth = static_cast<float>(args[2]->NumberValue(context).ToChecked());
+      int stencil = args[3]->Int32Value(context).ToChecked();
+
+      handle()->clearBufferfi(buffer, drawbuffer, depth, stencil);
+      args.GetReturnValue().SetUndefined();
     }
 
     // Query objects
     void WebGL2RenderingContext::CreateQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native createQuery method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "createQuery", "Not implemented")));
     }
 
     void WebGL2RenderingContext::DeleteQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native deleteQuery method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "deleteQuery", "Not implemented")));
     }
 
     void WebGL2RenderingContext::BeginQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native beginQuery method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "beginQuery", "Not implemented")));
     }
 
     void WebGL2RenderingContext::EndQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native endQuery method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "endQuery", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetQuery(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getQuery method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getQuery", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetQueryParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getQueryParameter method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getQueryParameter", "Not implemented")));
     }
 
     // Sampler objects
     void WebGL2RenderingContext::CreateSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native createSampler method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "createSampler", "Not implemented")));
     }
 
     void WebGL2RenderingContext::DeleteSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native deleteSampler method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "deleteSampler", "Not implemented")));
     }
 
     void WebGL2RenderingContext::BindSampler(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native bindSampler method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "bindSampler", "Not implemented")));
     }
 
     void WebGL2RenderingContext::SamplerParameteri(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native samplerParameteri method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "samplerParameteri", "Not implemented")));
     }
 
     void WebGL2RenderingContext::SamplerParameterf(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native samplerParameterf method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "samplerParameterf", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetSamplerParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getSamplerParameter method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getSamplerParameter", "Not implemented")));
     }
 
     // Sync objects
     void WebGL2RenderingContext::FenceSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native fenceSync method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "fenceSync", "Not implemented")));
     }
 
     void WebGL2RenderingContext::IsSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native isSync method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "isSync", "Not implemented")));
     }
 
     void WebGL2RenderingContext::DeleteSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native deleteSync method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "deleteSync", "Not implemented")));
     }
 
     void WebGL2RenderingContext::ClientWaitSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native clientWaitSync method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "clientWaitSync", "Not implemented")));
     }
 
     void WebGL2RenderingContext::WaitSync(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native waitSync method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "waitSync", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetSyncParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getSyncParameter method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getSyncParameter", "Not implemented")));
     }
 
     // Transform feedback
     void WebGL2RenderingContext::CreateTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native createTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "createTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::DeleteTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native deleteTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "deleteTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::BindTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native bindTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "bindTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::BeginTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native beginTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "beginTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::EndTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native endTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "endTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::TransformFeedbackVaryings(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native transformFeedbackVaryings method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "transformFeedbackVaryings", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetTransformFeedbackVarying(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getTransformFeedbackVarying method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getTransformFeedbackVarying", "Not implemented")));
     }
 
     void WebGL2RenderingContext::PauseTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native pauseTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "pauseTransformFeedback", "Not implemented")));
     }
 
     void WebGL2RenderingContext::ResumeTransformFeedback(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native resumeTransformFeedback method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "resumeTransformFeedback", "Not implemented")));
     }
 
     // Uniform buffer objects
     void WebGL2RenderingContext::BindBufferBase(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 2)
       {
-        // Implementation would call native bindBufferBase method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "bindBufferBase", 2, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferBase", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferBase", 1, "number", args[1])));
+        return;
+      }
+      if (!WebGLBuffer::IsInstanceOf(isolate, args[2]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferBase", 2, "WebGLBuffer", args[2])));
+        return;
+      }
+
+      client_graphics::WebGLBufferBindingTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLBufferBindingTarget>(value);
+      }
+      int index = args[1]->Int32Value(context).ToChecked();
+
+      auto bufferObj = args[2].As<Object>();
+      auto bufferBinding = WebGLBuffer::Unwrap(isolate, bufferObj);
+
+      handle()->bindBufferBase(target, index, bufferBinding->handle());
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::BindBufferRange(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 5)
       {
-        // Implementation would call native bindBufferRange method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "bindBufferRange", 5, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferRange", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferRange", 1, "number", args[1])));
+        return;
+      }
+      if (!WebGLBuffer::IsInstanceOf(isolate, args[2]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferRange", 2, "WebGLBuffer", args[2])));
+        return;
+      }
+      if (!args[3]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferRange", 3, "number", args[3])));
+        return;
+      }
+      if (!args[4]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindBufferRange", 4, "number", args[4])));
+        return;
+      }
+
+      client_graphics::WebGLBufferBindingTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLBufferBindingTarget>(value);
+      }
+      int index = args[1]->Int32Value(context).ToChecked();
+
+      auto bufferObj = args[2].As<Object>();
+      auto bufferBinding = WebGLBuffer::Unwrap(isolate, bufferObj);
+
+      int offset = args[3]->Int32Value(context).ToChecked();
+      int size = args[4]->Int32Value(context).ToChecked();
+
+      handle()->bindBufferRange(target, index, bufferBinding->handle(), offset, size);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::GetUniformIndices(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getUniformIndices method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getUniformIndices", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetActiveUniforms(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getActiveUniforms method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getActiveUniforms", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetUniformBlockIndex(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      if (args.Length() < 2)
       {
-        // Implementation would call native getUniformBlockIndex method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "getUniformBlockIndex", 2, args.Length())));
+        return;
       }
+      if (!args[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "getUniformBlockIndex", 0, "WebGLProgram", args[0])));
+        return;
+      }
+      if (!args[1]->IsString())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "getUniformBlockIndex", 1, "string", args[1])));
+        return;
+      }
+
+      auto programObj = args[0].As<Object>();
+      auto program = WebGLProgram::Unwrap(isolate, programObj);
+
+      String::Utf8Value blockName(isolate, args[1]);
+      if (blockName.length() == 0)
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "getUniformBlockIndex", "Invalid block name")));
+        return;
+      }
+
+      int blockIndex = handle()->getUniformBlockIndex(program->handle(), *blockName);
+      args.GetReturnValue().Set(Integer::New(isolate, blockIndex));
     }
 
     void WebGL2RenderingContext::GetActiveUniformBlockParameter(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getActiveUniformBlockParameter method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getActiveUniformBlockParameter", "Not implemented")));
     }
 
     void WebGL2RenderingContext::GetActiveUniformBlockName(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native getActiveUniformBlockName method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "getActiveUniformBlockName", "Not implemented")));
     }
 
     void WebGL2RenderingContext::UniformBlockBinding(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 3)
       {
-        // Implementation would call native uniformBlockBinding method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "uniformBlockBinding", 3, args.Length())));
+        return;
       }
+      if (!args[0]->IsObject())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "uniformBlockBinding", 0, "WebGLProgram", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "uniformBlockBinding", 1, "number", args[1])));
+        return;
+      }
+      if (!args[2]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "uniformBlockBinding", 2, "number", args[2])));
+        return;
+      }
+
+      auto programObj = args[0].As<Object>();
+      auto program = WebGLProgram::Unwrap(isolate, programObj);
+      if (program == nullptr || !program->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "uniformBlockBinding", "Invalid WebGLProgram")));
+        return;
+      }
+
+      uint32_t uniformBlockIndex = args[1]->Uint32Value(context).ToChecked();
+      uint32_t uniformBlockBinding = args[2]->Uint32Value(context).ToChecked();
+
+      handle()->uniformBlockBinding(program->handle(), uniformBlockIndex, uniformBlockBinding);
+      args.GetReturnValue().SetUndefined();
     }
 
     // Vertex array objects
     void WebGL2RenderingContext::CreateVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      auto vertexArray = handle()->createVertexArray();
+      if (!vertexArray)
       {
-        // Implementation would call native createVertexArray method
+        args.GetReturnValue().SetNull();
+        return;
       }
+
+      auto instance = WebGLVertexArray::NewInstance(isolate, vertexArray);
+      args.GetReturnValue().Set(instance);
     }
 
     void WebGL2RenderingContext::DeleteVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      if (args.Length() < 1)
       {
-        // Implementation would call native deleteVertexArray method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "deleteVertexArray", 1, args.Length())));
+        return;
       }
+      if (!WebGLVertexArray::IsInstanceOf(isolate, args[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "deleteVertexArray", 0, "WebGLVertexArray", args[0])));
+        return;
+      }
+
+      auto vertexArrayObj = args[0].As<Object>();
+      auto vertexArray = WebGLVertexArray::Unwrap(isolate, vertexArrayObj);
+      if (vertexArray == nullptr || !vertexArray->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "deleteVertexArray", "Invalid WebGLVertexArray")));
+        return;
+      }
+
+      handle()->deleteVertexArray(vertexArray->handle());
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::BindVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      if (args.Length() < 1)
       {
-        // Implementation would call native bindVertexArray method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "bindVertexArray", 1, args.Length())));
+        return;
       }
+
+      // Fast path for `bindVertexArray(null)`
+      if (args[0]->IsNull() || args[0]->IsUndefined())
+      {
+        handle()->bindVertexArray(nullptr);
+        args.GetReturnValue().SetUndefined();
+        return;
+      }
+
+      if (!WebGLVertexArray::IsInstanceOf(isolate, args[0]))
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "bindVertexArray", 0, "WebGLVertexArray or null", args[0])));
+        return;
+      }
+      auto vertexArrayObj = args[0].As<Object>();
+      auto vertexArray = WebGLVertexArray::Unwrap(isolate, vertexArrayObj);
+      if (vertexArray == nullptr || !vertexArray->hasData())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "bindVertexArray", "Invalid WebGLVertexArray")));
+        return;
+      }
+
+      handle()->bindVertexArray(vertexArray->handle());
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::IsVertexArray(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      if (args.Length() < 1)
       {
-        // Implementation would call native isVertexArray method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "isVertexArray", 1, args.Length())));
+        return;
       }
+
+      if (!WebGLVertexArray::IsInstanceOf(isolate, args[0]))
+      {
+        args.GetReturnValue().Set(Boolean::New(isolate, false));
+        return;
+      }
+
+      auto vertexArrayObj = args[0].As<Object>();
+      auto vertexArray = WebGLVertexArray::Unwrap(isolate, vertexArrayObj);
+      if (vertexArray == nullptr || !vertexArray->hasData())
+      {
+        args.GetReturnValue().Set(Boolean::New(isolate, false));
+        return;
+      }
+
+      bool result = handle()->isVertexArray(vertexArray->handle());
+      args.GetReturnValue().Set(Boolean::New(isolate, result));
     }
 
     // Enhanced texture operations
     void WebGL2RenderingContext::TexImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 10)
       {
-        // Implementation would call native texImage3D method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "texImage3D", 10, args.Length())));
+        return;
       }
+
+      if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() ||
+          !args[3]->IsNumber() || !args[4]->IsNumber() || !args[5]->IsNumber() ||
+          !args[6]->IsNumber() || !args[7]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texImage3D", "Invalid argument types")));
+        return;
+      }
+
+      client_graphics::WebGLTexture3DTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLTexture3DTarget>(value);
+      }
+      int level = args[1]->Int32Value(context).ToChecked();
+      int internalformat = args[2]->Int32Value(context).ToChecked();
+      int width = args[3]->Int32Value(context).ToChecked();
+      int height = args[4]->Int32Value(context).ToChecked();
+      int depth = args[5]->Int32Value(context).ToChecked();
+      int border = args[6]->Int32Value(context).ToChecked();
+      client_graphics::WebGLTextureFormat format;
+      {
+        int value = args[7]->Int32Value(context).ToChecked();
+        format = static_cast<client_graphics::WebGLTextureFormat>(value);
+      }
+      client_graphics::WebGLPixelType pixelType;
+      {
+        int value = args[8]->Int32Value(context).ToChecked();
+        pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+      }
+
+      unsigned char *pixels = nullptr;
+      if (!args[9]->IsNullOrUndefined())
+      {
+        if (!args[9]->IsArrayBufferView())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texImage3D", 9, "ArrayBufferView", args[9])));
+          return;
+        }
+
+        auto data = args[9].As<ArrayBufferView>();
+        auto buffer = data->Buffer();
+        if (buffer.IsEmpty())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "texImage3D", "Invalid ArrayBufferView")));
+          return;
+        }
+
+        pixels = static_cast<uint8_t *>(buffer->GetBackingStore()->Data()) + data->ByteOffset();
+      }
+
+      handle()->texImage3D(target,
+                           level,
+                           internalformat,
+                           width,
+                           height,
+                           depth,
+                           border,
+                           format,
+                           pixelType,
+                           pixels);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::TexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 11)
       {
-        // Implementation would call native texSubImage3D method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "texSubImage3D", 11, args.Length())));
+        return;
       }
+
+      if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() ||
+          !args[3]->IsNumber() || !args[4]->IsNumber() || !args[5]->IsNumber() ||
+          !args[6]->IsNumber() || !args[7]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "texSubImage3D", "Invalid argument types")));
+        return;
+      }
+
+      client_graphics::WebGLTexture3DTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLTexture3DTarget>(value);
+      }
+      int level = args[1]->Int32Value(context).ToChecked();
+      int xoffset = args[2]->Int32Value(context).ToChecked();
+      int yoffset = args[3]->Int32Value(context).ToChecked();
+      int zoffset = args[4]->Int32Value(context).ToChecked();
+      int width = args[5]->Int32Value(context).ToChecked();
+      int height = args[6]->Int32Value(context).ToChecked();
+      int depth = args[7]->Int32Value(context).ToChecked();
+      client_graphics::WebGLTextureFormat format;
+      {
+        int value = args[8]->Int32Value(context).ToChecked();
+        format = static_cast<client_graphics::WebGLTextureFormat>(value);
+      }
+      client_graphics::WebGLPixelType pixelType;
+      {
+        int value = args[9]->Int32Value(context).ToChecked();
+        pixelType = static_cast<client_graphics::WebGLPixelType>(value);
+      }
+
+      unsigned char *pixels = nullptr;
+      if (!args[10]->IsNullOrUndefined())
+      {
+        if (!args[10]->IsArrayBufferView())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodArgTypeError(isolate, "texSubImage3D", 10, "ArrayBufferView", args[10])));
+          return;
+        }
+
+        auto data = args[10].As<ArrayBufferView>();
+        auto buffer = data->Buffer();
+        if (buffer.IsEmpty())
+        {
+          isolate->ThrowException(Exception::TypeError(
+            MakeMethodError(isolate, "texSubImage3D", "Invalid ArrayBufferView")));
+          return;
+        }
+
+        pixels = static_cast<uint8_t *>(buffer->GetBackingStore()->Data()) + data->ByteOffset();
+      }
+
+      handle()->texSubImage3D(target,
+                              level,
+                              xoffset,
+                              yoffset,
+                              zoffset,
+                              width,
+                              height,
+                              depth,
+                              format,
+                              pixelType,
+                              pixels);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::CopyTexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 9)
       {
-        // Implementation would call native copyTexSubImage3D method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "copyTexSubImage3D", 9, args.Length())));
+        return;
       }
+
+      if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber() ||
+          !args[3]->IsNumber() || !args[4]->IsNumber() || !args[5]->IsNumber() ||
+          !args[6]->IsNumber() || !args[7]->IsNumber() || !args[8]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodError(isolate, "copyTexSubImage3D", "Invalid argument types")));
+        return;
+      }
+
+      client_graphics::WebGLTexture2DTarget target;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        target = static_cast<client_graphics::WebGLTexture2DTarget>(value);
+      }
+      int level = args[1]->Int32Value(context).ToChecked();
+      int xoffset = args[2]->Int32Value(context).ToChecked();
+      int yoffset = args[3]->Int32Value(context).ToChecked();
+      int zoffset = args[4]->Int32Value(context).ToChecked();
+      int x = args[5]->Int32Value(context).ToChecked();
+      int y = args[6]->Int32Value(context).ToChecked();
+      int width = args[7]->Int32Value(context).ToChecked();
+      int height = args[8]->Int32Value(context).ToChecked();
+
+      handle()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::CompressedTexImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native compressedTexImage3D method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "compressedTexImage3D", "Not implemented")));
     }
 
     void WebGL2RenderingContext::CompressedTexSubImage3D(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
-      {
-        // Implementation would call native compressedTexSubImage3D method
-      }
+      HandleScope scope(isolate);
+
+      isolate->ThrowException(Exception::Error(
+        MakeMethodError(isolate, "compressedTexSubImage3D", "Not implemented")));
     }
 
     // Enhanced drawing operations
     void WebGL2RenderingContext::DrawRangeElements(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 6)
       {
-        // Implementation would call native drawRangeElements method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "drawRangeElements", 6, args.Length())));
+        return;
       }
+
+      client_graphics::WebGLDrawMode mode;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        mode = static_cast<client_graphics::WebGLDrawMode>(value);
+      }
+      uint32_t start = args[1]->Uint32Value(context).ToChecked();
+      uint32_t end = args[2]->Uint32Value(context).ToChecked();
+      int count = args[3]->Int32Value(context).ToChecked();
+      int type = args[4]->Int32Value(context).ToChecked();
+      int offset = args[5]->Int32Value(context).ToChecked();
+
+      handle()->drawRangeElements(mode, start, end, count, type, offset);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::DrawElementsInstanced(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 6)
       {
-        // Implementation would call native drawElementsInstanced method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "drawElementsInstanced", 6, args.Length())));
+        return;
       }
+
+      client_graphics::WebGLDrawMode mode;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        mode = static_cast<client_graphics::WebGLDrawMode>(value);
+      }
+      int count = args[1]->Int32Value(context).ToChecked();
+      int type = args[2]->Int32Value(context).ToChecked();
+      int offset = args[3]->Int32Value(context).ToChecked();
+      int instanceCount = args[4]->Int32Value(context).ToChecked();
+
+      handle()->drawElementsInstanced(mode, count, type, offset, instanceCount);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::DrawArraysInstanced(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 4)
       {
-        // Implementation would call native drawArraysInstanced method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "drawArraysInstanced", 4, args.Length())));
+        return;
       }
+
+      client_graphics::WebGLDrawMode mode;
+      {
+        int value = args[0]->Int32Value(context).ToChecked();
+        mode = static_cast<client_graphics::WebGLDrawMode>(value);
+      }
+      int first = args[1]->Int32Value(context).ToChecked();
+      int count = args[2]->Int32Value(context).ToChecked();
+      int instanceCount = args[3]->Int32Value(context).ToChecked();
+
+      handle()->drawArraysInstanced(mode, first, count, instanceCount);
+      args.GetReturnValue().SetUndefined();
     }
 
     void WebGL2RenderingContext::VertexAttribDivisor(const FunctionCallbackInfo<Value> &args)
     {
       Isolate *isolate = args.GetIsolate();
-      auto *self = Unwrap(isolate, args.This());
-      if (self && self->handle())
+      HandleScope scope(isolate);
+      Local<Context> context = isolate->GetCurrentContext();
+
+      if (args.Length() < 2)
       {
-        // Implementation would call native vertexAttribDivisor method
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgCountError(isolate, "vertexAttribDivisor", 2, args.Length())));
+        return;
       }
+      if (!args[0]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribDivisor", 0, "number", args[0])));
+        return;
+      }
+      if (!args[1]->IsNumber())
+      {
+        isolate->ThrowException(Exception::TypeError(
+          MakeMethodArgTypeError(isolate, "vertexAttribDivisor", 1, "number", args[1])));
+        return;
+      }
+
+      uint32_t index = args[0]->Uint32Value(context).ToChecked();
+      uint32_t divisor = args[1]->Uint32Value(context).ToChecked();
+
+      handle()->vertexAttribDivisor(index, divisor);
+      args.GetReturnValue().SetUndefined();
     }
   }
 }

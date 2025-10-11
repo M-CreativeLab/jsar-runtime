@@ -476,6 +476,43 @@ namespace scripting_base
       return v8::String::NewFromUtf8(isolate, str.c_str()).ToLocalChecked();
     }
     /**
+     * Create a standardized error message for method argument count errors.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param method The name of the method where the error occurred.
+     * @param expected The expected number of arguments.
+     * @param actual The actual number of arguments provided.
+     */
+    static v8::Local<v8::String> MakeMethodArgCountError(v8::Isolate *isolate,
+                                                         const char *method,
+                                                         int expected,
+                                                         int actual)
+    {
+      std::string str = std::to_string(expected) + " argument(s) required, " +
+                        "but only " + std::to_string(actual) + " present.";
+      return MakeMethodError(isolate, method, str.c_str());
+    }
+    /**
+     * Create a standardized error message for method argument type errors.
+     * 
+     * @param isolate The v8::Isolate instance.
+     * @param method The name of the method where the error occurred.
+     * @param index The index of the argument that has the wrong type.
+     * @param expectedType The expected type of the argument.
+     * @param arg The actual argument value.
+     */
+    static v8::Local<v8::String> MakeMethodArgTypeError(v8::Isolate *isolate,
+                                                        const char *method,
+                                                        int index,
+                                                        const char *expectedType,
+                                                        v8::Local<v8::Value> arg)
+    {
+      v8::String::Utf8Value argUtf8(isolate, arg);
+      std::string str = "Argument " + std::to_string(index) + " must be of type " + std::string(expectedType) + ", " +
+                        "but got '" + std::string(*argUtf8) + "'.";
+      return MakeMethodError(isolate, method, str.c_str());
+    }
+    /**
      * Create a standardized error message for constructor failures.
      * 
      * @param isolate The v8::Isolate instance.
